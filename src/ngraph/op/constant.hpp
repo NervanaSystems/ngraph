@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -331,7 +331,6 @@ namespace ngraph
             }
 
             bool is_constant() const override { return true; }
-            bool are_all_data_elements_bitwise_identical() const;
             bool get_all_data_elements_bitwise_identical() const
             {
                 return m_all_elements_bitwise_identical;
@@ -435,6 +434,7 @@ namespace ngraph
             Shape m_shape{};
             std::unique_ptr<runtime::AlignedBuffer> m_data;
             bool m_all_elements_bitwise_identical;
+            bool are_all_data_elements_bitwise_identical() const;
             Constant(const Constant&) = delete;
             Constant operator=(const Constant&) = delete;
         };

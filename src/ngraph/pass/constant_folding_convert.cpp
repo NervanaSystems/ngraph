@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,13 +28,14 @@ template <typename TI, typename TO>
 shared_ptr<op::Constant> fold_constant_convert_helper1(shared_ptr<op::Constant> constant,
                                                        const element::Type& output_element_type)
 {
-    auto out_shape = constant->get_shape();
-    vector<TO> out_vec(shape_size(out_shape));
+    const Shape& out_shape = constant->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(TO));
+    TO* data_ptr = buffer.get_ptr<TO>();
 
     runtime::reference::convert<TI, TO>(
-        constant->get_vector<TI>().data(), out_vec.data(), shape_size(out_shape));
+        constant->get_vector<TI>().data(), data_ptr, shape_size(out_shape));
 
-    return make_shared<op::Constant>(output_element_type, out_shape, out_vec);
+    return make_shared<op::Constant>(output_element_type, out_shape, data_ptr);
 }
 
 // Helper for mapping element::Types to runtime::reference::convert, which is templated in C++
