@@ -509,7 +509,7 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::MaxPool)
 template <>
 mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::MaxPoolBackprop)
 {
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGMaxPoolBackpropOp>(ngNode);
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGMaxPoolBackpropOp>(ngNode, 2);
     auto maxPoolBackpropNode = static_cast<const ngraph::op::MaxPool*>(ngNode);
     auto maxPoolBackpropOp = llvm::cast<mlir::NGMaxPoolBackpropOp>(op);
 
