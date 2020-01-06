@@ -35,6 +35,29 @@ namespace ngraph
     {
         namespace op
         {
+            ngraph::op::PadMode setPadMode(string mode)
+            {
+                ngraph::op::PadMode pad_mode;
+
+                if (mode == "constant")
+                {
+                    pad_mode = ngraph::op::PadMode::CONSTANT;
+                }
+                else if (mode == "reflect")
+                {
+                    pad_mode = ngraph::op::PadMode::REFLECT;
+                }
+                else if (mode == "edge")
+                {
+                    pad_mode = ngraph::op::PadMode::EDGE;
+                }
+                else
+                {
+                    throw error::InvalidArgument("Unsupported padding mode: [" + mode + "]");
+                }
+
+                return pad_mode;
+            }
             namespace set_1
             {
                 NodeVector pad(const Node& node)
@@ -43,24 +66,10 @@ namespace ngraph
                     const Shape& data_shape = data->get_shape();
 
                     double value = node.get_attribute_value<double>("value", 0);
-                    std::string mode = node.get_attribute_value<std::string>("mode", "constant");
-                    ngraph::op::PadMode pad_mode;
-                    if (mode == "constant")
-                    {
-                        pad_mode = ngraph::op::PadMode::CONSTANT;
-                    }
-                    else if (mode == "reflect")
-                    {
-                        pad_mode = ngraph::op::PadMode::REFLECT;
-                    }
-                    else if (mode == "edge")
-                    {
-                        pad_mode = ngraph::op::PadMode::EDGE;
-                    }
-                    else
-                    {
-                        throw error::InvalidArgument("Unsupported padding mode: [" + mode + "]");
-                    }
+                    const std::string mode =
+                        node.get_attribute_value<std::string>("mode", "constant");
+                    ngraph::op::PadMode pad_mode = setPadMode(mode);
+
                     auto paddings = convpool::get_pads(node, data_shape);
                     ngraph::CoordinateDiff padding_below = paddings.first;
                     ngraph::CoordinateDiff padding_above = paddings.second;
@@ -103,24 +112,10 @@ namespace ngraph
                     auto padding_end =
                         std::make_shared<default_opset::Convert>(padding.at(1), element::i64);
 
-                    std::string mode = node.get_attribute_value<std::string>("mode", "constant");
-                    ngraph::op::PadMode pad_mode;
-                    if (mode == "constant")
-                    {
-                        pad_mode = ngraph::op::PadMode::CONSTANT;
-                    }
-                    else if (mode == "reflect")
-                    {
-                        pad_mode = ngraph::op::PadMode::REFLECT;
-                    }
-                    else if (mode == "edge")
-                    {
-                        pad_mode = ngraph::op::PadMode::EDGE;
-                    }
-                    else
-                    {
-                        throw error::InvalidArgument("Unsupported padding mode: [" + mode + "]");
-                    }
+                    const std::string mode =
+                        node.get_attribute_value<std::string>("mode", "constant");
+                    ngraph::op::PadMode pad_mode = setPadMode(mode);
+
                     return {std::make_shared<ngraph::op::v1::Pad>(
                         data, padding_begin, padding_end, values, pad_mode)};
                 }
