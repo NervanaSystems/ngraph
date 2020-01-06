@@ -54,7 +54,7 @@ target_link_libraries(
 )
 
 target_link_libraries(
-    mlir_cpu_backend PRIVATE
+    mlir_cpu_backend PUBLIC
     mlir_core
 )
 # some libs need whole archive linkage because of Globals static initialization
