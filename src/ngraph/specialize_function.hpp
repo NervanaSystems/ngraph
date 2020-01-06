@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -103,6 +103,7 @@ namespace ngraph
     ///       parameter_shapes[i] can be created.
     ///
     /// TODO(amprocte): convert this to a pass.
+    NGRAPH_API
     std::shared_ptr<Function>
         specialize_function(std::shared_ptr<Function> f,
                             const std::vector<element::Type>& parameter_element_types,
@@ -195,6 +196,7 @@ namespace ngraph
     ///       parameter_shapes[i] can be created.
     ///
     /// TODO(amprocte): convert this to a pass.
+    NGRAPH_API
     std::shared_ptr<Function>
         specialize_function(std::shared_ptr<Function> f,
                             const std::vector<element::Type>& parameter_element_types,

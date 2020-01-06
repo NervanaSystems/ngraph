@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -2386,11 +2386,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Product:
         {
-            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
+            set<size_t> reduction_axes =
+                get_or_default<set<size_t>>(node_js, "reduction_axes", set<size_t>());
             if (reduction_axes.empty())
+            {
                 node = make_shared<op::v0::Product>(args[0], args[1]);
+            }
             else
+            {
                 node = make_shared<op::v0::Product>(args[0], reduction_axes);
+            }
             break;
         }
         case OP_TYPEID::ReduceProd_v1:
@@ -2619,6 +2624,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::ScatterAdd>(args[0], args[1], args[2]);
             break;
         }
+        case OP_TYPEID::ScatterND:
+        {
+            node = make_shared<op::ScatterND>(args[0], args[1], args[2]);
+            break;
+        }
         case OP_TYPEID::ScatterNDAdd:
         {
             node = make_shared<op::ScatterNDAdd>(args[0], args[1], args[2]);
@@ -2636,6 +2646,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[1],
                 args[2],
                 read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+        }
+        case OP_TYPEID::Stack:
+        {
+            auto axis = node_js.at("axis").get<size_t>();
+            node = make_shared<op::Stack>(static_cast<OutputVector>(args), axis);
             break;
         }
         case OP_TYPEID::Selu:
@@ -2807,11 +2822,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Sum:
         {
-            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
+            set<size_t> reduction_axes =
+                get_or_default<set<size_t>>(node_js, "reduction_axes", set<size_t>());
             if (reduction_axes.empty())
+            {
                 node = make_shared<op::v0::Sum>(args[0], args[1]);
+            }
             else
+            {
                 node = make_shared<op::v0::Sum>(args[0], reduction_axes);
+            }
             break;
         }
         case OP_TYPEID::Tan:
@@ -3318,7 +3338,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Constant:
     {
         auto tmp = static_cast<const op::Constant*>(&n);
-        if (tmp->are_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
+        if (tmp->get_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
         {
             vector<string> vs;
             vs.push_back(tmp->convert_value_to_string(0));
@@ -4202,7 +4222,11 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::PRelu: { break;
     }
-    case OP_TYPEID::Product: { break;
+    case OP_TYPEID::Product:
+    {
+        auto tmp = static_cast<const op::Product*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
+        break;
     }
     case OP_TYPEID::ReduceProd_v1:
     {
@@ -4372,6 +4396,8 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ScatterAdd: { break;
     }
+    case OP_TYPEID::ScatterND: { break;
+    }
     case OP_TYPEID::ScatterNDAdd: { break;
     }
     case OP_TYPEID::Select: { break;
@@ -4480,7 +4506,17 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::Sum: { break;
+    case OP_TYPEID::Sum:
+    {
+        auto tmp = static_cast<const op::Sum*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
+        break;
+    }
+    case OP_TYPEID::Stack:
+    {
+        auto tmp = static_cast<const op::Stack*>(&n);
+        node["axis"] = tmp->get_axis();
+        break;
     }
     case OP_TYPEID::ReduceSum_v1:
     {

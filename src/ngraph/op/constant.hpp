@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <cstring>
 #include <sstream>
 
@@ -46,8 +47,9 @@ namespace ngraph
             Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
                 : m_element_type(type)
                 , m_shape(shape)
-                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
-                                                    host_alignment()))
+                , m_data(new runtime::AlignedBuffer(
+                      std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
+                      host_alignment()))
             {
                 NODE_VALIDATION_CHECK(
                     this,
@@ -82,8 +84,9 @@ namespace ngraph
             Constant(const element::Type& type, Shape shape, const std::vector<std::string>& values)
                 : m_element_type(type)
                 , m_shape(shape)
-                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
-                                                    host_alignment()))
+                , m_data(new runtime::AlignedBuffer(
+                      std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
+                      host_alignment()))
             {
                 NODE_VALIDATION_CHECK(
                     this,
@@ -143,9 +146,8 @@ namespace ngraph
                 , m_shape(shape)
                 , m_data(nullptr)
             {
-                size_t size = shape_size(m_shape) * m_element_type.size();
-                m_data.reset(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
-                                                        host_alignment()));
+                size_t size = std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f);
+                m_data.reset(new runtime::AlignedBuffer(size, host_alignment()));
                 std::memcpy(m_data->get_ptr(), data, size);
                 constructor_validate_and_infer_types();
                 m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
@@ -329,7 +331,6 @@ namespace ngraph
             }
 
             bool is_constant() const override { return true; }
-            bool are_all_data_elements_bitwise_identical() const;
             bool get_all_data_elements_bitwise_identical() const
             {
                 return m_all_elements_bitwise_identical;
@@ -433,6 +434,7 @@ namespace ngraph
             Shape m_shape{};
             std::unique_ptr<runtime::AlignedBuffer> m_data;
             bool m_all_elements_bitwise_identical;
+            bool are_all_data_elements_bitwise_identical() const;
             Constant(const Constant&) = delete;
             Constant operator=(const Constant&) = delete;
         };

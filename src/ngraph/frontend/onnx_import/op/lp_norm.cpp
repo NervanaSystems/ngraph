@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@
 #include "lp_norm.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/norm.hpp"
-#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph
@@ -49,7 +49,7 @@ namespace ngraph
                     const AxisSet reduction_axes{valid_axis};
                     std::shared_ptr<ngraph::Node> norm = ngraph::builder::lp_norm(
                         data, reduction_axes, static_cast<std::size_t>(p_norm));
-                    norm = std::make_shared<ngraph::op::Broadcast>(
+                    norm = std::make_shared<ngraph::opset0::Broadcast>(
                         norm, data->get_shape(), reduction_axes);
 
                     return {data / norm};

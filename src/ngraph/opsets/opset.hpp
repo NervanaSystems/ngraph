@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,6 +98,6 @@ namespace ngraph
         std::map<std::string, NodeTypeInfo> m_name_type_info_map;
     };
 
-    const OpSet& get_opset0();
-    const OpSet& get_opset1();
+    const NGRAPH_API OpSet& get_opset0();
+    const NGRAPH_API OpSet& get_opset1();
 }

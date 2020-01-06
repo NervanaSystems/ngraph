@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,15 +28,19 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/equal.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
 
@@ -473,18 +477,6 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
 
 bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node)
 {
-    // Disable any op using boolean type until we have support for i1<->i8 conversion in MLIR.
-    // Otherwise, we would generate code like this:
-    //   %0 = icmp %a, %b : i1
-    //   store %0, %c[%arg1] : i8  // Type error: trying to store an i1 into an i8.
-    for (auto& output : node->get_outputs())
-    {
-        if (output.get_element_type() == element::boolean)
-        {
-            return false;
-        }
-    }
-
     if (TI(Parameter) == TI(*node) || TI(Result) == TI(*node))
     {
         return true;

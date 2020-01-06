@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,17 +19,14 @@
 #include <vector>
 
 #include "conv.hpp"
+#include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "ngraph/builder/reshape.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/concat.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "utils/convpool.hpp"
 
 namespace ngraph
@@ -61,7 +58,7 @@ namespace ngraph
                             auto reshaped_filters =
                                 ngraph::builder::reshape(filters, filters_shape);
 
-                            return std::make_shared<ngraph::op::v1::GroupConvolution>(
+                            return std::make_shared<default_opset::GroupConvolution>(
                                 data,
                                 reshaped_filters,
                                 strides,
@@ -72,13 +69,13 @@ namespace ngraph
                         }
                         else
                         {
-                            return std::make_shared<ngraph::op::v1::Convolution>(data,
-                                                                                 filters,
-                                                                                 strides,
-                                                                                 padding_below,
-                                                                                 padding_above,
-                                                                                 dilations,
-                                                                                 auto_pad);
+                            return std::make_shared<default_opset::Convolution>(data,
+                                                                                filters,
+                                                                                strides,
+                                                                                padding_below,
+                                                                                padding_above,
+                                                                                dilations,
+                                                                                auto_pad);
                         }
                     }
 
@@ -134,11 +131,11 @@ namespace ngraph
                     auto bias = inputs.at(2);
                     const Shape& new_shape = conv_node->get_shape();
 
-                    auto broadcasted_bias = std::make_shared<ngraph::op::Broadcast>(
+                    auto broadcasted_bias = std::make_shared<ngraph::opset0::Broadcast>(
                         bias,
                         new_shape,
                         ngraph::op::calculate_broadcast_axes(new_shape, bias->get_shape(), 1));
-                    return {std::make_shared<ngraph::op::Add>(conv_node, broadcasted_bias)};
+                    return {std::make_shared<ngraph::opset0::Add>(conv_node, broadcasted_bias)};
                 }
 
             } // namespace set_1

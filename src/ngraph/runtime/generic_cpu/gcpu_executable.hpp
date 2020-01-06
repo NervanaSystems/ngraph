@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1637,6 +1637,7 @@ private:
         case OP_TYPEID::Reciprocal:
         case OP_TYPEID::RNNCell:
         case OP_TYPEID::ScaleShift:
+        case OP_TYPEID::ScatterND:
         case OP_TYPEID::Selu:
         case OP_TYPEID::ShuffleChannels:
         case OP_TYPEID::SoftmaxCrossEntropy:
@@ -1645,6 +1646,7 @@ private:
         case OP_TYPEID::Split:
         case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Stack:
         // Tensor Iterator not yet supported
         case OP_TYPEID::TensorIterator:
         case OP_TYPEID::Tile:
