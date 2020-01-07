@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -783,12 +783,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
         OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
 
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
-#endif
 
         switch (get_typeid(type_info))
         {
@@ -2624,6 +2621,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::ScatterAdd>(args[0], args[1], args[2]);
             break;
         }
+        case OP_TYPEID::ScatterND:
+        {
+            node = make_shared<op::ScatterND>(args[0], args[1], args[2]);
+            break;
+        }
         case OP_TYPEID::ScatterNDAdd:
         {
             node = make_shared<op::ScatterNDAdd>(args[0], args[1], args[2]);
@@ -2641,6 +2643,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[1],
                 args[2],
                 read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
+        }
+        case OP_TYPEID::Stack:
+        {
+            auto axis = node_js.at("axis").get<size_t>();
+            node = make_shared<op::Stack>(static_cast<OutputVector>(args), axis);
             break;
         }
         case OP_TYPEID::Selu:
@@ -2952,9 +2959,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             throw runtime_error(ss.str());
         }
         }
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
-#endif
 
         for (auto& control_dep : control_deps_inputs)
         {
@@ -3116,12 +3121,9 @@ json JSONSerializer::serialize_node(const Node& n)
         node["provenance_tags"] = provenance_tags;
     }
 
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
-#endif
     switch (get_typeid(type_info))
     {
     case OP_TYPEID::Abs: { break;
@@ -3328,7 +3330,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Constant:
     {
         auto tmp = static_cast<const op::Constant*>(&n);
-        if (tmp->are_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
+        if (tmp->get_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
         {
             vector<string> vs;
             vs.push_back(tmp->convert_value_to_string(0));
@@ -4386,6 +4388,8 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ScatterAdd: { break;
     }
+    case OP_TYPEID::ScatterND: { break;
+    }
     case OP_TYPEID::ScatterNDAdd: { break;
     }
     case OP_TYPEID::Select: { break;
@@ -4500,6 +4504,12 @@ json JSONSerializer::serialize_node(const Node& n)
         node["reduction_axes"] = tmp->get_reduction_axes();
         break;
     }
+    case OP_TYPEID::Stack:
+    {
+        auto tmp = static_cast<const op::Stack*>(&n);
+        node["axis"] = tmp->get_axis();
+        break;
+    }
     case OP_TYPEID::ReduceSum_v1:
     {
         auto tmp = static_cast<const op::v1::ReduceSum*>(&n);
@@ -4612,8 +4622,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::UnknownOp: { break;
     }
     }
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
-#endif
     return node;
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -139,7 +139,9 @@ namespace ngraph
                 // reserve the space for primitives for each op, different op requires different
                 // number of primitives.
                 // some ops require a new workspace.
-                size_t reserve_primitive_space(size_t count, bool new_workspace = false);
+                size_t reserve_primitive_space(size_t count,
+                                               bool fwd_bwd = false,
+                                               bool new_workspace = false);
                 size_t insert_primitive(mkldnn::primitive* primitive);
                 size_t insert_memory(mkldnn::memory* memory);
                 size_t insert_workspace(std::unique_ptr<MKLDNNWorkspace>& workspace);

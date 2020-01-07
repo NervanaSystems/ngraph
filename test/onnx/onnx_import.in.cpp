@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1774,6 +1774,19 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mod)
     test_case.add_input<int64_t>({22, -13, 8, -3, 7, 2});
     test_case.add_expected_output<int64_t>(Shape{6}, {-8, 3, 4, 0, -3, 1});
 
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_scatterND)
+{
+    const auto scatterND_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/scatter_nd.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(scatterND_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f});
+    test_case.add_input<int64_t>({4, 3, 1, 7});
+    test_case.add_input<float>({9.f, 10.f, 11.f, 12.f});
+    test_case.add_expected_output<float>(Shape{8}, {1.f, 11.f, 3.f, 10.f, 9.f, 6.f, 7.f, 12.f});
     test_case.run();
 }
 

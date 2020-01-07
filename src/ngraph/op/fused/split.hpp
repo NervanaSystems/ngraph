@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -104,9 +104,6 @@ namespace ngraph
                 bool supports_decompose() const override { return false; }
             protected:
                 size_t m_num_splits;
-
-            private:
-                int64_t axis_value_from_input() const;
             };
         }
 

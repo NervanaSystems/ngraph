@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -256,7 +256,8 @@ namespace ngraph
                     // weights_iter, bias,
                     // dst_layer, dst_iter, dst_iter_c, workspace, and rnn_forward.
                     // It needs a new workspace.
-                    index = mkldnn_emitter.reserve_primitive_space(11, true /* new workspace */);
+                    index = mkldnn_emitter.reserve_primitive_space(
+                        11, false /* fwd and bwd */, true /* new workspace */);
                     deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
@@ -1773,7 +1774,8 @@ namespace ngraph
                     // MaxPoolBackprop needs 6 primitives: fprop_src, diff_dst, diff_src, workspace
                     // pooling forward, and pooling_backward.
                     // It needs a new workspace.
-                    index = mkldnn_emitter.reserve_primitive_space(6, true /* new workspace */);
+                    index = mkldnn_emitter.reserve_primitive_space(
+                        6, true /* fwd and bwd */, true /* new workspace */);
                     deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
@@ -1832,13 +1834,13 @@ namespace ngraph
                     writer.block_end();
                     writer << "cg_ctx->mkldnn_workspaces.push_back(workspace);\n";
 
-                    deps[5] = mkldnn_emitter.reserve_workspace();
+                    deps[4] = mkldnn_emitter.reserve_workspace();
 
                     writer << "\n// build primitive\n";
 
-                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[4])
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index - 1)
                            << "] = new mkldnn::pooling_forward(fwd_pd);\n";
-                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(deps[4])
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index - 1)
                            << "] = new mkldnn::memory::desc(fwd_pd.scratchpad_desc());\n";
 
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
@@ -2816,7 +2818,6 @@ bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr
                     construct_string, deps, index, scratchpad_size);
         }
     }
-
     return false;
 }
 
