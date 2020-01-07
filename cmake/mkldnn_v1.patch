@@ -1,5 +1,5 @@
 diff --git a/cmake/OpenMP.cmake b/cmake/OpenMP.cmake
-index 99970659..ef88a0a7 100644
+index 0bc6ea57a..4fa0a22d1 100644
 --- a/cmake/OpenMP.cmake
 +++ b/cmake/OpenMP.cmake
 @@ -28,7 +28,7 @@ if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -18,7 +18,7 @@ index 99970659..ef88a0a7 100644
 +macro(use_intel_omp_rt)
 +    # fast return
 +    if (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-+        set(MKLDNN_USES_INTEL_OPENMP TRUE)
++        set(DNNL_USES_INTEL_OPENMP TRUE)
 +        return()
 +    endif()
 +
@@ -41,10 +41,10 @@ index 99970659..ef88a0a7 100644
 +        endif()
 +        list(APPEND EXTRA_SHARED_LIBS ${IOMP5LIB})
 +    else()
-+        if (MKLDNN_THREADING STREQUAL "OMP:INTEL")
++        if (DNNL_THREADING STREQUAL "OMP:INTEL")
 +            message(${_omp_severity} "Intel OpenMP runtime could not be found. "
 +                "Please either use OpenMP runtime that comes with the compiler "
-+                "(via -DMKLDNN_THREADING={OMP,OMP:COMP}), or "
++                "(via -DDNNL_THREADING={OMP,OMP:COMP}), or "
 +                "explicitely provide the path to libiomp with the "
 +                "-DCMAKE_LIBRARY_PATH option")
 +        endif()
@@ -54,27 +54,27 @@ index 99970659..ef88a0a7 100644
  if(WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
      add_definitions(/Qpar)
      add_definitions(/openmp)
-@@ -78,6 +114,7 @@ if (MKLDNN_CPU_RUNTIME MATCHES "OMP")
-         message(${_omp_severity} "OpenMP library could not be found. "
-             "Proceeding might lead to highly sub-optimal performance.")
+@@ -79,6 +115,7 @@ if (DNNL_CPU_THREADING_RUNTIME MATCHES "OMP")
+         # Override CPU threading to sequential if allowed to proceed
+         set(DNNL_CPU_THREADING_RUNTIME "SEQ")
      endif()
 +    use_intel_omp_rt()
  else()
      # Compilation happens with OpenMP to enable `#pragma omp simd`
      # but during linkage OpenMP dependency should be avoided
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index f99ec31ce..b3c1d9bb8 100644
+index 4c774a11b..56fb4e294 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -73,8 +73,10 @@ endif()
- add_library(${LIB_NAME}
-     ${MKLDNN_LIBRARY_TYPE} ${HEADERS} ${${LIB_NAME}_SUB_OBJS})
+@@ -78,8 +78,10 @@ endif()
+ add_library(${LIB_NAME} ${DNNL_LIBRARY_TYPE}
+     ${VERSION_RESOURCE_FILE} ${HEADERS} ${${LIB_NAME}_SUB_OBJS})
 
--set_property(TARGET ${LIB_NAME} PROPERTY VERSION "${MKLDNN_VERSION_MAJOR}.${MKLDNN_VERSION_MINOR}")
--set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "${MKLDNN_VERSION_MAJOR}")
+-set_property(TARGET ${LIB_NAME} PROPERTY VERSION "${DNNL_VERSION_MAJOR}.${DNNL_VERSION_MINOR}")
+-set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "${DNNL_VERSION_MAJOR}")
 +if(MKLDNN_LIB_VERSIONING_ENABLE)
-+    set_property(TARGET ${LIB_NAME} PROPERTY VERSION "${MKLDNN_VERSION_MAJOR}.${MKLDNN_VERSION_MINOR}")
-+    set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "${MKLDNN_VERSION_MAJOR}")
++    set_property(TARGET ${LIB_NAME} PROPERTY VERSION "${DNNL_VERSION_MAJOR}.${DNNL_VERSION_MINOR}")
++    set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "${DNNL_VERSION_MAJOR}")
 +endif()
  set_property(TARGET ${LIB_NAME} PROPERTY PUBLIC_HEADER ${HEADERS})
 
