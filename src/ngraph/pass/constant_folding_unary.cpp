@@ -132,7 +132,8 @@ void pass::ConstantFolding::construct_constant_unary()
 {
     auto constant_label = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
-    auto is_ue = [](std::shared_ptr<Node> n) {
+    auto is_ue = [](const Output<Node>& value) {
+        auto n = value.get_node_shared_ptr();
         return n->is_unary_elementwise_arithmetic() || pattern::has_class<op::Not>()(n);
     };
     auto ue =

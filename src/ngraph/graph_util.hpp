@@ -439,7 +439,7 @@ namespace ngraph
     // or a node that belongs to args
     NodeVector extract_subgraph(const NodeVector& results, const NodeVector& args);
 
-    bool is_one(std::shared_ptr<Node> reduce_constant);
+    bool is_one(const Output<Node>& reduce_constant);
 
     bool compare_constants(const std::shared_ptr<Node>& n1, const std::shared_ptr<Node>& n2);
 

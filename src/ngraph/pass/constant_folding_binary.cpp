@@ -569,7 +569,8 @@ void pass::ConstantFolding::construct_constant_binary()
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
     auto b = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
-    auto is_be = [](std::shared_ptr<Node> n) {
+    auto is_be = [](const Output<Node>& value) {
+        auto n = value.get_node();
         return (n->is_binary_elementwise_arithmetic() || n->is_binary_elementwise_comparison() ||
                 n->is_binary_elementwise_logical());
     };

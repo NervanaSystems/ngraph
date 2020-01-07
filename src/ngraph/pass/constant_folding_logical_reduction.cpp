@@ -102,7 +102,8 @@ void pass::ConstantFolding::construct_constant_logical_reduction()
         element::boolean, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
     auto constant_axes_label =
         make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
-    auto is_supported_reduction = [](std::shared_ptr<Node> n) {
+    auto is_supported_reduction = [](const Output<Node>& value) {
+        auto n = value.get_node_shared_ptr();
         return (pattern::has_class<::ngraph::op::All>()(n) ||
                 pattern::has_class<::ngraph::op::Any>()(n) ||
                 pattern::has_class<::ngraph::op::v1::ReduceLogicalAnd>()(n) ||

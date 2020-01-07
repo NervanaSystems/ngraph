@@ -14,28 +14,30 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pass/pass_util.hpp"
+#include "ngraph/pattern/op/or.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-std::function<bool(const Output<Node>&)> ngraph::pass::get_no_fan_out_function()
-{
-    auto ret_fun = [](const Output<Node>& value) {
-        auto n = value.get_node_shared_ptr();
-        auto users = n->get_users(true);
-        std::set<std::shared_ptr<Node>> user_set(users.begin(), users.end());
-        size_t num_unique_users = user_set.size();
-        if (num_unique_users == 1)
-        {
-            return true;
-        }
-        else
-        {
-            NGRAPH_DEBUG << n->get_name() << " has fan out\n";
-            return false;
-        }
-    };
+constexpr NodeTypeInfo pattern::op::Or::type_info;
 
-    return ret_fun;
+const NodeTypeInfo& pattern::op::Or::get_type_info() const
+{
+    return type_info;
+}
+
+bool pattern::op::Or::match_value(Matcher* matcher,
+                                  const Output<Node>& pattern_value,
+                                  const Output<Node>& graph_value)
+{
+    for (auto input_value : input_values())
+    {
+        auto saved = matcher->start_match();
+        if (matcher->match_value(input_value, graph_value))
+        {
+            return saved.finish(true);
+        }
+    }
+    return false;
 }

@@ -30,6 +30,6 @@ namespace ngraph
 {
     namespace pass
     {
-        std::function<bool(std::shared_ptr<Node>)> get_no_fan_out_function();
+        std::function<bool(const Output<Node>&)> get_no_fan_out_function();
     }
 }

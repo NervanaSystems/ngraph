@@ -48,7 +48,7 @@ namespace ngraph
                 /// \endcode
                 Label(const element::Type& type,
                       const PartialShape& s,
-                      Predicate pred,
+                      const ValuePredicate pred,
                       const OutputVector& wrapped_values)
                     : Pattern(wrapped_values, pred)
                 {
@@ -56,20 +56,25 @@ namespace ngraph
                 }
 
                 Label(const element::Type& type, const PartialShape& s)
-                    : Label(type, s, [](std::shared_ptr<Node>) { return true; }, OutputVector())
+                    : Label(type, s, [](const Output<Node>&) { return true; }, OutputVector())
                 {
                 }
 
-                Label(const element::Type& type, const PartialShape& s, Predicate pred)
+                Label(const element::Type& type, const PartialShape& s, ValuePredicate pred)
                     : Label(type, s, pred, OutputVector{})
+                {
+                }
+
+                Label(const element::Type& type, const PartialShape& s, NodePredicate pred)
+                    : Label(type, s, as_value_predicate(pred), OutputVector{})
                 {
                 }
 
                 Label(const element::Type& type,
                       const PartialShape& s,
-                      Predicate pred,
+                      const NodePredicate pred,
                       const NodeVector& wrapped_values)
-                    : Label(type, s, pred, as_output_vector(wrapped_values))
+                    : Label(type, s, as_value_predicate(pred), as_output_vector(wrapped_values))
                 {
                 }
 
@@ -85,37 +90,46 @@ namespace ngraph
                 ///                                                   nullptr,
                 ///                                                   OutputVector{add});
                 /// \endcode
-                Label(std::shared_ptr<Node> node,
-                      Predicate pred,
+                Label(const Output<Node>& value,
+                      const ValuePredicate pred,
                       const OutputVector& wrapped_values)
-                    : Label(node->get_element_type(),
-                            node->get_output_partial_shape(0),
-                            pred,
-                            wrapped_values)
+                    : Label(
+                          value.get_element_type(), value.get_partial_shape(), pred, wrapped_values)
                 {
                 }
-                Label(std::shared_ptr<Node> node, Predicate pred)
-                    : Label(node->get_element_type(),
-                            node->get_output_partial_shape(0),
-                            pred,
-                            OutputVector{})
+                Label(const Output<Node>& value, const ValuePredicate pred)
+                    : Label(
+                          value.get_element_type(), value.get_partial_shape(), pred, OutputVector{})
                 {
                 }
 
-                Label(std::shared_ptr<Node> node)
-                    : Label(node->get_element_type(),
-                            node->get_output_partial_shape(0),
-                            [](std::shared_ptr<Node>) { return true; },
+                Label(const Output<Node>& value, const NodePredicate pred)
+                    : Label(value.get_element_type(),
+                            value.get_partial_shape(),
+                            as_value_predicate(pred),
                             OutputVector{})
                 {
                 }
-                Label(std::shared_ptr<Node> node, Predicate pred, const NodeVector& wrapped_values)
-                    : Label(node->get_element_type(),
-                            node->get_output_partial_shape(0),
-                            pred,
+                Label(const Output<Node>& value)
+                    : Label(value.get_element_type(),
+                            value.get_partial_shape(),
+                            [](const Output<Node>&) { return true; },
+                            OutputVector{})
+                {
+                }
+                Label(const Output<Node>& node,
+                      const NodePredicate pred,
+                      const NodeVector& wrapped_values)
+                    : Label(node.get_element_type(),
+                            node.get_partial_shape(),
+                            as_value_predicate(pred),
                             as_output_vector(wrapped_values))
                 {
                 }
+
+                bool match_value(Matcher* matcher,
+                                 const Output<Node>& pattern_value,
+                                 const Output<Node>& graph_value) override;
             };
         }
     }

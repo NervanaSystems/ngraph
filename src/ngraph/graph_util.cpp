@@ -574,7 +574,7 @@ bool ngraph::is_zero(const Output<Node>& reduce_constant)
     return result_bool;
 }
 
-bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
+bool ngraph::is_one(const Output<Node>& reduce_constant)
 {
     auto result_bool = is_equal_to_const_value("1", reduce_constant);
     return result_bool;
