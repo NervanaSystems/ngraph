@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -210,11 +210,9 @@ void op::Range::validate_and_infer_types()
 
     PartialShape result_shape;
 
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-#endif
     switch (result_et)
     {
     case element::Type_t::bf16: result_shape = infer_output_shape<bfloat16>(this, result_et); break;
@@ -237,9 +235,7 @@ void op::Range::validate_and_infer_types()
             this, false, "Internal nGraph error: unsupported element type: ", result_et);
         break;
     }
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
-#endif
 
     set_output_type(0, result_et, result_shape);
 }
