@@ -171,8 +171,11 @@ static mlir::LogicalResult verifyCmpOp(T* op)
     NGTensorType resType = r0.cast<NGTensorType>();
 
     // result of same shape as input and has bool type
-    if (!resType.isCompatibleShape(opType0) || !resType.getElementType().isa<NGBoolType>())
+    if (!resType.isCompatibleShape(opType0) ||
+        !resType.getElementType().cast<NGIntegerType>().isUInt8())
+    {
         return op->emitOpError("Incompatible result shape or type for comparison op");
+    }
 
     return mlir::success();
 }
