@@ -22,1449 +22,1452 @@
 
 using namespace ngraph;
 
-TEST(op_is, Abs)
-{
-    op::Abs node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Acos)
-{
-    op::Acos node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Add)
-{
-    op::Add node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, All)
-{
-    op::All node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, AllReduce)
-{
-    op::AllReduce node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, And)
-{
-    op::And node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_TRUE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Any)
-{
-    op::Any node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ArgMax)
-{
-    op::ArgMax node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ArgMin)
-{
-    op::ArgMin node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Asin)
-{
-    op::Asin node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Atan)
-{
-    op::Atan node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Atan2)
-{
-    op::Atan2 node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, AvgPool)
-{
-    op::AvgPool node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, AvgPoolBackprop)
-{
-    op::AvgPoolBackprop node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, BatchMatMul)
-{
-    op::BatchMatMul node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, BatchMatMulTranspose)
-{
-    op::BatchMatMulTranspose node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, BatchNormInference)
-{
-    op::BatchNormInference node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, BatchNormTraining)
-{
-    op::BatchNormTraining node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, BatchNormTrainingBackprop)
-{
-    op::BatchNormTrainingBackprop node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Broadcast)
-{
-    op::Broadcast node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, BroadcastDistributed)
-{
-    op::BroadcastDistributed node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, BroadcastLike)
-{
-    op::BroadcastLike node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Ceiling)
-{
-    op::Ceiling node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Clamp)
-{
-    op::Clamp node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Concat)
-{
-    op::Concat node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Constant)
-{
-    op::Constant node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Convert)
-{
-    op::Convert node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Convolution)
-{
-    op::Convolution node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ConvolutionBackpropData)
-{
-    op::ConvolutionBackpropData node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ConvolutionBackpropFilters)
-{
-    op::ConvolutionBackpropFilters node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ConvolutionBias)
-{
-    op::ConvolutionBias node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ConvolutionBiasAdd)
-{
-    op::ConvolutionBiasAdd node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ConvolutionBiasBackpropFiltersBias)
-{
-    op::ConvolutionBiasBackpropFiltersBias node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Cos)
-{
-    op::Cos node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Cosh)
-{
-    op::Cosh node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, CrossEntropy)
-{
-    op::CrossEntropy node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, CrossEntropyBackprop)
-{
-    op::CrossEntropyBackprop node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, CropAndResize)
-{
-    op::CropAndResize node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, CumSum)
-{
-    op::CumSum node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, DepthToSpace)
-{
-    op::DepthToSpace node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Dequantize)
-{
-    op::Dequantize node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Divide)
-{
-    op::Divide node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Dot)
-{
-    op::Dot node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, DynBroadcast)
-{
-    op::DynBroadcast node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, DynPad)
-{
-    op::DynPad node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, DynReplaceSlice)
-{
-    op::DynReplaceSlice node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, DynReshape)
-{
-    op::DynReshape node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, DynSlice)
-{
-    op::DynSlice node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Elu)
-{
-    op::Elu node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, EmbeddingLookup)
-{
-    op::EmbeddingLookup node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Equal)
-{
-    op::Equal node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Erf)
-{
-    op::Erf node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Exp)
-{
-    op::Exp node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, FakeQuantize)
-{
-    op::FakeQuantize node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Floor)
-{
-    op::Floor node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, GRN)
-{
-    op::GRN node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, GRUCell)
-{
-    op::GRUCell node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Gather)
-{
-    op::Gather node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, GatherND)
-{
-    op::GatherND node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Gelu)
-{
-    op::Gelu node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, GeluBackpropFactor)
-{
-    op::GeluBackpropFactor node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Gemm)
-{
-    op::Gemm node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, GenerateMask)
-{
-    op::GenerateMask node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, GetOutputElement)
-{
-    op::GetOutputElement node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Greater)
-{
-    op::Greater node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, GreaterEq)
-{
-    op::GreaterEq node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, GroupConvolution)
-{
-    op::GroupConvolution node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, GroupConvolutionBackpropData)
-{
-    op::GroupConvolutionBackpropData node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, GroupConvolutionBackpropFilters)
-{
-    op::GroupConvolutionBackpropFilters node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, GroupConvolutionTranspose)
-{
-    op::GroupConvolutionTranspose node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, HardSigmoid)
-{
-    op::HardSigmoid node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Interpolate)
-{
-    op::Interpolate node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, LayerNorm)
-{
-    op::LayerNorm node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, LayerNormBackprop)
-{
-    op::LayerNormBackprop node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Less)
-{
-    op::Less node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, LessEq)
-{
-    op::LessEq node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Log)
-{
-    op::Log node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, LogSoftmax)
-{
-    op::LogSoftmax node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, LRN)
-{
-    op::LRN node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, LSTMCell)
-{
-    op::LSTMCell node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, LSTMSequence)
-{
-    op::LSTMSequence node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, MatMul)
-{
-    op::MatMul node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, NormalizeL2)
-{
-    op::NormalizeL2 node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Max)
-{
-    op::Max node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Maximum)
-{
-    op::Maximum node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, MaxPool)
-{
-    op::MaxPool node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, MaxPoolBackprop)
-{
-    op::MaxPoolBackprop node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Min)
-{
-    op::Min node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Minimum)
-{
-    op::Minimum node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Multiply)
-{
-    op::Multiply node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, MVN)
-{
-    op::MVN node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Negative)
-{
-    op::Negative node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Not)
-{
-    op::Not node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, NotEqual)
-{
-    op::NotEqual node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, OneHot)
-{
-    op::OneHot node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Or)
-{
-    op::Or node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_TRUE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Pad)
-{
-    op::Pad node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Parameter)
-{
-    op::Parameter node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, PartialSlice)
-{
-    op::PartialSlice node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, PartialSliceBackprop)
-{
-    op::PartialSliceBackprop node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Passthrough)
-{
-    op::Passthrough node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Power)
-{
-    op::Power node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, PRelu)
-{
-    op::PRelu node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Product)
-{
-    op::Product node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Quantize)
-{
-    op::Quantize node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, QuantizedConvolution)
-{
-    op::QuantizedConvolution node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, QuantizedConvolutionBias)
-{
-    op::QuantizedConvolutionBias node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, QuantizedConvolutionBiasAdd)
-{
-    op::QuantizedConvolutionBiasAdd node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, QuantizedConvolutionBiasSignedAdd)
-{
-    op::QuantizedConvolutionBiasSignedAdd node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, QuantizedConvolutionRelu)
-{
-    op::QuantizedConvolutionRelu node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, QuantizedDot)
-{
-    op::QuantizedDot node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, QuantizedDotBias)
-{
-    op::QuantizedDotBias node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, RandomUniform)
-{
-    op::RandomUniform node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Recv)
-{
-    op::Recv node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Range)
-{
-    op::Range node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Reciprocal)
-{
-    op::Reciprocal node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Relu)
-{
-    op::Relu node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ReluBackprop)
-{
-    op::ReluBackprop node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ReplaceSlice)
-{
-    op::ReplaceSlice node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Reshape)
-{
-    op::Reshape node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Result)
-{
-    op::Result node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Reverse)
-{
-    op::Reverse node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ReverseSequence)
-{
-    op::ReverseSequence node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, RNNCell)
-{
-    op::RNNCell node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ScalarConstantLike)
-{
-    op::ScalarConstantLike node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ScaleShift)
-{
-    op::ScaleShift node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ScatterAdd)
-{
-    op::ScatterAdd node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ScatterND)
-{
-    op::ScatterND node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ScatterNDAdd)
-{
-    op::ScatterNDAdd node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Select)
-{
-    op::Select node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Selu)
-{
-    op::Selu node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Send)
-{
-    op::Send node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ShapeOf)
-{
-    op::ShapeOf node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, ShuffleChannels)
-{
-    op::ShuffleChannels node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Sigmoid)
-{
-    op::Sigmoid node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, SigmoidBackprop)
-{
-    op::SigmoidBackprop node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Sign)
-{
-    op::Sign node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Sin)
-{
-    op::Sin node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Sinh)
-{
-    op::Sinh node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Slice)
-{
-    op::Slice node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Softmax)
-{
-    op::Softmax node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, SoftmaxCrossEntropy)
-{
-    op::SoftmaxCrossEntropy node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, SoftmaxCrossEntropyBackprop)
-{
-    op::SoftmaxCrossEntropyBackprop node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, SpaceToDepth)
-{
-    op::SpaceToDepth node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Split)
-{
-    op::Split node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Sqrt)
-{
-    op::Sqrt node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, SquaredDifference)
-{
-    op::SquaredDifference node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Squeeze)
-{
-    op::Squeeze node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, StopGradient)
-{
-    op::StopGradient node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Stack)
-{
-    op::Stack node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Subtract)
-{
-    op::Subtract node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Sum)
-{
-    op::Sum node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Tan)
-{
-    op::Tan node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Tanh)
-{
-    op::Tanh node;
-    EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, TensorIterator)
-{
-    op::TensorIterator node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Tile)
-{
-    op::Tile node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, TopK)
-{
-    op::TopK node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Transpose)
-{
-    op::Transpose node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Unsqueeze)
-{
-    op::Unsqueeze node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_FALSE(node.is_binary_elementwise_logical());
-}
-
-TEST(op_is, Xor)
-{
-    op::Xor node;
-    EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-    EXPECT_FALSE(node.is_binary_elementwise_comparison());
-    EXPECT_TRUE(node.is_binary_elementwise_logical());
+namespace
+{
+    void op_is_Abs()
+    {
+        op::Abs node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Acos()
+    {
+        op::Acos node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Add()
+    {
+        op::Add node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_All()
+    {
+        op::All node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_AllReduce()
+    {
+        op::AllReduce node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_And()
+    {
+        op::And node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_TRUE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Any()
+    {
+        op::Any node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ArgMax()
+    {
+        op::ArgMax node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ArgMin()
+    {
+        op::ArgMin node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Asin()
+    {
+        op::Asin node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Atan()
+    {
+        op::Atan node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Atan2()
+    {
+        op::Atan2 node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_AvgPool()
+    {
+        op::AvgPool node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_AvgPoolBackprop()
+    {
+        op::AvgPoolBackprop node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_BatchMatMul()
+    {
+        op::BatchMatMul node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_BatchMatMulTranspose()
+    {
+        op::BatchMatMulTranspose node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_BatchNormInference()
+    {
+        op::BatchNormInference node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_BatchNormTraining()
+    {
+        op::BatchNormTraining node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_BatchNormTrainingBackprop()
+    {
+        op::BatchNormTrainingBackprop node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Broadcast()
+    {
+        op::Broadcast node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_BroadcastDistributed()
+    {
+        op::BroadcastDistributed node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_BroadcastLike()
+    {
+        op::BroadcastLike node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Ceiling()
+    {
+        op::Ceiling node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Clamp()
+    {
+        op::Clamp node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Concat()
+    {
+        op::Concat node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Constant()
+    {
+        op::Constant node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Convert()
+    {
+        op::Convert node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Convolution()
+    {
+        op::Convolution node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ConvolutionBackpropData()
+    {
+        op::ConvolutionBackpropData node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ConvolutionBackpropFilters()
+    {
+        op::ConvolutionBackpropFilters node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ConvolutionBias()
+    {
+        op::ConvolutionBias node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ConvolutionBiasAdd()
+    {
+        op::ConvolutionBiasAdd node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ConvolutionBiasBackpropFiltersBias()
+    {
+        op::ConvolutionBiasBackpropFiltersBias node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Cos()
+    {
+        op::Cos node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Cosh()
+    {
+        op::Cosh node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_CrossEntropy()
+    {
+        op::CrossEntropy node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_CrossEntropyBackprop()
+    {
+        op::CrossEntropyBackprop node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_CropAndResize()
+    {
+        op::CropAndResize node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_CumSum()
+    {
+        op::CumSum node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_DepthToSpace()
+    {
+        op::DepthToSpace node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Dequantize()
+    {
+        op::Dequantize node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Divide()
+    {
+        op::Divide node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Dot()
+    {
+        op::Dot node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_DynBroadcast()
+    {
+        op::DynBroadcast node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_DynPad()
+    {
+        op::DynPad node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_DynReplaceSlice()
+    {
+        op::DynReplaceSlice node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_DynReshape()
+    {
+        op::DynReshape node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_DynSlice()
+    {
+        op::DynSlice node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Elu()
+    {
+        op::Elu node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_EmbeddingLookup()
+    {
+        op::EmbeddingLookup node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Equal()
+    {
+        op::Equal node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Erf()
+    {
+        op::Erf node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Exp()
+    {
+        op::Exp node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_FakeQuantize()
+    {
+        op::FakeQuantize node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Floor()
+    {
+        op::Floor node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_GRN()
+    {
+        op::GRN node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_GRUCell()
+    {
+        op::GRUCell node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Gather()
+    {
+        op::Gather node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_GatherND()
+    {
+        op::GatherND node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Gelu()
+    {
+        op::Gelu node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_GeluBackpropFactor()
+    {
+        op::GeluBackpropFactor node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Gemm()
+    {
+        op::Gemm node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_GenerateMask()
+    {
+        op::GenerateMask node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_GetOutputElement()
+    {
+        op::GetOutputElement node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Greater()
+    {
+        op::Greater node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_GreaterEq()
+    {
+        op::GreaterEq node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_GroupConvolution()
+    {
+        op::GroupConvolution node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_GroupConvolutionBackpropData()
+    {
+        op::GroupConvolutionBackpropData node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_GroupConvolutionBackpropFilters()
+    {
+        op::GroupConvolutionBackpropFilters node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_GroupConvolutionTranspose()
+    {
+        op::GroupConvolutionTranspose node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_HardSigmoid()
+    {
+        op::HardSigmoid node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Interpolate()
+    {
+        op::Interpolate node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_LayerNorm()
+    {
+        op::LayerNorm node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_LayerNormBackprop()
+    {
+        op::LayerNormBackprop node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Less()
+    {
+        op::Less node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_LessEq()
+    {
+        op::LessEq node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Log()
+    {
+        op::Log node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_LogSoftmax()
+    {
+        op::LogSoftmax node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_LRN()
+    {
+        op::LRN node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_LSTMCell()
+    {
+        op::LSTMCell node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_LSTMSequence()
+    {
+        op::LSTMSequence node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_MatMul()
+    {
+        op::MatMul node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_NormalizeL2()
+    {
+        op::NormalizeL2 node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Max()
+    {
+        op::Max node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Maximum()
+    {
+        op::Maximum node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_MaxPool()
+    {
+        op::MaxPool node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_MaxPoolBackprop()
+    {
+        op::MaxPoolBackprop node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Min()
+    {
+        op::Min node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Minimum()
+    {
+        op::Minimum node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Multiply()
+    {
+        op::Multiply node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_MVN()
+    {
+        op::MVN node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Negative()
+    {
+        op::Negative node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Not()
+    {
+        op::Not node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_NotEqual()
+    {
+        op::NotEqual node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_OneHot()
+    {
+        op::OneHot node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Or()
+    {
+        op::Or node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_TRUE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Pad()
+    {
+        op::Pad node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Parameter()
+    {
+        op::Parameter node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_PartialSlice()
+    {
+        op::PartialSlice node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_PartialSliceBackprop()
+    {
+        op::PartialSliceBackprop node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Passthrough()
+    {
+        op::Passthrough node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Power()
+    {
+        op::Power node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_PRelu()
+    {
+        op::PRelu node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Product()
+    {
+        op::Product node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Quantize()
+    {
+        op::Quantize node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_QuantizedConvolution()
+    {
+        op::QuantizedConvolution node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_QuantizedConvolutionBias()
+    {
+        op::QuantizedConvolutionBias node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_QuantizedConvolutionBiasAdd()
+    {
+        op::QuantizedConvolutionBiasAdd node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_QuantizedConvolutionBiasSignedAdd()
+    {
+        op::QuantizedConvolutionBiasSignedAdd node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_QuantizedConvolutionRelu()
+    {
+        op::QuantizedConvolutionRelu node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_QuantizedDot()
+    {
+        op::QuantizedDot node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_QuantizedDotBias()
+    {
+        op::QuantizedDotBias node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_RandomUniform()
+    {
+        op::RandomUniform node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Recv()
+    {
+        op::Recv node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Range()
+    {
+        op::Range node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Reciprocal()
+    {
+        op::Reciprocal node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Relu()
+    {
+        op::Relu node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ReluBackprop()
+    {
+        op::ReluBackprop node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ReplaceSlice()
+    {
+        op::ReplaceSlice node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Reshape()
+    {
+        op::Reshape node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Result()
+    {
+        op::Result node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Reverse()
+    {
+        op::Reverse node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ReverseSequence()
+    {
+        op::ReverseSequence node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_RNNCell()
+    {
+        op::RNNCell node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ScalarConstantLike()
+    {
+        op::ScalarConstantLike node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ScaleShift()
+    {
+        op::ScaleShift node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ScatterAdd()
+    {
+        op::ScatterAdd node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ScatterND()
+    {
+        op::ScatterND node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ScatterNDAdd()
+    {
+        op::ScatterNDAdd node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Select()
+    {
+        op::Select node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Selu()
+    {
+        op::Selu node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Send()
+    {
+        op::Send node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ShapeOf()
+    {
+        op::ShapeOf node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_ShuffleChannels()
+    {
+        op::ShuffleChannels node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Sigmoid()
+    {
+        op::Sigmoid node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_SigmoidBackprop()
+    {
+        op::SigmoidBackprop node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Sign()
+    {
+        op::Sign node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Sin()
+    {
+        op::Sin node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Sinh()
+    {
+        op::Sinh node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Slice()
+    {
+        op::Slice node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Softmax()
+    {
+        op::Softmax node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_SoftmaxCrossEntropy()
+    {
+        op::SoftmaxCrossEntropy node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_SoftmaxCrossEntropyBackprop()
+    {
+        op::SoftmaxCrossEntropyBackprop node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_SpaceToDepth()
+    {
+        op::SpaceToDepth node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Split()
+    {
+        op::Split node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Sqrt()
+    {
+        op::Sqrt node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_SquaredDifference()
+    {
+        op::SquaredDifference node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Squeeze()
+    {
+        op::Squeeze node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_StopGradient()
+    {
+        op::StopGradient node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Stack()
+    {
+        op::Stack node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Subtract()
+    {
+        op::Subtract node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Sum()
+    {
+        op::Sum node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Tan()
+    {
+        op::Tan node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Tanh()
+    {
+        op::Tanh node;
+        EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_TensorIterator()
+    {
+        op::TensorIterator node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Tile()
+    {
+        op::Tile node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_TopK()
+    {
+        op::TopK node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Transpose()
+    {
+        op::Transpose node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Unsqueeze()
+    {
+        op::Unsqueeze node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_Xor()
+    {
+        op::Xor node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_TRUE(node.is_binary_elementwise_logical());
+    }
 }
 
 TEST(op_is, check)
 {
-#define NGRAPH_OP(a, b) run_test_ ## a();
+#define NGRAPH_OP(a, b) op_is_##a();
 #include "ngraph/opsets/opset0_tbl.hpp"
 #undef NGRAPH_OP
 }
