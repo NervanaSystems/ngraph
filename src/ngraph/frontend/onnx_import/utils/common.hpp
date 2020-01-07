@@ -38,7 +38,7 @@ namespace ngraph
     {
         namespace common
         {
-            std::unordered_set<ngraph::Node*> traverse_node_args(const ngraph::Node& ng_node_args);
+            NodeVector traverse_node_args(const ngraph::Node& ng_node_args);
             const NodeVector& add_provenance_tags(const Node& onnx_node,
                                                   const NodeVector& ng_node_vector);
             const ngraph::element::Type& get_ngraph_element_type(std::int64_t onnx_type);

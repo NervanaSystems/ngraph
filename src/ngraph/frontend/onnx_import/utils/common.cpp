@@ -27,10 +27,11 @@ namespace ngraph
     {
         namespace common
         {
-            std::unordered_set<ngraph::Node*> traverse_node_args(const NodeVector& ng_node_args)
+            NodeVector traverse_node_args(const NodeVector& ng_node_args)
             {
                 std::unordered_set<ngraph::Node*> instances_seen;
                 std::stack<ngraph::Node*, std::vector<ngraph::Node*>> stack;
+                NodeVector result;
 
                 for (auto& ng_node_arg : ng_node_args)
                 {
@@ -47,9 +48,10 @@ namespace ngraph
                         {
                             stack.push(ng_node_arg.get());
                         }
+                        result.push_back(ng_node->shared_from_this());
                     }
                 }
-                return instances_seen;
+                return result;
             }
 
             void add_provenance_tag_recursive(const NodeVector& ng_node_args,
