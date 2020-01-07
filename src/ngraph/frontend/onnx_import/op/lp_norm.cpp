@@ -55,6 +55,9 @@ namespace ngraph
                     const auto target_shape = default_opset::Constant::create(
                         element::i64, Shape{data->get_shape().size()}, data->get_shape());
 
+                    // Create a default axes order matching the data tensor rank and erase the
+                    // element at the 'valid_axis' position. The erased element indicates the axis
+                    // along which the data should be broadcasted.
                     std::vector<size_t> axes_values(data->get_shape().size());
                     std::iota(axes_values.begin(), axes_values.end(), 0);
                     axes_values.erase(axes_values.begin() + valid_axis);
