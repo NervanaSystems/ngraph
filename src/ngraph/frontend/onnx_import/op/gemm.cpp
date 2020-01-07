@@ -62,16 +62,16 @@ namespace ngraph
 
                     if (trans_a)
                     {
-                        input_a = ngraph::builder::transpose(input_a);
+                        input_a = ngraph::builder::v1::transpose(input_a);
                     }
 
                     if (trans_b)
                     {
-                        input_b = ngraph::builder::transpose(input_b);
+                        input_b = ngraph::builder::v1::transpose(input_b);
                     }
 
-                    input_a = ngraph::builder::flatten(input_a, 1);
-                    input_b = ngraph::builder::flatten(input_b, 1);
+                    input_a = ngraph::builder::v1::flatten(input_a, 1);
+                    input_b = ngraph::builder::v1::flatten(input_b, 1);
 
                     auto matmul_node = std::make_shared<ngraph::op::MatMul>(input_a, input_b);
 
