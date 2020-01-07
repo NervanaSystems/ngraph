@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,11 +45,9 @@ template <typename TI>
 shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> constant,
                                                        const element::Type& output_element_type)
 {
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-#endif
     switch (output_element_type)
     {
     case element::Type_t::undefined:
@@ -90,9 +88,7 @@ shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> 
     }
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
-#endif
 }
 
 static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> constant,
@@ -105,11 +101,9 @@ static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> c
         return constant;
     }
 
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-#endif
     switch (input_element_type)
     {
     case element::Type_t::undefined:
@@ -150,9 +144,7 @@ static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> c
     }
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
-#endif
 }
 
 void pass::ConstantFolding::construct_constant_convert()
