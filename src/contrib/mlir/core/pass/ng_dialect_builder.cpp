@@ -33,14 +33,18 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/equal.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
@@ -228,11 +232,9 @@ mlir::Type NgDialectConversionPass::getMlirType(const descriptor::Tensor* tensor
 // Converts an nGraph element type into an MLIR type.
 mlir::Type NgDialectConversionPass::getMlirType(const element::Type& type)
 {
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-#endif
 
     switch (type)
     {
@@ -257,9 +259,7 @@ mlir::Type NgDialectConversionPass::getMlirType(const element::Type& type)
     NGRAPH_CHECK(false, "Unreachable");
     return mlir::Type();
 
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
-#endif
 }
 
 mlir::Type NgDialectConversionPass::getMlirType(const ngraph::Node* node)
@@ -358,6 +358,29 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Less)
     return NgDialectObj.createGenericOp<mlir::NGLessOp>(ngNode);
 }
 
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::GreaterEq)
+{
+    return NgDialectObj.createGenericOp<mlir::NGGreaterEqOp>(ngNode);
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::LessEq)
+{
+    return NgDialectObj.createGenericOp<mlir::NGLessEqOp>(ngNode);
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Equal)
+{
+    return NgDialectObj.createGenericOp<mlir::NGEqOp>(ngNode);
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::NotEqual)
+{
+    return NgDialectObj.createGenericOp<mlir::NGNotEqOp>(ngNode);
+}
 template <>
 mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Maximum)
 {
