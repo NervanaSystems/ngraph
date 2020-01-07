@@ -17,6 +17,7 @@
 
 #include "common.hpp"
 #include "default_opset.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/opsets/opset0.hpp"
 #include "validation_util.hpp"
@@ -54,6 +55,36 @@ namespace ngraph
                 return result;
             }
 
+            NodeVector traverse_and_tag_node_args(const std::shared_ptr<ngraph::Node>& ng_node,
+                                                  std::string provenance_tag)
+            {
+                std::unordered_set<ngraph::Node*> instances_seen;
+                std::stack<ngraph::Node*, std::vector<ngraph::Node*>> stack;
+                NodeVector result;
+
+                stack.push(ng_node.get());
+                while (stack.size() > 0)
+                {
+                    auto ng_node = stack.top();
+                    stack.pop();
+                    if (instances_seen.insert(ng_node).second)
+                    {
+                        if (!ng_node->is_parameter() && !ng_node->is_constant() &&
+
+                            ng_node->get_provenance_tags().size() == 0)
+                        {
+                            ng_node->add_provenance_tag(provenance_tag);
+                        }
+                        for (auto& ng_node_arg : ng_node->get_arguments())
+                        {
+                            stack.push(ng_node_arg.get());
+                        }
+                        result.push_back(ng_node->shared_from_this());
+                    }
+                }
+                return result;
+            }
+
             void add_provenance_tag_recursive(const NodeVector& ng_node_args,
                                               std::string provenance_tag)
             {
@@ -71,25 +102,21 @@ namespace ngraph
             const NodeVector& add_provenance_tags(const Node& onnx_node,
                                                   const NodeVector& ng_node_vector)
             {
-                for (auto& ng_node : ng_node_vector)
-                {
-                    const std::string node_name =
-                        onnx_node.get_name().empty() ? "unnamed node" : onnx_node.get_name();
-                    const std::string provenance_tag =
-                        "<ONNX " + onnx_node.op_type() + " (" + node_name + ")>";
+                const std::string node_name =
+                    onnx_node.get_name().empty() ? "unnamed node" : onnx_node.get_name();
+                const std::string provenance_tag =
+                    "<ONNX " + onnx_node.op_type() + " (" + node_name + ")>";
 
-                    auto ng_args = ng_node->get_arguments();
-                    auto ng_inner_nodes = traverse_node_args(ng_args);
-                    for (auto& ng_inner_node : ng_inner_nodes)
-                    {
-                        if (!ng_inner_node->is_parameter() && !ng_inner_node->is_constant() &&
-                            ng_inner_node->get_provenance_tags().size() == 0)
-                        {
-                            ng_inner_node->add_provenance_tag(provenance_tag);
-                        }
-                    }
-                    ng_node->add_provenance_tag(provenance_tag);
-                }
+                auto ng_inputs = onnx_node.get_ng_inputs();
+                ngraph::traverse_nodes(ng_node_vector,
+                                       [&](std::shared_ptr<ngraph::Node> ng_node) {
+                                           if (!ng_node->is_constant())
+                                           {
+                                               ng_node->add_provenance_tag(provenance_tag);
+                                           };
+                                       },
+                                       false,
+                                       ng_inputs);
                 return ng_node_vector;
             }
 
