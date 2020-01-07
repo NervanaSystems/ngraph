@@ -14,6 +14,8 @@ fake_quantize_with_clip_across_channels
 # casting not supported on interpreter
 convert_float32_bf16
 convert_bf16_float32
+convert_float32_f16
+convert_f16_float32
 
 # ONNX TopK with dynamic K
 top_k_opset_10
