@@ -478,17 +478,31 @@ size_t MKLDNNEmitter::inner_product_forward_init(bool with_bias)
     return m_mkldnn_primitives.size() - 1;
 }
 
-size_t MKLDNNEmitter::reserve_primitive_space(size_t count, bool new_workspace)
+size_t MKLDNNEmitter::reserve_primitive_space(size_t count, bool fwd_bwd, bool new_workspace)
 {
     size_t size = m_mkldnn_primitives.size();
 #if MKLDNN_VERSION_MAJOR >= 1
     size_t mem_size = m_mkldnn_memories.size();
-    m_mkldnn_primitives.resize(size + 1, nullptr);
-    m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
-    m_mkldnn_memories.resize(mem_size + count - 1, nullptr);
-    for (auto i = 0; i < count - 1; i++)
+    if (fwd_bwd)
     {
-        m_primitive_deps[m_mkldnn_primitives.size() - 1].push_back(mem_size + i);
+        m_mkldnn_primitives.resize(size + 2, nullptr);
+        m_mkldnn_memories.resize(mem_size + count - 2, nullptr);
+        m_mkldnn_scratchpad_mds.resize(size + 2, nullptr);
+        for (auto i = 0; i < count - 2; i++)
+        {
+            m_primitive_deps[m_mkldnn_primitives.size() - 2].push_back(mem_size + i);
+            m_primitive_deps[m_mkldnn_primitives.size() - 1].push_back(mem_size + i);
+        }
+    }
+    else
+    {
+        m_mkldnn_primitives.resize(size + 1, nullptr);
+        m_mkldnn_memories.resize(mem_size + count - 1, nullptr);
+        m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
+        for (auto i = 0; i < count - 1; i++)
+        {
+            m_primitive_deps[m_mkldnn_primitives.size() - 1].push_back(mem_size + i);
+        }
     }
 #else
     m_mkldnn_primitives.resize(size + count, nullptr);
@@ -501,6 +515,10 @@ size_t MKLDNNEmitter::reserve_primitive_space(size_t count, bool new_workspace)
     if (new_workspace)
     {
         m_primitive_deps[m_mkldnn_primitives.size() - 1].push_back(0);
+        if (fwd_bwd)
+        {
+            m_primitive_deps[m_mkldnn_primitives.size() - 2].push_back(0);
+        }
     }
     return m_mkldnn_primitives.size() - 1;
 }
