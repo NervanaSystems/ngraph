@@ -36,20 +36,28 @@ using namespace std;
 
 shared_ptr<Node> builder::reshape(const Output<Node>& value, const Shape& shape)
 {
-    const auto out_pattern = op::Constant::create(
-        element::i64, Shape{shape.size()}, vector<int64_t>(shape.begin(), shape.end()));
-    const bool special_zero = false;
-    return make_shared<op::v1::Reshape>(value, out_pattern, special_zero)
+    return make_shared<op::Reshape>(value, get_default_order(value.get_shape().size()), shape)
         ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
 {
-    const auto axes_order_const =
-        op::Constant::create(element::i64,
-                             Shape{axes_order.size()},
-                             vector<int64_t>(axes_order.begin(), axes_order.end()));
-    return make_shared<op::v1::Transpose>(value, axes_order_const)
+    Shape out_shape = value.get_shape();
+    if (axes_order.empty())
+    {
+        axes_order.resize(out_shape.size());
+        iota(begin(axes_order), end(axes_order), 0);
+    }
+    else
+    {
+        for (size_t i = 0; i < axes_order.size(); ++i)
+        {
+            out_shape[i] = value.get_shape().at(axes_order.at(i));
+        }
+    }
+
+    auto axis_vector = AxisVector{begin(axes_order), end(axes_order)};
+    return make_shared<op::Reshape>(value, axis_vector, out_shape)
         ->add_provenance_group_members_above({value});
 }
 
@@ -74,7 +82,9 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, int axis)
     size_t last_dim_size =
         accumulate(next(begin(data_shape), axis), end(data_shape), 1UL, multiplies<size_t>());
 
-    return builder::reshape(value, Shape{first_dim_size, last_dim_size});
+    return make_shared<op::Reshape>(
+               value, get_default_order(data_shape.size()), Shape{first_dim_size, last_dim_size})
+        ->add_provenance_group_members_above({value});
 }
 
 // Dynamic version of "flatten".
@@ -160,7 +170,9 @@ shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
     auto empty_axis_it = begin(output_shape);
     advance(empty_axis_it, axis);
     output_shape.insert(empty_axis_it, 1);
-    return builder::reshape(value, output_shape);
+    return make_shared<op::Reshape>(
+               value, get_default_order(value.get_shape().size()), output_shape)
+        ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::v1::reshape(const Output<Node>& value, const Shape& shape)
