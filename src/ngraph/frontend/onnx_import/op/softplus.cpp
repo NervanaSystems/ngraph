@@ -39,6 +39,7 @@ namespace ngraph
                         std::make_shared<default_opset::Constant>(
                             data->get_element_type(), data->get_shape(), std::vector<float>{1.f});
 
+                    // data + log(exp(-data) + 1)
                     const std::shared_ptr<ngraph::Node> positive_val_node =
                         std::make_shared<default_opset::Add>(
                             data,
@@ -48,6 +49,7 @@ namespace ngraph
                                         std::make_shared<default_opset::Negative>(data)),
                                     one_node)));
 
+                    // log(exp(data) + 1)
                     const std::shared_ptr<ngraph::Node> negative_val_node =
                         std::make_shared<default_opset::Log>(std::make_shared<default_opset::Add>(
                             std::make_shared<default_opset::Exp>(data), one_node));
@@ -55,7 +57,6 @@ namespace ngraph
                     const std::shared_ptr<ngraph::Node> condition_node =
                         std::make_shared<default_opset::Greater>(data, zero_node);
 
-                    //
                     // This equation represents:
                     //     x + log(exp(-x) + 1) - for x > 0; to manage exponent overflow,
                     //     log(exp(x) + 1)      - elsewhere.
