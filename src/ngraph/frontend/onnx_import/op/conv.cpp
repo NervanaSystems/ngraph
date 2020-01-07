@@ -56,7 +56,7 @@ namespace ngraph
                             filters_shape.insert(filters_shape.begin(), groups);
 
                             auto reshaped_filters =
-                                ngraph::builder::reshape(filters, filters_shape);
+                                ngraph::builder::v1::reshape(filters, filters_shape);
 
                             return std::make_shared<default_opset::GroupConvolution>(
                                 data,

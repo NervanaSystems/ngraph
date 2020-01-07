@@ -37,7 +37,7 @@ namespace ngraph
                     auto valid_axis = common::validate_axis(node, axis, input_shape.size());
 
                     // reshape to 2D - "batch size" x "input feature dimensions" (NxD)
-                    const auto coerced_tensor = ngraph::builder::flatten(input, valid_axis);
+                    const auto coerced_tensor = ngraph::builder::v1::flatten(input, valid_axis);
                     const auto& coerced_shape = coerced_tensor->get_shape();
 
                     const std::shared_ptr<ngraph::Node> argmax_2d =
@@ -51,7 +51,7 @@ namespace ngraph
                     auto results =
                         std::make_shared<ngraph::opset0::EmbeddingLookup>(argmax_2d, eye_matrix);
 
-                    return {ngraph::builder::reshape(results, input_shape)};
+                    return {ngraph::builder::v1::reshape(results, input_shape)};
                 }
 
             } // namespace set_1
