@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -339,10 +339,7 @@ private:
         {
             free(w);
         }
-    }
 
-    inline void cleanup_mkldnn_descriptors()
-    {
         for (auto d : mkldnn_descriptors)
         {
             free(d);
@@ -362,14 +359,14 @@ extern "C" void destroy_cg_ctx(CPURuntimeContextCG* cg_ctx)
 
 static void
 	deserialize_memory_descs_and_build_memory(std::ifstream& desc_file,
-														 CPURuntimeContextCG* cg_ctx,
-														 size_t descs_count)
+                                              CPURuntimeContextCG* cg_ctx,
+                                              size_t descs_count)
 {
     cg_ctx->mkldnn_descriptors = std::vector<mkldnn::memory::desc*>(descs_count);
     for (auto i = 0; i < descs_count; i++)
     {
-    		size_t index;
-		    desc_file >> index;
+        size_t index;
+        desc_file >> index;
         auto desc = (mkldnn::memory::desc*)malloc(sizeof(mkldnn::memory::desc));
         if (!desc)
         {
@@ -377,8 +374,8 @@ static void
         }
         desc_file.read(reinterpret_cast<char*>(desc), sizeof(mkldnn::memory::desc));
 
-		    cg_ctx->mkldnn_descriptors[i] = desc;
-		    cg_ctx->mkldnn_memories[index] = new mkldnn::memory(*cg_ctx->mkldnn_descriptors[i], cg_ctx->global_cpu_engine, nullptr);
+        cg_ctx->mkldnn_descriptors[i] = desc;
+        cg_ctx->mkldnn_memories[index] = new mkldnn::memory(*cg_ctx->mkldnn_descriptors[i], cg_ctx->global_cpu_engine, nullptr);
 	}
 };
 )"
