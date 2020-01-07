@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -479,6 +479,7 @@ set (SRC
     pass/constant_folding_dyn_slice.cpp
     pass/constant_folding_gather.cpp
     pass/constant_folding_logical_reduction.cpp
+    pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
     pass/constant_folding_range.cpp

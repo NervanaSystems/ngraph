@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -521,13 +521,9 @@ namespace
         const auto axis = node->get_axis();
 
         NGRAPH_CHECK(depth->is_constant(), "depth input must be constant", *node);
-        const auto const_depth = as_type_ptr<op::Constant>(depth);
-        std::int64_t depth_value = const_depth->get_vector<std::int64_t>()[0];
-
-        const auto indices_shape = node->get_input_partial_shape(0);
-        NGRAPH_CHECK(indices_shape.is_static(), "indices shape must be static", *node);
-        auto output_shape = indices_shape.to_shape();
-        output_shape.insert(output_shape.begin() + axis, depth_value);
+        const auto output_pshape = node->get_output_partial_shape(0);
+        NGRAPH_CHECK(output_pshape.is_static(), "output shape must be static", *node);
+        const auto output_shape = output_pshape.to_shape();
 
         auto one_hot = std::make_shared<ngraph::op::Convert>(
             std::make_shared<ngraph::op::OneHot>(indices, output_shape, axis),
