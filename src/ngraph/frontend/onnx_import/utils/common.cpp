@@ -39,10 +39,7 @@ namespace ngraph
                 auto ng_inputs = onnx_node.get_ng_inputs();
                 ngraph::traverse_nodes(ng_node_vector,
                                        [&](std::shared_ptr<ngraph::Node> ng_node) {
-                                           if (!ng_node->is_constant())
-                                           {
-                                               ng_node->add_provenance_tag(provenance_tag);
-                                           };
+                                           ng_node->add_provenance_tag(provenance_tag);
                                        },
                                        false,
                                        ng_inputs);
