@@ -27,7 +27,6 @@ set(LLVM_SHA1_HASH @LLVM_SHA1_HASH@)
 
 if(NGRAPH_USE_PREBUILT_LLVM)
     message(STATUS "Using prebuilt LLVM")
-    find_package(ZLIB REQUIRED)
     # Override default LLVM binaries
     if(NOT DEFINED LLVM_TARBALL_URL)
         if(APPLE)
