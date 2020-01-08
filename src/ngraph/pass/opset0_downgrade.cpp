@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,48 @@ namespace
         replace_node(node, replacement_node);
     }
 
-    // Default is that we didn nothing
+    template <typename OpV0, typename OpV1>
+    void op_cast_reduction_node(const shared_ptr<OpV1>& node)
+    {
+        auto replacement_node = make_shared<OpV0>(node->input_value(0), node->input_value(1));
+        if (node->get_keep_dims())
+        {
+            string v1_op_name = string{node->get_type_name()} + ":v1";
+            string v0_op_name = string{OpV0{}.get_type_name()} + ":v0";
+
+            NGRAPH_CHECK(node->reduction_axes_constant(),
+                         "Unable to convert ",
+                         v1_op_name,
+                         "to ",
+                         v0_op_name,
+                         " if reduction axes are not constant (for keep_dims=true). Node: ",
+                         *node);
+            auto output_pshape = replacement_node->get_output_partial_shape(0);
+            NGRAPH_CHECK(output_pshape.is_static(),
+                         "Unable to convert ",
+                         v1_op_name,
+                         "to ",
+                         v0_op_name,
+                         " if output shape is dynamic (for keep_dims=true). Node: ",
+                         *node);
+            const auto output_shape = output_pshape.to_shape();
+            auto reshaped_output_shape = output_shape;
+            for (const auto& axis : node->get_reduction_axes())
+            {
+                reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
+            }
+            auto reshaped_product = make_shared<op::Reshape>(replacement_node->output(0),
+                                                             get_default_order(output_shape),
+                                                             reshaped_output_shape);
+            replace_node(node, reshaped_product);
+        }
+        else
+        {
+            replace_node(node, replacement_node);
+        }
+    }
+
+    // Default is that we did nothing
     bool op_cast(shared_ptr<Node> node) { return false; }
     bool op_cast(shared_ptr<op::v1::Add> node)
     {
@@ -514,13 +555,9 @@ namespace
         const auto axis = node->get_axis();
 
         NGRAPH_CHECK(depth->is_constant(), "depth input must be constant", *node);
-        const auto const_depth = as_type_ptr<op::Constant>(depth);
-        std::int64_t depth_value = const_depth->get_vector<std::int64_t>()[0];
-
-        const auto indices_shape = node->get_input_partial_shape(0);
-        NGRAPH_CHECK(indices_shape.is_static(), "indices shape must be static", *node);
-        auto output_shape = indices_shape.to_shape();
-        output_shape.insert(output_shape.begin() + axis, depth_value);
+        const auto output_pshape = node->get_output_partial_shape(0);
+        NGRAPH_CHECK(output_pshape.is_static(), "output shape must be static", *node);
+        const auto output_shape = output_pshape.to_shape();
 
         auto one_hot = std::make_shared<ngraph::op::Convert>(
             std::make_shared<ngraph::op::OneHot>(indices, output_shape, axis),
@@ -553,36 +590,27 @@ namespace
         return true;
     }
 
+    bool op_cast(shared_ptr<op::v1::ReduceMax> node)
+    {
+        op_cast_reduction_node<op::v0::Max, op::v1::ReduceMax>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::ReduceMin> node)
+    {
+        op_cast_reduction_node<op::v0::Min, op::v1::ReduceMin>(node);
+        return true;
+    }
+
     bool op_cast(shared_ptr<op::v1::ReduceProd> node)
     {
-        auto replacement_node =
-            make_shared<op::v0::Product>(node->input_value(0), node->input_value(1));
-        if (node->get_keep_dims())
-        {
-            NGRAPH_CHECK(node->reduction_axes_constant(),
-                         "Unable to convert ReduceProd:v1 to Product:v0 "
-                         "if reduction axes are not constant (for keep_dims=true). Node: ",
-                         *node);
-            auto output_pshape = replacement_node->get_output_partial_shape(0);
-            NGRAPH_CHECK(output_pshape.is_static(),
-                         "Unable to convert ReduceProd:v1 to Product:v0 "
-                         "if output shape is dynamic (for keep_dims=true). Node: ",
-                         *node);
-            const auto output_shape = output_pshape.to_shape();
-            auto reshaped_output_shape = output_shape;
-            for (const auto& axis : node->get_reduction_axes())
-            {
-                reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
-            }
-            auto reshaped_product = make_shared<op::Reshape>(replacement_node->output(0),
-                                                             get_default_order(output_shape),
-                                                             reshaped_output_shape);
-            replace_node(node, reshaped_product);
-        }
-        else
-        {
-            replace_node(node, replacement_node);
-        }
+        op_cast_reduction_node<op::v0::Product, op::v1::ReduceProd>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::ReduceSum> node)
+    {
+        op_cast_reduction_node<op::v0::Sum, op::v1::ReduceSum>(node);
         return true;
     }
 
@@ -717,39 +745,6 @@ namespace
     bool op_cast(shared_ptr<op::v1::Subtract> node)
     {
         op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
-        return true;
-    }
-
-    bool op_cast(shared_ptr<op::v1::ReduceSum> node)
-    {
-        auto replacement_node =
-            make_shared<op::v0::Sum>(node->input_value(0), node->input_value(1));
-        if (node->get_keep_dims())
-        {
-            NGRAPH_CHECK(node->reduction_axes_constant(),
-                         "Unable to convert ReduceSum:v1 to Sum:v0 "
-                         "if reduction axes are not constant (for keep_dims=true). Node: ",
-                         *node);
-            auto output_pshape = replacement_node->get_output_partial_shape(0);
-            NGRAPH_CHECK(output_pshape.is_static(),
-                         "Unable to convert ReduceSum:v1 to Sum:v0 "
-                         "if output shape is dynamic (for keep_dims=true). Node: ",
-                         *node);
-            const auto output_shape = output_pshape.to_shape();
-            auto reshaped_output_shape = output_shape;
-            for (const auto& axis : node->get_reduction_axes())
-            {
-                reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
-            }
-            auto reshaped_product = make_shared<op::Reshape>(replacement_node->output(0),
-                                                             get_default_order(output_shape),
-                                                             reshaped_output_shape);
-            replace_node(node, reshaped_product);
-        }
-        else
-        {
-            replace_node(node, replacement_node);
-        }
         return true;
     }
 

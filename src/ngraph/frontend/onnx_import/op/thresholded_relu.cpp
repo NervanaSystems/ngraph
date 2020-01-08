@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,6 @@
 #include <vector>
 
 #include "default_opset.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/opsets/opset0.hpp"
 #include "thresholded_relu.hpp"
 
 namespace ngraph
@@ -33,18 +30,17 @@ namespace ngraph
             {
                 NodeVector thresholded_relu(const Node& node)
                 {
-                    auto data = node.get_ng_inputs().at(0);
-                    double alpha = node.get_attribute_value<double>("alpha", 1.0);
+                    const auto data = node.get_ng_inputs().at(0);
+                    const double alpha = node.get_attribute_value<double>("alpha", 1.0);
 
-                    std::shared_ptr<ngraph::Node> alpha_node =
-                        std::make_shared<default_opset::Constant>(data->get_element_type(),
-                                                                  data->get_shape(),
-                                                                  std::vector<double>{alpha});
+                    const auto alpha_node = default_opset::Constant::create(
+                        data->get_element_type(), data->get_shape(), {alpha});
 
-                    auto data_map = std::make_shared<default_opset::Convert>(
-                        std::make_shared<ngraph::opset0::Greater>(data, alpha_node),
+                    const auto data_map = std::make_shared<default_opset::Convert>(
+                        std::make_shared<default_opset::Greater>(data, alpha_node),
                         data->get_element_type());
-                    return {data * data_map};
+
+                    return {std::make_shared<default_opset::Multiply>(data, data_map)};
                 }
 
             } // namespace set_1default_opset
