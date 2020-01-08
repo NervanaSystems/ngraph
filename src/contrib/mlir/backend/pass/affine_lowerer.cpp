@@ -1010,223 +1010,6 @@ namespace
 
 #undef REWRITER
     /// End of pattern matchers
-    template <typename OP>
-    void lowerUnaryElementwise(Operation* op,
-                               ArrayRef<Value*> operands,
-                               PatternRewriter& rewriter,
-                               DialectLoweringPass& pass)
-    {
-        auto loc = cast<OP>(op).getLoc();
-
-        auto result = pass.buildOutputDefs(op, rewriter)[0];
-        NGRAPH_CHECK(result->getType().isa<MemRefType>());
-        // Note that builder's current function is still the original function body.
-        // use getBlock to get the new block instead.
-
-        // get new operands
-        Value* lhs = operands[0];
-
-        ScopedContext scope(rewriter, loc);
-        // Views
-        MemRefView vRes(result), vLHS(lhs);
-        // Index Values
-        IndexedValue iRes(result), iLHS(lhs);
-        // Bounds Index Handles
-        auto lbs = vLHS.getLbs();
-        auto ubs = vLHS.getUbs();
-        // Loop induction vars
-        auto ivs = makeIndexHandles(vLHS.rank());
-        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
-        // Steps
-        auto steps = vLHS.getSteps();
-
-        NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
-        Type elemTy = lhs->getType().cast<MemRefType>().getElementType();
-
-        AffineLoopNestBuilder(pivs, lbs, ubs, steps)([&] {
-            ValueHandle val = iLHS(ivs);
-            if (isa<NGNegOp>(op))
-            {
-                ValueHandle zero = createZeroConstant(elemTy);
-                iRes(ivs) = zero - val;
-            }
-            else
-            {
-                NGRAPH_CHECK(false, "Unsupported op");
-            }
-        });
-
-        rewriter.replaceOp(op, {result});
-    }
-
-    template <typename OP>
-    void lowerBinaryElementwise(Operation* op,
-                                ArrayRef<Value*> operands,
-                                PatternRewriter& rewriter,
-                                DialectLoweringPass& pass)
-    {
-        auto loc = cast<OP>(op).getLoc();
-        auto result = pass.buildOutputDefs(op, rewriter)[0];
-        NGRAPH_CHECK(result->getType().isa<MemRefType>());
-        // get new operands
-        Value* lhs = operands[0];
-        Value* rhs = operands[1];
-
-        ScopedContext scope(rewriter, loc);
-        // Views
-        MemRefView vRes(result), vLHS(lhs), vRHS(rhs);
-        // Index Values
-        IndexedValue iRes(result), iLHS(lhs), iRHS(rhs);
-        // Bounds Index Handles
-        auto lbs = vLHS.getLbs();
-        auto ubs = vLHS.getUbs();
-        // Loop induction vars
-        auto ivs = makeIndexHandles(vLHS.rank());
-        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
-        // Steps
-        auto steps = vLHS.getSteps();
-        AffineLoopNestBuilder(pivs, lbs, ubs, steps)(
-            // single stmt body
-            [&] {
-                if (isa<NGAddOp>(op))
-                {
-                    iRes(ivs) = iLHS(ivs) + iRHS(ivs);
-                }
-                else if (isa<NGSubOp>(op))
-                {
-                    iRes(ivs) = iLHS(ivs) - iRHS(ivs);
-                }
-                else if (isa<NGMulOp>(op))
-                {
-                    iRes(ivs) = iLHS(ivs) * iRHS(ivs);
-                }
-                else if (isa<NGDivOp>(op))
-                {
-                    iRes(ivs) = iLHS(ivs) / iRHS(ivs);
-                }
-                else if (isa<NGGreaterOp>(op))
-                {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs));
-                }
-                else if (isa<NGLessOp>(op))
-                {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs));
-                }
-                else if (isa<NGMaxOp>(op))
-                {
-                    iRes(ivs) =
-                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)),
-                                                 ValueHandle(iLHS(ivs)),
-                                                 ValueHandle(iRHS(ivs)));
-                }
-                else if (isa<NGMinOp>(op))
-                {
-                    iRes(ivs) =
-                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)),
-                                                 ValueHandle(iLHS(ivs)),
-                                                 ValueHandle(iRHS(ivs)));
-                }
-                else
-                {
-                    NGRAPH_CHECK(false, "Unsupported op");
-                }
-            });
-        rewriter.replaceOp(op, {result});
-    }
-
-    template <typename RedOp>
-    void lowerIndexReduction(Operation* op,
-                             ArrayRef<Value*> operands,
-                             PatternRewriter& rewriter,
-                             DialectLoweringPass& pass)
-    {
-        static_assert(std::is_same<RedOp, NGArgMinRedOp>() || std::is_same<RedOp, NGArgMaxRedOp>(),
-                      "Template parameter is not supported by lowerIndexReduction");
-
-        RedOp redOp = cast<RedOp>(op);
-        auto loc = redOp.getLoc();
-        auto axesAttr = redOp.axes();
-
-        NGRAPH_CHECK(axesAttr.size() == 1, "Index Reduction op should have one reduction axis");
-        Attribute axisAttr = *axesAttr.begin();
-        unsigned axis = axisAttr.dyn_cast<IntegerAttr>().getInt();
-
-        NGRAPH_CHECK(operands.size() == 1 && operands[0] != nullptr,
-                     "Expected one non-null operand in Index Reduction op");
-
-        // Retrieve/generate Values for operands and result.
-        ScopedContext scope(rewriter, loc);
-        Value* arg = operands[0];
-
-        Value* result = pass.buildOutputDefs(op, rewriter)[0];
-
-        // Views
-        MemRefView vRes(result), vArg(arg);
-        // Index Values
-        StdIndexedValue iRes(result), stdArg(arg);
-        IndexedValue affineArg(arg);
-        // Bounds Index Handles
-        auto resLbs = vRes.getLbs();
-        auto resUbs = vRes.getUbs();
-        auto argLbs = vArg.getLbs();
-        auto argUbs = vArg.getUbs();
-
-        Type resTy = result->getType().cast<MemRefType>().getElementType();
-        // Generate loop nest that initializes result to lower bound of the axis to be reduced.
-        {
-            auto ivs = makeIndexHandles(vRes.rank());
-            auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
-            auto steps = vRes.getSteps();
-            auto initVal = vArg.lb(axis);
-            AffineLoopNestBuilder(pivs, resLbs, resUbs, steps)(
-                [&] { iRes(ivs) = ValueHandle::create<IndexCastOp>(initVal, resTy); });
-        }
-
-        // Generate loop nest that computes the actual index reduction.
-        {
-            auto allIVs = makeIndexHandles(vArg.rank());
-            auto pAllIVs = makeHandlePointers(MutableArrayRef<IndexHandle>(allIVs));
-            auto steps = vArg.getSteps();
-            SmallVector<IndexHandle, 8> nonRedIVs;
-
-            Type resTy = result->getType().cast<MemRefType>().getElementType();
-            NGRAPH_CHECK(resTy.isa<IntegerType>(),
-                         "Expected integer result type in index reduction");
-
-            // iterate over all argument dimensions
-            AffineLoopNestBuilder(pAllIVs, argLbs, argUbs, steps)([&] {
-                // build a list of non-reduction IVs
-                for (auto i = 0; i < vArg.rank(); i++)
-                {
-                    if (i != axis)
-                    {
-                        nonRedIVs.push_back(allIVs[i]);
-                    }
-                }
-
-                // Load current min index with integer data type and convert it to index data type.
-                ValueHandle currRedIdx = ValueHandle::create<IndexCastOp>(
-                    (ValueHandle)iRes(nonRedIVs), IndexType::get(resTy.getContext()));
-
-                // Build list of IVs including current min index.
-                auto tempIVs = allIVs;
-                tempIVs[axis] = currRedIdx;
-
-                // Select the min/max value and cast it back to integer type before storing it.
-                ValueHandle newRedIdx =
-                    std::is_same<RedOp, NGArgMinRedOp>()
-                        ? edsc::intrinsics::select(
-                              affineArg(allIVs) < stdArg(tempIVs), allIVs[axis], currRedIdx)
-                        : edsc::intrinsics::select(
-                              stdArg(tempIVs) < affineArg(allIVs), allIVs[axis], currRedIdx);
-
-                iRes(nonRedIVs) = ValueHandle::create<IndexCastOp>(newRedIdx, resTy);
-            });
-        }
-
-        rewriter.replaceOp(op, result);
-    }
-
     void lowerConvolution(Value* result,
                           Value* images,
                           Value* filters,
@@ -1584,6 +1367,223 @@ namespace
                 });
             });
         });
+    }
+
+    template <typename OP>
+    void lowerUnaryElementwise(Operation* op,
+                               ArrayRef<Value*> operands,
+                               PatternRewriter& rewriter,
+                               DialectLoweringPass& pass)
+    {
+        auto loc = cast<OP>(op).getLoc();
+
+        auto result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result->getType().isa<MemRefType>());
+        // Note that builder's current function is still the original function body.
+        // use getBlock to get the new block instead.
+
+        // get new operands
+        Value* lhs = operands[0];
+
+        ScopedContext scope(rewriter, loc);
+        // Views
+        MemRefView vRes(result), vLHS(lhs);
+        // Index Values
+        IndexedValue iRes(result), iLHS(lhs);
+        // Bounds Index Handles
+        auto lbs = vLHS.getLbs();
+        auto ubs = vLHS.getUbs();
+        // Loop induction vars
+        auto ivs = makeIndexHandles(vLHS.rank());
+        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
+        // Steps
+        auto steps = vLHS.getSteps();
+
+        NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
+        Type elemTy = lhs->getType().cast<MemRefType>().getElementType();
+
+        AffineLoopNestBuilder(pivs, lbs, ubs, steps)([&] {
+            ValueHandle val = iLHS(ivs);
+            if (isa<NGNegOp>(op))
+            {
+                ValueHandle zero = createZeroConstant(elemTy);
+                iRes(ivs) = zero - val;
+            }
+            else
+            {
+                NGRAPH_CHECK(false, "Unsupported op");
+            }
+        });
+
+        rewriter.replaceOp(op, {result});
+    }
+
+    template <typename OP>
+    void lowerBinaryElementwise(Operation* op,
+                                ArrayRef<Value*> operands,
+                                PatternRewriter& rewriter,
+                                DialectLoweringPass& pass)
+    {
+        auto loc = cast<OP>(op).getLoc();
+        auto result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result->getType().isa<MemRefType>());
+        // get new operands
+        Value* lhs = operands[0];
+        Value* rhs = operands[1];
+
+        ScopedContext scope(rewriter, loc);
+        // Views
+        MemRefView vRes(result), vLHS(lhs), vRHS(rhs);
+        // Index Values
+        IndexedValue iRes(result), iLHS(lhs), iRHS(rhs);
+        // Bounds Index Handles
+        auto lbs = vLHS.getLbs();
+        auto ubs = vLHS.getUbs();
+        // Loop induction vars
+        auto ivs = makeIndexHandles(vLHS.rank());
+        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
+        // Steps
+        auto steps = vLHS.getSteps();
+        AffineLoopNestBuilder(pivs, lbs, ubs, steps)(
+            // single stmt body
+            [&] {
+                if (isa<NGAddOp>(op))
+                {
+                    iRes(ivs) = iLHS(ivs) + iRHS(ivs);
+                }
+                else if (isa<NGSubOp>(op))
+                {
+                    iRes(ivs) = iLHS(ivs) - iRHS(ivs);
+                }
+                else if (isa<NGMulOp>(op))
+                {
+                    iRes(ivs) = iLHS(ivs) * iRHS(ivs);
+                }
+                else if (isa<NGDivOp>(op))
+                {
+                    iRes(ivs) = iLHS(ivs) / iRHS(ivs);
+                }
+                else if (isa<NGGreaterOp>(op))
+                {
+                    iRes(ivs) = ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs));
+                }
+                else if (isa<NGLessOp>(op))
+                {
+                    iRes(ivs) = ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs));
+                }
+                else if (isa<NGMaxOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)),
+                                                 ValueHandle(iLHS(ivs)),
+                                                 ValueHandle(iRHS(ivs)));
+                }
+                else if (isa<NGMinOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)),
+                                                 ValueHandle(iLHS(ivs)),
+                                                 ValueHandle(iRHS(ivs)));
+                }
+                else
+                {
+                    NGRAPH_CHECK(false, "Unsupported op");
+                }
+            });
+        rewriter.replaceOp(op, {result});
+    }
+
+    template <typename RedOp>
+    void lowerIndexReduction(Operation* op,
+                             ArrayRef<Value*> operands,
+                             PatternRewriter& rewriter,
+                             DialectLoweringPass& pass)
+    {
+        static_assert(std::is_same<RedOp, NGArgMinRedOp>() || std::is_same<RedOp, NGArgMaxRedOp>(),
+                      "Template parameter is not supported by lowerIndexReduction");
+
+        RedOp redOp = cast<RedOp>(op);
+        auto loc = redOp.getLoc();
+        auto axesAttr = redOp.axes();
+
+        NGRAPH_CHECK(axesAttr.size() == 1, "Index Reduction op should have one reduction axis");
+        Attribute axisAttr = *axesAttr.begin();
+        unsigned axis = axisAttr.dyn_cast<IntegerAttr>().getInt();
+
+        NGRAPH_CHECK(operands.size() == 1 && operands[0] != nullptr,
+                     "Expected one non-null operand in Index Reduction op");
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* arg = operands[0];
+
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+
+        // Views
+        MemRefView vRes(result), vArg(arg);
+        // Index Values
+        StdIndexedValue iRes(result), stdArg(arg);
+        IndexedValue affineArg(arg);
+        // Bounds Index Handles
+        auto resLbs = vRes.getLbs();
+        auto resUbs = vRes.getUbs();
+        auto argLbs = vArg.getLbs();
+        auto argUbs = vArg.getUbs();
+
+        Type resTy = result->getType().cast<MemRefType>().getElementType();
+        // Generate loop nest that initializes result to lower bound of the axis to be reduced.
+        {
+            auto ivs = makeIndexHandles(vRes.rank());
+            auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
+            auto steps = vRes.getSteps();
+            auto initVal = vArg.lb(axis);
+            AffineLoopNestBuilder(pivs, resLbs, resUbs, steps)(
+                [&] { iRes(ivs) = ValueHandle::create<IndexCastOp>(initVal, resTy); });
+        }
+
+        // Generate loop nest that computes the actual index reduction.
+        {
+            auto allIVs = makeIndexHandles(vArg.rank());
+            auto pAllIVs = makeHandlePointers(MutableArrayRef<IndexHandle>(allIVs));
+            auto steps = vArg.getSteps();
+            SmallVector<IndexHandle, 8> nonRedIVs;
+
+            Type resTy = result->getType().cast<MemRefType>().getElementType();
+            NGRAPH_CHECK(resTy.isa<IntegerType>(),
+                         "Expected integer result type in index reduction");
+
+            // iterate over all argument dimensions
+            AffineLoopNestBuilder(pAllIVs, argLbs, argUbs, steps)([&] {
+                // build a list of non-reduction IVs
+                for (auto i = 0; i < vArg.rank(); i++)
+                {
+                    if (i != axis)
+                    {
+                        nonRedIVs.push_back(allIVs[i]);
+                    }
+                }
+
+                // Load current min index with integer data type and convert it to index data type.
+                ValueHandle currRedIdx = ValueHandle::create<IndexCastOp>(
+                    (ValueHandle)iRes(nonRedIVs), IndexType::get(resTy.getContext()));
+
+                // Build list of IVs including current min index.
+                auto tempIVs = allIVs;
+                tempIVs[axis] = currRedIdx;
+
+                // Select the min/max value and cast it back to integer type before storing it.
+                ValueHandle newRedIdx =
+                    std::is_same<RedOp, NGArgMinRedOp>()
+                        ? edsc::intrinsics::select(
+                              affineArg(allIVs) < stdArg(tempIVs), allIVs[axis], currRedIdx)
+                        : edsc::intrinsics::select(
+                              stdArg(tempIVs) < affineArg(allIVs), allIVs[axis], currRedIdx);
+
+                iRes(nonRedIVs) = ValueHandle::create<IndexCastOp>(newRedIdx, resTy);
+            });
+        }
+
+        rewriter.replaceOp(op, result);
     }
 
     ValueHandle createZeroConstant(mlir::Type type)
