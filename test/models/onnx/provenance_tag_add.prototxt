@@ -8,6 +8,13 @@ graph {
     name: "add_node1"
     op_type: "Add"
   }
+  node {
+    input: "X"
+    input: "C"
+    output: "Y"
+    name: "add_node2"
+    op_type: "Add"
+  }
   name: "test_graph"
   input {
     name: "A"
@@ -24,6 +31,32 @@ graph {
   }
   input {
     name: "B"
+    type {
+      tensor_type {
+        elem_type: 1
+        shape {
+          dim {
+            dim_value: 1
+          }
+        }
+      }
+    }
+  }
+  input {
+    name: "C"
+    type {
+      tensor_type {
+        elem_type: 1
+        shape {
+          dim {
+            dim_value: 1
+          }
+        }
+      }
+    }
+  }
+  output {
+    name: "Y"
     type {
       tensor_type {
         elem_type: 1
