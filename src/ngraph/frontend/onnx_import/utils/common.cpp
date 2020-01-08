@@ -38,7 +38,7 @@ namespace ngraph
                     };
 
                 return std::accumulate(
-                    outputs.begin(), outputs.end(), std::string{}, concat_with_comma);
+                    outputs.begin() + 1, outputs.end(), outputs.begin()->get(), concat_with_comma);
             }
 
             static std::string build_provenance_tag(const Node& onnx_node)

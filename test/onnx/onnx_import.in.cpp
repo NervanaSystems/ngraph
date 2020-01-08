@@ -371,6 +371,51 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_text)
     }
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_only_outputs)
+{
+    // the Add node in the model does not have a name,
+    // only its output name should be found in the provenance tags
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_only_outputs.prototxt"));
+
+    for (auto ng_node : function->get_ordered_ops())
+    {
+        for (auto tag : ng_node->get_provenance_tags())
+        {
+            // empty node name(before the arrow) and single output name in the tag are expected
+            EXPECT_EQ(tag, "<ONNX Add ( -> output_of_add)>");
+        }
+    }
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_node_name_and_outputs)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_node_name_and_outputs.prototxt"));
+
+    for (auto ng_node : function->get_ordered_ops())
+    {
+        for (auto tag : ng_node->get_provenance_tags())
+        {
+            EXPECT_EQ(tag, "<ONNX Add (Add_node -> output_of_add)>");
+        }
+    }
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_multiple_outputs_op)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_multiple_outputs_op.prototxt"));
+
+    for (auto ng_node : function->get_ordered_ops())
+    {
+        for (auto tag : ng_node->get_provenance_tags())
+        {
+            EXPECT_EQ(tag, "<ONNX TopK (TOPK -> values, indices)>");
+        }
+    }
+}
+
 // ############################################################################ OPERATOR TESTS
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_addmul_abc)
 {
