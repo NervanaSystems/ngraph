@@ -47,5 +47,5 @@ message(STATUS "CLANG_INCLUDE_DIRS: ${CLANG_INCLUDE_DIRS}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
 add_library(libllvm INTERFACE)
-target_include_directories(libllvm PRIVATE INTERFACE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIR})
-target_link_libraries(libllvm PRIVATE INTERFACE clangHandleCXX clangHandleLLVM)
+target_include_directories(libllvm INTERFACE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIR})
+target_link_libraries(libllvm INTERFACE clangHandleCXX clangHandleLLVM)
