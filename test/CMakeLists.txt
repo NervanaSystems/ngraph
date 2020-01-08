@@ -71,6 +71,7 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    op_is.cpp
     opset1.cpp
     opset_pass/binary_elementwise_opset_pass.cpp
     opset_pass/broadcast_opset_pass.cpp
