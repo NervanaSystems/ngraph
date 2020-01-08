@@ -375,21 +375,8 @@ namespace ngraph
             Constant operator=(const Constant&) = delete;
         };
 
-        class NGRAPH_API ScalarConstantLikeBase : public Constant
-        {
-        public:
-            std::shared_ptr<op::Constant> as_constant() const;
-            ScalarConstantLikeBase() = default;
-
-        protected:
-            ScalarConstantLikeBase(const OutputVector& args)
-                : Constant(args)
-            {
-            }
-        };
-
         /// \brief A scalar constant whose element type is the same as like.
-        class NGRAPH_API ScalarConstantLike : public ScalarConstantLikeBase
+        class NGRAPH_API ScalarConstantLike : public Constant
         {
         public:
             static constexpr NodeTypeInfo type_info{"ScalarConstantLike", 0};
@@ -403,7 +390,7 @@ namespace ngraph
             /// \param value The value of the scalar.
             template <typename T>
             ScalarConstantLike(const Output<Node>& like, T value)
-                : ScalarConstantLikeBase({like})
+                : Constant({like})
                 , m_value(static_cast<double>(value))
             {
                 constructor_validate_and_infer_types();
@@ -412,6 +399,7 @@ namespace ngraph
             ScalarConstantLike() = default;
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+            std::shared_ptr<op::Constant> as_constant() const;
 
         protected:
             void infer_element_type() override;
