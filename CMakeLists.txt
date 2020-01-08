@@ -265,7 +265,7 @@ if("${CMAKE_GENERATOR}" STREQUAL "Ninja" AND (NGRAPH_TOOLS_ENABLE OR NGRAPH_CPU_
     message(FATAL_ERROR "Ninja generator not supported.")
 endif()
 
-if (NGRAPH_CPU_ENABLE AND (NGRAPH_MLIR_ENABLE OR (NOT NGRAPH_DEX_ONLY)))
+if (NGRAPH_CPU_ENABLE AND NGRAPH_MLIR_ENABLE)
     #MLIR uses the latest version of LLVM which requires C++14.
     set(NGRAPH_CXX_STANDARD 14)
 else()
@@ -600,9 +600,7 @@ else()
 endif()
 
 if(NGRAPH_CODEGEN_ENABLE)
-    if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
-        include(cmake/external_llvm_prebuilt.cmake)
-    elseif (NOT MSVC)
+    if (NOT MSVC)
         include(cmake/external_llvm.cmake)
     else()
         message(FATAL_ERROR "CODEGEN is not supported on Windows!")

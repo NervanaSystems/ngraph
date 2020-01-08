@@ -23,7 +23,7 @@ else()
     set(LLVM_CMAKE_ASM_COMPILER ${CMAKE_C_COMPILER})
 endif()
 
-configure_file(${CMAKE_SOURCE_DIR}/cmake/llvm_fetch.cmake.in ${LLVM_PROJECT_ROOT}/CMakeLists.txt)
+configure_file(${CMAKE_SOURCE_DIR}/cmake/llvm_fetch.cmake.in ${LLVM_PROJECT_ROOT}/CMakeLists.txt @ONLY)
 
 execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
     WORKING_DIRECTORY "${LLVM_PROJECT_ROOT}")

@@ -21,44 +21,97 @@ include(ExternalProject)
 
 project(llvm NONE)
 
-ExternalProject_Add(
-    ext_llvm
-    PREFIX llvm
-    GIT_REPOSITORY https://github.com/llvm/llvm-project.git
-    GIT_TAG llvmorg-8.0.0
-    GIT_SHALLOW 1
-    CMAKE_GENERATOR "${CMAKE_GENERATOR}"
-    CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
-    CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
-    CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
-    -DCMAKE_INSTALL_PREFIX=${LLVM_INSTALL_ROOT}
-                -DLLVM_ENABLE_PROJECTS=clang
-                -DLLVM_INCLUDE_DOCS=OFF
-                -DLLVM_INCLUDE_TESTS=OFF
-                -DLLVM_INCLUDE_GO_TESTS=OFF
-                -DLLVM_INCLUDE_EXAMPLES=OFF
-                -DLLVM_INCLUDE_BENCHMARKS=OFF
-                -DLLVM_BUILD_TOOLS=OFF
-                -DLLVM_BUILD_UTILS=OFF
-                -DLLVM_BUILD_RUNTIMES=OFF
-                -DLLVM_BUILD_RUNTIME=OFF
-                -DLLVM_TARGETS_TO_BUILD=X86
-                -DLLVM_ENABLE_BINDINGS=OFF
-                -DLLVM_ENABLE_TERMINFO=OFF
-                -DLLVM_ENABLE_ZLIB=OFF
-                -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON
-                -DLIBOMP_OMPT_SUPPORT=OFF
-                -DCLANG_ENABLE_ARCMT=OFF
-                -DCLANG_ANALYZER_ENABLE_Z3_SOLVER=OFF
-                -DCLANG_ENABLE_STATIC_ANALYZER=OFF
-                -DLLVM_EXTERNAL_OPENMP_SOURCE_DIR=${LLVM_PROJECT_ROOT}/llvm/src/ext_llvm/openmp
-    UPDATE_COMMAND ""
-    SOURCE_SUBDIR llvm
-    DOWNLOAD_NO_PROGRESS TRUE
-    EXCLUDE_FROM_ALL TRUE
-)
+set(NGRAPH_USE_PREBUILT_LLVM @NGRAPH_USE_PREBUILT_LLVM@)
+set(LLVM_TARBALL_URL @LLVM_TARBALL_URL@)
+set(LLVM_SHA1_HASH @LLVM_SHA1_HASH@)
 
-                #-DCLANG_BUILD_TOOLS=OFF
-#-DLLVM_BUILD_EXAMPLES=ON
-#-DLLVM_TARGETS_TO_BUILD=host
-#-DLLVM_ENABLE_RTTI=ON
+if(NGRAPH_USE_PREBUILT_LLVM)
+    message(STATUS "Using prebuilt LLVM")
+    find_package(ZLIB REQUIRED)
+    # Override default LLVM binaries
+    if(NOT DEFINED LLVM_TARBALL_URL)
+        if(APPLE)
+            set(NGRAPH_LLVM_VERSION 8.0.0)
+            set(LLVM_TARBALL_URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-apple-darwin.tar.xz)
+            set(LLVM_SHA1_HASH a5674f2ce5b9ed1b67d92689d319ed3b46d66e29)
+        elseif(UNIX AND NOT APPLE)
+            set(NGRAPH_LLVM_VERSION 8.0.0)
+            if(EXISTS /etc/lsb-release)
+                execute_process(COMMAND grep DISTRIB_RELEASE /etc/lsb-release OUTPUT_VARIABLE UBUNTU_VER_LINE)
+                string(REGEX MATCH "[0-9.]+" UBUNTU_VER ${UBUNTU_VER_LINE})
+                message(STATUS "Ubuntu version: ${UBUNTU_VER} detected.")
+                set(LLVM_TARBALL_URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-linux-gnu-ubuntu-${UBUNTU_VER}.tar.xz)
+                if(UBUNTU_VER MATCHES "14.04")
+                    set(LLVM_SHA1_HASH 552ea458b70961b7922a4bbe9de1434688342dbf)
+                elseif(UBUNTU_VER MATCHES "16.04")
+                    set(LLVM_SHA1_HASH 2be69be355b012ae206dbc0ea7d84b831d77dc27)
+                elseif(UBUNTU_VER MATCHES "18.04")
+                    set(LLVM_SHA1_HASH 6aeb8aa0998d37be67d886b878f27de5e5ccc5e4)
+                else()
+                    message(FATAL_ERROR "No prebuilt LLVM available for Ubuntu ${UBUNTU_VER} on llvm.org, please set LLVM_TARBALL_URL manually.")
+                endif()
+            else()
+                message(FATAL_ERROR "Prebuilt LLVM: Only Ubuntu Linux is supported.")
+            endif()
+        else()
+            message(FATAL_ERROR "Prebuilt LLVM: unsupported OS.")
+        endif()
+    else()
+        if(NOT DEFINED LLVM_SHA1_HASH)
+            message(FATAL_ERROR "Prebuilt LLVM: please provide LLVM_SHA_HASH.")
+        endif()
+    endif()
+
+    ExternalProject_Add(
+        ext_llvm
+        PREFIX llvm
+        URL ${LLVM_TARBALL_URL}
+        URL_HASH SHA1=${LLVM_SHA1_HASH}
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        UPDATE_COMMAND ""
+        SOURCE_DIR @LLVM_INSTALL_ROOT@
+        DOWNLOAD_NO_PROGRESS TRUE
+        EXCLUDE_FROM_ALL TRUE
+        )
+
+else()
+    message(STATUS "Building LLVM from source")
+    ExternalProject_Add(
+        ext_llvm
+        PREFIX llvm
+        GIT_REPOSITORY https://github.com/llvm/llvm-project.git
+        GIT_TAG llvmorg-8.0.0
+        GIT_SHALLOW 1
+        CMAKE_GENERATOR "@CMAKE_GENERATOR@"
+        CMAKE_GENERATOR_PLATFORM @CMAKE_GENERATOR_PLATFORM@
+        CMAKE_GENERATOR_TOOLSET @CMAKE_GENERATOR_TOOLSET@
+        CMAKE_ARGS @NGRAPH_FORWARD_CMAKE_ARGS@
+                   -DCMAKE_INSTALL_PREFIX=@LLVM_INSTALL_ROOT@
+                   -DLLVM_ENABLE_PROJECTS=clang
+                   -DLLVM_INCLUDE_DOCS=OFF
+                   -DLLVM_INCLUDE_TESTS=OFF
+                   -DLLVM_INCLUDE_GO_TESTS=OFF
+                   -DLLVM_INCLUDE_EXAMPLES=OFF
+                   -DLLVM_INCLUDE_BENCHMARKS=OFF
+                   -DLLVM_BUILD_TOOLS=OFF
+                   -DLLVM_BUILD_UTILS=OFF
+                   -DLLVM_BUILD_RUNTIMES=OFF
+                   -DLLVM_BUILD_RUNTIME=OFF
+                   -DLLVM_TARGETS_TO_BUILD=X86
+                   -DLLVM_ENABLE_BINDINGS=OFF
+                   -DLLVM_ENABLE_TERMINFO=OFF
+                   -DLLVM_ENABLE_ZLIB=OFF
+                   -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON
+                   -DLIBOMP_OMPT_SUPPORT=OFF
+                   -DCLANG_ENABLE_ARCMT=OFF
+                   -DCLANG_ANALYZER_ENABLE_Z3_SOLVER=OFF
+                   -DCLANG_ENABLE_STATIC_ANALYZER=OFF
+                   -DLLVM_EXTERNAL_OPENMP_SOURCE_DIR=@LLVM_PROJECT_ROOT@/llvm/src/ext_llvm/openmp
+        UPDATE_COMMAND ""
+        SOURCE_SUBDIR llvm
+        DOWNLOAD_NO_PROGRESS TRUE
+        EXCLUDE_FROM_ALL TRUE
+        )
+endif()
