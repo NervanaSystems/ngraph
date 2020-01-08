@@ -45,4 +45,5 @@ namespace ngraph
 
     void addenv_to_map(std::string key, std::string val);
     bool getenv_from_map(const char* key, std::string val);
+    void log_all_envvar();
 }

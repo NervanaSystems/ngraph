@@ -16,20 +16,38 @@
 
 #include <sstream>
 
+#include <unordered_map>
 #include "ngraph/env_util.hpp"
 #include "ngraph/util.hpp"
-#include <unordered_map>
 
 using namespace std;
 
 static std::unordered_map<string, string> s_env_map;
+static const size_t MAX_NUM_ENV_VARS = 100;
+
+void ngraph::log_all_envvar()
+{
+    NGRAPH_DEBUG << "List of all environment variables:\n";
+    std::unordered_map<std::string, std::string>::iterator it = s_env_map.begin();
+    while (it != s_env_map.end())
+    {
+        NGRAPH_DEBUG << "\t" << it->first << " = " << it->second << std::endl;
+        it++;
+    }
+}
 
 void ngraph::addenv_to_map(std::string env_var, std::string val)
 {
-    s_env_map.emplace(env_var, val);
-    std::cout << env_var << " = " << val << " inserted to env_var map" << std::endl;
-
-    // should there be a size limit to check?
+    if (s_env_map.size() <= MAX_NUM_ENV_VARS)
+    {
+        s_env_map.emplace(env_var, val);
+    }
+    else
+    {
+        NGRAPH_WARN << "Number of environment variables used is > max = " << MAX_NUM_ENV_VARS
+                    << std::endl;
+        log_all_envvar();
+    }
 }
 
 bool ngraph::getenv_from_map(const char* env_var, std::string val)
@@ -37,7 +55,6 @@ bool ngraph::getenv_from_map(const char* env_var, std::string val)
     if (s_env_map.find(env_var) != s_env_map.end())
     {
         val = s_env_map.at(env_var);
-        std::cout << env_var << " = " << val <<" read from env_var map" << std::endl;
         return true;
     }
     else
@@ -76,7 +93,8 @@ int32_t ngraph::getenv_int(const char* env_var, int32_t default_value)
             {
                 std::stringstream ss;
                 ss << "Environment variable \"" << env_var << "\"=\"" << env_p
-                << "\" converted to different value \"" << env << "\" due to overflow." << std::endl;
+                   << "\" converted to different value \"" << env << "\" due to overflow."
+                   << std::endl;
                 throw runtime_error(ss.str());
             }
             // if syntax error is there - conversion will still happen
@@ -85,15 +103,15 @@ int32_t ngraph::getenv_int(const char* env_var, int32_t default_value)
             {
                 std::stringstream ss;
                 ss << "Environment variable \"" << env_var << "\"=\"" << env_p
-                << "\" converted to different value \"" << env << "\" due to syntax error \"" << err
-                << '\"' << std::endl;
+                   << "\" converted to different value \"" << env << "\" due to syntax error \""
+                   << err << '\"' << std::endl;
                 throw runtime_error(ss.str());
             }
         }
         else
         {
             NGRAPH_DEBUG << "Environment variable (" << env_var << ") empty or undefined, "
-                        << " defaulted to -1 here.";
+                         << " defaulted to -1 here.";
         }
         // insert into map
         addenv_to_map(env_var, std::to_string(env));
@@ -104,11 +122,11 @@ int32_t ngraph::getenv_int(const char* env_var, int32_t default_value)
         errno = 0;
         char* err;
         int32_t env_int = strtol(env_string, &err, 0);
-        if (errno==0 || *err)
+        if (errno == 0 || *err)
         {
             // Extensive error checking was done when reading getenv, keeping it minimal here, ok?
             NGRAPH_DEBUG << "Error reading (" << env_var << ") empty or undefined, "
-                        << " defaulted to -1 here.";
+                         << " defaulted to -1 here.";
             return default_value;
         }
         return env_int;
