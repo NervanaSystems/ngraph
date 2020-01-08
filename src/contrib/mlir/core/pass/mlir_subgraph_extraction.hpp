@@ -118,7 +118,7 @@ namespace ngraph
             NodeGraphMap m_node_to_graph;
             // Mutex over sub-graph IDs
             std::mutex m_subgraph_mutex;
-            static const std::set<std::type_index> m_supported_ops;
+            static const std::set<ngraph::Node::type_info_t> m_supported_ops;
             // Maximum depth to check for cycles during merging of sub-graphs.
             // If exceeded, we conservatively assume a cycle.
             int m_max_cycle_depth;
