@@ -422,13 +422,16 @@ namespace ngraph
 {
     namespace op
     {
-        template <>
-        void Constant::write_to_buffer<string>(const element::Type& /* target_type */,
-                                               const Shape& /* target_shape */,
-                                               const vector<string>& /* source */,
-                                               void* /* target */,
-                                               size_t /* target_element_count */)
+        namespace v0
         {
+            template <>
+            void Constant::write_to_buffer<string>(const element::Type& /* target_type */,
+                                                   const Shape& /* target_shape */,
+                                                   const vector<string>& /* source */,
+                                                   void* /* target */,
+                                                   size_t /* target_element_count */)
+            {
+            }
         }
     }
 }
