@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,8 +62,8 @@ namespace ngraph
                 // Rnn needs 9 primitives: src_layer, src_iter, weights_layer, weights_iter, bias,
                 // dst_layer, dst_iter, workspace, and rnn_forward.
                 // It needs a new workspace.
-                auto rnn_index =
-                    mkldnn_emitter->reserve_primitive_space(9, true /* new workspace */);
+                auto rnn_index = mkldnn_emitter->reserve_primitive_space(
+                    9, false /* fwd and bwd */, true /* new workspace */);
                 auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
 
                 auto functor = [&,
@@ -125,8 +125,8 @@ namespace ngraph
                 // weights_iter, bias,
                 // dst_layer, dst_iter, dst_iter_c, workspace, and lstm_forward.
                 // It needs a new workspace.
-                auto rnn_index =
-                    mkldnn_emitter->reserve_primitive_space(11, true /* new workspace */);
+                auto rnn_index = mkldnn_emitter->reserve_primitive_space(
+                    11, false /* fwd and bwd */, true /* new workspace */);
                 auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
 
                 auto functor = [&,
