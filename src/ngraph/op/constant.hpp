@@ -410,8 +410,8 @@ namespace ngraph
 
                 double m_value;
             };
-            using v0::Constant;
-            using v0::ScalarConstantLike;
         }
+        using v0::Constant;
+        using v0::ScalarConstantLike;
     }
 }
