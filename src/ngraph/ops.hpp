@@ -98,7 +98,6 @@
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/layer_norm.hpp"
-#include "ngraph/op/fused/log_softmax.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/lstm_sequence.hpp"
 #include "ngraph/op/fused/matmul.hpp"

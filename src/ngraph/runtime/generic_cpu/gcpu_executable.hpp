@@ -1621,7 +1621,6 @@ private:
         case OP_TYPEID::Interpolate:
         case OP_TYPEID::LayerNorm:
         case OP_TYPEID::LayerNormBackprop:
-        case OP_TYPEID::LogSoftmax:
         case OP_TYPEID::LSTMCell:
         case OP_TYPEID::LSTMSequence:
         case OP_TYPEID::MatMul:
