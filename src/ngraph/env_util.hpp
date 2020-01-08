@@ -42,4 +42,7 @@ namespace ngraph
     /// \param default_value The value to return if the environment variable is not set.
     /// \return Returns the boolean value of the environment variable.
     bool getenv_bool(const char* env_var, bool default_value = false);
+
+    void addenv_to_map(std::string key, std::string val);
+    bool getenv_from_map(const char* key, std::string val);
 }
