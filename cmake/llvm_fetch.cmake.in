@@ -14,9 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-# 3.7+ required for using SOURCE_SUBDIR
-cmake_minimum_required( VERSION 3.7 )
-
 include(ExternalProject)
 
 project(llvm NONE)
@@ -77,6 +74,9 @@ if(NGRAPH_USE_PREBUILT_LLVM)
 
 else()
     message(STATUS "Building LLVM from source")
+    # 3.7+ required for using SOURCE_SUBDIR
+    cmake_minimum_required( VERSION 3.7 )
+
     ExternalProject_Add(
         ext_llvm
         PREFIX llvm
