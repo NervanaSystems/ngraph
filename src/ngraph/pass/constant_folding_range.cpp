@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,13 +26,12 @@ shared_ptr<op::Constant> fold_constant_range(shared_ptr<op::Constant> start,
                                              shared_ptr<op::Constant> step,
                                              shared_ptr<op::Range> range)
 {
-    vector<T> out_vec(shape_size(range->get_shape()));
-    runtime::reference::range<T>(start->get_vector<T>().data(),
-                                 step->get_vector<T>().data(),
-                                 range->get_shape(),
-                                 out_vec.data());
+    runtime::AlignedBuffer buffer(shape_size(range->get_shape()) * sizeof(T));
+    T* data_ptr = buffer.get_ptr<T>();
+    runtime::reference::range<T>(
+        start->get_vector<T>().data(), step->get_vector<T>().data(), range->get_shape(), data_ptr);
 
-    return make_shared<op::Constant>(range->get_element_type(), range->get_shape(), out_vec);
+    return make_shared<op::Constant>(range->get_element_type(), range->get_shape(), data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_range()

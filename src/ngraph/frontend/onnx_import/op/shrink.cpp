@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,10 +18,6 @@
 
 #include "default_opset.hpp"
 #include "exceptions.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/subtract.hpp"
-#include "ngraph/opsets/opset0.hpp"
 #include "shrink.hpp"
 
 namespace ngraph
@@ -66,7 +62,7 @@ namespace ngraph
                     // by adding and subtracting bias
                     // All other values indicated by 'false' in the masks need to be zeroed out
                     std::shared_ptr<ngraph::Node> values_below_neg_lambd =
-                        std::make_shared<ngraph::opset0::Less>(input, negative_lambd);
+                        std::make_shared<default_opset::Less>(input, negative_lambd);
                     std::shared_ptr<ngraph::Node> values_above_pos_lambd =
                         std::make_shared<default_opset::Greater>(input, positive_lambd);
 
@@ -77,15 +73,21 @@ namespace ngraph
                     values_above_pos_lambd = std::make_shared<default_opset::Convert>(
                         values_above_pos_lambd, input_element_type);
 
-                    std::shared_ptr<ngraph::Node> input_minus_bias = input - bias_tensor;
-                    std::shared_ptr<ngraph::Node> input_plus_bias = input + bias_tensor;
+                    std::shared_ptr<ngraph::Node> input_minus_bias =
+                        std::make_shared<default_opset::Subtract>(input, bias_tensor);
+                    std::shared_ptr<ngraph::Node> input_plus_bias =
+                        std::make_shared<default_opset::Add>(input, bias_tensor);
 
                     // multiply by the corresponding mask to zero-out the values within
                     // the <-lambd;lambd> range and keep the bias-adjusted values from outside of it
-                    input_minus_bias = values_above_pos_lambd * input_minus_bias;
-                    input_plus_bias = values_below_neg_lambd * input_plus_bias;
+                    input_minus_bias = std::make_shared<default_opset::Multiply>(
+                        values_above_pos_lambd, input_minus_bias);
 
-                    return {input_plus_bias + input_minus_bias};
+                    input_plus_bias = std::make_shared<default_opset::Multiply>(
+                        values_below_neg_lambd, input_plus_bias);
+
+                    return {
+                        std::make_shared<default_opset::Add>(input_plus_bias, input_minus_bias)};
                 }
 
             } // namespace set_1

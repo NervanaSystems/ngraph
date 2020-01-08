@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,11 +48,9 @@ static void test_allreduce_common(reduction::Type reduce_type)
         auto a = backend->create_tensor(element::f32, shape);
         auto result = backend->create_tensor(element::f32, shape);
 
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-#endif
         switch (reduce_type)
         {
         case reduction::Type::SUM:
@@ -83,9 +81,7 @@ static void test_allreduce_common(reduction::Type reduce_type)
                     v[i] = i + 2;
             }
         }
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
-#endif
 
         auto handle = backend->compile(f);
         handle->call_with_validate({result}, {a});

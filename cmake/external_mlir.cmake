@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ set(MLIR_LLVM_REPO_URL https://github.com/llvm/llvm-project.git)
 set(MLIR_REPO_URL https://github.com/tensorflow/mlir.git)
 
 # Change these commit IDs to move to latest stable versions
-set(MLIR_LLVM_COMMIT_ID 75990950)
-set(MLIR_COMMIT_ID 5e64e536)
+set(MLIR_LLVM_COMMIT_ID c36773c7)
+set(MLIR_COMMIT_ID 606e96a1)
 
 # MLIR environment variables. Some of them are used by LIT tool.
 

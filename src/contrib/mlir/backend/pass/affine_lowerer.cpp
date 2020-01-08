@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -163,6 +163,7 @@ namespace
                                DialectLoweringPass& pass);
 
     ValueHandle createZeroConstant(mlir::Type type);
+    ValueHandle createOneConstant(mlir::Type type);
 
     /// Conversion from types in the nGraph dialect to the Standard dialect.
     class NGraphTypeConverter : public TypeConverter
@@ -538,6 +539,30 @@ namespace
         return matchSuccess();
     }
 
+    REWRITER(NGGreaterEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGGreaterEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGLessEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGLessEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGNotEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGNotEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
     REWRITER(NGMaxOp)
     {
         lowerBinaryElementwise<mlir::NGMaxOp>(op, operands, rewriter, pass);
@@ -585,7 +610,7 @@ namespace
         auto ubs = vLHS.getUbs();
         // Loop induction vars
         auto ivs = makeIndexHandles(vLHS.rank());
-        auto pivs = makeIndexHandlePointers(ivs);
+        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
         // Steps
         auto steps = vLHS.getSteps();
 
@@ -796,14 +821,14 @@ namespace
                      "Incorrect loop nest bounds size for gather params");
 
         paramsIVs = makeIndexHandles(vParams.rank() - 1);
-        paramsIVPtrs = makeIndexHandlePointers(paramsIVs);
+        paramsIVPtrs = makeHandlePointers(MutableArrayRef<IndexHandle>(paramsIVs));
 
         auto indicesLbs = vIndices.getLbs();
         auto indicesUbs = vIndices.getUbs();
         auto indicesSteps = vIndices.getSteps();
 
         auto indicesIVs = makeIndexHandles(vIndices.rank());
-        auto indicesIVPtrs = makeIndexHandlePointers(indicesIVs);
+        auto indicesIVPtrs = makeHandlePointers(MutableArrayRef<IndexHandle>(indicesIVs));
 
         SmallVector<IndexHandle, 8> paramsIndices, resIndices;
 
@@ -958,7 +983,8 @@ namespace
 
         // Result spatial indices and bounds
         auto resSpatialIndices = makeIndexHandles(spatialRank);
-        auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
+        auto resSpatialIndicesPtrs =
+            makeHandlePointers(MutableArrayRef<IndexHandle>(resSpatialIndices));
         SmallVector<int64_t, 4> resSteps, filtersSteps;
         SmallVector<int, 4> padBelowIntValues;
         bool withPadding = false;
@@ -997,7 +1023,8 @@ namespace
 
         // Filters spatial indices and bounds
         auto filtersSpatialIndices = makeIndexHandles(spatialRank);
-        auto filtersSpatialIndicesPtrs = makeIndexHandlePointers(filtersSpatialIndices);
+        auto filtersSpatialIndicesPtrs =
+            makeHandlePointers(MutableArrayRef<IndexHandle>(filtersSpatialIndices));
 
         for (auto i = 0; i < spatialRank; i++)
         {
@@ -1045,7 +1072,8 @@ namespace
         {
             IndexHandle n, k, c;
             auto resSpatialIndices = makeIndexHandles(spatialRank);
-            auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
+            auto resSpatialIndicesPtrs =
+                makeHandlePointers(MutableArrayRef<IndexHandle>(resSpatialIndices));
 
             LoopBuilder::makeAffine(&n, batchLb, batchUb, 1)([&] {
                 LoopBuilder::makeAffine(&k, numFiltersLb, numFiltersUb, 1)([&] {
@@ -1196,7 +1224,7 @@ namespace
         auto ubs = vLHS.getUbs();
         // Loop induction vars
         auto ivs = makeIndexHandles(vLHS.rank());
-        auto pivs = makeIndexHandlePointers(ivs);
+        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
         // Steps
         auto steps = vLHS.getSteps();
 
@@ -1242,9 +1270,11 @@ namespace
         auto ubs = vLHS.getUbs();
         // Loop induction vars
         auto ivs = makeIndexHandles(vLHS.rank());
-        auto pivs = makeIndexHandlePointers(ivs);
+        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
         // Steps
         auto steps = vLHS.getSteps();
+        // element type of the operand
+        Type elemTy = result->getType().cast<MemRefType>().getElementType();
         AffineLoopNestBuilder(pivs, lbs, ubs, steps)(
             // single stmt body
             [&] {
@@ -1264,13 +1294,52 @@ namespace
                 {
                     iRes(ivs) = iLHS(ivs) / iRHS(ivs);
                 }
+                // TODO(pthoreho) For all comparision operators, use
+                // edsc::intrinsics::zero_extendi(ValueHandle(iLHS(ivs)) !=
+                // ValueHandle(iRHS(ivs)), IntegerType::get(8, op->getContext()));
+                // instead of edsc::intrinsics::select once `zero_extendi` is
+                // made available in the edsc::intrinsics namescope in MLIR repo.
                 else if (isa<NGGreaterOp>(op))
                 {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs));
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
                 }
                 else if (isa<NGLessOp>(op))
                 {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs));
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
+                }
+                else if (isa<NGGreaterEqOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) >= ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
+                }
+                else if (isa<NGLessEqOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) <= ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
+                }
+                else if (isa<NGEqOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) == ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
+                }
+                else if (isa<NGNotEqOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) != ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
                 }
                 else if (isa<NGMaxOp>(op))
                 {
@@ -1335,7 +1404,7 @@ namespace
         // Generate loop nest that initializes result to lower bound of the axis to be reduced.
         {
             auto ivs = makeIndexHandles(vRes.rank());
-            auto pivs = makeIndexHandlePointers(ivs);
+            auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
             auto steps = vRes.getSteps();
             auto initVal = vArg.lb(axis);
             AffineLoopNestBuilder(pivs, resLbs, resUbs, steps)(
@@ -1345,7 +1414,7 @@ namespace
         // Generate loop nest that computes the actual index reduction.
         {
             auto allIVs = makeIndexHandles(vArg.rank());
-            auto pAllIVs = makeIndexHandlePointers(allIVs);
+            auto pAllIVs = makeHandlePointers(MutableArrayRef<IndexHandle>(allIVs));
             auto steps = vArg.getSteps();
             SmallVector<IndexHandle, 8> nonRedIVs;
 
@@ -1410,7 +1479,31 @@ namespace
         }
         NGRAPH_UNREACHABLE("Unsupported type");
     }
-}
+
+    ValueHandle createOneConstant(mlir::Type type)
+    {
+        if (auto floatTy = type.dyn_cast<FloatType>())
+        {
+            if (floatTy.isF32())
+            {
+                return intrinsics::constant_float(llvm::APFloat(1.0f), floatTy);
+            }
+            else if (floatTy.isF64())
+            {
+                return intrinsics::constant_float(llvm::APFloat(1.0f), floatTy);
+            }
+            else
+            {
+                NGRAPH_UNREACHABLE("Unsupported floating-point precision");
+            }
+        }
+        else if (auto intTy = type.dyn_cast<IntegerType>())
+        {
+            return intrinsics::constant_int(1, intTy.getWidth());
+        }
+        NGRAPH_UNREACHABLE("Unsupported type");
+    }
+} // namespace
 
 namespace mlir
 {
