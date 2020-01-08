@@ -133,7 +133,7 @@ namespace ngraph
                         // Grab a context and initialize a CPU backend using same context
                         MLIRCPUBackend mlir_backend(mlir_compiler.get_module(), context);
                         // Codegen to LLVM dialect
-                        mlir_backend.codegen(mlir_runtime.get_attrPtrs());
+                        mlir_backend.codegen();
                         // Store module into runtime, and invoke.
                         mlir_runtime.set_module(mlir_backend.get_module());
                         mlir_runtime.run(mem_ref_arg_vec);

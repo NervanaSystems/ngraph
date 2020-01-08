@@ -159,17 +159,17 @@ void MLIRCPUBackend::init()
     }
 }
 
-void MLIRCPUBackend::codegen(std::vector<void*>& attrPtrs)
+void MLIRCPUBackend::codegen()
 {
     optimizeNgDialect();
-    lowerNgDialect(attrPtrs);
+    lowerNgDialect();
 }
 
-void MLIRCPUBackend::lowerNgDialect(std::vector<void*>& attrPtrs)
+void MLIRCPUBackend::lowerNgDialect()
 {
     // Lower NG dialect to Affine
     mlir::PassManager pm(&m_context);
-    pm.addPass(mlir::createDialectLoweringPass(attrPtrs));
+    pm.addPass(mlir::createDialectLoweringPass());
     pm.addPass(mlir::createCanonicalizerPass());
 
     // Apply any generic pass manager command line options.

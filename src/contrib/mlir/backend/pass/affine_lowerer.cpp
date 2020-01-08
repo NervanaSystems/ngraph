@@ -41,6 +41,8 @@
 #define PASS_NAME "convert-ngraph-to-affine"
 #define DEBUG_TYPE PASS_NAME
 
+std::vector<ngraph::runtime::ngmlir::opAttrs> opAttrsVec;
+
 // anonymous namespace
 // no need to expose any of the following outside of this file
 namespace
@@ -190,16 +192,6 @@ namespace
     class DialectLoweringPass : public ModulePass<DialectLoweringPass>
     {
     public:
-        DialectLoweringPass()
-            : ModulePass<DialectLoweringPass>()
-        {
-        }
-
-        DialectLoweringPass(std::vector<void*>& attrPtrs)
-            : ModulePass<DialectLoweringPass>()
-        {
-            m_attrPtrs = &attrPtrs;
-        }
         void runOnModule() override;
 
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
@@ -227,7 +219,8 @@ namespace
                            ArrayRef<Type> output,
                            PatternRewriter& rewriter);
 
-        void insertAttrPtr(void* p) { m_attrPtrs->push_back(p); }
+        inline size_t insertAttrs(opAttrs attrs);
+
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
@@ -248,8 +241,8 @@ namespace
         // TODO: Workaround for findOutputValues and buildOutputDefs. See NGCPU-470.
         std::string funcName;
 
-        // Store the pointers to attributes needed by callback
-        std::vector<void*>* m_attrPtrs = nullptr;
+        // Store the attributes needed by callback
+        std::vector<opAttrs> m_attrsVec;
     };
 
     void DialectLoweringPass::runOnModule()
@@ -296,6 +289,8 @@ namespace
             // separate rewrite pattern. Retrieve new function after signature conversion.
             insertNoAliasArgAttrs();
         }
+
+        opAttrsVec = m_attrsVec;
     }
 
     void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
@@ -512,6 +507,12 @@ namespace
             callBackFunc = module.lookupSymbol<mlir::FuncOp>(name);
         }
         return callBackFunc;
+    }
+
+    inline size_t DialectLoweringPass::insertAttrs(opAttrs attrs)
+    {
+        m_attrsVec.push_back(attrs);
+        return m_attrsVec.size() - 1;
     }
 
     // NGDialect converters
@@ -1323,44 +1324,37 @@ namespace
             {},
             rewriter);
 
-        SmallVector<mlir::Value*, 4> args;
+        opAttrs attrs;
         if (srcShape.size() == 4)
         {
-            auto attrPtr = static_cast<poolAttrs<2>*>(malloc(sizeof(poolAttrs<2>)));
-            pass.insertAttrPtr(attrPtr);
-            auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
-                rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
-            attrPtr->includePaddingInAvgComputation = false;
+            attrs.poolAttrs2d.includePaddingInAvgComputation = false;
             for (auto i = 0; i < 2; i++)
             {
-                attrPtr->windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
-                attrPtr->windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
-                attrPtr->padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
-                attrPtr->padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
             }
-            auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
-                rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MAXPOOLBACKPROP), 64);
-
-            args = {outputs[0], outputs[1], outputs[2], attrPtrArg, opTypeArg};
         }
         else if (srcShape.size() == 5)
         {
-            auto attrPtr = static_cast<poolAttrs<3>*>(malloc(sizeof(poolAttrs<3>)));
-            pass.insertAttrPtr(attrPtr);
-            auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
-                rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
-            attrPtr->includePaddingInAvgComputation = false;
+            opAttrs attrs;
+            attrs.poolAttrs3d.includePaddingInAvgComputation = false;
             for (auto i = 0; i < 3; i++)
             {
-                attrPtr->windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
-                attrPtr->windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
-                attrPtr->padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
-                attrPtr->padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
             }
-            auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
-                rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MAXPOOLBACKPROP), 64);
-            args = {outputs[0], outputs[1], outputs[2], attrPtrArg, opTypeArg};
         }
+        auto index = pass.insertAttrs(attrs);
+        auto attrsIndexArg =
+            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
+        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MAXPOOLBACKPROP), 64);
+        SmallVector<mlir::Value*, 4> args = {
+            outputs[0], outputs[1], outputs[2], attrsIndexArg, opTypeArg};
 
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
@@ -1396,26 +1390,25 @@ namespace
         NGRAPH_CHECK(lhsShape.size() == 2 && rhsShape.size() == 2 && resultShape.size() == 2,
                      "MatMul operation is only supported for 2D tensors");
 
-        auto attrPtr = static_cast<gemmAttrs*>(malloc(sizeof(gemmAttrs)));
-        pass.insertAttrPtr(attrPtr);
-        attrPtr->transposeA = matmul.transposeA();
-        attrPtr->transposeB = matmul.transposeB();
-        attrPtr->m = lhsShape[0];
-        attrPtr->k = lhsShape[1];
-        attrPtr->n = rhsShape[1];
-        attrPtr->lda = lhsShape[1];
-        attrPtr->ldb = rhsShape[1];
+        opAttrs attrs;
+        attrs.gemmAttrs2d.transposeA = matmul.transposeA();
+        attrs.gemmAttrs2d.transposeB = matmul.transposeB();
+        attrs.gemmAttrs2d.m = lhsShape[0];
+        attrs.gemmAttrs2d.k = lhsShape[1];
+        attrs.gemmAttrs2d.n = rhsShape[1];
+        attrs.gemmAttrs2d.lda = lhsShape[1];
+        attrs.gemmAttrs2d.ldb = rhsShape[1];
 
         if (matmul.transposeA())
         {
-            attrPtr->m = lhsShape[1];
-            attrPtr->k = lhsShape[0];
+            attrs.gemmAttrs2d.m = lhsShape[1];
+            attrs.gemmAttrs2d.k = lhsShape[0];
         }
         if (matmul.transposeB())
         {
-            attrPtr->n = rhsShape[0];
+            attrs.gemmAttrs2d.n = rhsShape[0];
         }
-        attrPtr->ldc = attrPtr->n;
+        attrs.gemmAttrs2d.ldc = attrs.gemmAttrs2d.n;
 
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
@@ -1425,15 +1418,16 @@ namespace
             {},
             rewriter);
 
-        auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
-            rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
+        auto index = pass.insertAttrs(attrs);
+        auto attrsIndexArg =
+            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MATMUL), 64);
         SmallVector<mlir::Value*, 4> inputs = {lhs, rhs, result};
         SmallVector<mlir::Value*, 4> outputs;
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
         SmallVector<mlir::Value*, 4> args = {
-            outputs[0], outputs[1], outputs[2], attrPtrArg, opTypeArg};
+            outputs[0], outputs[1], outputs[2], attrsIndexArg, opTypeArg};
 
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
@@ -1476,28 +1470,27 @@ namespace
         NGRAPH_CHECK(vLhs.rank() == 2 && vRhs.rank() == 2 && vRes.rank() == 2 && vBias.rank() <= 2,
                      "Gemm operation is only supported for 2D tensors");
 
-        auto attrPtr = static_cast<gemmAttrs*>(malloc(sizeof(gemmAttrs)));
-        pass.insertAttrPtr(attrPtr);
-        attrPtr->transposeA = gemm.transA();
-        attrPtr->transposeB = gemm.transB();
-        attrPtr->alpha = gemm.alpha().convertToFloat();
-        attrPtr->beta = gemm.beta().convertToFloat();
-        attrPtr->m = lhsShape[0];
-        attrPtr->k = lhsShape[1];
-        attrPtr->n = rhsShape[1];
-        attrPtr->lda = lhsShape[1];
-        attrPtr->ldb = rhsShape[1];
+        opAttrs attrs;
+        attrs.gemmAttrs2d.transposeA = gemm.transA();
+        attrs.gemmAttrs2d.transposeB = gemm.transB();
+        attrs.gemmAttrs2d.alpha = gemm.alpha().convertToFloat();
+        attrs.gemmAttrs2d.beta = gemm.beta().convertToFloat();
+        attrs.gemmAttrs2d.m = lhsShape[0];
+        attrs.gemmAttrs2d.k = lhsShape[1];
+        attrs.gemmAttrs2d.n = rhsShape[1];
+        attrs.gemmAttrs2d.lda = lhsShape[1];
+        attrs.gemmAttrs2d.ldb = rhsShape[1];
 
         if (gemm.transA())
         {
-            attrPtr->m = lhsShape[1];
-            attrPtr->k = lhsShape[0];
+            attrs.gemmAttrs2d.m = lhsShape[1];
+            attrs.gemmAttrs2d.k = lhsShape[0];
         }
         if (gemm.transB())
         {
-            attrPtr->n = rhsShape[0];
+            attrs.gemmAttrs2d.n = rhsShape[0];
         }
-        attrPtr->ldc = attrPtr->n;
+        attrs.gemmAttrs2d.ldc = attrs.gemmAttrs2d.n;
 
         int broadcastHint;
         if (vBias.rank() == 0)
@@ -1507,11 +1500,11 @@ namespace
         }
         else if (vBias.rank() == 2)
         {
-            if (biasShape[0] == attrPtr->m && biasShape[1] == 1)
+            if (biasShape[0] == attrs.gemmAttrs2d.m && biasShape[1] == 1)
             {
                 broadcastHint = 1;
             }
-            else if (biasShape[0] == 1 && biasShape[1] == attrPtr->n)
+            else if (biasShape[0] == 1 && biasShape[1] == attrs.gemmAttrs2d.n)
             {
                 broadcastHint = 0;
             }
@@ -1522,16 +1515,16 @@ namespace
         }
         else
         {
-            if (biasShape[0] == attrPtr->m)
+            if (biasShape[0] == attrs.gemmAttrs2d.m)
             {
                 broadcastHint = 1;
             }
-            else if (biasShape[0] == attrPtr->n)
+            else if (biasShape[0] == attrs.gemmAttrs2d.n)
             {
                 broadcastHint = 0;
             }
         }
-        attrPtr->broadcastHint = broadcastHint;
+        attrs.gemmAttrs2d.broadcastHint = broadcastHint;
 
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
@@ -1545,15 +1538,16 @@ namespace
                                              {},
                                              rewriter);
 
-        auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
-            rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
+        auto index = pass.insertAttrs(attrs);
+        auto attrsIndexArg =
+            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::GEMM), 64);
         SmallVector<mlir::Value*, 4> inputs = {lhs, rhs, bias, result};
         SmallVector<mlir::Value*, 4> outputs;
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
         SmallVector<mlir::Value*, 4> args = {
-            outputs[0], outputs[1], outputs[2], outputs[3], attrPtrArg, opTypeArg};
+            outputs[0], outputs[1], outputs[2], outputs[3], attrsIndexArg, opTypeArg};
 
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
@@ -1589,11 +1583,11 @@ namespace
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         auto axes = softmax.axes().getValue();
-        auto attrPtr = static_cast<int64_t*>(malloc(sizeof(int64_t)));
-        pass.insertAttrPtr(attrPtr);
-        *attrPtr = axes[0].cast<IntegerAttr>().getInt();
-        auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
-            rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
+        opAttrs attrs;
+        attrs.intAttr = axes[0].cast<IntegerAttr>().getInt();
+        auto index = pass.insertAttrs(attrs);
+        auto attrsIndexArg =
+            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::SOFTMAX), 64);
 
@@ -1606,7 +1600,7 @@ namespace
         SmallVector<mlir::Value*, 4> inputs = {lhs, result};
         SmallVector<mlir::Value*, 4> outputs;
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
-        SmallVector<mlir::Value*, 4> args = {outputs[0], outputs[1], attrPtrArg, opTypeArg};
+        SmallVector<mlir::Value*, 4> args = {outputs[0], outputs[1], attrsIndexArg, opTypeArg};
 
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
@@ -1937,43 +1931,35 @@ namespace
                              {},
                              rewriter);
 
-        SmallVector<mlir::Value*, 4> args;
+        opAttrs attrs;
         if (lhsShape.size() == 4)
         {
-            auto attrPtr = static_cast<poolAttrs<2>*>(malloc(sizeof(poolAttrs<2>)));
-            pass.insertAttrPtr(attrPtr);
-            auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
-                rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
-            attrPtr->includePaddingInAvgComputation = includePadding;
+            attrs.poolAttrs2d.includePaddingInAvgComputation = includePadding;
             for (auto i = 0; i < 2; i++)
             {
-                attrPtr->windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
-                attrPtr->windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
-                attrPtr->padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
-                attrPtr->padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
             }
-            auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
-                rewriter.getUnknownLoc(), static_cast<int64_t>(ty), 64);
-            args = {outputs[0], outputs[1], attrPtrArg, opTypeArg};
         }
         else if (lhsShape.size() == 5)
         {
-            auto attrPtr = static_cast<poolAttrs<3>*>(malloc(sizeof(poolAttrs<3>)));
-            pass.insertAttrPtr(attrPtr);
-            auto attrPtrArg = rewriter.create<mlir::ConstantIntOp>(
-                rewriter.getUnknownLoc(), reinterpret_cast<int64_t>(attrPtr), 64);
-            attrPtr->includePaddingInAvgComputation = includePadding;
+            attrs.poolAttrs3d.includePaddingInAvgComputation = includePadding;
             for (auto i = 0; i < 3; i++)
             {
-                attrPtr->windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
-                attrPtr->windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
-                attrPtr->padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
-                attrPtr->padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
             }
-            auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
-                rewriter.getUnknownLoc(), static_cast<int64_t>(ty), 64);
-            args = {outputs[0], outputs[1], attrPtrArg, opTypeArg};
         }
+        auto index = pass.insertAttrs(attrs);
+        auto attrsIndexArg =
+            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
+        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), static_cast<int64_t>(ty), 64);
+        SmallVector<mlir::Value*, 4> args = {outputs[0], outputs[1], attrsIndexArg, opTypeArg};
 
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
@@ -2030,9 +2016,9 @@ namespace
 
 namespace mlir
 {
-    std::unique_ptr<Pass> createDialectLoweringPass(std::vector<void*>& attrPtrs)
+    std::unique_ptr<Pass> createDialectLoweringPass()
     {
-        return std::make_unique<DialectLoweringPass>(attrPtrs);
+        return std::make_unique<DialectLoweringPass>();
     }
 } // namespace mlir
 

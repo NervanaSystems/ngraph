@@ -55,14 +55,14 @@ namespace ngraph
                                  "Cannot instantiate CPU MLIR backend without initialization");
                 }
                 // codegen LLVM dialect from nGraph dialect applying CPU backend optimization passes
-                void codegen(std::vector<void*>& attrPtrs) override;
+                void codegen() override;
 
             private:
                 // Apply CPU specific optimizations at nGraph dialect level
                 void optimizeNgDialect();
 
                 // Lowers nGraph dialect all the way to Affine dialect.
-                void lowerNgDialect(std::vector<void*>& attrPtrs);
+                void lowerNgDialect();
 
                 // Lowers standard dialect all the way to LLVM dialect.
                 void lowerStandardDialect();

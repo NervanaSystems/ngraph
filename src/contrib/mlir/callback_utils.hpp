@@ -102,6 +102,13 @@ namespace ngraph
                 float beta;
                 int64_t broadcastHint;
             };
+
+            union opAttrs {
+                int intAttr;
+                poolAttrs<2> poolAttrs2d;
+                poolAttrs<3> poolAttrs3d;
+                gemmAttrs gemmAttrs2d;
+            };
         } // namespace ngmlir
     }     // namespace runtime
 } // namespace ngraph

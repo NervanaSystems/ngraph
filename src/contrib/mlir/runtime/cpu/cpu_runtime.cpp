@@ -53,14 +53,6 @@ static llvm::cl::opt<std::string>
     clObjectFilename("ngraph-mlir-object-filename",
                      llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
-MLIRCPURuntime::~MLIRCPURuntime()
-{
-    for (auto p : m_attrPtrs)
-    {
-        free(p);
-    }
-}
-
 void MLIRCPURuntime::run(std::vector<MemRefArg>& args)
 {
     // run_internal(*reinterpret_cast<std::vector<void*>*>(args), shapeVec, stridesVec);

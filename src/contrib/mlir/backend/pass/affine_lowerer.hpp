@@ -36,5 +36,5 @@ namespace ngraph
 
 namespace mlir
 {
-    std::unique_ptr<Pass> createDialectLoweringPass(std::vector<void*>& attrPtrs);
+    std::unique_ptr<Pass> createDialectLoweringPass();
 }

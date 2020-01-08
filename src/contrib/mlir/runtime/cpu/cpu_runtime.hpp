@@ -54,10 +54,9 @@ namespace ngraph
             class MLIRCPURuntime : public MLIRRuntime
             {
             public:
-                ~MLIRCPURuntime();
                 /// Executes a pre-compiled subgraph
                 void run(std::vector<MemRefArg>& args) override;
-                std::vector<void*>& get_attrPtrs() { return m_attrPtrs; }
+
             private:
                 void run_internal(std::vector<MemRefArg>& args);
                 // Bind external tensors to MLIR module entry point
@@ -80,7 +79,6 @@ namespace ngraph
                 llvm::SmallVector<void*, 8> m_invokeArgs;
                 std::unique_ptr<mlir::ExecutionEngine> m_engine;
                 std::vector<size_t> m_ranks;
-                std::vector<void*> m_attrPtrs;
             };
         }
     }
