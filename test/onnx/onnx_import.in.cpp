@@ -366,7 +366,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_text)
     {
         for (auto tag : ng_node->get_provenance_tags())
         {
-            EXPECT_HAS_SUBSTRING(tag, "ONNX Add");
+            EXPECT_HAS_SUBSTRING(tag, "ONNX");
         }
     }
 }
