@@ -214,7 +214,7 @@ void codegen::CompilerCore::initialize()
 
     // Initialize CompilerInvocation
     CompilerInvocation::CreateFromArgs(
-        m_compiler->getInvocation(), &args[0], &args[0] + args.size(), diag_engine);
+        m_compiler->getInvocation(), llvm::ArrayRef<const char*>(args), diag_engine);
 
     DiagnosticConsumer* diag_consumer;
     if (m_enable_diag_output)
@@ -236,9 +236,7 @@ void codegen::CompilerCore::initialize()
     // and any dependencies like Eigen
     auto LO = m_compiler->getInvocation().getLangOpts();
     LO->CPlusPlus = 1;
-    LO->CPlusPlus11 = 1;
-    // Strange but need to manually disable c++14
-    LO->CPlusPlus14 = 0;
+    LO->CPlusPlus14 = 1;
     LO->Bool = 1;
     LO->Exceptions = 1;
     LO->CXXExceptions = 1;
@@ -255,7 +253,7 @@ void codegen::CompilerCore::initialize()
     // CGO.CodeModel = "medium";
     CGO.ThreadModel = "posix";
     CGO.FloatABI = "hard";
-    CGO.OmitLeafFramePointer = 1;
+    //CGO.OmitLeafFramePointer = 1;
     CGO.VectorizeLoop = 1;
     CGO.VectorizeSLP = 1;
     CGO.CXAAtExit = 1;

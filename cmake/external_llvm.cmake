@@ -39,14 +39,12 @@ else()
         WORKING_DIRECTORY "${LLVM_PROJECT_ROOT}")
 endif()
 
-
-# Enable modules for LLVM.
-set(CLANG_DIR "${LLVM_INSTALL_ROOT}/lib/cmake/clang"
-    CACHE PATH "Path to Clang cmake modules")
-message(STATUS "Using modules in: ${CLANG_DIR}")
-list(APPEND CMAKE_MODULE_PATH "${CLANG_DIR}")
-
-find_package(Clang REQUIRED CONFIG)
+message(STATUS "LLVM_INSTALL_ROOT: ${LLVM_INSTALL_ROOT}")
+find_package(Clang REQUIRED CONFIG
+    HINTS ${LLVM_INSTALL_ROOT}/lib/cmake/clang NO_DEFAULT_PATH)
+message(STATUS "CLANG_CMAKE_DIR: ${CLANG_CMAKE_DIR}")
+message(STATUS "CLANG_INCLUDE_DIRS: ${CLANG_INCLUDE_DIRS}")
+message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
 set(${LLVM_LINK_LIBS} clangHandleCXX)
 if(LINUX OR APPLE)
