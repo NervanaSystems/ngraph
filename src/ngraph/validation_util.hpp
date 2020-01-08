@@ -124,7 +124,7 @@ namespace ngraph
     ///             axis, by adding tensor_rank to axis.
     ///
     std::vector<size_t> normalize_axes(const std::string& node_description,
-                                       std::vector<int64_t> axes,
+                                       const std::vector<int64_t>& axes,
                                        std::int64_t tensor_rank);
 
     /// \brief      Handle out of range axis.

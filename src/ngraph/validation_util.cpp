@@ -796,12 +796,12 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
 }
 
 std::vector<size_t> ngraph::normalize_axes(const std::string& node_description,
-                                           std::vector<int64_t> axes,
+                                           const std::vector<int64_t>& axes,
                                            std::int64_t tensor_rank)
 {
     std::vector<size_t> new_axes;
 
-    for (auto axis : axes)
+    for (const auto& axis : axes)
     {
         new_axes.push_back(normalize_axis(node_description, axis, tensor_rank));
     }
