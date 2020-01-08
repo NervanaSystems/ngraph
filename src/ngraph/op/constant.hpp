@@ -44,8 +44,7 @@ namespace ngraph
                 /// \param type The element type of the tensor constant.
                 /// \param shape The shape of the tensor constant.
                 /// \param values A vector of literals for initializing the tensor constant. The
-                /// size
-                ///        of values must match the size of the shape.
+                ///               size of values must match the size of the shape.
                 template <typename T>
                 Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
                     : m_element_type(type)
@@ -89,8 +88,8 @@ namespace ngraph
                          const std::vector<std::string>& values);
 
                 /// \brief Constructs a tensor constant with the same initialization value copied
-                /// across
-                //         the tensor. This constructor is to support deserialization of constants.
+                ///        across the tensor. This constructor is to support deserialization of
+                ///        constants.
                 ///
                 /// \param type The element type of the tensor constant.
                 /// \param shape The shape of the tensor constant.
