@@ -28,10 +28,8 @@ namespace ngraph
             /// \brief A function parameter.
             ///
             /// Parameters are nodes that represent the arguments that will be passed to
-            /// user-defined
-            /// functions. Function creation requires a sequence of parameters. Basic graph
-            /// operations
-            /// do not need parameters attached to a function.
+            /// user-defined functions. Function creation requires a sequence of parameters.
+            /// Basic graph operations do not need parameters attached to a function.
             class NGRAPH_API Parameter : public op::Op
             {
             protected:
