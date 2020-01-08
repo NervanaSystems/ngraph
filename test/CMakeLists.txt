@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -71,6 +71,7 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    op_is.cpp
     opset1.cpp
     opset_pass/binary_elementwise_opset_pass.cpp
     opset_pass/broadcast_opset_pass.cpp
@@ -85,12 +86,11 @@ set(SRC
     opset_pass/generate_mask_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
     opset_pass/poolings_opset_pass.cpp
-    opset_pass/product_opset_pass.cpp
+    opset_pass/reduction_opset_pass.cpp
     opset_pass/reverse_opset_pass.cpp
     opset_pass/select_opset_pass.cpp
     opset_pass/slice_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
-    opset_pass/sum_opset_pass.cpp
     opset_pass/topk_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
