@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -97,11 +97,9 @@ namespace ngraph
                     throw ngraph_error("Unsupported index 2 element type");
                 }
                 auto element_type = args[0].get_element_type();
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-#endif
                 switch (element_type)
                 {
                 case element::Type_t::undefined:
@@ -157,9 +155,7 @@ namespace ngraph
                     NGRAPH_UNREACHABLE("Unexpected switch case");
                 }
 
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
-#endif
 
                 functors.emplace_back(functor);
             }

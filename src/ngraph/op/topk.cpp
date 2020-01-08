@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -313,10 +313,8 @@ size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
 
     size_t k = 0;
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-#endif
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
     switch (static_cast<element::Type_t>(k_element_type))
     {
     case element::Type_t::i8: k = validate_and_get_k<int8_t>(k_constant); break;
@@ -324,9 +322,7 @@ size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
     case element::Type_t::i64: k = validate_and_get_k<int64_t>(k_constant); break;
     default: break;
     }
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
+#pragma GCC diagnostic pop
 
     return k;
 }
