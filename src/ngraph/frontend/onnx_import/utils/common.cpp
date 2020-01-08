@@ -28,21 +28,39 @@ namespace ngraph
     {
         namespace common
         {
+            static std::string concat_strings(
+                const std::vector<std::reference_wrapper<const std::string>>& outputs)
+            {
+                const auto concat_with_comma =
+                    [](const std::string& accumulator,
+                       std::reference_wrapper<const std::string> next_output) {
+                        return accumulator + ", " + next_output.get();
+                    };
+
+                return std::accumulate(
+                    outputs.begin(), outputs.end(), std::string{}, concat_with_comma);
+            }
+
+            static std::string build_provenance_tag(const Node& onnx_node)
+            {
+                const auto output_names = concat_strings(onnx_node.get_output_names());
+                return std::string{"<ONNX " + onnx_node.op_type() + " (" + onnx_node.get_name() +
+                                   " -> " + output_names + ")>"};
+            }
+
             const NodeVector& add_provenance_tags(const Node& onnx_node,
                                                   const NodeVector& ng_node_vector)
             {
-                const std::string node_name =
-                    onnx_node.get_name().empty() ? "unnamed node" : onnx_node.get_name();
-                const std::string provenance_tag =
-                    "<ONNX " + onnx_node.op_type() + " (" + node_name + ")>";
+                const auto tag = build_provenance_tag(onnx_node);
+                const auto ng_inputs = onnx_node.get_ng_inputs();
 
-                auto ng_inputs = onnx_node.get_ng_inputs();
                 ngraph::traverse_nodes(ng_node_vector,
-                                       [&](std::shared_ptr<ngraph::Node> ng_node) {
-                                           ng_node->add_provenance_tag(provenance_tag);
+                                       [&tag](std::shared_ptr<ngraph::Node> ng_node) {
+                                           ng_node->add_provenance_tag(tag);
                                        },
                                        false,
                                        ng_inputs);
+
                 return ng_node_vector;
             }
 
