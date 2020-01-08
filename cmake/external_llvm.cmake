@@ -46,11 +46,6 @@ message(STATUS "CLANG_CMAKE_DIR: ${CLANG_CMAKE_DIR}")
 message(STATUS "CLANG_INCLUDE_DIRS: ${CLANG_INCLUDE_DIRS}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
-set(${LLVM_LINK_LIBS} clangHandleCXX)
-if(LINUX OR APPLE)
-    set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} m)
-endif()
-
 add_library(libllvm INTERFACE)
-target_include_directories(libllvm SYSTEM INTERFACE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIR})
-target_link_libraries(libllvm INTERFACE ${LLVM_LINK_LIBS})
+target_include_directories(libllvm PRIVATE INTERFACE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIR})
+target_link_libraries(libllvm PRIVATE INTERFACE clangHandleCXX clangHandleLLVM)
