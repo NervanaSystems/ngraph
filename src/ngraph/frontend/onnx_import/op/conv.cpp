@@ -136,8 +136,7 @@ namespace ngraph
                         default_opset::Constant::create(
                             element::i64, Shape{new_shape.size()}, new_shape),
                         default_opset::Constant::create(element::i64, Shape{1}, {1}));
-                    return {std::make_shared<default_opset::Add>(
-                        conv_node, broadcasted_bias, ngraph::op::AutoBroadcastSpec())};
+                    return {std::make_shared<default_opset::Add>(conv_node, broadcasted_bias)};
                 }
 
             } // namespace set_1
