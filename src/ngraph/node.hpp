@@ -138,20 +138,8 @@ namespace ngraph
         /// \param output_size Number of outputs for this node
         Node(const OutputVector& arguments, size_t output_size = 1);
 
-        /// \brief Construct a node with arguments. Will be deprecated.
-        Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
-
-        /// \brief Constructor for Node subclasses that have metaclasses. Will be deprecated.
-        /// \param arguments The 0th output of node i will connect to input i
-        /// \param output_size Number of outputs for this node
-        Node(const NodeVector& arguments, size_t output_size = 1);
-
         // For back-compatibility
-        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
-        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
-        {
-            generate_adjoints(adjoints, as_node_vector(deltas));
-        }
+        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas) {}
         /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows
         /// on deep networks.
         void safe_delete(NodeVector& nodes, bool recurse);
@@ -306,17 +294,14 @@ namespace ngraph
         size_t get_output_size() const;
 
         /// Returns the element type for output i
-        // TODO: deprecate in favor of node->output(i).get_element_type()
         const element::Type& get_output_element_type(size_t i) const;
 
         /// Checks that there is exactly one output and returns its element type
-        // TODO: deprecate in favor of node->output(0).get_element_type() with a suitable check in
         // the calling code, or updates to the calling code if it is making an invalid assumption
         // of only one output.
         const element::Type& get_element_type() const;
 
         /// Returns the shape for output i
-        // TODO: deprecate in favor of node->output(i).get_shape()
         const Shape& get_output_shape(size_t i) const;
 
         /// Returns the partial shape for output i
@@ -326,9 +311,6 @@ namespace ngraph
                                                                bool for_get_output_element = true);
 
         /// Checks that there is exactly one output and returns its shape
-        // TODO: deprecate in favor of node->output(0).get_shape() with a suitable check in the
-        // calling code, or updates to the calling code if it is making an invalid assumption of
-        // only one output.
         const Shape& get_shape() const;
 
         /// Returns the tensor for output i
@@ -362,15 +344,12 @@ namespace ngraph
         size_t get_input_size() const;
 
         /// Returns the element type of input i
-        // TODO: deprecate in favor of node->input(i).get_element_type()
         const element::Type& get_input_element_type(size_t i) const;
 
         /// Returns the shape of input i
-        // TODO: deprecate in favor of node->input(i).get_shape()
         const Shape& get_input_shape(size_t i) const;
 
         /// Returns the partial shape of input i
-        // TODO: deprecate in favor of node->input(i).get_partial_shape()
         const PartialShape& get_input_partial_shape(size_t i) const;
 
         /// Returns the tensor name for input i
@@ -379,10 +358,9 @@ namespace ngraph
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
-        // Will be deprecated
-        virtual NodeVector get_arguments() const;
-        // Will be deprecated
-        std::shared_ptr<Node> get_argument(size_t index) const;
+        virtual NodeVector get_arguments() const NGRAPH_DEPRECATED("Use input_values().");
+        std::shared_ptr<Node> get_argument(size_t index) const
+            NGRAPH_DEPRECATED("use input_value(i).");
 
     protected:
         // Will be replaced with an OutputVector version
@@ -700,8 +678,6 @@ namespace ngraph
         /// \brief Constructs a Output.
         /// \param node A `shared_ptr` to the node for the output handle.
         /// \param index The index of the output.
-        ///
-        /// TODO: Make a plan to deprecate this.
         Output(const std::shared_ptr<Node>& node, size_t index)
             : m_node(node)
             , m_index(index)
@@ -724,8 +700,6 @@ namespace ngraph
         /// \return A pointer to the node referred to by this output handle.
         Node* get_node() const { return m_node.get(); }
         /// \return A `shared_ptr` to the node referred to by this output handle.
-        ///
-        /// TODO: Make a plan to deprecate this.
         std::shared_ptr<Node> get_node_shared_ptr() const { return m_node; }
         /// \return A useable shared pointer to this output. If index 0, the node,
         /// otherwise find or create a GOE.
@@ -806,8 +780,6 @@ namespace ngraph
         /// \brief Constructs a Output.
         /// \param node A `shared_ptr` to the node for the output handle.
         /// \param index The index of the output.
-        ///
-        /// TODO: Make a plan to deprecate this.
         Output(const std::shared_ptr<const Node>& node, size_t index)
             : m_node(node)
             , m_index(index)
@@ -834,8 +806,6 @@ namespace ngraph
         /// \return A pointer to the node referred to by this output handle.
         const Node* get_node() const { return m_node.get(); }
         /// \return A `shared_ptr` to the node referred to by this output handle.
-        ///
-        /// TODO: Make a plan to deprecate this.
         std::shared_ptr<const Node> get_node_shared_ptr() const { return m_node; }
         /// \return The index of the output referred to by this output handle.
         size_t get_index() const { return m_index; }

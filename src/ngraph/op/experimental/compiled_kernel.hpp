@@ -34,9 +34,6 @@ namespace ngraph
             static constexpr NodeTypeInfo type_info{"CompiledKernel", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             CompiledKernel() = default;
-            CompiledKernel(const NodeVector& node_list,
-                           const NodeVector& outputs,
-                           const NodeVector& args);
             CompiledKernel(const OutputVector& node_list,
                            const OutputVector& outputs,
                            const OutputVector& args);

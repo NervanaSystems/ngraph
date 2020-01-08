@@ -33,9 +33,16 @@ namespace ngraph
             public:
                 /// \brief \p a base class for \sa Skip and \sa Label
                 ///
-                Pattern(const NodeVector& nodes, Predicate pred)
+                Pattern(const OutputVector& nodes, Predicate pred)
                     : Node(nodes)
                     , m_predicate(pred)
+                {
+                }
+
+                /// \brief \p a base class for \sa Skip and \sa Label
+                ///
+                Pattern(const NodeVector& nodes, Predicate pred)
+                    : Pattern(as_output_vector(nodes), pred)
                 {
                 }
 
