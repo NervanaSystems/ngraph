@@ -206,7 +206,7 @@ protected:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-// #pragma GCC diagnostic error "-Wcovered-switch-default"
+        // #pragma GCC diagnostic error "-Wcovered-switch-default"
         switch (get_typeid(node))
         {
         case OP_TYPEID::Abs:
