@@ -44,6 +44,9 @@
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#ifdef NGRAPH_MLIR_ENABLE
+#include "contrib/mlir/utils.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
