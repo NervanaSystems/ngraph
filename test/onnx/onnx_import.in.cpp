@@ -382,11 +382,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_only_outputs)
     {
         if (as_type_ptr<op::v1::Add>(ng_node))
         {
-            for (const auto tag : ng_node->get_provenance_tags())
-            {
-                // empty node name(before the arrow) and single output name in the tag are expected
-                EXPECT_EQ(tag, "<ONNX Add ( -> output_of_add)>");
-            }
+            const auto tags = ng_node->get_provenance_tags();
+            ASSERT_EQ(tags.size(), 1) << "There should be exactly one provenance tag set for "
+                                      << ng_node;
+
+            // empty node name(before the arrow) and single output name in the tag are expected
+            EXPECT_EQ(*(tags.cbegin()), "<ONNX Add ( -> output_of_add)>");
         }
     }
 }
@@ -400,10 +401,11 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_node_name_and_outputs)
     {
         if (as_type_ptr<op::v1::Add>(ng_node))
         {
-            for (const auto tag : ng_node->get_provenance_tags())
-            {
-                EXPECT_EQ(tag, "<ONNX Add (Add_node -> output_of_add)>");
-            }
+            const auto tags = ng_node->get_provenance_tags();
+            ASSERT_EQ(tags.size(), 1) << "There should be exactly one provenance tag set for "
+                                      << ng_node;
+
+            EXPECT_EQ(*(tags.cbegin()), "<ONNX Add (Add_node -> output_of_add)>");
         }
     }
 }
@@ -417,10 +419,11 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_multiple_outputs_op)
     {
         if (as_type_ptr<op::v1::TopK>(ng_node))
         {
-            for (const auto tag : ng_node->get_provenance_tags())
-            {
-                EXPECT_EQ(tag, "<ONNX TopK (TOPK -> values, indices)>");
-            }
+            const auto tags = ng_node->get_provenance_tags();
+            ASSERT_EQ(tags.size(), 1) << "There should be exactly one provenance tag set for "
+                                      << ng_node;
+
+            EXPECT_EQ(*(tags.cbegin()), "<ONNX TopK (TOPK -> values, indices)>");
         }
     }
 }
