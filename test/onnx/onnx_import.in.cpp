@@ -385,7 +385,6 @@ void TEST_PROVENANCE_TAGS(const std::string& model_path, const std::string& expe
             ASSERT_EQ(tags.size(), 1) << "There should be exactly one provenance tag set for "
                                       << ng_node;
 
-            // empty node name(before the arrow) and single output name in the tag are expected
             EXPECT_EQ(*(tags.cbegin()), expected_provenance_tag);
         }
     }
