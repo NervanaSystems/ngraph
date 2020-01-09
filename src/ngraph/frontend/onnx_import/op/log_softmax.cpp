@@ -17,8 +17,8 @@
 #include <memory>
 
 #include "default_opset.hpp"
-#include "utils/common.hpp"
 #include "log_softmax.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
