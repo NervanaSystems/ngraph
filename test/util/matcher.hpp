@@ -49,15 +49,7 @@ public:
         NGRAPH_DEBUG << "Starting match pattern = " << pattern_node->get_name()
                      << " , graph_node = " << graph_node->get_name();
 
-        m_pattern_map.clear();
-        m_match_root.reset();
-        m_matched_list.clear();
-
-        bool is_match = match_value(pattern_node, graph_node);
-        if (is_match)
-        {
-            m_match_root = graph_node;
-        }
-        return is_match;
+        m_pattern_node = pattern_node;
+        return ngraph::pattern::Matcher::match(graph_node, ngraph::pattern::PatternValueMap{});
     }
 };
