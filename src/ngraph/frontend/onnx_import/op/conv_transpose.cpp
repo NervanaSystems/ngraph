@@ -20,11 +20,11 @@
 #include <memory>
 #include <vector>
 
+#include "builder/reshape.hpp"
 #include "conv_transpose.hpp"
+#include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/opsets/opset0.hpp"
@@ -82,30 +82,39 @@ namespace ngraph
                         << "provided group attribute value must be a multiple of filter channels "
                            "count.";
 
+                    // reshape filters to match desired shape:
+                    // [GROUPS, C_INPUT, C_OUTPUT, K_D, ..., K_1]
+                    // from [C_INPUT x C_OUTPUT/groups x k1 x k2 x ... x kn]
+
+                    Shape new_filters_shape{weights_shape};
+                    new_filters_shape.at(0) /= groups;
+                    new_filters_shape.insert(std::begin(new_filters_shape), groups);
+                    filters = builder::reshape(filters, new_filters_shape);
+
                     std::shared_ptr<ngraph::Node> conv_node;
                     if (!output_shape.empty())
                     {
-                        conv_node = std::make_shared<ngraph::opset0::GroupConvolutionTranspose>(
+                        conv_node = std::make_shared<default_opset::GroupConvolutionBackpropData>(
                             data,
                             filters,
+                            default_opset::Constant::create(
+                                element::i64, Shape{output_shape.size()}, output_shape),
                             strides,
                             dilations,
-                            CoordinateDiff(std::begin(output_padding), std::end(output_padding)),
-                            Shape(std::begin(output_shape), std::end(output_shape)),
-                            groups);
+                            auto_pad_type,
+                            CoordinateDiff(std::begin(output_padding), std::end(output_padding)));
                     }
                     else
                     {
-                        conv_node = std::make_shared<ngraph::opset0::GroupConvolutionTranspose>(
+                        conv_node = std::make_shared<default_opset::GroupConvolutionBackpropData>(
                             data,
                             filters,
                             strides,
-                            dilations,
                             padding_below,
                             padding_above,
-                            CoordinateDiff(std::begin(output_padding), std::end(output_padding)),
-                            groups,
-                            auto_pad_type);
+                            dilations,
+                            auto_pad_type,
+                            CoordinateDiff(std::begin(output_padding), std::end(output_padding)));
                     }
 
                     // no bias param
@@ -115,10 +124,14 @@ namespace ngraph
                     }
 
                     auto bias = inputs.at(2);
+                    const Shape& new_shape = conv_node->get_shape();
+                    auto broadcasted_bias = std::make_shared<default_opset::Broadcast>(
+                        bias,
+                        default_opset::Constant::create(
+                            element::i64, Shape{new_shape.size()}, new_shape),
+                        default_opset::Constant::create(element::i64, Shape{1}, {1}));
 
-                    return {std::make_shared<ngraph::opset0::Add>(
-                        conv_node,
-                        ngraph::op::make_broadcast_node(bias, conv_node->get_shape(), 1))};
+                    return {std::make_shared<default_opset::Add>(conv_node, broadcasted_bias)};
                 }
 
             } // namespace set_1
