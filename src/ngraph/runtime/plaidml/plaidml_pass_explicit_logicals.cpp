@@ -86,7 +86,7 @@ void ngraph::runtime::plaidml::pass::ExplicitLogicals::construct_logical_to_data
                 "ConvertLogicalToData",
                 "Tile",
                 "function (I) -> (O) { O = as_int(I ? 1 : 0, 8);}",
-                NodeVector{producer},
+                OutputVector{producer},
                 std::vector<std::tuple<element::Type, PartialShape>>{{std::make_tuple(
                     element::boolean, PartialShape{producer->get_output_shape(0)})}}));
         return true;
