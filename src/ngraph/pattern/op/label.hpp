@@ -50,7 +50,7 @@ namespace ngraph
                       const PartialShape& s,
                       const ValuePredicate pred,
                       const OutputVector& wrapped_values)
-                    : Pattern(wrapped_values, pred)
+                    : Pattern(OutputVector{wrap_values(wrapped_values)}, pred)
                 {
                     set_output_type(0, type, s);
                 }
@@ -130,6 +130,9 @@ namespace ngraph
                 bool match_value(Matcher* matcher,
                                  const Output<Node>& pattern_value,
                                  const Output<Node>& graph_value) override;
+
+            protected:
+                static Output<Node> wrap_values(const OutputVector& wrapped_values);
             };
         }
     }
