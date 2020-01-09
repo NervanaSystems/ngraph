@@ -44,6 +44,11 @@ namespace ngraph
     bool getenv_bool(const char* env_var, bool default_value = false);
 
     void addenv_to_map(std::string key, std::string val);
-    bool getenv_from_map(const char* key, std::string val);
+    std::string getenv_from_map(const char* env_var);
     void log_all_envvar();
+    // void set_env_var(const char* env_var, std::string val, bool priority);
+    int set_environment(const char* name, const char* value, int overwrite);
+    int unset_environment(const char* name);
+    bool map_contains(const char* env_var);
+    void erase_env_from_map(std::string env_var);
 }

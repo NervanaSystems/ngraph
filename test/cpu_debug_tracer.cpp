@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "misc.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"

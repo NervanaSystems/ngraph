@@ -22,14 +22,17 @@
 
 using namespace std;
 
-static std::unordered_map<string, string> s_env_map;
-static const size_t MAX_NUM_ENV_VARS = 100;
+std::unordered_map<std::string, std::string>& get_env_var_map()
+{
+    static std::unordered_map<string, string> s_env_var_map;
+    return s_env_var_map;
+}
 
 void ngraph::log_all_envvar()
 {
     NGRAPH_DEBUG << "List of all environment variables:\n";
-    std::unordered_map<std::string, std::string>::iterator it = s_env_map.begin();
-    while (it != s_env_map.end())
+    std::unordered_map<std::string, std::string>::iterator it = get_env_var_map().begin();
+    while (it != get_env_var_map().end())
     {
         NGRAPH_DEBUG << "\t" << it->first << " = " << it->second << std::endl;
         it++;
@@ -38,23 +41,13 @@ void ngraph::log_all_envvar()
 
 void ngraph::addenv_to_map(std::string env_var, std::string val)
 {
-    if (s_env_map.size() <= MAX_NUM_ENV_VARS)
-    {
-        s_env_map.emplace(env_var, val);
-    }
-    else
-    {
-        NGRAPH_WARN << "Number of environment variables used is > max = " << MAX_NUM_ENV_VARS
-                    << std::endl;
-        log_all_envvar();
-    }
+    get_env_var_map().emplace(env_var, val);
 }
 
-bool ngraph::getenv_from_map(const char* env_var, std::string val)
+bool ngraph::map_contains(const char* env_var)
 {
-    if (s_env_map.find(env_var) != s_env_map.end())
+    if (get_env_var_map().find(env_var) != get_env_var_map().end())
     {
-        val = s_env_map.at(env_var);
         return true;
     }
     else
@@ -63,22 +56,89 @@ bool ngraph::getenv_from_map(const char* env_var, std::string val)
     }
 }
 
+std::string ngraph::getenv_from_map(const char* env_var)
+{
+    if (map_contains(env_var))
+    {
+        return get_env_var_map().at(env_var);
+    }
+    else
+    {
+        return "";
+    }
+}
+
+void ngraph::erase_env_from_map(std::string env_var)
+{
+    get_env_var_map().erase(env_var);
+}
+
+int ngraph::set_environment(const char* env_var, const char* value, int overwrite)
+{
+    if (map_contains(env_var) && !overwrite)
+    {
+        // Log that it is already set and user chose to not overwrite
+        NGRAPH_WARN << "Cannot set environment variable " << env_var << " is already set to "
+                    << value << ", and overwrite is false";
+        return -1; // Recheck
+    }
+    else if (map_contains(env_var))
+    {
+        erase_env_from_map(env_var);
+    }
+    addenv_to_map(env_var, value);
+
+#ifdef _WIN32
+    return _putenv_s(env_var, value);
+#elif defined(__linux) || defined(__APPLE__)
+    return setenv(env_var, value, overwrite);
+#endif
+}
+
+int ngraph::unset_environment(const char* env_var)
+{
+    erase_env_from_map(env_var);
+#ifdef _WIN32
+    return _putenv_s(env_var, "");
+#elif defined(__linux) || defined(__APPLE__)
+    return unsetenv(env_var);
+#endif
+}
+
 std::string ngraph::getenv_string(const char* env_var)
 {
-    string env_string = "";
-    if (!getenv_from_map(env_var, env_string))
+    if (map_contains(env_var))
+    {
+        return getenv_from_map(env_var);
+    }
+    else
     {
         const char* env_p = ::getenv(env_var);
-        env_string = env_p ? env_p : "";
+        string env_string = env_p ? env_p : "";
         addenv_to_map(env_var, env_string);
+        return env_string;
     }
-    return env_string;
 }
 
 int32_t ngraph::getenv_int(const char* env_var, int32_t default_value)
 {
-    char* env_string;
-    if (!getenv_from_map(env_var, env_string))
+    if (map_contains(env_var))
+    {
+        string env_p = getenv_from_map(env_var);
+
+        errno = 0;
+        char* err;
+        int32_t env_int = strtol(env_p.c_str(), &err, 0);
+        if (errno == 0 || *err)
+        {
+            // Extensive error checking was done when reading getenv, keeping it minimal here, ok?
+            NGRAPH_DEBUG << "Error reading (" << env_var << ") empty or undefined, "
+                         << " defaulted to -1 here.";
+            return default_value;
+        }
+        return env_int;
+    }
+    else
     {
         const char* env_p = ::getenv(env_var);
         int32_t env = default_value;
@@ -113,23 +173,8 @@ int32_t ngraph::getenv_int(const char* env_var, int32_t default_value)
             NGRAPH_DEBUG << "Environment variable (" << env_var << ") empty or undefined, "
                          << " defaulted to -1 here.";
         }
-        // insert into map
         addenv_to_map(env_var, std::to_string(env));
         return env;
-    }
-    else
-    {
-        errno = 0;
-        char* err;
-        int32_t env_int = strtol(env_string, &err, 0);
-        if (errno == 0 || *err)
-        {
-            // Extensive error checking was done when reading getenv, keeping it minimal here, ok?
-            NGRAPH_DEBUG << "Error reading (" << env_var << ") empty or undefined, "
-                         << " defaulted to -1 here.";
-            return default_value;
-        }
-        return env_int;
     }
 }
 

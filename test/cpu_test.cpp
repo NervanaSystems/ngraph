@@ -22,7 +22,7 @@
 #include <thread>
 
 #include "gtest/gtest.h"
-#include "misc.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
