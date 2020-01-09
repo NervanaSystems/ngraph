@@ -81,59 +81,9 @@ namespace ngraph
             /// \param type The element type of the tensor constant.
             /// \param shape The shape of the tensor constant.
             /// \param values A list of string values to use as the constant data.
-            Constant(const element::Type& type, Shape shape, const std::vector<std::string>& values)
-                : m_element_type(type)
-                , m_shape(shape)
-                , m_data(new runtime::AlignedBuffer(
-                      std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
-                      host_alignment()))
-            {
-                NODE_VALIDATION_CHECK(
-                    this,
-                    values.size() == shape_size(m_shape) || values.size() == 1,
-                    "Did not get the expected number of literals for a constant of shape ",
-                    m_shape,
-                    " (got ",
-                    values.size(),
-                    ", expected ",
-                    shape_size(m_shape),
-                    ".");
-                if (values.size())
-                {
-                    if (type.is_integral())
-                    {
-                        if (type.is_signed())
-                        {
-                            std::vector<int64_t> dvalues = parse_string<int64_t>(values);
-                            if (values.size() == 1 && shape_size(m_shape) != 1)
-                            {
-                                dvalues = std::vector<int64_t>(shape_size(m_shape), dvalues[0]);
-                            }
-                            write_values(dvalues);
-                        }
-                        else
-                        {
-                            std::vector<uint64_t> dvalues = parse_string<uint64_t>(values);
-                            if (values.size() == 1 && shape_size(m_shape) != 1)
-                            {
-                                dvalues = std::vector<uint64_t>(shape_size(m_shape), dvalues[0]);
-                            }
-                            write_values(dvalues);
-                        }
-                    }
-                    else
-                    {
-                        std::vector<double> dvalues = parse_string<double>(values);
-                        if (values.size() == 1 && shape_size(m_shape) != 1)
-                        {
-                            dvalues = std::vector<double>(shape_size(m_shape), dvalues[0]);
-                        }
-                        write_values(dvalues);
-                    }
-                }
-                constructor_validate_and_infer_types();
-                m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
-            }
+            Constant(const element::Type& type,
+                     Shape shape,
+                     const std::vector<std::string>& values);
 
             /// \brief Constructs a tensor constant with the same initialization value copied across
             //         the tensor. This constructor is to support deserialization of constants.
@@ -141,17 +91,7 @@ namespace ngraph
             /// \param type The element type of the tensor constant.
             /// \param shape The shape of the tensor constant.
             /// \param data A void* to constant data.
-            Constant(const element::Type& type, const Shape& shape, const void* data)
-                : m_element_type(type)
-                , m_shape(shape)
-                , m_data(nullptr)
-            {
-                size_t size = std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f);
-                m_data.reset(new runtime::AlignedBuffer(size, host_alignment()));
-                std::memcpy(m_data->get_ptr(), data, size);
-                constructor_validate_and_infer_types();
-                m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
-            }
+            Constant(const element::Type& type, const Shape& shape, const void* data);
 
             virtual ~Constant() override;
 
@@ -435,21 +375,8 @@ namespace ngraph
             Constant operator=(const Constant&) = delete;
         };
 
-        class NGRAPH_API ScalarConstantLikeBase : public Constant
-        {
-        public:
-            std::shared_ptr<op::Constant> as_constant() const;
-            ScalarConstantLikeBase() = default;
-
-        protected:
-            ScalarConstantLikeBase(const OutputVector& args)
-                : Constant(args)
-            {
-            }
-        };
-
         /// \brief A scalar constant whose element type is the same as like.
-        class NGRAPH_API ScalarConstantLike : public ScalarConstantLikeBase
+        class NGRAPH_API ScalarConstantLike : public Constant
         {
         public:
             static constexpr NodeTypeInfo type_info{"ScalarConstantLike", 0};
@@ -463,7 +390,7 @@ namespace ngraph
             /// \param value The value of the scalar.
             template <typename T>
             ScalarConstantLike(const Output<Node>& like, T value)
-                : ScalarConstantLikeBase({like})
+                : Constant({like})
                 , m_value(static_cast<double>(value))
             {
                 constructor_validate_and_infer_types();
@@ -472,6 +399,7 @@ namespace ngraph
             ScalarConstantLike() = default;
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+            std::shared_ptr<op::Constant> as_constant() const;
 
         protected:
             void infer_element_type() override;
