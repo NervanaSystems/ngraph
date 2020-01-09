@@ -1823,9 +1823,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_pad_constant)
     auto test_case = ngraph::test::NgraphTestCase(pad_fn, "${BACKEND_NAME}");
 
     test_case.add_input<float>({1.f, 1.2, 2.3, 3.4, 4.5, 5.7});
-    test_case.add_input<int64_t>({0, 0, 2, 0});
     test_case.add_expected_output<float>(
-        Shape{1, 3, 4}, {0.f, 0.f, 1.f, 1.2, 0.f, 0.f, 2.3, 3.4, 0.f, 0.f, 4.5, 5.7});
+        Shape{3, 4}, {0.f, 0.f, 1.f, 1.2, 0.f, 0.f, 2.3, 3.4, 0.f, 0.f, 4.5, 5.7});
 
     test_case.run();
 }

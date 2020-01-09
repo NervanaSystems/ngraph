@@ -28,36 +28,39 @@
 #include "utils/convpool.hpp"
 
 using namespace std;
+namespace
+{
+    ngraph::op::PadMode get_pad_mode(string mode)
+    {
+        ngraph::op::PadMode pad_mode;
 
+        if (mode == "constant")
+        {
+            pad_mode = ngraph::op::PadMode::CONSTANT;
+        }
+        else if (mode == "reflect")
+        {
+            pad_mode = ngraph::op::PadMode::REFLECT;
+        }
+        else if (mode == "edge")
+        {
+            pad_mode = ngraph::op::PadMode::EDGE;
+        }
+        else
+        {
+            throw ngraph::onnx_import::error::InvalidArgument("Unsupported padding mode: [" + mode +
+                                                              "]");
+        }
+
+        return pad_mode;
+    }
+}
 namespace ngraph
 {
     namespace onnx_import
     {
         namespace op
         {
-            ngraph::op::PadMode setPadMode(string mode)
-            {
-                ngraph::op::PadMode pad_mode;
-
-                if (mode == "constant")
-                {
-                    pad_mode = ngraph::op::PadMode::CONSTANT;
-                }
-                else if (mode == "reflect")
-                {
-                    pad_mode = ngraph::op::PadMode::REFLECT;
-                }
-                else if (mode == "edge")
-                {
-                    pad_mode = ngraph::op::PadMode::EDGE;
-                }
-                else
-                {
-                    throw error::InvalidArgument("Unsupported padding mode: [" + mode + "]");
-                }
-
-                return pad_mode;
-            }
             namespace set_1
             {
                 NodeVector pad(const Node& node)
@@ -68,7 +71,7 @@ namespace ngraph
                     double value = node.get_attribute_value<double>("value", 0);
                     const std::string mode =
                         node.get_attribute_value<std::string>("mode", "constant");
-                    ngraph::op::PadMode pad_mode = setPadMode(mode);
+                    ngraph::op::PadMode pad_mode = get_pad_mode(mode);
 
                     auto paddings = convpool::get_pads(node, data_shape);
                     ngraph::CoordinateDiff padding_below = paddings.first;
@@ -93,6 +96,8 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
                     auto pads = node.get_ng_inputs().at(1);
                     std::shared_ptr<ngraph::Node> values;
+                    std::shared_ptr<ngraph::Node> padding_begin;
+                    std::shared_ptr<ngraph::Node> padding_end;
 
                     if (node.get_ng_inputs().size() == 3)
                     {
@@ -104,19 +109,40 @@ namespace ngraph
                             data->get_element_type(), ngraph::Shape{}, {0});
                     }
 
-                    auto axis = ngraph::op::Constant::create(element::i64, ngraph::Shape{}, {0});
-                    NodeVector padding = builder::split(pads, 2, 0);
+                    if (pads->is_constant())
+                    {
+                        std::vector<std::int64_t> pads_vector =
+                            ngraph::as_type_ptr<ngraph::op::Constant>(pads)
+                                ->get_vector<std::int64_t>();
 
-                    auto padding_begin =
-                        std::make_shared<default_opset::Convert>(padding.at(0), element::i64);
-                    auto padding_end =
-                        std::make_shared<default_opset::Convert>(padding.at(1), element::i64);
+                        std::size_t const half_size = pads_vector.size() / 2;
+                        std::vector<std::int64_t> padding_begin_values(
+                            pads_vector.begin(), pads_vector.begin() + half_size);
+                        std::vector<std::int64_t> padding_end_values(
+                            pads_vector.begin() + half_size, pads_vector.end());
+
+                        padding_begin = ngraph::op::Constant::create(
+                            element::i64, ngraph::Shape{half_size}, padding_begin_values);
+                        padding_end = ngraph::op::Constant::create(
+                            element::i64, ngraph::Shape{half_size}, padding_end_values);
+                    }
+                    else
+                    {
+                        auto axis =
+                            ngraph::op::Constant::create(element::i64, ngraph::Shape{}, {0});
+                        NodeVector padding = builder::split(pads, 2, 0);
+
+                        padding_begin =
+                            std::make_shared<default_opset::Convert>(padding.at(0), element::i64);
+                        padding_end =
+                            std::make_shared<default_opset::Convert>(padding.at(1), element::i64);
+                    }
 
                     const std::string mode =
                         node.get_attribute_value<std::string>("mode", "constant");
-                    ngraph::op::PadMode pad_mode = setPadMode(mode);
+                    ngraph::op::PadMode pad_mode = get_pad_mode(mode);
 
-                    return {std::make_shared<ngraph::op::v1::Pad>(
+                    return {std::make_shared<default_opset::Pad>(
                         data, padding_begin, padding_end, values, pad_mode)};
                 }
 
