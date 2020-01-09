@@ -38,8 +38,11 @@ namespace ngraph
     {
         namespace common
         {
+            /// \brief Adds a provenance tag to all nodes in a subgraph representing an ONNX node
             void add_provenance_tags(const Node& onnx_node, const NodeVector& ng_node_vector);
 
+            /// \brief Adds a provenance tag to a node that represents an input of a graph
+            /// \note  This overload only works with Parameter and Constant nodes
             void add_provenance_tags(const std::string& input_name,
                                      std::shared_ptr<ngraph::Node> ng_node);
 

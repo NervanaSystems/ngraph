@@ -46,6 +46,7 @@ namespace ngraph
                                            concat_with_comma);
                 }
 
+                /// \brief Builds a provenance tag for an ONNX operator
                 static std::string build_provenance_tag(const Node& onnx_node)
                 {
                     const auto output_names = concat_strings(onnx_node.get_output_names());
@@ -53,6 +54,7 @@ namespace ngraph
                                        onnx_node.get_name() + " -> " + output_names + ")>"};
                 }
 
+                /// \brief Builds a provenance tag for an input of an ONNX graph
                 static std::string build_provenance_tag(const std::string& input_name)
                 {
                     return std::string{"<ONNX Input (" + input_name + ")>"};
