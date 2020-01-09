@@ -358,13 +358,13 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_text)
 {
-    auto function = onnx_import::import_onnx_model(
+    const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_tag_add.prototxt"));
 
-    auto ng_nodes = function->get_ordered_ops();
-    for (auto ng_node : ng_nodes)
+    const auto ng_nodes = function->get_ordered_ops();
+    for (const auto ng_node : ng_nodes)
     {
-        for (auto tag : ng_node->get_provenance_tags())
+        for (const auto tag : ng_node->get_provenance_tags())
         {
             EXPECT_HAS_SUBSTRING(tag, "ONNX");
         }
@@ -378,12 +378,15 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_only_outputs)
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_only_outputs.prototxt"));
 
-    for (auto ng_node : function->get_ordered_ops())
+    for (const auto ng_node : function->get_ordered_ops())
     {
-        for (auto tag : ng_node->get_provenance_tags())
+        if (as_type_ptr<op::v1::Add>(ng_node))
         {
-            // empty node name(before the arrow) and single output name in the tag are expected
-            EXPECT_EQ(tag, "<ONNX Add ( -> output_of_add)>");
+            for (const auto tag : ng_node->get_provenance_tags())
+            {
+                // empty node name(before the arrow) and single output name in the tag are expected
+                EXPECT_EQ(tag, "<ONNX Add ( -> output_of_add)>");
+            }
         }
     }
 }
@@ -393,11 +396,14 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_node_name_and_outputs)
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_node_name_and_outputs.prototxt"));
 
-    for (auto ng_node : function->get_ordered_ops())
+    for (const auto ng_node : function->get_ordered_ops())
     {
-        for (auto tag : ng_node->get_provenance_tags())
+        if (as_type_ptr<op::v1::Add>(ng_node))
         {
-            EXPECT_EQ(tag, "<ONNX Add (Add_node -> output_of_add)>");
+            for (const auto tag : ng_node->get_provenance_tags())
+            {
+                EXPECT_EQ(tag, "<ONNX Add (Add_node -> output_of_add)>");
+            }
         }
     }
 }
@@ -407,11 +413,14 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_multiple_outputs_op)
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_multiple_outputs_op.prototxt"));
 
-    for (auto ng_node : function->get_ordered_ops())
+    for (const auto ng_node : function->get_ordered_ops())
     {
-        for (auto tag : ng_node->get_provenance_tags())
+        if (as_type_ptr<op::v1::TopK>(ng_node))
         {
-            EXPECT_EQ(tag, "<ONNX TopK (TOPK -> values, indices)>");
+            for (const auto tag : ng_node->get_provenance_tags())
+            {
+                EXPECT_EQ(tag, "<ONNX TopK (TOPK -> values, indices)>");
+            }
         }
     }
 }
@@ -421,14 +430,15 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_initializer_tags)
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_initializer_tags.prototxt"));
 
-    for (auto ng_node : function->get_ordered_ops())
+    for (const auto ng_node : function->get_ordered_ops())
     {
-        if (const auto ng_const = as_type_ptr<op::Constant>(ng_node))
+        if (as_type_ptr<op::Constant>(ng_node))
         {
-            for (auto tag : ng_node->get_provenance_tags())
-            {
-                EXPECT_EQ(tag, "<ONNX Input (initializer_of_A)>");
-            }
+            const auto tags = ng_node->get_provenance_tags();
+            ASSERT_EQ(tags.size(), 1) << "There should be exactly one provenance tag set for "
+                                      << ng_node;
+
+            EXPECT_EQ(*(tags.cbegin()), "<ONNX Input (initializer_of_A)>");
         }
     }
 }

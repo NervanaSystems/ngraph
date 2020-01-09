@@ -89,8 +89,10 @@ namespace ngraph
                     continue;
                 }
 
-                m_ng_node_cache[input.name()] =
-                    m_inputs.back().get_ng_node(m_parameters, m_initializers, weights);
+                auto ng_node = m_inputs.back().get_ng_node(m_parameters, m_initializers, weights);
+                common::add_provenance_tags(input.name(), ng_node);
+
+                m_ng_node_cache[input.name()] = std::move(ng_node);
             }
 
             // Process all graph outputs

@@ -73,10 +73,19 @@ namespace ngraph
             }
 
             void add_provenance_tags(const std::string& input_name,
-                                     std::shared_ptr<default_opset::Constant> ng_node)
+                                     std::shared_ptr<ngraph::Node> ng_node)
             {
-                const auto tag = detail::build_provenance_tag(input_name);
-                ng_node->add_provenance_tag(tag);
+                if (as_type_ptr<default_opset::Constant>(ng_node) ||
+                    as_type_ptr<default_opset::Parameter>(ng_node))
+                {
+                    const auto tag = detail::build_provenance_tag(input_name);
+                    ng_node->add_provenance_tag(tag);
+                }
+                else
+                {
+                    throw ngraph_error(
+                        "Provenance tags for inputs can only be set for Constants and Parameters");
+                }
             }
 
             const ngraph::element::Type& get_ngraph_element_type(int64_t onnx_type)
