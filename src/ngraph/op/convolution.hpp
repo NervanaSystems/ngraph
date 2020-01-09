@@ -429,19 +429,25 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched-convolution data batch-backprop operation.
                 ConvolutionBackpropData() = default;
-                /// \brief Constructs a batched-convolution data batch-backprop operation.
                 ///
-                /// \param data_batch_shape The shape of the data batch from forward-prop.
-                /// \param filters The node producing the filters from forward-prop.
-                /// \param data The node producing output delta.
-                /// \param window_movement_strides_forward The window movement strides from
-                ///                                        forward-prop.
-                /// \param window_dilation_strides_forward The window dilation strides from
-                ///                                        forward-prop.
-                /// \param padding_below_forward The padding-below sizes from forward-prop.
-                /// \param padding_above_forward The padding-above sizes from forward-prop.
-                /// \param data_dilation_strides_forward The data dilation strides from
-                /// forward-prop.
+                /// \brief      Constructs a batched-convolution data batch-backprop operation.
+                ///
+                /// \param      data_batch_shape                 The shape of the data batch from
+                ///                                              forward-prop.
+                /// \param      filters                          The node producing the filters from
+                ///                                              forward-prop.
+                /// \param      data                             The node producing output delta.
+                /// \param      window_movement_strides_forward  The window movement strides from
+                ///                                              forward-prop.
+                /// \param      window_dilation_strides_forward  The window dilation strides from
+                ///                                              forward-prop.
+                /// \param      padding_below_forward            The padding-below sizes from
+                ///                                              forward-prop.
+                /// \param      padding_above_forward            The padding-above sizes from
+                ///                                              forward-prop.
+                /// \param      data_dilation_strides_forward    The data dilation strides from
+                ///                                              forward-prop.
+                ///
                 ConvolutionBackpropData(const Shape& data_batch_shape,
                                         const Output<Node>& filters,
                                         const Output<Node>& data,
