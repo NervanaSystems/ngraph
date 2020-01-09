@@ -1794,14 +1794,8 @@ namespace ngraph
                     }
                     catch (const mkldnn::error& e)
                     {
-#if MKLDNN_VERSION_MAJOR < 1
-                        throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                           to_string(fprop_input_md.data.format) +
-                                           MKLDNN_ERROR_MESSAGE);
-#else
                         throw ngraph_error("MKLDNN Unsupported pooling layout" +
                                            MKLDNN_ERROR_MESSAGE);
-#endif
                     }
                 }
 
