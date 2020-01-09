@@ -72,7 +72,9 @@ namespace ngraph
                     m_initializers.emplace(initializer_tensor.name(), tensor);
 
                     // For each initializer, create a Constant node and store in cache
-                    m_ng_node_cache.emplace(initializer_tensor.name(), tensor.get_ng_constant());
+                    auto ng_constant = tensor.get_ng_constant();
+                    common::add_provenance_tags(initializer_tensor.name(), ng_constant);
+                    m_ng_node_cache.emplace(initializer_tensor.name(), std::move(ng_constant));
                 }
             }
 

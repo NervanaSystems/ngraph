@@ -29,30 +29,39 @@ namespace ngraph
     {
         namespace common
         {
-            static std::string concat_strings(
-                const std::vector<std::reference_wrapper<const std::string>>& outputs)
+            namespace detail
             {
-                const auto concat_with_comma =
-                    [](const std::string& accumulator,
-                       std::reference_wrapper<const std::string> next_output) {
-                        return accumulator + ", " + next_output.get();
-                    };
+                static std::string concat_strings(
+                    const std::vector<std::reference_wrapper<const std::string>>& outputs)
+                {
+                    const auto concat_with_comma =
+                        [](const std::string& accumulator,
+                           std::reference_wrapper<const std::string> next_output) {
+                            return accumulator + ", " + next_output.get();
+                        };
 
-                return std::accumulate(
-                    outputs.begin() + 1, outputs.end(), outputs.begin()->get(), concat_with_comma);
+                    return std::accumulate(outputs.begin() + 1,
+                                           outputs.end(),
+                                           outputs.begin()->get(),
+                                           concat_with_comma);
+                }
+
+                static std::string build_provenance_tag(const Node& onnx_node)
+                {
+                    const auto output_names = concat_strings(onnx_node.get_output_names());
+                    return std::string{"<ONNX " + onnx_node.op_type() + " (" +
+                                       onnx_node.get_name() + " -> " + output_names + ")>"};
+                }
+
+                static std::string build_provenance_tag(const std::string& input_name)
+                {
+                    return std::string{"<ONNX Input (" + input_name + ")>"};
+                }
             }
 
-            static std::string build_provenance_tag(const Node& onnx_node)
+            void add_provenance_tags(const Node& onnx_node, const NodeVector& ng_node_vector)
             {
-                const auto output_names = concat_strings(onnx_node.get_output_names());
-                return std::string{"<ONNX " + onnx_node.op_type() + " (" + onnx_node.get_name() +
-                                   " -> " + output_names + ")>"};
-            }
-
-            const NodeVector& add_provenance_tags(const Node& onnx_node,
-                                                  const NodeVector& ng_node_vector)
-            {
-                const auto tag = build_provenance_tag(onnx_node);
+                const auto tag = detail::build_provenance_tag(onnx_node);
                 const auto ng_inputs = onnx_node.get_ng_inputs();
 
                 ngraph::traverse_nodes(ng_node_vector,
@@ -61,8 +70,13 @@ namespace ngraph
                                        },
                                        false,
                                        ng_inputs);
+            }
 
-                return ng_node_vector;
+            void add_provenance_tags(const std::string& input_name,
+                                     std::shared_ptr<default_opset::Constant> ng_node)
+            {
+                const auto tag = detail::build_provenance_tag(input_name);
+                ng_node->add_provenance_tag(tag);
             }
 
             const ngraph::element::Type& get_ngraph_element_type(int64_t onnx_type)

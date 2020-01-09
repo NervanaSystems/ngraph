@@ -38,8 +38,11 @@ namespace ngraph
     {
         namespace common
         {
-            const NodeVector& add_provenance_tags(const Node& onnx_node,
-                                                  const NodeVector& ng_node_vector);
+            void add_provenance_tags(const Node& onnx_node, const NodeVector& ng_node_vector);
+
+            void add_provenance_tags(const std::string& input_name,
+                                     std::shared_ptr<default_opset::Constant> ng_node);
+
             const ngraph::element::Type& get_ngraph_element_type(std::int64_t onnx_type);
 
             /// \brief      Return a monotonic sequence.

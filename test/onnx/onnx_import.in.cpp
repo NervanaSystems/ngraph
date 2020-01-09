@@ -416,6 +416,23 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_multiple_outputs_op)
     }
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_initializer_tags)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_initializer_tags.prototxt"));
+
+    for (auto ng_node : function->get_ordered_ops())
+    {
+        if (const auto ng_const = as_type_ptr<op::Constant>(ng_node))
+        {
+            for (auto tag : ng_node->get_provenance_tags())
+            {
+                EXPECT_EQ(tag, "<ONNX Input (initializer_of_A)>");
+            }
+        }
+    }
+}
+
 // ############################################################################ OPERATOR TESTS
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_addmul_abc)
 {
