@@ -127,9 +127,7 @@ namespace ngraph
                     return false;
                 }
             }
-            // gcc will compile this incorrectly without the temp saved
-            auto saved = start_match();
-            return saved.finish(pattern_node->match_value(this, pattern_value, graph_value));
+            return pattern_node->match_value(this, pattern_value, graph_value);
         }
 
         bool Matcher::match_permutation(const OutputVector& pattern_args, const OutputVector& args)
@@ -185,11 +183,7 @@ namespace ngraph
             }
             else
             {
-                auto saved = start_match();
-                if (match_permutation(pattern_args, args))
-                {
-                    return saved.finish(true);
-                }
+                return match_permutation(pattern_args, args);
             }
 
             NGRAPH_DEBUG << "[MATCHER] Aborting at " << *graph_node << " for pattern "
@@ -210,10 +204,12 @@ namespace ngraph
             // clear our state
             m_match_root.reset();
             m_pattern_map.clear();
+            m_matched_list.clear();
 
             // insert previous matches
             m_pattern_map.insert(previous_matches.cbegin(), previous_matches.cend());
-            bool is_match = match_value(m_pattern_node, graph_value);
+            auto saved = start_match();
+            bool is_match = saved.finish(match_value(m_pattern_node, graph_value));
             if (is_match)
             {
                 m_match_root = graph_value;

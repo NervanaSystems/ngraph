@@ -25,9 +25,15 @@ namespace ngraph
     {
         namespace op
         {
-            /// \brief Labels are used in patterns to express repeating nodes in an input graph
-            /// and bind them to specific nodes from the graph
+            /// Fails if the predicate returns false on the graph value.
             ///
+            /// The graph value is added to the matched values list. If the Label is already
+            /// associated with a value, the match succeeds if the value is the same as the graph
+            /// value. Otherwise, the label is associated with the graph value and the match
+            /// succeeds if the pattern input matches the graph value.
+            ///
+            /// DEPRECATED: If no inputs are given to Label, a True node is serves as the input. If
+            /// more than one inputs are given, an Or pattern of the inputs serves as the input.
             class NGRAPH_API Label : public Pattern
             {
             public:
@@ -50,7 +56,7 @@ namespace ngraph
                       const PartialShape& s,
                       const ValuePredicate pred,
                       const OutputVector& wrapped_values)
-                    : Pattern(wrapped_values, pred)
+                    : Pattern(OutputVector{wrap_values(wrapped_values)}, pred)
                 {
                     set_output_type(0, type, s);
                 }
@@ -130,6 +136,9 @@ namespace ngraph
                 bool match_value(Matcher* matcher,
                                  const Output<Node>& pattern_value,
                                  const Output<Node>& graph_value) override;
+
+            protected:
+                static Output<Node> wrap_values(const OutputVector& wrapped_values);
             };
         }
     }

@@ -25,7 +25,8 @@ namespace ngraph
     {
         namespace op
         {
-            /// \brief Anys are used in patterns to express arbitrary queries on a node
+            /// The graph value is to the matched value list. If the predicate is true for the node
+            /// and the arguments match, the match succeeds.
             class NGRAPH_API Any : public Pattern
             {
             public:

@@ -25,9 +25,9 @@ namespace ngraph
     {
         namespace op
         {
-            /// \brief \p Skip allows users to specify unexpected nodes in a pattern
-            /// and skip them if a predicate condition is satisfied.
-            ///
+            /// The graph value is added to the matched value list. If the predicate is true, the
+            /// match succeeds if the arguments match; if the predicate is false, the match succeeds
+            /// if the pattern input matches the graph value.
             class NGRAPH_API Skip : public Pattern
             {
             public:
