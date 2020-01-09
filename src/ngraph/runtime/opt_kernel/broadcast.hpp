@@ -30,72 +30,49 @@ namespace ngraph
         namespace opt_kernel
         {
             template <typename T>
-            void broadcast_2d(const T* in,
-                              T* out,
-                              const Shape& in_shape,
-                              const Shape& out_shape,
-                              const AxisSet& broadcast_axes)
+            void broadcast_2d(
+                const T* in, T* out, const Shape& in_shape, const Shape& out_shape, size_t out_axis)
             {
                 size_t index[2];
-                size_t* out_index =
-                    (broadcast_axes.find(0) == broadcast_axes.end() ? &index[0] : &index[1]);
+                size_t& in_index = index[out_axis];
+                auto out_strides = row_major_strides(out_shape);
                 for (index[0] = 0; index[0] < out_shape[0]; ++index[0])
                 {
                     for (index[1] = 0; index[1] < out_shape[1]; ++index[1])
                     {
-                        out[index[0] * out_shape[1] + index[1]] = in[*out_index];
+                        out[index[0] * out_strides[0] + index[1]] = in[in_index];
                     }
                 }
             }
 
             // #define PARALLEL
             template <typename T>
-            void broadcast_3d(const T* in,
-                              T* out,
-                              const Shape& in_shape,
-                              const Shape& out_shape,
-                              const AxisSet& broadcast_axes)
+            void broadcast_3d(
+                const T* in, T* out, const Shape& in_shape, const Shape& out_shape, size_t out_axis)
             {
                 size_t index[3];
-                size_t* out_index = 0;
-                for (size_t i = 0; i < 3; i++)
-                {
-                    if (broadcast_axes.count(i) == 0)
-                    {
-                        out_index = &index[i];
-                        break;
-                    }
-                }
+                size_t& in_index = index[out_axis];
+                auto out_strides = row_major_strides(out_shape);
                 for (index[0] = 0; index[0] < out_shape[0]; ++index[0])
                 {
                     for (index[1] = 0; index[1] < out_shape[1]; ++index[1])
                     {
                         for (index[2] = 0; index[2] < out_shape[2]; ++index[2])
                         {
-                            out[index[0] * out_shape[1] * out_shape[2] + index[1] * out_shape[2] +
-                                index[2]] = in[*out_index];
+                            out[index[0] * out_strides[0] + index[1] * out_strides[1] + index[2]] =
+                                in[in_index];
                         }
                     }
                 }
             }
 
             template <typename T>
-            void broadcast_4d(const T* in,
-                              T* out,
-                              const Shape& in_shape,
-                              const Shape& out_shape,
-                              const AxisSet& broadcast_axes)
+            void broadcast_4d(
+                const T* in, T* out, const Shape& in_shape, const Shape& out_shape, size_t out_axis)
             {
                 size_t index[4];
-                size_t* out_index = 0;
-                for (size_t i = 0; i < 4; i++)
-                {
-                    if (broadcast_axes.count(i) == 0)
-                    {
-                        out_index = &index[i];
-                        break;
-                    }
-                }
+                size_t& in_index = index[out_axis];
+                auto out_strides = row_major_strides(out_shape);
                 for (index[0] = 0; index[0] < out_shape[0]; ++index[0])
                 {
                     for (index[1] = 0; index[1] < out_shape[1]; ++index[1])
@@ -104,9 +81,8 @@ namespace ngraph
                         {
                             for (index[3] = 0; index[3] < out_shape[3]; ++index[3])
                             {
-                                out[index[0] * out_shape[1] * out_shape[2] * out_shape[3] +
-                                    index[1] * out_shape[2] * out_shape[3] +
-                                    index[2] * out_shape[3] + index[3]] = in[*out_index];
+                                out[index[0] * out_strides[0] + index[1] * out_strides[1] +
+                                    index[2] * out_strides[2] + index[3]] = in[in_index];
                             }
                         }
                     }
@@ -114,22 +90,12 @@ namespace ngraph
             }
 
             template <typename T>
-            void broadcast_5d(const T* in,
-                              T* out,
-                              const Shape& in_shape,
-                              const Shape& out_shape,
-                              const AxisSet& broadcast_axes)
+            void broadcast_5d(
+                const T* in, T* out, const Shape& in_shape, const Shape& out_shape, size_t out_axis)
             {
                 size_t index[5];
-                size_t* out_index = 0;
-                for (size_t i = 0; i < 5; i++)
-                {
-                    if (broadcast_axes.count(i) == 0)
-                    {
-                        out_index = &index[i];
-                        break;
-                    }
-                }
+                size_t& in_index = index[out_axis];
+                auto out_strides = row_major_strides(out_shape);
                 for (index[0] = 0; index[0] < out_shape[0]; ++index[0])
                 {
                     for (index[1] = 0; index[1] < out_shape[1]; ++index[1])
@@ -140,11 +106,9 @@ namespace ngraph
                             {
                                 for (index[4] = 0; index[4] < out_shape[4]; ++index[4])
                                 {
-                                    out[index[0] * out_shape[1] * out_shape[2] * out_shape[3] *
-                                            out_shape[4] +
-                                        index[1] * out_shape[2] * out_shape[3] * out_shape[4] +
-                                        index[2] * out_shape[3] * out_shape[4] +
-                                        index[3] * out_shape[4] + index[4]] = in[*out_index];
+                                    out[index[0] * out_strides[0] + index[1] * out_strides[1] +
+                                        index[2] * out_strides[2] + index[3] * out_strides[3] +
+                                        index[4]] = in[in_index];
                                 }
                             }
                         }
@@ -153,22 +117,12 @@ namespace ngraph
             }
 
             template <typename T>
-            void broadcast_6d(const T* in,
-                              T* out,
-                              const Shape& in_shape,
-                              const Shape& out_shape,
-                              const AxisSet& broadcast_axes)
+            void broadcast_6d(
+                const T* in, T* out, const Shape& in_shape, const Shape& out_shape, size_t out_axis)
             {
                 size_t index[6];
-                size_t* out_index = 0;
-                for (size_t i = 0; i < 6; i++)
-                {
-                    if (broadcast_axes.count(i) == 0)
-                    {
-                        out_index = &index[i];
-                        break;
-                    }
-                }
+                size_t& in_index = index[out_axis];
+                auto out_strides = row_major_strides(out_shape);
                 for (index[0] = 0; index[0] < out_shape[0]; ++index[0])
                 {
                     for (index[1] = 0; index[1] < out_shape[1]; ++index[1])
@@ -181,13 +135,9 @@ namespace ngraph
                                 {
                                     for (index[5] = 0; index[5] < out_shape[5]; ++index[5])
                                     {
-                                        out[index[0] * out_shape[1] * out_shape[2] * out_shape[3] *
-                                                out_shape[4] * out_shape[5] +
-                                            index[1] * out_shape[2] * out_shape[3] * out_shape[4] *
-                                                out_shape[5] +
-                                            index[2] * out_shape[3] * out_shape[4] * out_shape[5] +
-                                            index[3] * out_shape[4] * out_shape[5] +
-                                            index[4] * out_shape[5] + index[5]] = in[*out_index];
+                                        out[index[0] * out_strides[0] + index[1] * out_strides[1] +
+                                            index[2] * out_strides[2] + index[3] * out_strides[3] +
+                                            index[4] * out_strides[4] + index[5]] = in[in_index];
                                     }
                                 }
                             }
@@ -212,13 +162,22 @@ namespace ngraph
                 }
                 else if (in_shape.size() == 1)
                 {
+                    size_t output_axis = 0;
+                    for (size_t i = 0; i < out_shape.size(); i++)
+                    {
+                        if (broadcast_axes.count(i) == 0)
+                        {
+                            output_axis = i;
+                            break;
+                        }
+                    }
                     switch (out_shape.size())
                     {
-                    case 2: broadcast_2d<T>(in, out, in_shape, out_shape, broadcast_axes); break;
-                    case 3: broadcast_3d<T>(in, out, in_shape, out_shape, broadcast_axes); break;
-                    case 4: broadcast_4d<T>(in, out, in_shape, out_shape, broadcast_axes); break;
-                    case 5: broadcast_5d<T>(in, out, in_shape, out_shape, broadcast_axes); break;
-                    case 6: broadcast_6d<T>(in, out, in_shape, out_shape, broadcast_axes); break;
+                    case 2: broadcast_2d<T>(in, out, in_shape, out_shape, output_axis); break;
+                    case 3: broadcast_3d<T>(in, out, in_shape, out_shape, output_axis); break;
+                    case 4: broadcast_4d<T>(in, out, in_shape, out_shape, output_axis); break;
+                    case 5: broadcast_5d<T>(in, out, in_shape, out_shape, output_axis); break;
+                    case 6: broadcast_6d<T>(in, out, in_shape, out_shape, output_axis); break;
                     default:
                         runtime::reference::broadcast<T>(
                             in, out, in_shape, out_shape, broadcast_axes);
