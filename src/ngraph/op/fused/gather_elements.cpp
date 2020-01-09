@@ -34,6 +34,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/builder/split.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -53,55 +54,27 @@ NodeVector op::GatherElements::decompose_op() const
     auto data = input_value(0);
     auto indicate = input_value(1);
 
-    auto x_shape = data.get_shape();
-    auto indicate_shape = indicate.get_shape();
+    auto x_shape = data.get_shape().at(0);
+    const auto indicate_shape = indicate.get_shape();
+    const auto x_indicate_shape = indicate.get_shape().at(0);
 
-    std::shared_ptr<ngraph::Node> data_slice_1 =
-        std::make_shared<op::Slice>(data, ngraph::Coordinate{0, 0}, ngraph::Coordinate{1, 2});
+    std::vector<std::shared_ptr<ngraph::Node>> data_splices =  builder::split(data, x_shape, 0);
 
-    std::shared_ptr<ngraph::Node> data_slice_2 =
-        std::make_shared<op::Slice>(data, ngraph::Coordinate{0, 0}, ngraph::Coordinate{1, 2});
+    std::vector<std::shared_ptr<ngraph::Node>> indices_splices =  builder::split(indicate, x_indicate_shape, 0);
 
-    auto ds1_shape = data_slice_1->get_shape();
-    auto ds2_shape = data_slice_2->get_shape();
+    std::vector<std::shared_ptr<ngraph::Node>> result_args;
 
-    std::shared_ptr<ngraph::Node> ind_slice_1 =
-        std::make_shared<op::Slice>(indicate, ngraph::Coordinate{0, 0}, ngraph::Coordinate{1, 1});
+    for (int i=0; i<indices_splices.size(); i++){
+        auto x_indicate_splices_element_shape = indices_splices.at(0)->get_shape().at(0);
+        auto indicate_splices_element_shape = indices_splices.at(0)->get_shape();
+        std::vector<std::shared_ptr<ngraph::Node>> indices_splices_elements =  builder::split(indices_splices.at(i), x_indicate_splices_element_shape, 0);
+        for(int j=0; j<indices_splices_elements.size(); j++){
+            auto convert = std::make_shared<ngraph::op::Convert>(indices_splices_elements.at(j), ngraph::element::i64);
+            result_args.push_back(std::make_shared<op::GatherND>(data_splices.at(i), convert));
+        }
+    }
 
-    std::shared_ptr<ngraph::Node> ind_slice_2 =
-        std::make_shared<op::Slice>(indicate, ngraph::Coordinate{0, 0}, ngraph::Coordinate{1, 1});
-
-    std::shared_ptr<ngraph::Node> ind_slice_3 =
-        std::make_shared<op::Slice>(indicate, ngraph::Coordinate{0, 0}, ngraph::Coordinate{1, 1});
-
-    std::shared_ptr<ngraph::Node> ind_slice_4 =
-        std::make_shared<op::Slice>(indicate, ngraph::Coordinate{0, 0}, ngraph::Coordinate{1, 1});
-
-    auto convert1 = std::make_shared<ngraph::op::Convert>(ind_slice_1, ngraph::element::i64);
-    auto convert2 = std::make_shared<ngraph::op::Convert>(ind_slice_2, ngraph::element::i64);
-    auto convert3 = std::make_shared<ngraph::op::Convert>(ind_slice_3, ngraph::element::i64);
-    auto convert4 = std::make_shared<ngraph::op::Convert>(ind_slice_4, ngraph::element::i64);
-
-    auto indicate_shape_hard =
-        op::Constant::create(data.get_element_type(), ngraph::Shape{1, 2}, {0});
-    auto convert_indicate_shape_hard =
-        std::make_shared<ngraph::op::Convert>(indicate_shape_hard, ngraph::element::i64);
-
-    std::shared_ptr<ngraph::Node> gather_nd_1_slice_res =
-        std::make_shared<op::GatherND>(data_slice_1, convert_indicate_shape_hard);
-    std::shared_ptr<ngraph::Node> gather_nd_2_slice_res =
-        std::make_shared<op::GatherND>(data_slice_1, convert_indicate_shape_hard);
-    std::shared_ptr<ngraph::Node> gather_nd_3_slice_res =
-        std::make_shared<op::GatherND>(data_slice_2, convert_indicate_shape_hard);
-    std::shared_ptr<ngraph::Node> gather_nd_4_slice_res =
-        std::make_shared<op::GatherND>(data_slice_2, convert_indicate_shape_hard);
-
-    std::vector<std::shared_ptr<ngraph::Node>> gather_nd_args;
-    gather_nd_args.push_back(gather_nd_1_slice_res);
-    gather_nd_args.push_back(gather_nd_2_slice_res);
-    gather_nd_args.push_back(gather_nd_3_slice_res);
-    gather_nd_args.push_back(gather_nd_4_slice_res);
-    auto concat = std::make_shared<op::Concat>(gather_nd_args, 0);
+    auto concat = std::make_shared<op::Concat>(result_args, 0);
 
     return {concat};
 }
