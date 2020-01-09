@@ -30,7 +30,7 @@ shared_ptr<op::Constant> fold_constant_select(const shared_ptr<op::Constant>& se
     auto out_shape = select->get_shape();
     vector<T> out_vec(shape_size(out_shape));
 
-    if (auto select_v0 = as_type_ptr<op::v0::Select>(select))
+    if (is_type<op::v0::Select>(select))
     {
         runtime::reference::select<T>(selection->get_data_ptr<char>(),
                                       t->get_data_ptr<T>(),
