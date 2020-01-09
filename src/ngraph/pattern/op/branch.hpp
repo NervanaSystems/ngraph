@@ -25,32 +25,40 @@ namespace ngraph
     {
         namespace op
         {
-            /// \brief Branches are used to allow repeat patterns
+            /// A branch adds a loop to the pattern. The branch match is successful if the
+            /// destination node pattern matches the graph value. The destination node is a node in
+            /// the pattern graph that will not have been created some time after the Branch node is
+            /// created; use set_destination to add it.
+            ///
+            /// The branch destination is not stored as a shared pointer to prevent reference
+            /// cycles. Thus the destination node must be referenced in some other way to prevent it
+            /// from being deleted.
             class NGRAPH_API Branch : public Pattern
             {
             public:
                 static constexpr NodeTypeInfo type_info{"patternBranch", 0};
                 const NodeTypeInfo& get_type_info() const override;
                 /// \brief Creates a Branch pattern
-                /// \param pattern the repeating pattern
-                /// \param labels Labels where the repeat may occur
+                /// \param pattern the destinationing pattern
+                /// \param labels Labels where the destination may occur
                 Branch()
                     : Pattern(OutputVector{})
                 {
                     set_output_type(0, element::f32, Shape{});
                 }
 
-                void set_repeat(const Output<Node>& repeat)
+                void set_destination(const Output<Node>& destination)
                 {
-                    m_repeat_node = repeat.get_node();
-                    m_repeat_index = repeat.get_index();
+                    m_destination_node = destination.get_node();
+                    m_destination_index = destination.get_index();
                 }
 
-                Output<Node> get_repeat() const
+                Output<Node> get_destination() const
                 {
-                    return m_repeat_node == nullptr
+                    return m_destination_node == nullptr
                                ? Output<Node>()
-                               : Output<Node>{m_repeat_node->shared_from_this(), m_repeat_index};
+                               : Output<Node>{m_destination_node->shared_from_this(),
+                                              m_destination_index};
                 }
 
                 bool match_value(pattern::Matcher* matcher,
@@ -58,8 +66,8 @@ namespace ngraph
                                  const Output<Node>& graph_value) override;
 
             protected:
-                Node* m_repeat_node{nullptr};
-                size_t m_repeat_index{0};
+                Node* m_destination_node{nullptr};
+                size_t m_destination_index{0};
             };
         }
     }

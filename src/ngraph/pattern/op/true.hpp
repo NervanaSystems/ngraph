@@ -25,7 +25,7 @@ namespace ngraph
     {
         namespace op
         {
-            /// \brief Always matches
+            /// \brief The match always succeeds.
             class NGRAPH_API True : public Pattern
             {
             public:

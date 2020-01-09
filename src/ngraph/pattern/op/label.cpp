@@ -31,8 +31,12 @@ const NodeTypeInfo& pattern::op::Label::get_type_info() const
 
 Output<Node> pattern::op::Label::wrap_values(const OutputVector& wrapped_values)
 {
-    return wrapped_values.size() == 0 ? make_shared<pattern::op::True>()->output(0)
-                                      : make_shared<pattern::op::Or>(wrapped_values)->output(0);
+    switch (wrapped_values.size())
+    {
+    case 0: return make_shared<pattern::op::True>()->output(0);
+    case 1: return wrapped_values[0];
+    default: return make_shared<pattern::op::Or>(wrapped_values)->output(0);
+    }
 }
 
 bool pattern::op::Label::match_value(Matcher* matcher,

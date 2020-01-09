@@ -25,13 +25,13 @@ namespace ngraph
     {
         namespace op
         {
-            /// \brief AnyOfs are used in patterns to express arbitrary queries on a node
+            /// The graph value is added to the matched values list. If the predicate is true for
+            /// the
+            /// graph node, a submatch is performed on the input of AnyOf and each input of the
+            /// graph node. The first match that succeeds results in a successful match. Otherwise
+            /// the match fails.
             ///
-            /// When AnyOf predicate matches a node; Matcher tries to match node's arguments to
-            /// a single argument of AnyOf one by one. The first match is returned.
-            /// This is useful for nodes with variable number of arguments such as Concat
-            /// AnyOf enables on to specify one single branch/chain. The remaining arguments
-            /// can be discovered (in a callback) by simply inspecting matched node's argument.
+            /// AnyOf may be given a type and shape for use in strict mode.
             class NGRAPH_API AnyOf : public Pattern
             {
             public:

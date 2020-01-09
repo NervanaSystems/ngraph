@@ -25,8 +25,10 @@ namespace ngraph
     {
         namespace op
         {
-            /// \brief \p Capture allows users to capture the matches
+            /// Experimental for support of recurrent matches.
             ///
+            /// Capture adds the pattern value map to a list of pattern value maps and resets
+            /// matches for pattern nodes not in the static node list. The match always succeeds.
             class NGRAPH_API Capture : public Pattern
             {
             public:

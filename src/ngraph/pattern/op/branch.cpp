@@ -31,5 +31,5 @@ bool pattern::op::Branch::match_value(Matcher* matcher,
                                       const Output<Node>& pattern_value,
                                       const Output<Node>& graph_value)
 {
-    return matcher->match_value(get_repeat(), graph_value);
+    return matcher->match_value(get_destination(), graph_value);
 }

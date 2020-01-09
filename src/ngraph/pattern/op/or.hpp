@@ -25,7 +25,8 @@ namespace ngraph
     {
         namespace op
         {
-            /// \brief Ors are used to allow on of several patterns
+            /// A submatch on the graph value is performed on each input to the Or; the match
+            /// succeeds on the first match. Otherwise the match fails.
             class NGRAPH_API Or : public Pattern
             {
             public:

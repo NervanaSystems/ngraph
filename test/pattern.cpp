@@ -448,7 +448,7 @@ TEST(pattern, matcher)
         auto star = std::make_shared<pattern::op::Or>(
             OutputVector{branch, std::make_shared<pattern::op::True>()});
         auto pattern = star + star;
-        branch->set_repeat(pattern);
+        branch->set_destination(pattern);
         ASSERT_TRUE(n.match(pattern, ((a + b) + (b + a) + a)));
         ASSERT_EQ(n.get_matched_nodes().size(), 4);
     }
