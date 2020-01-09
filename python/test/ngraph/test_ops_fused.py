@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -351,17 +351,19 @@ def test_hard_sigmoid_operator():
     runtime = get_runtime()
 
     data_shape = [3]
-    alpha = np.float32(0.5)
-    beta = np.float32(0.6)
+    alpha_value = np.float32(0.5)
+    beta_value = np.float32(0.6)
 
     data_value = np.array([-1, 0, 1], dtype=np.float32)
 
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    parameter_alpha = ng.parameter([], name='Alpha', dtype=np.float32)
+    parameter_beta = ng.parameter([], name='Beta', dtype=np.float32)
 
-    model = ng.hard_sigmoid(parameter_data, alpha, beta)
-    computation = runtime.computation(model, parameter_data)
+    model = ng.hard_sigmoid(parameter_data, parameter_alpha, parameter_beta)
+    computation = runtime.computation(model, parameter_data, parameter_alpha, parameter_beta)
 
-    result = computation(data_value)
+    result = computation(data_value, alpha_value, beta_value)
     expected = [0.1, 0.6, 1.]
     assert np.allclose(result, expected)
 

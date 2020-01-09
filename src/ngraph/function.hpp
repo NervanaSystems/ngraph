@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
 namespace ngraph
 {
     /// A user-defined function.
-    class Function : public Lambda
+    class NGRAPH_API Function : public Lambda
     {
     public:
         static constexpr DiscreteTypeInfo type_info{"Function", 0};

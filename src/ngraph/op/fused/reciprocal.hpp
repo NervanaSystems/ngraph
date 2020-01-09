@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,10 +26,9 @@ namespace ngraph
     {
         /// \brief Reciprocal operation
         /// f(x) = 1 / x
-        class Reciprocal : public ngraph::op::util::FusedOp
+        class NGRAPH_API Reciprocal : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Reciprocal", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             Reciprocal() = default;

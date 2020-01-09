@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <cstring>
 #include <sstream>
 
@@ -30,12 +31,12 @@ namespace ngraph
     namespace op
     {
         /// \brief Class for constants.
-        class Constant : public Op
+        class NGRAPH_API Constant : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Constant", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
+            Constant() = default;
             /// \brief Constructs a tensor constant.
             ///
             /// \param type The element type of the tensor constant.
@@ -46,8 +47,9 @@ namespace ngraph
             Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
                 : m_element_type(type)
                 , m_shape(shape)
-                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
-                                                    host_alignment()))
+                , m_data(new runtime::AlignedBuffer(
+                      std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
+                      host_alignment()))
             {
                 NODE_VALIDATION_CHECK(
                     this,
@@ -79,58 +81,9 @@ namespace ngraph
             /// \param type The element type of the tensor constant.
             /// \param shape The shape of the tensor constant.
             /// \param values A list of string values to use as the constant data.
-            Constant(const element::Type& type, Shape shape, const std::vector<std::string>& values)
-                : m_element_type(type)
-                , m_shape(shape)
-                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
-                                                    host_alignment()))
-            {
-                NODE_VALIDATION_CHECK(
-                    this,
-                    values.size() == shape_size(m_shape) || values.size() == 1,
-                    "Did not get the expected number of literals for a constant of shape ",
-                    m_shape,
-                    " (got ",
-                    values.size(),
-                    ", expected ",
-                    shape_size(m_shape),
-                    ".");
-                if (values.size())
-                {
-                    if (type.is_integral())
-                    {
-                        if (type.is_signed())
-                        {
-                            std::vector<int64_t> dvalues = parse_string<int64_t>(values);
-                            if (values.size() == 1 && shape_size(m_shape) != 1)
-                            {
-                                dvalues = std::vector<int64_t>(shape_size(m_shape), dvalues[0]);
-                            }
-                            write_values(dvalues);
-                        }
-                        else
-                        {
-                            std::vector<uint64_t> dvalues = parse_string<uint64_t>(values);
-                            if (values.size() == 1 && shape_size(m_shape) != 1)
-                            {
-                                dvalues = std::vector<uint64_t>(shape_size(m_shape), dvalues[0]);
-                            }
-                            write_values(dvalues);
-                        }
-                    }
-                    else
-                    {
-                        std::vector<double> dvalues = parse_string<double>(values);
-                        if (values.size() == 1 && shape_size(m_shape) != 1)
-                        {
-                            dvalues = std::vector<double>(shape_size(m_shape), dvalues[0]);
-                        }
-                        write_values(dvalues);
-                    }
-                }
-                constructor_validate_and_infer_types();
-                m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
-            }
+            Constant(const element::Type& type,
+                     Shape shape,
+                     const std::vector<std::string>& values);
 
             /// \brief Constructs a tensor constant with the same initialization value copied across
             //         the tensor. This constructor is to support deserialization of constants.
@@ -138,18 +91,7 @@ namespace ngraph
             /// \param type The element type of the tensor constant.
             /// \param shape The shape of the tensor constant.
             /// \param data A void* to constant data.
-            Constant(const element::Type& type, const Shape& shape, const void* data)
-                : m_element_type(type)
-                , m_shape(shape)
-                , m_data(nullptr)
-            {
-                size_t size = shape_size(m_shape) * m_element_type.size();
-                m_data.reset(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
-                                                        host_alignment()));
-                std::memcpy(m_data->get_ptr(), data, size);
-                constructor_validate_and_infer_types();
-                m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
-            }
+            Constant(const element::Type& type, const Shape& shape, const void* data);
 
             virtual ~Constant() override;
 
@@ -240,6 +182,87 @@ namespace ngraph
                 return rc;
             }
 
+            /// \brief Return the Constant's value as a vector cast to type T
+            ///
+            /// \tparam T  Type to which data vector's entries will be cast.
+            /// \return    Constant's data vector.
+            template <typename T>
+            std::vector<T> cast_vector() const
+            {
+                auto source_type = get_element_type();
+                switch (source_type)
+                {
+                case element::Type_t::boolean:
+                {
+                    auto vector = get_vector<char>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::bf16:
+                {
+                    auto vector = get_vector<bfloat16>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::f16:
+                {
+                    auto vector = get_vector<float16>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::f32:
+                {
+                    auto vector = get_vector<float>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::f64:
+                {
+                    auto vector = get_vector<double>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::i8:
+                {
+                    auto vector = get_vector<int8_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::i16:
+                {
+                    auto vector = get_vector<int16_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::i32:
+                {
+                    auto vector = get_vector<int32_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::i64:
+                {
+                    auto vector = get_vector<int64_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::u8:
+                {
+                    auto vector = get_vector<uint8_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::u16:
+                {
+                    auto vector = get_vector<uint16_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::u32:
+                {
+                    auto vector = get_vector<uint32_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::u64:
+                {
+                    auto vector = get_vector<uint64_t>();
+                    return std::vector<T>(vector.begin(), vector.end());
+                }
+                case element::Type_t::u1:
+                case element::Type_t::undefined:
+                case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
+                }
+            }
+
             const void* get_data_ptr() const { return (m_data ? m_data->get_ptr() : nullptr); }
             template <typename T>
             const T* get_data_ptr() const
@@ -248,7 +271,6 @@ namespace ngraph
             }
 
             bool is_constant() const override { return true; }
-            bool are_all_data_elements_bitwise_identical() const;
             bool get_all_data_elements_bitwise_identical() const
             {
                 return m_all_elements_bitwise_identical;
@@ -292,11 +314,9 @@ namespace ngraph
                 {
                     throw std::runtime_error("Constant initializer does not match shape");
                 }
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-#endif
                 switch (target_type)
                 {
                 case element::Type_t::boolean:
@@ -342,9 +362,7 @@ namespace ngraph
                 case element::Type_t::undefined: throw std::runtime_error("unsupported type");
                 case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
                 }
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
-#endif
             }
 
             static constexpr size_t host_alignment() { return 64; }
@@ -352,29 +370,17 @@ namespace ngraph
             Shape m_shape{};
             std::unique_ptr<runtime::AlignedBuffer> m_data;
             bool m_all_elements_bitwise_identical;
+            bool are_all_data_elements_bitwise_identical() const;
             Constant(const Constant&) = delete;
             Constant operator=(const Constant&) = delete;
         };
 
-        class ScalarConstantLikeBase : public Constant
-        {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ScalarConstantLikeBase", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            std::shared_ptr<op::Constant> as_constant() const;
-
-        protected:
-            ScalarConstantLikeBase(const OutputVector& args)
-                : Constant(args)
-            {
-            }
-        };
-
         /// \brief A scalar constant whose element type is the same as like.
-        class ScalarConstantLike : public ScalarConstantLikeBase
+        class NGRAPH_API ScalarConstantLike : public Constant
         {
         public:
+            static constexpr NodeTypeInfo type_info{"ScalarConstantLike", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief A scalar constant whose element type is the same as like.
             ///
             /// Once the element type is known, the dependency on like will be removed and
@@ -384,13 +390,16 @@ namespace ngraph
             /// \param value The value of the scalar.
             template <typename T>
             ScalarConstantLike(const Output<Node>& like, T value)
-                : ScalarConstantLikeBase({like})
+                : Constant({like})
                 , m_value(static_cast<double>(value))
             {
                 constructor_validate_and_infer_types();
             }
 
+            ScalarConstantLike() = default;
+
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+            std::shared_ptr<op::Constant> as_constant() const;
 
         protected:
             void infer_element_type() override;

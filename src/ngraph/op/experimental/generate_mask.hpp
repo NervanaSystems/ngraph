@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief GenerateMask
             ///
-            class GenerateMask : public op::Op
+            class NGRAPH_API GenerateMask : public op::Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"GenerateMask", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a GenerateMask node with a given shape, seed,
@@ -70,7 +69,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                               const NodeVector& /* deltas */) override
+                                               const OutputVector& /* deltas */) override
                 {
                 }
 
@@ -87,10 +86,9 @@ namespace ngraph
         {
             /// \brief GenerateMask
             ///
-            class GenerateMask : public op::Op
+            class NGRAPH_API GenerateMask : public op::Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"GenerateMask", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a GenerateMask node with a given shape, seed,
@@ -130,7 +128,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                               const NodeVector& /* deltas */) override
+                                               const OutputVector& /* deltas */) override
                 {
                 }
 

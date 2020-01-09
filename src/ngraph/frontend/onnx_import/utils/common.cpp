@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,10 @@
 #include <onnx/onnx_pb.h> // onnx types
 
 #include "common.hpp"
+#include "default_opset.hpp"
+#include "ngraph/op/get_output_element.hpp"
+#include "ngraph/opsets/opset0.hpp"
+#include "validation_util.hpp"
 
 namespace ngraph
 {
@@ -46,51 +50,22 @@ namespace ngraph
                                        static_cast<onnx::TensorProto_DataType>(onnx_type)));
             }
 
-            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
-                                      std::int64_t axis,
-                                      std::int64_t tensor_rank)
+            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
             {
-                // Accepted range of value for axis is [-tensor_rank, tensor_rank-1].
-                return validate_axis(node, axis, tensor_rank, -tensor_rank, tensor_rank - 1);
-            }
-
-            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
-                                      std::int64_t axis,
-                                      std::int64_t tensor_rank,
-                                      std::int64_t axis_range_min,
-                                      std::int64_t axis_range_max)
-            {
-                // Accepted range of value for axis is [axis_range_min, axis_range_max].
-                NGRAPH_CHECK(((axis >= axis_range_min) && (axis <= axis_range_max)),
-                             node.get_description(),
-                             "Parameter axis ",
-                             axis,
-                             " out of the tensor rank [-",
-                             axis_range_min,
-                             ", ",
-                             axis_range_max,
-                             "].");
-
-                if (axis < 0)
+                const auto outputs_number = node->get_output_size();
+                ngraph::NodeVector outputs(outputs_number);
+                for (int i = 0; i < outputs_number; ++i)
                 {
-                    axis = axis + tensor_rank;
+                    if (node->output(i).get_node_shared_ptr()->get_output_size() == 1)
+                    {
+                        outputs[i] = node->get_output_as_single_output_node(i);
+                    }
+                    else
+                    {
+                        outputs[i] = std::make_shared<ngraph::opset0::GetOutputElement>(node, i);
+                    }
                 }
-
-                return static_cast<size_t>(axis);
-            }
-
-            std::vector<std::size_t> validate_axes(const ngraph::onnx_import::Node& node,
-                                                   std::vector<std::int64_t> axes,
-                                                   std::int64_t tensor_rank)
-            {
-                std::vector<std::size_t> new_axes;
-
-                for (auto a : axes)
-                {
-                    new_axes.push_back(validate_axis(node, a, tensor_rank));
-                }
-
-                return new_axes;
+                return outputs;
             }
 
         } // namespace  common

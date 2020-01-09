@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,24 +24,27 @@ namespace ngraph
 {
     namespace op
     {
-        class BroadcastDistributed : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"BroadcastDistributed", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            BroadcastDistributed() = default;
-            BroadcastDistributed(const Output<Node>& arg, int64_t root_id = 0);
-            bool visit_attributes(AttributeVisitor& visitor) override;
-            void validate_and_infer_types() override;
+            class NGRAPH_API BroadcastDistributed : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"BroadcastDistributed", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                BroadcastDistributed() = default;
+                BroadcastDistributed(const Output<Node>& arg, int64_t root_id = 0);
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-            int64_t get_root_id() const;
-            void set_root_id(int64_t root_id);
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+                int64_t get_root_id() const;
+                void set_root_id(int64_t root_id);
 
-        private:
-            int64_t m_root_id;
-        };
+            private:
+                int64_t m_root_id;
+            };
+        }
+        using v0::BroadcastDistributed;
     }
 }

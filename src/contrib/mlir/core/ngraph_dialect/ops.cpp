@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -171,8 +171,11 @@ static mlir::LogicalResult verifyCmpOp(T* op)
     NGTensorType resType = r0.cast<NGTensorType>();
 
     // result of same shape as input and has bool type
-    if (!resType.isCompatibleShape(opType0) || !resType.getElementType().isa<NGBoolType>())
+    if (!resType.isCompatibleShape(opType0) ||
+        !resType.getElementType().cast<NGIntegerType>().isUInt8())
+    {
         return op->emitOpError("Incompatible result shape or type for comparison op");
+    }
 
     return mlir::success();
 }
@@ -334,4 +337,101 @@ namespace mlir
 
 #define GET_OP_CLASSES
 #include "ops.cpp.inc"
+}
+
+// Fused Ops decompose
+// Stubs for now
+// TODO: Implement and move to another file
+void mlir::NGSpaceToDepthOp::decompose()
+{
+}
+void mlir::NGSplitOp::decompose()
+{
+}
+void mlir::NGScaleShiftOp::decompose()
+{
+}
+void mlir::NGUnSqueezeOp::decompose()
+{
+}
+void mlir::NGSquaredDiffOp::decompose()
+{
+}
+void mlir::NGSqueezeOp::decompose()
+{
+}
+void mlir::NGShuffleChannelsOp::decompose()
+{
+}
+void mlir::NGRNNCellOp::decompose()
+{
+}
+void mlir::NGFakeQuantOp::decompose()
+{
+}
+void mlir::NGMVN::decompose()
+{
+}
+void mlir::NGHardSigmoid::decompose()
+{
+}
+void mlir::NGGRNOp::decompose()
+{
+}
+void mlir::NGNormalizeL2Op::decompose()
+{
+}
+void mlir::NGConvBiasBackpropFiltersBias::decompose()
+{
+}
+void mlir::NGPrelu::decompose()
+{
+}
+void mlir::NGLayerNormBackpropOp::decompose()
+{
+}
+void mlir::NGGemmOp::decompose()
+{
+}
+void mlir::NGClampOp::decompose()
+{
+}
+void mlir::NGGroupConvTransposeOp::decompose()
+{
+}
+void mlir::NGConvBiasOp::decompose()
+{
+}
+void mlir::NGConvBiasAddOp::decompose()
+{
+}
+void mlir::NGGRUCellOp::decompose()
+{
+}
+void mlir::NGGroupConvOp::decompose()
+{
+}
+void mlir::NGGeluOp::decompose()
+{
+}
+void mlir::NGGeluBackpropFactorOp::decompose()
+{
+}
+void mlir::NGLSTMCellOp::decompose()
+{
+}
+void mlir::NGLSTMSequenceOp::decompose()
+{
+}
+void mlir::NGMatMul::decompose()
+{
+}
+void mlir::NGLayerNormOp::decompose()
+{
+}
+void mlir::NGDepthToSpaceOp::decompose()
+{
+}
+void mlir::NGEluOp::decompose()
+{
 }

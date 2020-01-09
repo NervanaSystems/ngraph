@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief Elementwise logical-and operation.
             ///
-            class LogicalAnd : public util::BinaryElementwiseLogical
+            class NGRAPH_API LogicalAnd : public util::BinaryElementwiseLogical
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"LogicalAnd", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a logical-and operation.
@@ -61,10 +60,9 @@ namespace ngraph
         {
             /// \brief Elementwise logical-and operation.
             ///
-            class And : public util::BinaryElementwiseLogical
+            class NGRAPH_API And : public util::BinaryElementwiseLogical
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"And", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a logical-and operation.

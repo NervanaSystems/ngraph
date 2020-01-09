@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -795,17 +795,54 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
     return dim;
 }
 
-std::size_t ngraph::normalize_axis(const Node* node, std::int64_t axis, std::int64_t tensor_rank)
+std::vector<size_t> ngraph::normalize_axes(const std::string& node_description,
+                                           const std::vector<int64_t>& axes,
+                                           std::int64_t tensor_rank)
 {
-    const auto axis_range_min = -tensor_rank;
-    const auto axis_range_max = tensor_rank - 1;
+    std::vector<size_t> new_axes;
 
+    for (const auto& axis : axes)
+    {
+        new_axes.push_back(normalize_axis(node_description, axis, tensor_rank));
+    }
+
+    return new_axes;
+}
+
+int64_t ngraph::normalize_axis(const Node* node, std::int64_t axis, std::int64_t tensor_rank)
+{
+    return normalize_axis(node->description(), axis, tensor_rank);
+}
+
+int64_t ngraph::normalize_axis(const std::string& node_description,
+                               std::int64_t axis,
+                               std::int64_t tensor_rank)
+{
+    return normalize_axis(node_description, axis, tensor_rank, -tensor_rank, tensor_rank - 1);
+}
+
+int64_t ngraph::normalize_axis(const Node* node,
+                               std::int64_t axis,
+                               std::int64_t tensor_rank,
+                               std::int64_t axis_range_min,
+                               std::int64_t axis_range_max)
+{
+    return ngraph::normalize_axis(
+        node->description(), axis, tensor_rank, axis_range_min, axis_range_max);
+}
+
+int64_t ngraph::normalize_axis(const std::string& node_description,
+                               std::int64_t axis,
+                               std::int64_t tensor_rank,
+                               std::int64_t axis_range_min,
+                               std::int64_t axis_range_max)
+{
     // Accepted range of value for axis is [axis_range_min, axis_range_max].
     NGRAPH_CHECK(((axis >= axis_range_min) && (axis <= axis_range_max)),
-                 node->description(),
-                 "Parameter axis ",
+                 node_description,
+                 " Parameter axis ",
                  axis,
-                 " out of the tensor rank [-",
+                 " out of the tensor rank range [",
                  axis_range_min,
                  ", ",
                  axis_range_max,
@@ -816,5 +853,5 @@ std::size_t ngraph::normalize_axis(const Node* node, std::int64_t axis, std::int
         axis = axis + tensor_rank;
     }
 
-    return static_cast<size_t>(axis);
+    return static_cast<int64_t>(axis);
 }

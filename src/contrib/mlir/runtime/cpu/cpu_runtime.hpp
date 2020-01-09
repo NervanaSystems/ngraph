@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,8 @@ namespace ngraph
         {
             struct StaticMemRef
             {
-                void* data;
+                void* allocatedPtr;
+                void* alignedPtr;
             };
             /// A CPU Runtime is an MLIR runtime that owns an MLIR context and a module
             /// The module should be in LLVM dialect and ready to be lowered via an MLIR

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -115,7 +115,7 @@ TEST(MLIR, ops_attributes)
             .getOperation();
 
     auto avgPool = cast<NGAvgPoolOp>(operation);
-    auto padType = static_cast<MLIRPadType>(avgPool.padType().getSExtValue());
+    auto padType = avgPool.padType();
     EXPECT_TRUE(padType == MLIRPadType::SAME_LOWER);
 
     operation =
@@ -131,7 +131,7 @@ TEST(MLIR, ops_attributes)
             .getOperation();
 
     avgPool = cast<NGAvgPoolOp>(operation);
-    padType = static_cast<MLIRPadType>(avgPool.padType().getSExtValue());
+    padType = avgPool.padType();
     EXPECT_TRUE(padType == MLIRPadType::EXPLICIT);
 
     auto ceilMode = avgPool.ceilMode();

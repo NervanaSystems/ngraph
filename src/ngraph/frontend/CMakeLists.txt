@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,4 +21,13 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     endif()
 endif()
 
+option(NGRAPH_FLUID_ENABLE "Enable build for PaddlePaddle Fluid support" ON)
+NORMALIZE_BOOL(NGRAPH_FLUID_ENABLE)
+message(STATUS "NGRAPH_FLUID_ENABLE:                  ${NGRAPH_FLUID_ENABLE}")
 
+if (NGRAPH_FLUID_ENABLE)
+    option(NGRAPH_FLUID_TEST_ENABLE "Enable PaddlePaddle Fluid operator tests" OFF)
+    NORMALIZE_BOOL(NGRAPH_FLUID_TEST_ENABLE)
+    message(STATUS "NGRAPH_FLUID_TEST_ENABLE:             ${NGRAPH_FLUID_TEST_ENABLE}")
+    add_subdirectory(fluid)
+endif()

@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,6 +52,7 @@ set(SRC
     builder/convert.cpp
     builder/convert_layout.cpp
     builder/convolution.cpp
+    builder/cum_sum.cpp
     builder/dot.cpp
     builder/dropout.cpp
     builder/embedding_lookup.cpp
@@ -179,8 +180,6 @@ set(NGRAPH_CPU_COMMON_DATATYPES
 
 
 if (NGRAPH_CPU_ENABLE)
-    set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
-
     set(NGRAPH_CPU_OPTIMIZED_DATATYPES "common"
         CACHE STRING "Semicolon-separated list of datatypes to optimize for, or \"common\" or \"all\".")
 
@@ -236,7 +235,7 @@ if (NGRAPH_CPU_ENABLE)
          message(WARNING "The build toolset doesn't support OpenMP. This will impact performance and lead to slowdowns.")
     endif()
 
-    if (MSVS)
+    if (MSVC)
         target_compile_definitions(cpu_backend PRIVATE EIGEN_HAS_CONSTEXPR)
         # under debug mode, more files besides builder/dot.cpp rises the error
         target_compile_options(cpu_backend PRIVATE "/bigobj" )
@@ -260,7 +259,7 @@ if (NGRAPH_CPU_ENABLE)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
 
-    if (NOT APPLE AND NOT MSVS)
+    if (NOT APPLE AND NOT MSVC)
         # CPU backend uses third-party libraries like Eigen that might be linked in and
         # exported by other DSOs as well. In the absence of versioning, this could lead to the
         # CPU backend picking up the wrong version or even multiple versions of the
@@ -277,9 +276,9 @@ if (NGRAPH_CPU_ENABLE)
                                DEFINITION MLIR_LLVM_INCLUDEPATH)
         
         message(STATUS "Building CPU backend with MLIR")
-        add_dependencies(cpu_backend mlir_backend)
+        add_dependencies(cpu_backend mlir_cpu_backend)
         target_include_directories(cpu_backend PUBLIC ${MLIR_INCLUDE_PATHS} ${MLIR_LLVM_INCLUDE_PATH})
-        target_link_libraries(cpu_backend PUBLIC mlir_backend)
+        target_link_libraries(cpu_backend PUBLIC mlir_cpu_backend)
         # TODO: Get rid of the compile time def, and move all MLIR code to separate src files
         # and add them to cpu_backend here instead.
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_MLIR_ENABLE")

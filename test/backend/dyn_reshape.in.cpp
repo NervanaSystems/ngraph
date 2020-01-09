@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -120,7 +120,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_v1)
 {
     auto arg = std::make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
     auto pattern = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
-    auto reshape_v1 = std::make_shared<op::v1::Reshape>(arg, pattern);
+    auto reshape_v1 = std::make_shared<op::v1::Reshape>(arg, pattern, false);
 
     auto f = std::make_shared<Function>(NodeVector{reshape_v1}, ParameterVector{arg, pattern});
 

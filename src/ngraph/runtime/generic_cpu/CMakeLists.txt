@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ if (NGRAPH_GENERIC_CPU_ENABLE)
     # if (OPENMP_FOUND)
     #     add_compile_options(${OpenMP_CXX_FLAGS})
     # endif()
-    add_library(gcpu_backend SHARED gcpu_backend.cpp gcpu_executable.cpp node_wrapper.cpp)
+    add_library(gcpu_backend SHARED gcpu_backend.cpp gcpu_executable.cpp)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(gcpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}

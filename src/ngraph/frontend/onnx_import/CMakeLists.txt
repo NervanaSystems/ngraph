@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -37,12 +37,14 @@ add_library(onnx_import STATIC
         core/operator_set.hpp
         core/tensor.hpp
         core/value_info.hpp
+        default_opset.hpp
         exceptions.cpp
         exceptions.hpp
         op/acos.hpp
         op/acosh.cpp
         op/acosh.hpp
         op/add.hpp
+        op/add.cpp
         op/and.hpp
         op/argmax.cpp
         op/argmax.hpp
@@ -75,6 +77,8 @@ add_library(onnx_import STATIC
         op/conv_integer.hpp
         op/conv_transpose.cpp
         op/conv_transpose.hpp
+        op/cum_sum.cpp
+        op/cum_sum.hpp
         op/depth_to_space.cpp
         op/depth_to_space.hpp
         op/dequantize_linear.cpp
@@ -94,6 +98,8 @@ add_library(onnx_import STATIC
         op/flatten.hpp
         op/floor.hpp
         op/gather.hpp
+        op/gather_nd.hpp
+        op/gather_nd.cpp
         op/gemm.cpp
         op/gemm.hpp
         op/global_average_pool.cpp
@@ -133,9 +139,13 @@ add_library(onnx_import STATIC
         op/mean_variance_normalization.cpp
         op/mean_variance_normalization.hpp
         op/min.hpp
+        op/mod.hpp
+        op/mod.cpp
         op/mul.hpp
         op/neg.hpp
         op/not.hpp
+        op/non_max_suppression.cpp
+        op/non_max_suppression.hpp
         op/onehot.cpp
         op/onehot.hpp
         op/or.hpp
@@ -158,7 +168,9 @@ add_library(onnx_import STATIC
         op/reshape.cpp
         op/reshape.hpp
         op/reverse_sequence.cpp
-        op/reverse_sequence.h
+        op/reverse_sequence.hpp
+        op/scatter_nd.cpp
+        op/scatter_nd.hpp
         op/selu.cpp
         op/selu.hpp
         op/shape.hpp
@@ -216,11 +228,11 @@ add_library(onnx_import STATIC
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
-add_dependencies(onnx_import_interface protobuf::libprotobuf onnx::libonnx onnx::libonnx_proto)
+add_dependencies(onnx_import_interface onnx::libonnx onnx::libonnx_proto)
 add_dependencies(onnx_import onnx_import_interface)
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import 
+target_include_directories(onnx_import
     SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} ${ONNX_PROTO_LIBRARY})
@@ -241,3 +253,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
             -Wno-invalid-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
             -Wno-unused-private-field -Wno-shadow -Wno-deprecated PUBLIC -Wno-undefined-func-template)
 endif()
+
+target_compile_definitions(onnx_import PRIVATE ngraph_EXPORTS)
+target_compile_definitions(onnx_import_interface PRIVATE ngraph_EXPORTS)

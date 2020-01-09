@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,10 +27,9 @@ namespace ngraph
         {
             /// \brief Batched average pooling operation, with optional padding and window stride.
             ///
-            class AvgPool : public Op
+            class NGRAPH_API AvgPool : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPool", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched average pooling operation.
@@ -138,7 +137,7 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 /// \return The window shape.
                 const Shape& get_window_shape() const;
@@ -173,10 +172,9 @@ namespace ngraph
                 bool m_ceil_mode{false};
             };
 
-            class AvgPoolBackprop : public Op
+            class NGRAPH_API AvgPoolBackprop : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPoolBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 AvgPoolBackprop() = default;
@@ -222,10 +220,9 @@ namespace ngraph
         {
             /// \brief Batched average pooling operation.
             ///
-            class AvgPool : public Op
+            class NGRAPH_API AvgPool : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPool", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched average pooling operation.
@@ -290,7 +287,7 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 /// \return The kernel shape.
                 const Shape& get_kernel() const;
@@ -324,10 +321,9 @@ namespace ngraph
                 op::RoundingType m_rounding_type{op::RoundingType::FLOOR};
             };
 
-            class AvgPoolBackprop : public Op
+            class NGRAPH_API AvgPoolBackprop : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPoolBackprop", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 AvgPoolBackprop() = default;

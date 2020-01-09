@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ namespace ngraph
     /// Attributes are the values set when building a graph which are not
     /// computed as the graph executes. Values computed from the graph topology and attributes
     /// during compilation are not attributes.
-    class AttributeVisitor
+    class NGRAPH_API AttributeVisitor
     {
     public:
         virtual ~AttributeVisitor() {}

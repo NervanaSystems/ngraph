@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
 endif()
 target_include_directories(ngraph_test_util PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(ngraph_test_util PRIVATE ngraph libgtest)
+add_dependencies(ngraph_test_util ext_gtest)
 
 if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
     add_definitions(-DNGRAPH_UNIT_TEST_OPENVINO_ENABLE)

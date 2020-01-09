@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief Operation which "adds" axes to an input tensor, replicating elements from the
             ///        input as needed along the new axes.
-            class Broadcast : public Op
+            class NGRAPH_API Broadcast : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Broadcast", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a broadcast operation.
@@ -66,7 +65,7 @@ namespace ngraph
                           const AxisSet& broadcast_axes);
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 virtual void infer_shape() {}
                 Shape m_shape;
@@ -74,10 +73,9 @@ namespace ngraph
             };
 
             /// \brief Broadcast arg to the same shape as like_arg.
-            class BroadcastLike : public v0::Broadcast
+            class NGRAPH_API BroadcastLike : public v0::Broadcast
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"BroadcastLike", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Broadcast arg to the same shape as like_arg.
@@ -117,10 +115,9 @@ namespace ngraph
         {
             /// \brief Operation which "adds" axes to an input tensor, replicating elements from the
             ///        input as needed along the new axes.
-            class Broadcast : public Op
+            class NGRAPH_API Broadcast : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Broadcast", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a broadcast operation.
@@ -173,7 +170,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             private:
                 AutoBroadcastSpec m_broadcast_spec;

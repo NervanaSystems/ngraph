@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ shared_ptr<Node> op::v0::Power::copy_with_new_args(const NodeVector& new_args) c
     return make_shared<op::v0::Power>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
-void op::v0::Power::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Power::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (get_autob().m_type != op::AutoBroadcastType::NONE)
     {
@@ -76,7 +76,7 @@ shared_ptr<Node> op::v1::Power::copy_with_new_args(const NodeVector& new_args) c
     return make_shared<op::v1::Power>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
-void op::v1::Power::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::Power::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (get_autob().m_type != op::AutoBroadcastType::NONE)
     {

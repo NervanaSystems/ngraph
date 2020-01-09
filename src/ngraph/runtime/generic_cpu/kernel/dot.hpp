@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,11 @@
 
 #include <Eigen/Dense>
 #include <cmath>
-#include <omp.h>
 #include <utility>
+
+#ifdef PARALLEL
+#include <omp.h>
+#endif
 
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/shape_util.hpp"

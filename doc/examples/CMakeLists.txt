@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 if (NGRAPH_CPU_ENABLE)
     add_subdirectory(abc)
     add_subdirectory(abc_operator)
+    add_subdirectory(dynamic_tensor)
     add_subdirectory(mnist_mlp)
     add_subdirectory(update)
 endif()

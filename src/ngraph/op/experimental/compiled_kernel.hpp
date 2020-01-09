@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,10 +28,9 @@ namespace ngraph
         /// This op can be used to delimit sub-graphs that with special compilation requirements
         /// within a function. For example, we currently use it to delimit sub-graphs that will be
         /// independently compiled and executed by MLIR backend.
-        class CompiledKernel : public ngraph::op::Op
+        class NGRAPH_API CompiledKernel : public ngraph::op::Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"CompiledKernel", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             CompiledKernel() = default;

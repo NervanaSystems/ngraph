@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,8 @@
 
 #include <memory>
 
-#include "core/node.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op/fused/log_softmax.hpp"
-#include "utils/common.hpp"
+#include "log_softmax.hpp"
+#include "ngraph/opsets/opset0.hpp"
 
 namespace ngraph
 {
@@ -36,7 +34,7 @@ namespace ngraph
                     auto data_shape = data->get_shape();
                     int axis = node.get_attribute_value<int64_t>("axis", 1);
 
-                    return {std::make_shared<ngraph::op::LogSoftmax>(data, axis)};
+                    return {std::make_shared<ngraph::opset0::LogSoftmax>(data, axis)};
                 }
 
             } // namespace set_1

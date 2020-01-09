@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,18 +16,11 @@
 
 #include <memory>
 
+#include "default_opset.hpp"
 #include "exceptions.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/maximum.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/shape.hpp"
-
-#include "core/node.hpp"
 #include "leaky_relu.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/multiply.hpp"
 
 namespace ngraph
 {
@@ -46,10 +39,10 @@ namespace ngraph
                         << " alpha value should be in range (0,1)";
 
                     std::shared_ptr<ngraph::Node> alpha_node =
-                        std::make_shared<ngraph::op::Constant>(data->get_element_type(),
-                                                               data->get_shape(),
-                                                               std::vector<double>{alpha});
-                    return {std::make_shared<ngraph::op::Maximum>(data * alpha_node, data)};
+                        std::make_shared<default_opset::Constant>(data->get_element_type(),
+                                                                  data->get_shape(),
+                                                                  std::vector<double>{alpha});
+                    return {std::make_shared<default_opset::Maximum>(data * alpha_node, data)};
                 }
 
             } // namespace set_1

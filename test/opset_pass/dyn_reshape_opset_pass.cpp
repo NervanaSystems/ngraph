@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,6 +58,6 @@ TEST(opset_transform, opset1_reshape_downgrade_pass)
 
     const auto pass_replacement_node = f->get_result()->input_value(0).get_node_shared_ptr();
     const auto reshape_v1 = as_type_ptr<op::v0::DynReshape>(pass_replacement_node);
-    EXPECT_TRUE(reshape_v1);
+    ASSERT_TRUE(reshape_v1);
     EXPECT_EQ(reshape_v1->get_zero_flag(), true);
 }

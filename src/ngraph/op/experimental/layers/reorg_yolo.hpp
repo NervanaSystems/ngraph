@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,27 +22,30 @@ namespace ngraph
 {
     namespace op
     {
-        class ReorgYolo : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"ReorgYolo", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            ReorgYolo() = default;
-            /// \brief Constructs a ReorgYolo operation
-            ///
-            /// \param input          Input
-            /// \param strides        Stride to reorganize input by
-            ReorgYolo(const Output<Node>& input, const Strides& strides);
+            class NGRAPH_API ReorgYolo : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"ReorgYolo", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ReorgYolo() = default;
+                /// \brief Constructs a ReorgYolo operation
+                ///
+                /// \param input          Input
+                /// \param strides        Stride to reorganize input by
+                ReorgYolo(const Output<Node>& input, const Strides& strides);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            const Strides get_strides() const { return m_strides; }
-        private:
-            Strides m_strides;
-        };
+                const Strides get_strides() const { return m_strides; }
+            private:
+                Strides m_strides;
+            };
+        }
+        using v0::ReorgYolo;
     }
 }

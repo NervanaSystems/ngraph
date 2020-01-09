@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,21 +22,36 @@ using namespace std;
 using namespace ngraph;
 
 template <class T>
-shared_ptr<op::Constant> fold_constant_select(shared_ptr<op::Constant> selection,
-                                              shared_ptr<op::Constant> t,
-                                              shared_ptr<op::Constant> f,
-                                              shared_ptr<op::Select> select)
+shared_ptr<op::Constant> fold_constant_select(const shared_ptr<op::Constant>& selection,
+                                              const shared_ptr<op::Constant>& t,
+                                              const shared_ptr<op::Constant>& f,
+                                              const shared_ptr<Node>& select)
 {
-    auto out_shape = select->get_shape();
-    vector<T> out_vec(shape_size(out_shape));
+    const Shape& out_shape = select->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
+    T* data_ptr = buffer.get_ptr<T>();
 
-    runtime::reference::select<T>(selection->get_data_ptr<char>(),
-                                  t->get_data_ptr<T>(),
-                                  f->get_data_ptr<T>(),
-                                  out_vec.data(),
-                                  shape_size(out_shape));
+    if (auto select_v0 = as_type_ptr<op::v0::Select>(select))
+    {
+        runtime::reference::select<T>(selection->get_data_ptr<char>(),
+                                      t->get_data_ptr<T>(),
+                                      f->get_data_ptr<T>(),
+                                      data_ptr,
+                                      shape_size(out_shape));
+    }
+    else if (auto select_v1 = as_type_ptr<op::v1::Select>(select))
+    {
+        runtime::reference::select<T>(selection->get_data_ptr<char>(),
+                                      t->get_data_ptr<T>(),
+                                      f->get_data_ptr<T>(),
+                                      data_ptr,
+                                      selection->get_shape(),
+                                      t->get_shape(),
+                                      f->get_shape(),
+                                      select_v1->get_auto_broadcast());
+    }
 
-    return make_shared<op::Constant>(select->get_element_type(), out_shape, out_vec);
+    return make_shared<op::Constant>(select->get_element_type(), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_select()
@@ -47,7 +62,8 @@ void pass::ConstantFolding::construct_constant_select()
         element::i64, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
     auto f_label = make_shared<pattern::op::Label>(
         element::i64, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
-    auto select_op = make_shared<op::Select>(selection_label, t_label, f_label);
+    auto select_v0_op = make_shared<op::v0::Select>(selection_label, t_label, f_label);
+    auto select_v1_op = make_shared<op::v1::Select>(selection_label, t_label, f_label);
 
     auto constant_select_callback = [selection_label, t_label, f_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_select_callback against node = "
@@ -55,10 +71,11 @@ void pass::ConstantFolding::construct_constant_select()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto selection_node = static_pointer_cast<op::Constant>(pattern_map[selection_label]);
-        auto t_node = static_pointer_cast<op::Constant>(pattern_map[t_label]);
-        auto f_node = static_pointer_cast<op::Constant>(pattern_map[f_label]);
-        auto select = static_pointer_cast<op::Select>(m.get_match_root());
+        const auto& selection_node =
+            static_pointer_cast<op::Constant>(pattern_map[selection_label]);
+        const auto& t_node = static_pointer_cast<op::Constant>(pattern_map[t_label]);
+        const auto& f_node = static_pointer_cast<op::Constant>(pattern_map[f_label]);
+        const auto& select = m.get_match_root();
 
         NGRAPH_CHECK(revalidate_and_ensure_static(select));
 
@@ -120,7 +137,12 @@ void pass::ConstantFolding::construct_constant_select()
         return true;
     };
 
-    auto select_matcher =
-        make_shared<pattern::Matcher>(select_op, "ConstantFolding.ConstantSelect");
-    this->add_matcher(select_matcher, constant_select_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+    this->add_matcher(
+        make_shared<pattern::Matcher>(select_v0_op, "ConstantFolding.ConstantSelectV0"),
+        constant_select_callback,
+        PassProperty::CHANGE_DYNAMIC_STATE);
+    this->add_matcher(
+        make_shared<pattern::Matcher>(select_v1_op, "ConstantFolding.ConstantSelectV1"),
+        constant_select_callback,
+        PassProperty::CHANGE_DYNAMIC_STATE);
 }

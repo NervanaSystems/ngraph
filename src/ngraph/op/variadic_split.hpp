@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief VariadicSplit operation splits an input tensor into pieces along some axis.
             /// The pieces may have variadic lengths depending on "split_lengths" attribute.
-            class VariadicSplit : public Op
+            class NGRAPH_API VariadicSplit : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"VariadicSplit", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a variadic split operation.

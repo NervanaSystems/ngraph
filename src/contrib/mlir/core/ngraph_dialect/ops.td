@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,9 @@
 // NOTE: This file follows nGraph format style and MLIR naming convention since it does
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
-include "mlir/IR/OpBase.td"
 include "core/ngraph_dialect/ops_interfaces.td"
+include "mlir/IR/OpBase.td"
+
 // nGraph Dialect operations definitions
 //
 // This files declares nGraph operations that table-gen uses to create C++ code
@@ -140,7 +141,9 @@ class NG_Terminator_Op<string mnemonic, list<OpTrait> traits = []> :
     NG_Op<mnemonic, !listconcat(traits, [Terminator])>,
     Arguments<(ins Variadic<NG_TensorType>:$args)>, Results<(outs)> {}
 
-
+class NG_Variadic_Result_Op<string mnemonic, list<OpTrait> traits = []> :
+    NG_Op<mnemonic, !listconcat(traits, [])>,
+    Results<(outs Variadic<NG_TensorType>:$args)> {}
 
 // Terminator Ops
 def NGReturnOp : NG_Terminator_Op<"return">;

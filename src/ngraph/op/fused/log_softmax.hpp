@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,28 +24,31 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief LogSoftmax operation
-        class LogSoftmax : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"LogSoftmax", 0};
-            LogSoftmax() = default;
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a LogSoftmax node.
-            ///
-            /// \param data Node that produces the first input tensor
-            /// \param axis Describes the axis of the inputs when coerced to 2D
-            LogSoftmax(const Output<Node>& data, int64_t axis);
+            /// \brief LogSoftmax operation
+            class NGRAPH_API LogSoftmax : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"LogSoftmax", 0};
+                LogSoftmax() = default;
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a LogSoftmax node.
+                ///
+                /// \param data Node that produces the first input tensor
+                /// \param axis Describes the axis of the inputs when coerced to 2D
+                LogSoftmax(const Output<Node>& data, int64_t axis);
 
-            virtual NodeVector decompose_op() const override;
+                virtual NodeVector decompose_op() const override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            int64_t get_axis() const { return m_axis; }
-        protected:
-            int64_t m_axis;
-        };
+                int64_t get_axis() const { return m_axis; }
+            protected:
+                int64_t m_axis;
+            };
+        }
+        using v0::LogSoftmax;
     } // namespace op
 } // namespace ngraph

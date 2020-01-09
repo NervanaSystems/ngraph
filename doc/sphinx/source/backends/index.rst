@@ -1,5 +1,7 @@
 .. backends/index.rst
 
+.. _backend_support:
+
 #####################
 Working with Backends
 #####################
@@ -51,7 +53,7 @@ How to use?
 #. A single iteration of the executable is executed by calling the ``call``
    method on the ``Executable`` object.
 
-.. figure:: ../graphics/ExecutionInterfaceRunGraphs.png
+.. figure:: ../graphics/execution-interface-run-graph.svg
    :width: 650px
 
    The execution interface for nGraph 
