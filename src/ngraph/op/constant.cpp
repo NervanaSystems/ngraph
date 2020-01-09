@@ -393,7 +393,7 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
 
 constexpr NodeTypeInfo op::ScalarConstantLike::type_info;
 
-shared_ptr<op::Constant> op::ScalarConstantLikeBase::as_constant() const
+shared_ptr<op::Constant> op::ScalarConstantLike::as_constant() const
 {
     return std::make_shared<op::Constant>(m_element_type, m_shape, m_data->get_ptr());
 }
