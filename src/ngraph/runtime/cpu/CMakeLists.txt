@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -276,9 +276,9 @@ if (NGRAPH_CPU_ENABLE)
                                DEFINITION MLIR_LLVM_INCLUDEPATH)
         
         message(STATUS "Building CPU backend with MLIR")
-        add_dependencies(cpu_backend mlir_backend)
+        add_dependencies(cpu_backend mlir_cpu_backend)
         target_include_directories(cpu_backend PUBLIC ${MLIR_INCLUDE_PATHS} ${MLIR_LLVM_INCLUDE_PATH})
-        target_link_libraries(cpu_backend PUBLIC mlir_backend)
+        target_link_libraries(cpu_backend PUBLIC mlir_cpu_backend)
         # TODO: Get rid of the compile time def, and move all MLIR code to separate src files
         # and add them to cpu_backend here instead.
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_MLIR_ENABLE")
