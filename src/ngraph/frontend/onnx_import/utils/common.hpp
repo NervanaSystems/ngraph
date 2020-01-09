@@ -27,6 +27,7 @@
 
 #include "core/node.hpp"
 #include "default_opset.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -37,6 +38,8 @@ namespace ngraph
     {
         namespace common
         {
+            const NodeVector& add_provenance_tags(const Node& onnx_node,
+                                                  const NodeVector& ng_node_vector);
             const ngraph::element::Type& get_ngraph_element_type(std::int64_t onnx_type);
 
             /// \brief      Return a monotonic sequence.
