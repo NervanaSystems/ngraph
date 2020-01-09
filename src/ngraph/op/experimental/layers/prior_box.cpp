@@ -68,12 +68,12 @@ void op::PriorBox::validate_and_infer_types()
         auto layer_shape = const_shape->get_shape_val();
 
         set_output_type(0,
-                        element::f32,
+                        m_attrs.outputType,
                         Shape{2, 4 * layer_shape[0] * layer_shape[1] * number_of_priors(m_attrs)});
     }
     else
     {
-        set_output_type(0, element::f32, PartialShape::dynamic());
+        set_output_type(0, m_attrs.outputType, PartialShape::dynamic());
     }
 }
 

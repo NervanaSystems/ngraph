@@ -45,6 +45,7 @@ namespace ngraph
             float offset = 0.0f;
             std::vector<float> variance;
             bool scale_all_sizes = false;
+            element::Type_t outputType;
         };
 
         namespace v0
