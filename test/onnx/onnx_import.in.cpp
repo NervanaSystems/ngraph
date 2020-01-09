@@ -428,10 +428,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_multiple_outputs_op)
     }
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_initializer_tags)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_constants)
 {
     const auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_initializer_tags.prototxt"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_input_tags.prototxt"));
 
     for (const auto ng_node : function->get_ordered_ops())
     {
@@ -442,6 +442,24 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_initializer_tags)
                                       << ng_node;
 
             EXPECT_EQ(*(tags.cbegin()), "<ONNX Input (initializer_of_A)>");
+        }
+    }
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_parameters)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_input_tags.prototxt"));
+
+    for (const auto ng_node : function->get_ordered_ops())
+    {
+        if (as_type_ptr<op::Parameter>(ng_node))
+        {
+            const auto tags = ng_node->get_provenance_tags();
+            ASSERT_EQ(tags.size(), 1) << "There should be exactly one provenance tag set for "
+                                      << ng_node;
+
+            EXPECT_EQ(*(tags.cbegin()), "<ONNX Input (input_B)>");
         }
     }
 }
