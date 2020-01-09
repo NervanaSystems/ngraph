@@ -88,38 +88,6 @@ namespace ngraph
                                        static_cast<onnx::TensorProto_DataType>(onnx_type)));
             }
 
-            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
-                                      std::int64_t axis,
-                                      std::int64_t tensor_rank)
-            {
-                // Accepted range of value for axis is [-tensor_rank, tensor_rank-1].
-                return validate_axis(node, axis, tensor_rank, -tensor_rank, tensor_rank - 1);
-            }
-
-            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
-                                      std::int64_t axis,
-                                      std::int64_t tensor_rank,
-                                      std::int64_t axis_range_min,
-                                      std::int64_t axis_range_max)
-            {
-                return ngraph::normalize_axis(
-                    node.get_description(), axis, tensor_rank, axis_range_min, axis_range_max);
-            }
-
-            std::vector<std::size_t> validate_axes(const ngraph::onnx_import::Node& node,
-                                                   std::vector<std::int64_t> axes,
-                                                   std::int64_t tensor_rank)
-            {
-                std::vector<std::size_t> new_axes;
-
-                for (auto a : axes)
-                {
-                    new_axes.push_back(validate_axis(node, a, tensor_rank));
-                }
-
-                return new_axes;
-            }
-
             ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
             {
                 const auto outputs_number = node->get_output_size();
