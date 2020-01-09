@@ -24,8 +24,8 @@
 #include "ngraph/opsets/opset0.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/validation_util.hpp"
 #include "topk.hpp"
-#include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
 namespace
@@ -37,7 +37,7 @@ namespace
 
         auto data = node.get_ng_inputs().at(0);
         auto data_rank = data->get_shape().size();
-        return ngraph::onnx_import::common::validate_axis(node, axis, data_rank);
+        return ngraph::normalize_axis(node.get_description(), axis, data_rank);
     }
 
     /// \return Return the second input to the TopK node reshaped to a scalar.

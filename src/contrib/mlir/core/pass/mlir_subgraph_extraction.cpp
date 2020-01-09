@@ -75,38 +75,6 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::add_node(std::shared_ptr<Node> no
     m_pass.m_node_to_graph[node] = get_id();
 }
 
-void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& sg2)
-{
-    NGRAPH_CHECK(&sg2 != this, "Cannot merge a sub-graph into itself");
-
-    // Associate nodes of second sub-graph to first one
-    auto sg_nodes = sg2.get_nodes();
-    for (auto node : sg_nodes)
-    {
-        NGRAPH_DEBUG << *node;
-        NGRAPH_CHECK(m_pass.get_subgraph_id(node) == sg2.get_id(),
-                     "Node does not belong to sub-graph");
-        m_pass.m_node_to_graph[node] = get_id();
-    }
-
-    // nodes  of sub-graphs are exclusive
-    m_nodes.insert(m_nodes.end(), sg2.get_nodes().begin(), sg2.get_nodes().end());
-    // merge inputs
-    add_inputs(sg2.get_inputs());
-
-    // Remove sub-graph from map
-    m_pass.m_id_to_graph.erase(sg2.get_id());
-}
-
-MLIRSubgraphExtractionPass::MLIRSubgraphExtractionPass()
-    : m_max_cycle_depth(20)
-{
-    if (char* max_cycle_depth = std::getenv("NGRAPH_MLIR_MAX_CYCLE_DEPTH"))
-    {
-        m_max_cycle_depth = std::stoi(max_cycle_depth);
-    }
-}
-
 // The sub-graph construction algorithm is as follows
 // Construct a map of node to number of its input not being processes
 // Put the node with value 0 into a ready list
