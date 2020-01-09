@@ -158,8 +158,9 @@ namespace ngraph
 
         NodeVector Graph::make_ng_nodes(const Node& onnx_node) const
         {
-            const auto ng_node_vector =
-                m_model->get_operator(onnx_node.op_type(), onnx_node.domain())(onnx_node);
+            const auto ng_node_factory =
+                m_model->get_operator(onnx_node.op_type(), onnx_node.domain());
+            const auto ng_node_vector = ng_node_factory(onnx_node);
             common::add_provenance_tags(onnx_node, ng_node_vector);
             return ng_node_vector;
         }
