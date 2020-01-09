@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <numeric>
 #include <onnx/onnx_pb.h> // onnx types
 
 #include "common.hpp"
