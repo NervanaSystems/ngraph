@@ -28,6 +28,10 @@
 using namespace std;
 using namespace ngraph;
 
+//------------------------------------------------------------------------------
+//                        v1::GroupConvolution
+//------------------------------------------------------------------------------
+
 constexpr NodeTypeInfo op::v1::GroupConvolution::type_info;
 
 shared_ptr<Node> op::v1::GroupConvolution::get_default_value() const
@@ -147,6 +151,9 @@ void op::v1::GroupConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
     ngraph_error("Not Yet Implemented");
 }
 
+//------------------------------------------------------------------------------
+//                        v1::GroupConvolutionBackpropData
+//------------------------------------------------------------------------------
 constexpr NodeTypeInfo op::v1::GroupConvolutionBackpropData::type_info;
 
 op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
@@ -173,6 +180,26 @@ op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
 op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
     const Output<Node>& data,
     const Output<Node>& filters,
+    const Output<Node>& output_shape,
+    const Strides& strides,
+    const Strides& dilations,
+    const PadType& auto_pad,
+    const CoordinateDiff& output_padding)
+    : GroupConvolutionBackpropData(data,
+                                   filters,
+                                   output_shape,
+                                   strides,
+                                   CoordinateDiff(),
+                                   CoordinateDiff(),
+                                   dilations,
+                                   auto_pad,
+                                   output_padding)
+{
+}
+
+op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
+    const Output<Node>& data,
+    const Output<Node>& filters,
     const Strides& strides,
     const CoordinateDiff& pads_begin,
     const CoordinateDiff& pads_end,
@@ -193,12 +220,12 @@ op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
 const PartialShape op::v1::GroupConvolutionBackpropData::get_output_shape() const
 {
     PartialShape shape{vector<Dimension>(m_strides.size() + 2)};
-    auto data_pshape = get_input_partial_shape(0);
+    auto data_pshape = input(0).get_partial_shape();
     if (data_pshape.rank().is_static())
     {
         shape[0] = data_pshape[0]; // N
     }
-    auto filters_pshape = get_input_partial_shape(1);
+    auto filters_pshape = input(1).get_partial_shape();
     if (filters_pshape.rank().is_static())
     {
         shape[1] = filters_pshape[1]; // C
@@ -340,6 +367,10 @@ shared_ptr<Node>
                                                              m_output_padding);
     }
 }
+
+//------------------------------------------------------------------------------
+//                        v0::GroupConvolution
+//------------------------------------------------------------------------------
 
 constexpr NodeTypeInfo op::v0::GroupConvolution::type_info;
 
@@ -540,6 +571,10 @@ void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
     throw ngraph_error("NYI");
 }
 
+//------------------------------------------------------------------------------
+//                        v0::GroupConvolutionBackpropData
+//------------------------------------------------------------------------------
+
 constexpr NodeTypeInfo op::v0::GroupConvolutionBackpropData::type_info;
 
 op::v0::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
@@ -602,7 +637,6 @@ NodeVector op::v0::GroupConvolutionBackpropData::decompose_op() const
 {
     auto filters = input_value(1);
     auto output_delta = input_value(2);
-
     auto data_shape = get_input_shape(0);
 
     NodeVector sliced_inputs;
@@ -635,6 +669,10 @@ NodeVector op::v0::GroupConvolutionBackpropData::decompose_op() const
     size_t concatenation_axis = 1;
     return {std::make_shared<ngraph::op::Concat>(sliced_inputs, concatenation_axis)};
 }
+
+//------------------------------------------------------------------------------
+//                        v0::GroupConvolutionBackpropFilters
+//------------------------------------------------------------------------------
 
 constexpr NodeTypeInfo op::v0::GroupConvolutionBackpropFilters::type_info;
 
