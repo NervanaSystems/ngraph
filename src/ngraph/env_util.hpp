@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {
@@ -43,12 +44,42 @@ namespace ngraph
     /// \return Returns the boolean value of the environment variable.
     bool getenv_bool(const char* env_var, bool default_value = false);
 
-    void addenv_to_map(std::string key, std::string val);
+    /// \brief Adds the environment variable with it's value to a map
+    /// \param env_var The string name of the environment variable to add.
+    /// \param val The string value of the environment variable to add.
+    void addenv_to_map(const char* env_var, const char* val);
+
+    /// \brief Gets the environment variable with it's value to a map
+    /// \param env_var The string name of the environment variable to add.
+    /// \return Returns the boolean value of the environment variable.
     std::string getenv_from_map(const char* env_var);
+
+    /// \brief Get the names environment variable as a string.
+    /// \param env_var The string name of the environment variable to get.
+    /// \return Returns string by value or an empty string if the environment
+    ///         variable is not set.
     void log_all_envvar();
-    // void set_env_var(const char* env_var, std::string val, bool priority);
-    int set_environment(const char* name, const char* value, int overwrite);
-    int unset_environment(const char* name);
+
+    /// \brief Set the environment variable.
+    /// \param env_var The string name of the environment variable to set.
+    /// \param val The string value of the environment variable to set.
+    /// \param overwrite Flag to overwrite already set environment variable.
+    ///         0 = do not overwrite.
+    ///         1 = overwrite the environment variable with this new value.
+    /// \return Returns 0 if successful, -1 in case of error.
+    NGRAPH_API int set_environment(const char* env_var, const char* value, const int overwrite = 0);
+
+    /// \brief Unset the environment variable.
+    /// \param env_var The string name of the environment variable to unset.
+    /// \return Returns 0 if successful, -1 in case of error.
+    NGRAPH_API int unset_environment(const char* env_var);
+
+    /// \brief Check if the environment variable is present in the cache map.
+    /// \param env_var The string name of the environment variable to check.
+    /// \return Returns true if found, else false.
     bool map_contains(const char* env_var);
-    void erase_env_from_map(std::string env_var);
+
+    /// \brief Delete the environment variable from the cache map.
+    /// \param env_var The string name of the environment variable to delete.
+    void erase_env_from_map(const char* env_var);
 }

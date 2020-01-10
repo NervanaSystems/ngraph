@@ -39,7 +39,7 @@ void ngraph::log_all_envvar()
     }
 }
 
-void ngraph::addenv_to_map(std::string env_var, std::string val)
+void ngraph::addenv_to_map(const char* env_var, const char* val)
 {
     get_env_var_map().emplace(env_var, val);
 }
@@ -68,12 +68,12 @@ std::string ngraph::getenv_from_map(const char* env_var)
     }
 }
 
-void ngraph::erase_env_from_map(std::string env_var)
+void ngraph::erase_env_from_map(const char* env_var)
 {
     get_env_var_map().erase(env_var);
 }
 
-int ngraph::set_environment(const char* env_var, const char* value, int overwrite)
+int ngraph::set_environment(const char* env_var, const char* value, const int overwrite)
 {
     if (map_contains(env_var) && !overwrite)
     {
@@ -115,7 +115,7 @@ std::string ngraph::getenv_string(const char* env_var)
     {
         const char* env_p = ::getenv(env_var);
         string env_string = env_p ? env_p : "";
-        addenv_to_map(env_var, env_string);
+        addenv_to_map(env_var, env_string.c_str());
         return env_string;
     }
 }
@@ -173,7 +173,7 @@ int32_t ngraph::getenv_int(const char* env_var, int32_t default_value)
             NGRAPH_DEBUG << "Environment variable (" << env_var << ") empty or undefined, "
                          << " defaulted to -1 here.";
         }
-        addenv_to_map(env_var, std::to_string(env));
+        addenv_to_map(env_var, std::to_string(env).c_str());
         return env;
     }
 }
