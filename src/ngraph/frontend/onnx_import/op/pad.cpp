@@ -27,10 +27,9 @@
 #include "pad.hpp"
 #include "utils/convpool.hpp"
 
-using namespace std;
 namespace
 {
-    ngraph::op::PadMode get_pad_mode(string mode)
+    ngraph::op::PadMode get_pad_mode(std::string mode)
     {
         ngraph::op::PadMode pad_mode;
 
@@ -121,9 +120,9 @@ namespace ngraph
                         std::vector<std::int64_t> padding_end_values(
                             pads_vector.begin() + half_size, pads_vector.end());
 
-                        padding_begin = ngraph::op::Constant::create(
+                        padding_begin = default_opset::Constant::create(
                             element::i64, ngraph::Shape{half_size}, padding_begin_values);
-                        padding_end = ngraph::op::Constant::create(
+                        padding_end = default_opset::Constant::create(
                             element::i64, ngraph::Shape{half_size}, padding_end_values);
                     }
                     else
