@@ -183,10 +183,8 @@ namespace ngraph
                                              const PadType& auto_pad = PadType::EXPLICIT,
                                              const CoordinateDiff& output_padding = {});
 
-                // TODO - Remove supports_decompose and validate_and_infer_type once op supports
-                // decomposition
-                bool supports_decompose() const override { return false; }
-                void validate_and_infer_types() override;
+                virtual NodeVector decompose_op() const override;
+                virtual void pre_validate_and_infer_types() override;
 
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;
