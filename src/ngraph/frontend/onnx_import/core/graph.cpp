@@ -57,6 +57,11 @@ namespace ngraph
                 std::string domain = get_node_domain(node_proto);
                 return (domain.empty() ? "" : domain + ".") + node_proto.op_type();
             }
+
+            static std::string build_input_provenance_tag(const std::string& input_name)
+            {
+                return std::string{"<ONNX Input (" + input_name + ")>"};
+            }
         } // namespace detail
 
         Graph::Graph(const onnx::GraphProto& graph_proto, Model& model, const Weights& weights)
@@ -73,7 +78,7 @@ namespace ngraph
 
                     // For each initializer, create a Constant node and store in cache
                     auto ng_constant = tensor.get_ng_constant();
-                    common::add_provenance_tags(initializer_tensor.name(), ng_constant);
+                    add_provenance_tag_to_initializer(tensor, ng_constant);
                     m_ng_node_cache.emplace(initializer_tensor.name(), std::move(ng_constant));
                 }
             }
@@ -90,8 +95,7 @@ namespace ngraph
                 }
 
                 auto ng_node = m_inputs.back().get_ng_node(m_parameters, m_initializers, weights);
-                common::add_provenance_tags(input.name(), ng_node);
-
+                add_provenance_tag_to_input(m_inputs.back(), ng_node);
                 m_ng_node_cache[input.name()] = std::move(ng_node);
             }
 
@@ -170,6 +174,19 @@ namespace ngraph
             return ng_node_vector;
         }
 
+        void Graph::add_provenance_tag_to_initializer(
+            const Tensor& tensor, std::shared_ptr<default_opset::Constant> node) const
+        {
+            const std::string tag = detail::build_input_provenance_tag(tensor.get_name());
+            node->add_provenance_tag(tag);
+        }
+
+        void Graph::add_provenance_tag_to_input(const ValueInfo& input,
+                                                std::shared_ptr<ngraph::Node> node) const
+        {
+            const std::string tag = detail::build_input_provenance_tag(input.get_name());
+            node->add_provenance_tag(tag);
+        }
     } // namespace onnx_import
 
 } // namespace ngraph
