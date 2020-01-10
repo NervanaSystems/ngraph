@@ -104,14 +104,14 @@ namespace ngraph
                     }
                     else
                     {
-                        values = ngraph::op::Constant::create(
+                        values = default_opset::Constant::create(
                             data->get_element_type(), ngraph::Shape{}, {0});
                     }
 
                     if (pads->is_constant())
                     {
                         std::vector<std::int64_t> pads_vector =
-                            ngraph::as_type_ptr<ngraph::op::Constant>(pads)
+                            ngraph::as_type_ptr<default_opset::Constant>(pads)
                                 ->get_vector<std::int64_t>();
 
                         std::size_t const half_size = pads_vector.size() / 2;
@@ -128,7 +128,7 @@ namespace ngraph
                     else
                     {
                         auto axis =
-                            ngraph::op::Constant::create(element::i64, ngraph::Shape{}, {0});
+                            default_opset::Constant::create(element::i64, ngraph::Shape{}, {0});
                         NodeVector padding = builder::split(pads, 2, 0);
 
                         padding_begin =
