@@ -128,22 +128,18 @@ namespace ngraph
             class INTBackend;
             class INTExecutable;
 
-            namespace
+            // This expands the op list in op_tbl.hpp into a list of enumerations that look like
+            // this:
+            // Abs,
+            // Acos,
+            // ...
+            enum class OP_TYPEID
             {
-                // This expands the op list in op_tbl.hpp into a list of enumerations that look like
-                // this:
-                // Abs,
-                // Acos,
-                // ...
-                enum class OP_TYPEID
-                {
 #define NGRAPH_OP(NAME, NAMESPACE) ID_SUFFIX(NAME),
 #include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
 #undef NGRAPH_OP
-                    UnknownOp
-                };
-            }
-
+                UnknownOp
+            };
         } // namespace interpreter
     }     // namespace runtime
 } // namespace ngraph
@@ -175,7 +171,7 @@ public:
     std::vector<std::shared_ptr<runtime::Tensor>>
         create_output_tensor(size_t output_index, size_t pipeline_depth) override;
 
-private:
+protected:
     INTExecutable(const std::string& model_string);
 
     std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
@@ -190,15 +186,15 @@ private:
     std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
 
-    static OP_TYPEID get_typeid(const NodeTypeInfo& type_info);
+    static OP_TYPEID get_typeid(const Node& node);
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
 
-    void generate_calls(const element::Type& type,
-                        const Node& op,
-                        const std::vector<std::shared_ptr<HostTensor>>& outputs,
-                        const std::vector<std::shared_ptr<HostTensor>>& inputs);
+    virtual void generate_calls(const element::Type& type,
+                                const Node& op,
+                                const std::vector<std::shared_ptr<HostTensor>>& outputs,
+                                const std::vector<std::shared_ptr<HostTensor>>& inputs);
 
     template <typename T>
     void op_engine(const Node& node,
@@ -211,7 +207,8 @@ private:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-        switch (get_typeid(node.get_type_info()))
+        // #pragma GCC diagnostic error "-Wcovered-switch-default"
+        switch (get_typeid(node))
         {
         case OP_TYPEID::Abs:
         {
