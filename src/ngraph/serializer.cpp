@@ -2958,10 +2958,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         if (ngraph::get_provenance_enabled())
         {
-            std::vector<json> prov_js = node_js.at("provenance_tags");
-            for (auto prov_tag : prov_js)
+            if (has_key(node_js, "provenance_tags"))
             {
-                node->add_provenance_tag(prov_tag);
+                const std::vector<json> prov_js = node_js.at("provenance_tags");
+                for (auto prov_tag : prov_js)
+                {
+                    node->add_provenance_tag(prov_tag);
+                }
             }
         }
         m_node_map[node_name] = node;
@@ -4321,7 +4324,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ScalarConstantLike:
     {
-        auto tmp = static_cast<const op::ScalarConstantLikeBase*>(&n);
+        auto tmp = static_cast<const op::ScalarConstantLike*>(&n);
         auto constant = tmp->as_constant();
         node["value"] = constant->get_value_strings()[0];
         node["element_type"] = write_element_type(constant->get_element_type());
