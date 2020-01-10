@@ -26,10 +26,10 @@
 #include "ngraph/ops.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/opt_kernel/broadcast.hpp"
-#include "ngraph/runtime/opt_kernel/reshape.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/interpreter/int_executable.hpp"
+#include "ngraph/runtime/opt_kernel/broadcast.hpp"
+#include "ngraph/runtime/opt_kernel/reshape.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
