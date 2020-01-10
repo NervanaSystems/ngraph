@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <functional>
+#include <sstream>
 
 #include "graph.hpp"
 #include "node.hpp"
@@ -58,9 +59,35 @@ namespace ngraph
                 return (domain.empty() ? "" : domain + ".") + node_proto.op_type();
             }
 
-            static std::string build_input_provenance_tag(const std::string& input_name)
+            static std::string concat_strings(
+                const std::vector<std::reference_wrapper<const std::string>>& strings)
             {
-                return std::string{"<ONNX Input (" + input_name + ")>"};
+                const auto concat_with_comma =
+                    [](const std::string& accumulator,
+                       std::reference_wrapper<const std::string> next_string) {
+                        return accumulator + ", " + next_string.get();
+                    };
+
+                return std::accumulate(
+                    strings.begin() + 1, strings.end(), strings.begin()->get(), concat_with_comma);
+            }
+
+            static std::string build_input_provenance_tag(const std::string& input_name,
+                                                          const Shape& shape)
+            {
+                std::stringstream tag_builder;
+                tag_builder << "<ONNX Input (" << input_name << ") " << shape << ">";
+                return tag_builder.str();
+            }
+
+            static std::string build_op_provenance_tag(const Node& onnx_node)
+            {
+                const auto output_names = concat_strings(onnx_node.get_output_names());
+                const auto node_name =
+                    onnx_node.get_name().empty() ? "" : onnx_node.get_name() + " ";
+
+                return std::string{"<ONNX " + onnx_node.op_type() + " (" + node_name + "-> " +
+                                   output_names + ")>"};
             }
         } // namespace detail
 
@@ -168,24 +195,42 @@ namespace ngraph
         {
             const auto ng_node_factory =
                 m_model->get_operator(onnx_node.op_type(), onnx_node.domain());
-            const auto ng_node_vector = ng_node_factory(onnx_node);
 
-            common::add_provenance_tags(onnx_node, ng_node_vector);
+            const auto ng_node_vector = ng_node_factory(onnx_node);
+            add_provenance_tags(onnx_node, ng_node_vector);
+
             return ng_node_vector;
         }
 
         void Graph::add_provenance_tag_to_initializer(
             const Tensor& tensor, std::shared_ptr<default_opset::Constant> node) const
         {
-            const std::string tag = detail::build_input_provenance_tag(tensor.get_name());
+            const std::string tag =
+                detail::build_input_provenance_tag(tensor.get_name(), tensor.get_shape());
+
             node->add_provenance_tag(tag);
         }
 
         void Graph::add_provenance_tag_to_input(const ValueInfo& input,
                                                 std::shared_ptr<ngraph::Node> node) const
         {
-            const std::string tag = detail::build_input_provenance_tag(input.get_name());
+            const std::string tag =
+                detail::build_input_provenance_tag(input.get_name(), input.get_shape());
+
             node->add_provenance_tag(tag);
+        }
+
+        void Graph::add_provenance_tags(const Node& onnx_node,
+                                        const NodeVector& ng_node_vector) const
+        {
+            const auto tag = detail::build_op_provenance_tag(onnx_node);
+            const auto ng_inputs = onnx_node.get_ng_inputs();
+
+            ngraph::traverse_nodes(
+                ng_node_vector,
+                [&tag](std::shared_ptr<ngraph::Node> ng_node) { ng_node->add_provenance_tag(tag); },
+                false,
+                ng_inputs);
         }
     } // namespace onnx_import
 

@@ -65,7 +65,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_only_output)
     // the Add node in the model does not have a name,
     // only its output name should be found in the provenance tags
     TEST_PROVENANCE_TAGS<default_opset::Add>("onnx/provenance_only_outputs.prototxt",
-                                             "<ONNX Add ( -> output_of_add)>");
+                                             "<ONNX Add (-> output_of_add)>");
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_node_name_and_outputs)
@@ -83,11 +83,11 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_multiple_outputs_op)
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_constants)
 {
     TEST_PROVENANCE_TAGS<default_opset::Constant>("onnx/provenance_input_tags.prototxt",
-                                                  "<ONNX Input (initializer_of_A)>");
+                                                  "<ONNX Input (initializer_of_A) Shape{0}>");
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_parameters)
 {
     TEST_PROVENANCE_TAGS<default_opset::Parameter>("onnx/provenance_input_tags.prototxt",
-                                                   "<ONNX Input (input_B)>");
+                                                   "<ONNX Input (input_B) Shape{0}>");
 }

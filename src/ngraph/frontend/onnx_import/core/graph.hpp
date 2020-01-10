@@ -54,6 +54,8 @@ namespace ngraph
             void add_provenance_tag_to_input(const ValueInfo& input,
                                              std::shared_ptr<ngraph::Node> node) const;
 
+            void add_provenance_tags(const Node& onnx_node, const NodeVector& ng_node_vector) const;
+
         private:
             const onnx::GraphProto* m_graph_proto;
             std::vector<Node> m_nodes;

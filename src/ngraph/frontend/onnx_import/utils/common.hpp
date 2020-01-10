@@ -38,9 +38,6 @@ namespace ngraph
     {
         namespace common
         {
-            /// \brief Adds a provenance tag to all nodes in a subgraph representing an ONNX node
-            void add_provenance_tags(const Node& onnx_node, const NodeVector& ng_node_vector);
-
             const ngraph::element::Type& get_ngraph_element_type(std::int64_t onnx_type);
 
             /// \brief      Return a monotonic sequence.
