@@ -1515,11 +1515,6 @@ protected:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
-        case OP_TYPEID::Reciprocal:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
         case OP_TYPEID::Relu:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1845,7 +1840,6 @@ protected:
         case OP_TYPEID::MatMul:
         case OP_TYPEID::Split:
         case OP_TYPEID::DynBroadcast:
-        case OP_TYPEID::Transpose:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::Tile:
         case OP_TYPEID::DynReplaceSlice:
