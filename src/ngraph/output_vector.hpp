@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2020 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,30 +17,15 @@
 #pragma once
 
 #include <memory>
-
-#include "core/node.hpp"
-#include "default_opset.hpp"
-#include "ngraph/node.hpp"
+#include <vector>
 
 namespace ngraph
 {
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                inline NodeVector where(const Node& node)
-                {
-                    NodeVector ng_inputs{node.get_ng_inputs()};
+    class Node;
 
-                    return {std::make_shared<default_opset::Select>(
-                        ng_inputs.at(0), ng_inputs.at(1), ng_inputs.at(2))};
-                }
-            } // namespace set_1
+    template <typename T>
+    class Output;
 
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    using NodeVector = std::vector<std::shared_ptr<Node>>;
+    using OutputVector = std::vector<Output<Node>>;
+}
