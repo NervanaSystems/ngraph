@@ -60,11 +60,14 @@ namespace ngraph
     namespace op
     {
         struct AutoBroadcastSpec;
-        class Constant;
-        class Result;
+
+        namespace v0
+        {
+            class Result;
+        }
     } // namespace op
 
-    using ResultVector = std::vector<std::shared_ptr<op::Result>>;
+    using ResultVector = std::vector<std::shared_ptr<op::v0::Result>>;
 
     namespace autodiff
     {
