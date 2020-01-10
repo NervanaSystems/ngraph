@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <functional>
+#include <numeric>
 #include <sstream>
 
 #include "graph.hpp"
@@ -121,8 +122,9 @@ namespace ngraph
                     continue;
                 }
 
-                auto ng_node = m_inputs.back().get_ng_node(m_parameters, m_initializers, weights);
-                add_provenance_tag_to_input(m_inputs.back(), ng_node);
+                const auto value_info = m_inputs.back();
+                auto ng_node = value_info.get_ng_node(m_parameters, m_initializers, weights);
+                add_provenance_tag_to_input(value_info, ng_node);
                 m_ng_node_cache[input.name()] = std::move(ng_node);
             }
 
