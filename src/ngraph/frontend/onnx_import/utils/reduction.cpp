@@ -75,7 +75,7 @@ namespace ngraph
                 {
                     output_shape.at(idx) = 1;
                 }
-                return builder::v1::reshape(op_node, output_shape);
+                return builder::opset1::reshape(op_node, output_shape);
             }
 
             std::shared_ptr<ngraph::Node>

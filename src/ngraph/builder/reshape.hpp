@@ -104,7 +104,7 @@ namespace ngraph
         ///
         std::shared_ptr<Node> expand_dims(const Output<Node>& value, std::size_t axis = 0);
 
-        namespace v1
+        namespace opset1
         {
             /// \brief      Change shape of a value
             ///

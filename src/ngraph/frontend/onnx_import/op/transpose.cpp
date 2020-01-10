@@ -37,8 +37,8 @@ namespace ngraph
                         node.get_attribute_value<std::vector<std::size_t>>("perm", {});
 
                     return {(permute_axes.empty())
-                                ? ngraph::builder::v1::transpose(data)
-                                : ngraph::builder::v1::reorder_axes(data, permute_axes)};
+                                ? ngraph::builder::opset1::transpose(data)
+                                : ngraph::builder::opset1::reorder_axes(data, permute_axes)};
                 }
 
             } // namespace set_1

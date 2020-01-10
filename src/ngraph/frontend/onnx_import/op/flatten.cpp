@@ -39,7 +39,7 @@ namespace ngraph
                     auto valid_axis =
                         common::validate_axis(node, axis, data_rank, -data_rank, data_rank);
 
-                    return {ngraph::builder::v1::flatten(data, valid_axis)};
+                    return {ngraph::builder::opset1::flatten(data, valid_axis)};
                 }
 
             } // namespace set_1
