@@ -598,16 +598,23 @@ op::v0::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
 
 void op::v0::GroupConvolutionBackpropData::pre_validate_and_infer_types()
 {
-    element::Type data_element_type = get_input_element_type(0);
-    PartialShape data_pshape = get_input_partial_shape(0);
-    PartialShape filters_pshape = get_input_partial_shape(1);
-    PartialShape delta_pshape = get_input_partial_shape(2);
+    element::Type data_element_type = input(2).get_element_type();
+    element::Type filters_elem_type = input(1).get_element_type();
 
     NODE_VALIDATION_CHECK(this,
                           data_element_type.is_dynamic() || data_element_type.is_real(),
-                          "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
+                          "Output delta element type must be f16, bf16, f32, f64 or dynamic (got ",
                           data_element_type,
                           ").");
+    NODE_VALIDATION_CHECK(this,
+                          filters_elem_type.is_dynamic() || filters_elem_type.is_real(),
+                          "Filters element type must be f16, bf16, f32, f64 or dynamic (got ",
+                          filters_elem_type,
+                          ").");
+
+    PartialShape data_pshape = input(0).get_partial_shape();
+    PartialShape filters_pshape = input(1).get_partial_shape();
+    PartialShape delta_pshape = input(2).get_partial_shape();
 
     if (data_pshape.is_dynamic() || filters_pshape.is_dynamic() || delta_pshape.is_dynamic())
     {
