@@ -2926,9 +2926,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = move(topk);
             break;
         }
-        case OP_TYPEID::Transpose:
+        case OP_TYPEID::Transpose_v1:
         {
-            node = make_shared<op::Transpose>(args[0], args[1]);
+            node = make_shared<op::v1::Transpose>(args[0], args[1]);
             break;
         }
         case OP_TYPEID::StopGradient:
@@ -4579,7 +4579,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["index_element_type"] = write_element_type(tmp->get_index_element_type());
         break;
     }
-    case OP_TYPEID::Transpose: { break;
+    case OP_TYPEID::Transpose_v1: { break;
     }
     case OP_TYPEID::Unsqueeze: { break;
     }
