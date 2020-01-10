@@ -1832,6 +1832,19 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_gatherND_float)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_pad_constant)
+{
+    const auto pad_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/pad_constant.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(pad_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({1.f, 1.2f, 2.3f, 3.4f, 4.5f, 5.7f});
+    test_case.add_expected_output<float>(
+        Shape{3, 4}, {0.f, 0.f, 1.f, 1.2f, 0.f, 0.f, 2.3f, 3.4f, 0.f, 0.f, 4.5f, 5.7f});
+
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reciprocal)
 {
     const auto reciprocal_fn = onnx_import::import_onnx_model(
