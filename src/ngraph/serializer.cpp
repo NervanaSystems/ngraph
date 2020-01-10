@@ -2507,11 +2507,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Range>(args[0], args[1], args[2]);
             break;
         }
-        case OP_TYPEID::Reciprocal:
-        {
-            node = make_shared<op::Reciprocal>(args[0]);
-            break;
-        }
         case OP_TYPEID::ReduceMean_v1:
         {
             auto keep_dims = node_js.at("keep_dims").get<bool>();
@@ -4277,8 +4272,6 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Range: { break;
-    }
-    case OP_TYPEID::Reciprocal: { break;
     }
     case OP_TYPEID::Recv:
     {
