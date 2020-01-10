@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,11 +99,9 @@ namespace ngraph
                 }
 
                 decltype(MPI_SUM) mpi_reduce_type;
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-#endif
                 switch (reduce_type)
                 {
                 case reduction::Type::SUM: mpi_reduce_type = MPI_SUM; break;
@@ -111,9 +109,7 @@ namespace ngraph
                 case reduction::Type::MIN: mpi_reduce_type = MPI_MIN; break;
                 case reduction::Type::MAX: mpi_reduce_type = MPI_MAX; break;
                 }
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
-#endif
 
                 MPI_Allreduce(in, out, count, data_type, mpi_reduce_type, MPI_COMM_WORLD);
             }
@@ -176,11 +172,9 @@ namespace ngraph
             MPI_Datatype ngraph_type_to_mpi_type(element::Type_t& n_type)
             {
                 MPI_Datatype m_type = MPI_FLOAT;
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-#endif
                 switch (n_type)
                 {
                 case element::Type_t::boolean: m_type = MPI_BYTE; break;
@@ -200,9 +194,7 @@ namespace ngraph
                 case element::Type_t::undefined:
                 case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
                 }
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
-#endif
                 return m_type;
             }
 

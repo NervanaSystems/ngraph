@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,8 +62,6 @@ namespace ngraph
                 void add_inputs(NodeVector& inputs);
                 /// Add a list of output nodes to the sub-graph.
                 void add_outputs(NodeVector& outputs);
-                /// Merges sub-graph (other) into this sub-graph. other will be destroyed.
-                void merge(MLIRSubgraph& other);
                 /// Add one node to the sub-graph.
                 void add_node(std::shared_ptr<Node> node);
 
@@ -84,7 +82,6 @@ namespace ngraph
             friend class MLIRSubgraph;
 
         public:
-            MLIRSubgraphExtractionPass();
             bool run_on_function(std::shared_ptr<Function> func) override;
             /// Checks if an ngraph node is supported by MLIR backend
             bool is_supported_mlir_op(std::shared_ptr<Node> node);
@@ -119,9 +116,6 @@ namespace ngraph
             // Mutex over sub-graph IDs
             std::mutex m_subgraph_mutex;
             static const std::set<std::type_index> m_supported_ops;
-            // Maximum depth to check for cycles during merging of sub-graphs.
-            // If exceeded, we conservatively assume a cycle.
-            int m_max_cycle_depth;
         };
     }
 }

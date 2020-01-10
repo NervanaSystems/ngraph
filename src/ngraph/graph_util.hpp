@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,10 @@ namespace ngraph
 
     namespace op
     {
-        class Parameter;
+        namespace v0
+        {
+            class Parameter;
+        }
     }
 
     void traverse_nodes(const std::shared_ptr<const Function> p,
@@ -240,8 +243,8 @@ namespace ngraph
     ///      `body_replacement_map`, behavior is unspecified.
     void replace_nodes(
         const std::shared_ptr<Function>& f,
-        const std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Parameter>>&
-            parameter_replacement_map,
+        const std::unordered_map<std::shared_ptr<op::v0::Parameter>,
+                                 std::shared_ptr<op::v0::Parameter>>& parameter_replacement_map,
         const std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>>&
             body_replacement_map);
 
@@ -400,7 +403,7 @@ namespace ngraph
     // Assert that nodes in the function is colocated and return that placement
     Placement get_colocated_function_placement(std::shared_ptr<Function> func);
 
-    std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
+    std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::v0::Parameter>>
         insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
                                       const std::shared_ptr<Node>& dst_node);
 

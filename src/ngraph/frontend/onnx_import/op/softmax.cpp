@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 #include <memory>
 
 #include "default_opset.hpp"
+#include "ngraph/validation_util.hpp"
 #include "softmax.hpp"
-#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -35,9 +35,10 @@ namespace ngraph
                     auto data_shape = data->get_shape();
 
                     int axis = node.get_attribute_value<int64_t>("axis", 1);
-                    std::size_t valid_axis = common::validate_axis(node, axis, data_shape.size());
+                    const auto normalized_axis =
+                        ngraph::normalize_axis(node.get_description(), axis, data_shape.size());
 
-                    return {std::make_shared<default_opset::Softmax>(data, valid_axis)};
+                    return {std::make_shared<default_opset::Softmax>(data, normalized_axis)};
                 }
             } // namespace set_1
 

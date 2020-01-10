@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -188,8 +188,15 @@ option(NGRAPH_CPU_STATIC_LIB_ENABLE "Enable build CPU backend as a static librar
 option(NGRAPH_PLAIDML_STATIC_LIB_ENABLE "Enable build PlaidML backend as a static library" FALSE)
 option(NGRAPH_DYNAMIC_COMPONENTS_ENABLE "Enable dynamic loading of components" TRUE)
 option(NGRAPH_NATIVE_ARCH_ENABLE "Enable build for native archtecture" TRUE)
+option(NGRAPH_EXPORT_TARGETS_ENABLE "Enable exporting nGraph cmake export targets" TRUE)
 if (NGRAPH_CPU_ENABLE)
     option(NGRAPH_TBB_ENABLE "Control usage of TBB for CPU backend" TRUE)
+endif()
+
+if (NGRAPH_STATIC_LIB_ENABLE)
+    message(WARNING "Workaround: "
+                    "Turning off NGRAPH_EXPORT_TARGETS_ENABLE for nGraph static lib")
+    set(NGRAPH_EXPORT_TARGETS_ENABLE OFF)
 endif()
 
 if (NGRAPH_CPU_ENABLE
@@ -267,6 +274,7 @@ NORMALIZE_BOOL(NGRAPH_STATIC_LIB_ENABLE)
 NORMALIZE_BOOL(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
 NORMALIZE_BOOL(NGRAPH_CPU_STATIC_LIB_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
+NORMALIZE_BOOL(NGRAPH_EXPORT_TARGETS_ENABLE)
 if (NGRAPH_CPU_ENABLE)
     NORMALIZE_BOOL(NGRAPH_TBB_ENABLE)
 endif()
@@ -300,6 +308,7 @@ message(STATUS "NGRAPH_CPU_STATIC_LIB_ENABLE:         ${NGRAPH_CPU_STATIC_LIB_EN
 message(STATUS "NGRAPH_PLAIDML_STATIC_LIB_ENABLE:     ${NGRAPH_PLAIDML_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_DYNAMIC_COMPONENTS_ENABLE:     ${NGRAPH_DYNAMIC_COMPONENTS_ENABLE}")
 message(STATUS "NGRAPH_NATIVE_ARCH_ENABLE:            ${NGRAPH_NATIVE_ARCH_ENABLE}")
+message(STATUS "NGRAPH_EXPORT_TARGETS_ENABLE:         ${NGRAPH_EXPORT_TARGETS_ENABLE}")
 if (NGRAPH_CPU_ENABLE)
     message(STATUS "NGRAPH_TBB_ENABLE:                    ${NGRAPH_TBB_ENABLE}")
 endif()
@@ -642,23 +651,30 @@ if (NGRAPH_PYTHON_BUILD_ENABLE)
     add_subdirectory(python)
 endif()
 
-include(CMakePackageConfigHelpers)
+if (NGRAPH_EXPORT_TARGETS_ENABLE)
+    include(CMakePackageConfigHelpers)
 
-export(TARGETS ngraph NAMESPACE ngraph:: FILE "${CMAKE_CURRENT_BINARY_DIR}/ngraphTargets.cmake")
+    export(TARGETS ngraph NAMESPACE ngraph:: FILE "${CMAKE_CURRENT_BINARY_DIR}/ngraphTargets.cmake")
 
-install(EXPORT ngraphTargets
-    FILE ngraphTargets.cmake
-    NAMESPACE ngraph::
-    DESTINATION cmake
-    COMPONENT ngraph)
+    install(EXPORT ngraphTargets
+        FILE ngraphTargets.cmake
+        NAMESPACE ngraph::
+        DESTINATION cmake
+        COMPONENT ngraph)
 
-configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/share/ngraphConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
-    INSTALL_DESTINATION cmake)
+    configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/share/ngraphConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
+        INSTALL_DESTINATION cmake)
 
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
-    VERSION ${NGRAPH_VERSION}
-    COMPATIBILITY SameMajorVersion)
+    write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
+        VERSION ${NGRAPH_VERSION}
+        COMPATIBILITY SameMajorVersion)
+
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
+        DESTINATION cmake
+        COMPONENT ngraph)
+endif()
 
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/licenses
@@ -667,8 +683,3 @@ install(DIRECTORY
 )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION "." COMPONENT ngraph)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/VERSION DESTINATION "." COMPONENT ngraph)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
-    DESTINATION cmake
-    COMPONENT ngraph)

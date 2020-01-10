@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@
 #include "util/test_case.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
+#include "util/type_prop.hpp"
 
 using namespace ngraph;
 
@@ -353,6 +354,21 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
 
     Outputs output{execute(function, inputs, "${BACKEND_NAME}")};
     EXPECT_TRUE(test::all_close_f(expected_output, output.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_text)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_tag_add.prototxt"));
+
+    auto ng_nodes = function->get_ordered_ops();
+    for (auto ng_node : ng_nodes)
+    {
+        for (auto tag : ng_node->get_provenance_tags())
+        {
+            EXPECT_HAS_SUBSTRING(tag, "ONNX");
+        }
+    }
 }
 
 // ############################################################################ OPERATOR TESTS

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -149,10 +149,8 @@ int64_t op::v1::NonMaxSuppression::max_boxes_output_from_input() const
     const auto max_output_boxes_input =
         as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-#endif
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
     switch (static_cast<element::Type_t>(max_output_boxes_input->get_element_type()))
     {
     case element::Type_t::i8:
@@ -177,9 +175,7 @@ int64_t op::v1::NonMaxSuppression::max_boxes_output_from_input() const
     }
     default: break;
     }
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
+#pragma GCC diagnostic pop
 
     return max_output_boxes;
 }

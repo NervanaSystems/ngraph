@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,9 +45,10 @@ namespace ngraph
                     auto sum_node = std::shared_ptr<ngraph::Node>{reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        std::make_shared<ngraph::opset0::Sum,
+                        std::make_shared<default_opset::ReduceSum,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         const ngraph::AxisSet&>)};
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
 
                     auto const_node = default_opset::Constant::create(
                         sum_node->get_element_type(),
@@ -55,7 +56,7 @@ namespace ngraph
                         std::vector<std::size_t>(shape_size(sum_node->get_shape()),
                                                  elem_count_product));
 
-                    return {std::make_shared<ngraph::opset0::Divide>(sum_node, const_node)};
+                    return {std::make_shared<default_opset::Divide>(sum_node, const_node)};
                 }
 
             } // namespace set_1

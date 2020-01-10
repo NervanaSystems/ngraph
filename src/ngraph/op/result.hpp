@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,33 +24,38 @@ namespace ngraph
 {
     namespace op
     {
-        class NGRAPH_API Result : public Op
+        namespace v0
         {
-        public:
-            static constexpr NodeTypeInfo type_info{"Result", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Allows a value to be used as a function result.
-            Result() = default;
-            /// \brief Allows a value to be used as a function result.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Result(const Output<Node>& arg, bool needs_default_layout = false);
+            class NGRAPH_API Result : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Result", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Allows a value to be used as a function result.
+                Result() = default;
+                /// \brief Allows a value to be used as a function result.
+                ///
+                /// \param arg Node that produces the input tensor.
+                Result(const Output<Node>& arg, bool needs_default_layout = false);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            virtual bool is_output() const override { return true; }
-            void set_needs_default_layout(bool val) { m_needs_default_layout = val; }
-            bool needs_default_layout() const { return m_needs_default_layout; }
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const OutputVector& deltas) override;
+                virtual bool is_output() const override { return true; }
+                void set_needs_default_layout(bool val) { m_needs_default_layout = val; }
+                bool needs_default_layout() const { return m_needs_default_layout; }
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
 
-        private:
-            bool m_needs_default_layout{false};
-        };
+            private:
+                bool m_needs_default_layout{false};
+            };
+        }
+
+        using v0::Result;
     }
     using ResultVector = std::vector<std::shared_ptr<op::Result>>;
 }

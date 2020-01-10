@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 #include "constant_folding.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/runtime/reference/reshape.hpp"
+#include "ngraph/runtime/opt_kernel/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -41,11 +41,11 @@ shared_ptr<op::Constant> fold_constant_reshape(shared_ptr<op::Constant> constant
     }
     else
     {
-        runtime::reference::reshape<T>(constant->get_data_ptr<T>(),
-                                       data_ptr,
-                                       constant->get_shape(),
-                                       reshape->get_input_order(),
-                                       out_shape);
+        runtime::opt_kernel::reshape<T>(constant->get_data_ptr<T>(),
+                                        data_ptr,
+                                        constant->get_shape(),
+                                        reshape->get_input_order(),
+                                        out_shape);
     }
 
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, data_ptr);
