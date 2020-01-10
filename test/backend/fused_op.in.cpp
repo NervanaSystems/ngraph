@@ -183,20 +183,6 @@ NGRAPH_TEST(${BACKEND_NAME}, prelu)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, reciprocal)
-{
-    Shape shape{3, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto reciprocal = make_shared<op::Reciprocal>(A);
-    auto f0 = make_shared<Function>(NodeVector{reciprocal}, ParameterVector{A});
-
-    auto test_case = test::NgraphTestCase(f0, "${BACKEND_NAME}");
-    test_case.add_input(vector<float>{1, 2, 3, 4, 5, 6});
-    test_case.add_expected_output(
-        Shape{3, 2}, vector<float>{1.0f, 1 / 2.0f, 1 / 3.0f, 1 / 4.0f, 1 / 5.0f, 1 / 6.0f});
-    test_case.run();
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid)
 {
     const Shape shape{2, 7};
