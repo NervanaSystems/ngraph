@@ -17,8 +17,8 @@
 // NOTE: This file follows nGraph format style.
 // Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
+#include "callback_utils.hpp"
 #include "contrib/mlir/backend/cpu/cpu_backend.hpp"
-#include "contrib/mlir/callback_utils.hpp"
 #include "cpu_runtime.hpp"
 #include "ngraph/check.hpp"
 
@@ -742,6 +742,10 @@ extern "C" void __mlir_callback_1_input(void* input, void* output, size_t index,
                                       unrankedMemRefOutput->memRefDescPtr,
                                       index);
     }
+    else
+    {
+        NGRAPH_UNREACHABLE("Unsupported type");
+    }
 }
 
 extern "C" void
@@ -766,6 +770,10 @@ extern "C" void
                            unrankedMemRefOutput->memRefDescPtr,
                            index);
     }
+    else
+    {
+        NGRAPH_UNREACHABLE("Unsupported type");
+    }
 }
 
 extern "C" void __mlir_callback_3_inputs(
@@ -783,5 +791,9 @@ extern "C" void __mlir_callback_3_inputs(
                                      unrankedMemRefInput2->memRefDescPtr,
                                      unrankedMemRefOutput->memRefDescPtr,
                                      index);
+    }
+    else
+    {
+        NGRAPH_UNREACHABLE("Unsupported type");
     }
 }

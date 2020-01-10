@@ -19,9 +19,9 @@
 
 #include "affine_lowerer.hpp"
 
-#include "contrib/mlir/callback_utils.hpp"
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
+#include "contrib/mlir/runtime/cpu/callback_utils.hpp"
 #include "contrib/mlir/utils.hpp"
 #include "ngraph/assertion.hpp"
 

@@ -98,7 +98,7 @@ namespace
         // Simply maps ngraph tensors to values and generate an OP. No op-specific logic.
         // Use inNum when mlir OP needs less input than its corresponding ngraph OP.
         template <typename Op>
-        mlir::Operation* createGenericOp(const ngraph::Node* ngNode, int inNum = 0);
+        mlir::Operation* createGenericOp(const ngraph::Node* ngNode, int inNum = -1);
 
         template <typename RedOp>
         mlir::Operation* createIndexReduction(const ngraph::Node* ngNode);
@@ -596,7 +596,7 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
     int i = 0;
     for (auto& argOutput : ngNode->input_values())
     {
-        if (inNum > 0 && i == inNum)
+        if (inNum != -1 && i == inNum)
         {
             break;
         }
