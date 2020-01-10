@@ -100,7 +100,7 @@ namespace ngraph
 
                 auto output_shape = input_node->get_shape();
                 output_shape.at(normalized_axis) = 1;
-                auto reshape_node = builder::v1::reshape(op_node, output_shape);
+                auto reshape_node = builder::opset1::reshape(op_node, output_shape);
 
                 // WORKAROUND FOR PROBLEMS WITH RESHAPE ON i64 @TODO: remove
                 auto reconvert_node =

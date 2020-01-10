@@ -175,7 +175,7 @@ shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
         ->add_provenance_group_members_above({value});
 }
 
-shared_ptr<Node> builder::v1::reshape(const Output<Node>& value, const Shape& shape)
+shared_ptr<Node> builder::opset1::reshape(const Output<Node>& value, const Shape& shape)
 {
     const auto out_pattern = op::Constant::create(
         element::i64, Shape{shape.size()}, vector<int64_t>(shape.begin(), shape.end()));
@@ -184,7 +184,7 @@ shared_ptr<Node> builder::v1::reshape(const Output<Node>& value, const Shape& sh
         ->add_provenance_group_members_above({value});
 }
 
-shared_ptr<Node> builder::v1::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
+shared_ptr<Node> builder::opset1::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
 {
     const auto axes_order_const =
         op::Constant::create(element::i64,
@@ -194,15 +194,15 @@ shared_ptr<Node> builder::v1::reorder_axes(const Output<Node>& value, vector<siz
         ->add_provenance_group_members_above({value});
 }
 
-shared_ptr<Node> builder::v1::transpose(const Output<Node>& value)
+shared_ptr<Node> builder::opset1::transpose(const Output<Node>& value)
 {
     vector<size_t> axes_order(value.get_shape().size());
     iota(begin(axes_order), end(axes_order), 0);
     reverse(begin(axes_order), end(axes_order));
-    return builder::v1::reorder_axes(value, axes_order);
+    return builder::opset1::reorder_axes(value, axes_order);
 }
 
-shared_ptr<Node> builder::v1::flatten(const Output<Node>& value, int axis)
+shared_ptr<Node> builder::opset1::flatten(const Output<Node>& value, int axis)
 {
     auto data_shape = value.get_shape();
 
@@ -215,15 +215,15 @@ shared_ptr<Node> builder::v1::flatten(const Output<Node>& value, int axis)
     size_t last_dim_size =
         accumulate(next(begin(data_shape), axis), end(data_shape), 1UL, multiplies<size_t>());
 
-    return builder::v1::reshape(value, Shape{first_dim_size, last_dim_size});
+    return builder::opset1::reshape(value, Shape{first_dim_size, last_dim_size});
 }
 
-shared_ptr<Node> builder::v1::expand_dims(const Output<Node>& value, size_t axis)
+shared_ptr<Node> builder::opset1::expand_dims(const Output<Node>& value, size_t axis)
 {
     Shape output_shape(value.get_shape());
     // Add empty axis at specified position.
     auto empty_axis_it = begin(output_shape);
     advance(empty_axis_it, axis);
     output_shape.insert(empty_axis_it, 1);
-    return builder::v1::reshape(value, output_shape);
+    return builder::opset1::reshape(value, output_shape);
 }

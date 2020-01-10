@@ -109,7 +109,7 @@ namespace ngraph
                         node->get_element_type(), ngraph::Shape{}, value);
                 }
 
-                return ngraph::builder::v1::reshape(node, Shape{});
+                return ngraph::builder::opset1::reshape(node, Shape{});
             }
 
         } // namespace  reshape
