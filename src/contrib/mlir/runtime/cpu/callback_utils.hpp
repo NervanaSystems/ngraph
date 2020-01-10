@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cstdint>
+
 #pragma once
 
 namespace ngraph
