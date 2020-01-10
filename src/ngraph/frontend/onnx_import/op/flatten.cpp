@@ -19,7 +19,7 @@
 #include "exceptions.hpp"
 #include "flatten.hpp"
 #include "ngraph/builder/reshape.hpp"
-#include "utils/common.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -36,10 +36,10 @@ namespace ngraph
                     auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
                     auto data_rank = data->get_shape().size();
                     // Accepted range is [-r, r] where r = rank(input).
-                    auto valid_axis =
-                        common::validate_axis(node, axis, data_rank, -data_rank, data_rank);
+                    const auto normalized_axis = ngraph::normalize_axis(
+                        node.get_description(), axis, data_rank, -data_rank, data_rank);
 
-                    return {ngraph::builder::v1::flatten(data, valid_axis)};
+                    return {ngraph::builder::v1::flatten(data, normalized_axis)};
                 }
 
             } // namespace set_1

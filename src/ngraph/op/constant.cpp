@@ -393,7 +393,7 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
 
 constexpr NodeTypeInfo op::ScalarConstantLike::type_info;
 
-shared_ptr<op::Constant> op::ScalarConstantLikeBase::as_constant() const
+shared_ptr<op::Constant> op::ScalarConstantLike::as_constant() const
 {
     return std::make_shared<op::Constant>(m_element_type, m_shape, m_data->get_ptr());
 }
@@ -422,13 +422,16 @@ namespace ngraph
 {
     namespace op
     {
-        template <>
-        void Constant::write_to_buffer<string>(const element::Type& /* target_type */,
-                                               const Shape& /* target_shape */,
-                                               const vector<string>& /* source */,
-                                               void* /* target */,
-                                               size_t /* target_element_count */)
+        namespace v0
         {
+            template <>
+            void Constant::write_to_buffer<string>(const element::Type& /* target_type */,
+                                                   const Shape& /* target_shape */,
+                                                   const vector<string>& /* source */,
+                                                   void* /* target */,
+                                                   size_t /* target_element_count */)
+            {
+            }
         }
     }
 }

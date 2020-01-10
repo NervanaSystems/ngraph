@@ -17,8 +17,9 @@
 #include "hardmax.hpp"
 #include "exceptions.hpp"
 #include "ngraph/builder/reshape.hpp"
-#include "ngraph/frontend/onnx_import/utils/common.hpp"
 #include "ngraph/opsets/opset0.hpp"
+#include "ngraph/validation_util.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -34,10 +35,12 @@ namespace ngraph
                     const auto& input_shape = input->get_shape();
                     auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
 
-                    auto valid_axis = common::validate_axis(node, axis, input_shape.size());
+                    const auto normalized_axis =
+                        ngraph::normalize_axis(node.get_description(), axis, input_shape.size());
 
                     // reshape to 2D - "batch size" x "input feature dimensions" (NxD)
-                    const auto coerced_tensor = ngraph::builder::v1::flatten(input, valid_axis);
+                    const auto coerced_tensor =
+                        ngraph::builder::v1::flatten(input, normalized_axis);
                     const auto& coerced_shape = coerced_tensor->get_shape();
 
                     const std::shared_ptr<ngraph::Node> argmax_2d =
