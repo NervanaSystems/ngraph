@@ -32,3 +32,4 @@ set(SRC
 )
 
 add_library(mlir_core SHARED ${SRC})
+install(TARGETS mlir_core DESTINATION ${NGRAPH_INSTALL_LIB})
