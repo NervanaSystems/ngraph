@@ -2507,11 +2507,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Range>(args[0], args[1], args[2]);
             break;
         }
-        case OP_TYPEID::Reciprocal:
-        {
-            node = make_shared<op::Reciprocal>(args[0]);
-            break;
-        }
         case OP_TYPEID::ReduceMean_v1:
         {
             auto keep_dims = node_js.at("keep_dims").get<bool>();
@@ -2931,9 +2926,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = move(topk);
             break;
         }
-        case OP_TYPEID::Transpose:
+        case OP_TYPEID::Transpose_v1:
         {
-            node = make_shared<op::Transpose>(args[0], args[1]);
+            node = make_shared<op::v1::Transpose>(args[0], args[1]);
             break;
         }
         case OP_TYPEID::StopGradient:
@@ -4278,8 +4273,6 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Range: { break;
     }
-    case OP_TYPEID::Reciprocal: { break;
-    }
     case OP_TYPEID::Recv:
     {
         auto tmp = static_cast<const op::Recv*>(&n);
@@ -4586,7 +4579,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["index_element_type"] = write_element_type(tmp->get_index_element_type());
         break;
     }
-    case OP_TYPEID::Transpose: { break;
+    case OP_TYPEID::Transpose_v1: { break;
     }
     case OP_TYPEID::Unsqueeze: { break;
     }
