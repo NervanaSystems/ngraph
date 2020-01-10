@@ -266,19 +266,32 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
                               "Selected Pad type: ",
                               m_auto_pad,
                               "requires an output_shape input which is missing.");
-        if (output_pshape.is_static() && filters_pshape.is_static())
+        if (output_pshape.is_static() && filters_pshape.is_static() && data_pshape.is_static())
         {
-            m_pads_begin.clear();
-            m_pads_end.clear();
-            auto filter_shape = filters_pshape.to_shape();
-            filter_shape.erase(filter_shape.begin(), filter_shape.begin() + 2); // Remove {O,I}
-            infer_auto_padding(output_pshape.to_shape(),
-                               filter_shape,
-                               m_strides,
-                               m_dilations,
-                               m_auto_pad,
-                               m_pads_end,
-                               m_pads_begin);
+            const Shape output_shape = output_pshape.to_shape();
+            const Shape data_shape = data_pshape.to_shape();
+            const Shape filters_shape = filters_pshape.to_shape();
+            const size_t num_spatial_dims = data_shape.size() - 2;
+
+            m_pads_begin = CoordinateDiff(num_spatial_dims);
+            m_pads_end = CoordinateDiff(num_spatial_dims);
+
+            for (uint64_t i = 0; i < num_spatial_dims; ++i)
+            {
+                int total_padding = m_strides[i] * (data_shape[i + 2] - 1) +
+                                    m_dilations[i] * (filters_shape[i + 2] - 1) + 1 -
+                                    output_shape[i + 2] + m_output_padding[i];
+                if (m_auto_pad == PadType::SAME_UPPER)
+                {
+                    m_pads_begin[i] = total_padding / 2;
+                    m_pads_end[i] = total_padding - m_pads_begin[i];
+                }
+                else
+                {
+                    m_pads_end[i] = total_padding / 2;
+                    m_pads_begin[i] = total_padding - m_pads_end[i];
+                }
+            }
         }
     }
 
