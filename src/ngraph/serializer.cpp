@@ -300,13 +300,6 @@ static element::Type read_element_type(json j)
     return element::Type(bitwidth, is_real, is_signed, is_quantized, c_type_string);
 }
 
-static op::LSTMWeightsFormat read_lstm_weights_format(const json& js)
-{
-    return has_key(js, "weights_format")
-               ? static_cast<op::LSTMWeightsFormat>(js.at("weights_format"))
-               : op::LSTMWeightsFormat::IFCO;
-}
-
 void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent)
 {
     ofstream out(path);
@@ -1518,8 +1511,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Reshape_v1:
         {
-            const auto zero_flag = node_js.at("zero_flag").get<bool>();
-            node = make_shared<op::v1::Reshape>(args[0], args[1], zero_flag);
+            const bool special_zero = node_js.at("special_zero").get<bool>();
+            node = make_shared<op::v1::Reshape>(args[0], args[1], special_zero);
             break;
         }
         case OP_TYPEID::DynSlice:
@@ -1709,18 +1702,31 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
             auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
             auto data_dilation_strides = node_js.at("data_dilation_strides").get<vector<size_t>>();
-            auto groups = node_js.at("groups").get<size_t>();
-
             op::PadType pad_type = read_pad_type(node_js);
-            node = make_shared<op::GroupConvolution>(args[0],
-                                                     args[1],
-                                                     window_movement_strides,
-                                                     window_dilation_strides,
-                                                     padding_below,
-                                                     padding_above,
-                                                     data_dilation_strides,
-                                                     groups,
-                                                     pad_type);
+            if (has_key(node_js, "groups"))
+            {
+                auto groups = node_js.at("groups").get<size_t>();
+                node = make_shared<op::GroupConvolution>(args[0],
+                                                         args[1],
+                                                         window_movement_strides,
+                                                         window_dilation_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         data_dilation_strides,
+                                                         groups,
+                                                         pad_type);
+            }
+            else
+            {
+                node = make_shared<op::GroupConvolution>(args[0],
+                                                         args[1],
+                                                         window_movement_strides,
+                                                         window_dilation_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         data_dilation_strides,
+                                                         pad_type);
+            }
             break;
         }
         case OP_TYPEID::GroupConvolutionBackpropData:
@@ -1791,20 +1797,38 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
             auto clip = node_js.at("clip").get<float>();
             auto activations = node_js.at("activations").get<vector<string>>();
-            auto activation_alpha = node_js.at("activation_alpha").get<vector<float>>();
-            auto activation_beta = node_js.at("activation_beta").get<vector<float>>();
+            auto activation_alpha = node_js.at("activations_alpha").get<vector<float>>();
+            auto activation_beta = node_js.at("activations_beta").get<vector<float>>();
             auto linear_before_reset = node_js.at("linear_before_reset").get<bool>();
-            node = make_shared<op::GRUCell>(args[0],
-                                            args[1],
-                                            args[2],
-                                            args[3],
-                                            hidden_size,
-                                            args[4],
-                                            activations,
-                                            activation_alpha,
-                                            activation_beta,
-                                            clip,
-                                            linear_before_reset);
+            switch (args.size())
+            {
+            case 4:
+                node = make_shared<op::GRUCell>(args[0],
+                                                args[1],
+                                                args[2],
+                                                args[3],
+                                                hidden_size,
+                                                activations,
+                                                activation_alpha,
+                                                activation_beta,
+                                                clip,
+                                                linear_before_reset);
+                break;
+            case 5:
+                node = make_shared<op::GRUCell>(args[0],
+                                                args[1],
+                                                args[2],
+                                                args[3],
+                                                hidden_size,
+                                                args[4],
+                                                activations,
+                                                activation_alpha,
+                                                activation_beta,
+                                                clip,
+                                                linear_before_reset);
+                break;
+            default: throw runtime_error("GRUCell constructor not supported in serializer");
+            }
             break;
         }
         case OP_TYPEID::HardSigmoid:
@@ -1933,14 +1957,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::LSTMCell:
         {
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
-            auto weights_format = read_lstm_weights_format(node_js);
+            auto weights_format = get_or_default<op::LSTMWeightsFormat>(
+                node_js, "weights_format", op::LSTMWeightsFormat::IFCO);
             auto clip = node_js.at("clip").get<float>();
             auto activations = node_js.at("activations").get<vector<string>>();
             auto activations_alpha = node_js.at("activations_alpha").get<vector<float>>();
             auto activations_beta = node_js.at("activations_beta").get<vector<float>>();
             auto input_forget = node_js.at("input_forget").get<bool>();
-            if (args.size() == 7)
+            switch (args.size())
             {
+            case 7:
                 node = make_shared<op::LSTMCell>(args[0],
                                                  args[1],
                                                  args[2],
@@ -1955,9 +1981,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                  activations_beta,
                                                  clip,
                                                  input_forget);
-            }
-            if (args.size() == 6)
-            {
+                break;
+            case 6:
                 node = make_shared<op::LSTMCell>(args[0],
                                                  args[1],
                                                  args[2],
@@ -1971,9 +1996,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                  activations_beta,
                                                  clip,
                                                  input_forget);
-            }
-            else
-            {
+                break;
+            case 5:
                 node = make_shared<op::LSTMCell>(args[0],
                                                  args[1],
                                                  args[2],
@@ -1986,19 +2010,22 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                  activations_beta,
                                                  clip,
                                                  input_forget);
+                break;
+            default: throw runtime_error("LSTMCell constructor not supported in serializer");
             }
             break;
         }
         case OP_TYPEID::LSTMSequence:
         {
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
-            auto clip = node_js.at("clip").get<float>();
+            auto clip = node_js.at("clip_threshold").get<float>();
             auto activations = node_js.at("activations").get<vector<string>>();
             auto activations_alpha = node_js.at("activations_alpha").get<vector<float>>();
             auto activations_beta = node_js.at("activations_beta").get<vector<float>>();
             auto input_forget = node_js.at("input_forget").get<bool>();
             auto direction = node_js.at("direction").get<op::LSTMSequence::direction>();
-            auto weights_format = read_lstm_weights_format(node_js);
+            auto weights_format = get_or_default<op::LSTMWeightsFormat>(
+                node_js, "weights_format", op::LSTMWeightsFormat::IFCO);
             if (args.size() == 8)
             {
                 node = make_shared<op::LSTMSequence>(args[0],
@@ -2217,9 +2244,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::MVN:
         {
             auto normalize_variance = node_js.at("normalize_variance").get<bool>();
-            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
+            AxisSet reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
             auto eps = node_js.at("eps").get<double>();
-            node = make_shared<op::MVN>(args[0], normalize_variance, normalize_variance, eps);
+            if (reduction_axes.size() > 0)
+            {
+                node = make_shared<op::MVN>(args[0], reduction_axes, normalize_variance, eps);
+            }
+            else
+            {
+                node = make_shared<op::MVN>(args[0], true, normalize_variance, eps);
+            }
             break;
         }
         case OP_TYPEID::Negative:
@@ -2507,11 +2541,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Range>(args[0], args[1], args[2]);
             break;
         }
-        case OP_TYPEID::Reciprocal:
-        {
-            node = make_shared<op::Reciprocal>(args[0]);
-            break;
-        }
         case OP_TYPEID::ReduceMean_v1:
         {
             auto keep_dims = node_js.at("keep_dims").get<bool>();
@@ -2588,18 +2617,35 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
             auto clip = node_js.at("clip").get<float>();
             auto activations = node_js.at("activations").get<vector<string>>();
-            auto activation_alpha = node_js.at("activation_alpha").get<vector<float>>();
-            auto activation_beta = node_js.at("activation_beta").get<vector<float>>();
-            node = make_shared<op::RNNCell>(args[0],
-                                            args[1],
-                                            args[2],
-                                            args[3],
-                                            args[4],
-                                            hidden_size,
-                                            activations,
-                                            activation_alpha,
-                                            activation_beta,
-                                            clip);
+            auto activation_alpha = node_js.at("activations_alpha").get<vector<float>>();
+            auto activation_beta = node_js.at("activations_beta").get<vector<float>>();
+            switch (args.size())
+            {
+            case 4:
+                node = make_shared<op::RNNCell>(args[0],
+                                                args[1],
+                                                args[2],
+                                                args[3],
+                                                hidden_size,
+                                                activations,
+                                                activation_alpha,
+                                                activation_beta,
+                                                clip);
+                break;
+            case 5:
+                node = make_shared<op::RNNCell>(args[0],
+                                                args[1],
+                                                args[2],
+                                                args[3],
+                                                args[4],
+                                                hidden_size,
+                                                activations,
+                                                activation_alpha,
+                                                activation_beta,
+                                                clip);
+                break;
+            default: throw runtime_error("GRUCell constructor not supported in serializer");
+            }
             break;
         }
         case OP_TYPEID::ROIPooling: { break;
@@ -2899,23 +2945,26 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             auto compute_max = node_js.at("compute_max").get<bool>();
             auto target_type = read_element_type(node_js.at("index_element_type"));
+            op::TopKSortType sort = node_js.at("sort").get<op::TopKSortType>();
             if (has_key(node_js, "top_k_axis"))
             {
                 auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
                 if (has_key(node_js, "k"))
                 {
                     auto k = node_js.at("k").get<size_t>();
-                    node = make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
+                    node = make_shared<op::TopK>(
+                        args[0], top_k_axis, target_type, k, compute_max, sort);
                 }
                 else
                 {
                     node = make_shared<op::TopK>(
-                        args[0], args[1], top_k_axis, target_type, compute_max);
+                        args[0], args[1], top_k_axis, target_type, compute_max, sort);
                 }
             }
             else
             {
-                node = make_shared<op::TopK>(args[0], args[1], args[2], target_type, compute_max);
+                node = make_shared<op::TopK>(
+                    args[0], args[1], args[2], target_type, compute_max, sort);
             }
             break;
         }
@@ -2931,9 +2980,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = move(topk);
             break;
         }
-        case OP_TYPEID::Transpose:
+        case OP_TYPEID::Transpose_v1:
         {
-            node = make_shared<op::Transpose>(args[0], args[1]);
+            node = make_shared<op::v1::Transpose>(args[0], args[1]);
             break;
         }
         case OP_TYPEID::StopGradient:
@@ -2992,8 +3041,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         m_node_map[node_name] = node;
     }
-    catch (...)
+    catch (exception& err)
     {
+        NGRAPH_INFO << err.what();
         string node_name;
         auto it = node_js.find("name");
         if (it != node_js.end())
@@ -3773,7 +3823,10 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
-        node["groups"] = tmp->get_groups();
+        if (!tmp->has_groups_in_filters())
+        {
+            node["groups"] = tmp->get_groups();
+        }
         node["pad_type"] = tmp->get_pad_type();
         break;
     }
@@ -4278,8 +4331,6 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Range: { break;
     }
-    case OP_TYPEID::Reciprocal: { break;
-    }
     case OP_TYPEID::Recv:
     {
         auto tmp = static_cast<const op::Recv*>(&n);
@@ -4362,8 +4413,8 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::ScalarConstantLike*>(&n);
         auto constant = tmp->as_constant();
-        node["value"] = constant->get_value_strings()[0];
-        node["element_type"] = write_element_type(constant->get_element_type());
+        char* p_end;
+        node["value"] = strtod(constant->get_value_strings()[0].c_str(), &p_end);
         break;
     }
     case OP_TYPEID::ScaleShift: { break;
@@ -4574,6 +4625,17 @@ json JSONSerializer::serialize_node(const Node& n)
         const auto tmp = static_cast<const op::TopK*>(&n);
         node["index_element_type"] = write_element_type(tmp->get_index_element_type());
         node["compute_max"] = tmp->get_compute_max();
+        node["sort"] = tmp->get_sort();
+        switch (tmp->inputs().size())
+        {
+        case 1:
+            node["k"] = tmp->get_k();
+            node["top_k_axis"] = tmp->get_top_k_axis();
+            break;
+        case 2: node["top_k_axis"] = tmp->get_top_k_axis(); break;
+        case 3: break;
+        default: throw runtime_error("TopK constructor not supported in serializer");
+        }
         break;
     }
 
@@ -4586,7 +4648,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["index_element_type"] = write_element_type(tmp->get_index_element_type());
         break;
     }
-    case OP_TYPEID::Transpose: { break;
+    case OP_TYPEID::Transpose_v1: { break;
     }
     case OP_TYPEID::Unsqueeze: { break;
     }

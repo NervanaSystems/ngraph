@@ -401,8 +401,6 @@ set (SRC
     op/fused/partial_slice.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
-    op/fused/reciprocal.cpp
-    op/fused/reciprocal.hpp
     op/fused/rnn_cell.cpp
     op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
