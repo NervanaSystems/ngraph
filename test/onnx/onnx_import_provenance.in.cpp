@@ -41,6 +41,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_text)
     }
 }
 
+// the NodeToCheck parameter of this template is used to find a node in the whole subgraph
+// that a particular unit test is supposed to check against the expected provenance tag
 template <typename NodeToCheck>
 void TEST_PROVENANCE_TAGS(const std::string& model_path, const std::string& expected_provenance_tag)
 {
