@@ -26,7 +26,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/op/divide.hpp"
-#include "utils/common.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -42,25 +42,26 @@ namespace ngraph
                     const std::int64_t p_norm{node.get_attribute_value<std::int64_t>("p", 2)};
 
                     const std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
-                    const std::size_t valid_axis =
-                        common::validate_axis(node, axis, data->get_shape().size());
+                    const size_t normalize_axis = ngraph::normalize_axis(
+                        node.get_description(), axis, data->get_shape().size());
 
                     ASSERT_VALID_ARGUMENT(node, p_norm == 1 || p_norm == 2)
                         << "Invalid `p` attribute value: " << p_norm
                         << "Only normalization of 1st or 2nd order is supported.";
 
                     std::shared_ptr<ngraph::Node> norm = ngraph::builder::lp_norm(
-                        data, AxisSet{valid_axis}, static_cast<std::size_t>(p_norm));
+                        data, AxisSet{normalize_axis}, static_cast<std::size_t>(p_norm));
 
                     const auto target_shape = default_opset::Constant::create(
                         element::i64, Shape{data->get_shape().size()}, data->get_shape());
 
                     // Create a default axes order matching the data tensor rank and erase the
-                    // element at the 'valid_axis' position. The erased element indicates the axis
+                    // element at the 'normalize_axis' position. The erased element indicates the
+                    // axis
                     // along which the data should be broadcasted.
                     std::vector<size_t> axes_values(data->get_shape().size());
                     std::iota(axes_values.begin(), axes_values.end(), 0);
-                    axes_values.erase(axes_values.begin() + valid_axis);
+                    axes_values.erase(axes_values.begin() + normalize_axis);
 
                     const auto axes_mapping = default_opset::Constant::create(
                         element::i64, Shape{axes_values.size()}, axes_values);
