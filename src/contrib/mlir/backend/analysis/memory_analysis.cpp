@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -358,7 +358,7 @@ namespace
                 // V1   = Concat    S0(?), S1(0,16), S2(?)
                 // R2   = ...
                 // V2   = Concat    R0, S1{0,16}, R2
-                // Reusing assignment of S1 in the first concat will cause S0 anr R0 to alias. And
+                // Reusing assignment of S1 in the first concat will cause S0 and R0 to alias. And
                 // since R0 is alive the write to R0 will overwrite S0.
 
                 // For now, assign only if all srcs have no prior assignments
