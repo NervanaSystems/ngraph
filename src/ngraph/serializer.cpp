@@ -2507,11 +2507,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Range>(args[0], args[1], args[2]);
             break;
         }
-        case OP_TYPEID::Reciprocal:
-        {
-            node = make_shared<op::Reciprocal>(args[0]);
-            break;
-        }
         case OP_TYPEID::ReduceMean_v1:
         {
             auto keep_dims = node_js.at("keep_dims").get<bool>();
@@ -2981,13 +2976,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         if (ngraph::get_provenance_enabled())
         {
-            if (has_key(node_js, "provenance_tags"))
+            std::vector<json> prov_js = node_js.at("provenance_tags");
+            for (auto prov_tag : prov_js)
             {
-                const std::vector<json> prov_js = node_js.at("provenance_tags");
-                for (auto prov_tag : prov_js)
-                {
-                    node->add_provenance_tag(prov_tag);
-                }
+                node->add_provenance_tag(prov_tag);
             }
         }
         m_node_map[node_name] = node;
@@ -4277,8 +4269,6 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Range: { break;
-    }
-    case OP_TYPEID::Reciprocal: { break;
     }
     case OP_TYPEID::Recv:
     {
