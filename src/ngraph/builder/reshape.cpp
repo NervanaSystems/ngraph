@@ -29,6 +29,7 @@
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/opsets/opset1.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -180,7 +181,7 @@ shared_ptr<Node> builder::opset1::reshape(const Output<Node>& value, const Shape
     const auto out_pattern = op::Constant::create(
         element::i64, Shape{shape.size()}, vector<int64_t>(shape.begin(), shape.end()));
     const bool special_zero = false;
-    return make_shared<op::v1::Reshape>(value, out_pattern, special_zero)
+    return make_shared<ngraph::opset1::Reshape>(value, out_pattern, special_zero)
         ->add_provenance_group_members_above({value});
 }
 
@@ -190,7 +191,7 @@ shared_ptr<Node> builder::opset1::reorder_axes(const Output<Node>& value, vector
         op::Constant::create(element::i64,
                              Shape{axes_order.size()},
                              vector<int64_t>(axes_order.begin(), axes_order.end()));
-    return make_shared<op::v1::Transpose>(value, axes_order_const)
+    return make_shared<ngraph::opset1::Transpose>(value, axes_order_const)
         ->add_provenance_group_members_above({value});
 }
 
