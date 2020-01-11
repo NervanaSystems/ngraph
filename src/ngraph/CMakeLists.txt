@@ -385,8 +385,6 @@ set (SRC
     op/fused/gru_cell.hpp
     op/fused/layer_norm.cpp
     op/fused/layer_norm.hpp
-    op/fused/log_softmax.cpp
-    op/fused/log_softmax.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
     op/fused/lstm_sequence.cpp
