@@ -546,7 +546,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         nullptr,
         OutputVector{std::make_shared<pattern::op::Or>(
             OutputVector{lstm_goe, std::make_shared<ngraph::op::GetOutputElement>(lstm, 0)})});
-    // NodeVector{lstm_goe, std::make_shared<ngraph::op::GetOutputElement>(lstm, 0)});
     auto lstm_goe_slice =
         std::make_shared<ngraph::op::Slice>(lstm_goe_label, Coordinate{10, 0}, Coordinate{20, 100});
 

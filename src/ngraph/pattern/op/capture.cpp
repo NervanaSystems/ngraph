@@ -31,6 +31,6 @@ bool pattern::op::Capture::match_value(Matcher* matcher,
                                        const Output<Node>& pattern_value,
                                        const Output<Node>& graph_value)
 {
-    matcher->capture();
+    matcher->capture(m_static_nodes);
     return true;
 }

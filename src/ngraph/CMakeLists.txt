@@ -563,6 +563,8 @@ set (SRC
     pattern/op/any_of.hpp
     pattern/op/branch.cpp
     pattern/op/branch.hpp
+    pattern/op/capture.cpp
+    pattern/op/capture.hpp
     pattern/op/label.cpp
     pattern/op/label.hpp
     pattern/op/or.cpp
