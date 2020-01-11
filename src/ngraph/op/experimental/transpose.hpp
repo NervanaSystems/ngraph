@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v1
         {
             /// \brief Tensor transpose operation.
             class NGRAPH_API Transpose : public Op
@@ -52,6 +52,6 @@ namespace ngraph
                                                const OutputVector& deltas) override;
             };
         }
-        using v0::Transpose;
+        using v1::Transpose;
     }
 }
