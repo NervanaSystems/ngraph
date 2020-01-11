@@ -601,7 +601,7 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
             break;
         }
         auto argOutputNode = argOutput.get_node();
-        if (as_type<op::Parameter>(argOutputNode))
+        if (is_type<op::Parameter>(argOutputNode))
         {
             auto it = inputMap.find(argOutputNode->shared_from_this());
             NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
