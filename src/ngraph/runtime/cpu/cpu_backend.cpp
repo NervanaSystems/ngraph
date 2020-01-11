@@ -224,22 +224,24 @@ shared_ptr<ngraph::op::Result> runtime::cpu::CPU_Executable::get_result(size_t i
     return results[index];
 }
 
-shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_input_tensor(size_t input_index)
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_input_tensor(size_t input_index,
+                                                                              void* memory_pointer)
 {
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
     return make_shared<runtime::cpu::CPUTensorView>(parameter->get_element_type(),
                                                     parameter->get_shape());
 }
 
-shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_output_tensor(size_t output_index)
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_output_tensor(size_t output_index,
+                                                                               void* memory_pointer)
 {
     shared_ptr<op::Result> result = get_result(output_index);
     return make_shared<runtime::cpu::CPUTensorView>(result->get_element_type(),
                                                     result->get_shape());
 }
 
-vector<shared_ptr<runtime::Tensor>>
-    runtime::cpu::CPU_Executable::create_input_tensor(size_t input_index, size_t pipeline_depth)
+vector<shared_ptr<runtime::Tensor>> runtime::cpu::CPU_Executable::create_input_tensor(
+    size_t input_index, size_t pipeline_depth, std::vector<void*> memory_pointers)
 {
     vector<shared_ptr<runtime::cpu::CPUTensorView>> tensors;
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
@@ -259,8 +261,8 @@ vector<shared_ptr<runtime::Tensor>>
     return result_tensors;
 }
 
-vector<shared_ptr<runtime::Tensor>>
-    runtime::cpu::CPU_Executable::create_output_tensor(size_t output_index, size_t pipeline_depth)
+vector<shared_ptr<runtime::Tensor>> runtime::cpu::CPU_Executable::create_output_tensor(
+    size_t output_index, size_t pipeline_depth, std::vector<void*> memory_pointers)
 {
     vector<shared_ptr<runtime::cpu::CPUTensorView>> tensors;
     shared_ptr<op::Result> result = get_result(output_index);
