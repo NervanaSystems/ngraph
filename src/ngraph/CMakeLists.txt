@@ -291,6 +291,8 @@ set (SRC
     op/reduce_mean.hpp
     op/reduce_sum.cpp
     op/reduce_sum.hpp
+    op/round.cpp
+    op/round.hpp
     op/quantize.cpp
     op/quantize.hpp
     op/quantized_convolution.cpp

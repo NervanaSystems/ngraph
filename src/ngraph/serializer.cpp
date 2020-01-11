@@ -2654,7 +2654,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::ReorgYolo: { break;
         }
-
+        case OP_TYPEID::Round:
+        {
+            node = make_shared<op::Round>(args[0]);
+            break;
+        }
         case OP_TYPEID::ScalarConstantLike:
         {
             double value = node_js.at("value").get<double>();
@@ -3552,6 +3556,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::RegionYolo: { break;
     }
     case OP_TYPEID::ReorgYolo: { break;
+    }
+    case OP_TYPEID::Round: { break;
     }
     case OP_TYPEID::DeformableConvolution_v1:
     {

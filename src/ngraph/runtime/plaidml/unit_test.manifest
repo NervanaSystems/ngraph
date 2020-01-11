@@ -253,6 +253,10 @@ model_cum_sum_2d_axis_input
 model_cum_sum_2d_dynamic_axis_input
 model_cum_sum_3d_exclusive_reverse
 
+# unsupported op: `Round`
+round
+round_2D
+
 # onnx tests
 model_quant_conv_linear_2d
 model_quant_conv_linear_3d
