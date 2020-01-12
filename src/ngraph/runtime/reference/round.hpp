@@ -14,37 +14,39 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
-#include <vector>
+#pragma once
 
-#include "ngraph/builder/reshape.hpp"
-#include "ngraph/node.hpp"
-#include "transpose.hpp"
+#include <cmath>
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace runtime
     {
-        namespace op
+        namespace reference
         {
-            namespace set_1
+            template <typename T>
+            T round_to_nearest_even(const T arg)
             {
-                NodeVector transpose(const Node& node)
+                const auto floor_arg = std::floor(arg);
+                const auto diff = arg - floor_arg;
+                if (diff < 0.5f || (diff == 0.5f && static_cast<int>(floor_arg) % 2 == 0))
                 {
-                    std::shared_ptr<ngraph::Node> data = node.get_ng_inputs().at(0);
-
-                    auto permute_axes =
-                        node.get_attribute_value<std::vector<std::size_t>>("perm", {});
-
-                    return {(permute_axes.empty())
-                                ? ngraph::builder::opset1::transpose(data)
-                                : ngraph::builder::opset1::reorder_axes(data, permute_axes)};
+                    return floor_arg;
                 }
+                else
+                {
+                    return floor_arg + 1.0f;
+                }
+            }
 
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            template <typename T>
+            void round(const T* arg, T* out, size_t count)
+            {
+                for (size_t i = 0; i < count; ++i)
+                {
+                    out[i] = round_to_nearest_even(arg[i]);
+                }
+            }
+        }
+    }
+}

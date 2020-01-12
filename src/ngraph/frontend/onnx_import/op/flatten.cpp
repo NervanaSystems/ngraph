@@ -39,7 +39,7 @@ namespace ngraph
                     const auto normalized_axis = ngraph::normalize_axis(
                         node.get_description(), axis, data_rank, -data_rank, data_rank);
 
-                    return {ngraph::builder::flatten(data, normalized_axis)};
+                    return {ngraph::builder::opset1::flatten(data, normalized_axis)};
                 }
 
             } // namespace set_1
