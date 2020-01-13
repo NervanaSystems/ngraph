@@ -16,7 +16,6 @@
 
 #include "mean.hpp"
 #include "default_opset.hpp"
-#include "ngraph/op/divide.hpp"
 #include "utils/variadic.hpp"
 
 namespace ngraph
@@ -39,7 +38,7 @@ namespace ngraph
                         shape,
                         std::vector<int>(shape_size(shape), node.get_ng_inputs().size()));
 
-                    return {sum / count};
+                    return {std::make_shared<default_opset::Divide>(sum, count)};
                 }
 
             } // namespace set_1
