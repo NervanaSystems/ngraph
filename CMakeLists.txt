@@ -358,12 +358,6 @@ endif()
 # Compiler-specific logic...
 #-----------------------------------------------------------------------------------------------
 
-# Compiler-specific logic...
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$" AND NOT NGRAPH_BUILD_DIR)
-    message( STATUS "Setting clang flags...")
-    include( cmake/clang_4_0_flags.cmake )
-endif()
-
 if (WIN32)
     string(REPLACE "/W3" "/W0" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /MP")
@@ -392,7 +386,18 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endif()
 endif()
 
+########################################################################################
+# The CMAKE_CXX_FLAGS up to this point are passed to all external projects
+# Don't set any flags like -Wall before this line of code
+# Make sure you set flags you want propagated to external projects before this point
+########################################################################################
 set(CMAKE_ORIGINAL_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
+# Compiler-specific logic...
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$" AND NOT NGRAPH_BUILD_DIR)
+    message( STATUS "Setting clang flags...")
+    include( cmake/clang_4_0_flags.cmake )
+endif()
 
 if (${NGRAPH_WARNINGS_AS_ERRORS})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
