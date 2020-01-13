@@ -41,7 +41,6 @@ namespace mlir
         using BufferSizeMap = std::unordered_map<unsigned, unsigned>;
         // Compute this analysis with the provided operation.
         MemoryAnalysis(Operation* op);
-
         BufferInfo getBufferInfo(Operation* op)
         {
             auto it = m_bufferInfo.find(op);
@@ -70,7 +69,6 @@ namespace mlir
             NGRAPH_CHECK(it != m_bufferSize.end(), "Buffer has no size!");
             return it->second;
         }
-
     private:
         // Records assignment of BufferInfo to each inplace op
         BufferInfoMap m_bufferInfo;

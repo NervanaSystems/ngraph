@@ -58,12 +58,12 @@ namespace
     using namespace ngraph::runtime::ngmlir;
     using namespace mlir;
 
-    // A helper data-structure to track cannot alias relationship between tensor syms
-    // If NoAlias[T] contains S, then T and S cannot alias.
+    // A helper data-structure to track cannot alias relationship between 
+    // tensor syms. If NoAlias[T] contains S, then T and S cannot alias.
     // The relationship is an equivalence (transitive, symmetric, reflexive)
-    // Initially each sym is put in its own equivalence class (set). If two syms
-    // a and b are found to be non-alias (equivalent), their equivalence classes
-    // are unioned
+    // Initially each sym is put in its own equivalence class (set). 
+    // If two syms a and b are found to be non-alias (equivalent), 
+    // their equivalence classes are unioned
     class AliasRelation
     {
     public:
@@ -81,6 +81,8 @@ namespace
         SmallVector<BV, 10> m_sets;
     };
 
+    // Simple single basic block liveness analysis
+    // TODO: Replace with MLIR's liveness analysis
     class LivenessAnalysis
     {
     public:
@@ -96,9 +98,11 @@ namespace
         std::unordered_map<Value*, unsigned> m_valueToIdx;
     };
 
-    /// Memory Assignment pass
-    /// - Tries to perform operations in place where applicable by assigning a virtual buffer ID
-    ///    to values. Those are used later in affine lowering pass to create or re-use memrefs
+    // Memory Assignment analysis
+    // Tries to find operations that can be done in place where applicable 
+    // by assigning a virtual buffer ID to values. 
+    // The buffer assignment is used later in affine lowering pass to create 
+    // or re-use memrefs
     class MemoryAssignment
     {
     public:
@@ -156,7 +160,6 @@ namespace
     //      Reshape: TBD
     //
     // Update liveness info
-
     void MemoryAssignment::run(ModuleOp* module)
     {
         if (!clEnableNgInPlaceMemory)
@@ -204,7 +207,6 @@ namespace
             }
         }
         m_aliasRelation.init(syms);
-
         // scan instructions backwards
         for (auto it = block.rbegin(); it != block.rend(); it++)
         {
@@ -225,7 +227,6 @@ namespace
                 }
             }
             // update liveness info
-
             for (auto dit : op->getResults())
             {
                 m_liveness.kill(dit);
@@ -267,7 +268,6 @@ namespace
                     return;
                 }
             }
-
             // check that all operands and dst can alias
             // and that none is input or output
             for (auto opnd : op->getOperands())
@@ -277,7 +277,6 @@ namespace
                     return;
                 }
             }
-
             // calculate relative offsets in the output buffer
             int opndOffset = 0;
             for (auto i = 0; i < op->getNumOperands(); i++)
@@ -294,18 +293,14 @@ namespace
                     opndOffsets.push_back(opndOffset);
                 }
             }
-
             // check for consistent pre-existing buffer assignments
-
-            // dest has an assignment
             bufferInfo = m_memAnalysis->getBufferInfo(op);
-
+            // if dest has an assignment
             if (bufferInfo.isValid())
             {
                 // set buffer ID and base offset to that of dest's
                 bufferId = bufferInfo.m_bufferId;
                 baseOffset = bufferInfo.m_offset;
-
                 // check if we can re-use it for all src operands
                 int bufferOffset = 0;
                 for (auto i = 0; i < op->getNumOperands(); i++)
@@ -331,14 +326,13 @@ namespace
             else
             {
                 // dst has no buffer assignment
-
                 // TODO:
                 // We can re-use an existing assignment of a src operand if
-                //  Every other src either:
+                // Every other src either:
                 //    a. has a matching pre-assigned buffer ID and offset, or
                 //    b. is unassigned a buffer/offset, and the computed offset is valid
-                //    (non-negative),
-                //       and no other live tensor aliases the chunk of the buffer we want to assign.
+                //       (non-negative), and no other live tensor aliases the chunk 
+                //       of the buffer we want to assign.
                 //       To achieve this, we need to track buffer->{tensor,offset,size} and
                 //       perform the check
                 //
@@ -350,7 +344,7 @@ namespace
                 //
                 // For the first concat, we could use the assignment of S1 (from second concat)
                 // to define assignments for S0 and S2, and since R0, R2 are dead, no live tensors
-                // alias into the buffer.
+                // alias into the buffer, and the assignment is valid.
                 //
                 // On the other hand, the following is invalid
                 // Example:
@@ -358,9 +352,8 @@ namespace
                 // V1   = Concat    S0(?), S1(0,16), S2(?)
                 // R2   = ...
                 // V2   = Concat    R0, S1{0,16}, R2
-                // Reusing assignment of S1 in the first concat will cause S0 and R0 to alias. And
-                // since R0 is alive the write to R0 will overwrite S0.
-
+                // Reusing assignment of S1 in the first concat will cause S0 and R0 to alias. 
+                // And since R0 is alive the write to R0 will overwrite S0.
                 // For now, assign only if all srcs have no prior assignments
                 for (auto opnd : op->getOperands())
                 {
@@ -400,7 +393,6 @@ namespace
     {
         NGRAPH_CHECK(op->getNumResults() == 1, "Destructive in-place with multi-def ?");
         Value* use = nullptr;
-
         int useCount = -1;
 
         if (isInputOrOutputValue(op->getResult(0)))
@@ -408,7 +400,6 @@ namespace
             // dst is output, bail out
             return;
         };
-
         // pick a dead operand that is not an input or output with the least number of uses
         for (auto opnd : op->getOperands())
         {
@@ -430,10 +421,8 @@ namespace
         {
             return;
         }
-
         // assign new buffer or copy buffer info from dst
         auto bufferInfo = m_memAnalysis->getBufferInfo(op);
-
         if (!bufferInfo.isValid())
         {
             // attach a new buffer id, and 0 offset on obth src and result
@@ -449,7 +438,6 @@ namespace
         auto bufferSize = 0;
         bufferSize = getBufferSizeForOperand(op->getResult(0), bufferInfo.m_offset);
         m_memAnalysis->setBufferSize(bufferInfo.m_bufferId, bufferSize);
-
         // update aliasing info
         // use value cannot alias any live value
         SmallVector<Value*, 10> liveValues;
@@ -472,7 +460,6 @@ namespace
         {
             return true;
         }
-
         // If the defined value is an output of the sub-graph, cannot do it in place
         //
         // TODO: Improve to support control flow. Track value use-chain along branches/block-args,
@@ -499,7 +486,6 @@ namespace
     {
         unsigned numSyms = symbols.size();
         m_sets.resize(numSyms);
-
         for (auto& bv : m_sets)
         {
             bv.resize(numSyms);
@@ -540,7 +526,6 @@ namespace
         // replace aSet with union
         auto pSet = m_valueToSet[a];
         *pSet = uSet;
-
         // update value to set maps
         for (auto it = pSet->set_bits_begin(); it != pSet->set_bits_end(); it++)
         {
@@ -603,7 +588,6 @@ namespace
         }
         m_liveness[it->second] = false;
     }
-
     // helpers
     unsigned getBufferSizeForOperand(mlir::Value* value, int offset)
     {
