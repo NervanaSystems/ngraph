@@ -270,6 +270,7 @@ TEST(dyn_elimination, range_f64)
         vals, vector<double>{-0.5, -0.25, 0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75}));
 }
 
+#ifndef NGRAPH_JSON_DISABLE
 TEST(dyn_elimination, paddlepaddle_transpose)
 {
     string model = "paddlepaddle/transpose.json";
@@ -289,3 +290,4 @@ TEST(dyn_elimination, paddlepaddle_transpose)
     passes.set_per_pass_validation(false);
     passes.run_passes(clone);
 }
+#endif
