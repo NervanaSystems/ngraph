@@ -44,7 +44,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_text)
 // the NodeToCheck parameter of this template is used to find a node in the whole subgraph
 // that a particular unit test is supposed to check against the expected provenance tag
 template <typename NodeToCheck>
-void TEST_PROVENANCE_TAGS(const std::string& model_path, const std::string& expected_provenance_tag)
+void test_provenance_tags(const std::string& model_path, const std::string& expected_provenance_tag)
 {
     const auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, model_path));
@@ -66,30 +66,30 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_only_output)
 {
     // the Add node in the model does not have a name,
     // only its output name should be found in the provenance tags
-    TEST_PROVENANCE_TAGS<default_opset::Add>("onnx/provenance_only_outputs.prototxt",
+    test_provenance_tags<default_opset::Add>("onnx/provenance_only_outputs.prototxt",
                                              "<ONNX Add (-> output_of_add)>");
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_node_name_and_outputs)
 {
-    TEST_PROVENANCE_TAGS<default_opset::Add>("onnx/provenance_node_name_and_outputs.prototxt",
+    test_provenance_tags<default_opset::Add>("onnx/provenance_node_name_and_outputs.prototxt",
                                              "<ONNX Add (Add_node -> output_of_add)>");
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_multiple_outputs_op)
 {
-    TEST_PROVENANCE_TAGS<default_opset::TopK>("onnx/provenance_multiple_outputs_op.prototxt",
+    test_provenance_tags<default_opset::TopK>("onnx/provenance_multiple_outputs_op.prototxt",
                                               "<ONNX TopK (TOPK -> values, indices)>");
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_constants)
 {
-    TEST_PROVENANCE_TAGS<default_opset::Constant>("onnx/provenance_input_tags.prototxt",
+    test_provenance_tags<default_opset::Constant>("onnx/provenance_input_tags.prototxt",
                                                   "<ONNX Input (initializer_of_A) Shape{0}>");
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_parameters)
 {
-    TEST_PROVENANCE_TAGS<default_opset::Parameter>("onnx/provenance_input_tags.prototxt",
+    test_provenance_tags<default_opset::Parameter>("onnx/provenance_input_tags.prototxt",
                                                    "<ONNX Input (input_B) Shape{0}>");
 }
