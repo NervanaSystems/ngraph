@@ -369,6 +369,7 @@ class BuildExt(build_ext):
         return False
 
     def add_debug_or_release_flags(self):
+        """Return compiler flags for Release and Debug build types."""
         if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
             return ['-O0', '-g']
         else:
