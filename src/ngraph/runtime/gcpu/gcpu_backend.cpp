@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/generic_cpu/gcpu_backend_visibility.hpp"
+#include "ngraph/runtime/gcpu/gcpu_backend_visibility.hpp"
 
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/generic_cpu/gcpu_backend.hpp"
-#include "ngraph/runtime/generic_cpu/gcpu_executable.hpp"
+#include "ngraph/runtime/gcpu/gcpu_backend.hpp"
+#include "ngraph/runtime/gcpu/gcpu_executable.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
 

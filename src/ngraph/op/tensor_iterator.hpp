@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -300,6 +300,11 @@ namespace ngraph
                 void revalidate_and_infer_types_for_body_ops();
 
                 int64_t get_num_iterations() const { return m_num_iterations; }
+                void set_num_iterations(int64_t num_iterations)
+                {
+                    m_num_iterations = num_iterations;
+                }
+
             private:
                 // Find an input corresponding to value, adding one if necessary.
                 Input<Node> input_for_value(const Output<Node>& value);

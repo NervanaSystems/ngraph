@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,29 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
-#include "util/type_prop.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
-TEST(type_prop, log_softmax)
+namespace ngraph
 {
-    const auto data = make_shared<op::Parameter>(element::f64, Shape{2, 2});
-    const auto axis = 2;
-    try
+    namespace onnx_import
     {
-        const auto log_softmax = make_shared<op::LogSoftmax>(data, axis);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid axis value not detected";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Parameter axis "));
-    }
-    catch (...)
-    {
-        FAIL() << "Log softmax failed for unexpected reason";
-    }
-}
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector scatter_nd(const Node& node);
+
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

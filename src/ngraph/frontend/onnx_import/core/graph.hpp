@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ namespace ngraph
         {
         public:
             Graph(const onnx::GraphProto& proto, Model& model, const Weights& weights = {});
-
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
             const std::vector<ValueInfo>& get_outputs() const { return m_outputs; }
@@ -44,12 +43,8 @@ namespace ngraph
             {
                 return m_ng_node_cache.at(name);
             }
-
             const std::string& get_name() const { return m_graph_proto->name(); }
-            NodeVector make_ng_nodes(const Node& node) const
-            {
-                return m_model->get_operator(node.op_type(), node.domain())(node);
-            }
+            NodeVector make_ng_nodes(const Node& onnx_node) const;
 
         private:
             const onnx::GraphProto* m_graph_proto;

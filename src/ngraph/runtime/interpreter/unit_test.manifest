@@ -1,24 +1,8 @@
-# Quantized convolution is not supported on interpreter
-model_quant_conv_linear
-model_qlinear_matmul
-model_qlinear_matmul_3d
-model_conv_integer_no_zero_point
-model_matmul_integer_no_zero_point
-model_matmul_integer_4d_no_zero_point
-
-fake_quantize
+tile_3d_small_data_rank
+tile_3d_few_repeats
 fake_quantize_pdpd
-fake_quantize_with_clip
-fake_quantize_with_clip_across_channels
-
-# casting not supported on interpreter
 convert_float32_bf16
 convert_bf16_float32
 
-# ONNX TopK with dynamic K
-top_k_opset_10
-top_k_opset_11_const_k_smallest
-
-# Tile op case that the number of elements in "repeats" and shape of "data" are different
-tile_3d_small_data_rank
-tile_3d_few_repeats
+onnx_INTERPRETER.model_quant_conv_linear
+onnx_INTERPRETER.top_k_opset_10
