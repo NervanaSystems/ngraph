@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,21 +14,18 @@
 # limitations under the License.
 # ******************************************************************************
 
-include_directories(
-    ${NGRAPH_INCLUDE_PATH}
-    ${MLIR_LLVM_INCLUDE_PATH}
-    ${MLIR_INCLUDE_PATHS}
-)
+if (NGRAPH_GENERIC_CPU_ENABLE)
+    add_library(gcpu_backend SHARED gcpu_backend.cpp gcpu_executable.cpp)
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(gcpu_backend PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION})
+    endif()
+    target_link_libraries(gcpu_backend PRIVATE ngraph interpreter_backend)
+    target_compile_definitions(gcpu_backend PRIVATE GCPU_BACKEND_DLL_EXPORTS)
 
-set(SRC
-    compiler.cpp
-    ngraph_dialect/dialect.cpp
-    ngraph_dialect/type.cpp
-    ngraph_dialect/ops.cpp
-    pass/mlir_subgraph_extraction.cpp
-    pass/mlir_subgraph_extraction.hpp
-    pass/ng_dialect_builder.cpp
-    pass/ng_dialect_builder.hpp
-)
-
-add_library(mlir_core SHARED ${SRC})
+    install(TARGETS gcpu_backend
+        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
+        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
+endif()

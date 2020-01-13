@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/generic_cpu/gcpu_executable.hpp"
+#include "ngraph/runtime/gcpu/gcpu_executable.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"

@@ -17,11 +17,9 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/opsets/opset0.hpp"
-#include "ngraph/shape.hpp"
+#include "default_opset.hpp"
+#include "ngraph/op/constant.hpp"
 #include "reciprocal.hpp"
-
 namespace ngraph
 {
     namespace onnx_import
@@ -34,7 +32,9 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
 
-                    return {std::make_shared<ngraph::opset0::Reciprocal>(data)};
+                    auto one_node = default_opset::Constant::create(
+                        data->get_element_type(), data->get_shape(), {1});
+                    return {std::make_shared<default_opset::Divide>(one_node, data)};
                 }
 
             } // namespace set_1
