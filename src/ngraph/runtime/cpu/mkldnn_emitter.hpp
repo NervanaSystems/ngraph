@@ -139,7 +139,9 @@ namespace ngraph
                 // reserve the space for primitives for each op, different op requires different
                 // number of primitives.
                 // some ops require a new workspace.
-                size_t reserve_primitive_space(size_t count, bool new_workspace = false);
+                size_t reserve_primitive_space(size_t count,
+                                               bool fwd_bwd = false,
+                                               bool new_workspace = false);
                 size_t insert_primitive(mkldnn::primitive* primitive);
                 size_t insert_memory(mkldnn::memory* memory);
                 size_t insert_workspace(std::unique_ptr<MKLDNNWorkspace>& workspace);

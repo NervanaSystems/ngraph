@@ -34,6 +34,7 @@
 #include "util/test_case.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
+#include "util/type_prop.hpp"
 
 using namespace ngraph;
 
@@ -353,6 +354,21 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
 
     Outputs output{execute(function, inputs, "${BACKEND_NAME}")};
     EXPECT_TRUE(test::all_close_f(expected_output, output.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_text)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_tag_add.prototxt"));
+
+    auto ng_nodes = function->get_ordered_ops();
+    for (auto ng_node : ng_nodes)
+    {
+        for (auto tag : ng_node->get_provenance_tags())
+        {
+            EXPECT_HAS_SUBSTRING(tag, "ONNX");
+        }
+    }
 }
 
 // ############################################################################ OPERATOR TESTS
@@ -1812,6 +1828,32 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_gatherND_float)
     test_case.add_input<float>({0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f});
     test_case.add_input<int64_t>({0, 1, 1, 0});
     test_case.add_expected_output<float>(Shape{2, 2}, {2.f, 3.f, 4.f, 5.f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_pad_constant)
+{
+    const auto pad_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/pad_constant.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(pad_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({1.f, 1.2f, 2.3f, 3.4f, 4.5f, 5.7f});
+    test_case.add_expected_output<float>(
+        Shape{3, 4}, {0.f, 0.f, 1.f, 1.2f, 0.f, 0.f, 2.3f, 3.4f, 0.f, 0.f, 4.5f, 5.7f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reciprocal)
+{
+    const auto reciprocal_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reciprocal.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(reciprocal_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({1.f, 2.f, 3.f, 4.f, 5.f, 6.f});
+    test_case.add_expected_output<float>(Shape{3, 2},
+                                         {1.f, 1 / 2.f, 1 / 3.f, 1 / 4.f, 1 / 5.f, 1 / 6.f});
 
     test_case.run();
 }

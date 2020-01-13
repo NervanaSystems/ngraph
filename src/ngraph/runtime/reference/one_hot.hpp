@@ -79,8 +79,7 @@ namespace ngraph
             {
                 const T on_value = 1;
                 const T off_value = 0;
-                return one_hot<T, T>(
-                    arg, out, in_shape, out_shape, one_hot_axis, on_value, off_value);
+                one_hot<T, T>(arg, out, in_shape, out_shape, one_hot_axis, on_value, off_value);
             }
         }
     }

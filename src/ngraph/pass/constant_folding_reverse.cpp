@@ -40,11 +40,9 @@ static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> c
 {
     auto& input_element_type = constant->get_output_element_type(0);
 
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-#endif
     switch (input_element_type)
     {
     case element::Type_t::undefined:
@@ -82,9 +80,7 @@ static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> c
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
 
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
-#endif
 }
 
 void pass::ConstantFolding::construct_constant_reverse()

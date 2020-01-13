@@ -80,7 +80,7 @@ void op::util::LogicalReduction::validate_and_infer_types()
             {
                 axis = normalize_axis(this, axis, size_t(input_rank));
             }
-            catch (const ngraph_error& err)
+            catch (const ngraph_error&)
             {
                 NODE_VALIDATION_CHECK(this,
                                       false,
