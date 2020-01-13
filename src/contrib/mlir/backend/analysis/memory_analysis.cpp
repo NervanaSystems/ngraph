@@ -58,11 +58,11 @@ namespace
     using namespace ngraph::runtime::ngmlir;
     using namespace mlir;
 
-    // A helper data-structure to track cannot alias relationship between 
+    // A helper data-structure to track cannot alias relationship between
     // tensor syms. If NoAlias[T] contains S, then T and S cannot alias.
     // The relationship is an equivalence (transitive, symmetric, reflexive)
-    // Initially each sym is put in its own equivalence class (set). 
-    // If two syms a and b are found to be non-alias (equivalent), 
+    // Initially each sym is put in its own equivalence class (set).
+    // If two syms a and b are found to be non-alias (equivalent),
     // their equivalence classes are unioned
     class AliasRelation
     {
@@ -99,9 +99,9 @@ namespace
     };
 
     // Memory Assignment analysis
-    // Tries to find operations that can be done in place where applicable 
-    // by assigning a virtual buffer ID to values. 
-    // The buffer assignment is used later in affine lowering pass to create 
+    // Tries to find operations that can be done in place where applicable
+    // by assigning a virtual buffer ID to values.
+    // The buffer assignment is used later in affine lowering pass to create
     // or re-use memrefs
     class MemoryAssignment
     {
@@ -331,7 +331,7 @@ namespace
                 // Every other src either:
                 //    a. has a matching pre-assigned buffer ID and offset, or
                 //    b. is unassigned a buffer/offset, and the computed offset is valid
-                //       (non-negative), and no other live tensor aliases the chunk 
+                //       (non-negative), and no other live tensor aliases the chunk
                 //       of the buffer we want to assign.
                 //       To achieve this, we need to track buffer->{tensor,offset,size} and
                 //       perform the check
@@ -352,7 +352,7 @@ namespace
                 // V1   = Concat    S0(?), S1(0,16), S2(?)
                 // R2   = ...
                 // V2   = Concat    R0, S1{0,16}, R2
-                // Reusing assignment of S1 in the first concat will cause S0 and R0 to alias. 
+                // Reusing assignment of S1 in the first concat will cause S0 and R0 to alias.
                 // And since R0 is alive the write to R0 will overwrite S0.
                 // For now, assign only if all srcs have no prior assignments
                 for (auto opnd : op->getOperands())

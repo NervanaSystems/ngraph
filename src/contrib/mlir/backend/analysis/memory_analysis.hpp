@@ -69,6 +69,7 @@ namespace mlir
             NGRAPH_CHECK(it != m_bufferSize.end(), "Buffer has no size!");
             return it->second;
         }
+
     private:
         // Records assignment of BufferInfo to each inplace op
         BufferInfoMap m_bufferInfo;
