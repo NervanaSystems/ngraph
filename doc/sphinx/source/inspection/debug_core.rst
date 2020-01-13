@@ -51,7 +51,6 @@ Compile Flags
    ``NGRAPH_TBB_ENABLE``, Only if (``NGRAPH_CPU_ENABLE``) Control usage of TBB for CPU backend, ``TRUE``
    ``NGRAPH_TOOLS_ENABLE``  Control the building of tools, ``TRUE``
    ``NGRAPH_UNIT_TEST_ENABLE``,  Control the building of unit tests, ``TRUE``
-   ``NGRAPH_USE_PREBUILT_DNNL``, Use the `precompiled DNNL`_,``FALSE``
    ``NGRAPH_USE_PREBUILT_LLVM``, Use a precompiled LLVM  ,``FALSE``
 
 
@@ -144,4 +143,3 @@ in the unit test for this feature.
 
 .. _pass config: https://github.com/NervanaSystems/ngraph/blob/a4a3031bb40f19ec28704f76de39762e1f27e031/src/ngraph/pass/pass_config.cpp#L54
 .. _OpenMPI Runtime Library Documentation: https://www.openmprtl.org/documentation
-.. _precompiled DNNL: https://github.com/intel/mkl-dnn
