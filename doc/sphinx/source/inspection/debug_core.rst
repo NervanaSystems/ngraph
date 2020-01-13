@@ -32,6 +32,7 @@ Compile Flags
    ``NGRAPH_FAST_MATH_ENABLE``, Enable fast math, ``ON``
    ``NGRAPH_TBB_ENABLE``, "Only if (``NGRAPH_CPU_ENABLE``) Control usage of TBB for CPU backend",``TRUE``
    ``NGRAPH_USE_PREBUILT_LLVM``, ,``FALSE``
+   ``NGRAPH_USE_PREBUILT_DNNL``, ,``FALSE``
    ``NGRAPH_ONNX_IMPORT_ENABLE``, Enable ONNX importer,``FALSE``
    ``NGRAPH_DEBUG_ENABLE``, Enable output for ``NGRAPH_DEBUG`` statements,``FALSE``
    ``NGRAPH_DEX_ONLY``, Build CPU DEX without codegen,``FALSE``
@@ -61,14 +62,11 @@ Environment Variables
 
 
 .. csv-table::
-   :header: "Environmental Variable", "Description"
+   :header: "Environment Variable", "Description"
    :widths: 20, 35
    :escape: ~
 
-   ``NGRAPH_MLIR_OPT_LEVEL``, 
-   ``NGRAPH_MLIR_MAX_CYCLE_DEPTH``, 
-   ``NGRAPH_MLIR``, 
-   ``NGRAPH_ENABLE_VISUALIZE_TRACING``,
+
    ``NGRAPH_VISUALIZE_TRACING_FORMAT``, Default format is ``.svg``
    ``NGRAPH_VISUALIZE_EDGE_LABELS``, Set it to 1 in ``~/.bashrc``
    ``NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE``, Calculated in code; helps prevent *long* edges between two nodes very far apart
@@ -79,30 +77,14 @@ Environment Variables
    ``NGRAPH_PASS_ENABLES``, Enable or disable a pass: either core or backend
    ``NGRAPH_PASS_ATTRIBUTES``, Enable or disable attributes related to a pass; see also `pass config`_
    ``NGRAPH_CPU_TRACING``, Generate Timelines for CPU to check in ``chrome://tracing``
-   ``NGRAPH_ENABLE_TRACING``,
-   ``NGRAPH_SERIALIZER_OUTPUT_SHAPES``,
-   ``NGRAPH_COMPILER_DEBUGINFO_ENABLE``,
-   ``NGRAPH_COMPILER_DIAG_ENABLE``,
-   ``NGRAPH_COMPILER_REPORT_ENABLE``,
-   ``NGRAPH_DISABLE_LOGGING``,
-   ``NGRAPH_FAIL_MATCH_AT``,
-   ``NGRAPH_PROVENANCE_ENABLE``,
-   ``NGRAPH_CODEGEN``,
-   ``NGRAPH_DEX_DEBUG``,
-   ``NGRAPH_CPU_CONCURRENCY``,
    ``NGRAPH_CPU_DEBUG_TRACER``, See also :ref:`debug_tracer`
    ``NGRAPH_CPU_TRACER_LOG``, See also :ref:`debug_tracer`
    ``NGRAPH_CPU_BIN_TRACER_LOG``, See also :ref:`debug_tracer`
-   ``NGRAPH_CPU_USE_REF_KERNELS``, 
    ``OMP_NUM_THREADS``, See `OpenMPI Runtime Library Documentation`_
    ``NGRAPH_INTRA_OP_PARALLELISM``, See also :ref:`interop_intraop`
    ``NGRAPH_INTER_OP_PARALLELISM``, See also :ref:`interop_intraop`
-   ``NGRAPH_CPU_EIGEN_THREAD_COUNT``,
-   ``NGRAPH_CPU_CHECK_PARMS_AND_CONSTS``,
-   ``NGRAPH_CPU_NAN_CHECK``,
-   ``NGRAPH_CPU_INF_CHECK``,
    ``NGRAPH_DECONV_FUSE``, "Default ``FALSE``; when ``TRUE`` it enables fusion for deconvolution.  Only available with CPU."
-   ``NGRAPH_PASS_CPU_LAYOUT_ELTWISE``,
+  
 
 
 
