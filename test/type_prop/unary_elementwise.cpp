@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,12 +39,4 @@ TEST(type_prop, unary_arithmetic_bad_argument_element_types)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
-}
-
-TEST(type_prop, reciprocal)
-{
-    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    auto pad = make_shared<op::Reciprocal>(param);
-    EXPECT_EQ(pad->get_element_type(), element::f32);
-    EXPECT_EQ(pad->get_shape(), (Shape{2, 3, 4}));
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ void op::util::LogicalReductionKeepDims::validate_and_infer_types()
                 {
                     axis = normalize_axis(this, axis, size_t(input_rank));
                 }
-                catch (const ngraph_error& err)
+                catch (const ngraph_error&)
                 {
                     NODE_VALIDATION_CHECK(this,
                                           false,

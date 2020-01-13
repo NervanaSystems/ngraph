@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ namespace ngraph
                             filters_shape.insert(filters_shape.begin(), groups);
 
                             auto reshaped_filters =
-                                ngraph::builder::reshape(filters, filters_shape);
+                                ngraph::builder::opset1::reshape(filters, filters_shape);
 
                             return std::make_shared<default_opset::GroupConvolution>(
                                 data,
@@ -131,11 +131,12 @@ namespace ngraph
                     auto bias = inputs.at(2);
                     const Shape& new_shape = conv_node->get_shape();
 
-                    auto broadcasted_bias = std::make_shared<ngraph::opset0::Broadcast>(
+                    auto broadcasted_bias = std::make_shared<default_opset::Broadcast>(
                         bias,
-                        new_shape,
-                        ngraph::op::calculate_broadcast_axes(new_shape, bias->get_shape(), 1));
-                    return {std::make_shared<ngraph::opset0::Add>(conv_node, broadcasted_bias)};
+                        default_opset::Constant::create(
+                            element::i64, Shape{new_shape.size()}, new_shape),
+                        default_opset::Constant::create(element::i64, Shape{1}, {1}));
+                    return {std::make_shared<default_opset::Add>(conv_node, broadcasted_bias)};
                 }
 
             } // namespace set_1

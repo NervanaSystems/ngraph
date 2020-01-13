@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -158,6 +158,7 @@ message(STATUS "NGRAPH_FORWARD_CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}")
 # Prevent Eigen from using any LGPL3 code
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TOOLS")
 
+ngraph_var(NGRAPH_USE_PREBUILT_MLIR DEFAULT "FALSE")
 ngraph_var(NGRAPH_USE_PREBUILT_LLVM DEFAULT "FALSE")
 
 option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
@@ -168,7 +169,7 @@ option(NGRAPH_USE_LEGACY_MKLDNN "Use legacy MKLDNN" FALSE)
 option(NGRAPH_MLIR_ENABLE "Control the building of MLIR backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
 option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
-option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" FALSE)
+option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" TRUE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_DEPRECATED_ENABLE "Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use)" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
@@ -187,14 +188,18 @@ option(NGRAPH_CPU_STATIC_LIB_ENABLE "Enable build CPU backend as a static librar
 option(NGRAPH_PLAIDML_STATIC_LIB_ENABLE "Enable build PlaidML backend as a static library" FALSE)
 option(NGRAPH_DYNAMIC_COMPONENTS_ENABLE "Enable dynamic loading of components" TRUE)
 option(NGRAPH_NATIVE_ARCH_ENABLE "Enable build for native archtecture" TRUE)
+option(NGRAPH_EXPORT_TARGETS_ENABLE "Enable exporting nGraph cmake export targets" TRUE)
 if (NGRAPH_CPU_ENABLE)
     option(NGRAPH_TBB_ENABLE "Control usage of TBB for CPU backend" TRUE)
 endif()
 
-if (NGRAPH_CPU_ENABLE
-        AND
-    (NOT NGRAPH_GENERIC_CPU_ENABLE)
-   )
+if (NGRAPH_STATIC_LIB_ENABLE)
+    message(WARNING "Workaround: "
+                    "Turning off NGRAPH_EXPORT_TARGETS_ENABLE for nGraph static lib")
+    set(NGRAPH_EXPORT_TARGETS_ENABLE OFF)
+endif()
+
+if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_INTEL_CPU_ONLY_ENABLE ON)
 endif()
 
@@ -257,6 +262,7 @@ NORMALIZE_BOOL(NGRAPH_CODE_COVERAGE_ENABLE)
 NORMALIZE_BOOL(NGRAPH_LIB_VERSIONING_ENABLE)
 NORMALIZE_BOOL(NGRAPH_PYTHON_BUILD_ENABLE)
 NORMALIZE_BOOL(NGRAPH_USE_PREBUILT_LLVM)
+NORMALIZE_BOOL(NGRAPH_USE_PREBUILT_MLIR)
 NORMALIZE_BOOL(NGRAPH_PLAIDML_ENABLE)
 NORMALIZE_BOOL(NGRAPH_JSON_ENABLE)
 
@@ -265,6 +271,7 @@ NORMALIZE_BOOL(NGRAPH_STATIC_LIB_ENABLE)
 NORMALIZE_BOOL(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
 NORMALIZE_BOOL(NGRAPH_CPU_STATIC_LIB_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
+NORMALIZE_BOOL(NGRAPH_EXPORT_TARGETS_ENABLE)
 if (NGRAPH_CPU_ENABLE)
     NORMALIZE_BOOL(NGRAPH_TBB_ENABLE)
 endif()
@@ -288,6 +295,7 @@ message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:          ${NGRAPH_CODE_COVERAGE_ENA
 message(STATUS "NGRAPH_LIB_VERSIONING_ENABLE:         ${NGRAPH_LIB_VERSIONING_ENABLE}")
 message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:           ${NGRAPH_PYTHON_BUILD_ENABLE}")
 message(STATUS "NGRAPH_USE_PREBUILT_LLVM:             ${NGRAPH_USE_PREBUILT_LLVM}")
+message(STATUS "NGRAPH_USE_PREBUILT_MLIR:             ${NGRAPH_USE_PREBUILT_MLIR}")
 message(STATUS "NGRAPH_PLAIDML_ENABLE:                ${NGRAPH_PLAIDML_ENABLE}")
 message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:            ${NGRAPH_DISTRIBUTED_ENABLE}")
 message(STATUS "NGRAPH_JSON_ENABLE:                   ${NGRAPH_JSON_ENABLE}")
@@ -297,6 +305,7 @@ message(STATUS "NGRAPH_CPU_STATIC_LIB_ENABLE:         ${NGRAPH_CPU_STATIC_LIB_EN
 message(STATUS "NGRAPH_PLAIDML_STATIC_LIB_ENABLE:     ${NGRAPH_PLAIDML_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_DYNAMIC_COMPONENTS_ENABLE:     ${NGRAPH_DYNAMIC_COMPONENTS_ENABLE}")
 message(STATUS "NGRAPH_NATIVE_ARCH_ENABLE:            ${NGRAPH_NATIVE_ARCH_ENABLE}")
+message(STATUS "NGRAPH_EXPORT_TARGETS_ENABLE:         ${NGRAPH_EXPORT_TARGETS_ENABLE}")
 if (NGRAPH_CPU_ENABLE)
     message(STATUS "NGRAPH_TBB_ENABLE:                    ${NGRAPH_TBB_ENABLE}")
 endif()
@@ -494,6 +503,11 @@ add_custom_target(fix-mode
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/fix_mode.cmake
 )
 
+if (NGRAPH_USE_PREBUILT_MLIR)
+	if (NOT DEFINED MLIR_LLVM_PREBUILT_PATH)
+	    message(FATAL_ERROR "MLIR_LLVM_PREBUILT_PATH not specified")
+    endif()
+endif()
 #-----------------------------------------------------------------------------------------------
 # enable or disable output from NGRAPH_DEBUG statements
 #-----------------------------------------------------------------------------------------------
@@ -634,23 +648,30 @@ if (NGRAPH_PYTHON_BUILD_ENABLE)
     add_subdirectory(python)
 endif()
 
-include(CMakePackageConfigHelpers)
+if (NGRAPH_EXPORT_TARGETS_ENABLE)
+    include(CMakePackageConfigHelpers)
 
-export(TARGETS ngraph NAMESPACE ngraph:: FILE "${CMAKE_CURRENT_BINARY_DIR}/ngraphTargets.cmake")
+    export(TARGETS ngraph NAMESPACE ngraph:: FILE "${CMAKE_CURRENT_BINARY_DIR}/ngraphTargets.cmake")
 
-install(EXPORT ngraphTargets
-    FILE ngraphTargets.cmake
-    NAMESPACE ngraph::
-    DESTINATION cmake
-    COMPONENT ngraph)
+    install(EXPORT ngraphTargets
+        FILE ngraphTargets.cmake
+        NAMESPACE ngraph::
+        DESTINATION cmake
+        COMPONENT ngraph)
 
-configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/share/ngraphConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
-    INSTALL_DESTINATION cmake)
+    configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/share/ngraphConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
+        INSTALL_DESTINATION cmake)
 
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
-    VERSION ${NGRAPH_VERSION}
-    COMPATIBILITY SameMajorVersion)
+    write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
+        VERSION ${NGRAPH_VERSION}
+        COMPATIBILITY SameMajorVersion)
+
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
+        DESTINATION cmake
+        COMPONENT ngraph)
+endif()
 
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/licenses
@@ -659,8 +680,3 @@ install(DIRECTORY
 )
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION "." COMPONENT ngraph)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/VERSION DESTINATION "." COMPONENT ngraph)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
-    DESTINATION cmake
-    COMPONENT ngraph)

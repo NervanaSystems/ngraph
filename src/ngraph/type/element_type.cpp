@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -83,7 +83,7 @@ static const map<element::Type_t, const TypeInfo>& get_type_info_map()
         {element::Type_t::i16, TypeInfo(16, false, true, false, "int16_t", "i16")},
         {element::Type_t::i32, TypeInfo(32, false, true, true, "int32_t", "i32")},
         {element::Type_t::i64, TypeInfo(64, false, true, false, "int64_t", "i64")},
-        {element::Type_t::u1, TypeInfo(1, false, false, false, "uint8_t", "u1")},
+        {element::Type_t::u1, TypeInfo(1, false, false, false, "uint1_t", "u1")},
         {element::Type_t::u8, TypeInfo(8, false, false, true, "uint8_t", "u8")},
         {element::Type_t::u16, TypeInfo(16, false, false, false, "uint16_t", "u16")},
         {element::Type_t::u32, TypeInfo(32, false, false, false, "uint32_t", "u32")},

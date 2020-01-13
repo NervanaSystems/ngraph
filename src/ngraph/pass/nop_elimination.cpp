@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,18 +79,6 @@ static bool eliminate_slice(const std::shared_ptr<Node>& node)
     return false;
 }
 
-static bool replace_broadcast_like(const std::shared_ptr<Node>& node)
-{
-    // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like"
-    // argument
-    auto broadcast_like = std::static_pointer_cast<op::BroadcastLike>(node);
-    replace_node(node,
-                 std::make_shared<op::Broadcast>(broadcast_like->get_argument(0),
-                                                 broadcast_like->get_broadcast_shape(),
-                                                 broadcast_like->get_broadcast_axes()));
-    return true;
-}
-
 static bool eliminate_broadcast(const std::shared_ptr<Node>& node)
 {
     auto broadcast = std::static_pointer_cast<op::Broadcast>(node);
@@ -114,7 +102,6 @@ static const std::unordered_map<std::type_index, std::function<bool(const std::s
                {TI(op::Convert), &eliminate_convert},
                {TI(op::Slice), &eliminate_slice},
                {TI(op::StopGradient), &eliminate_stop_gradient},
-               {TI(op::BroadcastLike), &replace_broadcast_like},
                {TI(op::Broadcast), &eliminate_broadcast}};
 
 bool pass::NopElimination::run_on_function(std::shared_ptr<Function> function)
@@ -129,15 +116,6 @@ bool pass::NopElimination::run_on_function(std::shared_ptr<Function> function)
         if (handler != dispatcher.end())
         {
             clobbered = handler->second(n) || clobbered;
-        }
-
-        // Here we're checking on a common base class of a family of template classes,
-        // which is more than type info can handle.
-        auto sclb = as_type_ptr<op::ScalarConstantLikeBase>(n);
-        if (sclb != nullptr)
-        {
-            replace_node(sclb, sclb->as_constant());
-            clobbered = true;
         }
     }
 

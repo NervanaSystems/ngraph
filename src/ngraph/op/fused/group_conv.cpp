@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@
 
 #include "group_conv.hpp"
 
-#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/validation_util.hpp"
 
@@ -516,8 +516,9 @@ NodeVector op::v0::GroupConvolution::decompose_op() const
         if (m_groups_in_filters)
         {
             // Remove group dimmension after slicing
-            sliced_filter = builder::reshape(
+            sliced_filter = make_shared<op::Reshape>(
                 sliced_filters[group],
+                get_default_order(sliced_filters[group]->get_shape().size()),
                 Shape(std::next(std::begin(filters_shape), 1), std::end(filters_shape)));
         }
         convolution_nodes.push_back(

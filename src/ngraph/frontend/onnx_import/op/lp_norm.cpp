@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,17 +14,19 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <numeric>
 
+#include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "lp_norm.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/op/divide.hpp"
-#include "ngraph/opsets/opset0.hpp"
-#include "utils/common.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -37,22 +39,37 @@ namespace ngraph
                 NodeVector lp_norm(const Node& node)
                 {
                     const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
-                    std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
                     const std::int64_t p_norm{node.get_attribute_value<std::int64_t>("p", 2)};
-                    std::size_t valid_axis =
-                        common::validate_axis(node, axis, data->get_shape().size());
+
+                    const std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
+                    const size_t normalize_axis = ngraph::normalize_axis(
+                        node.get_description(), axis, data->get_shape().size());
 
                     ASSERT_VALID_ARGUMENT(node, p_norm == 1 || p_norm == 2)
                         << "Invalid `p` attribute value: " << p_norm
                         << "Only normalization of 1st or 2nd order is supported.";
 
-                    const AxisSet reduction_axes{valid_axis};
                     std::shared_ptr<ngraph::Node> norm = ngraph::builder::lp_norm(
-                        data, reduction_axes, static_cast<std::size_t>(p_norm));
-                    norm = std::make_shared<ngraph::opset0::Broadcast>(
-                        norm, data->get_shape(), reduction_axes);
+                        data, AxisSet{normalize_axis}, static_cast<std::size_t>(p_norm));
 
-                    return {data / norm};
+                    const auto target_shape = default_opset::Constant::create(
+                        element::i64, Shape{data->get_shape().size()}, data->get_shape());
+
+                    // Create a default axes order matching the data tensor rank and erase the
+                    // element at the 'normalize_axis' position. The erased element indicates the
+                    // axis
+                    // along which the data should be broadcasted.
+                    std::vector<size_t> axes_values(data->get_shape().size());
+                    std::iota(axes_values.begin(), axes_values.end(), 0);
+                    axes_values.erase(axes_values.begin() + normalize_axis);
+
+                    const auto axes_mapping = default_opset::Constant::create(
+                        element::i64, Shape{axes_values.size()}, axes_values);
+
+                    norm = std::make_shared<default_opset::Broadcast>(
+                        norm, target_shape, axes_mapping);
+
+                    return {std::make_shared<default_opset::Divide>(data, norm)};
                 }
 
             } // namespace set_1

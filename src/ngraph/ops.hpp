@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,7 +98,6 @@
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/layer_norm.hpp"
-#include "ngraph/op/fused/log_softmax.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/lstm_sequence.hpp"
 #include "ngraph/op/fused/matmul.hpp"
@@ -107,7 +106,6 @@
 #include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/partial_slice.hpp"
 #include "ngraph/op/fused/prelu.hpp"
-#include "ngraph/op/fused/reciprocal.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/scatter_nd.hpp"
@@ -162,6 +160,7 @@
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/op/round.hpp"
 #include "ngraph/op/scatter_add.hpp"
 #include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"

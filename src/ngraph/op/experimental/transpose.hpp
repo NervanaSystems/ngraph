@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v1
         {
             /// \brief Tensor transpose operation.
             class NGRAPH_API Transpose : public Op
@@ -52,6 +52,6 @@ namespace ngraph
                                                const OutputVector& deltas) override;
             };
         }
-        using v0::Transpose;
+        using v1::Transpose;
     }
 }

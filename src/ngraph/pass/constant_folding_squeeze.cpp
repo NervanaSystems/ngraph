@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,10 +24,9 @@ template <class T>
 shared_ptr<op::Constant> fold_constant_squeeze(shared_ptr<op::Constant> constant,
                                                shared_ptr<op::Squeeze> squeeze)
 {
-    auto out_shape = squeeze->get_shape();
-    vector<T> out_vec(shape_size(out_shape));
-    out_vec = constant->get_vector<T>();
-    return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
+    const Shape& out_shape = squeeze->get_shape();
+    return make_shared<op::Constant>(
+        constant->get_element_type(), out_shape, constant->get_data_ptr());
 }
 
 void pass::ConstantFolding::construct_constant_squeeze()
