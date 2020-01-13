@@ -20,7 +20,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/opsets/opset0.hpp"
-#include "utils/common.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -50,10 +50,10 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
                     auto axes = node.get_attribute_value<std::vector<int64_t>>("axes", {0, 2, 3});
-                    std::vector<std::size_t> valid_axes =
-                        common::validate_axes(node, axes, data->get_shape().size());
+                    std::vector<std::size_t> normalized_axes = ngraph::normalize_axes(
+                        node.get_description(), axes, data->get_shape().size());
 
-                    return {std::make_shared<ngraph::opset0::MVN>(data, AxisSet(valid_axes))};
+                    return {std::make_shared<ngraph::opset0::MVN>(data, AxisSet(normalized_axes))};
                 }
 
             } // namespace set_9
