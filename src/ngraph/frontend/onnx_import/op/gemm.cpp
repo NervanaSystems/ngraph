@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,16 +62,16 @@ namespace ngraph
 
                     if (trans_a)
                     {
-                        input_a = ngraph::builder::transpose(input_a);
+                        input_a = ngraph::builder::opset1::transpose(input_a);
                     }
 
                     if (trans_b)
                     {
-                        input_b = ngraph::builder::transpose(input_b);
+                        input_b = ngraph::builder::opset1::transpose(input_b);
                     }
 
-                    input_a = ngraph::builder::flatten(input_a, 1);
-                    input_b = ngraph::builder::flatten(input_b, 1);
+                    input_a = ngraph::builder::opset1::flatten(input_a, 1);
+                    input_b = ngraph::builder::opset1::flatten(input_b, 1);
 
                     auto matmul_node = std::make_shared<ngraph::op::MatMul>(input_a, input_b);
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,29 +14,21 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
-#include "util/type_prop.hpp"
+#include "ngraph/op/round.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-TEST(type_prop, log_softmax)
+constexpr NodeTypeInfo op::Round::type_info;
+
+op::Round::Round(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
-    const auto data = make_shared<op::Parameter>(element::f64, Shape{2, 2});
-    const auto axis = 2;
-    try
-    {
-        const auto log_softmax = make_shared<op::LogSoftmax>(data, axis);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid axis value not detected";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Parameter axis "));
-    }
-    catch (...)
-    {
-        FAIL() << "Log softmax failed for unexpected reason";
-    }
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::Round::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<Round>(new_args.at(0));
 }

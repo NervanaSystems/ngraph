@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,13 +25,14 @@ template <typename T>
 static shared_ptr<op::Constant> fold_constant_reverse_helper(shared_ptr<op::Constant> constant,
                                                              const AxisSet& reversed_axes)
 {
-    auto out_shape = constant->get_shape();
-    vector<T> out_vec(shape_size(out_shape));
+    const Shape& out_shape = constant->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
+    T* data_ptr = buffer.get_ptr<T>();
 
     runtime::reference::reverse<T>(
-        constant->get_vector<T>().data(), out_vec.data(), out_shape, out_shape, reversed_axes);
+        constant->get_vector<T>().data(), data_ptr, out_shape, out_shape, reversed_axes);
 
-    return make_shared<op::Constant>(constant->get_output_element_type(0), out_shape, out_vec);
+    return make_shared<op::Constant>(constant->get_output_element_type(0), out_shape, data_ptr);
 }
 
 static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> constant,
@@ -39,11 +40,9 @@ static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> c
 {
     auto& input_element_type = constant->get_output_element_type(0);
 
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-#endif
     switch (input_element_type)
     {
     case element::Type_t::undefined:
@@ -81,9 +80,7 @@ static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> c
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
 
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
-#endif
 }
 
 void pass::ConstantFolding::construct_constant_reverse()

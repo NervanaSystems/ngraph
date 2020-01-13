@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ NodeVector op::SpaceToDepth::decompose_op() const
     {
         // Insert batch axis
         data_shape.insert(data_shape.begin(), 1);
-        data = builder::reshape(data, data_shape);
+        data = builder::opset1::reshape(data, data_shape);
     }
 
     const size_t n_dim = data_shape.at(0);
@@ -87,7 +87,7 @@ NodeVector op::SpaceToDepth::decompose_op() const
         dispersed_shape.push_back(data_shape.at(i + spatial_dim_index) / m_blocksize);
         dispersed_shape.push_back(m_blocksize);
     }
-    auto flat_node = builder::reshape(data, dispersed_shape);
+    auto flat_node = builder::opset1::reshape(data, dispersed_shape);
     // calculate axes to transpose
     // [0, 3, 5, ..., spatial_dims + (spatial_dims + 1), 2, 4, ..., K + K])
     vector<size_t> axes_order{0};
@@ -121,14 +121,14 @@ NodeVector op::SpaceToDepth::decompose_op() const
     default: { axes_order.insert(axes_order.begin() + spatial_dims + 1, 1);
     }
     }
-    flat_node = builder::reorder_axes(flat_node, axes_order);
+    flat_node = builder::opset1::reorder_axes(flat_node, axes_order);
     Shape squeezed_shape{n_dim};
     for (int i = 0; i < spatial_dims; ++i)
     {
         squeezed_shape.push_back(data_shape.at(spatial_dim_index + i) / m_blocksize);
     }
     squeezed_shape.insert(squeezed_shape.begin() + 1, c_dim * std::pow(m_blocksize, spatial_dims));
-    flat_node = builder::reshape(flat_node, squeezed_shape);
+    flat_node = builder::opset1::reshape(flat_node, squeezed_shape);
 
     return NodeVector{flat_node};
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,15 +27,16 @@ shared_ptr<op::Constant> fold_constant_select(const shared_ptr<op::Constant>& se
                                               const shared_ptr<op::Constant>& f,
                                               const shared_ptr<Node>& select)
 {
-    auto out_shape = select->get_shape();
-    vector<T> out_vec(shape_size(out_shape));
+    const Shape& out_shape = select->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
+    T* data_ptr = buffer.get_ptr<T>();
 
     if (auto select_v0 = as_type_ptr<op::v0::Select>(select))
     {
         runtime::reference::select<T>(selection->get_data_ptr<char>(),
                                       t->get_data_ptr<T>(),
                                       f->get_data_ptr<T>(),
-                                      out_vec.data(),
+                                      data_ptr,
                                       shape_size(out_shape));
     }
     else if (auto select_v1 = as_type_ptr<op::v1::Select>(select))
@@ -43,14 +44,14 @@ shared_ptr<op::Constant> fold_constant_select(const shared_ptr<op::Constant>& se
         runtime::reference::select<T>(selection->get_data_ptr<char>(),
                                       t->get_data_ptr<T>(),
                                       f->get_data_ptr<T>(),
-                                      out_vec.data(),
+                                      data_ptr,
                                       selection->get_shape(),
                                       t->get_shape(),
                                       f->get_shape(),
                                       select_v1->get_auto_broadcast());
     }
 
-    return make_shared<op::Constant>(select->get_element_type(), out_shape, out_vec);
+    return make_shared<op::Constant>(select->get_element_type(), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_select()

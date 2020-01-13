@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
 
 #include "default_opset.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/validation_util.hpp"
 #include "unsqueeze.hpp"
-#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -34,10 +34,10 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
                     auto axes = node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
                     const auto expanded_rank = data->get_shape().size() + axes.size();
-                    std::vector<std::size_t> valid_axes =
-                        common::validate_axes(node, axes, expanded_rank);
+                    std::vector<std::size_t> normalized_axes =
+                        ngraph::normalize_axes(node.get_description(), axes, expanded_rank);
                     auto axes_node = std::make_shared<default_opset::Constant>(
-                        element::i64, Shape{valid_axes.size()}, valid_axes);
+                        element::i64, Shape{normalized_axes.size()}, normalized_axes);
                     return {std::make_shared<default_opset::Unsqueeze>(data, axes_node)};
                 }
 
