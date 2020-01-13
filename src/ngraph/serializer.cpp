@@ -359,6 +359,33 @@ std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t ind
     return ::serialize(func, indent, false);
 }
 
+std::string
+    ngraph::serialize_types(const std::vector<std::pair<PartialShape, element::Type>>& types)
+{
+    json attrs = json::array();
+    for (const auto& n : types)
+    {
+        json j;
+        j["shape"] = write_partial_shape(n.first);
+        j["type"] = write_element_type(n.second);
+        attrs.push_back(j);
+    }
+    return attrs.dump();
+}
+
+std::vector<std::pair<PartialShape, element::Type>>
+    ngraph::deserialize_types(const std::string& str)
+{
+    std::vector<std::pair<PartialShape, element::Type>> outs;
+    json js = json::parse(str);
+    for (auto& j : js)
+    {
+        auto s = read_partial_shape(j["shape"]);
+        auto t = read_element_type(j["type"]);
+        outs.emplace_back(s, t);
+    }
+    return outs;
+}
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 {
     shared_ptr<Function> rc;
