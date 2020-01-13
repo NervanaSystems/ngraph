@@ -16,6 +16,9 @@
 
 #include "hardmax.hpp"
 #include "exceptions.hpp"
+#include "ngraph/op/convert_like.hpp"
+#include "ngraph/op/one_hot.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/opsets/opset0.hpp"
 #include "ngraph/validation_util.hpp"
@@ -42,19 +45,22 @@ namespace ngraph
                     const auto coerced_tensor =
                         ngraph::builder::opset1::flatten(input, normalized_axis);
                     const auto& coerced_shape = coerced_tensor->get_shape();
+                    const auto row_size = static_cast<int64_t>(coerced_shape.at(1));
 
                     const std::shared_ptr<ngraph::Node> argmax_2d =
                         std::make_shared<ngraph::opset0::ArgMax>(coerced_tensor, 1, element::i64);
 
-                    std::shared_ptr<ngraph::Node> eye_matrix =
-                        common::square_identity(coerced_shape.at(1), input->get_element_type());
+                    const auto depth = ngraph::op::Constant::create(ngraph::element::i64, Shape{}, {row_size});
+                    const auto on_value = ngraph::op::Constant::create(ngraph::element::i64, Shape{}, { 1 });
+                    const auto off_value = ngraph::op::Constant::create(ngraph::element::i64, Shape{}, { 0 });
+                    const auto new_dim_axis = 1;
 
-                    // the results are elements of the eye_matrix indexed by argmax_2d values
-                    // in other words: eye_matrix[argmax_2d]
-                    auto results =
-                        std::make_shared<ngraph::opset0::EmbeddingLookup>(argmax_2d, eye_matrix);
+                    //ngraph::op::Constant()
 
-                    return {ngraph::builder::opset1::reshape(results, input_shape)};
+                    const auto results = std::make_shared<default_opset::OneHot>(argmax_2d, depth, on_value, off_value, new_dim_axis);
+                    const auto converted_results = std::make_shared<default_opset::Convert>(results, input->get_element_type());
+
+                    return {ngraph::builder::opset1::reshape(converted_results, input_shape)};
                 }
 
             } // namespace set_1
