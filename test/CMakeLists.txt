@@ -148,7 +148,6 @@ set(SRC
     type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
     type_prop/layer_norm.cpp
-    type_prop/log_softmax.cpp
     type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
     type_prop/lstm_sequence.cpp
@@ -351,6 +350,7 @@ set(MULTI_TEST_SRC
     backend/reshape.in.cpp
     backend/reverse_sequence.in.cpp
     backend/reverse.in.cpp
+    backend/round.in.cpp
     backend/scatter.in.cpp
     backend/select.in.cpp
     backend/shape_of.in.cpp
