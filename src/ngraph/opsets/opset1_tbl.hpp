@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -115,7 +115,7 @@ NGRAPH_OP(OneHot, ngraph::op::v1)
 NGRAPH_OP(PRelu, ngraph::op::v0)
 NGRAPH_OP(PSROIPooling, ngraph::op::v0)
 NGRAPH_OP(Pad, ngraph::op::v1)
-NGRAPH_OP(Parameter, ngraph::op)
+NGRAPH_OP(Parameter, ngraph::op::v0)
 NGRAPH_OP(Power, ngraph::op::v1)
 NGRAPH_OP(PriorBox, ngraph::op::v0)
 NGRAPH_OP(PriorBoxClustered, ngraph::op::v0)
@@ -131,7 +131,7 @@ NGRAPH_OP(ReduceProd, ngraph::op::v1)
 NGRAPH_OP(ReduceSum, ngraph::op::v1)
 NGRAPH_OP(RegionYolo, ngraph::op::v0)
 NGRAPH_OP(Reshape, ngraph::op::v1)
-NGRAPH_OP(Result, ngraph::op)
+NGRAPH_OP(Result, ngraph::op::v0)
 NGRAPH_OP(Reverse, ngraph::op::v1)
 NGRAPH_OP(ReverseSequence, ngraph::op::v0)
 NGRAPH_OP(RNNCell, ngraph::op::v0)
@@ -156,7 +156,7 @@ NGRAPH_OP(Tanh, ngraph::op::v0)
 NGRAPH_OP(TensorIterator, ngraph::op::v0)
 NGRAPH_OP(Tile, ngraph::op::v0)
 NGRAPH_OP(TopK, ngraph::op::v1)
-NGRAPH_OP(Transpose, ngraph::op::v0)
+NGRAPH_OP(Transpose, ngraph::op::v1)
 NGRAPH_OP(Unsqueeze, ngraph::op::v0)
 NGRAPH_OP(VariadicSplit, ngraph::op::v1)
 NGRAPH_OP(Xor, ngraph::op::v0)

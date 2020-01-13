@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/opsets/opset0.hpp"
 
 namespace ngraph
 {
@@ -39,8 +38,8 @@ namespace ngraph
                     NodeVector ng_inputs{ngraph::op::legacy_style_broadcast_for_binary_operation(
                         node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
 
-                    return {std::make_shared<ngraph::opset0::Subtract>(ng_inputs.at(0),
-                                                                       ng_inputs.at(1))};
+                    return {std::make_shared<default_opset::Subtract>(
+                        ng_inputs.at(0), ng_inputs.at(1), ngraph::op::AutoBroadcastSpec::NONE)};
                 }
 
             } // namespace set_1

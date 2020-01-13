@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,15 +28,19 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/equal.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
 
@@ -71,38 +75,6 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::add_node(std::shared_ptr<Node> no
                  "node added to graph before");
     m_nodes.emplace_back(node);
     m_pass.m_node_to_graph[node] = get_id();
-}
-
-void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& sg2)
-{
-    NGRAPH_CHECK(&sg2 != this, "Cannot merge a sub-graph into itself");
-
-    // Associate nodes of second sub-graph to first one
-    auto sg_nodes = sg2.get_nodes();
-    for (auto node : sg_nodes)
-    {
-        NGRAPH_DEBUG << *node;
-        NGRAPH_CHECK(m_pass.get_subgraph_id(node) == sg2.get_id(),
-                     "Node does not belong to sub-graph");
-        m_pass.m_node_to_graph[node] = get_id();
-    }
-
-    // nodes  of sub-graphs are exclusive
-    m_nodes.insert(m_nodes.end(), sg2.get_nodes().begin(), sg2.get_nodes().end());
-    // merge inputs
-    add_inputs(sg2.get_inputs());
-
-    // Remove sub-graph from map
-    m_pass.m_id_to_graph.erase(sg2.get_id());
-}
-
-MLIRSubgraphExtractionPass::MLIRSubgraphExtractionPass()
-    : m_max_cycle_depth(20)
-{
-    if (char* max_cycle_depth = std::getenv("NGRAPH_MLIR_MAX_CYCLE_DEPTH"))
-    {
-        m_max_cycle_depth = std::stoi(max_cycle_depth);
-    }
 }
 
 // The sub-graph construction algorithm is as follows
@@ -473,18 +445,6 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
 
 bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node)
 {
-    // Disable any op using boolean type until we have support for i1<->i8 conversion in MLIR.
-    // Otherwise, we would generate code like this:
-    //   %0 = icmp %a, %b : i1
-    //   store %0, %c[%arg1] : i8  // Type error: trying to store an i1 into an i8.
-    for (auto& output : node->get_outputs())
-    {
-        if (output.get_element_type() == element::boolean)
-        {
-            return false;
-        }
-    }
-
     if (TI(Parameter) == TI(*node) || TI(Result) == TI(*node))
     {
         return true;

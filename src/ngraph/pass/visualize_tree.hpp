@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,8 +61,7 @@ protected:
     std::stringstream m_ss;
     std::string m_name;
     std::set<std::shared_ptr<Node>> m_nodes_with_attributes;
-    std::unordered_map<std::type_index, std::function<void(const Node&, std::ostream& ss)>>
-        m_ops_to_details;
+    visualize_tree_ops_map_t m_ops_to_details;
     node_modifiers_t m_node_modifiers = nullptr;
     bool m_dot_only;
     static const int max_jump_distance;

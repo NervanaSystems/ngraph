@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,13 +53,13 @@ private:
     void process_in_place_concat(std::list<std::shared_ptr<Node>> nodes);
 
     // For a chain of concat ops, propagate memory pool offsets
-    void propagate_in_place_concat(std::shared_ptr<ngraph::op::Op> concat, size_t index);
+    void propagate_in_place_concat(const ngraph::Output<ngraph::Node>& concat);
 
     // Find in-place slice ops and set appropriate memory pool offset for its output
     void process_in_place_slice(std::list<std::shared_ptr<Node>> nodes);
 
     // propagate slice when its arg comes from function input
-    void propagate_in_place_slice(ngraph::descriptor::Input* input, size_t input_index);
+    void propagate_in_place_slice(const ngraph::Input<ngraph::Node>& input);
 
     // build buffer sets maps
     void build_buffer_sets_maps(std::list<std::shared_ptr<Node>>& ops);

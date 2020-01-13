@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include "graph.hpp"
 #include "node.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -153,6 +154,15 @@ namespace ngraph
                 results.emplace_back(get_ng_node_from_cache(output.name()));
             }
             return results;
+        }
+
+        NodeVector Graph::make_ng_nodes(const Node& onnx_node) const
+        {
+            const auto ng_node_factory =
+                m_model->get_operator(onnx_node.op_type(), onnx_node.domain());
+            const auto ng_node_vector = ng_node_factory(onnx_node);
+            common::add_provenance_tags(onnx_node, ng_node_vector);
+            return ng_node_vector;
         }
 
     } // namespace onnx_import

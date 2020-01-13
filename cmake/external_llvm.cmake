@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -91,6 +91,7 @@ ExternalProject_Add(
                 -DLIBOMP_OMPT_SUPPORT=OFF
                 -DCLANG_BUILD_TOOLS=OFF
                 -DCLANG_ENABLE_ARCMT=OFF
+                -DCLANG_ANALYZER_ENABLE_Z3_SOLVER=OFF
                 -DCLANG_ENABLE_STATIC_ANALYZER=OFF
                 -DLLVM_EXTERNAL_CLANG_SOURCE_DIR=${CLANG_SOURCE_DIR}
                 ${PASS_LLVM_OPENMP_DIR}
