@@ -49,9 +49,9 @@ int main()
     float v_b[2][3] = {{7, 8, 9}, {10, 11, 12}};
     float v_c[2][3] = {{1, 0, -1}, {-1, 1, 2}};
 
-    t_a->write(&v_a, 0, sizeof(v_a));
-    t_b->write(&v_b, 0, sizeof(v_b));
-    t_c->write(&v_c, 0, sizeof(v_c));
+    t_a->write(&v_a, sizeof(v_a));
+    t_b->write(&v_b, sizeof(v_b));
+    t_c->write(&v_c, sizeof(v_c));
 
     // Invoke the function
     auto exec = backend->compile(f);
@@ -59,7 +59,7 @@ int main()
 
     // Get the result
     float r[2][3];
-    t_result->read(&r, 0, sizeof(r));
+    t_result->read(&r, sizeof(r));
 
     std::cout << "[" << std::endl;
     for (size_t i = 0; i < s[0]; ++i)

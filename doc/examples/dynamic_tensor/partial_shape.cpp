@@ -15,10 +15,18 @@
 //*****************************************************************************
 
 #include <iostream>
+#include <numeric>
+#include <vector>
 
 #include <ngraph/ngraph.hpp>
 
+using namespace std;
 using namespace ngraph;
+
+void execute(shared_ptr<runtime::Backend> be,
+             shared_ptr<runtime::Executable> ex,
+             shared_ptr<runtime::Tensor> t_out,
+             uint32_t n);
 
 int main()
 {
@@ -27,42 +35,46 @@ int main()
     auto x_shape_info = PartialShape{2, Dimension::dynamic()};
     auto x = make_shared<op::Parameter>(element::i32, x_shape_info);
     auto a = x + x;
-    auto f = make_shared<Function>({a}, {x});
-    auto be = runtime::backend::create();
+    auto f = make_shared<Function>(OutputVector{a}, ParameterVector{x});
+    auto be = runtime::Backend::create("CPU", true);
     auto ex = be->compile(f);
 
     // Create a dynamic tensor of shape (2,?)
     auto t_out = be->create_dynamic_tensor(element::i32, x_shape_info);
-
-    // Call the graph to write a value with shape (2,3) to t_out
-    auto t_in = be->create_tensor(element::i32, Shape{2, 3});
-    t_in->write();
-    ex->call({t_out}, {t_in})
-
-        // Call the graph again, to write a value with a different shape to
-        // t_out.
-        t_in = be->create_tensor(element::i32, Shape{2, 20});
-    t_in->write();
-    ex->call({t_out}, {t_in})
-
-        // Get the result. At this point t_out->get_shape() would return
-        // Shape{2,20},
-        // but t_out->get_partial_shape() would return "(2,?)"
-
-        float r[2][3];
-    t_result->read(&r, 0, sizeof(r));
-
-    std::cout << "[" << std::endl;
-    for (size_t i = 0; i < s[0]; ++i)
-    {
-        std::cout << " [";
-        for (size_t j = 0; j < s[1]; ++j)
-        {
-            std::cout << r[i][j] << ' ';
-        }
-        std::cout << ']' << std::endl;
-    }
-    std::cout << ']' << std::endl;
+    execute(be, ex, t_out, 3);
+    execute(be, ex, t_out, 11);
+    execute(be, ex, t_out, 20);
 
     return 0;
+}
+
+void execute(shared_ptr<runtime::Backend> be,
+             shared_ptr<runtime::Executable> ex,
+             shared_ptr<runtime::Tensor> t_out,
+             uint32_t n)
+{
+    // Initialize input of shape (2, n)
+    auto t_in = be->create_tensor(element::i32, Shape{2, n});
+    {
+        vector<int32_t> t_val(2 * n);
+        iota(t_val.begin(), t_val.end(), 0);
+        t_in->write(&t_val[0], t_val.size() * sizeof(t_val[0]));
+    }
+    // Get the result
+    ex->call({t_out}, {t_in});
+
+    auto s = t_out->get_shape();
+    vector<int32_t> r(s[0] * s[1]);
+    t_out->read(&r[0], r.size() * sizeof(r[0]));
+    cout << "[" << endl;
+    for (size_t i = 0; i < s[0]; ++i)
+    {
+        cout << " [";
+        for (size_t j = 0; j < s[1]; ++j)
+        {
+            cout << r[i * s[1] + j] << ' ';
+        }
+        cout << ']' << endl;
+    }
+    cout << ']' << endl;
 }

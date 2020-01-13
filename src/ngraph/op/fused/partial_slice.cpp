@@ -140,7 +140,7 @@ void op::PartialSlice::pre_validate_and_infer_types()
                           ").");
 }
 
-void op::PartialSlice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::PartialSlice::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     throw ngraph_error("op::PartialSlice::generate_adjoints function is not implemented yet");
 }

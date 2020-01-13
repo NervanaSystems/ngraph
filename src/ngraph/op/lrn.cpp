@@ -116,7 +116,8 @@ shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<op::LRN>(new_args.at(0), new_args.at(1), m_alpha, m_beta, m_bias, m_size);
 }
 
-void op::LRN::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
+void op::LRN::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                const OutputVector& /* deltas */)
 {
     throw ngraph_error("NYI");
 }

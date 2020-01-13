@@ -103,7 +103,7 @@ namespace ngraph
                 size_t get_version() const override { return 1; }
             protected:
                 void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const NodeVector& deltas) override;
+                                       const OutputVector& deltas) override;
 
             private:
                 AxisSet convert_mask_to_axis_set(const std::vector<int64_t>& mask) const;

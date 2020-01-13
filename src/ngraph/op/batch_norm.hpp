@@ -82,7 +82,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 static constexpr size_t INPUT_GAMMA = 0;
                 static constexpr size_t INPUT_BETA = 1;
@@ -149,7 +149,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                               const NodeVector& /* deltas */) override
+                                               const OutputVector& /* deltas */) override
                 {
                     throw ngraph_error("Invalid operation");
                 }

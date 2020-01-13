@@ -37,12 +37,14 @@ add_library(onnx_import STATIC
         core/operator_set.hpp
         core/tensor.hpp
         core/value_info.hpp
+        default_opset.hpp
         exceptions.cpp
         exceptions.hpp
         op/acos.hpp
         op/acosh.cpp
         op/acosh.hpp
         op/add.hpp
+        op/add.cpp
         op/and.hpp
         op/argmax.cpp
         op/argmax.hpp
@@ -96,6 +98,8 @@ add_library(onnx_import STATIC
         op/flatten.hpp
         op/floor.hpp
         op/gather.hpp
+        op/gather_nd.hpp
+        op/gather_nd.cpp
         op/gemm.cpp
         op/gemm.hpp
         op/global_average_pool.cpp

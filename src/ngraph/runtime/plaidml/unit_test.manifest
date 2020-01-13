@@ -263,6 +263,8 @@ model_lstm_fwd_hardsigmoid_activation
 model_lstm_fwd_with_clip
 model_lstm_fwd_mixed_seq
 model_lstm_fwd_large_batch_no_clip
+model_gatherND_int32
+model_gatherND_float
 model_global_lp_pool_p3
 model_argmin_no_keepdims
 model_reduce_log_sum_exp

@@ -16,7 +16,9 @@
 #include <onnx/onnx_pb.h> // onnx types
 
 #include "common.hpp"
+#include "default_opset.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "validation_util.hpp"
 
 namespace ngraph
@@ -92,7 +94,7 @@ namespace ngraph
                     }
                     else
                     {
-                        outputs[i] = std::make_shared<ngraph::op::GetOutputElement>(node, i);
+                        outputs[i] = std::make_shared<ngraph::opset0::GetOutputElement>(node, i);
                     }
                 }
                 return outputs;

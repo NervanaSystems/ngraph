@@ -19,8 +19,8 @@
 #include <memory>
 
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/tanh.hpp"
 
 namespace ngraph
 {
@@ -32,7 +32,7 @@ namespace ngraph
             {
                 inline NodeVector tanh(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::Tanh>(node.get_ng_inputs().at(0))};
+                    return {std::make_shared<default_opset::Tanh>(node.get_ng_inputs().at(0))};
                 }
 
             } // namespace set_1

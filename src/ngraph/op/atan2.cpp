@@ -39,7 +39,7 @@ shared_ptr<Node> op::Atan2::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<Atan2>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
-void op::Atan2::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Atan2::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (get_autob().m_type != op::AutoBroadcastType::NONE)
     {
