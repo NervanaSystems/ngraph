@@ -368,6 +368,12 @@ class BuildExt(build_ext):
             return True
         return False
 
+    def add_debug_or_release_flags(self):
+        if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
+            return ['-O0', '-g']
+        else:
+            return ['-O2', '-D_FORTIFY_SOURCE=2']
+
     def build_extensions(self):
         """Build extension providing extra compiler flags."""
         if sys.platform == 'win32':
@@ -389,10 +395,8 @@ class BuildExt(build_ext):
             add_platform_specific_link_args(ext.extra_link_args)
 
             ext.extra_compile_args += ['-Wformat', '-Wformat-security']
-            if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
-                ext.extra_compile_args += ['-O0', '-g']
-            else:
-                ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
+            ext.extra_compile_args += self.add_debug_or_release_flags()
+
             if sys.platform == 'darwin':
                 ext.extra_compile_args += ['-stdlib=libc++']
         build_ext.build_extensions(self)
