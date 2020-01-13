@@ -87,6 +87,8 @@ namespace ngraph
                                    out0_buffer_index,
                                    element_type](CPURuntimeContext* ctx,
                                                  CPUExecutionContext* /* ectx */) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
                     switch (element_type)
                     {
                     case Type_t::f32:
@@ -125,6 +127,7 @@ namespace ngraph
                         break;
                     default: NGRAPH_UNREACHABLE("Matmul element type is not supported");
                     }
+#pragma GCC diagnostic pop
                 };
 
                 CPUKernelFunctor bias_functor = [](CPURuntimeContext* /* ctx */,

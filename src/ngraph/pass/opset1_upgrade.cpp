@@ -667,7 +667,7 @@ namespace
         {
         case op::TopK::SortType::SORT_INDICES: sort = "index"; break;
         case op::TopK::SortType::SORT_VALUES: sort = "value"; break;
-        default: sort = "none"; break;
+        case op::TopK::SortType::NONE: sort = "none"; break;
         }
 
         std::string mode;

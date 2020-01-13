@@ -83,6 +83,8 @@ private:
                     const std::vector<std::shared_ptr<HostTensor>>& out,
                     const std::vector<std::shared_ptr<HostTensor>>& args)
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
         switch (INTExecutable::get_typeid(node))
         {
         case ngraph::runtime::interpreter::OP_TYPEID::Broadcast:
@@ -110,5 +112,6 @@ private:
         }
         default: op_engine<T>(node, out, args); break;
         }
+#pragma GCC diagnostic pop
     }
 };
