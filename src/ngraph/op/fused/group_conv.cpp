@@ -18,6 +18,7 @@
 
 #include "group_conv.hpp"
 
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
@@ -417,7 +418,7 @@ NodeVector op::v1::GroupConvolutionBackpropData::decompose_op() const
                    std::end(sliced_filters),
                    std::begin(sliced_filters),
                    [](const std::shared_ptr<Node>& n) -> std::shared_ptr<Node> {
-                       return builder::squeeze(n);
+                       return builder::opset1::squeeze(n);
                    });
 
     for (auto i = 0; i < groups; ++i)

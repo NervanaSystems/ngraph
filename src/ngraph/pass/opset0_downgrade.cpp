@@ -433,7 +433,7 @@ namespace
         output_shape.insert(output_shape.begin(), filters_shape[1] * groups);
         output_shape.insert(output_shape.begin(), data_shape[0]);
 
-        auto reshaped_filters = builder::reshape(node->input_value(1), filters_shape);
+        auto reshaped_filters = builder::opset1::reshape(node->input_value(1), filters_shape);
         auto auto_pad = node->get_auto_pad();
 
         if (auto_pad == op::PadType::SAME_UPPER || auto_pad == op::PadType::SAME_LOWER)
