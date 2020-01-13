@@ -515,6 +515,17 @@ namespace ngraph
             return result;
         }
 
+        Output<Node> get_axes_mapping(const Shape& output_shape,
+                                      const Shape& input_shape,
+                                      std::size_t start_match_axis)
+        {
+            NGRAPH_CHECK((input_shape.size() + start_match_axis <= output_shape.size()));
+            std::vector<std::size_t> mapping(input_shape.size());
+            std::iota(std::begin(mapping), std::end(mapping), start_match_axis);
+
+            return Constant::create(element::i64, Shape{mapping.size()}, mapping);
+        }
+
     } // namespace  op
 
 } // namespace  ngraph

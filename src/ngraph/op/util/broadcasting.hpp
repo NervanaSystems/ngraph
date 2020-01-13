@@ -197,5 +197,19 @@ namespace ngraph
                 new_shape,
                 calculate_broadcast_axes(new_shape, value.get_shape(), start_match_axis));
         }
+
+        ///
+        /// \brief      Gets the axes mapping.
+        ///
+        /// \param[in]  output_shape      The output shape
+        /// \param[in]  input_shape       The input shape
+        /// \param[in]  start_match_axis  The start match axis
+        ///
+        /// \return     The axes mapping.
+        ///
+        Output<Node> get_axes_mapping(const Shape& output_shape,
+                                      const Shape& input_shape,
+                                      std::size_t start_match_axis);
+
     } // namespace  op
 } // namespace  ngraph
