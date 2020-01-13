@@ -4,7 +4,7 @@
 Parameter
 #########
 
-.. code-block: cpp
+.. code-block:: cpp
 
    Parameter // A function parameter.
 
@@ -51,6 +51,6 @@ Backprop
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Parameter
+.. doxygenclass:: ngraph::op::v0::Parameter
    :project: ngraph
    :members:

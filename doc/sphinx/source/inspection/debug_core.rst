@@ -21,38 +21,38 @@ Compile Flags
    :widths: 20, 35, 5
    :escape: ~
 
-   ``NGRAPH_UNIT_TEST_ENABLE``, Control the building of unit tests,``TRUE``
-   ``NGRAPH_TOOLS_ENABLE``, Control the building of tools,``TRUE``
-   ``NGRAPH_CPU_ENABLE``, Control the building of the CPU backend,``TRUE``
-   ``NGRAPH_INTERPRETER_ENABLE``, Control the building of the ``INTERPRETER`` backend,``TRUE``
-   ``NGRAPH_NOP_ENABLE``, Control the building of the NOP backend,``TRUE``
-   ``NGRAPH_ENABLE_CPU_CONV_AUTO``, Enable mkldnn convolution_auto for CPU,``TRUE``
-   ``NGRAPH_JSON_ENABLE``, Enable JSON based serialization and tracing features,``TRUE``
-   ``NGRAPH_DYNAMIC_COMPONENTS_ENABLE``, Enable dynamic loading of components,``TRUE``
-   ``NGRAPH_FAST_MATH_ENABLE``, Enable fast math, ``ON``
-   ``NGRAPH_TBB_ENABLE``, "Only if (``NGRAPH_CPU_ENABLE``) Control usage of TBB for CPU backend",``TRUE``
-   ``NGRAPH_USE_PREBUILT_LLVM``, ,``FALSE``
-   ``NGRAPH_USE_PREBUILT_DNNL``, ,``FALSE``
-   ``NGRAPH_ONNX_IMPORT_ENABLE``, Enable ONNX importer,``FALSE``
-   ``NGRAPH_DEBUG_ENABLE``, Enable output for ``NGRAPH_DEBUG`` statements,``FALSE``
-   ``NGRAPH_DEX_ONLY``, Build CPU DEX without codegen,``FALSE``
-   ``NGRAPH_MLIR_ENABLE``, Control the building of MLIR backend,``FALSE``
-   ``NGRAPH_INTELGPU_ENABLE``, Control the building of the Intel GPU backend with clDNN,``FALSE``
-   ``NGRAPH_GPU_ENABLE``, Control the building of the GPU backend,``FALSE``
-   ``NGRAPH_GPUH_ENABLE``, Control the building of the Hybrid GPU backend,``FALSE``
-   ``NGRAPH_GENERIC_CPU_ENABLE``, Enable build ``NGRAPH`` for generic CPU backend,``FALSE``
-   ``NGRAPH_DEPRECATED_ENABLE``, Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use),``FALSE``
-   ``NGRAPH_CODE_COVERAGE_ENABLE``, Enable code coverage data collection,``FALSE``
-   ``NGRAPH_LIB_VERSIONING_ENABLE``, Enable shared library versioning,``FALSE``
-   ``NGRAPH_PYTHON_BUILD_ENABLE``, Enable build of ``NGRAPH`` python package wheel,``FALSE``
-   ``NGRAPH_PLAIDML_ENABLE``, Enable the PlaidML backend, ``${PLAIDML_FOUND}``
-   ``NGRAPH_STATIC_LIB_ENABLE``, Enable build ``NGRAPH`` static library,``FALSE``
-   ``NGRAPH_INTERPRETER_STATIC_LIB_ENABLE``, Enable build INTERPRETER backend static library,``FALSE``
-   ``NGRAPH_CPU_STATIC_LIB_ENABLE``, Enable build CPU backend static library,``FALSE``
-   ``NGRAPH_DISTRIBUTED_ENABLE``, Enable distributed training using MLSL/OpenMPI,``OFF``
-   ``NGRAPH_DISTRIBUTED_MLSL_ENABLE``, Use MLSL ,``OFF``
-   ``NGRAPH_HALIDE``, , ``OFF``
-   ``NGRAPH_DOC_BUILD_ENABLE``, Automatically build documentation ,``OFF``
+   ``NGRAPH_CODE_COVERAGE_ENABLE``, Enable code coverage data collection, ``FALSE``
+   ``NGRAPH_CPU_ENABLE``,  Control the building of the CPU backend, ``TRUE``
+   ``NGRAPH_CPU_STATIC_LIB_ENABLE``,  Enable build CPU backend static library, ``FALSE``
+   ``NGRAPH_DEBUG_ENABLE``, Enable output for ``NGRAPH_DEBUG`` statements, ``FALSE``
+   ``NGRAPH_DEPRECATED_ENABLE``, Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use), ``FALSE``
+   ``NGRAPH_DEX_ONLY``, Build CPU DEX without codegen, ``FALSE``
+   ``NGRAPH_DISTRIBUTED_ENABLE``, Enable distributed training using MLSL/OpenMPI, ``OFF``
+   ``NGRAPH_DISTRIBUTED_MLSL_ENABLE``, Use MLSL, ``OFF``
+   ``NGRAPH_DOC_BUILD_ENABLE``,  Automatically build documentation,  ``OFF``
+   ``NGRAPH_DYNAMIC_COMPONENTS_ENABLE``,  Enable dynamic loading of components,  ``TRUE``
+   ``NGRAPH_ENABLE_CPU_CONV_AUTO``, Enable mkldnn convolution_auto for CPU, ``TRUE``
+   ``NGRAPH_FAST_MATH_ENABLE``,  Enable fast math,  ``ON``
+   ``NGRAPH_GENERIC_CPU_ENABLE``  Enable build ``NGRAPH`` for generic CPU backend, ``FALSE``
+   ``NGRAPH_GPU_ENABLE``,  Control the building of the GPU backend,  ``FALSE``
+   ``NGRAPH_GPUH_ENABLE``, Control the building of the Hybrid GPU backend, ``FALSE``
+   ``NGRAPH_HALIDE``,  ,``OFF``
+   ``NGRAPH_INTELGPU_ENABLE``, Control the building of the Intel GPU backend with clDNN, ``FALSE``
+   ``NGRAPH_INTERPRETER_ENABLE``, Control the building of the ``INTERPRETER`` backend,  ``TRUE``
+   ``NGRAPH_INTERPRETER_STATIC_LIB_ENABLE``, Enable build INTERPRETER backend static library, ``FALSE``
+   ``NGRAPH_JSON_ENABLE``, Enable JSON based serialization and tracing features, ``TRUE``
+   ``NGRAPH_LIB_VERSIONING_ENABLE``  Enable shared library versioning, ``FALSE``
+   ``NGRAPH_MLIR_ENABLE``, Control the building of MLIR backend, ``FALSE``
+   ``NGRAPH_NOP_ENABLE``,  Control the building of the NOP backend,  ``TRUE``
+   ``NGRAPH_ONNX_IMPORT_ENABLE``  Enable ONNX importer, ``FALSE``
+   ``NGRAPH_PLAIDML_ENABLE``, Enable the PlaidML backend,  ``${PLAIDML_FOUND}``
+   ``NGRAPH_PYTHON_BUILD_ENABLE``,  Enable build of ``NGRAPH`` python package wheel, ``FALSE``
+   ``NGRAPH_STATIC_LIB_ENABLE``, Enable build ``NGRAPH`` static library, ``FALSE``
+   ``NGRAPH_TBB_ENABLE``, Only if (``NGRAPH_CPU_ENABLE``) Control usage of TBB for CPU backend, ``TRUE``
+   ``NGRAPH_TOOLS_ENABLE``  Control the building of tools, ``TRUE``
+   ``NGRAPH_UNIT_TEST_ENABLE``,  Control the building of unit tests, ``TRUE``
+   ``NGRAPH_USE_PREBUILT_DNNL``, Use the `precompiled DNNL`_,``FALSE``
+   ``NGRAPH_USE_PREBUILT_LLVM``, Use a precompiled LLVM  ,``FALSE``
 
 
 Environment Variables
@@ -66,25 +66,23 @@ Environment Variables
    :widths: 20, 35
    :escape: ~
 
-
-   ``NGRAPH_VISUALIZE_TRACING_FORMAT``, Default format is ``.svg``
-   ``NGRAPH_VISUALIZE_EDGE_LABELS``, Set it to 1 in ``~/.bashrc``
-   ``NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE``, Calculated in code; helps prevent *long* edges between two nodes very far apart
-   ``NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES``, Set it to 1 in ``~/.bashrc``
-   ``NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES``, Set it to 1 in ``~/.bashrc``
-   ``NGRAPH_ENABLE_SERIALIZE_TRACING``, Creates serialized files to be run with ``nbench`` for localized execution rather than whole stack execution
-   ``NGRAPH_PROFILE_PASS_ENABLE``, Per-pass time taken to compile
-   ``NGRAPH_PASS_ENABLES``, Enable or disable a pass: either core or backend
-   ``NGRAPH_PASS_ATTRIBUTES``, Enable or disable attributes related to a pass; see also `pass config`_
-   ``NGRAPH_CPU_TRACING``, Generate Timelines for CPU to check in ``chrome://tracing``
-   ``NGRAPH_CPU_DEBUG_TRACER``, See also :ref:`debug_tracer`
-   ``NGRAPH_CPU_TRACER_LOG``, See also :ref:`debug_tracer`
    ``NGRAPH_CPU_BIN_TRACER_LOG``, See also :ref:`debug_tracer`
-   ``OMP_NUM_THREADS``, See `OpenMPI Runtime Library Documentation`_
-   ``NGRAPH_INTRA_OP_PARALLELISM``, See also :ref:`interop_intraop`
+   ``NGRAPH_CPU_DEBUG_TRACER``,  See also :ref:`debug_tracer`
+   ``NGRAPH_CPU_TRACER_LOG``, See also :ref:`debug_tracer`
+   ``NGRAPH_CPU_TRACING``, Generate Timelines for CPU to check in ``chrome://tracing``
+   ``NGRAPH_DECONV_FUSE``,  Default ``FALSE``; when ``TRUE`` it enables fusion for deconvolution.  Only available with CPU.
+   ``NGRAPH_ENABLE_SERIALIZE_TRACING``,  Creates serialized files to be run with ``nbench`` for localized execution rather than whole stack execution
    ``NGRAPH_INTER_OP_PARALLELISM``, See also :ref:`interop_intraop`
-   ``NGRAPH_DECONV_FUSE``, "Default ``FALSE``; when ``TRUE`` it enables fusion for deconvolution.  Only available with CPU."
-  
+   ``NGRAPH_INTRA_OP_PARALLELISM``, See also :ref:`interop_intraop`
+   ``NGRAPH_PASS_ATTRIBUTES``, Enable or disable attributes related to a pass; see also `pass config`_
+   ``NGRAPH_PASS_ENABLES``,  Enable or disable a pass: either core or backend
+   ``NGRAPH_PROFILE_PASS_ENABLE``,  Per-pass time taken to compile
+   ``NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE``,  Calculated in code; helps prevent *long* edges between two nodes very far apart
+   ``NGRAPH_VISUALIZE_EDGE_LABELS``, Set it to 1 in ``~/.bashrc``
+   ``NGRAPH_VISUALIZE_TRACING_FORMAT``, Default format is ``.svg``
+   ``NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES``,  Set it to 1 in ``~/.bashrc``
+   ``NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES``, Set it to 1 in ``~/.bashrc``
+   ``OMP_NUM_THREADS``, See `OpenMPI Runtime Library Documentation`_
 
 
 
@@ -146,3 +144,4 @@ in the unit test for this feature.
 
 .. _pass config: https://github.com/NervanaSystems/ngraph/blob/a4a3031bb40f19ec28704f76de39762e1f27e031/src/ngraph/pass/pass_config.cpp#L54
 .. _OpenMPI Runtime Library Documentation: https://www.openmprtl.org/documentation
+.. _precompiled DNNL: https://github.com/intel/mkl-dnn

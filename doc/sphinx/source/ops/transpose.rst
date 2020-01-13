@@ -69,6 +69,6 @@ Not yet implemented.
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::v0::Transpose
+.. doxygenclass:: ngraph::op::v0:Transpose
    :project: ngraph
    :members:
