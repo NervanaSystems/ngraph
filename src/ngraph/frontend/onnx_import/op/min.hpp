@@ -19,6 +19,7 @@
 #include "core/node.hpp"
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "utils/variadic.hpp"
 
 namespace ngraph
@@ -31,7 +32,8 @@ namespace ngraph
             {
                 inline NodeVector min(const Node& node)
                 {
-                    return variadic::make_ng_variadic_op<default_opset::Minimum>(node);
+                    return variadic::make_ng_variadic_op<default_opset::Minimum>(
+                        node, ngraph::op::AutoBroadcastSpec::NONE);
                 }
 
             } // namespace set_1
