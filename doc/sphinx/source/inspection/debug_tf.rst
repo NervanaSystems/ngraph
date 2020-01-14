@@ -15,7 +15,6 @@ For profiling with TensorFlow\* and ``nbench``, see :ref:`nbench_tf`.
    :escape: ~
 
    ``NGRAPH_ENABLE_SERIALIZE=1``,Generate nGraph-level serialized graphs
-   ``NGRAPH_CPU_TRACING=1``, Generate nGraph-level function timelines
    ``NGRAPH_TF_VLOG_LEVEL=5``, Generate ngraph-tf logging info for different passes
    ``NGRAPH_TF_LOG_PLACEMENT=1``, Generate op placement log at stdout
    ``NGRAPH_TF_DUMP_CLUSTERS=1``, Dump Encapsulated TF Graphs formatted as ``NGRAPH_cluster_<cluster_num>``
