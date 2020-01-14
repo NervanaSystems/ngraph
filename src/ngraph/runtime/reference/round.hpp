@@ -16,23 +16,37 @@
 
 #pragma once
 
-#include "core/node.hpp"
-#include "ngraph/node.hpp"
+#include <cmath>
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace runtime
     {
-        namespace op
+        namespace reference
         {
-            namespace set_1
+            template <typename T>
+            T round_to_nearest_even(const T arg)
             {
-                NodeVector mean(const Node& node);
+                const auto floor_arg = std::floor(arg);
+                const auto diff = arg - floor_arg;
+                if (diff < 0.5f || (diff == 0.5f && static_cast<int>(floor_arg) % 2 == 0))
+                {
+                    return floor_arg;
+                }
+                else
+                {
+                    return floor_arg + 1.0f;
+                }
+            }
 
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            template <typename T>
+            void round(const T* arg, T* out, size_t count)
+            {
+                for (size_t i = 0; i < count; ++i)
+                {
+                    out[i] = round_to_nearest_even(arg[i]);
+                }
+            }
+        }
+    }
+}

@@ -1939,12 +1939,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
-        case OP_TYPEID::LogSoftmax:
-        {
-            auto axis = node_js.at("axis").get<int64_t>();
-            node = make_shared<op::LogSoftmax>(args[0], axis);
-            break;
-        }
         case OP_TYPEID::LRN:
         {
             auto alpha = node_js.at("alpha").get<double>();
@@ -2654,7 +2648,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::ReorgYolo: { break;
         }
-
+        case OP_TYPEID::Round:
+        {
+            node = make_shared<op::Round>(args[0]);
+            break;
+        }
         case OP_TYPEID::ScalarConstantLike:
         {
             double value = node_js.at("value").get<double>();
@@ -2945,7 +2943,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             auto compute_max = node_js.at("compute_max").get<bool>();
             auto target_type = read_element_type(node_js.at("index_element_type"));
-            op::TopKSortType sort = node_js.at("sort").get<op::TopKSortType>();
+            op::TopKSortType sort =
+                get_or_default<op::TopKSortType>(node_js, "sort", op::TopKSortType::SORT_VALUES);
             if (has_key(node_js, "top_k_axis"))
             {
                 auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
@@ -3553,6 +3552,8 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ReorgYolo: { break;
     }
+    case OP_TYPEID::Round: { break;
+    }
     case OP_TYPEID::DeformableConvolution_v1:
     {
         const auto tmp = static_cast<const op::v1::DeformableConvolution*>(&n);
@@ -3952,12 +3953,6 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
-        break;
-    }
-    case OP_TYPEID::LogSoftmax:
-    {
-        auto tmp = static_cast<const op::LogSoftmax*>(&n);
-        node["axis"] = tmp->get_axis();
         break;
     }
     case OP_TYPEID::LRN:
