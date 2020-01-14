@@ -76,8 +76,18 @@ if(NGRAPH_USE_PREBUILT_LLVM)
 
 else()
     message(STATUS "Building LLVM from source")
+
+    set(LLVM_CMAKE_ASM_COMPILER @CMAKE_ASM_COMPILER@)
+
+    if(NOT CMAKE_ASM_COMPILER)
+        message(STATUS "Setting LLVM_CMAKE_ASM_COMPILER to @CMAKE_C_COMPILER@")
+        set(LLVM_CMAKE_ASM_COMPILER @CMAKE_C_COMPILER@)
+    endif()
+
     set(LLVM_CMAKE_ARGS @NGRAPH_FORWARD_CMAKE_ARGS@
                    -DCMAKE_INSTALL_PREFIX=@LLVM_INSTALL_ROOT@
+                   -DCMAKE_CXX_FLAGS=@CMAKE_ORIGINAL_CXX_FLAGS@
+                   -DCMAKE_ASM_COMPILER=${LLVM_CMAKE_ASM_COMPILER}
                    -DLLVM_ENABLE_PROJECTS=clang
                    -DLLVM_INCLUDE_DOCS=OFF
                    -DLLVM_INCLUDE_TESTS=OFF
