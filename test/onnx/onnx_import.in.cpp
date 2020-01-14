@@ -356,21 +356,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
     EXPECT_TRUE(test::all_close_f(expected_output, output.front()));
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_text)
-{
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_tag_add.prototxt"));
-
-    auto ng_nodes = function->get_ordered_ops();
-    for (auto ng_node : ng_nodes)
-    {
-        for (auto tag : ng_node->get_provenance_tags())
-        {
-            EXPECT_HAS_SUBSTRING(tag, "ONNX");
-        }
-    }
-}
-
 // ############################################################################ OPERATOR TESTS
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_addmul_abc)
 {
