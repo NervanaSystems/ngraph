@@ -385,9 +385,11 @@ void pass::DynElimination::construct_range()
 
         std::shared_ptr<op::Constant> replacement;
 
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+#endif
         switch (et)
         {
         case element::Type_t::bf16:
@@ -433,7 +435,9 @@ void pass::DynElimination::construct_range()
             NGRAPH_CHECK(false, "Internal nGraph error: unsupported element type: ", et);
             break;
         }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
+#endif
 
         replace_node(range_node, replacement);
         return true;
