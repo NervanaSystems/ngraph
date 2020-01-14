@@ -109,6 +109,7 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
 
 void op::LSTMCell::pre_validate_and_infer_types()
 {
+    set_output_size(2);
     if (is_dynamic())
     {
         return;
