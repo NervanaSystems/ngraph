@@ -780,9 +780,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
         OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
 
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+#endif
 
         switch (get_typeid(type_info))
         {
@@ -1939,12 +1942,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
-        case OP_TYPEID::LogSoftmax:
-        {
-            auto axis = node_js.at("axis").get<int64_t>();
-            node = make_shared<op::LogSoftmax>(args[0], axis);
-            break;
-        }
         case OP_TYPEID::LRN:
         {
             auto alpha = node_js.at("alpha").get<double>();
@@ -2654,7 +2651,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::ReorgYolo: { break;
         }
-
+        case OP_TYPEID::Round:
+        {
+            node = make_shared<op::Round>(args[0]);
+            break;
+        }
         case OP_TYPEID::ScalarConstantLike:
         {
             double value = node_js.at("value").get<double>();
@@ -3014,7 +3015,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             throw runtime_error(ss.str());
         }
         }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
+#endif
 
         for (auto& control_dep : control_deps_inputs)
         {
@@ -3154,9 +3157,12 @@ json JSONSerializer::serialize_node(const Node& n)
         node["provenance_tags"] = provenance_tags;
     }
 
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+#endif
     switch (get_typeid(type_info))
     {
     case OP_TYPEID::Abs: { break;
@@ -3553,6 +3559,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::RegionYolo: { break;
     }
     case OP_TYPEID::ReorgYolo: { break;
+    }
+    case OP_TYPEID::Round: { break;
     }
     case OP_TYPEID::DeformableConvolution_v1:
     {
@@ -3953,12 +3961,6 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
-        break;
-    }
-    case OP_TYPEID::LogSoftmax:
-    {
-        auto tmp = static_cast<const op::LogSoftmax*>(&n);
-        node["axis"] = tmp->get_axis();
         break;
     }
     case OP_TYPEID::LRN:
@@ -4667,6 +4669,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::UnknownOp: { break;
     }
     }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
     return node;
 }
