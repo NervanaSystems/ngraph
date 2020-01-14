@@ -61,7 +61,7 @@ namespace ngraph
                 const CoordinateDiff& get_padding_above() const { return m_padding_above; }
                 void set_padding_above(const CoordinateDiff& padding_above)
                 {
-                    m_padding_below = padding_above;
+                    m_padding_above = padding_above;
                 }
 
                 /// \brief DEPRECATED. This is just a stub for backends that used to implement the
