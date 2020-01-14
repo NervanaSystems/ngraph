@@ -2,7 +2,6 @@
 
 :orphan:
 
-
 .. _inspection:
 
 Debug Tools
