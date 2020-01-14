@@ -112,6 +112,18 @@ namespace ngraph
                 return ngraph::builder::opset1::reshape(node, Shape{});
             }
 
+            std::shared_ptr<ngraph::Node> remove_dim(const std::shared_ptr<ngraph::Node>& node,
+                                                     int64_t axis)
+            {
+                auto output_shape = node->get_shape();
+                NGRAPH_CHECK((output_shape.at(axis) == 1),
+                             "Dimension size to remove indicated by axis must be equal 1 ",
+                             node);
+                output_shape.erase(output_shape.begin() + axis);
+
+                return builder::opset1::reshape(node, output_shape);
+            }
+
         } // namespace  reshape
     }     // namespace onnx_import
 } // namespace ngraph
