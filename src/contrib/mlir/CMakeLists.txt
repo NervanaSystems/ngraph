@@ -25,7 +25,7 @@ add_subdirectory(tools/ngraph-opt)
 set(SRC
     backend/cpu/cpu_backend.cpp
     backend/pass/affine_lowerer.cpp
-    backend/pass/memory_optimization.cpp
+    backend/analysis/memory_analysis.cpp
     core/compiler.cpp
     core/ngraph_dialect/dialect.cpp
     core/ngraph_dialect/type.cpp
