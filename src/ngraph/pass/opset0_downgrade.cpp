@@ -146,13 +146,46 @@ namespace
     bool op_cast(shared_ptr<op::v1::Broadcast> node)
     {
         auto arg = node->input_value(0);
+        const auto& arg_shape = arg.get_shape();
+
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
-        auto target_shape =
-            static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
-                ->get_shape_val();
+        auto target_shape = node->output(0).get_shape();
         NGRAPH_CHECK(node->get_broadcast_axes().first);
+
+        // (Re)construct axes_mapping.
+        AxisSet broadcast_axes = node->get_broadcast_axes().second;
+        std::vector<size_t> axes_mapping(target_shape.size());
+        std::iota(axes_mapping.begin(), axes_mapping.end(), 0);
+        for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); ++i)
+        {
+            axes_mapping.erase(axes_mapping.begin() + *i);
+        }
+
+        Output<Node> squeezed_arg = arg;
+        // Collect axes to squeeze. Broadcast v0 "adds" new axes, thus we have to squeeze
+        // the empty ones (dim:=1), which would be broadcasted by Broadcast v1.
+        std::vector<size_t> empty_axes;
+        for (size_t a{0}; a < axes_mapping.size(); ++a)
+        {
+            if (arg_shape.at(a) == 1 && target_shape.at(axes_mapping.at(a)) != 1)
+            {
+                empty_axes.push_back(a);
+            }
+        }
+        // Check if arg_shape contains some more empty dimensions marked to broadcast.
+        // If axes_mapping size is less than arg_shape size, then some of arg dimensions are
+        // equal to one and marked to broadcast.
+        if (axes_mapping.size() < arg_shape.size())
+        {
+            for (size_t a{axes_mapping.size()}; a < arg_shape.size(); ++a)
+            {
+                empty_axes.push_back(a);
+            }
+        }
+        squeezed_arg = builder::squeeze(arg, empty_axes);
+
         auto replacement_node =
-            make_shared<op::v0::Broadcast>(arg, target_shape, node->get_broadcast_axes().second);
+            make_shared<op::v0::Broadcast>(squeezed_arg, target_shape, broadcast_axes);
 
         replace_node(node, replacement_node);
         return true;
