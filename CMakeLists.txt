@@ -110,9 +110,6 @@ if (APPLE)
     endif()
 endif()
 
-# Prevent Eigen from using any LGPL3 code
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TOOLS")
-
 ngraph_var(NGRAPH_USE_PREBUILT_MLIR DEFAULT "FALSE")
 ngraph_var(NGRAPH_USE_PREBUILT_LLVM DEFAULT "FALSE")
 
@@ -362,21 +359,21 @@ endif()
 
 if (WIN32)
     string(REPLACE "/W3" "/W0" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /MP")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} /EHsc /MP)
 
     if (CMAKE_CXX_COMPILER_ID MATCHES MSVC)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+        set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} /bigobj)
         # C4251 needs to have dll-interface to be used by clients of class
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4251")
+        set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} /wd4251)
         # C4275 non dll-interface class used as base for dll-interface class
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4275")
+        set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} /wd4275)
     endif()
 else()
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
-    set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO -g)
+    set(CMAKE_CXX_FLAGS_DEBUG  -O0 -g)
     # These can be uncommented once we have visibility fully in place
-    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
-    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden")
+    # set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fvisibility=hidden)
+    # set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden)
 endif()
 
 include(cmake/sdl.cmake)
@@ -384,20 +381,23 @@ include(cmake/sdl.cmake)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
         message( STATUS "nGraph using CXX11 ABI: " ${NGRAPH_USE_CXX_ABI} )
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
+        set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI})
     endif()
 endif()
 
-set(CMAKE_ORIGINAL_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(CMAKE_ORIGINAL_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
+# Prevent Eigen from using any LGPL3 code
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TOOLS)
 
 ngraph_var(NGRAPH_WARNINGS_AS_ERRORS DEFAULT "OFF")
 if (${NGRAPH_WARNINGS_AS_ERRORS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -Werror)
     message(STATUS "Warnings as errors")
 endif()
 
 if (NGRAPH_CODE_COVERAGE_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} --coverage)
 endif()
 
 # Enable build target CPU features
@@ -410,42 +410,42 @@ if(NOT WIN32 AND NGRAPH_NATIVE_ARCH_ENABLE)
             "Build target architecture was overridden. The resulting build might not work correctly on the host CPU.")
     endif()
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH})
 endif()
 
 if (DEFINED NGRAPH_TUNE_ARCH)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=${NGRAPH_TUNE_ARCH}")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -mtune=${NGRAPH_TUNE_ARCH})
 endif()
 
 if (NGRAPH_USE_GOLD)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=gold")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
+    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -fuse-ld=gold)
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fuse-ld=gold)
 endif()
 if(WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOMINMAX")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DNOMINMAX)
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_USE_LEGACY_MKLDNN)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_USE_LEGACY_MKLDNN")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DNGRAPH_USE_LEGACY_MKLDNN)
 endif()
 
 if (NGRAPH_MLIR_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_MLIR_ENABLE")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DNGRAPH_MLIR_ENABLE)
     set(NGRAPH_MLIR_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/contrib/mlir)
 endif()
 
 if (NGRAPH_STATIC_LIB_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_STATIC_LIB_ENABLE")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DNGRAPH_STATIC_LIB_ENABLE)
 endif()
 
 if (NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DYNAMIC_COMPONENTS_ENABLE")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DNGRAPH_DYNAMIC_COMPONENTS_ENABLE)
 endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
@@ -454,15 +454,15 @@ if (NGRAPH_PLAIDML_ENABLE)
         message(FATAL_ERROR "PlaidML not installed")
     endif()
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_PlaidML_ENABLE")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DNGRAPH_PlaidML_ENABLE)
 endif()
 
 if (NGRAPH_DISTRIBUTED_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DISTRIBUTED_ENABLE")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DNGRAPH_DISTRIBUTED_ENABLE)
     if (NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DISTRIBUTED_MLSL_ENABLE")
+        set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DNGRAPH_DISTRIBUTED_MLSL_ENABLE)
     elseif (NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DISTRIBUTED_OMPI_ENABLE")
+        set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -DNGRAPH_DISTRIBUTED_OMPI_ENABLE)
     endif()
 endif()
 
