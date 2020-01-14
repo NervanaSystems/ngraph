@@ -78,6 +78,7 @@ else()
     message(STATUS "LLVM: Building LLVM from source")
 
     set(LLVM_CMAKE_ASM_COMPILER @CMAKE_ASM_COMPILER@)
+    set(NGRAPH_USE_CXX_ABI @NGRAPH_USE_CXX_ABI@)
 
     if(NOT CMAKE_ASM_COMPILER)
         message(STATUS "LLVM: Setting LLVM_CMAKE_ASM_COMPILER to @CMAKE_C_COMPILER@")
@@ -109,6 +110,12 @@ else()
                    -DCLANG_ANALYZER_ENABLE_Z3_SOLVER=OFF
                    -DCLANG_ENABLE_STATIC_ANALYZER=OFF
                    -DLLVM_EXTERNAL_OPENMP_SOURCE_DIR=@LLVM_PROJECT_ROOT@/llvm/src/ext_llvm/openmp)
+
+    if(NGRAPH_USE_CXX_ABI)
+        set(LLVM_CMAKE_CXX_FLAGS -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI})
+        set(LLVM_CMAKE_ARGS ${LLVM_CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${LLVM_CMAKE_CXX_FLAGS})
+    endif()
+
     if(${CMAKE_VERSION} VERSION_LESS 3.7)
         ExternalProject_Add(
             ext_llvm
