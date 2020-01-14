@@ -25,7 +25,7 @@ set(LLVM_TARBALL_URL @LLVM_TARBALL_URL@)
 set(LLVM_SHA1_HASH @LLVM_SHA1_HASH@)
 
 if(NGRAPH_USE_PREBUILT_LLVM)
-    message(STATUS "Using prebuilt LLVM")
+    message(STATUS "LLVM: Using prebuilt LLVM")
     # Override default LLVM binaries
     if(NOT DEFINED LLVM_TARBALL_URL)
         if(APPLE)
@@ -75,18 +75,20 @@ if(NGRAPH_USE_PREBUILT_LLVM)
         )
 
 else()
-    message(STATUS "Building LLVM from source")
+    message(STATUS "LLVM: Building LLVM from source")
 
     set(LLVM_CMAKE_ASM_COMPILER @CMAKE_ASM_COMPILER@)
 
     if(NOT CMAKE_ASM_COMPILER)
-        message(STATUS "Setting LLVM_CMAKE_ASM_COMPILER to @CMAKE_C_COMPILER@")
+        message(STATUS "LLVM: Setting LLVM_CMAKE_ASM_COMPILER to @CMAKE_C_COMPILER@")
         set(LLVM_CMAKE_ASM_COMPILER @CMAKE_C_COMPILER@)
     endif()
 
+    message(STATUS "LLVM: Passing CXX flags: @CMAKE_ORIGINAL_CXX_FLAGS@")
+
     set(LLVM_CMAKE_ARGS @NGRAPH_FORWARD_CMAKE_ARGS@
                    -DCMAKE_INSTALL_PREFIX=@LLVM_INSTALL_ROOT@
-                   -DCMAKE_CXX_FLAGS=@CMAKE_ORIGINAL_CXX_FLAGS@
+                   -DCMAKE_CXX_FLAGS="@CMAKE_ORIGINAL_CXX_FLAGS@"
                    -DCMAKE_ASM_COMPILER=${LLVM_CMAKE_ASM_COMPILER}
                    -DLLVM_ENABLE_PROJECTS=clang
                    -DLLVM_INCLUDE_DOCS=OFF
