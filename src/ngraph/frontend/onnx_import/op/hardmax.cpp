@@ -22,7 +22,6 @@
 #include "ngraph/opsets/opset0.hpp"
 #include "ngraph/validation_util.hpp"
 #include "utils/common.hpp"
-#include "utils/reshape.hpp"
 
 namespace ngraph
 {
