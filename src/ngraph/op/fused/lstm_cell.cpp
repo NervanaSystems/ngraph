@@ -52,7 +52,6 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
     , m_input_forget{input_forget}
     , m_weights_format{weights_format}
 {
-    set_output_size(2);
     set_argument(5, get_default_bias_input());
     set_argument(6, get_default_peepholes_input());
     constructor_validate_and_infer_types();
@@ -79,7 +78,6 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
     , m_input_forget{input_forget}
     , m_weights_format{weights_format}
 {
-    set_output_size(2);
     set_argument(6, get_default_peepholes_input());
     constructor_validate_and_infer_types();
 }
@@ -106,12 +104,12 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
     , m_input_forget{input_forget}
     , m_weights_format{weights_format}
 {
-    set_output_size(2);
     constructor_validate_and_infer_types();
 }
 
 void op::LSTMCell::pre_validate_and_infer_types()
 {
+    set_output_size(2);
     if (is_dynamic())
     {
         return;
