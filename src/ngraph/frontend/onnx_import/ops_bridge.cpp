@@ -301,7 +301,6 @@ namespace ngraph
             REGISTER_OPERATOR("Max", 1, max);
             REGISTER_OPERATOR("Max", 8, max);
             REGISTER_OPERATOR("Mean", 1, mean);
-            REGISTER_OPERATOR("Mean", 8, mean);
             REGISTER_OPERATOR("MeanVarianceNormalization", 1, mean_variance_normalization);
             REGISTER_OPERATOR("MeanVarianceNormalization", 9, mean_variance_normalization);
             REGISTER_OPERATOR("Min", 1, min);
