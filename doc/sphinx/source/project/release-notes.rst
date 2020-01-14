@@ -26,6 +26,7 @@ Core updates for |version|
 Latest documentation updates
 ----------------------------
 
++ Better debugging documentation
 + Dynamic Shapes and APIs
 + Provenance
 + Add linkages and overview for quantization APIs
