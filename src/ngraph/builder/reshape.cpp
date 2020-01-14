@@ -137,7 +137,7 @@ shared_ptr<Node> builder::squeeze(const Output<Node>& value, vector<size_t> axes
     Shape in_shape{value.get_shape()};
     for (size_t idx = 0; idx < axes.size(); ++idx)
     {
-        in_shape.at(idx) = 0;
+        in_shape.at(axes.at(idx)) = 0;
     }
     Shape output_shape;
     for (auto axis : in_shape)
@@ -193,6 +193,29 @@ shared_ptr<Node> builder::opset1::reorder_axes(const Output<Node>& value, vector
                              vector<int64_t>(axes_order.begin(), axes_order.end()));
     return make_shared<ngraph::opset1::Transpose>(value, axes_order_const)
         ->add_provenance_group_members_above({value});
+}
+
+shared_ptr<Node> builder::opset1::squeeze(const Output<Node>& value, vector<size_t> axes)
+{
+    if (axes.empty())
+    {
+        return value.get_node_shared_ptr();
+    }
+
+    Shape in_shape{value.get_shape()};
+    for (size_t idx = 0; idx < axes.size(); ++idx)
+    {
+        in_shape.at(axes.at(idx)) = 0;
+    }
+    Shape output_shape;
+    for (auto axis : in_shape)
+    {
+        if (axis != 0)
+        {
+            output_shape.push_back(axis);
+        }
+    }
+    return builder::opset1::reshape(value, output_shape);
 }
 
 shared_ptr<Node> builder::opset1::transpose(const Output<Node>& value)
