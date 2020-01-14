@@ -201,13 +201,9 @@ protected:
                    const std::vector<std::shared_ptr<HostTensor>>& out,
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
-// We want to check that every OP_TYPEID enumeration is included in the list.
-// These GCC flags enable compile-time checking so that if an enumeration
-// is not in the list an error is generated.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
-        // #pragma GCC diagnostic error "-Wcovered-switch-default"
+        // We want to check that every OP_TYPEID enumeration is included in the list.
+        // These GCC flags enable compile-time checking so that if an enumeration
+        // is not in the list an error is generated.
         switch (get_typeid(node))
         {
         case OP_TYPEID::Abs:
@@ -1889,7 +1885,6 @@ protected:
         case OP_TYPEID::TensorIterator:
         case OP_TYPEID::UnknownOp:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
-#pragma GCC diagnostic pop
         }
     }
 };

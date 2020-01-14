@@ -31,9 +31,6 @@ namespace ngraph
         {
             std::shared_ptr<Node> val = nullptr;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
             switch (type)
             {
             case element::Type_t::f32:
@@ -97,7 +94,6 @@ namespace ngraph
             case element::Type_t::undefined:
                 throw ngraph_error("make_constant: Unsupported element type 'undefined'");
             }
-#pragma GCC diagnostic pop
 
             if (shape.size() > 0)
             {
