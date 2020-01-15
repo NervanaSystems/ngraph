@@ -25,7 +25,6 @@ include "core/ngraph_dialect/ops_interfaces.td"
 
 include "mlir/IR/OpBase.td"
 
-
 // nGraph Dialect operations definitions
 //
 // This files declares nGraph operations that table-gen uses to create C++ code
