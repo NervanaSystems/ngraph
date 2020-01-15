@@ -55,6 +55,8 @@ void descriptor::Input::replace_output(Output& new_output)
     }
     new_output.add_input(this);
     m_output = &new_output;
+    m_cached_output_partial_shape = new_output.get_partial_shape();
+    m_cached_output_element_type = new_output.get_element_type();
     m_src_node = std::shared_ptr<Node>(new_output.get_node());
 
     static const auto nerc = std::getenv("NGRAPH_ENABLE_REPLACE_CHECK");

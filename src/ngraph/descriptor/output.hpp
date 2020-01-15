@@ -60,15 +60,51 @@ namespace ngraph
             /// \return the element type of the output
             const element::Type& get_element_type() const;
 
+            void set_element_type(const element::Type& element_type);
+            void set_partial_shape(const PartialShape& partial_shape);
+
             Output(const Output&) = default;
             Output(Output&&) = default;
             Output& operator=(const Output&) = default;
-
+            /// Requested shape. Autobroadcast will broadcast to this shape.
+            void set_requested_partial_shape(const PartialShape& partial_shape)
+            {
+                m_requested_partial_shape = partial_shape;
+            }
+            const PartialShape& get_requested_partial_shape() const
+            {
+                return m_requested_partial_shape;
+            }
+            /// Requested element type.
+            void set_requested_element_type(const element::Type& element_type)
+            {
+                m_requested_element_type = element_type;
+            }
+            const element::Type& get_requested_element_type() const
+            {
+                return m_requested_element_type;
+            }
+            /// Optional upper bound on this output's shape
+            void set_max_partial_shape(const PartialShape& partial_shape)
+            {
+                m_max_partial_shape = partial_shape;
+            }
+            const PartialShape& get_max_partial_shape() const { return m_max_partial_shape; }
+            /// Optional lower bound on this output's shape
+            void set_min_partial_shape(const PartialShape& partial_shape)
+            {
+                m_min_partial_shape = partial_shape;
+            }
+            const PartialShape& get_min_partial_shape() const { return m_min_partial_shape; }
         protected:
             Node* m_node;
             size_t m_index;
             std::shared_ptr<Tensor> m_tensor;
             std::vector<Input*> m_inputs;
+            PartialShape m_requested_partial_shape;
+            element::Type m_requested_element_type;
+            PartialShape m_max_partial_shape;
+            PartialShape m_min_partial_shape;
         };
     }
 }

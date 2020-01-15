@@ -82,6 +82,58 @@ namespace ngraph
             ///
             /// See Node::set_input_is_relevant_to_value for more details.
             bool get_is_relevant_to_value() const { return m_is_relevant_to_value; }
+            /// Most recent element type of the output
+            element::Type& get_cached_output_element_type() { return m_cached_output_element_type; }
+            const element::Type& get_cached_output_element_type() const
+            {
+                return m_cached_output_element_type;
+            }
+            void set_cached_output_element_type(const element::Type& element_type)
+            {
+                m_cached_output_element_type = element_type;
+            }
+            /// Most recent partial shape of the connected output
+            PartialShape& get_cached_output_partial_shape()
+            {
+                return m_cached_output_partial_shape;
+            };
+            void set_cached_output_partial_shape(const PartialShape& partial_shape)
+            {
+                m_cached_output_partial_shape = partial_shape;
+            };
+
+            const PartialShape& get_cached_output_partial_shape() const
+            {
+                return m_cached_output_partial_shape;
+            };
+            void set_requested_partial_shape(const PartialShape& partial_shape)
+            {
+                m_requested_partial_shape = partial_shape;
+            }
+            const PartialShape& get_requested_partial_shape() const
+            {
+                return m_requested_partial_shape;
+            }
+            void set_requested_element_type(const element::Type& element_type)
+            {
+                m_requested_element_type = element_type;
+            }
+            const element::Type& get_requested_element_type() const
+            {
+                return m_requested_element_type;
+            }
+            /// Optional upper bound on this input's shape
+            void set_max_partial_shape(const PartialShape& partial_shape)
+            {
+                m_max_partial_shape = partial_shape;
+            }
+            const PartialShape& get_max_partial_shape() const { return m_max_partial_shape; }
+            /// Optional lower bound on this input's shape
+            void set_min_partial_shape(const PartialShape& partial_shape)
+            {
+                m_min_partial_shape = partial_shape;
+            }
+            const PartialShape& get_min_partial_shape() const { return m_min_partial_shape; }
         protected:
             /// \return the tensor for the connected output
             std::shared_ptr<const Tensor> get_tensor_ptr() const;
@@ -109,6 +161,12 @@ namespace ngraph
             Node* m_node;   // The node we are an input for
             size_t m_index; // Index into all input tensors
             Output* m_output;
+            element::Type m_cached_output_element_type;
+            PartialShape m_cached_output_partial_shape;
+            element::Type m_requested_element_type;
+            PartialShape m_requested_partial_shape;
+            PartialShape m_max_partial_shape;
+            PartialShape m_min_partial_shape;
 
         private:
             bool m_is_relevant_to_shape;

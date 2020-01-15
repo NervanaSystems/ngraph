@@ -504,7 +504,10 @@ namespace ngraph
 
     private:
         descriptor::Input& get_input_descriptor(size_t position);
+        const descriptor::Input& get_input_descriptor(size_t position) const;
+
         descriptor::Output& get_output_descriptor(size_t position);
+        const descriptor::Output& get_output_descriptor(size_t position) const;
 
         std::vector<Node*> m_control_dependents;
         std::vector<std::shared_ptr<Node>> m_control_dependencies;
@@ -566,6 +569,31 @@ namespace ngraph
         {
             return m_node->get_input_partial_shape(m_index);
         }
+        /// \return The element type requested for this input
+        const element::Type& get_requested_element_type() const;
+        /// Specify an element type for this input.
+        void set_requested_element_type(const element::Type& element_type);
+        /// \return The shape requested for this input
+        const PartialShape& get_requested_partial_shape() const;
+        /// Set a partial shape for this input
+        void set_requested_partial_shape(const PartialShape& partial_shape);
+        /// \return The maximum shape for this input
+        const PartialShape& get_max_partial_shape() const;
+        /// Specify a maximum shape for this input
+        void set_max_partial_shape(const PartialShape& partial_shape);
+        /// \return The minimum shape for this input
+        const PartialShape& get_min_partial_shape() const;
+        /// Specify a minimum shape for the input
+        void set_min_partial_shape(const PartialShape& partial_shape);
+        /// \return The element type of the last connected output
+        const element::Type& get_cached_output_element_type() const;
+        /// Update the element type of the last connected output
+        void set_cached_output_element_type(const element::Type& element_type);
+        /// \return The shape of the last connected output
+        const PartialShape& get_cached_output_partial_shape() const;
+        /// Update the shape of the last connected output
+        void set_cached_output_partial_shape(const PartialShape& partial_shape);
+
         /// \return A handle to the output that is connected to this input.
         Output<Node> get_source_output() const;
         /// \return A reference to the tensor descriptor for this input.
@@ -643,6 +671,19 @@ namespace ngraph
         {
             return m_node->get_input_partial_shape(m_index);
         }
+        /// \return The requested element type
+        const element::Type& get_requested_element_type() const;
+        /// \return The requested shape
+        const PartialShape& get_requested_partial_shape() const;
+        /// \return The maximal shape
+        const PartialShape& get_max_partial_shape() const;
+        /// \return The minimal partial shape
+        const PartialShape& get_min_partial_shape() const;
+        /// \return The element type of the last connected output
+        const element::Type& get_cached_output_element_type() const;
+        /// \return The shape of the last connected output
+        const PartialShape& get_cached_output_partial_shape() const;
+
         /// \return A handle to the output that is connected to this input.
         Output<Node> get_source_output() const;
         /// \return A reference to the tensor descriptor for this input.
@@ -762,6 +803,22 @@ namespace ngraph
         {
             return m_node->get_output_partial_shape(m_index);
         }
+        /// \return The requested element type
+        const element::Type& get_requested_element_type() const;
+        /// Set the requested element type
+        void set_requested_element_type(const element::Type& element_type);
+        /// \return The requested shape
+        const PartialShape& get_requested_partial_shape() const;
+        /// Set the requested element type
+        void set_requested_partial_shape(const PartialShape& partial_shape);
+        /// \return The maximal partial shape
+        const PartialShape& get_max_partial_shape() const;
+        /// Set the maximal partial shape
+        void set_max_partial_shape(const PartialShape& partial_shape);
+        /// \return The minimal partial shape
+        const PartialShape& get_min_partial_shape() const;
+        /// Set the minumal partial shape
+        void set_min_partial_shape(const PartialShape& partial_shape);
 
         /// \return A set containing handles for all inputs targeted by the output referenced by
         ///        this output handle.
@@ -864,6 +921,14 @@ namespace ngraph
         {
             return m_node->get_output_partial_shape(m_index);
         }
+        /// \return The requested element type
+        const element::Type& get_requested_element_type() const;
+        /// \return The requested element shape
+        const PartialShape& get_requested_partial_shape() const;
+        /// \return The maximal partial shape
+        const PartialShape& get_max_partial_shape() const;
+        /// \return The minimal partial shape
+        const PartialShape& get_min_partial_shape() const;
 
         /// \return A set containing handles for all inputs targeted by the output referenced by
         ///        this output handle.

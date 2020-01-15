@@ -211,6 +211,15 @@ descriptor::Input& Node::get_input_descriptor(size_t position)
     return m_inputs.at(position);
 }
 
+const descriptor::Input& Node::get_input_descriptor(size_t position) const
+{
+    if (m_inputs.size() > position)
+    {
+        return m_inputs.at(position);
+    }
+    NODE_VALIDATION_CHECK(this, false, "Invalid input position", position);
+}
+
 descriptor::Output& Node::get_output_descriptor(size_t position)
 {
     while (m_outputs.size() <= position)
@@ -221,6 +230,15 @@ descriptor::Output& Node::get_output_descriptor(size_t position)
         m_outputs.emplace_back(this, i, tensor_descriptor);
     }
     return m_outputs.at(position);
+}
+
+const descriptor::Output& Node::get_output_descriptor(size_t position) const
+{
+    if (m_outputs.size() > position)
+    {
+        return m_outputs.at(position);
+    }
+    NODE_VALIDATION_CHECK(this, false, "Invalid output position", position);
 }
 
 void Node::set_argument(size_t position, const Output<Node>& argument)
@@ -282,9 +300,13 @@ void Node::set_input_is_relevant_to_value(size_t i, bool relevant)
     m_inputs[i].m_is_relevant_to_value = relevant;
 }
 
-void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
+void Node::set_output_type(size_t i,
+                           const element::Type& element_type,
+                           const PartialShape& partial_shape)
 {
-    get_output_descriptor(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
+    auto& descriptor = get_output_descriptor(i);
+    descriptor.set_element_type(element_type);
+    descriptor.set_partial_shape(partial_shape);
 }
 
 std::deque<descriptor::Output>& Node::get_outputs()
@@ -1048,4 +1070,134 @@ vector<Output<const Node>> Node::outputs() const
     }
 
     return result;
+}
+
+const element::Type& Input<Node>::get_requested_element_type() const
+{
+    return m_node->get_input_descriptor(m_index).get_requested_element_type();
+}
+
+void Input<Node>::set_requested_element_type(const element::Type& element_type)
+{
+    m_node->get_input_descriptor(m_index).set_requested_element_type(element_type);
+}
+
+const PartialShape& Input<Node>::get_requested_partial_shape() const
+{
+    return m_node->get_input_descriptor(m_index).get_requested_partial_shape();
+}
+
+void Input<Node>::set_requested_partial_shape(const PartialShape& partial_shape)
+{
+    m_node->get_input_descriptor(m_index).set_requested_partial_shape(partial_shape);
+}
+
+const PartialShape& Input<Node>::get_min_partial_shape() const
+{
+    return m_node->get_input_descriptor(m_index).get_min_partial_shape();
+}
+
+void Input<Node>::set_min_partial_shape(const PartialShape& partial_shape)
+{
+    m_node->get_input_descriptor(m_index).set_min_partial_shape(partial_shape);
+}
+
+const PartialShape& Input<Node>::get_max_partial_shape() const
+{
+    return m_node->get_input_descriptor(m_index).get_max_partial_shape();
+}
+
+void Input<Node>::set_max_partial_shape(const PartialShape& partial_shape)
+{
+    m_node->get_input_descriptor(m_index).set_max_partial_shape(partial_shape);
+}
+
+const element::Type& Input<Node>::get_cached_output_element_type() const
+{
+    return m_node->get_input_descriptor(m_index).get_cached_output_element_type();
+}
+
+void Input<Node>::set_cached_output_element_type(const element::Type& element_type)
+{
+    m_node->get_input_descriptor(m_index).set_cached_output_element_type(element_type);
+}
+
+const PartialShape& Input<Node>::get_cached_output_partial_shape() const
+{
+    return m_node->get_input_descriptor(m_index).get_cached_output_partial_shape();
+}
+
+void Input<Node>::set_cached_output_partial_shape(const PartialShape& partial_shape)
+{
+    m_node->get_input_descriptor(m_index).set_cached_output_partial_shape(partial_shape);
+}
+
+const element::Type& Input<const Node>::get_requested_element_type() const
+{
+    return m_node->get_input_descriptor(m_index).get_requested_element_type();
+}
+
+const PartialShape& Input<const Node>::get_min_partial_shape() const
+{
+    return m_node->get_input_descriptor(m_index).get_min_partial_shape();
+}
+
+const PartialShape& Input<const Node>::get_max_partial_shape() const
+{
+    return m_node->get_input_descriptor(m_index).get_max_partial_shape();
+}
+
+const element::Type& Input<const Node>::get_cached_output_element_type() const
+{
+    return m_node->get_input_descriptor(m_index).get_cached_output_element_type();
+}
+
+const PartialShape& Input<const Node>::get_cached_output_partial_shape() const
+{
+    return m_node->get_input_descriptor(m_index).get_cached_output_partial_shape();
+}
+
+const element::Type& Output<Node>::get_requested_element_type() const
+{
+    return m_node->get_input_descriptor(m_index).get_requested_element_type();
+}
+
+void Output<Node>::set_requested_element_type(const element::Type& element_type)
+{
+    m_node->get_input_descriptor(m_index).set_requested_element_type(element_type);
+}
+
+const PartialShape& Output<Node>::get_min_partial_shape() const
+{
+    return m_node->get_input_descriptor(m_index).get_min_partial_shape();
+}
+
+void Output<Node>::set_min_partial_shape(const PartialShape& partial_shape)
+{
+    m_node->get_input_descriptor(m_index).set_min_partial_shape(partial_shape);
+}
+
+const PartialShape& Output<Node>::get_max_partial_shape() const
+{
+    return m_node->get_input_descriptor(m_index).get_max_partial_shape();
+}
+
+void Output<Node>::set_max_partial_shape(const PartialShape& partial_shape)
+{
+    m_node->get_input_descriptor(m_index).set_max_partial_shape(partial_shape);
+}
+
+const element::Type& Output<const Node>::get_requested_element_type() const
+{
+    return m_node->get_input_descriptor(m_index).get_requested_element_type();
+}
+
+const PartialShape& Output<const Node>::get_min_partial_shape() const
+{
+    return m_node->get_input_descriptor(m_index).get_min_partial_shape();
+}
+
+const PartialShape& Output<const Node>::get_max_partial_shape() const
+{
+    return m_node->get_input_descriptor(m_index).get_max_partial_shape();
 }
