@@ -27,7 +27,7 @@ namespace ngraph
     } // namespace pass
 } // namespace ngraph
 
-class ngraph::pass::ConvertFP32ToFP16 : public ngraph::pass::GraphRewrite
+class NGRAPH_API ngraph::pass::ConvertFP32ToFP16 : public ngraph::pass::GraphRewrite
 {
 public:
     ConvertFP32ToFP16()
