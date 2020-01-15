@@ -36,7 +36,8 @@ namespace ngraph
             LookupTable2() = default;
             /// \brief Constructs a LookupTable2 operation.
             ///
-            /// \param x Input x
+            /// \param w Input weight table
+            /// \param ids  look up ids
             LookupTable2(const Output<Node>& w, const Output<Node>& ids, const int64_t padding_idx);
 
             virtual NodeVector decompose_op() const override;
@@ -48,7 +49,7 @@ namespace ngraph
 
             int64_t get_padding_idx() const { return m_padding_idx; }
         protected:
-            int64_t m_padding_idx;
+            int64_t m_padding_idx{-1};
         };
 
         /// \brief Fluid reduce_sum_grad
@@ -61,7 +62,9 @@ namespace ngraph
 
             /// \brief Constructs a LookupTable2Grad operation.
             ///
-            /// \param x Input tensor
+            /// \param w Input weight table
+            /// \param ids Input lookup ids
+            /// \param dout Input delta
             LookupTable2Grad(const Output<Node>& w,
                              const Output<Node>& ids,
                              const Output<Node>& dout);
