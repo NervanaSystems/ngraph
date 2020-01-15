@@ -703,7 +703,7 @@ namespace
     template <typename T>
     bool op_cast_thunk(shared_ptr<Node> node)
     {
-        std::string provenance_tag = "<Upgraded from v0 " + node->get_type_name() + ">";
+        std::string provenance_tag = "<Upgraded from v0 " + std::string(node->get_type_name()) + ">";
         node->add_provenance_tag(provenance_tag);
         return op_cast(as_type_ptr<T>(node));
     }
