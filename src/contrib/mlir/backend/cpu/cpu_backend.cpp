@@ -19,7 +19,6 @@
 
 #include "cpu_backend.hpp"
 #include "contrib/mlir/backend/pass/affine_lowerer.hpp"
-#include "contrib/mlir/backend/pass/memory_optimization.hpp"
 #include "contrib/mlir/utils.hpp"
 #include "ngraph/check.hpp"
 
@@ -161,7 +160,6 @@ void MLIRCPUBackend::init()
 
 void MLIRCPUBackend::codegen()
 {
-    optimizeNgDialect();
     lowerNgDialect();
 }
 
@@ -261,19 +259,4 @@ void MLIRCPUBackend::optimizeAffineDialect()
 
     // Run Std dialect optimizations.
     // TODO
-}
-
-void MLIRCPUBackend::optimizeNgDialect()
-{
-    mlir::PassManager pm(&m_context);
-    mlir::applyPassManagerCLOptions(pm);
-    if (clEnableNgInPlaceMemoryOpt)
-    {
-        pm.addPass(mlir::createMemoryOptimizationPass());
-    }
-
-    if (failed(pm.run(m_module.get())))
-    {
-        NGRAPH_CHECK(false, "MLIR pass manager failed");
-    }
 }
