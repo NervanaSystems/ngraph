@@ -141,6 +141,24 @@ std::shared_ptr<Node>
             }
         }
         clone = copy_with_new_args(args);
+        for (size_t i = 0; i < get_input_size(); ++i)
+        {
+            auto source_input = input(i);
+            auto clone_input = clone->input(i);
+            clone_input.set_max_partial_shape(source_input.get_max_partial_shape());
+            clone_input.set_min_partial_shape(source_input.get_min_partial_shape());
+            clone_input.set_requested_partial_shape(source_input.get_requested_partial_shape());
+            clone_input.set_requested_element_type(source_input.get_requested_element_type());
+        }
+        for (size_t i = 0; i < get_output_size(); ++i)
+        {
+            auto source_output = output(i);
+            auto clone_output = clone->output(i);
+            clone_output.set_max_partial_shape(source_output.get_max_partial_shape());
+            clone_output.set_min_partial_shape(source_output.get_min_partial_shape());
+            clone_output.set_requested_partial_shape(source_output.get_requested_partial_shape());
+            clone_output.set_requested_element_type(source_output.get_requested_element_type());
+        }
     }
     for (auto& cdep : control_dependencies)
     {
