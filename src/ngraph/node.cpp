@@ -1137,6 +1137,11 @@ const element::Type& Input<const Node>::get_requested_element_type() const
     return m_node->get_input_descriptor(m_index).get_requested_element_type();
 }
 
+const PartialShape& Input<const Node>::get_requested_partial_shape() const
+{
+    return m_node->get_input_descriptor(m_index).get_requested_partial_shape();
+}
+
 const PartialShape& Input<const Node>::get_min_partial_shape() const
 {
     return m_node->get_input_descriptor(m_index).get_min_partial_shape();
@@ -1159,45 +1164,60 @@ const PartialShape& Input<const Node>::get_cached_output_partial_shape() const
 
 const element::Type& Output<Node>::get_requested_element_type() const
 {
-    return m_node->get_input_descriptor(m_index).get_requested_element_type();
+    return m_node->get_output_descriptor(m_index).get_requested_element_type();
 }
 
 void Output<Node>::set_requested_element_type(const element::Type& element_type)
 {
-    m_node->get_input_descriptor(m_index).set_requested_element_type(element_type);
+    m_node->get_output_descriptor(m_index).set_requested_element_type(element_type);
+}
+
+const PartialShape& Output<Node>::get_requested_partial_shape() const
+{
+    return m_node->get_output_descriptor(m_index).get_requested_partial_shape();
+}
+
+void Output<Node>::set_requested_partial_shape(const PartialShape& partial_shape)
+{
+    m_node->get_output_descriptor(m_index).set_requested_partial_shape(partial_shape);
 }
 
 const PartialShape& Output<Node>::get_min_partial_shape() const
 {
-    return m_node->get_input_descriptor(m_index).get_min_partial_shape();
+    return m_node->get_output_descriptor(m_index).get_min_partial_shape();
 }
 
 void Output<Node>::set_min_partial_shape(const PartialShape& partial_shape)
 {
-    m_node->get_input_descriptor(m_index).set_min_partial_shape(partial_shape);
+    m_node->get_output_descriptor(m_index).set_min_partial_shape(partial_shape);
 }
 
 const PartialShape& Output<Node>::get_max_partial_shape() const
 {
-    return m_node->get_input_descriptor(m_index).get_max_partial_shape();
+    return m_node->get_output_descriptor(m_index).get_max_partial_shape();
 }
 
 void Output<Node>::set_max_partial_shape(const PartialShape& partial_shape)
 {
-    m_node->get_input_descriptor(m_index).set_max_partial_shape(partial_shape);
+    m_node->get_output_descriptor(m_index).set_max_partial_shape(partial_shape);
 }
 
 const element::Type& Output<const Node>::get_requested_element_type() const
 {
-    return m_node->get_input_descriptor(m_index).get_requested_element_type();
+    return m_node->get_output_descriptor(m_index).get_requested_element_type();
+}
+
+const PartialShape& Output<const Node>::get_requested_partial_shape() const
+{
+    return m_node->get_output_descriptor(m_index).get_requested_partial_shape();
 }
 
 const PartialShape& Output<const Node>::get_min_partial_shape() const
 {
-    return m_node->get_input_descriptor(m_index).get_min_partial_shape();
+    return m_node->get_output_descriptor(m_index).get_min_partial_shape();
 }
 
 const PartialShape& Output<const Node>::get_max_partial_shape() const
 {
-    return m_node->get_input_descriptor(m_index).get_max_partial_shape();
+    return m_node->get_output_descriptor(m_index).get_max_partial_shape();
 }
