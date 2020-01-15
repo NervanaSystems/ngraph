@@ -71,10 +71,10 @@ const PartialShape& descriptor::Output::get_partial_shape() const
 
 void descriptor::Output::set_partial_shape(const PartialShape& partial_shape)
 {
-    m_tensor->get_partial_shape() = partial_shape;
+    m_tensor->set_partial_shape(partial_shape);
     for (auto input : m_inputs)
     {
-        input->get_cached_output_partial_shape() = partial_shape;
+        input->set_cached_output_partial_shape(partial_shape);
     }
 }
 
@@ -85,9 +85,9 @@ const element::Type& descriptor::Output::get_element_type() const
 
 void descriptor::Output::set_element_type(const element::Type& element_type)
 {
-    m_tensor->get_element_type() = element_type;
+    m_tensor->set_element_type(element_type);
     for (auto input : m_inputs)
     {
-        input->get_cached_output_element_type() = element_type;
+        input->set_cached_output_element_type(element_type);
     }
 }

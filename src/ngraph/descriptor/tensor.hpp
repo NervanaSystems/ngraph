@@ -53,10 +53,10 @@ namespace ngraph
             void set_tensor_type(const element::Type& element_type, const PartialShape& pshape);
 
             const element::Type& get_element_type() const { return m_element_type; }
-            element::Type& get_element_type() { return m_element_type; }
+            void set_element_type(const element::Type& element_type);
             const Shape& get_shape() const;
             const PartialShape& get_partial_shape() const { return m_partial_shape; }
-            PartialShape& get_partial_shape() { return m_partial_shape; }
+            void set_partial_shape(const PartialShape& partial_shape);
             const std::shared_ptr<layout::TensorLayout>& get_tensor_layout() const
             {
                 return m_tensor_layout;
