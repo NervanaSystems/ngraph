@@ -1905,15 +1905,15 @@ namespace
         auto int64Ty = rewriter.getIntegerType(64);
         OpType ty;
         bool includePadding = false;
-        if (isa<NGAvgPoolOp>(op))
+        if (auto avgPool = dyn_cast<NGAvgPoolOp>(op))
         {
             ty = OpType::AVGPOOL;
-            includePadding = cast<NGAvgPoolOp>(op).includePadding();
+            includePadding = avgPool.includePadding();
         }
-        else if (isa<NGAvgPoolBackpropOp>(op))
+        else if (auto avgPoolBprop = dyn_cast<NGAvgPoolBackpropOp>(op))
         {
             ty = OpType::AVGPOOLBACKPROP;
-            includePadding = cast<NGAvgPoolBackpropOp>(op).includePadding();
+            includePadding = avgPoolBprop.includePadding();
         }
         else if (isa<NGMaxPoolOp>(op))
         {

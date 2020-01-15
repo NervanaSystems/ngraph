@@ -24,6 +24,10 @@ namespace ngraph
     {
         namespace ngmlir
         {
+            // OpType class is used for callbacks.
+            // We pass OpType to the generic callback functions,
+            // which call the real implementation based on OpType.
+            // TODO remove those not needed once all callbacks are implemented.
             enum class OpType
             {
                 ADD = 0,
@@ -80,6 +84,7 @@ namespace ngraph
                 SOFTMAX
             };
 
+            // These structs and union are used to pass attributes to callbacks.
             template <int N>
             struct poolAttrs
             {

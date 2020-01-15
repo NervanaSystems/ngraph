@@ -53,13 +53,13 @@ static llvm::cl::opt<std::string>
     clObjectFilename("ngraph-mlir-object-filename",
                      llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
-void MLIRCPURuntime::run(std::vector<MemRefArg>& args)
+void MLIRCPURuntime::run(const std::vector<MemRefArg>& args)
 {
     // run_internal(*reinterpret_cast<std::vector<void*>*>(args), shapeVec, stridesVec);
     run_internal(args);
 }
 
-void MLIRCPURuntime::run_internal(std::vector<MemRefArg>& args)
+void MLIRCPURuntime::run_internal(const std::vector<MemRefArg>& args)
 {
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
     // don't run MLIR passes that were already run. We also pass a default transformer created with
@@ -79,7 +79,7 @@ void MLIRCPURuntime::run_internal(std::vector<MemRefArg>& args)
 
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
 // helpers to be used inside the function.
-void MLIRCPURuntime::bindArguments(std::vector<MemRefArg>& args)
+void MLIRCPURuntime::bindArguments(const std::vector<MemRefArg>& args)
 {
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
@@ -173,6 +173,8 @@ StaticMemRef* MLIRCPURuntime::allocateMemrefDescriptor(size_t rank)
 {
     // We only use StaticMemRef because that's what MLIR currently offers.
     // We should expand this with different types and dynamic MemRefs
+    // We allocate 2 * rank * sizeof(int64_t) for the last element "int64_t shapeAndStrides[]"
+    // in StaticMemRef because shape and strides each needs rank * sizeof(int64_t).
     auto* descriptor =
         reinterpret_cast<StaticMemRef*>(malloc(sizeof(StaticMemRef) + 2 * rank * sizeof(int64_t)));
     NGRAPH_CHECK(descriptor != nullptr, "NULL MemRef descriptor");

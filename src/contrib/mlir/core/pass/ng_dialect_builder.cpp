@@ -114,7 +114,7 @@ namespace
         mlir::ArrayAttr getShapeAsAttr(T ngShape);
 
         /// Return the real input node corresponding to the fake node
-        std::shared_ptr<Node> getOriginArg(std::shared_ptr<Node> node) const;
+        ngraph::Node* getOriginArg(ngraph::Node* node) const;
 
     private:
         // Sub-graph to be compiled and executed with MLIR.
@@ -203,12 +203,12 @@ mlir::ArrayAttr NgDialectConversionPass::getShapeAsAttr(T ngShape)
     return m_builder.getI64ArrayAttr(mlirShape);
 }
 
-std::shared_ptr<Node> NgDialectConversionPass::getOriginArg(std::shared_ptr<Node> node) const
+ngraph::Node* NgDialectConversionPass::getOriginArg(ngraph::Node* node) const
 {
     auto inputMap = m_compiledKernel->get_input_map();
-    auto it = inputMap.find(node);
+    auto it = inputMap.find(node->shared_from_this());
     NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
-    return m_compiledKernel->input_values().at(it->second).get_node_shared_ptr();
+    return m_compiledKernel->input_values().at(it->second).get_node();
 }
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
@@ -577,8 +577,8 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Softmax)
     auto softmaxNode = static_cast<const ngraph::op::Softmax*>(ngNode);
     auto softmaxOp = llvm::cast<mlir::NGSoftMaxOp>(op);
 
-    auto originArg = NgDialectObj.getOriginArg(ngNode->input_value(1).get_node_shared_ptr());
-    auto const_op = as_type_ptr<ngraph::op::Constant>(originArg);
+    auto originArg = NgDialectObj.getOriginArg(ngNode->input_value(1).get_node());
+    auto const_op = static_cast<ngraph::op::Constant*>(originArg);
 
     AxisSet axes = const_op->get_axis_set_val();
     mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(axes);

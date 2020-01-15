@@ -55,12 +55,12 @@ namespace ngraph
             {
             public:
                 /// Executes a pre-compiled subgraph
-                void run(std::vector<MemRefArg>& args) override;
+                void run(const std::vector<MemRefArg>& args) override;
 
             private:
-                void run_internal(std::vector<MemRefArg>& args);
+                void run_internal(const std::vector<MemRefArg>& args);
                 // Bind external tensors to MLIR module entry point
-                void bindArguments(std::vector<MemRefArg>& args);
+                void bindArguments(const std::vector<MemRefArg>& args);
                 // Invokes an MLIR module entry point with bound arguments
                 void execute();
                 // Cleans up allocated args
@@ -74,7 +74,7 @@ namespace ngraph
 
             private:
                 // Pointers to externally allocated memory for sub-graph's input and output tensors.
-                std::vector<MemRefArg>* m_externalTensors;
+                const std::vector<MemRefArg>* m_externalTensors;
                 // Arguments for the MLIR function generated for the nGraph sub-graph.
                 llvm::SmallVector<void*, 8> m_invokeArgs;
                 std::unique_ptr<mlir::ExecutionEngine> m_engine;
