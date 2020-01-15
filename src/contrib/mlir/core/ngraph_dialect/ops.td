@@ -22,7 +22,6 @@
 // not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
 include "core/ngraph_dialect/ops_interfaces.td"
-
 include "mlir/IR/OpBase.td"
 
 // nGraph Dialect operations definitions
