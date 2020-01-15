@@ -44,9 +44,9 @@ endif()
 if(UNIX)
     # workaround for compile error
     # related: https://github.com/intel/mkl-dnn/issues/55
-    set(GTEST_CXX_FLAGS -Wno-unused-result ${CMAKE_CXX_FLAGS} -Wno-undef)
+    set(GTEST_CXX_FLAGS -Wno-unused-result ${NGRAPH_COMMON_CXX_FLAGS} -Wno-undef)
 else()
-    set(GTEST_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    set(GTEST_CXX_FLAGS ${NGRAPH_COMMON_CXX_FLAGS})
 endif()
 
 #Build for ninja
