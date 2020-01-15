@@ -31,12 +31,6 @@ namespace ngraph
 
             } // namespace set_1
 
-            namespace set_8
-            {
-                NodeVector mean(const Node& node);
-
-            } // namespace set_1
-
         } // namespace op
 
     } // namespace onnx_import
