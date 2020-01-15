@@ -628,13 +628,6 @@ if (NGRAPH_DISTRIBUTED_MLSL_ENABLE)
     include(cmake/external_mlsl.cmake)
 endif()
 
-if (NGRAPH_HALIDE)
-    message(WARNING "Halide build system integration is currently using an older LLVM release \
-                     and is not expected to work across most build environments. Consider \
-                     disabling it till this message goes away")
-    include(cmake/external_halide.cmake)
-endif()
-
 add_subdirectory(src)
 
 add_subdirectory(test)

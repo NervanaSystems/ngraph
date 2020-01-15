@@ -236,9 +236,6 @@ else()
         if (NOT NGRAPH_DEX_ONLY)
             list(APPEND SRC cpu_codegen.cpp)
         endif()
-        if (NGRAPH_HALIDE)
-            list(APPEND SRC halide.cpp)
-        endif()
         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
     endif()
 
@@ -586,10 +583,6 @@ endif()
 
 if (NGRAPH_TBB_ENABLE)
     target_compile_definitions(unit-test PRIVATE "NGRAPH_TBB_ENABLE")
-endif()
-
-if (NGRAPH_HALIDE)
-    target_compile_definitions(unit-test PRIVATE "NGRAPH_HALIDE")
 endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)

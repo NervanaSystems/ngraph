@@ -120,22 +120,6 @@ TEST(cpu_test, trivial_in_place_relu)
               add->output(0).get_tensor().get_pool_offset());
 }
 
-#ifndef NGRAPH_HALIDE
-TEST(cpu_test, MLIR_DISABLE_TEST(trivial_in_place_relu_fail))
-{
-    auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{16, 1});
-    auto add = A + B;
-    auto relu = make_shared<op::Relu>(add);
-    auto add2 = relu + add;
-    auto f = make_shared<Function>(add2, ParameterVector{A, B});
-    auto backend = runtime::Backend::create("CPU");
-    (backend->compile(f));
-    ASSERT_NE(relu->output(0).get_tensor().get_pool_offset(),
-              add->output(0).get_tensor().get_pool_offset());
-}
-#endif
-
 #ifdef NGRAPH_TBB_ENABLE
 TEST(cpu_test, abc_tbb)
 {
