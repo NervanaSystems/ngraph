@@ -679,9 +679,7 @@ namespace ngraph
                 static BuildOpMap build_dispatcher{
                     {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
                     {TI(ngraph::op::CompiledKernel),
-                     &runtime::cpu::Builder::build<ngraph::op::CompiledKernel>},
-                    {TI(ngraph::runtime::cpu::op::HalideOp),
-                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::HalideOp>}};
+                     &runtime::cpu::Builder::build<ngraph::op::CompiledKernel>}};
 
                 return build_dispatcher;
             }
