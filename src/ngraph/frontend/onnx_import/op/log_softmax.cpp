@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,8 +16,9 @@
 
 #include <memory>
 
+#include "default_opset.hpp"
 #include "log_softmax.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -30,11 +31,16 @@ namespace ngraph
                 NodeVector log_softmax(const Node& node)
                 {
                     NodeVector inputs{node.get_ng_inputs()};
-                    auto data = inputs.at(0);
-                    auto data_shape = data->get_shape();
-                    int axis = node.get_attribute_value<int64_t>("axis", 1);
+                    const auto data = inputs.at(0);
+                    const auto data_shape = data->get_shape();
 
-                    return {std::make_shared<ngraph::opset0::LogSoftmax>(data, axis)};
+                    const auto axis = node.get_attribute_value<int64_t>("axis", 1);
+                    const auto normalized_axis =
+                        ngraph::normalize_axis(node.get_description(), axis, data_shape.size());
+
+                    const auto softmax =
+                        std::make_shared<default_opset::Softmax>(data, normalized_axis);
+                    return {std::make_shared<default_opset::Log>(softmax)};
                 }
 
             } // namespace set_1

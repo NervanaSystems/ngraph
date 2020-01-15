@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ add_subdirectory(tools/ngraph-opt)
 set(SRC
     backend/cpu/cpu_backend.cpp
     backend/pass/affine_lowerer.cpp
-    backend/pass/memory_optimization.cpp
+    backend/analysis/memory_analysis.cpp
     core/compiler.cpp
     core/ngraph_dialect/dialect.cpp
     core/ngraph_dialect/type.cpp

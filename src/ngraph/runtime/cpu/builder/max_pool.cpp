@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -155,8 +155,8 @@ namespace ngraph
                     // MaxPoolBackprop forward needs 4 primitives: fprop_src, diff_src, workspace,
                     // and pooling_forward.
                     // It needs a new workspace.
-                    size_t fwd_pool_index =
-                        mkldnn_emitter->reserve_primitive_space(4, true /* new workspace */);
+                    size_t fwd_pool_index = mkldnn_emitter->reserve_primitive_space(
+                        4, false /* fwd and bwd */, true /* new workspace */);
                     auto& fdeps = mkldnn_emitter->get_primitive_deps(fwd_pool_index);
 
                     auto functor_fprop = [&,
@@ -182,8 +182,8 @@ namespace ngraph
                     // MaxPoolBackprop backward needs 4 primitives: diff_dst, workspace, diff_src,
                     // and pooling_backward.
                     // It needs a new workspace.
-                    size_t bwd_pool_index =
-                        mkldnn_emitter->reserve_primitive_space(4, true /* new workspace */);
+                    size_t bwd_pool_index = mkldnn_emitter->reserve_primitive_space(
+                        4, false /* fwd and bwd */, true /* new workspace */);
                     auto& bdeps = mkldnn_emitter->get_primitive_deps(bwd_pool_index);
                     auto functor_bprop = [&, bwd_pool_index, delta_buffer_index, out_buffer_index](
                         CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -103,5 +103,51 @@ namespace ngraph
         /// \return     The node with added empty axis.
         ///
         std::shared_ptr<Node> expand_dims(const Output<Node>& value, std::size_t axis = 0);
+
+        namespace opset1
+        {
+            /// \brief      Change shape of a value
+            ///
+            /// \param[in]  value  The value to be reshaped.
+            /// \param[in]  shape  The new shape.
+            ///
+            /// \return     Reshape:v1 op.
+            std::shared_ptr<Node> reshape(const Output<Node>& value, const Shape& shape);
+
+            /// \brief Permute axes according to specified axes_order parameter.
+            ///
+            /// \param      The vlaue whose axes we want to permute.
+            /// \param      axes_order The permutation of axes.
+            ///
+            /// \return     Transpose:v1 op.
+            std::shared_ptr<Node> reorder_axes(const Output<Node>& value,
+                                               std::vector<size_t> axes_order = {});
+
+            /// \brief      Return transposed vlaue (with axes in reversed order).
+            ///
+            /// \param      Value to transpose.
+            ///
+            /// \return     Transpose:v1 op.
+            std::shared_ptr<Node> transpose(const Output<Node>& value);
+
+            /// \brief       Flatten a value into a 2D matrix, with a static dividing axis.
+            ///
+            /// \param       The tensor to be flattened.
+            /// \param       The axis dividing shape.
+            ///
+            /// \return      The new value will be a 2D matrix representing the flattened input
+            /// node.
+            std::shared_ptr<Node> flatten(const Output<Node>& value, int axis);
+
+            /// \brief      Expands node tensor shape with empty axis at
+            ///             specified position.
+            ///
+            /// \param[in]  value  The value to be expanded.
+            /// \param[in]  axis   The position in the expanded axes where the
+            ///                    new axis is placed.
+            ///
+            /// \return     Reshape:v1 op.
+            std::shared_ptr<Node> expand_dims(const Output<Node>& value, std::size_t axis = 0);
+        }
     } // namespace  builder
 } // namespace  ngraph

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -127,7 +127,6 @@ NGRAPH_OP(LayerNormBackprop, ngraph::op)
 NGRAPH_OP(Less, ngraph::op)
 NGRAPH_OP(LessEq, ngraph::op)
 NGRAPH_OP(Log, ngraph::op)
-NGRAPH_OP(LogSoftmax, ngraph::op)
 NGRAPH_OP(LRN, ngraph::op)
 NGRAPH_OP(LSTMCell, ngraph::op)
 NGRAPH_OP(LSTMSequence, ngraph::op)
@@ -165,7 +164,6 @@ NGRAPH_OP(QuantizedDotBias, ngraph::op)
 NGRAPH_OP(RandomUniform, ngraph::op)
 NGRAPH_OP(Recv, ngraph::op)
 NGRAPH_OP(Range, ngraph::op)
-NGRAPH_OP(Reciprocal, ngraph::op)
 NGRAPH_OP(Relu, ngraph::op)
 NGRAPH_OP(ReluBackprop, ngraph::op)
 NGRAPH_OP(ReplaceSlice, ngraph::op)
@@ -174,6 +172,7 @@ NGRAPH_OP(Result, ngraph::op)
 NGRAPH_OP(Reverse, ngraph::op)
 NGRAPH_OP(ReverseSequence, ngraph::op)
 NGRAPH_OP(RNNCell, ngraph::op)
+NGRAPH_OP(Round, ngraph::op)
 NGRAPH_OP(ScalarConstantLike, ngraph::op)
 NGRAPH_OP(ScaleShift, ngraph::op)
 NGRAPH_OP(ScatterAdd, ngraph::op)
@@ -207,6 +206,5 @@ NGRAPH_OP(Tanh, ngraph::op)
 NGRAPH_OP(TensorIterator, ngraph::op)
 NGRAPH_OP(Tile, ngraph::op)
 NGRAPH_OP(TopK, ngraph::op::v0)
-NGRAPH_OP(Transpose, ngraph::op)
 NGRAPH_OP(Unsqueeze, ngraph::op)
 NGRAPH_OP(Xor, ngraph::op)

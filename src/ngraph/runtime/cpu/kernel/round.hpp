@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,14 +14,26 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
-
 #pragma once
 
-#include <mlir/Pass/Pass.h>
+#include "ngraph/runtime/reference/round.hpp"
 
-namespace mlir
+namespace ngraph
 {
-    std::unique_ptr<Pass> createMemoryOptimizationPass();
+    namespace runtime
+    {
+        namespace cpu
+        {
+            namespace kernel
+            {
+                template <typename ElementType>
+                void round(void* arg, void* output, size_t count, int arena)
+                {
+                    reference::round<ElementType>(static_cast<const ElementType*>(arg),
+                                                  static_cast<ElementType*>(output),
+                                                  count);
+                }
+            }
+        }
+    }
 }

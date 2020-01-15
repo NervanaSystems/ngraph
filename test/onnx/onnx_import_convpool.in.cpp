@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -408,7 +408,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p3)
 
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front(), 18));
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_convtranspose_output_shape)

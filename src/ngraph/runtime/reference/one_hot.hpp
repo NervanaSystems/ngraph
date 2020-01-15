@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,8 +79,7 @@ namespace ngraph
             {
                 const T on_value = 1;
                 const T off_value = 0;
-                return one_hot<T, T>(
-                    arg, out, in_shape, out_shape, one_hot_axis, on_value, off_value);
+                one_hot<T, T>(arg, out, in_shape, out_shape, one_hot_axis, on_value, off_value);
             }
         }
     }

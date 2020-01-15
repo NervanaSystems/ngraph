@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,11 +16,12 @@
 
 #include <vector>
 
+#include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/validation_util.hpp"
 #include "squeeze.hpp"
-#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -35,10 +36,10 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
                     std::vector<std::int64_t> axes =
                         node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
-                    std::vector<std::size_t> valid_axes =
-                        common::validate_axes(node, axes, data->get_shape().size());
+                    std::vector<std::size_t> normalized_axes = ngraph::normalize_axes(
+                        node.get_description(), axes, data->get_shape().size());
                     auto axes_node = std::make_shared<default_opset::Constant>(
-                        element::u64, Shape{valid_axes.size()}, valid_axes);
+                        element::u64, Shape{normalized_axes.size()}, normalized_axes);
                     return {std::make_shared<default_opset::Squeeze>(data, axes_node)};
                 }
 

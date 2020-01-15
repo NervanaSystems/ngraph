@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     {
         // Insert batch axis
         data_shape.insert(data_shape.begin(), 1);
-        data = builder::reshape(data, data_shape);
+        data = builder::opset1::reshape(data, data_shape);
     }
     const size_t n_dim = data_shape.at(0);
     const size_t c_dim = data_shape.at(1);
@@ -102,7 +102,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     case DepthToSpaceMode::DEPTH_FIRST:
     {
         dispersed_shape.insert(dispersed_shape.begin() + 1, c_flat);
-        flat_node = builder::reshape(data, dispersed_shape);
+        flat_node = builder::opset1::reshape(data, dispersed_shape);
 
         axes_order.push_back(1);
         for (int i = spatial_dim_index; i < data_shape.size(); ++i)
@@ -111,7 +111,7 @@ NodeVector op::DepthToSpace::decompose_op() const
             axes_order.push_back(i);
         }
 
-        flat_node = builder::reorder_axes(flat_node, axes_order);
+        flat_node = builder::opset1::reorder_axes(flat_node, axes_order);
         break;
     }
     // x' = reshape(data, [N, block_size, block_size, ..., block_size, C / (block_size ^ K), D1, D2,
@@ -123,7 +123,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     default:
     {
         dispersed_shape.insert(dispersed_shape.begin() + spatial_dims + 1, c_flat);
-        flat_node = builder::reshape(data, dispersed_shape);
+        flat_node = builder::opset1::reshape(data, dispersed_shape);
 
         axes_order.push_back(spatial_dims + 1);
         for (int i = 2; i < data_shape.size(); ++i)
@@ -131,7 +131,7 @@ NodeVector op::DepthToSpace::decompose_op() const
             axes_order.push_back(spatial_dims + i);
             axes_order.push_back(i - 1);
         }
-        flat_node = builder::reorder_axes(flat_node, axes_order);
+        flat_node = builder::opset1::reorder_axes(flat_node, axes_order);
     }
     }
     Shape squeezed_shape{n_dim, c_flat};
@@ -139,7 +139,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     {
         squeezed_shape.push_back(data_shape.at(i) * bs);
     }
-    flat_node = builder::reshape(flat_node, squeezed_shape);
+    flat_node = builder::opset1::reshape(flat_node, squeezed_shape);
 
     return NodeVector{flat_node};
 }

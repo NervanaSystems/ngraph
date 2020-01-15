@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/generic_cpu/gcpu_executable.hpp"
+#include "ngraph/runtime/gcpu/gcpu_executable.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
@@ -37,59 +37,10 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-runtime::gcpu::OP_TYPEID runtime::gcpu::GCPUExecutable::get_typeid(const NodeTypeInfo& type_info)
-{
-    // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-    // {Abs::type_info, OP_TYPEID::Abs},
-    // {Acos::type_info, OP_TYPEID::Acos},
-    // ...
-    static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
-#define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, OP_TYPEID::NAME},
-#include "ngraph/opsets/opset0_tbl.hpp"
-#undef NGRAPH_OP
-    };
-    OP_TYPEID rc = OP_TYPEID::UnknownOp;
-
-    auto it = type_info_map.find(type_info);
-    if (it != type_info_map.end())
-    {
-        rc = it->second;
-    }
-    return rc;
-}
-
 runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& function,
                                               bool enable_performance_collection)
-    : m_is_compiled{true}
-    , m_performance_counters_enabled{enable_performance_collection}
+    : INTExecutable(function, enable_performance_collection)
 {
-    m_function = clone_function(*function);
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::LikeReplacement>();
-    pass_manager.register_pass<pass::FusedOpDecomposition>();
-    pass_manager.register_pass<pass::Opset0Downgrade>();
-    pass_manager.register_pass<pass::ImplicitBroadcastElimination>();
-    pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
-    pass_manager.register_pass<pass::Liveness>();
-    pass_manager.run_passes(m_function);
-
-    for (auto node : m_function->get_ordered_ops())
-    {
-        m_nodes.push_back(node);
-    }
-    set_parameters_and_results(*m_function);
-}
-
-runtime::gcpu::GCPUExecutable::GCPUExecutable(const std::string& model_string)
-    : m_is_compiled{true}
-    , m_performance_counters_enabled{false}
-{
-    m_function = deserialize(model_string);
-    for (auto& node : m_function->get_ordered_ops())
-    {
-        m_nodes.push_back(node);
-    }
-    set_parameters_and_results(*m_function);
 }
 
 bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
@@ -101,10 +52,6 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     {
         auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
         func_inputs.push_back(host_tensor);
-    }
-    if (m_nan_check_enabled)
-    {
-        perform_nan_check(func_inputs);
     }
 
     // convert outputs to HostTensor
@@ -142,8 +89,8 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     // for each ordered op in the graph
     for (auto& op : m_nodes)
     {
-        auto type_id = get_typeid(op->get_type_info());
-        if (type_id == OP_TYPEID::Parameter)
+        auto type_id = get_typeid(*op);
+        if (type_id == ngraph::runtime::interpreter::OP_TYPEID::Parameter)
         {
             continue;
         }
@@ -186,23 +133,27 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
 #endif
         switch (type_id)
         {
-        case OP_TYPEID::Convert:
-        case OP_TYPEID::Quantize:
-        case OP_TYPEID::Dequantize:
-        case OP_TYPEID::ArgMin:
-        case OP_TYPEID::ArgMax: type = op->get_input_element_type(0); break;
-        case OP_TYPEID::Equal:
-        case OP_TYPEID::Greater:
-        case OP_TYPEID::GreaterEq:
-        case OP_TYPEID::Less:
-        case OP_TYPEID::LessEq:
-        case OP_TYPEID::NotEqual:
+        case ngraph::runtime::interpreter::OP_TYPEID::Convert:
+        case ngraph::runtime::interpreter::OP_TYPEID::Quantize:
+        case ngraph::runtime::interpreter::OP_TYPEID::Dequantize:
+        case ngraph::runtime::interpreter::OP_TYPEID::ArgMin:
+        case ngraph::runtime::interpreter::OP_TYPEID::ArgMax:
+            type = op->get_input_element_type(0);
+            break;
+        case ngraph::runtime::interpreter::OP_TYPEID::Equal:
+        case ngraph::runtime::interpreter::OP_TYPEID::Greater:
+        case ngraph::runtime::interpreter::OP_TYPEID::GreaterEq:
+        case ngraph::runtime::interpreter::OP_TYPEID::Less:
+        case ngraph::runtime::interpreter::OP_TYPEID::LessEq:
+        case ngraph::runtime::interpreter::OP_TYPEID::NotEqual:
             // Get the type of the second input, not the first
             // All BinaryElementwiseComparision ops have the same type for inputs
             // Select has bool for first input and the type we are interested in for the second
             type = op->get_input_element_type(1);
             break;
-        case OP_TYPEID::TopK: type = op->get_output_element_type(1); break;
+        case ngraph::runtime::interpreter::OP_TYPEID::TopK:
+            type = op->get_output_element_type(1);
+            break;
         default: type = op->get_output_element_type(0); break;
         }
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
@@ -218,10 +169,6 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         {
             m_timer_map[op].stop();
         }
-        if (m_nan_check_enabled)
-        {
-            perform_nan_check(op_outputs, op.get());
-        }
     }
 
     return true;
@@ -235,17 +182,17 @@ void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
     stringstream ss;
     switch (type)
     {
-    case element::Type_t::boolean: op_engine<char>(op, out, in); break;
-    case element::Type_t::f32: op_engine<float>(op, out, in); break;
-    case element::Type_t::f64: op_engine<double>(op, out, in); break;
-    case element::Type_t::i8: op_engine<int8_t>(op, out, in); break;
-    case element::Type_t::i16: op_engine<int16_t>(op, out, in); break;
-    case element::Type_t::i32: op_engine<int32_t>(op, out, in); break;
-    case element::Type_t::i64: op_engine<int64_t>(op, out, in); break;
-    case element::Type_t::u8: op_engine<uint8_t>(op, out, in); break;
-    case element::Type_t::u16: op_engine<uint16_t>(op, out, in); break;
-    case element::Type_t::u32: op_engine<uint32_t>(op, out, in); break;
-    case element::Type_t::u64: op_engine<uint64_t>(op, out, in); break;
+    case element::Type_t::boolean: gop_engine<char>(op, out, in); break;
+    case element::Type_t::f32: gop_engine<float>(op, out, in); break;
+    case element::Type_t::f64: gop_engine<double>(op, out, in); break;
+    case element::Type_t::i8: gop_engine<int8_t>(op, out, in); break;
+    case element::Type_t::i16: gop_engine<int16_t>(op, out, in); break;
+    case element::Type_t::i32: gop_engine<int32_t>(op, out, in); break;
+    case element::Type_t::i64: gop_engine<int64_t>(op, out, in); break;
+    case element::Type_t::u8: gop_engine<uint8_t>(op, out, in); break;
+    case element::Type_t::u16: gop_engine<uint16_t>(op, out, in); break;
+    case element::Type_t::u32: gop_engine<uint32_t>(op, out, in); break;
+    case element::Type_t::u64: gop_engine<uint64_t>(op, out, in); break;
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
     case element::Type_t::u1:
@@ -254,77 +201,4 @@ void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
         ss << "unsupported element type " << type << " op " << op.get_name();
         throw ngraph_error(ss.str());
     }
-}
-
-void runtime::gcpu::GCPUExecutable::set_nan_check(bool enable)
-{
-    m_nan_check_enabled = enable;
-}
-
-vector<runtime::PerformanceCounter> runtime::gcpu::GCPUExecutable::get_performance_data() const
-{
-    vector<runtime::PerformanceCounter> rc;
-    for (const pair<shared_ptr<const Node>, stopwatch> p : m_timer_map)
-    {
-        rc.emplace_back(p.first, p.second.get_total_microseconds(), p.second.get_call_count());
-    }
-    return rc;
-}
-
-void runtime::gcpu::GCPUExecutable::perform_nan_check(const vector<shared_ptr<HostTensor>>& tensors,
-                                                      const Node* op)
-{
-    size_t arg_number = 1;
-    for (const shared_ptr<HostTensor>& tensor : tensors)
-    {
-        const element::Type& type = tensor->get_element_type();
-        if (type == element::f32)
-        {
-            const float* data = tensor->get_data_ptr<float>();
-            for (size_t i = 0; i < tensor->get_element_count(); i++)
-            {
-                if (std::isnan(data[i]))
-                {
-                    if (op)
-                    {
-                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
-                    }
-                    else
-                    {
-                        throw runtime_error("nan found in function's input tensor number " +
-                                            to_string(arg_number));
-                    }
-                }
-            }
-        }
-        else if (type == element::f64)
-        {
-            const double* data = tensor->get_data_ptr<double>();
-            for (size_t i = 0; i < tensor->get_element_count(); i++)
-            {
-                if (std::isnan(data[i]))
-                {
-                    if (op)
-                    {
-                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
-                    }
-                    else
-                    {
-                        throw runtime_error("nan found in function's input tensor number " +
-                                            to_string(arg_number));
-                    }
-                }
-            }
-        }
-        arg_number++;
-    }
-}
-
-void runtime::gcpu::GCPUExecutable::save(ostream& out)
-{
-    cpio::Writer writer(out);
-    string si = "INTERPRETER Save File 1.0";
-    writer.write("save_info", si.data(), si.size());
-    string model = serialize(m_function, 0);
-    writer.write("model", model.data(), model.size());
 }

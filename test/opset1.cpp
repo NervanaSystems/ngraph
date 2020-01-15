@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -145,7 +145,7 @@ TEST(opset, check_opset1)
     CHECK_OPSET(op::v0::TensorIterator, opset1::TensorIterator)
     CHECK_OPSET(op::v0::Tile, opset1::Tile)
     CHECK_OPSET(op::v1::TopK, opset1::TopK)
-    CHECK_OPSET(op::v0::Transpose, opset1::Transpose)
+    CHECK_OPSET(op::v1::Transpose, opset1::Transpose)
     CHECK_OPSET(op::v0::Unsqueeze, opset1::Unsqueeze)
     CHECK_OPSET(op::v1::VariadicSplit, opset1::VariadicSplit)
     CHECK_OPSET(op::v0::Xor, opset1::Xor)

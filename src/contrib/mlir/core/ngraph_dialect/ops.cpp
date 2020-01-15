@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -171,8 +171,11 @@ static mlir::LogicalResult verifyCmpOp(T* op)
     NGTensorType resType = r0.cast<NGTensorType>();
 
     // result of same shape as input and has bool type
-    if (!resType.isCompatibleShape(opType0) || !resType.getElementType().isa<NGBoolType>())
+    if (!resType.isCompatibleShape(opType0) ||
+        !resType.getElementType().cast<NGIntegerType>().isUInt8())
+    {
         return op->emitOpError("Incompatible result shape or type for comparison op");
+    }
 
     return mlir::success();
 }
@@ -304,28 +307,6 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
         }
     }
     return mlir::success();
-}
-
-static std::string getBufferIdAttrName()
-{
-    return "ng.buffer_id";
-}
-
-void setBufferId(mlir::Operation* op, mlir::IntegerAttr attr)
-{
-    op->setAttr(getBufferIdAttrName(), attr);
-}
-
-mlir::IntegerAttr setBufferId(mlir::Operation* op, unsigned val)
-{
-    auto attr = mlir::IntegerAttr::get(IntegerType::get(32, op->getContext()), val);
-    setBufferId(op, attr);
-    return attr;
-}
-
-mlir::IntegerAttr getBufferId(mlir::Operation* op)
-{
-    return op->getAttrOfType<mlir::IntegerAttr>(getBufferIdAttrName());
 }
 
 namespace mlir

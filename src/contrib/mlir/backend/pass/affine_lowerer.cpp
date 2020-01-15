@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,11 +19,13 @@
 
 #include "affine_lowerer.hpp"
 
+#include "contrib/mlir/backend/analysis/memory_analysis.hpp"
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
 #include "ngraph/assertion.hpp"
 
 #include <llvm/ADT/DenseSet.h>
+#include <llvm/Support/Debug.h>
 #include <mlir/EDSC/Builders.h>
 #include <mlir/EDSC/Helpers.h>
 #include <mlir/EDSC/Intrinsics.h>
@@ -193,6 +195,9 @@ namespace
                           Value* gId = nullptr);
 
     ValueHandle createZeroConstant(mlir::Type type);
+    ValueHandle createOneConstant(mlir::Type type);
+
+    bool isInPlaceConcat(mlir::Operation* op, DialectLoweringPass& pass);
 
     /// Conversion from types in the nGraph dialect to the Standard dialect.
     class NGraphTypeConverter : public TypeConverter
@@ -213,29 +218,25 @@ namespace
         void runOnModule() override;
 
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
-        /// Allocates a linear buffer for a temporary tensor
-        Value* createTempBuffer(Type type, PatternRewriter& rewriter);
-
+        /// Allocates a linear buffer for a temporary memref that shares its
+        /// underlying memory. Used in conjunction with createTempMemref
+        Value* createTempBuffer(int bufferId, PatternRewriter& rewriter);
         /// Creates an allocation or view of a memref.
         /// type     MemRef Type
         /// buffer   Optional buffer value to create view over
         /// offset   Optional offset into the buffer this view starts at
         ///
-        /// If buffer is null, a new allocation of a memref is created.
-        /// Offset is ignored.  If buffer is non-null, then we create a temp
-        /// view over a pre-allocated buffer (see createTempBuffer)
-
+        /// If buffer is null it allocates a Memref directly and Offset is ignored.
+        /// If not, it creates a view over the pre-allocated buffer at the given offset.
         Value*
             createTempMemref(Type type, Value* buffer, unsigned offset, PatternRewriter& rewriter);
-
         /// Inserts dealloc Ops for each temporary allocated by AllocOp
         void insertDeallocs(PatternRewriter& rewriter);
-
         NGraphTypeConverter& getTypeConverter() { return typeConverter; }
+        MemoryAnalysis* getMemAnalysis() const { return m_memAnalysis; }
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
-
         void findOutputValues();
         void insertNoAliasArgAttrs();
 
@@ -248,7 +249,7 @@ namespace
         // Track pre-assigned buffers  for each Value and re-use it if one is available.
         using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
         IdToMemRefMap m_id_to_memref;
-
+        MemoryAnalysis* m_memAnalysis;
         // TODO: Workaround for findOutputValues and buildOutputDefs. See NGCPU-470.
         std::string funcName;
     };
@@ -260,6 +261,9 @@ namespace
         OwningRewritePatternList patterns;
 
         populateNGraphToAffineConversionPatterns(patterns);
+
+        // Get Memory analysis for in-place memory optimizations
+        m_memAnalysis = &getAnalysis<MemoryAnalysis>();
 
         // Create target that defines legal ops for nGraph dialect to be lowered to.
         ConversionTarget target(getContext());
@@ -365,24 +369,25 @@ namespace
                 // will re-use the same buffer.
                 auto tensorType = origResult->getType().cast<NGTensorType>();
                 Value* newResult = nullptr;
-                Attribute bufferIdAttr = getBufferId(op);
+                auto bufferInfo = m_memAnalysis->getBufferInfo(op);
                 Type memRefType = typeConverter.convertType(tensorType);
-
                 Value* bufferValue = nullptr;
-                if (!bufferIdAttr)
+
+                if (!bufferInfo.isValid())
                 {
                     // Allocate new memref
                     newResult = createTempMemref(memRefType, nullptr, 0, rewriter);
                 }
                 else
                 {
-                    unsigned bufferId = bufferIdAttr.cast<IntegerAttr>().getInt();
+                    unsigned bufferId = bufferInfo.m_bufferId;
+                    unsigned offset = bufferInfo.m_offset;
                     // Re-use a buffer if it exist, else create a new one and update map
                     IdToMemRefMap::iterator it = m_id_to_memref.find(bufferId);
                     if (it == m_id_to_memref.end())
                     {
                         // create a new buffer
-                        bufferValue = createTempBuffer(memRefType, rewriter);
+                        bufferValue = createTempBuffer(bufferId, rewriter);
                         m_id_to_memref[bufferId] = bufferValue;
                     }
                     else
@@ -390,7 +395,7 @@ namespace
                         bufferValue = it->second;
                     }
                     // Create a temp view over the linear buffer
-                    newResult = createTempMemref(memRefType, bufferValue, 0, rewriter);
+                    newResult = createTempMemref(memRefType, bufferValue, offset, rewriter);
                 }
                 NGRAPH_CHECK(newResult != nullptr, "Temp memref value is not set");
                 newResults.push_back(newResult);
@@ -399,18 +404,17 @@ namespace
         return newResults;
     }
 
-    Value* DialectLoweringPass::createTempBuffer(Type type, PatternRewriter& rewriter)
+    Value* DialectLoweringPass::createTempBuffer(int bufferId, PatternRewriter& rewriter)
     {
-        MemRefType memRefType = type.cast<MemRefType>();
+        unsigned sizeInBytes = getMemAnalysis()->getBufferSize(bufferId);
+        NGRAPH_CHECK(bufferId >= 0, "Invalid buffer id to allocate");
+        NGRAPH_CHECK(sizeInBytes > 0, "Zero buffer allocation?");
 
-        NGRAPH_CHECK(memRefType.hasStaticShape(), "Dynamic shapes are not supported");
-
-        // deduce linear buffer shape
-        unsigned sizeInBytes = memRefType.getSizeInBits() / 8;
-
+        LLVM_DEBUG(llvm::dbgs() << "Allocating buffer of size " << sizeInBytes << " bytes\n");
         MemRefType bufferType =
-            MemRefType::get({sizeInBytes}, IntegerType::get(8, type.getContext()), {});
+            MemRefType::get({sizeInBytes}, IntegerType::get(8, rewriter.getContext()), {});
 
+        // TODO: Set alignment
         Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), bufferType);
 
         memRefsToDealloc.push_back(alloc);
@@ -433,7 +437,6 @@ namespace
                                                  unsigned offset,
                                                  PatternRewriter& rewriter)
     {
-        NGRAPH_CHECK(offset == 0, "Only zero offset is supported");
         MemRefType memRefType = type.cast<MemRefType>();
         if (buffer)
         {
@@ -443,7 +446,7 @@ namespace
             // linear
             // buffer
             // This is simply (d0, d1, d2, .. dN-1) --> d0 * S0 + d1 * S1 ... + dN-1 * SN-1
-            // Where Si is the stride along the i_th dimension
+            // Where Si is the stride along the i_th dimension in elements
             auto shape = memRefType.getShape();
             SmallVector<int64_t, 4> strides(shape.size(), 0);
             strides[shape.size() - 1] = 1;
@@ -565,6 +568,30 @@ namespace
     REWRITER(NGLessOp)
     {
         lowerBinaryElementwise<mlir::NGLessOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGGreaterEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGGreaterEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGLessEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGLessEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGNotEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGNotEqOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
@@ -1444,6 +1471,8 @@ namespace
         auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
         // Steps
         auto steps = vLHS.getSteps();
+        // element type of the operand
+        Type elemTy = result->getType().cast<MemRefType>().getElementType();
         AffineLoopNestBuilder(pivs, lbs, ubs, steps)(
             // single stmt body
             [&] {
@@ -1463,13 +1492,52 @@ namespace
                 {
                     iRes(ivs) = iLHS(ivs) / iRHS(ivs);
                 }
+                // TODO(pthoreho) For all comparision operators, use
+                // edsc::intrinsics::zero_extendi(ValueHandle(iLHS(ivs)) !=
+                // ValueHandle(iRHS(ivs)), IntegerType::get(8, op->getContext()));
+                // instead of edsc::intrinsics::select once `zero_extendi` is
+                // made available in the edsc::intrinsics namescope in MLIR repo.
                 else if (isa<NGGreaterOp>(op))
                 {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs));
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
                 }
                 else if (isa<NGLessOp>(op))
                 {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs));
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
+                }
+                else if (isa<NGGreaterEqOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) >= ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
+                }
+                else if (isa<NGLessEqOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) <= ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
+                }
+                else if (isa<NGEqOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) == ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
+                }
+                else if (isa<NGNotEqOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) != ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
                 }
                 else if (isa<NGMaxOp>(op))
                 {
@@ -1608,6 +1676,95 @@ namespace
             return intrinsics::constant_int(0, intTy.getWidth());
         }
         NGRAPH_UNREACHABLE("Unsupported type");
+    }
+
+    ValueHandle createOneConstant(mlir::Type type)
+    {
+        if (auto floatTy = type.dyn_cast<FloatType>())
+        {
+            if (floatTy.isF32())
+            {
+                return intrinsics::constant_float(llvm::APFloat(1.0f), floatTy);
+            }
+            else if (floatTy.isF64())
+            {
+                return intrinsics::constant_float(llvm::APFloat(1.0f), floatTy);
+            }
+            else
+            {
+                NGRAPH_UNREACHABLE("Unsupported floating-point precision");
+            }
+        }
+        else if (auto intTy = type.dyn_cast<IntegerType>())
+        {
+            return intrinsics::constant_int(1, intTy.getWidth());
+        }
+        NGRAPH_UNREACHABLE("Unsupported type");
+    }
+
+    // Given a concat op, it will check if dst and operands have
+    // a valid buffer/offset assignment that will make this op
+    // valid in-place
+    bool isInPlaceConcat(mlir::Operation* op, DialectLoweringPass& pass)
+    {
+        NGRAPH_CHECK(isa<NGConcatOp>(op), "Expecting concat operation");
+        auto concat = cast<NGConcatOp>(op);
+        auto concatAxis = concat.concatenation_axis();
+        auto result = concat.getResult();
+        auto shape = (result->getType().cast<NGTensorType>()).getShape();
+        auto memAnalysis = pass.getMemAnalysis();
+        BufferInfo bufferInfo = memAnalysis->getBufferInfo(op);
+
+        if (!bufferInfo.isValid())
+        {
+            // no buffer assignment to dst, nothing to do
+            return false;
+        }
+
+        auto dstBufferId = bufferInfo.m_bufferId;
+        auto dstOffset = bufferInfo.m_offset;
+
+        LLVM_DEBUG(llvm::dbgs() << ">> Check in-place concat\n");
+        LLVM_DEBUG(op->dump());
+        for (auto i = 0; i < shape.size(); i++)
+        {
+            if (i == concatAxis)
+            {
+                break;
+            }
+            if (shape[i] != 1)
+            {
+                LLVM_DEBUG(llvm::dbgs() << "Axis FAIL. Skipping instruction\n");
+                return false;
+            }
+        }
+        LLVM_DEBUG(llvm::dbgs() << "Axis OK\n");
+
+        // Check if the buffer id and offsets are consistent with what's exepcted
+        LLVM_DEBUG(llvm::dbgs() << "Dst (id, offset) = (" << dstBufferId << ", " << dstOffset
+                                << ")\n");
+        // relative offset in the buffer
+        int opndOffset = 0;
+        for (auto opnd : op->getOperands())
+        {
+            bufferInfo = memAnalysis->getBufferInfo(opnd->getDefiningOp());
+            auto srcBufferId = bufferInfo.m_bufferId;
+            auto srcOffset = bufferInfo.m_offset;
+            LLVM_DEBUG(llvm::dbgs() << "Src (id, offset) = (" << srcBufferId << ", " << srcOffset
+                                    << ")\n");
+            if (!bufferInfo.isValid() || srcBufferId != dstBufferId ||
+                srcOffset != (opndOffset + dstOffset))
+            {
+                // mismatch in buffer IDs or offsets
+                LLVM_DEBUG(llvm::dbgs() << "Buffer ID and Offsets FAIL. Skipping instruction\n");
+                return false;
+            }
+            auto tensorType = opnd->getType().cast<NGTensorType>();
+            opndOffset += tensorType.getNumElements();
+        }
+        LLVM_DEBUG(llvm::dbgs() << "Buffer ID and Offsets OK\n");
+
+        return true;
     }
 } // namespace
 

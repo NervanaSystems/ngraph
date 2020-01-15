@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -349,6 +349,143 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_propagate_2d_tensor)
         (vector<float>{3, 7, 2}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_tree_1)
+{
+    Shape shape{1, 2, 2};
+    Shape shape_r{1, 4, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto add1 = make_shared<op::Add>(A, B);
+    auto add2 = make_shared<op::Add>(A, B);
+    auto concat = make_shared<op::Concat>(NodeVector{add1, add2}, 1);
+    auto f = make_shared<Function>(make_shared<op::Add>(concat, concat), ParameterVector{A, B});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1, 1, 1, 1});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{1, 1, 1, 1});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    vector<float> expected;
+    expected.resize(8, 4);
+
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_tree_2)
+{
+    Shape shape{1, 2, 2};
+    Shape shape_r{1, 8, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto add1 = make_shared<op::Add>(A, B);
+    auto add2 = make_shared<op::Add>(A, B);
+    auto concat1 = make_shared<op::Concat>(NodeVector{add1, add2}, 1);
+    auto concat2 = make_shared<op::Concat>(NodeVector{add1, add2}, 1);
+    auto concat12 = make_shared<op::Concat>(NodeVector{concat1, concat2}, 1);
+    auto f = make_shared<Function>(make_shared<op::Add>(concat12, concat12), ParameterVector{A, B});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1, 1, 1, 1});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{1, 1, 1, 1});
+    auto result = backend->create_tensor(element::f32, shape_r);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    vector<float> expected;
+    expected.resize(16, 4);
+
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_tree_3)
+{
+    Shape shape{1, 2, 2};
+    Shape shape_r{1, 16, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto concat1 = make_shared<op::Concat>(NodeVector{A, B}, 1);
+    auto concat2 = make_shared<op::Concat>(NodeVector{A, B}, 1);
+    auto concat3 = make_shared<op::Concat>(NodeVector{A, B}, 1);
+    auto concat4 = make_shared<op::Concat>(NodeVector{A, B}, 1);
+    auto concat12 = make_shared<op::Concat>(NodeVector{concat1, concat2}, 1);
+    auto concat34 = make_shared<op::Concat>(NodeVector{concat3, concat4}, 1);
+    auto concat14 = make_shared<op::Concat>(NodeVector{concat12, concat34}, 1);
+    auto f = make_shared<Function>(make_shared<op::Add>(concat14, concat14), ParameterVector{A, B});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1, 1, 1, 1});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{1, 1, 1, 1});
+    auto result = backend->create_tensor(element::f32, shape_r);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    vector<float> expected;
+    expected.resize(32, 2);
+
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_add_concat)
+{
+    Shape shape{2, 2};
+    Shape shape_r{4, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto add1 = make_shared<op::Add>(A, B);
+    auto add2 = make_shared<op::Add>(add1, add1);
+    auto concat = make_shared<op::Concat>(NodeVector{add1, add2}, 0);
+    auto add3 = make_shared<op::Add>(concat, concat);
+    auto f = make_shared<Function>(add3, ParameterVector{A, B});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1, 1, 1, 1});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{1, 1, 1, 1});
+    auto result = backend->create_tensor(element::f32, shape_r);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    vector<float> expected = {4, 4, 4, 4, 8, 8, 8, 8};
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_add_concat_2)
+{
+    Shape shape{1, 2, 2};
+    Shape shape_r{1, 6, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto add1 = make_shared<op::Add>(A, B);
+    auto add2 = make_shared<op::Add>(A, B);
+    auto add3 = make_shared<op::Add>(A, B);
+    auto add4 = make_shared<op::Add>(A, B);
+    auto add5 = make_shared<op::Add>(A, B);
+
+    auto concat1 = make_shared<op::Concat>(NodeVector{add1, add2, add3}, 1);
+
+    auto concat2 = make_shared<op::Concat>(NodeVector{add4, add2, add5}, 1);
+
+    auto add6 = make_shared<op::Add>(concat1, concat2);
+    auto f = make_shared<Function>(add6, ParameterVector{A, B});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1, 1, 1, 1});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{1, 1, 1, 1});
+    auto result = backend->create_tensor(element::f32, shape_r);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    vector<float> expected = {4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
 // from numpy import *
 // a=linspace(1,2*3*4*3*2,2*3*4*3*2)
 // b=linspace(1000+1,1000+2*3*3*3*2,2*3*3*3*2)

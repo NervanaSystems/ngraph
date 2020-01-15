@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -109,7 +109,7 @@ namespace ngraph
                         node->get_element_type(), ngraph::Shape{}, value);
                 }
 
-                return ngraph::builder::reshape(node, Shape{});
+                return ngraph::builder::opset1::reshape(node, Shape{});
             }
 
         } // namespace  reshape
