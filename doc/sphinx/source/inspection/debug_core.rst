@@ -34,7 +34,7 @@ Compile Flags
    ``NGRAPH_DYNAMIC_COMPONENTS_ENABLE``,  Enable dynamic loading of components,  ``TRUE``
    ``NGRAPH_ENABLE_CPU_CONV_AUTO``, Enable mkldnn convolution_auto for CPU, ``TRUE``
    ``NGRAPH_FAST_MATH_ENABLE``,  Enable fast math,  ``ON``
-   ``NGRAPH_GENERIC_CPU_ENABLE``  Enable build ``NGRAPH`` for generic CPU backend, ``FALSE``
+   ``NGRAPH_GENERIC_CPU_ENABLE``, Enable build ``NGRAPH`` for generic CPU backend, ``FALSE``
    ``NGRAPH_GPU_ENABLE``,  Control the building of the GPU backend,  ``FALSE``
    ``NGRAPH_GPUH_ENABLE``, Control the building of the Hybrid GPU backend, ``FALSE``
    ``NGRAPH_HALIDE``,  ,``OFF``
@@ -42,15 +42,15 @@ Compile Flags
    ``NGRAPH_INTERPRETER_ENABLE``, Control the building of the ``INTERPRETER`` backend,  ``TRUE``
    ``NGRAPH_INTERPRETER_STATIC_LIB_ENABLE``, Enable build INTERPRETER backend static library, ``FALSE``
    ``NGRAPH_JSON_ENABLE``, Enable JSON based serialization and tracing features, ``TRUE``
-   ``NGRAPH_LIB_VERSIONING_ENABLE``  Enable shared library versioning, ``FALSE``
+   ``NGRAPH_LIB_VERSIONING_ENABLE``, Enable shared library versioning, ``FALSE``
    ``NGRAPH_MLIR_ENABLE``, Control the building of MLIR backend, ``FALSE``
    ``NGRAPH_NOP_ENABLE``,  Control the building of the NOP backend,  ``TRUE``
-   ``NGRAPH_ONNX_IMPORT_ENABLE``  Enable ONNX importer, ``FALSE``
+   ``NGRAPH_ONNX_IMPORT_ENABLE``, Enable ONNX importer, ``FALSE``
    ``NGRAPH_PLAIDML_ENABLE``, Enable the PlaidML backend,  ``${PLAIDML_FOUND}``
-   ``NGRAPH_PYTHON_BUILD_ENABLE``,  Enable build of ``NGRAPH`` python package wheel, ``FALSE``
+   ``NGRAPH_PYTHON_BUILD_ENABLE``, Enable build of ``NGRAPH`` python package wheel, ``FALSE``
    ``NGRAPH_STATIC_LIB_ENABLE``, Enable build ``NGRAPH`` static library, ``FALSE``
    ``NGRAPH_TBB_ENABLE``, Only if (``NGRAPH_CPU_ENABLE``) Control usage of TBB for CPU backend, ``TRUE``
-   ``NGRAPH_TOOLS_ENABLE``  Control the building of tools, ``TRUE``
+   ``NGRAPH_TOOLS_ENABLE``, Control the building of tools, ``TRUE``
    ``NGRAPH_UNIT_TEST_ENABLE``,  Control the building of unit tests, ``TRUE``
    ``NGRAPH_USE_PREBUILT_LLVM``, Use a precompiled LLVM  ,``FALSE``
    ``NGRAPH_USE_PREBUILT_MLIR``, Use the `precompiled MLIR`_,``FALSE``
