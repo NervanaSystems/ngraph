@@ -15,7 +15,12 @@
 //*****************************************************************************
 
 #include "ngraph/frontend/fluid/operators/lookup_table.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/gather.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph::fluid;
@@ -37,7 +42,43 @@ NodeVector LookupTable2::decompose_op() const
     auto ids = input_value(1);
     auto padding_idx = get_padding_idx();
 
-    return {};
+    auto table_shape = get_input_shape(0);
+    auto ids_shape = get_input_shape(1);
+
+    NODE_VALIDATION_CHECK(
+        this, table_shape.size() == 2, "The dimension of look up table must be 2");
+
+    auto row_number = table_shape[0];
+    auto row_width = table_shape[1];
+
+    auto node_w = w.get_node_shared_ptr();
+    auto masked_w = node_w;
+
+    if (padding_idx == -1)
+    {
+        vector<size_t> mask(row_number, 1);
+        mask[padding_idx] = 0;
+
+        shared_ptr<Node> mask_node =
+            make_shared<op::Constant>(w.get_element_type(), Shape{row_number}, mask);
+        shared_ptr<Node> mask_bcast =
+            make_shared<op::Broadcast>(mask_node, table_shape, AxisSet{1});
+        masked_w = make_shared<op::Multiply>(node_w, mask_bcast);
+    }
+
+    auto ids_size = shape_size(ids_shape);
+
+    auto flattened_ids =
+        make_shared<op::Reshape>(ids, get_default_order(ids_shape), Shape{ids_size});
+    auto out = make_shared<op::Gather>(masked_w, flattened_ids);
+
+    auto out_shape = ids_shape;
+    out_shape.push_back(row_width);
+
+    auto out_reshaped =
+        make_shared<op::Reshape>(out, get_default_order(out->get_shape()), out_shape);
+
+    return {out_reshaped};
 }
 
 shared_ptr<Node> LookupTable2::copy_with_new_args(const NodeVector& new_args) const
