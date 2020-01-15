@@ -22,6 +22,7 @@ Compile Flags
    :escape: ~
 
    ``NGRAPH_CODE_COVERAGE_ENABLE``, Enable code coverage data collection, ``FALSE``
+   ``NGRAPH_CODEGEN, Emit code in codegen format and disables the default DEX compilation, ``FALSE``
    ``NGRAPH_CPU_ENABLE``,  Control the building of the CPU backend, ``TRUE``
    ``NGRAPH_CPU_STATIC_LIB_ENABLE``,  Enable build CPU backend static library, ``FALSE``
    ``NGRAPH_DEBUG_ENABLE``, Enable output for ``NGRAPH_DEBUG`` statements, ``FALSE``
@@ -51,8 +52,8 @@ Compile Flags
    ``NGRAPH_TBB_ENABLE``, Only if (``NGRAPH_CPU_ENABLE``) Control usage of TBB for CPU backend, ``TRUE``
    ``NGRAPH_TOOLS_ENABLE``  Control the building of tools, ``TRUE``
    ``NGRAPH_UNIT_TEST_ENABLE``,  Control the building of unit tests, ``TRUE``
-   ``NGRAPH_USE_PREBUILT_MLIR``, Use the `precompiled MLIR`_,``FALSE``
    ``NGRAPH_USE_PREBUILT_LLVM``, Use a precompiled LLVM  ,``FALSE``
+   ``NGRAPH_USE_PREBUILT_MLIR``, Use the `precompiled MLIR`_,``FALSE``
 
 
 Environment Variables
@@ -66,23 +67,25 @@ Environment Variables
    :widths: 20, 35
    :escape: ~
 
-   ``NGRAPH_CPU_BIN_TRACER_LOG``, See also :ref:`debug_tracer`
-   ``NGRAPH_CPU_DEBUG_TRACER``,  See also :ref:`debug_tracer`
+   ``NGRAPH_CPU_BIN_TRACER_LOG``, See :ref:`debug_tracer`
+   ``NGRAPH_CPU_DEBUG_TRACER``,  See :ref:`debug_tracer`
    ``NGRAPH_CPU_TRACER_LOG``, See also :ref:`debug_tracer`
-   ``NGRAPH_CPU_TRACING``, Generate Timelines for CPU to check in ``chrome://tracing``
+   ``NGRAPH_CPU_TRACING``, Generate timelines for CPU to check in ``chrome://tracing``
    ``NGRAPH_DECONV_FUSE``,  Default ``FALSE``; when ``TRUE`` it enables fusion for deconvolution.  Only available with CPU.
    ``NGRAPH_ENABLE_SERIALIZE_TRACING``,  Creates serialized files to be run with ``nbench`` for localized execution rather than whole stack execution
-   ``NGRAPH_INTER_OP_PARALLELISM``, See also :ref:`interop_intraop`
-   ``NGRAPH_INTRA_OP_PARALLELISM``, See also :ref:`interop_intraop`
+   ``NGRAPH_INTER_OP_PARALLELISM``, See :ref:`interop_intraop`
+   ``NGRAPH_INTRA_OP_PARALLELISM``, See :ref:`interop_intraop`
    ``NGRAPH_PASS_ATTRIBUTES``, Enable or disable attributes related to a pass; see also `pass config`_
    ``NGRAPH_PASS_ENABLES``,  Enable or disable a pass: either core or backend
    ``NGRAPH_PROFILE_PASS_ENABLE``,  Per-pass time taken to compile
    ``NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE``,  Calculated in code; helps prevent *long* edges between two nodes very far apart
    ``NGRAPH_VISUALIZE_EDGE_LABELS``, Set it to 1 in ``~/.bashrc``
-   ``NGRAPH_VISUALIZE_TRACING_FORMAT``, Default format is ``.svg``
+   ``NGRAPH_ENABLE_VISUALIZE_TRACING``, See :doc:`viz_tools`
+   ``NGRAPH_ENABLE_TRACING``, See :doc:`viz_tools`
+   ``NGRAPH_VISUALIZE_TRACING_FORMAT``, Default format is ``.svg``. See also :doc:`viz_tools` 
    ``NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES``,  Set it to 1 in ``~/.bashrc``
    ``NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES``, Set it to 1 in ``~/.bashrc``
-   ``OMP_NUM_THREADS``, See `OpenMPI Runtime Library Documentation`_
+   ``OMP_NUM_THREADS``, See: `OpenMPI Runtime Library Documentation`_
 
 
 
