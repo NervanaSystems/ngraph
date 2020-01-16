@@ -62,16 +62,11 @@ Environment Variables
    :widths: 20, 35
    :escape: ~
 
-   ``NGRAPH_CPU_BIN_TRACER_LOG``, See :ref:`debug_tracer`
-   ``NGRAPH_CPU_DEBUG_TRACER``,  See :ref:`debug_tracer`
-   ``NGRAPH_CPU_TRACER_LOG``, See also :ref:`debug_tracer`
-   ``NGRAPH_CPU_TRACING``, Generate timelines for CPU to check in ``chrome://tracing``
    ``NGRAPH_DISABLE_LOGGING``,	Disable printing all logs irrespective of build type
    ``NGRAPH_ENABLE_REPLACE_CHECK``,	Enables strict type checking in copy constructor copy_with_new_args
    ``NGRAPH_ENABLE_SERIALIZE_TRACING``, generates 1 ``json`` file per pass to run with ``nbench`` for localized execution rather than whole stack execution
-   ``NGRAPH_ENABLE_VISUALIZE_TRACING``, See :doc:`viz_tools`
    ``NGRAPH_ENABLE_TRACING``, Enables creating graph execution timelines to be viewed in ``chrome://tracing`` see also :doc:`viz_tools`.
-   ``NGRAPH_ENABLE_VISUALIZE_TRACING``,	Enables creating visual graph for each pass ``.svg`` files by default
+   ``NGRAPH_ENABLE_VISUALIZE_TRACING``,	Enables creating visual graph for each pass ``.svg`` files by default; see also :doc:`viz_tools`
    ``NGRAPH_FAIL_MATCH_AT``, Allows one to specify node name patterns to abort pattern matching at particular nodes. Helps debug an offending fusion
    ``NGRAPH_GTEST_INFO``, Enables printing info about a specific test
    ``NGRAPH_INTER_OP_PARALLELISM``, See :ref:`interop_intraop`
