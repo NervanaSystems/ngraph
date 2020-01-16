@@ -81,7 +81,7 @@ namespace
         }                                                                                          \
                                                                                                    \
         PatternMatchResult matchAndRewrite(Operation* op,                                          \
-                                           ArrayRef<Value> operands,                              \
+                                           ArrayRef<Value> operands,                               \
                                            ConversionPatternRewriter& rewriter) const override;    \
     };
 
@@ -198,8 +198,7 @@ namespace
         ///
         /// If buffer is null it allocates a Memref directly and Offset is ignored.
         /// If not, it creates a view over the pre-allocated buffer at the given offset.
-        Value
-            createTempMemref(Type type, Value buffer, unsigned offset, PatternRewriter& rewriter);
+        Value createTempMemref(Type type, Value buffer, unsigned offset, PatternRewriter& rewriter);
         /// Inserts dealloc Ops for each temporary allocated by AllocOp
         void insertDeallocs(PatternRewriter& rewriter);
         NGraphTypeConverter& getTypeConverter() { return typeConverter; }
@@ -313,7 +312,7 @@ namespace
     }
 
     SmallVector<Value, 4> DialectLoweringPass::buildOutputDefs(Operation* op,
-                                                                PatternRewriter& rewriter)
+                                                               PatternRewriter& rewriter)
     {
         FuncOp f = getModule().lookupSymbol<mlir::FuncOp>(funcName);
         NGRAPH_CHECK(f, "FuncOp '" + funcName + "' not found");
@@ -403,9 +402,9 @@ namespace
     }
 
     Value DialectLoweringPass::createTempMemref(Type type,
-                                                 Value buffer,
-                                                 unsigned offset,
-                                                 PatternRewriter& rewriter)
+                                                Value buffer,
+                                                unsigned offset,
+                                                PatternRewriter& rewriter)
     {
         MemRefType memRefType = type.cast<MemRefType>();
         if (buffer)
