@@ -115,10 +115,9 @@ void op::v1::Broadcast::validate_and_infer_types()
     // shape node should have integer data type. For now we only allow i64
     auto shape_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
-                          shape_et.compatible(element::Type_t::i64),
-                          "Broadcast shape must have element type i64, but has ",
+                          shape_et.is_integral_number(),
+                          "Broadcast shape must have integral number element type, but has ",
                           shape_et);
-
     // shape node should produce a one dimensional shape.
     auto broadcast_shape_rank = get_input_partial_shape(1).rank();
     NODE_VALIDATION_CHECK(this,
@@ -131,10 +130,9 @@ void op::v1::Broadcast::validate_and_infer_types()
         // axes_mapping node should have integer data type. For now we only allow i64
         auto axes_et = get_input_element_type(2);
         NODE_VALIDATION_CHECK(this,
-                              axes_et.compatible(element::Type_t::i64),
-                              "Broadcast axes must have element type i64, but has ",
+                              axes_et.is_integral_number(),
+                              "Broadcast axes must have integral number element type, but has ",
                               axes_et);
-
         // axes_mapping node should produce a one dimensional shape.
         auto axes_shape_rank = get_input_partial_shape(2).rank();
         NODE_VALIDATION_CHECK(this,
