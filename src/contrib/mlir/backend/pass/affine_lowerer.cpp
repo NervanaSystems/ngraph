@@ -81,7 +81,7 @@ namespace
         }                                                                                          \
                                                                                                    \
         PatternMatchResult matchAndRewrite(Operation* op,                                          \
-                                           ArrayRef<Value*> operands,                              \
+                                           ArrayRef<Value> operands,                              \
                                            ConversionPatternRewriter& rewriter) const override;    \
     };
 
@@ -99,7 +99,7 @@ namespace
 
         /// Hook for derived classes to implement combined matching and rewriting.
         PatternMatchResult matchAndRewrite(Operation* op,
-                                           ArrayRef<Value*> operands,
+                                           ArrayRef<Value> operands,
                                            ConversionPatternRewriter& rewriter) const override
         {
             auto funcOp = cast<FuncOp>(op);
@@ -148,19 +148,19 @@ namespace
     // Helpers
     template <typename RedOp>
     void lowerIndexReduction(Operation* op,
-                             ArrayRef<Value*> operands,
+                             ArrayRef<Value> operands,
                              PatternRewriter& rewriter,
                              DialectLoweringPass& pass);
 
     template <typename OP>
     void lowerBinaryElementwise(Operation* op,
-                                ArrayRef<Value*> operands,
+                                ArrayRef<Value> operands,
                                 PatternRewriter& rewriter,
                                 DialectLoweringPass& pass);
 
     template <typename OP>
     void lowerUnaryElementwise(Operation* op,
-                               ArrayRef<Value*> operands,
+                               ArrayRef<Value> operands,
                                PatternRewriter& rewriter,
                                DialectLoweringPass& pass);
 
@@ -187,10 +187,10 @@ namespace
     public:
         void runOnModule() override;
 
-        SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
+        SmallVector<Value, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
         /// Allocates a linear buffer for a temporary memref that shares its
         /// underlying memory. Used in conjunction with createTempMemref
-        Value* createTempBuffer(int bufferId, PatternRewriter& rewriter);
+        Value createTempBuffer(int bufferId, PatternRewriter& rewriter);
         /// Creates an allocation or view of a memref.
         /// type     MemRef Type
         /// buffer   Optional buffer value to create view over
@@ -198,8 +198,8 @@ namespace
         ///
         /// If buffer is null it allocates a Memref directly and Offset is ignored.
         /// If not, it creates a view over the pre-allocated buffer at the given offset.
-        Value*
-            createTempMemref(Type type, Value* buffer, unsigned offset, PatternRewriter& rewriter);
+        Value
+            createTempMemref(Type type, Value buffer, unsigned offset, PatternRewriter& rewriter);
         /// Inserts dealloc Ops for each temporary allocated by AllocOp
         void insertDeallocs(PatternRewriter& rewriter);
         NGraphTypeConverter& getTypeConverter() { return typeConverter; }
@@ -213,11 +213,11 @@ namespace
     private:
         NGraphTypeConverter typeConverter;
         // List of temporary memrefs to deallocate at end of function
-        SmallVector<Value*, 4> memRefsToDealloc;
+        SmallVector<Value, 4> memRefsToDealloc;
 
         // Ops maybe assigned mem-refs in previous memory optimization passes.
         // Track pre-assigned buffers  for each Value and re-use it if one is available.
-        using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
+        using IdToMemRefMap = std::unordered_map<unsigned, Value>;
         IdToMemRefMap m_id_to_memref;
         MemoryAnalysis* m_memAnalysis;
         // TODO: Workaround for findOutputValues and buildOutputDefs. See NGCPU-470.
@@ -291,7 +291,7 @@ namespace
         FuncOp f = getModule().lookupSymbol<mlir::FuncOp>(funcName);
         NGRAPH_CHECK(f, "FuncOp '" + funcName + "' not found");
 
-        SmallVector<Value*, 4> outputList;
+        SmallVector<Value, 4> outputList;
         unsigned outputCount = 0;
         unsigned inputCount = f.getType().getNumInputs();
         // we find out output values by looking at returned values
@@ -301,7 +301,7 @@ namespace
             {
                 // annotate instructions defining outputs with the arg idx of the output
                 auto outputValue = ret.getOperand(i);
-                auto op = outputValue->getDefiningOp();
+                auto op = outputValue.getDefiningOp();
 
                 op->setAttr(
                     "graphOutputIdx",
@@ -312,13 +312,13 @@ namespace
         });
     }
 
-    SmallVector<Value*, 4> DialectLoweringPass::buildOutputDefs(Operation* op,
+    SmallVector<Value, 4> DialectLoweringPass::buildOutputDefs(Operation* op,
                                                                 PatternRewriter& rewriter)
     {
         FuncOp f = getModule().lookupSymbol<mlir::FuncOp>(funcName);
         NGRAPH_CHECK(f, "FuncOp '" + funcName + "' not found");
 
-        SmallVector<Value*, 4> newResults;
+        SmallVector<Value, 4> newResults;
         for (auto origResult : op->getResults())
         {
             // find output arg if this operation produces any sub-graph outputs
@@ -337,11 +337,11 @@ namespace
                 //    the linear buffer.
                 // If two memrefs are defined via 2 Views over the same buffer, then they share and
                 // will re-use the same buffer.
-                auto tensorType = origResult->getType().cast<NGTensorType>();
-                Value* newResult = nullptr;
+                auto tensorType = origResult.getType().cast<NGTensorType>();
+                Value newResult = nullptr;
                 auto bufferInfo = m_memAnalysis->getBufferInfo(op);
                 Type memRefType = typeConverter.convertType(tensorType);
-                Value* bufferValue = nullptr;
+                Value bufferValue = nullptr;
 
                 if (!bufferInfo.isValid())
                 {
@@ -374,7 +374,7 @@ namespace
         return newResults;
     }
 
-    Value* DialectLoweringPass::createTempBuffer(int bufferId, PatternRewriter& rewriter)
+    Value DialectLoweringPass::createTempBuffer(int bufferId, PatternRewriter& rewriter)
     {
         unsigned sizeInBytes = getMemAnalysis()->getBufferSize(bufferId);
         NGRAPH_CHECK(bufferId >= 0, "Invalid buffer id to allocate");
@@ -385,7 +385,7 @@ namespace
             MemRefType::get({sizeInBytes}, IntegerType::get(8, rewriter.getContext()), {});
 
         // TODO: Set alignment
-        Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), bufferType);
+        Value alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), bufferType);
 
         memRefsToDealloc.push_back(alloc);
 
@@ -402,8 +402,8 @@ namespace
         return alloc;
     }
 
-    Value* DialectLoweringPass::createTempMemref(Type type,
-                                                 Value* buffer,
+    Value DialectLoweringPass::createTempMemref(Type type,
+                                                 Value buffer,
                                                  unsigned offset,
                                                  PatternRewriter& rewriter)
     {
@@ -428,14 +428,14 @@ namespace
             auto map = makeStridedLinearLayoutMap(strides, offset, rewriter.getContext());
             MemRefType newMemRefType = MemRefType::get(shape, memRefType.getElementType(), map);
             auto viewOp = rewriter.create<mlir::ViewOp>(
-                buffer->getDefiningOp()->getLoc(), newMemRefType, buffer, llvm::None);
+                buffer.getDefiningOp()->getLoc(), newMemRefType, buffer, llvm::None);
             return viewOp.getResult();
         }
 
         // No buffer, create an atomic memref without underlying buffer
         NGRAPH_CHECK(memRefType.hasStaticShape(), "Dynamic shapes are not supported");
 
-        Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), memRefType);
+        Value alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), memRefType);
         memRefsToDealloc.push_back(alloc);
         return alloc;
     }
@@ -448,9 +448,9 @@ namespace
         NGRAPH_CHECK(func, "FuncOp '" + funcName + "' not found");
 
         unsigned int argIdx = 0;
-        for (auto* arg : func.getArguments())
+        for (auto arg : func.getArguments())
         {
-            if (arg->getType().isa<MemRefType>())
+            if (arg.getType().isa<MemRefType>())
             {
                 func.setArgAttr(argIdx, "llvm.noalias", BoolAttr::get(true, &getContext()));
             }
@@ -503,7 +503,7 @@ namespace
 
 #define REWRITER(OP)                                                                               \
     PatternMatchResult OP##Conversion::matchAndRewrite(                                            \
-        Operation* op, ArrayRef<Value*> operands, ConversionPatternRewriter& rewriter) const
+        Operation* op, ArrayRef<Value> operands, ConversionPatternRewriter& rewriter) const
 
     REWRITER(NGAddOp)
     {
@@ -595,12 +595,12 @@ namespace
         auto loc = cast<NGReluOp>(op).getLoc();
 
         auto result = pass.buildOutputDefs(op, rewriter)[0];
-        NGRAPH_CHECK(result->getType().isa<MemRefType>());
+        NGRAPH_CHECK(result.getType().isa<MemRefType>());
         // Note that builder's current function is still the original function body.
         // use getBlock to get the new block instead.
 
         // get new operands
-        Value* lhs = operands[0];
+        Value lhs = operands[0];
 
         ScopedContext scope(rewriter, loc);
         // Views
@@ -616,8 +616,8 @@ namespace
         // Steps
         auto steps = vLHS.getSteps();
 
-        NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
-        Type elemTy = lhs->getType().dyn_cast<MemRefType>().getElementType();
+        NGRAPH_CHECK(lhs.getType().isa<MemRefType>());
+        Type elemTy = lhs.getType().dyn_cast<MemRefType>().getElementType();
 
         AffineLoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iLHS(ivs);
@@ -643,14 +643,14 @@ namespace
 
         // Retrieve/generate Values for operands and result.
         ScopedContext scope(rewriter, loc);
-        Value* lhs = operands[0];
-        Value* rhs = operands[1];
-        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        Value lhs = operands[0];
+        Value rhs = operands[1];
+        Value result = pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(lhs && rhs && result, "Unexpected null values in DotOp");
 
-        auto resultTy = result->getType().dyn_cast<MemRefType>();
-        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
-        auto rhsTy = rhs->getType().dyn_cast<MemRefType>();
+        auto resultTy = result.getType().dyn_cast<MemRefType>();
+        auto lhsTy = lhs.getType().dyn_cast<MemRefType>();
+        auto rhsTy = rhs.getType().dyn_cast<MemRefType>();
         NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
         NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
         NGRAPH_CHECK(rhsTy, "Unexpected non-memref RHS type");
@@ -712,7 +712,7 @@ namespace
         ScopedContext scope(rewriter, loc);
 
         // Create Value for result, and extract type info.
-        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        Value result = pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
 
         // Create view to write into result.
@@ -790,11 +790,11 @@ namespace
         ScopedContext scope(rewriter, loc);
 
         // Get operands
-        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        Value result = pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result, "Unexpected null result in GatherOp");
 
-        Value* params = operands[0];
-        Value* indices = operands[1];
+        Value params = operands[0];
+        Value indices = operands[1];
         auto axis = gatherOp.axis().getSExtValue();
 
         // Create view to write into result.
@@ -909,15 +909,15 @@ namespace
         ScopedContext scope(rewriter, loc);
 
         // Get operands
-        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        Value result = pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result, "Unexpected null result in Convolution Op");
-        Value* images = operands[0];
-        Value* filters = operands[1];
+        Value images = operands[0];
+        Value filters = operands[1];
         auto strides = convolOp.strides().getValue();
         auto padBelow = convolOp.padBelow().getValue();
         auto padAbove = convolOp.padBelow().getValue();
 
-        Type elemTy = images->getType().cast<MemRefType>().getElementType();
+        Type elemTy = images.getType().cast<MemRefType>().getElementType();
 
         // Let Images shape be  [N, C_IN, D_1, ... D_f]
         // Let Filters shape be [C_OUT, C_IN, F_1, ... F_f]
@@ -1146,7 +1146,7 @@ namespace
                                 // if args : img dims, img lbs, img ubs
                                 SmallVector<IndexHandle, 4>::iterator it = imgIndices.begin();
                                 std::advance(it, 2);
-                                SmallVector<Value*, 4> affineIfArgs(it, imgIndices.end());
+                                SmallVector<Value, 4> affineIfArgs(it, imgIndices.end());
                                 affineIfArgs.insert(
                                     affineIfArgs.end(), imgSpatialLbs.begin(), imgSpatialLbs.end());
                                 affineIfArgs.insert(
@@ -1202,19 +1202,19 @@ namespace
     /// End of pattern matchers
     template <typename OP>
     void lowerUnaryElementwise(Operation* op,
-                               ArrayRef<Value*> operands,
+                               ArrayRef<Value> operands,
                                PatternRewriter& rewriter,
                                DialectLoweringPass& pass)
     {
         auto loc = cast<OP>(op).getLoc();
 
         auto result = pass.buildOutputDefs(op, rewriter)[0];
-        NGRAPH_CHECK(result->getType().isa<MemRefType>());
+        NGRAPH_CHECK(result.getType().isa<MemRefType>());
         // Note that builder's current function is still the original function body.
         // use getBlock to get the new block instead.
 
         // get new operands
-        Value* lhs = operands[0];
+        Value lhs = operands[0];
 
         ScopedContext scope(rewriter, loc);
         // Views
@@ -1230,8 +1230,8 @@ namespace
         // Steps
         auto steps = vLHS.getSteps();
 
-        NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
-        Type elemTy = lhs->getType().cast<MemRefType>().getElementType();
+        NGRAPH_CHECK(lhs.getType().isa<MemRefType>());
+        Type elemTy = lhs.getType().cast<MemRefType>().getElementType();
 
         AffineLoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iLHS(ivs);
@@ -1251,16 +1251,16 @@ namespace
 
     template <typename OP>
     void lowerBinaryElementwise(Operation* op,
-                                ArrayRef<Value*> operands,
+                                ArrayRef<Value> operands,
                                 PatternRewriter& rewriter,
                                 DialectLoweringPass& pass)
     {
         auto loc = cast<OP>(op).getLoc();
         auto result = pass.buildOutputDefs(op, rewriter)[0];
-        NGRAPH_CHECK(result->getType().isa<MemRefType>());
+        NGRAPH_CHECK(result.getType().isa<MemRefType>());
         // get new operands
-        Value* lhs = operands[0];
-        Value* rhs = operands[1];
+        Value lhs = operands[0];
+        Value rhs = operands[1];
 
         ScopedContext scope(rewriter, loc);
         // Views
@@ -1276,7 +1276,7 @@ namespace
         // Steps
         auto steps = vLHS.getSteps();
         // element type of the operand
-        Type elemTy = result->getType().cast<MemRefType>().getElementType();
+        Type elemTy = result.getType().cast<MemRefType>().getElementType();
         AffineLoopNestBuilder(pivs, lbs, ubs, steps)(
             // single stmt body
             [&] {
@@ -1367,7 +1367,7 @@ namespace
 
     template <typename RedOp>
     void lowerIndexReduction(Operation* op,
-                             ArrayRef<Value*> operands,
+                             ArrayRef<Value> operands,
                              PatternRewriter& rewriter,
                              DialectLoweringPass& pass)
     {
@@ -1387,9 +1387,9 @@ namespace
 
         // Retrieve/generate Values for operands and result.
         ScopedContext scope(rewriter, loc);
-        Value* arg = operands[0];
+        Value arg = operands[0];
 
-        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        Value result = pass.buildOutputDefs(op, rewriter)[0];
 
         // Views
         MemRefView vRes(result), vArg(arg);
@@ -1402,7 +1402,7 @@ namespace
         auto argLbs = vArg.getLbs();
         auto argUbs = vArg.getUbs();
 
-        Type resTy = result->getType().cast<MemRefType>().getElementType();
+        Type resTy = result.getType().cast<MemRefType>().getElementType();
         // Generate loop nest that initializes result to lower bound of the axis to be reduced.
         {
             auto ivs = makeIndexHandles(vRes.rank());
@@ -1420,7 +1420,7 @@ namespace
             auto steps = vArg.getSteps();
             SmallVector<IndexHandle, 8> nonRedIVs;
 
-            Type resTy = result->getType().cast<MemRefType>().getElementType();
+            Type resTy = result.getType().cast<MemRefType>().getElementType();
             NGRAPH_CHECK(resTy.isa<IntegerType>(),
                          "Expected integer result type in index reduction");
 
@@ -1515,7 +1515,7 @@ namespace
         auto concat = cast<NGConcatOp>(op);
         auto concatAxis = concat.concatenation_axis();
         auto result = concat.getResult();
-        auto shape = (result->getType().cast<NGTensorType>()).getShape();
+        auto shape = (result.getType().cast<NGTensorType>()).getShape();
         auto memAnalysis = pass.getMemAnalysis();
         BufferInfo bufferInfo = memAnalysis->getBufferInfo(op);
 
@@ -1551,7 +1551,7 @@ namespace
         int opndOffset = 0;
         for (auto opnd : op->getOperands())
         {
-            bufferInfo = memAnalysis->getBufferInfo(opnd->getDefiningOp());
+            bufferInfo = memAnalysis->getBufferInfo(opnd.getDefiningOp());
             auto srcBufferId = bufferInfo.m_bufferId;
             auto srcOffset = bufferInfo.m_offset;
             LLVM_DEBUG(llvm::dbgs() << "Src (id, offset) = (" << srcBufferId << ", " << srcOffset
@@ -1563,7 +1563,7 @@ namespace
                 LLVM_DEBUG(llvm::dbgs() << "Buffer ID and Offsets FAIL. Skipping instruction\n");
                 return false;
             }
-            auto tensorType = opnd->getType().cast<NGTensorType>();
+            auto tensorType = opnd.getType().cast<NGTensorType>();
             opndOffset += tensorType.getNumElements();
         }
         LLVM_DEBUG(llvm::dbgs() << "Buffer ID and Offsets OK\n");
