@@ -154,12 +154,8 @@ namespace
 
         // (Re)construct axes_mapping.
         AxisSet broadcast_axes = node->get_broadcast_axes().second;
-        std::vector<size_t> axes_mapping(target_shape.size());
-        std::iota(axes_mapping.begin(), axes_mapping.end(), 0);
-        for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); ++i)
-        {
-            axes_mapping.erase(axes_mapping.begin() + *i);
-        }
+        std::vector<size_t> axes_mapping{
+            ngraph::op::opset1::get_axes_mapping(target_shape, broadcast_axes)};
 
         Output<Node> squeezed_arg = arg;
         // Collect axes to squeeze. Broadcast v0 "adds" new axes, thus we have to squeeze
@@ -182,7 +178,10 @@ namespace
                 empty_axes.push_back(a);
             }
         }
-        squeezed_arg = builder::squeeze(arg, empty_axes);
+        if (!empty_axes.empty())
+        {
+            squeezed_arg = builder::squeeze(arg, empty_axes);
+        }
 
         auto replacement_node =
             make_shared<op::v0::Broadcast>(squeezed_arg, target_shape, broadcast_axes);
