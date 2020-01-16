@@ -22,16 +22,12 @@ Compile Flags
    :escape: ~
 
    ``NGRAPH_CODE_COVERAGE_ENABLE``, Enable code coverage data collection, ``FALSE``
-   ``NGRAPH_CODEGEN``, Emit code in codegen format and disables the default DEX compilation, ``FALSE``
    ``NGRAPH_DEBUG_ENABLE``, Enable output for ``NGRAPH_DEBUG`` statements, ``FALSE``
-   ``NGRAPH_DECONV_FUSE``, Only available with CPU; when set it enables fusion for deconvolution, ``FALSE``
    ``NGRAPH_DEPRECATED_ENABLE``, Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use), ``FALSE``
    ``NGRAPH_DEX_ONLY``, Build CPU DEX without codegen, ``FALSE``
-   ``NGRAPH_DISABLED_FUSIONS``,	Disable specified fusions. Specified as `;` separated list and supports regex, ``FALSE``
    ``NGRAPH_DISTRIBUTED_ENABLE``, Enable distributed training using MLSL/OpenMPI, ``OFF``
    ``NGRAPH_DISTRIBUTED_MLSL_ENABLE``, Use MLSL, ``OFF``
    ``NGRAPH_DOC_BUILD_ENABLE``,  Automatically build documentation, ``OFF``
-   ``NGRAPH_DYNAMIC_COMPONENTS_ENABLE``,  Enable dynamic loading of components, ``TRUE``
    ``NGRAPH_FAST_MATH_ENABLE``,  Enable fast math, ``ON``
    ``NGRAPH_HALIDE``,  ,``OFF``
    ``NGRAPH_INTERPRETER_ENABLE``, Control the building of the ``INTERPRETER`` backend,  ``TRUE``
@@ -63,6 +59,7 @@ Environment Variables
    :escape: ~
 
    ``NGRAPH_DISABLE_LOGGING``,	Disable printing all logs irrespective of build type
+   ``NGRAPH_DISABLED_FUSIONS``,	Disable specified fusions. Specified as `;` separated list and supports regex
    ``NGRAPH_ENABLE_REPLACE_CHECK``,	Enables strict type checking in copy constructor copy_with_new_args
    ``NGRAPH_ENABLE_SERIALIZE_TRACING``, generates 1 ``json`` file per pass to run with ``nbench`` for localized execution rather than whole stack execution
    ``NGRAPH_ENABLE_TRACING``, Enables creating graph execution timelines to be viewed in ``chrome://tracing`` see also :doc:`viz_tools`.
