@@ -67,10 +67,8 @@ void pass::ConstantFolding::construct_constant_quantize()
         NGRAPH_CHECK(revalidate_and_ensure_static(quantize_op));
 
         auto args = quant_match->get_arguments();
-        auto scale = static_pointer_cast<op::Constant>(
-            quant_match->get_input_node_shr_ptr(1));
-        auto offset = static_pointer_cast<op::Constant>(
-            quant_match->get_input_node_shr_ptr(2));
+        auto scale = static_pointer_cast<op::Constant>(quant_match->get_input_node_shr_ptr(1));
+        auto offset = static_pointer_cast<op::Constant>(quant_match->get_input_node_shr_ptr(2));
 
         auto type = quant_match->get_element_type();
 

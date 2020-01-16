@@ -398,8 +398,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         {
             // swap the inputs if the cell_state and hidden state does not
             // belong to the same Lstm
-            if (hidden_state->get_input_node_ptr(0) !=
-                cell_state->get_input_node_ptr(0))
+            if (hidden_state->get_input_node_ptr(0) != cell_state->get_input_node_ptr(0))
             {
                 swap_lstm_inputs();
             }

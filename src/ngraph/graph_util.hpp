@@ -272,7 +272,7 @@ namespace ngraph
                 size_t arg_count = node->get_input_size();
                 for (size_t i = 0; i < arg_count; ++i)
                 {
-		  Node* dep = node->get_input_node_ptr(arg_count - i - 1);
+                    Node* dep = node->get_input_node_ptr(arg_count - i - 1);
                     if (nodes_done.count(dep) == 0)
                     {
                         can_add = false;
@@ -332,7 +332,7 @@ namespace ngraph
                 size_t arg_count = node->get_input_size();
                 for (size_t i = 0; i < arg_count; ++i)
                 {
-		    Node* dep = node->get_input_node_ptr(arg_count - i - 1);
+                    Node* dep = node->get_input_node_ptr(arg_count - i - 1);
                     if (nodes_done.count(dep) == 0 && nodes_to_emit.count(node) != 0)
                     {
                         can_add = false;

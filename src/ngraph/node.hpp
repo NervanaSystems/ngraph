@@ -386,9 +386,9 @@ namespace ngraph
         virtual NodeVector get_arguments() const;
         // Will be deprecated
         std::shared_ptr<Node> get_argument(size_t index) const;
-	
-	Node* get_input_node_ptr(size_t index) const;
-	std::shared_ptr<Node> get_input_node_shr_ptr(size_t index) const;
+
+        Node* get_input_node_ptr(size_t index) const;
+        std::shared_ptr<Node> get_input_node_shr_ptr(size_t index) const;
 
     protected:
         // Will be replaced with an OutputVector version

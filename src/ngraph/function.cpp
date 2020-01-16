@@ -132,7 +132,7 @@ void Function::map_unordered_ops(std::function<void(Node*)> f) const
             f(op);
             for (size_t i = 0; i < op->get_input_size(); ++i)
             {
-	      remaining_ops.push(op->get_input_node_ptr(i));
+                remaining_ops.push(op->get_input_node_ptr(i));
             }
             for (auto& cdep : op->get_control_dependencies())
             {

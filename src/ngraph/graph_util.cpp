@@ -86,9 +86,9 @@ void ngraph::traverse_nodes(const NodeVector& subgraph_results,
         if (instances_seen.insert(n).second)
         {
             f(n->shared_from_this());
-	    for (size_t i = 0; i < n->inputs().size(); i++)
+            for (size_t i = 0; i < n->inputs().size(); i++)
             {
-	      stack.push(n->get_input_node_ptr(i));
+                stack.push(n->get_input_node_ptr(i));
             }
 
             if (include_control_deps)
@@ -707,7 +707,7 @@ static bool check_for_cycles_bkwd(std::shared_ptr<ngraph::Node> node,
     path.push_back(node);
     path_set.insert(node);
     for (size_t i = 0; i < node->inputs().size(); i++)
-      {
+    {
         auto arg = node->get_input_node_shr_ptr(i);
         if (path_set.find(arg) != path_set.end())
         {

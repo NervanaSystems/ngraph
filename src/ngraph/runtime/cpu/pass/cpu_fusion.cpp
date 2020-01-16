@@ -605,11 +605,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        auto m_bn =
-            std::static_pointer_cast<ngraph::op::BatchNormTraining>(m.get_match_root()
-								    ->get_input_node_shr_ptr(0)
-								    ->get_input_node_shr_ptr(0));
-
+        auto m_bn = std::static_pointer_cast<ngraph::op::BatchNormTraining>(
+            m.get_match_root()->get_input_node_shr_ptr(0)->get_input_node_shr_ptr(0));
 
         if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(m_bn.get()))
         {
