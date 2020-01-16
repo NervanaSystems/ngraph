@@ -134,8 +134,7 @@ namespace
         template <typename T>
         mlir::ArrayAttr getShapeAsAttr(T ngShape);
 
-        mlir::Attribute getIntAsAttr(int64_t value);
-
+        mlir::OpBuilder& getBuilder() { return m_builder; }
     private:
         // Sub-graph to be compiled and executed with MLIR.
         const ngraph::op::CompiledKernel* m_compiledKernel;
@@ -221,11 +220,6 @@ mlir::ArrayAttr NgDialectConversionPass::getShapeAsAttr(T ngShape)
     SmallVector<int64_t, 4> mlirShape;
     getMlirShape(ngShape, mlirShape);
     return m_builder.getI64ArrayAttr(mlirShape);
-}
-
-mlir::Attribute NgDialectConversionPass::getIntAsAttr(int64_t value)
-{
-    return m_builder.getI64IntegerAttr(value);
 }
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
@@ -488,7 +482,7 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::GroupConvo
     attr = NgDialectObj.getShapeAsAttr(gConvNode->get_padding_above());
     gConvOp.setPadAbove(attr);
 
-    gConvOp.setGroups(NgDialectObj.getIntAsAttr(gConvNode->get_groups()));
+    gConvOp.setGroups(NgDialectObj.getBuilder().getI64IntegerAttr(gConvNode->get_groups()));
     return op;
 }
 
