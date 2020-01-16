@@ -15,20 +15,20 @@
 //*****************************************************************************
 #pragma once
 
+#include <cstdint>
 #include <memory>
 
 #include "core/node.hpp"
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/topk.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        namespace arg
+        namespace utils
         {
-            /// \brief          Factory class which generates sub-graphs for ONNX ArgMin, ArgMax
+            /// \brief  Factory class which generates sub-graphs for ONNX ArgMin, ArgMax
             /// ops.
             class ArgMinMaxFactory
             {
@@ -37,20 +37,20 @@ namespace ngraph
                 virtual ~ArgMinMaxFactory() = default;
 
                 /// \brief      Creates ArgMax ONNX operation.
-                /// \return     Sub-graph represented arg man op.
+                /// \return     Sub-graph represented ArgMax op.
                 std::shared_ptr<ngraph::Node> make_arg_max() const;
 
                 /// \brief      Creates ArgMin ONNX operation.
-                /// \return     Sub-graph represented arg man op.
+                /// \return     Sub-graph represented ArgMin op.
                 std::shared_ptr<ngraph::Node> make_arg_min() const;
 
             private:
                 std::shared_ptr<ngraph::Node>
                     make_topk_subgraph(default_opset::TopK::Mode mode) const;
 
-                const int64_t m_keep_dims;
+                const std::int64_t m_keep_dims;
                 std::shared_ptr<ngraph::Node> m_input_node;
-                int64_t m_normalized_axis;
+                std::int64_t m_normalized_axis;
             };
 
         } // namespace arg

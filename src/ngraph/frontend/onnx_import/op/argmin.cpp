@@ -27,7 +27,7 @@ namespace ngraph
             {
                 NodeVector argmin(const Node& node)
                 {
-                    const arg::ArgMinMaxFactory arg_factory(node);
+                    const utils::ArgMinMaxFactory arg_factory(node);
                     return {arg_factory.make_arg_min()};
                 }
 

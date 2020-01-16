@@ -15,18 +15,17 @@
 //*****************************************************************************
 
 #include "utils/arg_min_max_factory.hpp"
-#include "builder/reshape.hpp"
+#include "default_opset.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/op/topk.hpp"
 #include "ngraph/opsets/opset0.hpp"
 #include "ngraph/validation_util.hpp"
-#include "utils/reshape.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        namespace arg
+        namespace utils
         {
             ArgMinMaxFactory::ArgMinMaxFactory(const Node& node)
                 : m_keep_dims{node.get_attribute_value<std::int64_t>("keepdims", 1)}
@@ -64,10 +63,11 @@ namespace ngraph
 
                 if (m_keep_dims == 0)
                 {
-                    const auto reshaped_indices = reshape::remove_dim(indices, m_normalized_axis);
-                    return std::make_shared<ngraph::op::Convert>(reshaped_indices, element::i64);
+                    const auto reshaped_indices =
+                        ngraph::builder::opset1::squeeze(indices, {m_normalized_axis});
+                    return std::make_shared<default_opset::Convert>(reshaped_indices, element::i64);
                 }
-                return std::make_shared<ngraph::op::Convert>(indices, element::i64);
+                return std::make_shared<default_opset::Convert>(indices, element::i64);
             }
         }
     }

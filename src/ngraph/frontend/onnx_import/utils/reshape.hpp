@@ -62,19 +62,6 @@ namespace ngraph
             std::shared_ptr<ngraph::Node>
                 interpret_as_scalar(const std::shared_ptr<ngraph::Node>& node);
 
-            /// \brief      Remove dimension determined by axis from input node
-            ///
-            /// \note       Remove dimension from input node when it is possible
-            ///             (when size of dimension indicated by axis is 1)
-            ///
-            /// \param[in]  node   Node to reshape.
-            /// \param[in]  axis   Axis indicated dimension to remove.
-            ///
-            /// \return     Reshaped input node.
-            ///
-            std::shared_ptr<ngraph::Node> remove_dim(const std::shared_ptr<ngraph::Node>& node,
-                                                     int64_t axis);
-
         } // namespace  reshape
     }     // namespace onnx_import
 } // namespace ngraph
