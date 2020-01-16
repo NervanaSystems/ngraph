@@ -120,9 +120,11 @@ op::Constant::~Constant()
 string op::Constant::convert_value_to_string(size_t index) const
 {
     string rc;
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+#endif
     switch (get_element_type())
     {
     case element::Type_t::boolean: rc = to_string(get_vector<char>()[index]); break;
@@ -148,7 +150,9 @@ string op::Constant::convert_value_to_string(size_t index) const
     case element::Type_t::undefined: throw runtime_error("unsupported type");
     case element::Type_t::dynamic: throw runtime_error("unsupported type");
     }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
+#endif
     return rc;
 }
 
@@ -156,9 +160,11 @@ vector<string> op::Constant::get_value_strings() const
 {
     vector<string> rc;
 
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+#endif
     switch (get_element_type())
     {
     case element::Type_t::boolean:
@@ -243,7 +249,9 @@ vector<string> op::Constant::get_value_strings() const
     case element::Type_t::undefined: throw runtime_error("unsupported type");
     case element::Type_t::dynamic: throw runtime_error("unsupported type");
     }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
+#endif
 
     return rc;
 }
@@ -349,9 +357,11 @@ static bool test_bitwise_identical(const op::Constant* constant)
 bool op::Constant::are_all_data_elements_bitwise_identical() const
 {
     bool rc = false;
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+#endif
     switch (get_element_type())
     {
     case element::Type_t::boolean:
@@ -387,7 +397,9 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
     case element::Type_t::undefined:
     case element::Type_t::dynamic: break;
     }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
+#endif
     return rc;
 }
 
@@ -422,13 +434,16 @@ namespace ngraph
 {
     namespace op
     {
-        template <>
-        void Constant::write_to_buffer<string>(const element::Type& /* target_type */,
-                                               const Shape& /* target_shape */,
-                                               const vector<string>& /* source */,
-                                               void* /* target */,
-                                               size_t /* target_element_count */)
+        namespace v0
         {
+            template <>
+            void Constant::write_to_buffer<string>(const element::Type& /* target_type */,
+                                                   const Shape& /* target_shape */,
+                                                   const vector<string>& /* source */,
+                                                   void* /* target */,
+                                                   size_t /* target_element_count */)
+            {
+            }
         }
     }
 }
