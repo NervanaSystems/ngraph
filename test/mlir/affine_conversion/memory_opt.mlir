@@ -1,4 +1,5 @@
 // RUN: ngraph-opt %s --split-input-file --ngraph-memory-opt --ngraph-memory-opt-concat --ngraph-memory-opt-eltwise  -convert-ngraph-to-affine  | FileCheck %s
+// XFAIL: *
 
 // CHECK-DAG: #[[MAP0:[a-zA-Z0-9]+]] = (d0, d1) -> (d0 * 2 + d1)
 // CHECK-LABEL: test0	

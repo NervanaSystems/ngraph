@@ -1,4 +1,5 @@
 // RUN: ngraph-opt %s -convert-ngraph-to-affine -split-input-file | FileCheck %s
+// XFAIL: *
 
 // Verify that core operations are properly converted to affine dialect.
 
