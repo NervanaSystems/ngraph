@@ -21,6 +21,7 @@
 
 #include "broadcasting.hpp"
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -358,16 +359,16 @@ namespace ngraph
             new_right_shape.erase(std::begin(new_right_shape),
                                   std::next(std::begin(new_right_shape), num_ones));
 
-            auto reshape_right = builder::opset1::reshape(right, new_right_shape);
+            auto reshape_right = std::make_shared<ngraph::op::Reshape>(
+                right, ngraph::get_default_order(right_shape), new_right_shape);
 
             // Move broadcast start axis parameter to right
             start_match_axis += num_ones;
 
-            auto broadcast_right = std::make_shared<ngraph::op::v1::Broadcast>(
+            auto broadcast_right = std::make_shared<ngraph::op::Broadcast>(
                 reshape_right,
-                ngraph::op::Constant::create(
-                    ngraph::element::i64, Shape{left_shape.size()}, left_shape),
-                get_axes_mapping(left_shape, new_right_shape, start_match_axis));
+                left_shape,
+                calculate_broadcast_axes(left_shape, new_right_shape, start_match_axis));
 
             return {left, broadcast_right};
         }
