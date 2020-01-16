@@ -26,29 +26,7 @@
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/argmax.hpp"
-#include "ngraph/op/argmin.hpp"
-#include "ngraph/op/concat.hpp"
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/dot.hpp"
-#include "ngraph/op/equal.hpp"
-#include "ngraph/op/experimental/compiled_kernel.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
-#include "ngraph/op/gather.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/op/greater_eq.hpp"
-#include "ngraph/op/less.hpp"
-#include "ngraph/op/less_eq.hpp"
-#include "ngraph/op/maximum.hpp"
-#include "ngraph/op/minimum.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/negative.hpp"
-#include "ngraph/op/not_equal.hpp"
-#include "ngraph/op/relu.hpp"
-#include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/index_reduction.hpp"
+#include "ngraph/ops.hpp"
 #include "ngraph/type/element_type.hpp"
 
 // Defines a new LLVM debug type for this file to be used by LLVM_DEBUG macro.
@@ -118,8 +96,9 @@ namespace
 
         // Generic op lowerer to ng dialect.
         // Simply maps ngraph tensors to values and generate an OP. No op-specific logic.
+        // Use inNum when mlir OP needs less input than its corresponding ngraph OP.
         template <typename Op>
-        mlir::Operation* createGenericOp(const ngraph::Node* ngNode);
+        mlir::Operation* createGenericOp(const ngraph::Node* ngNode, int inNum = -1);
 
         template <typename RedOp>
         mlir::Operation* createIndexReduction(const ngraph::Node* ngNode);
@@ -133,8 +112,11 @@ namespace
         /// Converts an ngraph shape to an I64 array attribute
         template <typename T>
         mlir::ArrayAttr getShapeAsAttr(T ngShape);
-
+        /// Returns the builder
         mlir::OpBuilder& getBuilder() { return m_builder; }
+        /// Return the real input node corresponding to the fake node
+        ngraph::Node* getOriginArg(ngraph::Node* node) const;
+
     private:
         // Sub-graph to be compiled and executed with MLIR.
         const ngraph::op::CompiledKernel* m_compiledKernel;
@@ -220,6 +202,14 @@ mlir::ArrayAttr NgDialectConversionPass::getShapeAsAttr(T ngShape)
     SmallVector<int64_t, 4> mlirShape;
     getMlirShape(ngShape, mlirShape);
     return m_builder.getI64ArrayAttr(mlirShape);
+}
+
+ngraph::Node* NgDialectConversionPass::getOriginArg(ngraph::Node* node) const
+{
+    auto inputMap = m_compiledKernel->get_input_map();
+    auto it = inputMap.find(node->shared_from_this());
+    NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
+    return m_compiledKernel->input_values().at(it->second).get_node();
 }
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
@@ -463,6 +453,7 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Convolutio
 
     attr = NgDialectObj.getShapeAsAttr(convNode->get_padding_above());
     convOp.setPadAbove(attr);
+
     return op;
 }
 
@@ -486,17 +477,156 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::GroupConvo
     return op;
 }
 
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::AvgPool)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolOp>(ngNode);
+    auto avgPoolNode = static_cast<const ngraph::op::AvgPool*>(ngNode);
+    auto avgPoolOp = llvm::cast<mlir::NGAvgPoolOp>(op);
+
+    mlir::BoolAttr boolAttr =
+        NgDialectObj.m_builder.getBoolAttr(avgPoolNode->get_include_padding_in_avg_computation());
+    avgPoolOp.setIncludePadding(boolAttr);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_window_shape());
+    avgPoolOp.setWindowShape(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_window_movement_strides());
+    avgPoolOp.setWindowMovementStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_padding_below());
+    avgPoolOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_padding_above());
+    avgPoolOp.setPadAbove(attr);
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::AvgPoolBackprop)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolBackpropOp>(ngNode);
+    auto avgPoolBackpropNode = static_cast<const ngraph::op::AvgPoolBackprop*>(ngNode);
+    auto avgPoolBackpropOp = llvm::cast<mlir::NGAvgPoolBackpropOp>(op);
+
+    mlir::BoolAttr boolAttr = NgDialectObj.m_builder.getBoolAttr(
+        avgPoolBackpropNode->get_include_padding_in_avg_computation());
+    avgPoolBackpropOp.setIncludePadding(boolAttr);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_window_shape());
+    avgPoolBackpropOp.setWindowShape(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_window_movement_strides());
+    avgPoolBackpropOp.setWindowMovementStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_padding_below());
+    avgPoolBackpropOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_padding_above());
+    avgPoolBackpropOp.setPadAbove(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_forward_arg_shape());
+    avgPoolBackpropOp.setForwardArgShape(attr);
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::MaxPool)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGMaxPoolOp>(ngNode);
+    auto maxPoolNode = static_cast<const ngraph::op::MaxPool*>(ngNode);
+    auto maxPoolOp = llvm::cast<mlir::NGMaxPoolOp>(op);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_window_shape());
+    maxPoolOp.setWindowShape(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_window_movement_strides());
+    maxPoolOp.setWindowMovementStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_padding_below());
+    maxPoolOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_padding_above());
+    maxPoolOp.setPadAbove(attr);
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::MaxPoolBackprop)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGMaxPoolBackpropOp>(ngNode, 2);
+    auto maxPoolBackpropNode = static_cast<const ngraph::op::MaxPool*>(ngNode);
+    auto maxPoolBackpropOp = llvm::cast<mlir::NGMaxPoolBackpropOp>(op);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_window_shape());
+    maxPoolBackpropOp.setWindowShape(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_window_movement_strides());
+    maxPoolBackpropOp.setWindowMovementStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_padding_below());
+    maxPoolBackpropOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_padding_above());
+    maxPoolBackpropOp.setPadAbove(attr);
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::MatMul)
+{
+    auto matmulNode = static_cast<const ngraph::op::MatMul*>(ngNode);
+    auto op = NgDialectObj.createGenericOp<mlir::NGMatMulOp>(ngNode);
+    auto matmulOp = llvm::cast<mlir::NGMatMulOp>(op);
+    matmulOp.setTransposeA(NgDialectObj.m_builder.getBoolAttr(matmulNode->get_transpose_a()));
+    matmulOp.setTransposeB(NgDialectObj.m_builder.getBoolAttr(matmulNode->get_transpose_b()));
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Gemm)
+{
+    auto gemmNode = static_cast<const ngraph::op::Gemm*>(ngNode);
+    auto op = NgDialectObj.createGenericOp<mlir::NGGemmOp>(ngNode);
+    auto gemmOp = llvm::cast<mlir::NGGemmOp>(op);
+    gemmOp.setTransA(NgDialectObj.m_builder.getBoolAttr(gemmNode->get_transA()));
+    gemmOp.setTransB(NgDialectObj.m_builder.getBoolAttr(gemmNode->get_transB()));
+    gemmOp.setAlpha(NgDialectObj.m_builder.getF32FloatAttr(gemmNode->get_alpha()));
+    gemmOp.setBeta(NgDialectObj.m_builder.getF32FloatAttr(gemmNode->get_beta()));
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Softmax)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGSoftMaxOp>(ngNode, 1);
+    auto softmaxNode = static_cast<const ngraph::op::Softmax*>(ngNode);
+    auto softmaxOp = llvm::cast<mlir::NGSoftMaxOp>(op);
+
+    auto originArg = NgDialectObj.getOriginArg(ngNode->input_value(1).get_node());
+    auto const_op = static_cast<ngraph::op::Constant*>(originArg);
+
+    AxisSet axes = const_op->get_axis_set_val();
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(axes);
+    softmaxOp.setAxes(attr);
+    return op;
+}
 template <typename Op>
-mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ngNode)
+mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ngNode, int inNum)
 {
     std::vector<mlir::Value*> argValues;
     std::vector<mlir::Type> resTypes;
     auto inputMap = m_compiledKernel->get_input_map();
     std::shared_ptr<descriptor::Tensor> argTensor;
+    int i = 0;
     for (auto& argOutput : ngNode->input_values())
     {
+        if (inNum != -1 && i == inNum)
+        {
+            break;
+        }
         auto argOutputNode = argOutput.get_node();
-        if (as_type<op::Parameter>(argOutputNode))
+        if (is_type<op::Parameter>(argOutputNode))
         {
             auto it = inputMap.find(argOutputNode->shared_from_this());
             NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
@@ -510,6 +640,7 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
 
         auto argV = getTensorValue(argTensor.get()).m_value;
         argValues.push_back(argV);
+        i++;
     }
 
     for (auto& output : ngNode->outputs())
