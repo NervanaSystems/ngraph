@@ -29,7 +29,6 @@ and multi-device support of nGraph Compiler, please refer to [Framework integrat
 | MXNet* 1.3                 | :heavy_check_mark: |  :heavy_check_mark:
 | ONNX 1.3                   | :heavy_check_mark: |  :heavy_check_mark:
 | ONNX Runtime               | Functional         |  No
-| PyTorch (via ONNXIFI)      | Functional         |  No
 | PaddlePaddle               | Functional         |  No
 
 
@@ -70,7 +69,6 @@ stack, and early adopters will be able test them in 2019.
 [Architecture and features]: ./ABOUT.md
 [Upcoming DL accelerators]: https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/vision-accelerator-design-product-brief.pdf
 [import it]: https://ngraph.nervanasys.com/docs/latest/core/constructing-graphs/import.html
-[ONNXIFI]: https://github.com/onnx/onnx/blob/master/docs/ONNXIFI.md
 [ONNX Runtime]: https://azure.microsoft.com/en-us/blog/onnx-runtime-is-now-open-source/
 [WinML]: http://docs.microsoft.com/en-us/windows/ai
 [How to]: https://ngraph.nervanasys.com/docs/latest/howto/index.html
