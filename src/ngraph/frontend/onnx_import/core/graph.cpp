@@ -216,8 +216,8 @@ namespace ngraph
         void Graph::add_provenance_tag_to_input(const ValueInfo& input,
                                                 std::shared_ptr<ngraph::Node> node) const
         {
-            const std::string tag =
-                detail::build_input_provenance_tag(input.get_name(), input.get_shape());
+            const std::string tag = detail::build_input_provenance_tag(
+                input.get_name(), input.get_partial_shape().to_shape());
 
             node->add_provenance_tag(tag);
         }
