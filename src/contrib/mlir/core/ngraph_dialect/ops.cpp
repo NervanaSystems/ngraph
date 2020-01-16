@@ -309,6 +309,55 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
     return mlir::success();
 }
 
+template <>
+mlir::LogicalResult verifyOp(NGMatMulOp* op)
+{
+    // TODO(ayzhuang): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
+template <>
+mlir::LogicalResult verifyOp(NGGemmOp* op)
+{
+    // TODO(ayzhuang): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
+template <>
+mlir::LogicalResult verifyOp(NGSoftMaxOp* op)
+{
+    // TODO(ayzhuang): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
+template <>
+mlir::LogicalResult verifyOp(NGAvgPoolOp* op)
+{
+    // TODO(ayzhuang): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
+template <>
+mlir::LogicalResult verifyOp(NGAvgPoolBackpropOp* op)
+{
+    // TODO(ayzhuang): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
+template <>
+mlir::LogicalResult verifyOp(NGMaxPoolOp* op)
+{
+    // TODO(ayzhuang): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
+template <>
+mlir::LogicalResult verifyOp(NGMaxPoolBackpropOp* op)
+{
+    // TODO(ayzhuang): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
 namespace mlir
 {
 #include "ops_interfaces.cpp.inc"
@@ -401,7 +450,7 @@ void mlir::NGLSTMCellOp::decompose()
 void mlir::NGLSTMSequenceOp::decompose()
 {
 }
-void mlir::NGMatMul::decompose()
+void mlir::NGMatMulOp::decompose()
 {
 }
 void mlir::NGLayerNormOp::decompose()
