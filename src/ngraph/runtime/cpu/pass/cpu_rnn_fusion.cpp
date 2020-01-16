@@ -244,7 +244,7 @@ static void replace_collapse_node_user(std::shared_ptr<Node> collapsed_node,
         NGRAPH_DEBUG << "node_name: " << node->get_name();
         for (size_t i = 0; i < node->get_input_size(); i++)
         {
-            if (node->input(i).get_source_output().get_node_shared_ptr() == collapsed_node)
+            if (node->get_input_node_shr_ptr(i) == collapsed_node)
             {
                 node->set_argument(i, new_output);
             }
@@ -398,8 +398,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         {
             // swap the inputs if the cell_state and hidden state does not
             // belong to the same Lstm
-            if (hidden_state->input(0).get_source_output().get_node() !=
-                cell_state->input(0).get_source_output().get_node())
+            if (hidden_state->get_input_node_ptr(0) !=
+                cell_state->get_input_node_ptr(0))
             {
                 swap_lstm_inputs();
             }

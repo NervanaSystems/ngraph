@@ -68,9 +68,9 @@ void pass::ConstantFolding::construct_constant_quantize()
 
         auto args = quant_match->get_arguments();
         auto scale = static_pointer_cast<op::Constant>(
-            quant_match->input(1).get_source_output().get_node_shared_ptr());
+            quant_match->get_input_node_shr_ptr(1));
         auto offset = static_pointer_cast<op::Constant>(
-            quant_match->input(2).get_source_output().get_node_shared_ptr());
+            quant_match->get_input_node_shr_ptr(2));
 
         auto type = quant_match->get_element_type();
 
