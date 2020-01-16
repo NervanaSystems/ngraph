@@ -648,6 +648,19 @@ vector<float> read_float_vector(shared_ptr<runtime::Tensor> tv)
             float_vec.push_back(static_cast<float>(value));
         }
     }
+    else if (element_type == element::bf16)
+    {
+        vector<bfloat16> vec = read_vector<bfloat16>(tv);
+        float_vec = bfloat16::to_float_vector(vec);
+    }
+    else if (element_type == element::f16)
+    {
+        vector<float16> vec = read_vector<float16>(tv);
+        for (float16 value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
     else if (element_type == element::f32)
     {
         vector<float> vec = read_vector<float>(tv);
