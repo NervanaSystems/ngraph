@@ -6,9 +6,9 @@ graph {
     input: "data_1"
     input: "data_2"
     output: "result"
-    op_type: "Mean"
+    op_type: "Max"
   }
-  name: "test_mean_example"
+  name: "test_max_example"
   input {
     name: "data_0"
     type {
@@ -16,7 +16,7 @@ graph {
         elem_type: 1
         shape {
           dim {
-            dim_value: 1
+            dim_value: 3
           }
         }
       }
@@ -63,5 +63,5 @@ graph {
   }
 }
 opset_import {
-  version: 8
+  version: 1
 }

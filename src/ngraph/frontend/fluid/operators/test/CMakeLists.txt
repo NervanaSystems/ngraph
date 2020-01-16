@@ -41,6 +41,7 @@ endif()
 set(SRC
     main.cpp
     reduce_sum.cpp
+    lookup_table.cpp
 )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../../../../test)
