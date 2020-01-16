@@ -1213,7 +1213,7 @@ TEST(cpu_fusion, fuse_deconv)
     bool use_deconv_fuse = (getenv_bool("NGRAPH_DECONV_FUSE"));
     if (!use_deconv_fuse)
     {
-        set_environment("NGRAPH_DECONV_FUSE", "1", 1);
+        set_environment(EnvVarEnum::NGRAPH_DECONV_FUSE, "1", 1);
     }
 
     auto fuse_func = gen_deconv(false);
@@ -1253,7 +1253,8 @@ TEST(cpu_fusion, fuse_deconv)
 
     if (!use_deconv_fuse)
     {
-        unset_environment("NGRAPH_DECONV_FUSE");
+        //unset_environment<EnvVarEnumMask>(EnvVarEnum::NGRAPH_DECONV_FUSE);
+        unset_environment(EnvVarEnum::NGRAPH_DECONV_FUSE);
     }
 }
 

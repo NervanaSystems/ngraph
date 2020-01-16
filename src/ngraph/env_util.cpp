@@ -17,10 +17,106 @@
 #include <sstream>
 
 #include <unordered_map>
+#include <utility>
 #include "ngraph/env_util.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
+
+//enum class ENVVAR_ID
+//{
+//#define ENVVAR NAME
+//#define NGRAPH_DEFINE_ENVVAR(NAME, DEFAULT, DESCRIPTION) ENVVAR,
+//#include "ngraph/env_tbl.hpp"
+//#undef NGRAPH_DEFINE_ENVVAR
+//        UnknownOp
+//    };
+//}*/
+
+// just to create a list of all env var and their details
+static map<ngraph::EnvVarEnum, ngraph::EnvVarInfo> get_all_env_id()
+{
+    // This expands the env var list in env_tbl.hpp into a list of enumerations that look like this:
+    // {Abs::type_info, OP_TYPEID::Abs},
+    // {Acos::type_info, OP_TYPEID::Acos},
+    // ...
+    //ngraph::ENVVAR_ID
+    static const map<ngraph::EnvVarEnum, ngraph::EnvVarInfo> envvar_info_map{
+#define NGRAPH_DEFINE_ENVVAR(ENUMID, NAME, DEFAULT, DESCRIPTION)                                   \
+    {ENUMID, {NAME, DEFAULT, DESCRIPTION}},
+#include "ngraph/env_tbl.hpp"
+#undef NGRAPH_OP
+    };
+    return envvar_info_map;
+}
+
+// get current value or default
+static ngraph::EnvVarInfo get_env_var_info(const ngraph::EnvVarEnum env_var)
+{
+    ngraph::EnvVarInfo rc ;//= ngraph::ENVVAR_ID::UnknownOp;
+    /*auto it = type_info_map.find(type_info);
+    if (it != type_info_map.end())
+    {
+        rc = it->second;
+    }*/
+    return rc;
+}
+
+// get current value or default
+static string get_or_default_env_var(const ngraph::EnvVarEnum env_var)
+{
+
+}
+
+
+//----------------------
+
+/*std::vector<std_pair<EnvVarEnum, std::string>> EnvVarEnumStringMap = {
+    {NGRAPH_CODEGEN, "NGRAPH_CODEGEN"},
+    {NGRAPH_COMPILER_DEBUGINFO_ENABLE, "NGRAPH_COMPILER_DEBUGINFO_ENABLE"},
+    {NGRAPH_COMPILER_DIAG_ENABLE, "NGRAPH_COMPILER_DIAG_ENABLE"},
+    {NGRAPH_COMPILER_REPORT_ENABLE, "NGRAPH_COMPILER_REPORT_ENABLE"},
+    {NGRAPH_CPU_BIN_TRACER_LOG, "NGRAPH_CPU_BIN_TRACER_LOG"},
+    {NGRAPH_CPU_CHECK_PARMS_AND_CONSTS, "NGRAPH_CPU_CHECK_PARMS_AND_CONSTS"},
+    {NGRAPH_CPU_CONCURRENCY, "NGRAPH_CPU_CONCURRENCY"},
+    {NGRAPH_CPU_DEBUG_TRACER, "NGRAPH_CPU_DEBUG_TRACER"},
+    {NGRAPH_CPU_EIGEN_THREAD_COUNT, "NGRAPH_CPU_EIGEN_THREAD_COUNT"},
+    {NGRAPH_CPU_INF_CHECK, "NGRAPH_CPU_INF_CHECK"},
+    {NGRAPH_CPU_NAN_CHECK, "NGRAPH_CPU_NAN_CHECK"},
+    {NGRAPH_CPU_TRACER_LOG, "NGRAPH_CPU_TRACER_LOG"},
+    {NGRAPH_CPU_TRACING, "NGRAPH_CPU_TRACING"},
+    {NGRAPH_CPU_USE_REF_KERNELS, "NGRAPH_CPU_USE_REF_KERNELS"},
+    {NGRAPH_CPU_USE_TBB, "NGRAPH_CPU_USE_TBB"},
+    {NGRAPH_DECONV_FUSE, "NGRAPH_DECONV_FUSE"},
+    {NGRAPH_DEX_DEBUG, "NGRAPH_DEX_DEBUG"},
+    {NGRAPH_DISABLE_LOGGING, "NGRAPH_DISABLE_LOGGING"},
+    {NGRAPH_DISABLED_FUSIONS, "NGRAPH_DISABLED_FUSIONS"},
+    {NGRAPH_ENABLE_REPLACE_CHECK, "NGRAPH_ENABLE_REPLACE_CHECK"},
+    {NGRAPH_ENABLE_SERIALIZE_TRACING, "NGRAPH_ENABLE_SERIALIZE_TRACING"},
+    {NGRAPH_ENABLE_TRACING, "NGRAPH_ENABLE_TRACING"},
+    {NGRAPH_ENABLE_VISUALIZE_TRACING, "NGRAPH_ENABLE_VISUALIZE_TRACING"},
+    {NGRAPH_FAIL_MATCH_AT, "NGRAPH_FAIL_MATCH_AT"},
+    {NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK, "NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK"},
+    {NGRAPH_GTEST_INFO, "NGRAPH_GTEST_INFO"},
+    {NGRAPH_INTER_OP_PARALLELISM, "NGRAPH_INTER_OP_PARALLELISM"},
+    {NGRAPH_INTRA_OP_PARALLELISM, "NGRAPH_INTRA_OP_PARALLELISM"},
+    {NGRAPH_MLIR, "NGRAPH_MLIR"},
+    {NGRAPH_MLIR_MAX_CYCLE_DEPTH, "NGRAPH_MLIR_MAX_CYCLE_DEPTH"},
+    {NGRAPH_MLIR_OPT_LEVEL, "NGRAPH_MLIR_OPT_LEVEL"},
+    {NGRAPH_MLIR_OPTIONS, "NGRAPH_MLIR_OPTIONS"},
+    {NGRAPH_PASS_ATTRIBUTES, "NGRAPH_PASS_ATTRIBUTES"},
+    {NGRAPH_PASS_CPU_LAYOUT_ELTWISE, "NGRAPH_PASS_CPU_LAYOUT_ELTWISE"},
+    {NGRAPH_PASS_ENABLES, "NGRAPH_PASS_ENABLES"},
+    {NGRAPH_PROFILE_PASS_ENABLE, "NGRAPH_PROFILE_PASS_ENABLE"},
+    {NGRAPH_PROVENANCE_ENABLE, "NGRAPH_PROVENANCE_ENABLE"},
+    {NGRAPH_SERIALIZER_OUTPUT_SHAPES, "NGRAPH_SERIALIZER_OUTPUT_SHAPES"},
+    {NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE, "NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE"},
+    {NGRAPH_VISUALIZE_EDGE_LABELS, "NGRAPH_VISUALIZE_EDGE_LABELS"},
+    {NGRAPH_VISUALIZE_TRACING_FORMAT, "NGRAPH_VISUALIZE_TRACING_FORMAT"},
+    {NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES, "NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES"},
+    {NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES, "NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES"},
+    {OMP_NUM_THREADS "OMP_NUM_THREADS"},
+};*/
 
 std::unordered_map<std::string, std::string>& get_env_var_map()
 {
@@ -73,8 +169,10 @@ void ngraph::erase_env_from_map(const char* env_var)
     get_env_var_map().erase(env_var);
 }
 
-int ngraph::set_environment(const char* env_var, const char* value, const int overwrite)
+//template <typename ET>
+int ngraph::set_environment(EnvVarEnumMask env_var_enum, const char* value, const int overwrite)
 {
+    const char* env_var;
     if (map_contains(env_var) && !overwrite)
     {
         // Log that it is already set and user chose to not overwrite
@@ -95,13 +193,15 @@ int ngraph::set_environment(const char* env_var, const char* value, const int ov
 #endif
 }
 
-int ngraph::unset_environment(const char* env_var)
+//template <typename ET>
+int ngraph::unset_environment(EnvVarEnumMask env_var)
 {
-    erase_env_from_map(env_var);
+    const char* env_var_str = ""; // get env_var_string from the registry map
+    erase_env_from_map(env_var_str);
 #ifdef _WIN32
-    return _putenv_s(env_var, "");
+    return _putenv_s(env_var_str, "");
 #elif defined(__linux) || defined(__APPLE__)
-    return unsetenv(env_var);
+    return unsetenv(env_var_str);
 #endif
 }
 
