@@ -573,7 +573,7 @@ TEST(type_prop, pad_v1_arg_pads_begin_incompatible_type)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("pads_begin must have integral number element type (axes type:"));
+            std::string("pads_begin must be integral numbers, but are:"));
     }
     catch (...)
     {
@@ -598,7 +598,7 @@ TEST(type_prop, pad_v1_arg_pads_end_incompatible_type)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("pads_end must must have integral number element type (axes type:"));
+            std::string("pads_end must an integral numbers, but are:"));
     }
     catch (...)
     {

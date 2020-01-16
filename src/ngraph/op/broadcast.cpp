@@ -116,7 +116,7 @@ void op::v1::Broadcast::validate_and_infer_types()
     auto shape_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
                           shape_et.is_integral_number(),
-                          "Broadcast shape must have integral number element type, but has ",
+                          "Broadcast shape must be an integral number, but is: ",
                           shape_et);
     // shape node should produce a one dimensional shape.
     auto broadcast_shape_rank = get_input_partial_shape(1).rank();
@@ -131,7 +131,7 @@ void op::v1::Broadcast::validate_and_infer_types()
         auto axes_et = get_input_element_type(2);
         NODE_VALIDATION_CHECK(this,
                               axes_et.is_integral_number(),
-                              "Broadcast axes must have integral number element type, but has ",
+                              "Broadcast axes must be integral numbers, but are: ",
                               axes_et);
         // axes_mapping node should produce a one dimensional shape.
         auto axes_shape_rank = get_input_partial_shape(2).rank();

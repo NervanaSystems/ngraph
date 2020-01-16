@@ -38,13 +38,13 @@ void op::PriorBox::validate_and_infer_types()
     auto layer_shape_et = get_input_element_type(0);
     NODE_VALIDATION_CHECK(this,
                           layer_shape_et.is_integral_number(),
-                          "layer shape input must have integral number element type, but has ",
+                          "layer shape input must be an integral number, but is: ",
                           layer_shape_et);
 
     auto image_shape_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
                           image_shape_et.is_integral_number(),
-                          "image shape input must have integral number element type, but has ",
+                          "image shape input must be an integral number, but is: ",
                           image_shape_et);
 
     auto layer_shape_rank = get_input_partial_shape(0).rank();

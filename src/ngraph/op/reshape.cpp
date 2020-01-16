@@ -161,7 +161,7 @@ void op::v1::Reshape::validate_and_infer_types()
     auto pattern_et = get_input_element_type(1);
     // check data types
     NODE_VALIDATION_CHECK(
-        this, pattern_et.is_integral_number(), "Pattern must have integral number element type.");
+        this, pattern_et.is_integral_number(), "Pattern must be an integral number.");
 
     // check shapes
     const PartialShape& pattern_shape = get_input_partial_shape(1);

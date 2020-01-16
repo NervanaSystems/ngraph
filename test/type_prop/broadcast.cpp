@@ -386,7 +386,7 @@ TEST(type_prop, broadcast_v1_broadcast_shape_et_wrong)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Broadcast shape must have integral number element type"));
+                             std::string("Broadcast shape must be an integral number"));
     }
     catch (...)
     {
@@ -409,7 +409,7 @@ TEST(type_prop, broadcast_v1_axes_et_wrong)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Broadcast axes must have integral number element type"));
+                             std::string("Broadcast axes must be an integral number"));
     }
     catch (...)
     {

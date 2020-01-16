@@ -106,7 +106,7 @@ void op::LRN::validate_and_infer_types()
     const auto& axes_type = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
                           axes_type.is_integral_number(),
-                          "Axes input must have integral number element type (axes type: ",
+                          "Axes input must be integral numbers, but are: ",
                           axes_type,
                           ").");
 }

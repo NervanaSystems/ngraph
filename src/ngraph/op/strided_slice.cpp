@@ -72,11 +72,11 @@ void op::v1::StridedSlice::validate_and_infer_types()
     const auto& end_mask_et = get_input_element_type(2);
     NODE_VALIDATION_CHECK(this,
                           begin_mask_et.is_integral_number(),
-                          "Begin mask must have integral number element type, but has ",
+                          "Begin mask must be an integral number, but is: ",
                           begin_mask_et);
     NODE_VALIDATION_CHECK(this,
                           end_mask_et.is_integral_number(),
-                          "End mask must have integral number element type, but has ",
+                          "End mask must be an integral number, but is: ",
                           end_mask_et);
 
     auto are_mask_elem_in_range = [](size_t e) { return e == 0 || e == 1; };

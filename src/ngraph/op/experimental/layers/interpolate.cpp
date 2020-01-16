@@ -36,7 +36,7 @@ void op::Interpolate::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(1).is_integral_number(),
-                          "output shape must have integral number element type.");
+                          "output shape must be an integral number.");
     set_input_is_relevant_to_shape(1);
 
     PartialShape output_shape = PartialShape(get_input_partial_shape(0));
