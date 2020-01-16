@@ -19,6 +19,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 

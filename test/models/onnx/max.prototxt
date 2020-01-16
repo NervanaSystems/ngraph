@@ -29,7 +29,7 @@ graph {
         elem_type: 1
         shape {
           dim {
-            dim_value: 3
+            dim_value: 1
           }
         }
       }
@@ -63,5 +63,5 @@ graph {
   }
 }
 opset_import {
-  version: 7
+  version: 8
 }
