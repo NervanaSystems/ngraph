@@ -20,6 +20,7 @@
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/scatter_add.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -111,5 +112,14 @@ shared_ptr<Node> LookupTable2Grad::copy_with_new_args(const NodeVector& new_args
 
 NodeVector LookupTable2Grad::decompose_op() const
 {
-    return {};
+    auto w = input_value(0);
+    auto ids = input_value(1);
+    auto dout = input_value(2);
+
+    auto shape_w = get_input_shape(0);
+
+    auto w0 = op::Constant::create(dout.get_element_type(), shape_w, {0});
+    auto dw = make_shared<op::ScatterAdd>(w0, ids, dout);
+
+    return {dw};
 }
