@@ -4,7 +4,7 @@
 Parameter
 #########
 
-.. code-block: cpp
+.. code-block:: cpp
 
    Parameter // A function parameter.
 
@@ -38,7 +38,9 @@ Outputs
 | ``output`` | ``element_type`` | ``shape``  |
 +------------+------------------+------------+
 
-A ``Parameter`` produces the value of the tensor passed to the function in the position of the parameter in the function's arguments. The passed tensor must have the element type and shape specified by the parameter.
+A ``Parameter`` produces the value of the tensor passed to the function 
+in the position of the parameter in the function's arguments. The passed 
+tensor must have the element type and shape specified by the parameter.
 
 Backprop
 ========
@@ -51,6 +53,6 @@ Backprop
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Parameter
+.. doxygenclass:: ngraph::op::v0::Parameter
    :project: ngraph
    :members:

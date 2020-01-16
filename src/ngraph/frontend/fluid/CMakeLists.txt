@@ -18,6 +18,8 @@
 target_sources (ngraph PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/operators/layout_converter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/operators/layout_converter.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/operators/lookup_table.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/operators/lookup_table.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/operators/matmul.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/operators/matmul.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/operators/pool.cpp

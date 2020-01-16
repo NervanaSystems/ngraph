@@ -69,6 +69,11 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
 {
     const auto boxes_ps = get_input_partial_shape(0);
     const auto scores_ps = get_input_partial_shape(1);
+    if (boxes_ps.is_dynamic() || scores_ps.is_dynamic())
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic(Rank::dynamic()));
+        return;
+    }
 
     NODE_VALIDATION_CHECK(this,
                           boxes_ps.rank().is_static() && static_cast<size_t>(boxes_ps.rank()) == 3,
@@ -149,8 +154,10 @@ int64_t op::v1::NonMaxSuppression::max_boxes_output_from_input() const
     const auto max_output_boxes_input =
         as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-enum"
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
     switch (static_cast<element::Type_t>(max_output_boxes_input->get_element_type()))
     {
     case element::Type_t::i8:
@@ -175,7 +182,9 @@ int64_t op::v1::NonMaxSuppression::max_boxes_output_from_input() const
     }
     default: break;
     }
-#pragma GCC diagnostic pop
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
     return max_output_boxes;
 }

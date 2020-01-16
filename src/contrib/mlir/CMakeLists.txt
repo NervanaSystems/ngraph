@@ -18,27 +18,34 @@ include_directories(
     ${NGRAPH_INCLUDE_PATH}
     ${MLIR_LLVM_INCLUDE_PATH}
     ${MLIR_INCLUDE_PATHS}
-    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 add_subdirectory(tools/ngraph-opt)
-add_subdirectory(core)
+
 set(SRC
     backend/cpu/cpu_backend.cpp
     backend/pass/affine_lowerer.cpp
-    backend/pass/memory_optimization.cpp
+    backend/analysis/memory_analysis.cpp
+    core/compiler.cpp
+    core/ngraph_dialect/dialect.cpp
+    core/ngraph_dialect/type.cpp
+    core/ngraph_dialect/ops.cpp
+    core/pass/mlir_subgraph_extraction.cpp
+    core/pass/mlir_subgraph_extraction.hpp
+    core/pass/ng_dialect_builder.cpp
+    core/pass/ng_dialect_builder.hpp
     runtime/cpu/memory_manager.cpp
     runtime/cpu/cpu_runtime.cpp
     utils.cpp
 )
 
-add_library(mlir_cpu_backend SHARED ${SRC})
+add_library(mlir_backend SHARED ${SRC})
 
 llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 # Link MLIR libs
 target_link_libraries(
-    mlir_cpu_backend PRIVATE 
+    mlir_backend PRIVATE 
     MLIRAffineToStandard
     MLIRAnalysis
     MLIREDSC
@@ -51,11 +58,6 @@ target_link_libraries(
     MLIRTargetLLVMIR
     MLIRTransforms
     MLIRSupport
-)
-
-target_link_libraries(
-    mlir_cpu_backend PUBLIC
-    mlir_core
 )
 # some libs need whole archive linkage because of Globals static initialization
 function(whole_archive_link target)
@@ -80,15 +82,15 @@ set(LIBS
     ${LLVM_BUILD_LIBRARY_DIR}/libMLIRAffineOps.a
     ${LLVM_BUILD_LIBRARY_DIR}/libMLIRStandardOps.a
 )
-whole_archive_link(mlir_cpu_backend ${LIBS})
+whole_archive_link(mlir_backend ${LIBS})
 # Link LLVM libs
 target_link_libraries(
-    mlir_cpu_backend PRIVATE 
+    mlir_backend PRIVATE 
     ${llvm_libs}
 )
 
 # Link ngraph 
-target_link_libraries(mlir_cpu_backend PUBLIC ngraph)
+target_link_libraries(mlir_backend PUBLIC ngraph)
 
 # table-gen dialect ops
 # include table-gen helpers
@@ -120,6 +122,8 @@ ngraph_tablegen(ops_attributes.h.inc -gen-enum-decls)
 ngraph_tablegen(ops_attributes.cpp.inc -gen-enum-defs)
 add_public_tablegen_target(ngraph_ops_attributes_gen)
 
-add_dependencies(mlir_cpu_backend ngraph_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen)
+add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen)
 
-install(TARGETS mlir_cpu_backend DESTINATION ${NGRAPH_INSTALL_LIB})
+target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+install(TARGETS mlir_backend DESTINATION ${NGRAPH_INSTALL_LIB})
