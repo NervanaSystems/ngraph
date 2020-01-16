@@ -91,8 +91,8 @@ NodeVector builder::MatmulFactory::make_matmul_op()
     // Broadcast input arguments only if both of them are not vectors.
     if (left_rank > 1 && right_rank > 1)
     {
-        const NodeVector& broadcasted_nodes = op::numpy_style_broadcast_for_matmul_operation(
-            left.get_node_shared_ptr(), right.get_node_shared_ptr());
+        const OutputVector& broadcasted_nodes =
+            op::numpy_style_broadcast_values_for_matmul_operation(left, right);
 
         left = broadcasted_nodes.at(0);
         right = broadcasted_nodes.at(1);
