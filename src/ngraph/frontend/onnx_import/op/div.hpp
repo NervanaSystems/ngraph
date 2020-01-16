@@ -22,6 +22,7 @@
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -33,15 +34,23 @@ namespace ngraph
             {
                 inline NodeVector div(const Node& node)
                 {
-                    auto left_rank = node.get_ng_inputs().at(0)->get_shape().size();
-                    auto right_rank = node.get_ng_inputs().at(1)->get_shape().size();
+                    auto lhs_node = node.get_ng_inputs().at(0);
+                    auto rhs_node = node.get_ng_inputs().at(1);
+                    auto lhs_shape = lhs_node->get_shape();
+                    auto rhs_shape = rhs_node->get_shape();
+                    auto lhs_rank = lhs_shape.size();
+                    auto rhs_rank = rhs_shape.size();
                     auto axis =
-                        node.get_attribute_value<std::int64_t>("axis", left_rank - right_rank);
-                    NodeVector ng_inputs{ngraph::op::legacy_style_broadcast_for_binary_operation(
-                        node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
+                        node.get_attribute_value<std::int64_t>("axis", lhs_rank - rhs_rank);
+                    // Unidirectional broadcast right node to left shape.
+                    rhs_node = std::make_shared<default_opset::Broadcast>(
+                        rhs_node,
+                        default_opset::Constant::create(
+                            ngraph::element::i64, Shape{lhs_rank}, lhs_shape),
+                        ngraph::op::opset1::get_axes_mapping_output(lhs_shape, rhs_shape, axis));
 
                     return {std::make_shared<default_opset::Divide>(
-                        ng_inputs.at(0), ng_inputs.at(1), ngraph::op::AutoBroadcastSpec::NONE)};
+                        lhs_node, rhs_node, ngraph::op::AutoBroadcastSpec::NONE)};
                 }
 
             } // namespace set_1

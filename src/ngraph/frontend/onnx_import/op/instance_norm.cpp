@@ -42,47 +42,71 @@ namespace ngraph
                 NodeVector instance_norm(const Node& node)
                 {
                     const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
-                    std::shared_ptr<ngraph::Node> scale{node.get_ng_inputs().at(1)};
-                    std::shared_ptr<ngraph::Node> bias{node.get_ng_inputs().at(2)};
+                    Output<ngraph::Node> scale(node.get_ng_inputs().at(1));
+                    Output<ngraph::Node> bias(node.get_ng_inputs().at(2));
+                    const Shape& data_shape = data->get_shape();
+                    const Shape& scale_shape = scale.get_shape();
+                    const Shape& bias_shape = bias.get_shape();
                     const float epsilon{node.get_attribute_value<float>("epsilon", 1e-5f)};
 
-                    CHECK_VALID_NODE(node,
-                                     (scale->get_shape().size() == 1 &&
-                                      scale->get_shape()[0] == data->get_shape().at(1)),
-                                     "Scale input must be one dimensional vector of number of "
-                                     "input data channels size.");
+                    CHECK_VALID_NODE(
+                        node,
+                        (scale_shape.size() == 1 && scale_shape[0] == data_shape.at(1)),
+                        "Scale input must be one dimensional vector of number of "
+                        "input data channels size.");
 
                     CHECK_VALID_NODE(node,
-                                     (bias->get_shape().size() == 1 &&
-                                      bias->get_shape()[0] == data->get_shape().at(1)),
+                                     (bias_shape.size() == 1 && bias_shape[0] == data_shape.at(1)),
                                      "Bias input must be one dimensional vector of number of "
                                      "input data channels size.");
 
                     // all dimensions except spatial/feature
                     const AxisSet reduction_axes{
-                        common::get_monotonic_range<std::size_t>(data->get_shape().size(), 2)};
+                        common::get_monotonic_range<std::size_t>(data_shape.size(), 2)};
 
                     const std::shared_ptr<ngraph::Node> eps_node =
-                        std::make_shared<default_opset::Constant>(data->get_element_type(),
-                                                                  data->get_shape(),
-                                                                  std::vector<float>{epsilon});
+                        std::make_shared<default_opset::Constant>(
+                            data->get_element_type(), data_shape, std::vector<float>{epsilon});
 
-                    scale = ngraph::op::legacy_style_broadcast_for_binary_operation(data, scale, 1)
-                                .at(1);
-                    bias = ngraph::op::legacy_style_broadcast_for_binary_operation(data, bias, 1)
-                               .at(1);
+                    scale = std::make_shared<default_opset::Broadcast>(
+                        scale,
+                        default_opset::Constant::create(
+                            ngraph::element::i64, Shape{data_shape.size()}, data_shape),
+                        ngraph::op::opset1::get_axes_mapping_output(data_shape, scale_shape, 1));
+
+                    bias = std::make_shared<default_opset::Broadcast>(
+                        bias,
+                        default_opset::Constant::create(
+                            ngraph::element::i64, Shape{data_shape.size()}, data_shape),
+                        ngraph::op::opset1::get_axes_mapping_output(data_shape, bias_shape, 1));
 
                     std::shared_ptr<ngraph::Node> mean = builder::mean(data, reduction_axes);
-                    mean = std::make_shared<ngraph::opset0::Broadcast>(
-                        mean, data->get_shape(), reduction_axes);
+
+                    mean = std::make_shared<default_opset::Broadcast>(
+                        mean,
+                        default_opset::Constant::create(
+                            element::i64, Shape{data_shape.size()}, data_shape),
+                        ngraph::op::opset1::get_axes_mapping_output(data_shape, reduction_axes));
+
                     std::shared_ptr<ngraph::Node> variance =
                         builder::variance(data, reduction_axes);
-                    variance = std::make_shared<ngraph::opset0::Broadcast>(
-                        variance, data->get_shape(), reduction_axes);
+
+                    variance = std::make_shared<default_opset::Broadcast>(
+                        variance,
+                        default_opset::Constant::create(
+                            element::i64, Shape{data_shape.size()}, data_shape),
+                        ngraph::op::opset1::get_axes_mapping_output(data_shape, reduction_axes));
 
                     const auto sqrt = std::make_shared<default_opset::Sqrt>(variance + eps_node);
 
-                    return {scale * (data - mean) / sqrt + bias};
+                    // scale * (data - mean) / sqrt + bias
+                    std::shared_ptr<ngraph::Node> result{
+                        std::make_shared<default_opset::Subtract>(data, mean)};
+                    result = std::make_shared<default_opset::Multiply>(scale, result);
+                    result = std::make_shared<default_opset::Divide>(result, sqrt);
+                    result = std::make_shared<default_opset::Add>(result, bias);
+
+                    return {result};
                 }
 
             } // namespace set_1
