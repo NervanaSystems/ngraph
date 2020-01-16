@@ -38,8 +38,8 @@ LookupTable2::LookupTable2(const Output<Node>& w,
 
 NodeVector LookupTable2::decompose_op() const
 {
-    auto w = input_value(0).get_node_shared_ptr();
-    auto ids = input_value(1).get_node_shared_ptr();
+    auto w = input_value(0);
+    auto ids = input_value(1);
     auto padding_idx = get_padding_idx();
 
     auto table_shape = get_input_shape(0);
@@ -48,7 +48,6 @@ NodeVector LookupTable2::decompose_op() const
         this, table_shape.size() == 2, "The dimension of look up table must be 2");
 
     auto row_number = table_shape[0];
-    auto row_width = table_shape[1];
 
     auto masked_w = w;
 
@@ -57,11 +56,9 @@ NodeVector LookupTable2::decompose_op() const
         vector<size_t> mask(row_number, 1);
         mask[padding_idx] = 0;
 
-        shared_ptr<Node> mask_node =
-            make_shared<op::Constant>(w->get_element_type(), Shape{row_number}, mask);
-        shared_ptr<Node> mask_bcast =
-            make_shared<op::Broadcast>(mask_node, table_shape, AxisSet{1});
-        masked_w = make_shared<op::Multiply>(w, mask_bcast);
+        auto mask_node = make_shared<op::Constant>(w.get_element_type(), Shape{row_number}, mask);
+        auto mask_bcast = make_shared<op::Broadcast>(mask_node, table_shape, AxisSet{1});
+        masked_w = w * mask_bcast;
     }
 
     auto out = make_shared<op::Gather>(masked_w, ids);
