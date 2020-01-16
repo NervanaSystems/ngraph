@@ -16,7 +16,9 @@
 
 #pragma once
 
+#include <cstddef>
 #include <memory>
+#include <vector>
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/node.hpp"
@@ -157,18 +159,45 @@ namespace ngraph
                 calculate_broadcast_axes(new_shape, value.get_shape(), start_match_axis));
         }
 
-        ///
-        /// \brief      Gets the axes mapping.
-        ///
-        /// \param[in]  output_shape      The output shape
-        /// \param[in]  input_shape       The input shape
-        /// \param[in]  start_match_axis  The start match axis
-        ///
-        /// \return     The axes mapping.
-        ///
-        Output<Node> get_axes_mapping(const Shape& output_shape,
-                                      const Shape& input_shape,
-                                      std::size_t start_match_axis);
+        namespace opset1
+        {
+            ///
+            ///
+            /// \brief      Reconstructs axes mapping vector for Broadcast:v1 operation.
+            ///
+            /// \param[in]  output_shape    The output shape of Broadcast operation.
+            /// \param[in]  broadcast_axes  The broadcast axes used for Broadcast:v0 operator.
+            ///
+            /// \return     The vector with axes indexes mapping .
+            ///
+            std::vector<std::size_t> get_axes_mapping(const Shape& output_shape,
+                                                      const AxisSet& broadcast_axes);
 
-    } // namespace  op
+            ///
+            /// \brief      Creates Node returning the axes mapping for Broadcast:v1 operation.
+            ///
+            /// \param[in]  output_shape      The output shape of Broadcast operation.
+            /// \param[in]  input_shape       The input shape.
+            /// \param[in]  start_match_axis  The axis index at which input shape starts to be
+            ///                               identical as the output shape.
+            ///
+            /// \return     Returns the Output object pointing to node with the axes mapping.
+            ///
+            Output<Node> get_axes_mapping_output(const Shape& output_shape,
+                                                 const Shape& input_shape,
+                                                 std::size_t start_match_axis);
+
+            ///
+            /// \brief      Creates Node returning the axes mapping for Broadcast:v1 operation.
+            ///
+            /// \param[in]  output_shape    The output shape of Broadcast operation.
+            /// \param[in]  broadcast_axes  The broadcast axes used for Broadcast:v0 operator.
+            ///
+            /// \return     The Output object with Node returning axes mapping.
+            ///
+            Output<Node> get_axes_mapping_output(const Shape& output_shape,
+                                                 const AxisSet& broadcast_axes);
+
+        } // namespace opset1
+    }     // namespace  op
 } // namespace  ngraph

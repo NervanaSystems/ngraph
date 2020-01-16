@@ -23,6 +23,7 @@
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/util.hpp"
 
@@ -418,16 +419,41 @@ namespace ngraph
             return result;
         }
 
-        Output<Node> get_axes_mapping(const Shape& output_shape,
-                                      const Shape& input_shape,
-                                      std::size_t start_match_axis)
+        namespace opset1
         {
-            NGRAPH_CHECK((input_shape.size() + start_match_axis <= output_shape.size()));
-            std::vector<std::size_t> mapping(input_shape.size());
-            std::iota(std::begin(mapping), std::end(mapping), start_match_axis);
 
-            return Constant::create(element::i64, Shape{mapping.size()}, mapping);
-        }
+
+            std::vector<std::size_t> get_axes_mapping(const Shape& output_shape,
+                                                      const AxisSet& broadcast_axes)
+            {
+                NGRAPH_CHECK((broadcast_axes.size() <= output_shape.size()));
+                std::vector<size_t> axes_mapping(output_shape.size());
+                std::iota(axes_mapping.begin(), axes_mapping.end(), 0);
+                for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); ++i)
+                {
+                    axes_mapping.erase(axes_mapping.begin() + *i);
+                }
+                return axes_mapping;
+            }
+
+            Output<Node> get_axes_mapping_output(const Shape& output_shape,
+                                                 const Shape& input_shape,
+                                                 std::size_t start_match_axis)
+            {
+                NGRAPH_CHECK((input_shape.size() + start_match_axis <= output_shape.size()));
+                std::vector<std::size_t> mapping(input_shape.size());
+                std::iota(std::begin(mapping), std::end(mapping), start_match_axis);
+
+                return Constant::create(element::i64, Shape{mapping.size()}, mapping);
+            }
+
+            Output<Node> get_axes_mapping_output(const Shape& output_shape,
+                                                 const AxisSet& broadcast_axes)
+            {
+                std::vector<size_t> axes_mapping{get_axes_mapping(output_shape, broadcast_axes)};
+                return Constant::create(element::i64, Shape{axes_mapping.size()}, axes_mapping);
+            }
+        } // namespace opset1
 
     } // namespace  op
 
