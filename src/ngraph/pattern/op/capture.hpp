@@ -52,7 +52,7 @@ namespace ngraph
                                          const Output<Node>& graph_value) override;
 
             protected:
-                std::set<Node*> m_static_matches;
+                std::set<Node*> m_static_nodes;
             };
         }
     }

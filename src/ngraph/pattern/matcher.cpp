@@ -103,13 +103,6 @@ namespace ngraph
         bool Matcher::match_value(const ngraph::Output<Node>& pattern_value,
                                   const ngraph::Output<Node>& graph_value)
         {
-            if (pattern_value.get_index() != graph_value.get_index() ||
-                (is_strict_mode() &&
-                 (!pattern_value.get_element_type().compatible(graph_value.get_element_type()) ||
-                  !pattern_value.get_partial_shape().compatible(graph_value.get_partial_shape()))))
-            {
-                return false;
-            }
             std::shared_ptr<Node> pattern_node = pattern_value.get_node_shared_ptr();
             std::shared_ptr<Node> graph_node = graph_value.get_node_shared_ptr();
 

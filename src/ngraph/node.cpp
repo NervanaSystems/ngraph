@@ -951,6 +951,14 @@ bool Node::match_value(pattern::Matcher* matcher,
                        const Output<Node>& pattern_value,
                        const Output<Node>& graph_value)
 {
+    if (pattern_value.get_index() != graph_value.get_index() ||
+        (matcher->is_strict_mode() &&
+         (!pattern_value.get_element_type().compatible(graph_value.get_element_type()) ||
+          !pattern_value.get_partial_shape().compatible(graph_value.get_partial_shape()))))
+    {
+        return false;
+    }
+
     matcher->add_node(graph_value);
     return graph_value.get_node_shared_ptr()->get_type_info() == get_type_info() &&
            matcher->match_arguments(pattern_value, graph_value);
