@@ -19,6 +19,7 @@
 #include "core/node.hpp"
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/opsets/opset0.hpp"
 #include "utils/variadic.hpp"
 
@@ -32,7 +33,8 @@ namespace ngraph
             {
                 inline NodeVector sum(const Node& node)
                 {
-                    return variadic::make_ng_variadic_op<ngraph::opset0::Add>(node);
+                    return variadic::make_ng_variadic_op<default_opset::Add>(
+                        node, ngraph::op::AutoBroadcastSpec::NONE);
                 }
 
             } // namespace set_1
