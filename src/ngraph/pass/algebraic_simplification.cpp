@@ -88,6 +88,7 @@ static bool simplify_concat(shared_ptr<Node> n)
 
     Coordinate prev_lower_bounds;
     Shape prev_slice_shape;
+    Shape slice_shape;
 
     for (auto carg : n->get_arguments())
     {
@@ -102,8 +103,8 @@ static bool simplify_concat(shared_ptr<Node> n)
         {
             if (branch_tip != matcher->get_pattern_map()[ltip])
             {
-                NGRAPH_DEBUG << branch_tip->get_name() << " doesn't match "
-                             << matcher->get_pattern_map()[ltip]->get_name();
+                NGRAPH_DEBUG << *branch_tip << " doesn't match "
+                             << *matcher->get_pattern_map()[ltip];
                 return false;
             }
 
@@ -112,7 +113,7 @@ static bool simplify_concat(shared_ptr<Node> n)
             auto cur_lower_bounds = slice->get_lower_bounds();
             if (cur_lower_bounds < prev_lower_bounds)
             {
-                NGRAPH_DEBUG << slice->get_name() << " is in the wrong order";
+                NGRAPH_DEBUG << *slice << " is in the wrong order";
                 return false;
             }
             prev_lower_bounds.assign(cur_lower_bounds.begin(), cur_lower_bounds.end());
@@ -120,8 +121,7 @@ static bool simplify_concat(shared_ptr<Node> n)
             // slice shapes need to match
             if (slice->get_shape() != prev_slice_shape)
             {
-                NGRAPH_DEBUG << slice->get_name()
-                             << " doesn't match the shape of the previous slice";
+                NGRAPH_DEBUG << *slice << " doesn't match the shape of the previous slice";
                 return false;
             }
         }
@@ -131,7 +131,8 @@ static bool simplify_concat(shared_ptr<Node> n)
             prev_lower_bounds.assign(slice->get_lower_bounds().begin(),
                                      slice->get_lower_bounds().end());
             prev_slice_shape.assign(slice->get_shape().begin(), slice->get_shape().end());
-            NGRAPH_DEBUG << "setting branch_tip to " << branch_tip->get_name();
+            slice_shape = prev_slice_shape;
+            NGRAPH_DEBUG << "setting branch_tip to " << *branch_tip;
         }
 
         if (slice->get_users(true).size() > 1)
@@ -167,7 +168,6 @@ static bool simplify_concat(shared_ptr<Node> n)
     auto concat = static_pointer_cast<op::Concat>(n);
     auto concat_axis = concat->get_concatenation_axis();
 
-    auto slice_shape = branch_tip->get_users(true).at(0)->get_shape();
     size_t slice_axis = numeric_limits<size_t>::max();
 
     auto btip_shape = branch_tip->get_shape();

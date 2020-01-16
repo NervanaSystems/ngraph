@@ -100,13 +100,6 @@ Output<const Node> Node::get_as_output() const
 
 std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i, bool for_get_output_element)
 {
-    for (auto in : output(i).get_target_inputs())
-    {
-        if (is_type<op::GetOutputElement>(in.get_node()))
-        {
-            return in.get_node()->shared_from_this();
-        }
-    }
     if (i == 0 && get_output_size() == 1)
     {
         return shared_from_this();
@@ -958,7 +951,6 @@ bool Node::match_value(pattern::Matcher* matcher,
     {
         return false;
     }
-
     matcher->add_node(graph_value);
     return graph_value.get_node_shared_ptr()->get_type_info() == get_type_info() &&
            matcher->match_arguments(pattern_value, graph_value);
