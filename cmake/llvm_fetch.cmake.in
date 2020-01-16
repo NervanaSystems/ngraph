@@ -77,18 +77,12 @@ if(NGRAPH_USE_PREBUILT_LLVM)
 else()
     message(STATUS "LLVM: Building LLVM from source")
 
-    set(LLVM_CMAKE_ASM_COMPILER @CMAKE_ASM_COMPILER@)
-    set(NGRAPH_USE_CXX_ABI @NGRAPH_USE_CXX_ABI@)
-
-    if(NOT CMAKE_ASM_COMPILER)
-        message(STATUS "LLVM: Setting LLVM_CMAKE_ASM_COMPILER to @CMAKE_C_COMPILER@")
-        set(LLVM_CMAKE_ASM_COMPILER @CMAKE_C_COMPILER@)
-    endif()
+    # Revert prior changes to make incremental build work.
+    set(LLVM_PATCH_REVERT_COMMAND cd @LLVM_PROJECT_ROOT@/llvm/src/ext_llvm && git reset HEAD --hard)
 
     set(LLVM_CMAKE_ARGS @NGRAPH_FORWARD_CMAKE_ARGS@
                    -DCMAKE_INSTALL_PREFIX=@LLVM_INSTALL_ROOT@
-                   -DCMAKE_ASM_COMPILER=${LLVM_CMAKE_ASM_COMPILER}
-                   -DLLVM_ENABLE_PROJECTS=clang
+                   -DLLVM_ENABLE_PROJECTS:STRING=clang$<SEMICOLON>openmp
                    -DLLVM_INCLUDE_DOCS=OFF
                    -DLLVM_INCLUDE_TESTS=OFF
                    -DLLVM_INCLUDE_GO_TESTS=OFF
@@ -106,13 +100,7 @@ else()
                    -DLIBOMP_OMPT_SUPPORT=OFF
                    -DCLANG_ENABLE_ARCMT=OFF
                    -DCLANG_ANALYZER_ENABLE_Z3_SOLVER=OFF
-                   -DCLANG_ENABLE_STATIC_ANALYZER=OFF
-                   -DLLVM_EXTERNAL_OPENMP_SOURCE_DIR=@LLVM_PROJECT_ROOT@/llvm/src/ext_llvm/openmp)
-
-    if(NGRAPH_USE_CXX_ABI)
-        set(LLVM_CMAKE_CXX_FLAGS -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI})
-        set(LLVM_CMAKE_ARGS ${LLVM_CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${LLVM_CMAKE_CXX_FLAGS})
-    endif()
+                   -DCLANG_ENABLE_STATIC_ANALYZER=OFF)
 
     if(${CMAKE_VERSION} VERSION_LESS 3.7)
         ExternalProject_Add(
@@ -124,7 +112,9 @@ else()
             CMAKE_GENERATOR_PLATFORM @CMAKE_GENERATOR_PLATFORM@
             CMAKE_GENERATOR_TOOLSET @CMAKE_GENERATOR_TOOLSET@
             UPDATE_COMMAND ""
-            CONFIGURE_COMMAND ${CMAKE_COMMAND} ../ext_llvm/llvm -G "@CMAKE_GENERATOR@" ${LLVM_CMAKE_ARGS}
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} ../ext_llvm/llvm -G "@CMAKE_GENERATOR@" ${LLVM_CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+            PATCH_COMMAND ${LLVM_PATCH_REVERT_COMMAND}
+            COMMAND git apply --ignore-space-change --ignore-whitespace @CMAKE_CURRENT_SOURCE_DIR@/cmake/llvm.patch
             DOWNLOAD_NO_PROGRESS TRUE
             EXCLUDE_FROM_ALL TRUE
             )
@@ -138,8 +128,10 @@ else()
             CMAKE_GENERATOR "@CMAKE_GENERATOR@"
             CMAKE_GENERATOR_PLATFORM @CMAKE_GENERATOR_PLATFORM@
             CMAKE_GENERATOR_TOOLSET @CMAKE_GENERATOR_TOOLSET@
-            CMAKE_ARGS ${LLVM_CMAKE_ARGS}
+            CMAKE_ARGS ${LLVM_CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
             UPDATE_COMMAND ""
+            PATCH_COMMAND ${LLVM_PATCH_REVERT_COMMAND}
+            COMMAND git apply --ignore-space-change --ignore-whitespace @CMAKE_CURRENT_SOURCE_DIR@/cmake/llvm.patch
             SOURCE_SUBDIR llvm
             DOWNLOAD_NO_PROGRESS TRUE
             EXCLUDE_FROM_ALL TRUE
