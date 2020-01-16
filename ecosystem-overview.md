@@ -4,7 +4,7 @@
 One of nGraph’s key features is framework neutrality. We currently support 
 popular deep learning frameworks such as TensorFlow and MXNet with stable 
 bridges to pass computational graphs to nGraph. Additionally nGraph 
-Compiler has functional bridges to PaddlePaddle and PyTorch (via [ONNXIFI]). 
+Compiler has a functional bridge to PaddlePaddle. 
 For these frameworks, we have successfully tested functionality with a few 
 deep learning workloads, and we plan to bring stable support for them in the 
 upcoming releases. 
