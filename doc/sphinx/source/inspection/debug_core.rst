@@ -22,23 +22,18 @@ Compile Flags
    :escape: ~
 
    ``NGRAPH_CODE_COVERAGE_ENABLE``, Enable code coverage data collection, ``FALSE``
-   ``NGRAPH_CODEGEN, Emit code in codegen format and disables the default DEX compilation, ``FALSE``
-   ``NGRAPH_CPU_ENABLE``,  Control the building of the CPU backend, ``TRUE``
-   ``NGRAPH_CPU_STATIC_LIB_ENABLE``,  Enable build CPU backend static library, ``FALSE``
+   ``NGRAPH_CODEGEN``, Emit code in codegen format and disables the default DEX compilation, ``FALSE``
    ``NGRAPH_DEBUG_ENABLE``, Enable output for ``NGRAPH_DEBUG`` statements, ``FALSE``
+   ``NGRAPH_DECONV_FUSE``, Only available with CPU; when set it enables fusion for deconvolution, ``FALSE``
    ``NGRAPH_DEPRECATED_ENABLE``, Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use), ``FALSE``
    ``NGRAPH_DEX_ONLY``, Build CPU DEX without codegen, ``FALSE``
+   ``NGRAPH_DISABLED_FUSIONS``,	Disable specified fusions. Specified as `;` separated list and supports regex, ``FALSE``
    ``NGRAPH_DISTRIBUTED_ENABLE``, Enable distributed training using MLSL/OpenMPI, ``OFF``
    ``NGRAPH_DISTRIBUTED_MLSL_ENABLE``, Use MLSL, ``OFF``
-   ``NGRAPH_DOC_BUILD_ENABLE``,  Automatically build documentation,  ``OFF``
-   ``NGRAPH_DYNAMIC_COMPONENTS_ENABLE``,  Enable dynamic loading of components,  ``TRUE``
-   ``NGRAPH_ENABLE_CPU_CONV_AUTO``, Enable mkldnn convolution_auto for CPU, ``TRUE``
-   ``NGRAPH_FAST_MATH_ENABLE``,  Enable fast math,  ``ON``
-   ``NGRAPH_GENERIC_CPU_ENABLE``, Enable build ``NGRAPH`` for generic CPU backend, ``FALSE``
-   ``NGRAPH_GPU_ENABLE``,  Control the building of the GPU backend,  ``FALSE``
-   ``NGRAPH_GPUH_ENABLE``, Control the building of the Hybrid GPU backend, ``FALSE``
+   ``NGRAPH_DOC_BUILD_ENABLE``,  Automatically build documentation, ``OFF``
+   ``NGRAPH_DYNAMIC_COMPONENTS_ENABLE``,  Enable dynamic loading of components, ``TRUE``
+   ``NGRAPH_FAST_MATH_ENABLE``,  Enable fast math, ``ON``
    ``NGRAPH_HALIDE``,  ,``OFF``
-   ``NGRAPH_INTELGPU_ENABLE``, Control the building of the Intel GPU backend with clDNN, ``FALSE``
    ``NGRAPH_INTERPRETER_ENABLE``, Control the building of the ``INTERPRETER`` backend,  ``TRUE``
    ``NGRAPH_INTERPRETER_STATIC_LIB_ENABLE``, Enable build INTERPRETER backend static library, ``FALSE``
    ``NGRAPH_JSON_ENABLE``, Enable JSON based serialization and tracing features, ``TRUE``
@@ -52,7 +47,7 @@ Compile Flags
    ``NGRAPH_TBB_ENABLE``, Only if (``NGRAPH_CPU_ENABLE``) Control usage of TBB for CPU backend, ``TRUE``
    ``NGRAPH_TOOLS_ENABLE``, Control the building of tools, ``TRUE``
    ``NGRAPH_UNIT_TEST_ENABLE``,  Control the building of unit tests, ``TRUE``
-   ``NGRAPH_USE_PREBUILT_LLVM``, Use a precompiled LLVM  ,``FALSE``
+   ``NGRAPH_USE_PREBUILT_LLVM``, Use a precompiled LLVM, ``FALSE``
    ``NGRAPH_USE_PREBUILT_MLIR``, Use the `precompiled MLIR`_,``FALSE``
 
 
@@ -71,20 +66,26 @@ Environment Variables
    ``NGRAPH_CPU_DEBUG_TRACER``,  See :ref:`debug_tracer`
    ``NGRAPH_CPU_TRACER_LOG``, See also :ref:`debug_tracer`
    ``NGRAPH_CPU_TRACING``, Generate timelines for CPU to check in ``chrome://tracing``
-   ``NGRAPH_DECONV_FUSE``,  Default ``FALSE``; when ``TRUE`` it enables fusion for deconvolution.  Only available with CPU.
-   ``NGRAPH_ENABLE_SERIALIZE_TRACING``,  Creates serialized files to be run with ``nbench`` for localized execution rather than whole stack execution
+   ``NGRAPH_DISABLE_LOGGING``,	Disable printing all logs irrespective of build type
+   ``NGRAPH_ENABLE_REPLACE_CHECK``,	Enables strict type checking in copy constructor copy_with_new_args
+   ``NGRAPH_ENABLE_SERIALIZE_TRACING``, generates 1 ``json`` file per pass to run with ``nbench`` for localized execution rather than whole stack execution
+   ``NGRAPH_ENABLE_VISUALIZE_TRACING``, See :doc:`viz_tools`
+   ``NGRAPH_ENABLE_TRACING``, Enables creating graph execution timelines to be viewed in ``chrome://tracing`` see also :doc:`viz_tools`.
+   ``NGRAPH_ENABLE_VISUALIZE_TRACING``,	Enables creating visual graph for each pass ``.svg`` files by default
+   ``NGRAPH_FAIL_MATCH_AT``, Allows one to specify node name patterns to abort pattern matching at particular nodes. Helps debug an offending fusion
+   ``NGRAPH_GTEST_INFO``, Enables printing info about a specific test
    ``NGRAPH_INTER_OP_PARALLELISM``, See :ref:`interop_intraop`
    ``NGRAPH_INTRA_OP_PARALLELISM``, See :ref:`interop_intraop`
-   ``NGRAPH_PASS_ATTRIBUTES``, Enable or disable attributes related to a pass; see also `pass config`_
-   ``NGRAPH_PASS_ENABLES``,  Enable or disable a pass: either core or backend
-   ``NGRAPH_PROFILE_PASS_ENABLE``,  Per-pass time taken to compile
-   ``NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE``,  Calculated in code; helps prevent *long* edges between two nodes very far apart
-   ``NGRAPH_VISUALIZE_EDGE_LABELS``, Set it to 1 in ``~/.bashrc``
-   ``NGRAPH_ENABLE_VISUALIZE_TRACING``, See :doc:`viz_tools`
-   ``NGRAPH_ENABLE_TRACING``, See :doc:`viz_tools`
+   ``NGRAPH_PASS_ATTRIBUTES``, Specify pass-specific attributes as a semi-colon separated list to be enabled or disabled. Naming of pass attributes is up to the backends and see also `pass config`_
+   ``NGRAPH_PASS_ENABLES``,	Specify a semi-colon separated list to enable or disable a pass on core or backend. This will override the default enable/disable values
+   ``NGRAPH_PROFILE_PASS_ENABLE``, Dump the name and execution time of each pass; shows per-pass time taken to compile
+   ``NGRAPH_PROVENANCE_ENABLE``, Enable adding provenance info to nodes. This will also be added to serialized files.
+   ``NGRAPH_SERIALIZER_OUTPUT_SHAPES``,	Enable adding output shapes in the serialized graph
+   ``NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE``,	Calculated in code; helps prevent *long* edges between two nodes very far apart
+   ``NGRAPH_VISUALIZE_EDGE_LABELS``, Set it to 1 in ``~/.bashrc``; adds label to a graph edge when NGRAPH_ENABLE_VISUALIZE_TRACING=1
+   ``NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES``, Set it to 1 in ``~/.bashrc``; adds output shape of a node when NGRAPH_ENABLE_VISUALIZE_TRACING=1
+   ``NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES``, Set it to 1 in ``~/.bashrc``; adds output type of a node when NGRAPH_ENABLE_VISUALIZE_TRACING=1
    ``NGRAPH_VISUALIZE_TRACING_FORMAT``, Default format is ``.svg``. See also :doc:`viz_tools` 
-   ``NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES``,  Set it to 1 in ``~/.bashrc``
-   ``NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES``, Set it to 1 in ``~/.bashrc``
    ``OMP_NUM_THREADS``, See: `OpenMPI Runtime Library Documentation`_
 
 
