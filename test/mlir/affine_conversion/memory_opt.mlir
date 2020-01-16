@@ -1,6 +1,6 @@
 // RUN: ngraph-opt %s --split-input-file --ngraph-memory-opt --ngraph-memory-opt-concat --ngraph-memory-opt-eltwise  -convert-ngraph-to-affine  | FileCheck %s
 
-// CHECK-DAG: #[[MAP0:[a-zA-Z0-9]+]] = affine_map<(d0, d1) -> (d0 * 2 + d1)>
+// CHECK: #[[MAP0:[a-zA-Z0-9]+]] = affine_map<(d0, d1) -> (d0 * 2 + d1)>
 // CHECK-LABEL: test0	
 // CHECK: %[[B:.*]] = alloc() : memref<16xi8>
 // CHECK: std.view %[[B]][][] : memref<16xi8> to memref<2x2xf32, #[[MAP0]]>
