@@ -1,15 +1,11 @@
 :orphan:
 
-Sitemap
-#######
-
 * :ref:`Getting Started <introduction>`
 
   .. toctree::
      :maxdepth: 1
 
      introduction
-     tutorials/index.rst
 
 
 * :ref:`Framework Support <framework_support>`
@@ -66,12 +62,18 @@ Sitemap
      frameworks/validated/list.rst
 
 
-* :ref:`Debugging Graphs <inspection>`
+* :ref:`Diagnostics <inspection>`
 
   .. toctree::
      :maxdepth: 1
 
-     inspection/index.rst
+     inspection/debug_core.rst
+     inspection/debug_tf.rst
+     inspection/debug_onnx.rst
+     inspection/debug_paddle.rst
+     inspection/viz_tools.rst 
+     inspection/profiling.rst
+
 
 
 * :ref:`Contribution <contribution_guide>`
