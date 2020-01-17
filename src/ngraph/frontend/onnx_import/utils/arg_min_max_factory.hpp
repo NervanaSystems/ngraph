@@ -28,8 +28,7 @@ namespace ngraph
     {
         namespace utils
         {
-            /// \brief  Factory class which generates sub-graphs for ONNX ArgMin, ArgMax
-            /// ops.
+            /// \brief  Factory class which generates sub-graphs for ONNX ArgMin, ArgMax ops.
             class ArgMinMaxFactory
             {
             public:
@@ -37,11 +36,11 @@ namespace ngraph
                 virtual ~ArgMinMaxFactory() = default;
 
                 /// \brief      Creates ArgMax ONNX operation.
-                /// \return     Sub-graph represented ArgMax op.
+                /// \return     Sub-graph representing ArgMax op.
                 std::shared_ptr<ngraph::Node> make_arg_max() const;
 
                 /// \brief      Creates ArgMin ONNX operation.
-                /// \return     Sub-graph represented ArgMin op.
+                /// \return     Sub-graph representing ArgMin op.
                 std::shared_ptr<ngraph::Node> make_arg_min() const;
 
             private:
