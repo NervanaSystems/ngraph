@@ -90,7 +90,6 @@ namespace
         void setLive(Value v);
         void kill(Value v);
         void getLiveValues(llvm::SmallVectorImpl<Value>& values);
-        void reset();
 
     private:
         unsigned m_maxIdx = 0;
@@ -405,11 +404,7 @@ namespace
         {
             if (!m_liveness.isLive(opnd) && !isInputOrOutputValue(opnd))
             {
-                int uses = 0;
-                for (auto& i : opnd.getUses())
-                {
-                    uses++;
-                }
+                int uses = std::distance(opnd.getUses().begin(), opnd.getUses().end());
                 if (useCount == -1 || uses < useCount)
                 {
                     use = opnd;
@@ -533,13 +528,6 @@ namespace
             auto value = m_idxToValue[id];
             m_valueToSet[value] = pSet;
         }
-    }
-
-    void LivenessAnalysis::reset()
-    {
-        m_valueToIdx.clear();
-        m_liveness.clear();
-        m_maxIdx = 0;
     }
 
     void LivenessAnalysis::getLiveValues(llvm::SmallVectorImpl<Value>& values)

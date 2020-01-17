@@ -33,6 +33,7 @@ if(WIN32)
         -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG=${GTEST_OUTPUT_DIR}
         -Dgtest_force_shared_crt=TRUE
     )
+    set(GMOCK_OUTPUT_DIR ${GTEST_OUTPUT_DIR})
 endif()
 
 if(CMAKE_BUILD_TYPE)
@@ -44,21 +45,16 @@ endif()
 if(UNIX)
     # workaround for compile error
     # related: https://github.com/intel/mkl-dnn/issues/55
-    set(GTEST_CXX_FLAGS "-Wno-unused-result ${CMAKE_CXX_FLAGS} -Wno-undef")
+    set(GTEST_CXX_FLAGS "-Wno-unused-result ${CMAKE_ORIGINAL_CXX_FLAGS} -Wno-undef")
 else()
-    set(GTEST_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    set(GTEST_CXX_FLAGS ${CMAKE_ORIGINAL_CXX_FLAGS})
 endif()
 
 #Build for ninja
-if(UNIX)
-    SET(GTEST_PATHS ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/libgtest.a
-            ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/libgmock.a)
-else()
-    SET(GTEST_PATHS ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/gtest.lib
-            ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/gmock.lib
-            ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/gtestd.lib
-            ${CMAKE_BINARY_DIR}/ngraph/gtest/build/googlemock/gtest/gmockd.lib)
-endif()
+SET(GTEST_PATHS ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtestd${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmockd${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 ExternalProject_Add(
     ext_gtest
@@ -90,18 +86,12 @@ target_include_directories(libgtest SYSTEM INTERFACE
     ${SOURCE_DIR}/googletest/include
     ${SOURCE_DIR}/googlemock/include)
 
-if(LINUX OR APPLE)
+if(LINUX OR APPLE OR WIN32)
     target_link_libraries(libgtest INTERFACE
         debug ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtestd${CMAKE_STATIC_LIBRARY_SUFFIX}
         debug ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmockd${CMAKE_STATIC_LIBRARY_SUFFIX}
         optimized ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
         optimized ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
-elseif(WIN32)
-    target_link_libraries(libgtest INTERFACE
-        debug ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtestd${CMAKE_STATIC_LIBRARY_SUFFIX}
-        debug ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmockd${CMAKE_STATIC_LIBRARY_SUFFIX}
-        optimized ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
-        optimized ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
 else()
     message(FATAL_ERROR "libgtest: Unsupported platform.")
 endif()

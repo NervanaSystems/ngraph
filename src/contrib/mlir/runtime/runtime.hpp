@@ -33,6 +33,13 @@ namespace ngraph
     {
         namespace ngmlir
         {
+            struct MemRefArg
+            {
+                void* m_tensor;
+                std::vector<size_t> m_shape;
+                std::vector<size_t> m_strides;
+            };
+
             /// Base class for an MLIR runtime. An MLIR runtime owns the MLIR Context and owns
             /// the final compiled module. It supports invoking the module with specific arguments
             class MLIRRuntime
@@ -43,7 +50,7 @@ namespace ngraph
                 /// Overload with module op
                 void set_module(mlir::ModuleOp& module) { m_module = module; }
                 /// Executes a pre-compiled subgraph
-                virtual void run(void* args) = 0;
+                virtual void run(const std::vector<MemRefArg>& args) = 0;
 
                 /// Get the MLIR module that this runtime owns
                 mlir::OwningModuleRef& get_module() { return m_module; }

@@ -252,8 +252,8 @@ def NGAvgPoolOp :
 }
 
 // AvgPool for back prop
-def NGAvgPoolBackPropOp :
-    NG_OneResult_Op<"avgPoolBackProp", [NoSideEffect, OpVersion0]>,
+def NGAvgPoolBackpropOp :
+    NG_OneResult_Op<"avgPoolBackprop", [NoSideEffect, OpVersion0]>,
     Arguments<(ins I64ArrayAttr :$forwardArgShape,
                NG_TensorType    :$delta, 
                I64ArrayAttr     :$windowShape,
@@ -421,19 +421,6 @@ def NGMaxPoolOp :
       OpBuilder<
       "Builder *builder, OperationState &tblgen_state, Type res, Value arg," 
        "ArrayAttr windowShape, ArrayAttr windowMovementStrides,"
-       "ArrayAttr padBelow, ArrayAttr padAbove, IntegerAttr padType", [{
-        tblgen_state.addOperands(arg);
-        tblgen_state.addAttribute("windowShape", windowShape);
-        tblgen_state.addAttribute("windowMovementStrides", windowMovementStrides);
-        tblgen_state.addAttribute("padBelow", padBelow);
-        tblgen_state.addAttribute("padAbove", padAbove);
-        tblgen_state.addAttribute("padType", padType);
-        tblgen_state.addTypes(res);
-      }]>,
-
-      OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, Value arg," 
-       "ArrayAttr windowShape, ArrayAttr windowMovementStrides,"
        "ArrayAttr padBelow, ArrayAttr padAbove", [{
         tblgen_state.addOperands(arg);
         tblgen_state.addAttribute("windowShape", windowShape);
@@ -455,11 +442,10 @@ def NGMaxPoolOp :
 }
 
 // MaxPool for back prop
-def NGMaxPoolBackPropOp :
-    NG_OneResult_Op<"maxPoolBackProp", [NoSideEffect, OpVersion0]>,
+def NGMaxPoolBackpropOp :
+    NG_OneResult_Op<"maxPoolBackprop", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType :$argForward,
                NG_TensorType     :$delta, 
-               NG_TensorType     :$resultForward,
                I64ArrayAttr      :$windowShape,
                I64ArrayAttr      :$windowMovementStrides,
                I64ArrayAttr      :$padBelow,
@@ -473,24 +459,7 @@ def NGMaxPoolBackPropOp :
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
     let verifier = [{ return verifyOp(*this); }];
-    let builders = [
-      // Builder without resultForward
-      OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, " 
-       "Value argForward, Value delta, "
-       "ArrayAttr windowShape, ArrayAttr windowMovementStrides, "
-       "ArrayAttr padBelow, ArrayAttr padAbove", [{
-        tblgen_state.addOperands(argForward);
-        tblgen_state.addOperands(delta);
-        tblgen_state.addOperands(Value(nullptr));
-        tblgen_state.addAttribute("windowShape", windowShape);
-        tblgen_state.addAttribute("windowMovementStrides", windowMovementStrides);
-        tblgen_state.addAttribute("padBelow", padBelow);
-        tblgen_state.addAttribute("padAbove", padAbove);
-        tblgen_state.addTypes(res);
-      }]>
-    ];
-
+    
     let extraClassDeclaration = [{
       void setWindowShape(const ArrayAttr& arrayAttr)     { this->setAttr("windowShape", arrayAttr);     }
       void setWindowMovementStrides(const ArrayAttr& arrayAttr) { this->setAttr("windowMovementStrides", arrayAttr);}
