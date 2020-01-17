@@ -849,8 +849,9 @@ namespace
         auto downgraded_node = op_cast(as_type_ptr<T>(node));
         if (downgraded_node)
         {
-            std::string provenance_tag = "<Downgraded from v1 " + std::string(node->get_type_name()) + ">";
+            std::string provenance_tag = "<Opset0_Downgrade (v1 " + std::string(node->get_type_name()) + ")>";
             downgraded_node->add_provenance_tag(provenance_tag);
+            downgraded_node->add_provenance_tags_above(node->input_values(), {provenance_tag});
             return true;
         }
         return false;
