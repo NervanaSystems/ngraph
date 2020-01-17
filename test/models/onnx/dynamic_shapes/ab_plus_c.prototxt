@@ -26,7 +26,7 @@ graph {
             dim_param: "batch"
           }
           dim {
-            dim_value: 5
+            dim_value: 2
           }
         }
       }
@@ -42,7 +42,7 @@ graph {
             dim_param: "batch"
           }
           dim {
-            dim_value: 5
+            dim_value: 2
           }
         }
       }
@@ -58,7 +58,7 @@ graph {
             dim_param: "batch"
           }
           dim {
-            dim_value: 5
+            dim_value: 2
           }
         }
       }
@@ -74,7 +74,7 @@ graph {
             dim_param: "batch"
           }
           dim {
-            dim_value: 5
+            dim_value: 2
           }
         }
       }
