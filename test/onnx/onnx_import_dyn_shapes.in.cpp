@@ -43,4 +43,15 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, onnx_dynamic_dims_to_ngraph_dynamic_dims)
         EXPECT_TRUE(input_ps[1].is_static());
         EXPECT_EQ(static_cast<size_t>(input_ps[1]), 5);
     }
+
+    const auto& graph_outputs = function->get_results();
+    EXPECT_EQ(graph_outputs.size(), 1);
+
+    const auto out = *(graph_outputs.cbegin());
+    const auto& out_ps = out->get_output_partial_shape(0);
+    EXPECT_TRUE(out_ps.rank().is_static());
+    EXPECT_EQ(static_cast<size_t>(out_ps.rank()), 2);
+    EXPECT_TRUE(out_ps[0].is_dynamic());
+    EXPECT_TRUE(out_ps[1].is_static());
+    EXPECT_EQ(static_cast<size_t>(out_ps[1]), 5);
 }
