@@ -30,6 +30,21 @@ else()
     set(NGRAPH_PROTOBUF_GIT_TAG "v3.6.1")
 endif()
 
+set(Protobuf_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/protobuf)
+set(Protobuf_PROTOC_EXECUTABLE ${Protobuf_INSTALL_PREFIX}/bin/protoc)
+set(Protobuf_INCLUDE_DIR ${Protobuf_INSTALL_PREFIX}/include)
+if (WIN32)
+    set(Protobuf_LIBRARY ${Protobuf_INSTALL_PREFIX}/lib/libprotobuf.lib)
+else()
+    set(Protobuf_LIBRARY ${Protobuf_INSTALL_PREFIX}/lib/libprotobuf.a)
+endif()
+
+if ("${CMAKE_GENERATOR}" STREQUAL "Ninja")
+    set(MAKE_UTIL make)
+else()
+    set(MAKE_UTIL $(MAKE))
+endif()
+
 if (WIN32)
     ExternalProject_Add(
         ext_protobuf
@@ -56,6 +71,7 @@ if (WIN32)
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
         EXCLUDE_FROM_ALL TRUE
+        BUILD_BYPRODUCTS ${Protobuf_PROTOC_EXECUTABLE} ${Protobuf_LIBRARY}
     )
 elseif (APPLE)
     # Don't manually set compiler on macos since it causes compile error on macos >= 10.14
@@ -75,6 +91,7 @@ elseif (APPLE)
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
         EXCLUDE_FROM_ALL TRUE
+        BUILD_BYPRODUCTS ${Protobuf_PROTOC_EXECUTABLE} ${Protobuf_LIBRARY}
         )
 else()
     if (DEFINED NGRAPH_USE_CXX_ABI)
@@ -91,7 +108,7 @@ else()
         UPDATE_COMMAND ""
         PATCH_COMMAND ""
         CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --prefix=${EXTERNAL_PROJECTS_ROOT}/protobuf --disable-shared CXX=${CMAKE_CXX_COMPILER}
-        BUILD_COMMAND $(MAKE) "${BUILD_FLAGS}"
+        BUILD_COMMAND ${MAKE_UTIL} "${BUILD_FLAGS}"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
@@ -99,21 +116,13 @@ else()
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
         EXCLUDE_FROM_ALL TRUE
+        BUILD_BYPRODUCTS ${Protobuf_PROTOC_EXECUTABLE} ${Protobuf_LIBRARY}
         )
 endif()
 
 # -----------------------------------------------------------------------------
 # Use the interface of FindProtobuf.cmake
 # -----------------------------------------------------------------------------
-
-set(Protobuf_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/protobuf)
-set(Protobuf_PROTOC_EXECUTABLE ${Protobuf_INSTALL_PREFIX}/bin/protoc)
-set(Protobuf_INCLUDE_DIR ${Protobuf_INSTALL_PREFIX}/include)
-if (WIN32)
-    set(Protobuf_LIBRARY ${Protobuf_INSTALL_PREFIX}/lib/libprotobuf.lib)
-else()
-    set(Protobuf_LIBRARY ${Protobuf_INSTALL_PREFIX}/lib/libprotobuf.a)
-endif()
 
 if(NGRAPH_ONNX_IMPORT_ENABLE)
     if (NOT TARGET libprotobuf)

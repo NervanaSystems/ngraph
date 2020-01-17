@@ -114,6 +114,7 @@ ngraph_var(NGRAPH_USE_PREBUILT_MLIR DEFAULT "FALSE")
 ngraph_var(NGRAPH_USE_PREBUILT_LLVM DEFAULT "FALSE")
 
 option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
+option(NGRAPH_TEST_UTIL_ENABLE "Control the building of test utility" TRUE)
 option(NGRAPH_DOC_BUILD_ENABLE "Control the building of documentation" FALSE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
 option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
@@ -188,6 +189,13 @@ if (NOT NGRAPH_JSON_ENABLE)
     set(NGRAPH_TOOLS_ENABLE FALSE)
 endif()
 
+if (NGRAPH_UNIT_TEST_ENABLE)
+    if (NOT NGRAPH_TEST_UTIL_ENABLE)
+        message(WARNING "Unit test needs test util: Turning NGRAPH_TEST_UTIL_ENABLE ON!")
+        set(NGRAPH_TEST_UTIL_ENABLE TRUE)
+    endif()
+endif()
+
 macro (NORMALIZE_BOOL VAL)
     if (${VAL})
         set(${VAL} ON)
@@ -197,6 +205,7 @@ macro (NORMALIZE_BOOL VAL)
 endmacro()
 
 NORMALIZE_BOOL(NGRAPH_UNIT_TEST_ENABLE)
+NORMALIZE_BOOL(NGRAPH_TEST_UTIL_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DOC_BUILD_ENABLE)
 NORMALIZE_BOOL(NGRAPH_TOOLS_ENABLE)
 NORMALIZE_BOOL(NGRAPH_CPU_ENABLE)
@@ -229,6 +238,7 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:              ${NGRAPH_UNIT_TEST_ENABLE}")
+message(STATUS "NGRAPH_TEST_UTIL_ENABLE:              ${NGRAPH_TEST_UTIL_ENABLE}")
 message(STATUS "NGRAPH_DOC_BUILD_ENABLE:              ${NGRAPH_DOC_BUILD_ENABLE}")
 message(STATUS "NGRAPH_TOOLS_ENABLE:                  ${NGRAPH_TOOLS_ENABLE}")
 message(STATUS "NGRAPH_CPU_ENABLE:                    ${NGRAPH_CPU_ENABLE}")
@@ -261,10 +271,7 @@ if (NGRAPH_CPU_ENABLE)
     message(STATUS "NGRAPH_TBB_ENABLE:                    ${NGRAPH_TBB_ENABLE}")
 endif()
 
-if("${CMAKE_GENERATOR}" STREQUAL "Ninja" AND (NGRAPH_TOOLS_ENABLE OR NGRAPH_CPU_ENABLE OR NGRAPH_MLIR_ENABLE OR
-        NGRAPH_INTELGPU_ENABLE OR NGRAPH_GPU_ENABLE OR NGRAPH_INTERPRETER_ENABLE OR NGRAPH_NOP_ENABLE OR
-        NGRAPH_GPUH_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE OR NGRAPH_ONNX_IMPORT_ENABLE OR NGRAPH_PLAIDML_ENABLE OR
-        NGRAPH_JSON_ENABLE))
+if("${CMAKE_GENERATOR}" STREQUAL "Ninja" AND NGRAPH_MLIR_ENABLE)
     message(FATAL_ERROR "Ninja generator not supported.")
 endif()
 
@@ -518,8 +525,8 @@ add_custom_target(fix-mode
 )
 
 if (NGRAPH_USE_PREBUILT_MLIR)
-	if (NOT DEFINED MLIR_LLVM_PREBUILT_PATH)
-	    message(FATAL_ERROR "MLIR_LLVM_PREBUILT_PATH not specified")
+    if (NOT DEFINED MLIR_LLVM_PREBUILT_PATH)
+        message(FATAL_ERROR "MLIR_LLVM_PREBUILT_PATH not specified")
     endif()
 endif()
 #-----------------------------------------------------------------------------------------------
@@ -595,7 +602,6 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     endif()
 endif()
 
-include(cmake/external_gtest.cmake)
 if(NGRAPH_JSON_ENABLE)
     include(cmake/external_json.cmake)
 endif()
@@ -640,14 +646,11 @@ if (NGRAPH_DISTRIBUTED_MLSL_ENABLE)
     include(cmake/external_mlsl.cmake)
 endif()
 
-if (NGRAPH_HALIDE)
-    message(WARNING "Halide build system integration is currently using an older LLVM release \
-                     and is not expected to work across most build environments. Consider \
-                     disabling it till this message goes away")
-    include(cmake/external_halide.cmake)
-endif()
-
 add_subdirectory(src)
+
+if (NGRAPH_TEST_UTIL_ENABLE)
+    include(cmake/external_gtest.cmake)
+endif()
 
 add_subdirectory(test)
 add_subdirectory(doc/examples)

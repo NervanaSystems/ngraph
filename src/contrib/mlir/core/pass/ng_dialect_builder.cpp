@@ -112,7 +112,8 @@ namespace
         /// Converts an ngraph shape to an I64 array attribute
         template <typename T>
         mlir::ArrayAttr getShapeAsAttr(T ngShape);
-
+        /// Returns the builder
+        mlir::OpBuilder& getBuilder() { return m_builder; }
         /// Return the real input node corresponding to the fake node
         ngraph::Node* getOriginArg(ngraph::Node* node) const;
 
@@ -452,6 +453,27 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Convolutio
 
     attr = NgDialectObj.getShapeAsAttr(convNode->get_padding_above());
     convOp.setPadAbove(attr);
+
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::GroupConvolution)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGGroupConvOp>(ngNode);
+    auto gConvNode = static_cast<const ngraph::op::GroupConvolution*>(ngNode);
+    auto gConvOp = llvm::cast<mlir::NGGroupConvOp>(op);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(gConvNode->get_window_movement_strides());
+    gConvOp.setStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(gConvNode->get_padding_below());
+    gConvOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(gConvNode->get_padding_above());
+    gConvOp.setPadAbove(attr);
+
+    gConvOp.setGroups(NgDialectObj.getBuilder().getI64IntegerAttr(gConvNode->get_groups()));
     return op;
 }
 
@@ -589,7 +611,6 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Softmax)
     softmaxOp.setAxes(attr);
     return op;
 }
-
 template <typename Op>
 mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ngNode, int inNum)
 {
