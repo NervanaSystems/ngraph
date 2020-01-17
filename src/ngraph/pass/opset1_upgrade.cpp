@@ -708,6 +708,7 @@ namespace
         auto upgraded_node = op_cast(as_type_ptr<T>(node));
         if (upgraded_node)
         {
+            // Add provenance tag to upgraded node and all newly created nodes above
             std::string provenance_tag = "<Opset1_Upgrade (v0 " + std::string(node->get_type_name()) + ")>";
             upgraded_node->add_provenance_tag(provenance_tag);
             upgraded_node->add_provenance_tags_above(node->input_values(), {provenance_tag});
