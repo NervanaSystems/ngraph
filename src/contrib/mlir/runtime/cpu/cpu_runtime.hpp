@@ -38,7 +38,7 @@ namespace ngraph
                 void* allocatedPtr;
                 void* alignedPtr;
                 int64_t offset;
-                int64_t shapeAndStrides[];
+                std::vector<int64_t> shapeAndStrides;
             };
 
             struct UnrankedMemRef
