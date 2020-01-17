@@ -169,13 +169,16 @@ namespace
             }
         }
         // Check if arg_shape contains some more empty dimensions marked to broadcast.
-        // If axes_mapping size is less than arg_shape size, then some of arg dimensions are
-        // equal to one and marked to broadcast.
+        // If axes_mapping size is less than arg_shape size, then some of arg dimensions may
+        // be equal to one and marked to broadcast.
         if (axes_mapping.size() < arg_shape.size())
         {
             for (size_t a{axes_mapping.size()}; a < arg_shape.size(); ++a)
             {
-                empty_axes.push_back(a);
+                if (arg_shape.at(a) == 1)
+                {
+                    empty_axes.push_back(a);
+                }
             }
         }
         if (!empty_axes.empty())
