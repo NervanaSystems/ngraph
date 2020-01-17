@@ -162,6 +162,20 @@ namespace ngraph
         namespace opset1
         {
             ///
+            /// \brief      Broadcast right node to left node's shape using legacy scheme.
+            ///
+            /// \param[in]  left              The left hand side node of binary operation.
+            /// \param[in]  right             The right hand side node of binary operation. The one
+            ///                               to be broadcasted.
+            /// \param[in]  start_match_axis  The axis index starting mutually equal shapes
+            ///                               of both nodes.
+            ///
+            /// \return     The Output object connected to node producing broadcasted right node.
+            ///
+            Output<Node> legacy_style_broadcast_for_binary_operation(const Output<Node>& left,
+                                                                     const Output<Node>& right,
+                                                                     size_t start_match_axis);
+
             ///
             /// \brief      Reconstructs axes mapping vector for Broadcast:v1 operation.
             ///
