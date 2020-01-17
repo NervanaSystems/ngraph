@@ -41,7 +41,3 @@ namespace mlir
 #include "ops.h.inc"
 #undef GET_OP_CLASSES
 }
-
-void setBufferId(mlir::Operation* op, mlir::IntegerAttr attr);
-mlir::IntegerAttr setBufferId(mlir::Operation* op, unsigned val);
-mlir::IntegerAttr getBufferId(mlir::Operation* op);

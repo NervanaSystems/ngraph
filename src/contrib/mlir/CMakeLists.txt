@@ -25,7 +25,7 @@ add_subdirectory(tools/ngraph-opt)
 set(SRC
     backend/cpu/cpu_backend.cpp
     backend/pass/affine_lowerer.cpp
-    backend/pass/memory_optimization.cpp
+    backend/analysis/memory_analysis.cpp
     core/compiler.cpp
     core/ngraph_dialect/dialect.cpp
     core/ngraph_dialect/type.cpp
@@ -36,6 +36,7 @@ set(SRC
     core/pass/ng_dialect_builder.hpp
     runtime/cpu/memory_manager.cpp
     runtime/cpu/cpu_runtime.cpp
+    runtime/cpu/cpu_callbacks.cpp
     utils.cpp
 )
 
@@ -90,7 +91,8 @@ target_link_libraries(
 )
 
 # Link ngraph 
-target_link_libraries(mlir_backend PUBLIC ngraph)
+target_link_libraries(mlir_backend PUBLIC ngraph libmkl libmkldnn)
+target_include_directories(mlir_backend SYSTEM PUBLIC libmkldnn)
 
 # table-gen dialect ops
 # include table-gen helpers
