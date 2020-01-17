@@ -1340,7 +1340,6 @@ namespace
         }
         else if (srcShape.size() == 5)
         {
-            opAttrs attrs;
             attrs.poolAttrs3d.includePaddingInAvgComputation = false;
             for (auto i = 0; i < 3; i++)
             {
@@ -1604,6 +1603,107 @@ namespace
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
         SmallVector<mlir::Value*, 4> args = {outputs[0], outputs[1], attrsIndexArg, opTypeArg};
 
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        rewriter.replaceOp(op, result);
+
+        return matchSuccess();
+    }
+
+    REWRITER(NGConvBiasOp)
+    {
+        auto convBias = cast<NGConvBiasOp>(op);
+        auto loc = convBias.getLoc();
+        ScopedContext scope(rewriter, loc);
+
+        // Get operands
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result, "Unexpected null result in ConvBias Op");
+        Value* images = operands[0];
+        Value* filters = operands[1];
+        Value* bias = operands[2];
+        auto strides = convBias.strides().getValue();
+        auto dilation = convBias.dilation().getValue();
+        auto padBelow = convBias.padBelow().getValue();
+        auto padAbove = convBias.padBelow().getValue();
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto resultShape = resultTy.getShape();
+        auto imagesTy = images->getType().dyn_cast<MemRefType>();
+        auto imagesShape = imagesTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(imagesTy, "Unexpected non-memref LHS type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == imagesTy.getElementType(), "Types mismatch in ConvBias");
+
+        NGRAPH_CHECK((imagesShape.size() == 3 && resultShape.size() == 3) ||
+                         (imagesShape.size() == 4 && resultShape.size() == 4) ||
+                         (imagesShape.size() == 5 && resultShape.size() == 5),
+                     "MKLDNN conv operation is only supported for 3D, 4D, and 5D tensors");
+
+        auto int64Ty = rewriter.getIntegerType(64);
+        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
+        auto imagesCast =
+            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), images, unrankedMemrefTy);
+        auto filtersCast = rewriter.create<mlir::MemRefCastOp>(
+            rewriter.getUnknownLoc(), filters, unrankedMemrefTy);
+        auto biasCast =
+            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), bias, unrankedMemrefTy);
+        auto resultCast =
+            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, unrankedMemrefTy);
+
+        FuncOp callBackFunc = pass.getCallDecl("__mlir_callback_3_inputs",
+                                               {unrankedMemrefTy,
+                                                unrankedMemrefTy,
+                                                unrankedMemrefTy,
+                                                unrankedMemrefTy,
+                                                int64Ty,
+                                                int64Ty},
+                                               {},
+                                               rewriter);
+
+        opAttrs attrs;
+        if (imagesShape.size() == 3)
+        {
+            attrs.convAttrs1d.withRelu = convBias.withRelu();
+            for (auto i = 0; i < 1; i++)
+            {
+                attrs.convAttrs1d.windowStrides[i] = strides[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs1d.windowDilation[i] = dilation[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs1d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs1d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+            }
+        }
+        else if (imagesShape.size() == 4)
+        {
+            attrs.convAttrs2d.withRelu = convBias.withRelu();
+            for (auto i = 0; i < 2; i++)
+            {
+                attrs.convAttrs2d.windowStrides[i] = strides[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs2d.windowDilation[i] = dilation[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs2d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs2d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+            }
+        }
+        else if (imagesShape.size() == 5)
+        {
+            attrs.convAttrs3d.withRelu = convBias.withRelu();
+            for (auto i = 0; i < 3; i++)
+            {
+                attrs.convAttrs3d.windowStrides[i] = strides[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs3d.windowDilation[i] = dilation[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs3d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs3d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+            }
+        }
+
+        auto index = pass.insertAttrs(attrs);
+        auto attrsIndexArg =
+            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
+        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::CONVOLUTIONBIAS), 64);
+        SmallVector<mlir::Value*, 4> args = {
+            imagesCast, filtersCast, biasCast, resultCast, attrsIndexArg, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 

@@ -4,6 +4,22 @@
 
 // -----
 
+// Convbias Op
+// CHECK-LABEL: func @simple_convbias
+//       CHECK: %0 = memref_cast %arg0 : memref<1x1x3x3xf32> to memref<*xf32>
+//       CHECK: %1 = memref_cast %arg1 : memref<1x1x3x3xf32> to memref<*xf32>
+//       CHECK: %2 = memref_cast %arg2 : memref<1xf32> to memref<*xf32>
+//       CHECK: %3 = memref_cast %arg3 : memref<1x1x1x1xf32> to memref<*xf32>
+//       CHECK: %[[C1:.*]] = constant 0 : i64
+//       CHECK: %[[C2:.*]] = constant {{[0-9]+}} : i64
+//       CHECK: call @__mlir_callback_3_inputs(%0, %1, %2, %3, %c0_i64, %c12_i64) : (memref<*xf32>, memref<*xf32>, memref<*xf32>, memref<*xf32>, i64, i64) -> ()
+func @simple_convbias(%arg0: !ng.tensor<1x1x3x3xf32>, %arg1: !ng.tensor<1x1x3x3xf32>, %arg2: !ng.tensor<1xf32>) -> !ng.tensor<1x1x1x1xf32> {
+  %0 = "ng.convBias"(%arg0, %arg1, %arg2) {dilation = [1, 1], padAbove = [0, 0], padBelow = [0, 0], strides = [1, 1], withRelu = false} : (!ng.tensor<1x1x3x3xf32>, !ng.tensor<1x1x3x3xf32>, !ng.tensor<1xf32>) -> !ng.tensor<1x1x1x1xf32>
+  "ng.return"(%0) : (!ng.tensor<1x1x1x1xf32>) -> ()
+}
+
+// -----
+
 // Softmax Op
 // CHECK-LABEL: func @simple_softmax
 //       CHECK: %[[C1:.*]] = constant 0 : i64

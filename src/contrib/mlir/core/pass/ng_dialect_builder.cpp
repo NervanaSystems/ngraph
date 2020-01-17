@@ -456,6 +456,30 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Convolutio
 }
 
 template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::ConvolutionBias)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGConvBiasOp>(ngNode);
+    auto convNode = static_cast<const ngraph::op::ConvolutionBias*>(ngNode);
+    auto convOp = llvm::cast<mlir::NGConvBiasOp>(op);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(convNode->get_window_movement_strides());
+    convOp.setStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(convNode->get_window_dilation_strides());
+    convOp.setDilation(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(convNode->get_padding_below());
+    convOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(convNode->get_padding_above());
+    convOp.setPadAbove(attr);
+
+    mlir::BoolAttr boolAttr = NgDialectObj.m_builder.getBoolAttr(convNode->with_relu());
+    convOp.setWithRelu(boolAttr);
+    return op;
+}
+
+template <>
 mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::AvgPool)
 {
     mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolOp>(ngNode);

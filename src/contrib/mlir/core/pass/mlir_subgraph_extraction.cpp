@@ -420,6 +420,50 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
     }
 }
 
+template <typename T>
+static bool can_use_mkldnn_conv_callback(ngraph::Node* node)
+{
+    auto convolution = static_cast<const T*>(node);
+    auto arg0_rank = node->get_input_shape(0).size();
+
+    for (size_t s : convolution->get_data_dilation_strides())
+    {
+        if (s != 1)
+            return false;
+    }
+    // MKLDNN doesnt support negative padding
+    for (auto s : convolution->get_padding_above())
+    {
+        if (s < 0)
+        {
+            return false;
+        }
+    }
+
+    for (auto s : convolution->get_padding_below())
+    {
+        if (s < 0)
+        {
+            return false;
+        }
+    }
+
+    if (arg0_rank != 3 && arg0_rank != 4 && arg0_rank != 5)
+    {
+        return false;
+    }
+
+    // Only support f32 for now
+    if (node->get_input_element_type(0) != ngraph::element::f32 ||
+        node->get_input_element_type(1) != ngraph::element::f32 ||
+        node->get_output_element_type(0) != ngraph::element::f32)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 #define TI(x) std::type_index(typeid(x))
 
 bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node)
@@ -475,6 +519,16 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
 
         return std::all_of(data_dilation.begin(), data_dilation.end(), is_one) &&
                std::all_of(window_dilation.begin(), window_dilation.end(), is_one);
+    }
+
+    if (TI(ngraph::op::ConvolutionBias) == TI(*node))
+    {
+        // ConvBias is only supported through callback
+        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        {
+            return false;
+        }
+        return can_use_mkldnn_conv_callback<ngraph::op::ConvolutionBias>(node.get());
     }
 
     // MKLDNN only supports softmax across single axis

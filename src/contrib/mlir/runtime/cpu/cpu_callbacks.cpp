@@ -136,13 +136,12 @@ static mkldnn::memory convert_layout_if_diff(const mkldnn::memory::desc& lhs,
     }
 }
 
-static void convert_output_layout(const mkldnn::memory::desc& lhs,
+static void convert_output_layout(mkldnn::memory& reorder_in,
                                   const mkldnn::memory::desc& rhs,
                                   void* ptr,
                                   mkldnn::engine cpu_engine)
 {
-    mkldnn::memory reorder_in = {rhs, cpu_engine};
-    mkldnn::memory reorder_out = {lhs, cpu_engine, ptr};
+    mkldnn::memory reorder_out = {rhs, cpu_engine, ptr};
     mkldnn::reorder convert(reorder_in, reorder_out);
     std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, reorder_in},
                                                          {MKLDNN_ARG_DST, reorder_out}};
@@ -155,6 +154,168 @@ static void convert_output_layout(const mkldnn::memory::desc& lhs,
     catch (const mkldnn::error& e)
     {
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
+    }
+}
+
+static mkldnn::algorithm get_conv_algo()
+{
+#if defined(NGRAPH_ENABLE_CPU_CONV_AUTO)
+    return mkldnn::algorithm::convolution_auto;
+#else
+    return mkldnn::algorithm::convolution_direct;
+#endif
+}
+
+/// Callback for ConvBias
+static void __mlir_mkldnn_convbias(size_t rank,
+                                   StaticMemRef* memRefData,
+                                   StaticMemRef* memRefWeights,
+                                   StaticMemRef* memRefBias,
+                                   StaticMemRef* memRefOutput,
+                                   size_t index)
+{
+    mkldnn::memory::dims dataDims(rank);
+    mkldnn::memory::dims dataStrides(rank);
+    mkldnn::memory::dims weightsDims(rank);
+    mkldnn::memory::dims weightsStrides(rank);
+    mkldnn::memory::dims biasDims(1);
+    mkldnn::memory::dims biasStrides(1);
+    mkldnn::memory::dims resultDims(rank);
+    mkldnn::memory::dims resultStrides(rank);
+    biasDims[0] = memRefBias->shapeAndStrides[0];
+    biasStrides[0] = memRefBias->shapeAndStrides[1];
+    for (auto i = 0; i < rank; i++)
+    {
+        dataDims[i] = memRefData->shapeAndStrides[i];
+        dataStrides[i] = memRefData->shapeAndStrides[rank + i];
+        weightsDims[i] = memRefWeights->shapeAndStrides[i];
+        weightsStrides[i] = memRefWeights->shapeAndStrides[rank + i];
+        resultDims[i] = memRefOutput->shapeAndStrides[i];
+        resultStrides[i] = memRefOutput->shapeAndStrides[rank + i];
+    }
+
+    // build mkldnn primitive and execute
+    mkldnn::algorithm alg = get_conv_algo();
+    mkldnn::memory::data_type dtype = mkldnn::memory::data_type::f32;
+    auto data_desc = mkldnn::memory::desc(dataDims, dtype, mkldnn::memory::FORMAT::any);
+    auto data_desc_origin = mkldnn::memory::desc(dataDims, dtype, dataStrides);
+    auto weights_desc = mkldnn::memory::desc(weightsDims, dtype, mkldnn::memory::FORMAT::any);
+    auto weights_desc_origin = mkldnn::memory::desc(weightsDims, dtype, weightsStrides);
+    auto bias_desc = mkldnn::memory::desc(biasDims, dtype, mkldnn::memory::FORMAT::any);
+    auto result_desc = mkldnn::memory::desc(resultDims, dtype, mkldnn::memory::FORMAT::any);
+    auto result_desc_origin = mkldnn::memory::desc(resultDims, dtype, resultStrides);
+
+    mkldnn::primitive_attr attr;
+    mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
+    mkldnn::convolution_forward::primitive_desc conv_pd;
+    mkldnn::post_ops ops;
+    const float ops_scale = 1.f;
+    const float ops_alpha = -0.f; // relu negative slope
+    const float ops_beta = 0.f;
+    ops.append_eltwise(ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+    if (rank == 3)
+    {
+        auto convAttrs = getAttrs(index).convAttrs1d;
+        auto conv_desc =
+            mkldnn::convolution_forward::desc(mkldnn::prop_kind::forward_inference,
+                                              alg,
+                                              data_desc,
+                                              weights_desc,
+                                              bias_desc,
+                                              result_desc,
+                                              mkldnn::memory::dims{convAttrs.windowStrides[0]},
+                                              mkldnn::memory::dims{convAttrs.windowDilation[0] - 1},
+                                              mkldnn::memory::dims{convAttrs.padBelow[0]},
+                                              mkldnn::memory::dims{convAttrs.padAbove[0]});
+        if (convAttrs.withRelu)
+        {
+            attr.set_post_ops(ops);
+        }
+        conv_pd = mkldnn::convolution_forward::primitive_desc(conv_desc, attr, cpu_engine);
+    }
+    else if (rank == 4)
+    {
+        auto convAttrs = getAttrs(index).convAttrs2d;
+        auto conv_desc = mkldnn::convolution_forward::desc(
+            mkldnn::prop_kind::forward_inference,
+            alg,
+            data_desc,
+            weights_desc,
+            bias_desc,
+            result_desc,
+            mkldnn::memory::dims{convAttrs.windowStrides[0], convAttrs.windowStrides[1]},
+            mkldnn::memory::dims{convAttrs.windowDilation[0] - 1, convAttrs.windowDilation[1] - 1},
+            mkldnn::memory::dims{convAttrs.padBelow[0], convAttrs.padBelow[1]},
+            mkldnn::memory::dims{convAttrs.padAbove[0], convAttrs.padAbove[1]});
+        if (convAttrs.withRelu)
+        {
+            attr.set_post_ops(ops);
+        }
+        conv_pd = mkldnn::convolution_forward::primitive_desc(conv_desc, attr, cpu_engine);
+    }
+    else if (rank == 5)
+    {
+        auto convAttrs = getAttrs(index).convAttrs3d;
+        auto conv_desc = mkldnn::convolution_forward::desc(
+            mkldnn::prop_kind::forward_inference,
+            alg,
+            data_desc,
+            weights_desc,
+            bias_desc,
+            result_desc,
+            mkldnn::memory::dims{
+                convAttrs.windowStrides[0], convAttrs.windowStrides[1], convAttrs.windowStrides[2]},
+            mkldnn::memory::dims{convAttrs.windowDilation[0] - 1,
+                                 convAttrs.windowDilation[1] - 1,
+                                 convAttrs.windowDilation[2] - 1},
+            mkldnn::memory::dims{
+                convAttrs.padBelow[0], convAttrs.padBelow[1], convAttrs.padBelow[2]},
+            mkldnn::memory::dims{
+                convAttrs.padAbove[0], convAttrs.padAbove[1], convAttrs.padAbove[2]});
+        if (convAttrs.withRelu)
+        {
+            attr.set_post_ops(ops);
+        }
+        conv_pd = mkldnn::convolution_forward::primitive_desc(conv_desc, attr, cpu_engine);
+    }
+
+    mkldnn::convolution_forward conv(conv_pd);
+    mkldnn::memory data = convert_layout_if_diff(
+        data_desc_origin, conv_pd.src_desc(), memRefData->allocatedPtr, cpu_engine);
+    mkldnn::memory weights = convert_layout_if_diff(
+        weights_desc_origin, conv_pd.weights_desc(), memRefWeights->allocatedPtr, cpu_engine);
+    mkldnn::memory bias{conv_pd.bias_desc(), cpu_engine, memRefBias->allocatedPtr};
+    mkldnn::memory out;
+    bool need_convert = false;
+    if (!compare_mkldnn_md_formats(result_desc_origin, conv_pd.dst_desc()))
+    {
+        out = mkldnn::memory(conv_pd.dst_desc(), cpu_engine);
+        need_convert = true;
+    }
+    else
+    {
+        out = mkldnn::memory(conv_pd.dst_desc(), cpu_engine, memRefOutput->allocatedPtr);
+    }
+
+    std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, data},
+                                                         {MKLDNN_ARG_WEIGHTS, weights},
+                                                         {MKLDNN_ARG_BIAS, bias},
+                                                         {MKLDNN_ARG_DST, out}};
+
+    mkldnn::stream s(cpu_engine);
+    try
+    {
+        conv.execute(s, exec_args);
+        s.wait();
+    }
+    catch (const mkldnn::error& e)
+    {
+        throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
+    }
+
+    if (need_convert)
+    {
+        convert_output_layout(out, result_desc_origin, memRefOutput->allocatedPtr, cpu_engine);
     }
 }
 
@@ -292,10 +453,8 @@ static void __mlir_mkldnn_maxpoolbackprop(size_t rank,
 
     if (need_convert)
     {
-        convert_output_layout(diff_dst_desc_origin,
-                              maxpool_pd_b.diff_dst_desc(),
-                              memRefOutput->allocatedPtr,
-                              cpu_engine);
+        convert_output_layout(
+            diff_src, diff_src_desc_origin, memRefOutput->allocatedPtr, cpu_engine);
     }
 }
 
@@ -420,10 +579,7 @@ static void __mlir_mkldnn_avgpoolbackprop(size_t rank,
 
     if (need_convert)
     {
-        convert_output_layout(diff_dst_desc_origin,
-                              avgpool_pd_b.diff_dst_desc(),
-                              memRefOutput->allocatedPtr,
-                              cpu_engine);
+        convert_output_layout(out, diff_src_desc_origin, memRefOutput->allocatedPtr, cpu_engine);
     }
 }
 
@@ -524,8 +680,7 @@ static void __mlir_mkldnn_pooling(
 
     if (need_convert)
     {
-        convert_output_layout(
-            result_desc_origin, pool_pd.dst_desc(), memRefOutput->allocatedPtr, cpu_engine);
+        convert_output_layout(out, result_desc_origin, memRefOutput->allocatedPtr, cpu_engine);
     }
 }
 
@@ -791,6 +946,15 @@ extern "C" void __mlir_callback_3_inputs(
                                      unrankedMemRefInput2->memRefDescPtr,
                                      unrankedMemRefOutput->memRefDescPtr,
                                      index);
+    }
+    else if (type == OpType::CONVOLUTIONBIAS)
+    {
+        __mlir_mkldnn_convbias(unrankedMemRefInput0->rank,
+                               unrankedMemRefInput0->memRefDescPtr,
+                               unrankedMemRefInput1->memRefDescPtr,
+                               unrankedMemRefInput2->memRefDescPtr,
+                               unrankedMemRefOutput->memRefDescPtr,
+                               index);
     }
     else
     {

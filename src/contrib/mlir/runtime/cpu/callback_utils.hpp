@@ -86,6 +86,16 @@ namespace ngraph
 
             // These structs and union are used to pass attributes to callbacks.
             template <int N>
+            struct convAttrs
+            {
+                bool withRelu;
+                int64_t windowStrides[N];
+                int64_t windowDilation[N];
+                int64_t padBelow[N];
+                int64_t padAbove[N];
+            };
+
+            template <int N>
             struct poolAttrs
             {
                 bool includePaddingInAvgComputation;
@@ -112,6 +122,9 @@ namespace ngraph
 
             union opAttrs {
                 int intAttr;
+                convAttrs<1> convAttrs1d;
+                convAttrs<2> convAttrs2d;
+                convAttrs<3> convAttrs3d;
                 poolAttrs<2> poolAttrs2d;
                 poolAttrs<3> poolAttrs3d;
                 gemmAttrs gemmAttrs2d;
