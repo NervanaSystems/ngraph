@@ -256,3 +256,44 @@ TEST(attributes, user_op)
     EXPECT_EQ(g_oracle->get_hyper_parameters(), oracle->get_hyper_parameters());
     EXPECT_EQ(g_oracle->get_ultra_parameters(), oracle->get_ultra_parameters());
 }
+
+TEST(attributes, input_output)
+{
+    PartialShape in_min_shape{1, 1};
+    PartialShape shape{2, 3};
+    PartialShape in_max_shape{4, 3};
+    PartialShape out_min_shape{0, 0};
+    PartialShape out_max_shape{10, 10};
+    PartialShape in_inferred_min_shape{2, 2};
+    PartialShape in_inferred_max_shape{3, 3};
+    PartialShape out_inferred_min_shape{2, 2};
+    PartialShape out_inferred_max_shape{3, 3};
+    auto param = make_shared<op::Parameter>(element::f32, shape);
+    auto add = make_shared<op::Add>(param, param);
+    add->input(1).set_inferred_min_partial_shape(in_inferred_min_shape);
+    add->input(1).set_inferred_max_partial_shape(in_inferred_max_shape);
+    add->input(0).set_min_partial_shape(in_min_shape);
+    add->input(0).set_max_partial_shape(in_max_shape);
+    add->output(0).set_min_partial_shape(out_min_shape);
+    add->output(0).set_max_partial_shape(out_max_shape);
+    add->output(0).set_inferred_min_partial_shape(out_inferred_min_shape);
+    add->output(0).set_inferred_max_partial_shape(out_inferred_max_shape);
+    EXPECT_EQ(PartialShape(), param->output(0).get_min_partial_shape());
+    EXPECT_EQ(PartialShape(), param->output(0).get_max_partial_shape());
+    EXPECT_EQ(in_min_shape, add->input(0).get_min_partial_shape());
+    EXPECT_EQ(in_max_shape, add->input(0).get_max_partial_shape());
+    EXPECT_EQ(PartialShape(), add->input(0).get_inferred_min_partial_shape());
+    EXPECT_EQ(PartialShape(), add->input(0).get_inferred_max_partial_shape());
+    EXPECT_EQ(PartialShape(), add->input(1).get_min_partial_shape());
+    EXPECT_EQ(PartialShape(), add->input(1).get_max_partial_shape());
+    EXPECT_EQ(in_inferred_min_shape, add->input(1).get_inferred_min_partial_shape());
+    EXPECT_EQ(in_inferred_max_shape, add->input(1).get_inferred_max_partial_shape());
+    EXPECT_EQ(out_min_shape, add->output(0).get_min_partial_shape());
+    EXPECT_EQ(out_max_shape, add->output(0).get_max_partial_shape());
+    EXPECT_EQ(out_inferred_min_shape, add->output(0).get_inferred_min_partial_shape());
+    EXPECT_EQ(out_inferred_max_shape, add->output(0).get_inferred_max_partial_shape());
+    EXPECT_EQ(shape, add->input(0).get_cached_output_partial_shape());
+    EXPECT_EQ(element::f32, add->input(0).get_cached_output_element_type());
+    EXPECT_EQ(shape, add->input(1).get_cached_output_partial_shape());
+    EXPECT_EQ(element::f32, add->input(1).get_cached_output_element_type());
+}

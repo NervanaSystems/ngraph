@@ -164,6 +164,7 @@ namespace ngraph
         /// \param dim Right operand for multiplication.
         /// \return A reference to `*this`, after updating `*this` to the value `*this * dim`.
         Dimension& operator*=(const Dimension& dim) { return (*this = *this * dim); }
+        bool operator==(const Dimension& dim) const { return m_dimension == dim.m_dimension; }
     private:
         // The actual numerical value of the dimension. s_dynamic_val is a special case,
         // representing a dynamic dimension.

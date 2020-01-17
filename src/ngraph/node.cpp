@@ -221,6 +221,8 @@ void Node::set_arguments(const OutputVector& arguments)
         auto output_node = output.get_node();
         auto& output_descriptor = output_node->get_outputs().at(output.get_index());
         m_inputs.emplace_back(this, i++, output_descriptor);
+        m_inputs.back().set_cached_output_partial_shape(output.get_partial_shape());
+        m_inputs.back().set_cached_output_element_type(output.get_element_type());
     }
 }
 

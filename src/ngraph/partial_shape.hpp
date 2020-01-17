@@ -78,6 +78,8 @@ namespace ngraph
         /// \param shape The Shape to convert into PartialShape.
         PartialShape(const Shape& shape);
 
+        bool operator==(const PartialShape& partial_shape) const;
+
         /// \brief Check if this shape is static.
         /// \return `true` if this shape is static, else `false`.
         ///

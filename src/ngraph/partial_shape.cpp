@@ -29,6 +29,11 @@ PartialShape::PartialShape(const Shape& shape)
     m_dimensions.assign(shape.begin(), shape.end());
 }
 
+bool ngraph::PartialShape::operator==(const PartialShape& partial_shape) const
+{
+    return is_static() == partial_shape.is_static() && m_dimensions == partial_shape.m_dimensions;
+}
+
 bool ngraph::PartialShape::is_static() const
 {
     return m_rank_is_static && std::all_of(m_dimensions.begin(),
