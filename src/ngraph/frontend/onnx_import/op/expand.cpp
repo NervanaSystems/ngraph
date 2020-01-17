@@ -23,7 +23,6 @@
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/reshape.hpp"
