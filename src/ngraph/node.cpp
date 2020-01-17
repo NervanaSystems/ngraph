@@ -147,8 +147,10 @@ std::shared_ptr<Node>
             auto clone_input = clone->input(i);
             clone_input.set_max_partial_shape(source_input.get_max_partial_shape());
             clone_input.set_min_partial_shape(source_input.get_min_partial_shape());
-            clone_input.set_requested_partial_shape(source_input.get_requested_partial_shape());
-            clone_input.set_requested_element_type(source_input.get_requested_element_type());
+            clone_input.set_inferred_max_partial_shape(
+                source_input.get_inferred_max_partial_shape());
+            clone_input.set_inferred_min_partial_shape(
+                source_input.get_inferred_min_partial_shape());
         }
         for (size_t i = 0; i < get_output_size(); ++i)
         {
@@ -156,8 +158,10 @@ std::shared_ptr<Node>
             auto clone_output = clone->output(i);
             clone_output.set_max_partial_shape(source_output.get_max_partial_shape());
             clone_output.set_min_partial_shape(source_output.get_min_partial_shape());
-            clone_output.set_requested_partial_shape(source_output.get_requested_partial_shape());
-            clone_output.set_requested_element_type(source_output.get_requested_element_type());
+            clone_output.set_inferred_max_partial_shape(
+                source_output.get_inferred_max_partial_shape());
+            clone_output.set_inferred_min_partial_shape(
+                source_output.get_inferred_min_partial_shape());
         }
     }
     for (auto& cdep : control_dependencies)
@@ -1090,24 +1094,24 @@ vector<Output<const Node>> Node::outputs() const
     return result;
 }
 
-const element::Type& Input<Node>::get_requested_element_type() const
+const PartialShape& Input<Node>::get_inferred_min_partial_shape() const
 {
-    return m_node->get_input_descriptor(m_index).get_requested_element_type();
+    return m_node->get_input_descriptor(m_index).get_inferred_min_partial_shape();
 }
 
-void Input<Node>::set_requested_element_type(const element::Type& element_type)
+void Input<Node>::set_inferred_min_partial_shape(const PartialShape& partial_shape)
 {
-    m_node->get_input_descriptor(m_index).set_requested_element_type(element_type);
+    m_node->get_input_descriptor(m_index).set_inferred_min_partial_shape(partial_shape);
 }
 
-const PartialShape& Input<Node>::get_requested_partial_shape() const
+const PartialShape& Input<Node>::get_inferred_max_partial_shape() const
 {
-    return m_node->get_input_descriptor(m_index).get_requested_partial_shape();
+    return m_node->get_input_descriptor(m_index).get_inferred_max_partial_shape();
 }
 
-void Input<Node>::set_requested_partial_shape(const PartialShape& partial_shape)
+void Input<Node>::set_inferred_max_partial_shape(const PartialShape& partial_shape)
 {
-    m_node->get_input_descriptor(m_index).set_requested_partial_shape(partial_shape);
+    m_node->get_input_descriptor(m_index).set_inferred_max_partial_shape(partial_shape);
 }
 
 const PartialShape& Input<Node>::get_min_partial_shape() const
@@ -1150,14 +1154,14 @@ void Input<Node>::set_cached_output_partial_shape(const PartialShape& partial_sh
     m_node->get_input_descriptor(m_index).set_cached_output_partial_shape(partial_shape);
 }
 
-const element::Type& Input<const Node>::get_requested_element_type() const
+const PartialShape& Input<const Node>::get_inferred_min_partial_shape() const
 {
-    return m_node->get_input_descriptor(m_index).get_requested_element_type();
+    return m_node->get_input_descriptor(m_index).get_inferred_min_partial_shape();
 }
 
-const PartialShape& Input<const Node>::get_requested_partial_shape() const
+const PartialShape& Input<const Node>::get_inferred_max_partial_shape() const
 {
-    return m_node->get_input_descriptor(m_index).get_requested_partial_shape();
+    return m_node->get_input_descriptor(m_index).get_inferred_max_partial_shape();
 }
 
 const PartialShape& Input<const Node>::get_min_partial_shape() const
@@ -1180,24 +1184,24 @@ const PartialShape& Input<const Node>::get_cached_output_partial_shape() const
     return m_node->get_input_descriptor(m_index).get_cached_output_partial_shape();
 }
 
-const element::Type& Output<Node>::get_requested_element_type() const
+const PartialShape& Output<Node>::get_inferred_min_partial_shape() const
 {
-    return m_node->get_output_descriptor(m_index).get_requested_element_type();
+    return m_node->get_output_descriptor(m_index).get_inferred_min_partial_shape();
 }
 
-void Output<Node>::set_requested_element_type(const element::Type& element_type)
+void Output<Node>::set_inferred_min_partial_shape(const PartialShape& partial_shape)
 {
-    m_node->get_output_descriptor(m_index).set_requested_element_type(element_type);
+    m_node->get_output_descriptor(m_index).set_inferred_min_partial_shape(partial_shape);
 }
 
-const PartialShape& Output<Node>::get_requested_partial_shape() const
+const PartialShape& Output<Node>::get_inferred_max_partial_shape() const
 {
-    return m_node->get_output_descriptor(m_index).get_requested_partial_shape();
+    return m_node->get_output_descriptor(m_index).get_inferred_max_partial_shape();
 }
 
-void Output<Node>::set_requested_partial_shape(const PartialShape& partial_shape)
+void Output<Node>::set_inferred_max_partial_shape(const PartialShape& partial_shape)
 {
-    m_node->get_output_descriptor(m_index).set_requested_partial_shape(partial_shape);
+    m_node->get_output_descriptor(m_index).set_inferred_max_partial_shape(partial_shape);
 }
 
 const PartialShape& Output<Node>::get_min_partial_shape() const
@@ -1220,14 +1224,14 @@ void Output<Node>::set_max_partial_shape(const PartialShape& partial_shape)
     m_node->get_output_descriptor(m_index).set_max_partial_shape(partial_shape);
 }
 
-const element::Type& Output<const Node>::get_requested_element_type() const
+const PartialShape& Output<const Node>::get_inferred_min_partial_shape() const
 {
-    return m_node->get_output_descriptor(m_index).get_requested_element_type();
+    return m_node->get_output_descriptor(m_index).get_inferred_min_partial_shape();
 }
 
-const PartialShape& Output<const Node>::get_requested_partial_shape() const
+const PartialShape& Output<const Node>::get_inferred_max_partial_shape() const
 {
-    return m_node->get_output_descriptor(m_index).get_requested_partial_shape();
+    return m_node->get_output_descriptor(m_index).get_inferred_max_partial_shape();
 }
 
 const PartialShape& Output<const Node>::get_min_partial_shape() const

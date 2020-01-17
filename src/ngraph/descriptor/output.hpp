@@ -67,22 +67,22 @@ namespace ngraph
             Output(Output&&) = default;
             Output& operator=(const Output&) = default;
             /// Requested shape. Autobroadcast will broadcast to this shape.
-            void set_requested_partial_shape(const PartialShape& partial_shape)
+            void set_inferred_min_partial_shape(const PartialShape& partial_shape)
             {
-                m_requested_partial_shape = partial_shape;
+                m_inferred_min_partial_shape = partial_shape;
             }
-            const PartialShape& get_requested_partial_shape() const
+            const PartialShape& get_inferred_min_partial_shape() const
             {
-                return m_requested_partial_shape;
+                return m_inferred_min_partial_shape;
             }
             /// Requested element type.
-            void set_requested_element_type(const element::Type& element_type)
+            void set_inferred_max_partial_shape(const PartialShape& partial_shape)
             {
-                m_requested_element_type = element_type;
+                m_inferred_max_partial_shape = partial_shape;
             }
-            const element::Type& get_requested_element_type() const
+            const PartialShape& get_inferred_max_partial_shape() const
             {
-                return m_requested_element_type;
+                return m_inferred_max_partial_shape;
             }
             /// Optional upper bound on this output's shape
             void set_max_partial_shape(const PartialShape& partial_shape)
@@ -101,10 +101,10 @@ namespace ngraph
             size_t m_index;
             std::shared_ptr<Tensor> m_tensor;
             std::vector<Input*> m_inputs;
-            PartialShape m_requested_partial_shape;
-            element::Type m_requested_element_type;
-            PartialShape m_max_partial_shape;
+            PartialShape m_inferred_min_partial_shape;
+            PartialShape m_inferred_max_partial_shape;
             PartialShape m_min_partial_shape;
+            PartialShape m_max_partial_shape;
         };
     }
 }

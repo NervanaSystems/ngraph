@@ -106,21 +106,21 @@ namespace ngraph
             {
                 return m_cached_output_partial_shape;
             };
-            void set_requested_partial_shape(const PartialShape& partial_shape)
+            void set_inferred_max_partial_shape(const PartialShape& partial_shape)
             {
-                m_requested_partial_shape = partial_shape;
+                m_inferred_max_partial_shape = partial_shape;
             }
-            const PartialShape& get_requested_partial_shape() const
+            const PartialShape& get_inferred_max_partial_shape() const
             {
-                return m_requested_partial_shape;
+                return m_inferred_max_partial_shape;
             }
-            void set_requested_element_type(const element::Type& element_type)
+            void set_inferred_min_partial_shape(const PartialShape& partial_shape)
             {
-                m_requested_element_type = element_type;
+                m_inferred_min_partial_shape = partial_shape;
             }
-            const element::Type& get_requested_element_type() const
+            const PartialShape& get_inferred_min_partial_shape() const
             {
-                return m_requested_element_type;
+                return m_inferred_min_partial_shape;
             }
             /// Optional upper bound on this input's shape
             void set_max_partial_shape(const PartialShape& partial_shape)
@@ -163,10 +163,10 @@ namespace ngraph
             Output* m_output;
             element::Type m_cached_output_element_type;
             PartialShape m_cached_output_partial_shape;
-            element::Type m_requested_element_type;
-            PartialShape m_requested_partial_shape;
-            PartialShape m_max_partial_shape;
+            PartialShape m_inferred_min_partial_shape;
+            PartialShape m_inferred_max_partial_shape;
             PartialShape m_min_partial_shape;
+            PartialShape m_max_partial_shape;
 
         private:
             bool m_is_relevant_to_shape;

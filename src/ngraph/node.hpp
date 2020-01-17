@@ -569,14 +569,14 @@ namespace ngraph
         {
             return m_node->get_input_partial_shape(m_index);
         }
-        /// \return The element type requested for this input
-        const element::Type& get_requested_element_type() const;
+        /// \return The min partial shape inferred for this input
+        const PartialShape& get_inferred_min_partial_shape() const;
         /// Specify an element type for this input.
-        void set_requested_element_type(const element::Type& element_type);
-        /// \return The shape requested for this input
-        const PartialShape& get_requested_partial_shape() const;
+        void set_inferred_min_partial_shape(const PartialShape& partial_shape);
+        /// \return The max shape inferred for this input
+        const PartialShape& get_inferred_max_partial_shape() const;
         /// Set a partial shape for this input
-        void set_requested_partial_shape(const PartialShape& partial_shape);
+        void set_inferred_max_partial_shape(const PartialShape& partial_shape);
         /// \return The maximum shape for this input
         const PartialShape& get_max_partial_shape() const;
         /// Specify a maximum shape for this input
@@ -671,10 +671,10 @@ namespace ngraph
         {
             return m_node->get_input_partial_shape(m_index);
         }
-        /// \return The requested element type
-        const element::Type& get_requested_element_type() const;
-        /// \return The requested shape
-        const PartialShape& get_requested_partial_shape() const;
+        /// \return The inferred min partial shape
+        const PartialShape& get_inferred_min_partial_shape() const;
+        /// \return The inferred max partial shape
+        const PartialShape& get_inferred_max_partial_shape() const;
         /// \return The maximal shape
         const PartialShape& get_max_partial_shape() const;
         /// \return The minimal partial shape
@@ -803,14 +803,14 @@ namespace ngraph
         {
             return m_node->get_output_partial_shape(m_index);
         }
-        /// \return The requested element type
-        const element::Type& get_requested_element_type() const;
-        /// Set the requested element type
-        void set_requested_element_type(const element::Type& element_type);
-        /// \return The requested shape
-        const PartialShape& get_requested_partial_shape() const;
-        /// Set the requested element type
-        void set_requested_partial_shape(const PartialShape& partial_shape);
+        /// \return The inferred min shape
+        const PartialShape& get_inferred_min_partial_shape() const;
+        /// Set the inferred min shape
+        void set_inferred_min_partial_shape(const PartialShape& element_type);
+        /// \return The inferred max shape
+        const PartialShape& get_inferred_max_partial_shape() const;
+        /// Set the inferred max shape
+        void set_inferred_max_partial_shape(const PartialShape& partial_shape);
         /// \return The maximal partial shape
         const PartialShape& get_max_partial_shape() const;
         /// Set the maximal partial shape
@@ -921,10 +921,10 @@ namespace ngraph
         {
             return m_node->get_output_partial_shape(m_index);
         }
-        /// \return The requested element type
-        const element::Type& get_requested_element_type() const;
-        /// \return The requested element shape
-        const PartialShape& get_requested_partial_shape() const;
+        /// \return The inferred min partial shape
+        const PartialShape& get_inferred_min_partial_shape() const;
+        /// \return The inferred max partial shape
+        const PartialShape& get_inferred_max_partial_shape() const;
         /// \return The maximal partial shape
         const PartialShape& get_max_partial_shape() const;
         /// \return The minimal partial shape

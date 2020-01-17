@@ -3027,10 +3027,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 auto input = node->input(index++);
                 input.set_max_partial_shape(read_partial_shape(attributes["max_partial_shape"]));
                 input.set_min_partial_shape(read_partial_shape(attributes["min_partial_shape"]));
-                input.set_requested_partial_shape(
-                    read_partial_shape(attributes["requested_partial_shape"]));
-                input.set_requested_element_type(
-                    read_element_type(attributes["requested_element_type"]));
             }
         }
         if (has_key(node_js, "output_attributes"))
@@ -3041,10 +3037,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 auto output = node->output(index++);
                 output.set_max_partial_shape(read_partial_shape(attributes["max_partial_shape"]));
                 output.set_min_partial_shape(read_partial_shape(attributes["min_partial_shape"]));
-                output.set_requested_partial_shape(
-                    read_partial_shape(attributes["requested_partial_shape"]));
-                output.set_requested_element_type(
-                    read_element_type(attributes["requested_element_type"]));
             }
         }
 
@@ -3148,10 +3140,6 @@ json JSONSerializer::serialize_node(const Node& n)
         json attributes = json::object();
         attributes["max_partial_shape"] = write_partial_shape(input.get_max_partial_shape());
         attributes["min_partial_shape"] = write_partial_shape(input.get_min_partial_shape());
-        attributes["requested_partial_shape"] =
-            write_partial_shape(input.get_requested_partial_shape());
-        attributes["requested_element_type"] =
-            write_element_type(input.get_requested_element_type());
         input_attributes.push_back(attributes);
         inputs.push_back(serialize_output(input.get_source_output()));
     }
@@ -3164,10 +3152,6 @@ json JSONSerializer::serialize_node(const Node& n)
         json attributes = json::object();
         attributes["max_partial_shape"] = write_partial_shape(output.get_max_partial_shape());
         attributes["min_partial_shape"] = write_partial_shape(output.get_min_partial_shape());
-        attributes["requested_partial_shape"] =
-            write_partial_shape(output.get_requested_partial_shape());
-        attributes["requested_element_type"] =
-            write_element_type(output.get_requested_element_type());
         output_attributes.push_back(attributes);
         outputs.push_back(output.get_tensor().get_name());
     }
