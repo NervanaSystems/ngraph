@@ -4,26 +4,12 @@ graph {
   node {
     input: "data_0"
     input: "data_1"
-    input: "data_2"
     output: "result"
-    op_type: "Mean"
+    op_type: "Min"
   }
-  name: "test_mean_example"
+  name: "test_min_two_inputs"
   input {
     name: "data_0"
-    type {
-      tensor_type {
-        elem_type: 1
-        shape {
-          dim {
-            dim_value: 1
-          }
-        }
-      }
-    }
-  }
-  input {
-    name: "data_1"
     type {
       tensor_type {
         elem_type: 1
@@ -36,7 +22,7 @@ graph {
     }
   }
   input {
-    name: "data_2"
+    name: "data_1"
     type {
       tensor_type {
         elem_type: 1
@@ -63,5 +49,5 @@ graph {
   }
 }
 opset_import {
-  version: 8
+  version: 1
 }
