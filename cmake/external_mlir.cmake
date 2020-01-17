@@ -46,15 +46,21 @@ set(NGRAPH_LIT_TEST_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/test/mlir)
 if (NOT NGRAPH_USE_PREBUILT_MLIR)
     configure_file(${CMAKE_SOURCE_DIR}/cmake/mlir_fetch.cmake.in ${MLIR_PROJECT_ROOT}/CMakeLists.txt @ONLY)
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+                    -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
+                    -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
+                    -DCMAKE_CXX_FLAGS:STRING=${CMAKE_ORIGINAL_CXX_FLAGS} .
                     WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
-    # clone and build llvm
-    execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir_llvm
-                    WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
-
-    # clone and build mlir
-    execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir
-                    WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+    # clone and build llvm, mlir
+    include(ProcessorCount)
+    ProcessorCount(N)
+    if(("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles") AND (NOT N EQUAL 0))
+        execute_process(COMMAND "${CMAKE_COMMAND}" --build . -- -j${N}
+            WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+    else()
+        execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+            WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+    endif()
 endif()
 
 # Enable modules for LLVM.
