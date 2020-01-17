@@ -1,5 +1,4 @@
 // RUN: ngraph-opt %s -convert-ngraph-to-affine -split-input-file | FileCheck %s
-// XFAIL: *
 
 // Verify that core operations are properly converted to affine dialect.
 
@@ -152,7 +151,7 @@ func @simple_dot(%arg0: !ng.tensor<16x8xf32>, %arg1: !ng.tensor<8x32xf32>) -> !n
 
 // std.view 
 
-// CHECK-DAG: #[[MAP0:[a-zA-Z0-9]+]] = (d0, d1) -> (d0 * 2 + d1)
+// CHECK-DAG: #[[MAP0:[a-zA-Z0-9]+]] = affine_map<(d0, d1) -> (d0 * 2 + d1)>
 // CHECK:       %[[T1:[0-9]+]] = alloc() : memref<24xi8>
 // CHECK-NEXT:  %[[T2:[0-9]+]] = std.view %[[T1]][][] : memref<24xi8> to memref<3x2xf32, #[[MAP0]]>
 // CHECK:       affine.store %{{[0-9]+}}, %[[T2]][%{{.*}}, %{{.*}}] : memref<3x2xf32, #[[MAP0]]>
