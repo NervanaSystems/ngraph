@@ -135,7 +135,9 @@ namespace ngraph
                 /// \param special_zero Treats zeros in `pattern` as wildcard flags indicating a
                 /// copy
                 /// from input shape at the same index.
-                Reshape(const Output<Node>& arg, const Output<Node>& pattern, bool special_zero);
+                Reshape(const Output<Node>& arg,
+                        const Output<Node>& pattern,
+                        bool special_zero = true);
 
                 void validate_and_infer_types() override;
 

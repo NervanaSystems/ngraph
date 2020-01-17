@@ -76,7 +76,6 @@ set(SRC
     opset_pass/binary_elementwise_opset_pass.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
-    opset_pass/dyn_reshape_opset_pass.cpp
     opset_pass/logical_and_opset_pass.cpp
     opset_pass/logical_not_opset_pass.cpp
     opset_pass/logical_or_opset_pass.cpp

@@ -183,30 +183,6 @@ TEST(dyn_elimination, replace_slice)
     ASSERT_EQ(f->get_results().at(0)->get_shape(), (Shape{2, 4, 6, 8, 2, 2, 2}));
 }
 
-TEST(dyn_elimination, reshape)
-{
-    auto input_arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-    auto shape_arg = make_shared<op::Constant>(element::i64, Shape{3}, vector<int64_t>{0, 6, -1});
-
-    auto r = make_shared<op::DynReshape>(input_arg, shape_arg, true);
-
-    ASSERT_EQ(r->get_element_type(), element::f32);
-    ASSERT_EQ(r->get_shape(), (Shape{2, 6, 32}));
-
-    auto f = make_shared<Function>(r, ParameterVector{input_arg});
-
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::DynElimination>();
-    pass_manager.run_passes(f);
-
-    ASSERT_EQ(count_ops_of_type<op::DynReshape>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
-
-    ASSERT_EQ(f->get_results().at(0)->get_element_type(), element::f32);
-    ASSERT_EQ(f->get_results().at(0)->get_shape(), (Shape{2, 6, 32}));
-}
-
 TEST(dyn_elimination, range)
 {
     auto constant_start = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{0});
@@ -269,25 +245,3 @@ TEST(dyn_elimination, range_f64)
     ASSERT_TRUE(test::all_close_f(
         vals, vector<double>{-0.5, -0.25, 0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75}));
 }
-
-#ifndef NGRAPH_JSON_DISABLE
-TEST(dyn_elimination, paddlepaddle_transpose)
-{
-    string model = "paddlepaddle/transpose.json";
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, model);
-    const string json_string = file_util::read_file_to_string(json_path);
-    shared_ptr<Function> f = ngraph::deserialize(json_string);
-
-    vector<element::Type> arg_element_types = {element::f64, element::f64};
-    vector<PartialShape> arg_shapes = {{3, 4}, {4, 3}};
-    std::vector<void*> arg_value_base_pointers = {nullptr, nullptr};
-    auto clone = specialize_function(f, arg_element_types, arg_shapes, arg_value_base_pointers);
-
-    pass::Manager passes;
-    passes.register_pass<pass::ConstantFolding>();
-    passes.register_pass<pass::DynElimination>();
-    passes.register_pass<pass::Opset0Downgrade>(); // Converts dynamic v1 variants to v0 ops
-    passes.set_per_pass_validation(false);
-    passes.run_passes(clone);
-}
-#endif
