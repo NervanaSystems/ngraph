@@ -57,9 +57,16 @@ namespace ngraph
                 if (value_info_proto.type().has_tensor_type())
                 {
                     std::vector<Dimension> dims;
-                    for (const auto& dim : value_info_proto.type().tensor_type().shape().dim())
+                    for (const auto& onnx_dim : value_info_proto.type().tensor_type().shape().dim())
                     {
-                        dims.emplace_back(static_cast<Shape::value_type>(dim.dim_value()));
+                        if (onnx_dim.has_dim_value())
+                        {
+                            dims.emplace_back(onnx_dim.dim_value());
+                        }
+                        else if (onnx_dim.has_dim_param())
+                        {
+                            dims.push_back(Dimension::dynamic());
+                        }
                     }
                     m_partial_shape = PartialShape{dims};
                 }
