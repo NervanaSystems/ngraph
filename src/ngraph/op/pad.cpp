@@ -253,13 +253,13 @@ void op::v1::Pad::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           pads_begin_element_type.is_integral_number(),
-                          "pads_begin must be integral numbers, but are: ",
+                          "pads_begin must be an integral number, but is: ",
                           pads_begin_element_type,
                           ").");
 
     NODE_VALIDATION_CHECK(this,
                           pads_end_element_type.is_integral_number(),
-                          "pads_end must be integral numbers, but are: ",
+                          "pads_end must be an integral number, but is: ",
                           pads_end_element_type,
                           ").");
 

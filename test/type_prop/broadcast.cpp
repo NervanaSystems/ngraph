@@ -404,12 +404,12 @@ TEST(type_prop, broadcast_v1_axes_et_wrong)
     try
     {
         auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
-        FAIL() << "Broadcast: did not detect axes element type not integral number";
+        FAIL() << "Broadcast: did not detect axes element type not integral numbers";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Broadcast axes must be an integral number"));
+                             std::string("Broadcast axes must be integral numbers, but are:"));
     }
     catch (...)
     {

@@ -37,8 +37,7 @@ TEST(type_prop, strided_slice_begin_incorrect_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Begin mask must be an integral number"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Begin mask must be an integral number"));
     }
     catch (...)
     {
@@ -60,8 +59,7 @@ TEST(type_prop, strided_slice_end_incorrect_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("End mask must be an integral number"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("End mask must be an integral number"));
     }
     catch (...)
     {
