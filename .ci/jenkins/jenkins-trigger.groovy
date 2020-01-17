@@ -34,7 +34,7 @@ timestamps {
 
         deleteDir()  // Clear the workspace before starting
 
-        // Clone the cje-algo directory which contains our Jenkins groovy scripts
+        // Clone the cje-algo directory which contains our  Jenkins groovy scripts
         def sleeptime=0
         retry(count: 3) {
             sleep sleeptime; sleeptime = 10
