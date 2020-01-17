@@ -48,7 +48,8 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::And> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
+        auto replacement_node =
+            op_cast_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
         return replacement_node;
     }
 
@@ -262,13 +263,15 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Greater> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::Greater, op::v1::Greater>(node);
+        auto replacement_node =
+            op_cast_binary_elementwise_node<op::v0::Greater, op::v1::Greater>(node);
         return replacement_node;
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::GreaterEq> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEqual>(node);
+        auto replacement_node =
+            op_cast_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEqual>(node);
         return replacement_node;
     }
 
@@ -376,7 +379,8 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::LessEq> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
+        auto replacement_node =
+            op_cast_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
         return replacement_node;
     }
 
@@ -391,7 +395,8 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Maximum> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);
+        auto replacement_node =
+            op_cast_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);
         return replacement_node;
     }
 
@@ -460,13 +465,15 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Minimum> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
+        auto replacement_node =
+            op_cast_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
         return replacement_node;
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::Multiply> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
+        auto replacement_node =
+            op_cast_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
         return replacement_node;
     }
 
@@ -479,7 +486,8 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::NotEqual> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
+        auto replacement_node =
+            op_cast_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
         return replacement_node;
     }
 
@@ -506,7 +514,8 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Or> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
+        auto replacement_node =
+            op_cast_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
         return replacement_node;
     }
 
@@ -641,7 +650,8 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Subtract> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
+        auto replacement_node =
+            op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
         return replacement_node;
     }
 
@@ -709,7 +719,8 @@ namespace
         if (upgraded_node)
         {
             // Add provenance tag to upgraded node and all newly created nodes above
-            std::string provenance_tag = "<Opset1_Upgrade (v0 " + std::string(node->get_type_name()) + ")>";
+            std::string provenance_tag =
+                "<Opset1_Upgrade (v0 " + std::string(node->get_type_name()) + ")>";
             upgraded_node->add_provenance_tag(provenance_tag);
             upgraded_node->add_provenance_tags_above(node->input_values(), {provenance_tag});
             return true;
