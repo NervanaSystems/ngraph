@@ -38,6 +38,7 @@ Function::Function(const ResultVector& results,
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
+    , m_topological_sorter(topological_sorter)
 {
     init();
 }
@@ -50,6 +51,7 @@ Function::Function(const OutputVector& results,
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
+    , m_topological_sorter(topological_sorter)
 {
     init();
 }
@@ -62,6 +64,7 @@ Function::Function(const NodeVector& results,
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
+    , m_topological_sorter(topological_sorter)
 {
     init();
 }
@@ -108,7 +111,7 @@ std::list<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps)
         nodes.push_back(param);
     }
 
-    return topological_sort(nodes, include_control_deps);
+    return m_topological_sorter(nodes, include_control_deps);
 }
 
 void Function::map_unordered_ops(std::function<void(Node*)> f) const
@@ -294,4 +297,9 @@ void Function::replace_parameter(size_t parameter_index, const shared_ptr<op::Pa
                  " parameters.");
     replace_node(m_parameters[parameter_index], parameter);
     m_parameters[parameter_index] = parameter;
+}
+
+void Function::set_topological_sort(topological_sort_t sorter)
+{
+    m_topological_sorter = sorter;
 }

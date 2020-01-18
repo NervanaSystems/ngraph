@@ -126,6 +126,10 @@ namespace ngraph
         void replace_parameter(size_t parameter_index,
                                const std::shared_ptr<op::Parameter>& parameter);
 
+        using topological_sort_t = std::function<std::list<std::shared_ptr<Node>>(
+            const std::vector<std::shared_ptr<Node>>& root_nodes, bool include_control_deps)>;
+        void set_topological_sort(topological_sort_t);
+
     protected:
         size_t m_temporary_pool_size;
 
@@ -139,5 +143,6 @@ namespace ngraph
         std::string m_name;
         const std::string m_unique_name;
         size_t m_placement{0};
+        topological_sort_t m_topological_sorter;
     };
 }

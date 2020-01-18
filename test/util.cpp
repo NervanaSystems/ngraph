@@ -691,3 +691,23 @@ TEST(util, clone_function_op_annotations)
     EXPECT_TRUE(found_A);
     EXPECT_TRUE(found_B);
 }
+
+TEST(util, topological_sort_replace)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(A + B + C, ParameterVector{A, B, C});
+    bool custom_sorter_used = false;
+
+    f->set_topological_sort([&custom_sorter_used](
+        const std::vector<std::shared_ptr<Node>>& root_nodes, bool include_control_deps) {
+        custom_sorter_used = true;
+        return topological_sorter(root_nodes, include_control_deps);
+    });
+    for (auto op : f->get_ordered_ops())
+    {
+    }
+    EXPECT_TRUE(custom_sorter_used);
+}
