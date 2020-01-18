@@ -794,10 +794,3 @@ void ngraph::traverse_functions(std::shared_ptr<Function> p,
 {
     f(p);
 }
-
-std::list<std::shared_ptr<Node>>
-    ngraph::topological_sorter(const std::vector<std::shared_ptr<Node>>& root_nodes,
-                               bool include_control_deps)
-{
-    return topological_sort<std::vector<std::shared_ptr<Node>>>(root_nodes, include_control_deps);
-}

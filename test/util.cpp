@@ -704,7 +704,7 @@ TEST(util, topological_sort_replace)
     f->set_topological_sort([&custom_sorter_used](
         const std::vector<std::shared_ptr<Node>>& root_nodes, bool include_control_deps) {
         custom_sorter_used = true;
-        return topological_sorter(root_nodes, include_control_deps);
+        return topological_sort(root_nodes, include_control_deps);
     });
     for (auto op : f->get_ordered_ops())
     {

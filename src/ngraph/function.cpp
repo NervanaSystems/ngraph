@@ -30,6 +30,16 @@ constexpr DiscreteTypeInfo Function::type_info;
 
 atomic<size_t> Function::m_next_instance_id(0);
 
+namespace
+{
+    std::list<std::shared_ptr<Node>>
+        topological_sort_wrapper(const std::vector<std::shared_ptr<Node>>& root_nodes,
+                                 bool include_control_deps)
+    {
+        return topological_sort(root_nodes, include_control_deps);
+    }
+}
+
 Function::Function(const ResultVector& results,
                    const ParameterVector& parameters,
                    const std::string& name)
@@ -38,7 +48,7 @@ Function::Function(const ResultVector& results,
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
-    , m_topological_sorter(topological_sorter)
+    , m_topological_sorter(topological_sort_wrapper)
 {
     init();
 }
@@ -51,7 +61,7 @@ Function::Function(const OutputVector& results,
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
-    , m_topological_sorter(topological_sorter)
+    , m_topological_sorter(topological_sort_wrapper)
 {
     init();
 }
@@ -64,7 +74,7 @@ Function::Function(const NodeVector& results,
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
-    , m_topological_sorter(topological_sorter)
+    , m_topological_sorter(topological_sort_wrapper)
 {
     init();
 }
@@ -101,7 +111,7 @@ void Function::init()
 
 std::list<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps) const
 {
-    NodeVector nodes;
+    vector<shared_ptr<Node>> nodes;
     for (auto& r : get_results())
     {
         nodes.push_back(r);

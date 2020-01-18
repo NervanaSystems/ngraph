@@ -306,10 +306,6 @@ namespace ngraph
         return result;
     }
 
-    std::list<std::shared_ptr<Node>>
-        topological_sorter(const std::vector<std::shared_ptr<Node>>& root_nodes,
-                           bool include_control_deps);
-
     /// Topological sort of just nodes
     template <typename T>
     std::list<std::shared_ptr<Node>> subgraph_topological_sort(T nodes,
