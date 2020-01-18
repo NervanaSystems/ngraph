@@ -706,8 +706,9 @@ TEST(util, topological_sort_replace)
         custom_sorter_used = true;
         return topological_sort(root_nodes, include_control_deps);
     });
-    for (auto op : f->get_ordered_ops())
-    {
-    }
+
+    // Need to now call topological sort but don't care about the results
+    f->get_ordered_ops();
+
     EXPECT_TRUE(custom_sorter_used);
 }
