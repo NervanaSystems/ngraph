@@ -1253,7 +1253,6 @@ TEST(cpu_fusion, fuse_deconv)
 
     if (!use_deconv_fuse)
     {
-        //unset_environment<EnvVarEnumMask>(EnvVarEnum::NGRAPH_DECONV_FUSE);
         unset_environment(EnvVarEnum::NGRAPH_DECONV_FUSE);
     }
 }
@@ -3125,10 +3124,11 @@ TEST(cpu_quant_fusion, qconv_relu)
         args.push_back(tensor_val);
     }
 
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:0", 1);
     auto cpu1_results = execute(cpu_f1, args, "CPU");
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
+    unset_environment(EnvVarEnum::NGRAPH_PASS_ENABLES);
     // Expected output - [2, 2, ...]
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
@@ -3186,10 +3186,11 @@ TEST(cpu_quant_fusion, qconvb_relu)
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:0", 1);
     auto cpu1_results = execute(cpu_f1, args, "CPU");
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
+    unset_environment(EnvVarEnum::NGRAPH_PASS_ENABLES);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
@@ -3224,10 +3225,11 @@ TEST(cpu_quant_fusion, qavg_pool)
         args.push_back(tensor_val);
     }
 
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:0", 1);
     auto cpu1_results = execute(cpu_f1, args, "CPU");
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
+    unset_environment(EnvVarEnum::NGRAPH_PASS_ENABLES);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
@@ -3262,10 +3264,11 @@ TEST(cpu_quant_fusion, qmax_pool)
         args.push_back(tensor_val);
     }
 
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:0", 1);
     auto cpu1_results = execute(cpu_f1, args, "CPU");
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
+    unset_environment(EnvVarEnum::NGRAPH_PASS_ENABLES);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
@@ -3312,10 +3315,11 @@ TEST(cpu_quant_fusion, MLIR_DISABLE_TEST(qconcat))
         args.push_back(tensor_val);
     }
 
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:0", 1);
     auto cpu1_results = execute(cpu_f1, args, "CPU");
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
+    unset_environment(EnvVarEnum::NGRAPH_PASS_ENABLES);
     // Expect Concat2 -- Concat6 to be fused and not Concat7
     ASSERT_EQ(count_ops_of_type<op::Concat>(cpu_f2), 6);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
@@ -3358,10 +3362,11 @@ TEST(cpu_quant_fusion, dq_q)
     vector<vector<int8_t>> args;
     args.push_back({-1, 2, 3, 4});
 
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:0", 1);
     auto cpu1_results = execute(cpu_f1, args, "CPU");
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
+    unset_environment(EnvVarEnum::NGRAPH_PASS_ENABLES);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 
     auto backend = runtime::Backend::create("CPU");
@@ -3446,11 +3451,12 @@ TEST(cpu_quant_fusion, qconvbsa)
     }
 
     // Disable CPUQuantFusion
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:0", 1);
     auto cpu1_results = execute(cpu_f1, args, "CPU");
     // Enable CPUQuantFusion
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
+    unset_environment(EnvVarEnum::NGRAPH_PASS_ENABLES);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
@@ -3524,11 +3530,12 @@ TEST(cpu_quant_fusion, qconvba)
     }
 
     // Disable CPUQuantFusion
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:0", 1);
     auto cpu1_results = execute(cpu_f1, args, "CPU");
     // Enable CPUQuantFusion
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
+    unset_environment(EnvVarEnum::NGRAPH_PASS_ENABLES);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
@@ -3633,11 +3640,12 @@ TEST(cpu_quant_fusion, qconvba_q)
     }
 
     // Disable CPUQuantFusion
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:0", 1);
     auto cpu1_results = execute(cpu_f1, args, "CPU");
     // Enable CPUQuantFusion
-    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    set_environment(EnvVarEnum::NGRAPH_PASS_ENABLES, "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
+    unset_environment(EnvVarEnum::NGRAPH_PASS_ENABLES);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 
     auto backend = runtime::Backend::create("CPU");

@@ -23,126 +23,114 @@
 
 using namespace std;
 
-//enum class ENVVAR_ID
-//{
-//#define ENVVAR NAME
-//#define NGRAPH_DEFINE_ENVVAR(NAME, DEFAULT, DESCRIPTION) ENVVAR,
-//#include "ngraph/env_tbl.hpp"
-//#undef NGRAPH_DEFINE_ENVVAR
-//        UnknownOp
-//    };
-//}*/
-
-// just to create a list of all env var and their details
-static map<ngraph::EnvVarEnum, ngraph::EnvVarInfo> get_all_env_id()
+static map<ngraph::EnvVarEnum, ngraph::EnvVarInfo> get_env_registry()
 {
     // This expands the env var list in env_tbl.hpp into a list of enumerations that look like this:
-    // {Abs::type_info, OP_TYPEID::Abs},
-    // {Acos::type_info, OP_TYPEID::Acos},
+    // {ngraph::EnvVarEnum::NGRAPH_CODEGEN, {"NGRAPH_CODEGEN", "FALSE", "Enable ngraph codegen"}},
+    // {ngraph::EnvVarEnum::NGRAPH_COMPILER_DEBUGINFO_ENABLE, "NGRAPH_COMPILER_DEBUGINFO_ENABLE",
+    //                            "FALSE", "Enable compiler debug info when codegen is enabled"}},
     // ...
-    //ngraph::ENVVAR_ID
     static const map<ngraph::EnvVarEnum, ngraph::EnvVarInfo> envvar_info_map{
 #define NGRAPH_DEFINE_ENVVAR(ENUMID, NAME, DEFAULT, DESCRIPTION)                                   \
     {ENUMID, {NAME, DEFAULT, DESCRIPTION}},
 #include "ngraph/env_tbl.hpp"
-#undef NGRAPH_OP
+#undef NGRAPH_DEFINE_ENVVAR
     };
     return envvar_info_map;
 }
 
 // get current value or default
-static ngraph::EnvVarInfo get_env_var_info(const ngraph::EnvVarEnum env_var)
+static ngraph::EnvVarInfo& get_env_registry_info(const ngraph::EnvVarEnum env_var)
 {
-    ngraph::EnvVarInfo rc ;//= ngraph::ENVVAR_ID::UnknownOp;
-    /*auto it = type_info_map.find(type_info);
-    if (it != type_info_map.end())
+    if (env_var > ngraph::EnvVarEnum::NGRAPH_MAX_ENV_VAR)
     {
-        rc = it->second;
-    }*/
-    return rc;
+        throw "Unknown environment variable enum. Should not happen\n";
+    }
+    auto it = get_env_registry().find(env_var);
+    return it->second;
 }
 
-// get current value or default
-static string get_or_default_env_var(const ngraph::EnvVarEnum env_var)
+static string get_env_registry_name(const ngraph::EnvVarEnum env_var)
 {
-
+    return get_env_registry_info(env_var).env_str;
 }
 
+static string get_env_var_default(const ngraph::EnvVarEnum env_var)
+{
+    return get_env_registry_info(env_var).default_val;
+}
 
+static string get_env_var_desc(const ngraph::EnvVarEnum env_var)
+{
+    return get_env_registry_info(env_var).desc;
+}
+
+// Above this is registry related stuff
+//--------------------------
+
+// template <typename ET>
+int ngraph::set_environment(EnvVarEnum env_var_enum, const char* value, const int overwrite)
+{
+    const char* env_var = get_env_registry_name(env_var_enum).c_str();
+    if (env_cache_contains(env_var) && !overwrite)
+    {
+        NGRAPH_WARN << "Cannot set environment variable " << env_var << " is already set to "
+                    << value << ", and overwrite is false";
+        return -1;
+    }
+    else if (env_cache_contains(env_var))
+    {
+        erase_env_from_cache(env_var);
+    }
+    addenv_to_cache(env_var, value);
+
+#ifdef _WIN32
+    return _putenv_s(env_var, value);
+#elif defined(__linux) || defined(__APPLE__)
+    return setenv(env_var, value, overwrite);
+#endif
+}
+
+// template <typename ET>
+int ngraph::unset_environment(EnvVarEnum env_var_enum)
+{
+    const char* env_var = get_env_registry_name(env_var_enum).c_str();
+    erase_env_from_cache(env_var);
+#ifdef _WIN32
+    return _putenv_s(env_var, "");
+#elif defined(__linux) || defined(__APPLE__)
+    return unsetenv(env_var);
+#endif
+}
+// set and unset programmatical apis
 //----------------------
 
-/*std::vector<std_pair<EnvVarEnum, std::string>> EnvVarEnumStringMap = {
-    {NGRAPH_CODEGEN, "NGRAPH_CODEGEN"},
-    {NGRAPH_COMPILER_DEBUGINFO_ENABLE, "NGRAPH_COMPILER_DEBUGINFO_ENABLE"},
-    {NGRAPH_COMPILER_DIAG_ENABLE, "NGRAPH_COMPILER_DIAG_ENABLE"},
-    {NGRAPH_COMPILER_REPORT_ENABLE, "NGRAPH_COMPILER_REPORT_ENABLE"},
-    {NGRAPH_CPU_BIN_TRACER_LOG, "NGRAPH_CPU_BIN_TRACER_LOG"},
-    {NGRAPH_CPU_CHECK_PARMS_AND_CONSTS, "NGRAPH_CPU_CHECK_PARMS_AND_CONSTS"},
-    {NGRAPH_CPU_CONCURRENCY, "NGRAPH_CPU_CONCURRENCY"},
-    {NGRAPH_CPU_DEBUG_TRACER, "NGRAPH_CPU_DEBUG_TRACER"},
-    {NGRAPH_CPU_EIGEN_THREAD_COUNT, "NGRAPH_CPU_EIGEN_THREAD_COUNT"},
-    {NGRAPH_CPU_INF_CHECK, "NGRAPH_CPU_INF_CHECK"},
-    {NGRAPH_CPU_NAN_CHECK, "NGRAPH_CPU_NAN_CHECK"},
-    {NGRAPH_CPU_TRACER_LOG, "NGRAPH_CPU_TRACER_LOG"},
-    {NGRAPH_CPU_TRACING, "NGRAPH_CPU_TRACING"},
-    {NGRAPH_CPU_USE_REF_KERNELS, "NGRAPH_CPU_USE_REF_KERNELS"},
-    {NGRAPH_CPU_USE_TBB, "NGRAPH_CPU_USE_TBB"},
-    {NGRAPH_DECONV_FUSE, "NGRAPH_DECONV_FUSE"},
-    {NGRAPH_DEX_DEBUG, "NGRAPH_DEX_DEBUG"},
-    {NGRAPH_DISABLE_LOGGING, "NGRAPH_DISABLE_LOGGING"},
-    {NGRAPH_DISABLED_FUSIONS, "NGRAPH_DISABLED_FUSIONS"},
-    {NGRAPH_ENABLE_REPLACE_CHECK, "NGRAPH_ENABLE_REPLACE_CHECK"},
-    {NGRAPH_ENABLE_SERIALIZE_TRACING, "NGRAPH_ENABLE_SERIALIZE_TRACING"},
-    {NGRAPH_ENABLE_TRACING, "NGRAPH_ENABLE_TRACING"},
-    {NGRAPH_ENABLE_VISUALIZE_TRACING, "NGRAPH_ENABLE_VISUALIZE_TRACING"},
-    {NGRAPH_FAIL_MATCH_AT, "NGRAPH_FAIL_MATCH_AT"},
-    {NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK, "NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK"},
-    {NGRAPH_GTEST_INFO, "NGRAPH_GTEST_INFO"},
-    {NGRAPH_INTER_OP_PARALLELISM, "NGRAPH_INTER_OP_PARALLELISM"},
-    {NGRAPH_INTRA_OP_PARALLELISM, "NGRAPH_INTRA_OP_PARALLELISM"},
-    {NGRAPH_MLIR, "NGRAPH_MLIR"},
-    {NGRAPH_MLIR_MAX_CYCLE_DEPTH, "NGRAPH_MLIR_MAX_CYCLE_DEPTH"},
-    {NGRAPH_MLIR_OPT_LEVEL, "NGRAPH_MLIR_OPT_LEVEL"},
-    {NGRAPH_MLIR_OPTIONS, "NGRAPH_MLIR_OPTIONS"},
-    {NGRAPH_PASS_ATTRIBUTES, "NGRAPH_PASS_ATTRIBUTES"},
-    {NGRAPH_PASS_CPU_LAYOUT_ELTWISE, "NGRAPH_PASS_CPU_LAYOUT_ELTWISE"},
-    {NGRAPH_PASS_ENABLES, "NGRAPH_PASS_ENABLES"},
-    {NGRAPH_PROFILE_PASS_ENABLE, "NGRAPH_PROFILE_PASS_ENABLE"},
-    {NGRAPH_PROVENANCE_ENABLE, "NGRAPH_PROVENANCE_ENABLE"},
-    {NGRAPH_SERIALIZER_OUTPUT_SHAPES, "NGRAPH_SERIALIZER_OUTPUT_SHAPES"},
-    {NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE, "NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE"},
-    {NGRAPH_VISUALIZE_EDGE_LABELS, "NGRAPH_VISUALIZE_EDGE_LABELS"},
-    {NGRAPH_VISUALIZE_TRACING_FORMAT, "NGRAPH_VISUALIZE_TRACING_FORMAT"},
-    {NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES, "NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES"},
-    {NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES, "NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES"},
-    {OMP_NUM_THREADS "OMP_NUM_THREADS"},
-};*/
-
-std::unordered_map<std::string, std::string>& get_env_var_map()
+// --------- below this is caching apis
+std::unordered_map<std::string, std::string>& get_env_var_cache()
 {
-    static std::unordered_map<string, string> s_env_var_map;
-    return s_env_var_map;
+    static std::unordered_map<string, string> s_env_var_cache;
+    return s_env_var_cache;
 }
 
 void ngraph::log_all_envvar()
 {
     NGRAPH_DEBUG << "List of all environment variables:\n";
-    std::unordered_map<std::string, std::string>::iterator it = get_env_var_map().begin();
-    while (it != get_env_var_map().end())
+    std::unordered_map<std::string, std::string>::iterator it = get_env_var_cache().begin();
+    while (it != get_env_var_cache().end())
     {
         NGRAPH_DEBUG << "\t" << it->first << " = " << it->second << std::endl;
         it++;
     }
 }
 
-void ngraph::addenv_to_map(const char* env_var, const char* val)
+void ngraph::addenv_to_cache(const char* env_var, const char* val)
 {
-    get_env_var_map().emplace(env_var, val);
+    get_env_var_cache().emplace(env_var, val);
 }
 
-bool ngraph::map_contains(const char* env_var)
+bool ngraph::env_cache_contains(const char* env_var)
 {
-    if (get_env_var_map().find(env_var) != get_env_var_map().end())
+    if (get_env_var_cache().find(env_var) != get_env_var_cache().end())
     {
         return true;
     }
@@ -152,11 +140,11 @@ bool ngraph::map_contains(const char* env_var)
     }
 }
 
-std::string ngraph::getenv_from_map(const char* env_var)
+std::string ngraph::getenv_from_cache(const char* env_var)
 {
-    if (map_contains(env_var))
+    if (env_cache_contains(env_var))
     {
-        return get_env_var_map().at(env_var);
+        return get_env_var_cache().at(env_var);
     }
     else
     {
@@ -164,67 +152,31 @@ std::string ngraph::getenv_from_map(const char* env_var)
     }
 }
 
-void ngraph::erase_env_from_map(const char* env_var)
+void ngraph::erase_env_from_cache(const char* env_var)
 {
-    get_env_var_map().erase(env_var);
-}
-
-//template <typename ET>
-int ngraph::set_environment(EnvVarEnumMask env_var_enum, const char* value, const int overwrite)
-{
-    const char* env_var;
-    if (map_contains(env_var) && !overwrite)
-    {
-        // Log that it is already set and user chose to not overwrite
-        NGRAPH_WARN << "Cannot set environment variable " << env_var << " is already set to "
-                    << value << ", and overwrite is false";
-        return -1; // Recheck
-    }
-    else if (map_contains(env_var))
-    {
-        erase_env_from_map(env_var);
-    }
-    addenv_to_map(env_var, value);
-
-#ifdef _WIN32
-    return _putenv_s(env_var, value);
-#elif defined(__linux) || defined(__APPLE__)
-    return setenv(env_var, value, overwrite);
-#endif
-}
-
-//template <typename ET>
-int ngraph::unset_environment(EnvVarEnumMask env_var)
-{
-    const char* env_var_str = ""; // get env_var_string from the registry map
-    erase_env_from_map(env_var_str);
-#ifdef _WIN32
-    return _putenv_s(env_var_str, "");
-#elif defined(__linux) || defined(__APPLE__)
-    return unsetenv(env_var_str);
-#endif
+    get_env_var_cache().erase(env_var);
 }
 
 std::string ngraph::getenv_string(const char* env_var)
 {
-    if (map_contains(env_var))
+    if (env_cache_contains(env_var))
     {
-        return getenv_from_map(env_var);
+        return getenv_from_cache(env_var);
     }
     else
     {
         const char* env_p = ::getenv(env_var);
         string env_string = env_p ? env_p : "";
-        addenv_to_map(env_var, env_string.c_str());
+        addenv_to_cache(env_var, env_string.c_str());
         return env_string;
     }
 }
 
 int32_t ngraph::getenv_int(const char* env_var, int32_t default_value)
 {
-    if (map_contains(env_var))
+    if (env_cache_contains(env_var))
     {
-        string env_p = getenv_from_map(env_var);
+        string env_p = getenv_from_cache(env_var);
 
         errno = 0;
         char* err;
@@ -273,7 +225,7 @@ int32_t ngraph::getenv_int(const char* env_var, int32_t default_value)
             NGRAPH_DEBUG << "Environment variable (" << env_var << ") empty or undefined, "
                          << " defaulted to -1 here.";
         }
-        addenv_to_map(env_var, std::to_string(env).c_str());
+        addenv_to_cache(env_var, std::to_string(env).c_str());
         return env;
     }
 }

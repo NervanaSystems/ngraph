@@ -36,16 +36,16 @@ using namespace std;
 
 static void set_env_vars(const string& trace_log, const string& bin_log)
 {
-    set_environment(EnvVarEnumMask::NGRAPH_CPU_DEBUG_TRACER, "1", 1);
-    set_environment(EnvVarEnumMask::NGRAPH_CPU_TRACER_LOG, trace_log.c_str(), 1);
-    set_environment(EnvVarEnumMask::NGRAPH_CPU_BIN_TRACER_LOG, bin_log.c_str(), 1);
+    set_environment(EnvVarEnum::NGRAPH_CPU_DEBUG_TRACER, "1", 1);
+    set_environment(EnvVarEnum::NGRAPH_CPU_TRACER_LOG, trace_log.c_str(), 1);
+    set_environment(EnvVarEnum::NGRAPH_CPU_BIN_TRACER_LOG, bin_log.c_str(), 1);
 }
 
 static void unset_env_vars()
 {
-    unset_environment(EnvVarEnumMask::NGRAPH_CPU_DEBUG_TRACER);
-    unset_environment(EnvVarEnumMask::NGRAPH_CPU_TRACER_LOG);
-    unset_environment(EnvVarEnumMask::NGRAPH_CPU_BIN_TRACER_LOG);
+    unset_environment(EnvVarEnum::NGRAPH_CPU_DEBUG_TRACER);
+    unset_environment(EnvVarEnum::NGRAPH_CPU_TRACER_LOG);
+    unset_environment(EnvVarEnum::NGRAPH_CPU_BIN_TRACER_LOG);
 }
 
 static void open_logs(ifstream& meta, ifstream& bin, const string& trace_log, const string& bin_log)

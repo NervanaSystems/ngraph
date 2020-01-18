@@ -145,7 +145,7 @@ TEST(cpu_test, abc_tbb)
     bool use_tbb = getenv_bool("NGRAPH_CPU_USE_TBB");
     if (!use_tbb)
     {
-        set_environment("NGRAPH_CPU_USE_TBB", "1", 1);
+        set_environment(EnvVarEnum::NGRAPH_CPU_USE_TBB, "1", 1);
     }
 
     Shape shape{2, 2};
@@ -181,7 +181,7 @@ TEST(cpu_test, abc_tbb)
 
     if (!use_tbb)
     {
-        unset_environment("NGRAPH_CPU_USE_TBB");
+        unset_environment(EnvVarEnum::NGRAPH_CPU_USE_TBB);
     }
 }
 #endif // NGRAPH_TBB_ENABLE
@@ -984,7 +984,7 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
         return;
     }
 
-    set_environment("NGRAPH_CPU_CONCURRENCY", "2", 1);
+    set_environment(EnvVarEnum::NGRAPH_CPU_CONCURRENCY, "2", 1);
 
     Shape shape_a{2, 1, 3, 5};
     Shape shape_b{2, 1, 2, 2};
@@ -1051,7 +1051,7 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
     call2.join();
     call3.join();
 
-    unset_environment("NGRAPH_CPU_CONCURRENCY");
+    unset_environment(EnvVarEnum::NGRAPH_CPU_CONCURRENCY);
 }
 
 TEST(cpu_test, constant_convertlayout)
