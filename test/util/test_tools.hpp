@@ -45,7 +45,7 @@ namespace ngraph
     class Function;
 }
 
-bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
+bool validate_list(const std::vector<std::shared_ptr<ngraph::Node>>& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
 #ifndef NGRAPH_JSON_DISABLE
 std::shared_ptr<ngraph::Function> make_function_from_file(const std::string& file_name);

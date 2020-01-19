@@ -129,13 +129,7 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool /* transitive */)
                 {
                     continue;
                 }
-                vector<shared_ptr<Node>> node_vector;
-                list<shared_ptr<Node>> ordered_ops = f->get_ordered_ops();
-                for (auto op : ordered_ops)
-                {
-                    node_vector.push_back(op);
-                }
-                bool function_modified = call_graph_pass->run_on_call_graph(node_vector);
+                bool function_modified = call_graph_pass->run_on_call_graph(f->get_ordered_ops());
                 f_pair.second = (function_modified == true) ? f->is_dynamic() : f_pair.second;
             }
         }

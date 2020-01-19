@@ -73,7 +73,7 @@ pass::CallGraphPass::~CallGraphPass()
 bool pass::CallGraphPass::run_on_call_graph(const std::vector<std::shared_ptr<ngraph::Node>>& nodes)
 {
     list<shared_ptr<Node>> node_list;
-    for(auto op : nodes)
+    for (auto op : nodes)
     {
         node_list.push_back(op);
     }

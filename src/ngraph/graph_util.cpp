@@ -261,8 +261,8 @@ bool ngraph::is_post_dominated(Node* X, Node* Y)
     return true;
 }
 
-std::list<std::shared_ptr<ngraph::Node>>
-    ngraph::clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map)
+std::vector<std::shared_ptr<ngraph::Node>>
+    ngraph::clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map)
 {
     // for each node in topological order
     auto sorted_nodes = topological_sort(nodes, true);
@@ -304,9 +304,9 @@ std::list<std::shared_ptr<ngraph::Node>>
         }
     }
 
-    // create and return list of cloned nodes
-    // order matches input list (not necessarily topological)
-    std::list<std::shared_ptr<ngraph::Node>> cloned_nodes;
+    // create and return vector of cloned nodes
+    // order matches input vector (not necessarily topological)
+    std::vector<std::shared_ptr<ngraph::Node>> cloned_nodes;
     for (auto node : nodes)
     {
         cloned_nodes.push_back(node_map.at(node.get()));

@@ -252,12 +252,12 @@ namespace ngraph
 
     /// Topological sort of nodes needed to compute root_nodes
     template <typename T>
-    std::list<std::shared_ptr<Node>> topological_sort(T root_nodes,
-                                                      bool include_control_deps = false)
+    std::vector<std::shared_ptr<Node>> topological_sort(T root_nodes,
+                                                        bool include_control_deps = false)
     {
         std::stack<Node*, std::vector<Node*>> nodes_to_do;
         std::unordered_set<Node*> nodes_done;
-        std::list<std::shared_ptr<Node>> result;
+        std::vector<std::shared_ptr<Node>> result;
 
         for (auto& node : root_nodes)
         {
@@ -308,13 +308,13 @@ namespace ngraph
 
     /// Topological sort of just nodes
     template <typename T>
-    std::list<std::shared_ptr<Node>> subgraph_topological_sort(T nodes,
-                                                               bool include_control_deps = false)
+    std::vector<std::shared_ptr<Node>> subgraph_topological_sort(T nodes,
+                                                                 bool include_control_deps = false)
     {
         std::stack<Node*, std::vector<Node*>> nodes_to_do;
         std::unordered_set<Node*> nodes_done;
         std::unordered_set<Node*> nodes_to_emit;
-        std::list<std::shared_ptr<Node>> result;
+        std::vector<std::shared_ptr<Node>> result;
 
         for (auto& node : nodes)
         {
@@ -388,8 +388,8 @@ namespace ngraph
     // input nodes are cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
     // NodeMap output (by reference) fully maps input and cloned nodes
-    std::list<std::shared_ptr<ngraph::Node>>
-        clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map);
+    std::vector<std::shared_ptr<ngraph::Node>>
+        clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map);
 
     // input function is cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
