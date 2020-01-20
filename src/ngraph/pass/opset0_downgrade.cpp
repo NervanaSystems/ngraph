@@ -37,7 +37,7 @@ using namespace ngraph;
 namespace
 {
     template <typename OpV0, typename OpV1>
-    const shared_ptr<Node> op_cast_binary_elementwise_node(const shared_ptr<OpV1>& node)
+    shared_ptr<Node> op_cast_binary_elementwise_node(const shared_ptr<OpV1>& node)
     {
         const auto input_arg0 = node->input_value(0);
         const auto input_arg1 = node->input_value(1);
@@ -48,7 +48,7 @@ namespace
     }
 
     template <typename OpV0, typename OpV1>
-    const shared_ptr<Node> op_cast_reduction_node(const shared_ptr<OpV1>& node)
+    shared_ptr<Node> op_cast_reduction_node(const shared_ptr<OpV1>& node)
     {
         auto replacement_node = make_shared<OpV0>(node->input_value(0), node->input_value(1));
         if (node->get_keep_dims())
@@ -861,7 +861,7 @@ namespace
         if (downgraded_node)
         {
             // Add provenance tag to downgraded node and all newly created nodes above
-            std::string provenance_tag =
+            const std::string provenance_tag =
                 "<Opset0_Downgrade (v1 " + std::string(node->get_type_name()) + ")>";
             downgraded_node->add_provenance_tag(provenance_tag);
             downgraded_node->add_provenance_tags_above(node->input_values(), {provenance_tag});
