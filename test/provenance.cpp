@@ -499,9 +499,9 @@ TEST(provenance, upgrade_pass_tag)
         EXPECT_EQ(tags.find(tag) != tags.end(), true);
     };
     traverse_nodes(as_node_vector(topk_v1->outputs()),
-                           tag_check,
-                           false,
-                           as_node_vector(topk_v0->input_values()));
+                   tag_check,
+                   false,
+                   as_node_vector(topk_v0->input_values()));
 }
 
 TEST(provenance, downgrade_pass_tag)
@@ -532,7 +532,7 @@ TEST(provenance, downgrade_pass_tag)
         EXPECT_EQ(tags.find(tag) != tags.end(), true);
     };
     traverse_nodes(as_node_vector(topk_v0->outputs()),
-                           tag_check,
-                           false,
-                           as_node_vector(topk_v1->input_values()));
+                   tag_check,
+                   false,
+                   as_node_vector(topk_v1->input_values()));
 }
