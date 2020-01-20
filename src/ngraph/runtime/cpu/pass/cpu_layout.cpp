@@ -25,7 +25,6 @@
 #include "cpu_layout.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/descriptor/output.hpp"
-#include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
@@ -343,7 +342,13 @@ void set_layouts_binaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* exter
     {
         vector<memory::desc> i_mds;
         vector<memory::desc> o_mds;
-        static int32_t select = getenv_int("NGRAPH_PASS_CPU_LAYOUT_ELTWISE", 0);
+        int select = 0;
+        char* ngraph_pass_cpu_layout_eltwise = std::getenv("NGRAPH_PASS_CPU_LAYOUT_ELTWISE");
+        if (ngraph_pass_cpu_layout_eltwise != nullptr)
+        {
+            const int user_select = std::atoi(ngraph_pass_cpu_layout_eltwise);
+            select = (user_select == 0 || user_select == 1) ? user_select : select;
+        }
         i_mds.push_back(arg_mds[select]);
         i_mds.push_back(arg_mds[select]);
         o_mds.push_back(arg_mds[select]);

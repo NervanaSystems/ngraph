@@ -18,7 +18,6 @@
 #include <map>
 
 #include "cpu_tracing.hpp"
-#include "ngraph/env_util.hpp"
 
 #ifndef NGRAPH_JSON_DISABLE
 void ngraph::runtime::cpu::to_json(nlohmann::json& json, const TraceEvent& event)
@@ -75,7 +74,7 @@ void ngraph::runtime::cpu::GenerateTimeline(const std::vector<OpAttributes>& op_
 
 bool ngraph::runtime::cpu::IsTracingEnabled()
 {
-    static bool enabled = getenv_bool("NGRAPH_CPU_TRACING");
+    static bool enabled = (std::getenv("NGRAPH_CPU_TRACING") != nullptr);
     return enabled;
 }
 #else

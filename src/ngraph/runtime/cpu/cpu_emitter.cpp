@@ -22,7 +22,6 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-#include "ngraph/env_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
@@ -139,7 +138,7 @@
 using namespace std;
 using namespace ngraph;
 
-static bool s_use_ref_kernels = getenv_bool("NGRAPH_CPU_USE_REF_KERNELS");
+static bool s_use_ref_kernels = (std::getenv("NGRAPH_CPU_USE_REF_KERNELS") != nullptr);
 
 static string eigen_vector_format(const runtime::cpu::TensorViewWrapper& tvi)
 {
