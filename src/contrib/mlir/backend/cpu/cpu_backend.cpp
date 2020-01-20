@@ -21,7 +21,6 @@
 #include "contrib/mlir/backend/pass/affine_lowerer.hpp"
 #include "contrib/mlir/utils.hpp"
 #include "ngraph/check.hpp"
-#include "ngraph/env_util.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -141,8 +140,7 @@ void MLIRCPUBackend::init()
     if (!initialized)
     {
         // Override default optimization level with macro value.
-        static std::string optLevelStr = getenv_string("NGRAPH_MLIR_OPT_LEVEL");
-        if (!optLevelStr.empty())
+        if (char* optLevelStr = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
         {
             unsigned clOptLevel = std::stoi(optLevelStr);
             NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");
