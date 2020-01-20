@@ -20,6 +20,8 @@ graph {
     type {
       tensor_type {
         elem_type: 7
+        shape {
+        }
       }
     }
   }

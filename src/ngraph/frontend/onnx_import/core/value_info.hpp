@@ -56,19 +56,16 @@ namespace ngraph
             {
                 if (value_info_proto.type().has_tensor_type())
                 {
-                    std::vector<Dimension> dims;
-                    for (const auto& onnx_dim : value_info_proto.type().tensor_type().shape().dim())
+                    const auto& onnx_tensor = value_info_proto.type().tensor_type();
+
+                    if (onnx_tensor.has_shape())
                     {
-                        if (onnx_dim.has_dim_value())
-                        {
-                            dims.emplace_back(onnx_dim.dim_value());
-                        }
-                        else if (onnx_dim.has_dim_param())
-                        {
-                            dims.push_back(Dimension::dynamic());
-                        }
+                        m_partial_shape = to_ng_shape(onnx_tensor.shape());
                     }
-                    m_partial_shape = PartialShape{dims};
+                    else
+                    {
+                        m_partial_shape = PartialShape::dynamic();
+                    }
                 }
             }
 
@@ -123,6 +120,28 @@ namespace ngraph
             std::shared_ptr<op::Constant> get_ng_constant(const Tensor& tensor) const
             {
                 return tensor.get_ng_constant();
+            }
+
+            PartialShape to_ng_shape(const onnx::TensorShapeProto& onnx_shape) const
+            {
+                if (onnx_shape.dim_size() == 0)
+                {
+                    return Shape{}; // empty list of dimensions denotes a scalar
+                }
+
+                std::vector<Dimension> dims;
+                for (const auto& onnx_dim : onnx_shape.dim())
+                {
+                    if (onnx_dim.has_dim_value())
+                    {
+                        dims.emplace_back(onnx_dim.dim_value());
+                    }
+                    else if (onnx_dim.has_dim_param())
+                    {
+                        dims.push_back(Dimension::dynamic());
+                    }
+                }
+                return PartialShape{dims};
             }
 
         private:
