@@ -18,15 +18,15 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "util/test_control.hpp"
-#include "util/type_prop.hpp"
 #include "util/test_tools.hpp"
+#include "util/type_prop.hpp"
 
 using namespace ngraph;
 using namespace ngraph::onnx_import;
 
 static std::string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, onnx_dynamic_dims_to_ngraph_dynamic_dims)
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, onnx_dynamic_dims_to_ngraph_dynamic_dims)
 {
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/ab_plus_c.prototxt"));
@@ -57,7 +57,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, onnx_dynamic_dims_to_ngraph_dynamic_dims)
     EXPECT_EQ(static_cast<size_t>(out_ps[1]), 2);
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, ab_plus_c_dynamic_execution)
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, ab_plus_c_inference)
 {
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/ab_plus_c.prototxt"));
@@ -68,18 +68,43 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, ab_plus_c_dynamic_execution)
     auto out_tensor = backend->create_dynamic_tensor(function->get_output_element_type(0),
                                                      function->get_output_partial_shape(0));
 
-    auto input_A = backend->create_tensor(element::i64, Shape{1, 2});
-    auto input_B = backend->create_tensor(element::i64, Shape{1, 2});
-    auto input_C = backend->create_tensor(element::i64, Shape{1, 2});
+    struct ExpectedValuesGenerator
+    {
+        int64_t i = 1;
+        int64_t operator()()
+        {
+            const auto ret = i * i + i;
+            ++i;
+            return ret;
+        }
+    };
 
-    copy_data(input_A, std::vector<int64_t>{1, 2});
-    copy_data(input_B, std::vector<int64_t>{3, 4});
-    copy_data(input_C, std::vector<int64_t>{5, 6});
+    const size_t NUM_BATCHES_TO_TEST = 5;
 
-    executable->call_with_validate({out_tensor}, {input_A, input_B, input_C});
+    for (size_t batch = 1; batch < NUM_BATCHES_TO_TEST; ++batch)
+    {
+        const Shape input_shape = Shape{batch, 2};
+        const auto elems_in_tensor = shape_size(input_shape);
 
-    const auto results = read_vector<int64_t>(out_tensor);
-    const auto expected_results = std::vector<int64_t>{8, 14};
+        auto input_A = backend->create_tensor(element::i64, input_shape);
+        auto input_B = backend->create_tensor(element::i64, input_shape);
+        auto input_C = backend->create_tensor(element::i64, input_shape);
 
-    EXPECT_TRUE(results == expected_results);
+        std::vector<int64_t> input_values(elems_in_tensor);
+        std::iota(input_values.begin(), input_values.end(), 1);
+
+        copy_data(input_A, input_values);
+        copy_data(input_B, input_values);
+        copy_data(input_C, input_values);
+
+        executable->call_with_validate({out_tensor}, {input_A, input_B, input_C});
+
+        const auto results = read_vector<int64_t>(out_tensor);
+        EXPECT_EQ(results.size(), elems_in_tensor);
+
+        std::vector<int64_t> expected_values(elems_in_tensor);
+        std::generate(expected_values.begin(), expected_values.end(), ExpectedValuesGenerator{});
+
+        EXPECT_TRUE(results == expected_values);
+    }
 }
