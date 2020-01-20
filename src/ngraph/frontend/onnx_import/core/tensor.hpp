@@ -365,6 +365,10 @@ namespace ngraph
                 : m_tensor_proto{&tensor}
                 , m_shape{std::begin(tensor.dims()), std::end(tensor.dims())}
             {
+                if (m_shape == Shape{0})
+                {
+                    m_shape = Shape{};
+                }
             }
 
             Tensor(const Tensor&) = default;
