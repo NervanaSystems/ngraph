@@ -88,8 +88,10 @@
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
+#include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
@@ -205,7 +207,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
-#include "ngraph/runtime/cpu/pass/halide_subgraph_extraction.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -454,7 +455,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
     {TI(ngraph::op::Gelu), &runtime::cpu::CPU_Emitter::emit<op::Gelu>},
     {TI(ngraph::op::GeluBackprop), &runtime::cpu::CPU_Emitter::emit<op::GeluBackprop>},
-};
+    {TI(ngraph::op::Round), &runtime::cpu::CPU_Emitter::emit<op::Round>}};
 
 static void
     generate_isnan_isinf_check(CodeWriter& writer,
@@ -1187,7 +1188,22 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     auto dex = is_direct_execution();
     auto is_supported = [dex](const Node& node) {
+#ifdef NGRAPH_MLIR_ENABLE
+        if (std::getenv("NGRAPH_MLIR") != nullptr && std::getenv("NGRAPH_MLIR_CALLBACK") != nullptr)
+        {
+            if (typeid(ngraph::op::MatMul) == typeid(node) &&
+                node.get_input_element_type(0) == element::f32)
+            {
+                return true;
+            }
 
+            if (typeid(ngraph::op::Gemm) == typeid(node) &&
+                node.get_input_element_type(0) == element::f32)
+            {
+                return true;
+            }
+        }
+#endif
         // this checks averts the decomposition of LSTMCell
         // we will map LSTMCell to LSTM CPU op in the later
         // graph pass
@@ -1285,9 +1301,6 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)
-#if defined(NGRAPH_HALIDE)
-    REGISTER_KNOBBED_PASS(HalideSubgraphExtraction, true, ngraph::runtime::cpu::pass)
-#endif
 
 #ifdef NGRAPH_MLIR_ENABLE
     if (getenv_bool("NGRAPH_MLIR"))
