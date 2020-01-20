@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 #include "core/node.hpp"
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "utils/common.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -37,7 +37,8 @@ namespace ngraph
                     auto data = ng_inputs.at(0);
                     auto indices = ng_inputs.at(1);
                     auto axis = node.get_attribute_value<int64_t>("axis", 0);
-                    auto valid_axis = common::validate_axis(node, axis, data->get_shape().size());
+                    const auto valid_axis = ngraph::normalize_axis(
+                        node.get_description(), axis, data->get_shape().size());
 
                     return {std::make_shared<default_opset::Gather>(
                         data,

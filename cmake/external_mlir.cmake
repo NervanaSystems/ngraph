@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,20 +41,20 @@ set(NGRAPH_LIT_TEST_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/test/mlir)
 # MLIR has to be pre-built before ngraph build starts
 # this will clone and build MLIR during cmake config instead
 
-# we will fetch and build it from the source if cmake is not configured to use 
+# we will fetch and build it from the source if cmake is not configured to use
 # the prebuilt mlir
 if (NOT NGRAPH_USE_PREBUILT_MLIR)
-	configure_file(${CMAKE_SOURCE_DIR}/cmake/mlir_fetch.cmake.in ${MLIR_PROJECT_ROOT}/CMakeLists.txt)
-	execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-			WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+    configure_file(${CMAKE_SOURCE_DIR}/cmake/mlir_fetch.cmake.in ${MLIR_PROJECT_ROOT}/CMakeLists.txt @ONLY)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+                    WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
-	# clone and build llvm
-	execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir_llvm
-			WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+    # clone and build llvm
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir_llvm
+                    WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
-	# clone and build mlir
-	execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir
-			WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+    # clone and build mlir
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir
+                    WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 endif()
 
 # Enable modules for LLVM.

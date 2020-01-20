@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,12 @@ namespace ngraph
                 NodeVector pad(const Node& node);
 
             } // namespace set_1
+
+            namespace set_11
+            {
+                NodeVector pad(const Node& node);
+
+            } // namespace set_11
 
         } // namespace op
 

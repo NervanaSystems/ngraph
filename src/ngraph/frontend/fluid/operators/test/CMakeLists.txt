@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,11 @@ if(NOT NGRAPH_CPU_ENABLE)
     return()
 endif()
 
+if(NOT NGRAPH_TEST_UTIL_ENABLE)
+    message(WARNING "Fluid test: Turning on test util!")
+    set(NGRAPH_TEST_UTIL_ENABLE ON)
+endif()
+
 message(STATUS "fluid tests enabled")
 
 if(LINUX)
@@ -41,6 +46,7 @@ endif()
 set(SRC
     main.cpp
     reduce_sum.cpp
+    lookup_table.cpp
 )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../../../../test)

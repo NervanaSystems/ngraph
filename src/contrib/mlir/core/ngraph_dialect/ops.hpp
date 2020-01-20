@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,3 @@ namespace mlir
 #include "ops.h.inc"
 #undef GET_OP_CLASSES
 }
-
-void setBufferId(mlir::Operation* op, mlir::IntegerAttr attr);
-mlir::IntegerAttr setBufferId(mlir::Operation* op, unsigned val);
-mlir::IntegerAttr getBufferId(mlir::Operation* op);

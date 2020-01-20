@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -181,20 +181,6 @@ NGRAPH_TEST(${BACKEND_NAME}, prelu)
     handle->call_with_validate({result0}, {a, b});
     vector<float> expected{0, 3, -1, 1, -1, 0};
     EXPECT_EQ(expected, read_vector<float>(result0));
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, reciprocal)
-{
-    Shape shape{3, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto reciprocal = make_shared<op::Reciprocal>(A);
-    auto f0 = make_shared<Function>(NodeVector{reciprocal}, ParameterVector{A});
-
-    auto test_case = test::NgraphTestCase(f0, "${BACKEND_NAME}");
-    test_case.add_input(vector<float>{1, 2, 3, 4, 5, 6});
-    test_case.add_expected_output(
-        Shape{3, 2}, vector<float>{1.0f, 1 / 2.0f, 1 / 3.0f, 1 / 4.0f, 1 / 5.0f, 1 / 6.0f});
-    test_case.run();
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid)
@@ -1038,6 +1024,26 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm)
     test_case.run();
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, gemm_C)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{3, 4});
+
+    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // A
+    test_case.add_input<float>(vector<float>(18, 1));
+    // B
+    test_case.add_input<float>(vector<float>(24, 2));
+    // C
+    test_case.add_input<float>(vector<float>(12, 1));
+    // output
+    test_case.add_expected_output<float>(Shape{3, 4}, vector<float>(12, 13));
+    test_case.run();
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
@@ -1055,6 +1061,48 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
     test_case.add_input<float>(vector<float>{1});
     // output
     test_case.add_expected_output<float>(Shape{3, 4}, vector<float>(12, 7));
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_axes_0_input_C)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{1, 4});
+
+    auto gemm_func = make_shared<op::Gemm>(A, B, C, 0.5);
+    auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // A
+    test_case.add_input<float>(vector<float>(18, 1));
+    // B
+    test_case.add_input<float>(vector<float>(24, 2));
+    // C
+    test_case.add_input<float>(vector<float>{1, 2, 3, 4});
+    // output
+    test_case.add_expected_output<float>(Shape{3, 4},
+                                         vector<float>{7, 8, 9, 10, 7, 8, 9, 10, 7, 8, 9, 10});
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_axes_1_input_C)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{3, 1});
+
+    auto gemm_func = make_shared<op::Gemm>(A, B, C, 0.5);
+    auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // A
+    test_case.add_input<float>(vector<float>(18, 1));
+    // B
+    test_case.add_input<float>(vector<float>(24, 2));
+    // C
+    test_case.add_input<float>(vector<float>(3, 1));
+    // output
+    test_case.add_expected_output<float>(Shape{3, 4}, vector<float>(12, 7));
+    test_case.run();
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, fused_clamp)

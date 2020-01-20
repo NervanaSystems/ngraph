@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ namespace ngraph
                 const CoordinateDiff& get_padding_above() const { return m_padding_above; }
                 void set_padding_above(const CoordinateDiff& padding_above)
                 {
-                    m_padding_below = padding_above;
+                    m_padding_above = padding_above;
                 }
 
                 /// \brief DEPRECATED. This is just a stub for backends that used to implement the

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/validation_util.hpp"
 #include "reverse_sequence.hpp"
-#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -41,26 +41,26 @@ namespace ngraph
                         node.get_ng_inputs().at(1), element::i32);
 
                     const auto batch_axis = node.get_attribute_value<int64_t>("batch_axis", 1);
-                    std::size_t valid_batch_axis =
-                        common::validate_axis(node, batch_axis, data->get_shape().size());
+                    const auto normalized_batch_axis = ngraph::normalize_axis(
+                        node.get_description(), batch_axis, data->get_shape().size());
                     const auto time_axis = node.get_attribute_value<int64_t>("time_axis", 0);
-                    std::size_t valid_time_axis =
-                        common::validate_axis(node, time_axis, data->get_shape().size());
+                    const auto normalized_time_axis = ngraph::normalize_axis(
+                        node.get_description(), time_axis, data->get_shape().size());
 
-                    NGRAPH_CHECK(valid_batch_axis == 0 || valid_batch_axis == 1,
+                    NGRAPH_CHECK(normalized_batch_axis == 0 || normalized_batch_axis == 1,
                                  "Allowed values of the 'batch_axis' attribute for ReverseSequence "
                                  "operator are 0 and 1");
 
-                    NGRAPH_CHECK(valid_time_axis == 0 || valid_time_axis == 1,
+                    NGRAPH_CHECK(normalized_time_axis == 0 || normalized_time_axis == 1,
                                  "Allowed values of the 'time_axis' attribute for ReverseSequence "
                                  "operator are 0 and 1");
 
-                    NGRAPH_CHECK(valid_batch_axis != valid_time_axis,
+                    NGRAPH_CHECK(normalized_batch_axis != normalized_time_axis,
                                  "'batch_axis' and 'time_axis' attributes of the ReverseSequence "
                                  "operator can't point to the same dimension");
 
                     return {std::make_shared<default_opset::ReverseSequence>(
-                        data, sequence_lengths_i32, valid_batch_axis, valid_time_axis)};
+                        data, sequence_lengths_i32, normalized_batch_axis, normalized_time_axis)};
                 }
 
             } // namespace set_1

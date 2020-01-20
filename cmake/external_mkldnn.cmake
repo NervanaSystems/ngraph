@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -131,6 +131,8 @@ ExternalProject_Add(
     UPDATE_COMMAND ""
     DOWNLOAD_NO_PROGRESS TRUE
     EXCLUDE_FROM_ALL TRUE
+    BUILD_BYPRODUCTS ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
+                     ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB}
 )
 
 set(MKLDNN_DEPENDS ext_mkl)
@@ -260,6 +262,7 @@ else()
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
         EXCLUDE_FROM_ALL TRUE
+        BUILD_BYPRODUCTS ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
         )
 endif()
 

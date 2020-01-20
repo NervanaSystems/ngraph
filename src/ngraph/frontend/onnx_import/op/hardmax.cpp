@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
 #include "hardmax.hpp"
 #include "exceptions.hpp"
 #include "ngraph/builder/reshape.hpp"
-#include "ngraph/frontend/onnx_import/utils/common.hpp"
 #include "ngraph/opsets/opset0.hpp"
+#include "ngraph/validation_util.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -34,10 +35,12 @@ namespace ngraph
                     const auto& input_shape = input->get_shape();
                     auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
 
-                    auto valid_axis = common::validate_axis(node, axis, input_shape.size());
+                    const auto normalized_axis =
+                        ngraph::normalize_axis(node.get_description(), axis, input_shape.size());
 
                     // reshape to 2D - "batch size" x "input feature dimensions" (NxD)
-                    const auto coerced_tensor = ngraph::builder::flatten(input, valid_axis);
+                    const auto coerced_tensor =
+                        ngraph::builder::opset1::flatten(input, normalized_axis);
                     const auto& coerced_shape = coerced_tensor->get_shape();
 
                     const std::shared_ptr<ngraph::Node> argmax_2d =
@@ -51,7 +54,7 @@ namespace ngraph
                     auto results =
                         std::make_shared<ngraph::opset0::EmbeddingLookup>(argmax_2d, eye_matrix);
 
-                    return {ngraph::builder::reshape(results, input_shape)};
+                    return {ngraph::builder::opset1::reshape(results, input_shape)};
                 }
 
             } // namespace set_1

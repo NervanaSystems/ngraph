@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,7 +55,6 @@ op::Constant::Constant(const element::Type& type,
     , m_data(new runtime::AlignedBuffer(
           std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f), host_alignment()))
 {
-    NGRAPH_INFO;
     NODE_VALIDATION_CHECK(this,
                           values.size() == shape_size(m_shape) || values.size() == 1,
                           "Did not get the expected number of literals for a constant of shape ",
@@ -179,13 +178,24 @@ op::Constant::Constant(const element::Type& type,
     }
     else
     {
+        NGRAPH_INFO;
         switch (m_element_type)
         {
         case element::Type_t::boolean:
         {
+        NGRAPH_INFO;
             vector<char> value = parse_string<char>(values);
             bool* target = m_data->get_ptr<bool>();
-            std::copy(target, target + shape_size(m_shape), value.begin());
+            // std::copy(value.begin(), value.end(), target);
+            memcpy(target, value.data(), value.size()*sizeof(char));
+            for (auto x : value)
+            {
+                NGRAPH_INFO << static_cast<int32_t>(x);
+            }
+            for (size_t i=0; i<value.size(); i++)
+            {
+                NGRAPH_INFO << static_cast<int32_t>(target[i]);
+            }
             break;
         }
         case element::Type_t::bf16:
@@ -210,6 +220,7 @@ op::Constant::Constant(const element::Type& type,
         }
         case element::Type_t::f32:
         {
+        NGRAPH_INFO;
             vector<float> value = parse_string<float>(values);
             float* target = m_data->get_ptr<float>();
             std::copy(value.begin(), value.end(), target);
@@ -597,7 +608,7 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
 
 constexpr NodeTypeInfo op::ScalarConstantLike::type_info;
 
-shared_ptr<op::Constant> op::ScalarConstantLikeBase::as_constant() const
+shared_ptr<op::Constant> op::ScalarConstantLike::as_constant() const
 {
     return std::make_shared<op::Constant>(m_element_type, m_shape, m_data->get_ptr());
 }
@@ -626,13 +637,16 @@ namespace ngraph
 {
     namespace op
     {
-        template <>
-        void Constant::write_to_buffer<string>(const element::Type& /* target_type */,
-                                               const Shape& /* target_shape */,
-                                               const vector<string>& /* source */,
-                                               void* /* target */,
-                                               size_t /* target_element_count */)
+        namespace v0
         {
+            template <>
+            void Constant::write_to_buffer<string>(const element::Type& /* target_type */,
+                                                   const Shape& /* target_shape */,
+                                                   const vector<string>& /* source */,
+                                                   void* /* target */,
+                                                   size_t /* target_element_count */)
+            {
+            }
         }
     }
 }

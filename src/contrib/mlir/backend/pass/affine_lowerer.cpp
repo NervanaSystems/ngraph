@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,15 +19,20 @@
 
 #include "affine_lowerer.hpp"
 
+#include "contrib/mlir/backend/analysis/memory_analysis.hpp"
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
+#include "contrib/mlir/runtime/cpu/callback_utils.hpp"
+#include "contrib/mlir/utils.hpp"
 #include "ngraph/assertion.hpp"
 
 #include <llvm/ADT/DenseSet.h>
+#include <llvm/Support/Debug.h>
 #include <mlir/EDSC/Builders.h>
 #include <mlir/EDSC/Helpers.h>
 #include <mlir/EDSC/Intrinsics.h>
 #include <mlir/IR/AffineExpr.h>
+#include <mlir/IR/Function.h>
 #include <mlir/IR/IntegerSet.h>
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/IR/StandardTypes.h>
@@ -37,6 +42,8 @@
 
 #define PASS_NAME "convert-ngraph-to-affine"
 #define DEBUG_TYPE PASS_NAME
+
+std::vector<ngraph::runtime::ngmlir::opAttrs> opAttrsVec;
 
 // anonymous namespace
 // no need to expose any of the following outside of this file
@@ -162,7 +169,46 @@ namespace
                                PatternRewriter& rewriter,
                                DialectLoweringPass& pass);
 
+    // Generates a convolution kernel that can be used to generate single or
+    // group convolution. It can handle filters where C_OUT dim includes
+    // all groups, or if groups is an additional dimension before C_OUT.
+    //
+    // For single convolution, the default variables do not
+    // have to be specific and will be auto-deduced from the input shapes.
+    //
+    // For group convolution, the caller has to generate the outer loop
+    // over the number of groups. It will also generate the bounds on the
+    // C_IN and C_OUT dimensions. It will pass the bounds and IV of the outer
+    // loop as follows:
+    //
+    // cLb/Ub : Values representing bounds on channel dim in image (C_IN)
+    // kLb/Ub : Values representing bounds on numFilters dim in filters (C_OUT)
+    // gId    : Value representing induction variable for the outer loop
+    void lowerConvolution(Value* result,
+                          Value* images,
+                          Value* filters,
+                          ArrayAttr stridesAttr,
+                          ArrayAttr padBelowAttr,
+                          ArrayAttr padAboveAttr,
+                          PatternRewriter& rewriter,
+                          DialectLoweringPass& pass,
+                          Location loc,
+                          Value* cLb = nullptr,
+                          Value* cUb = nullptr,
+                          Value* kLb = nullptr,
+                          Value* kUb = nullptr,
+                          Value* gId = nullptr);
+
+    template <typename OP>
+    void lowerPooling(Operation* op,
+                      ArrayRef<Value*> operands,
+                      PatternRewriter& rewriter,
+                      DialectLoweringPass& pass);
+
     ValueHandle createZeroConstant(mlir::Type type);
+    ValueHandle createOneConstant(mlir::Type type);
+
+    bool isInPlaceConcat(mlir::Operation* op, DialectLoweringPass& pass);
 
     /// Conversion from types in the nGraph dialect to the Standard dialect.
     class NGraphTypeConverter : public TypeConverter
@@ -183,29 +229,32 @@ namespace
         void runOnModule() override;
 
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
-        /// Allocates a linear buffer for a temporary tensor
-        Value* createTempBuffer(Type type, PatternRewriter& rewriter);
-
+        /// Allocates a linear buffer for a temporary memref that shares its
+        /// underlying memory. Used in conjunction with createTempMemref
+        Value* createTempBuffer(int bufferId, PatternRewriter& rewriter);
         /// Creates an allocation or view of a memref.
         /// type     MemRef Type
         /// buffer   Optional buffer value to create view over
         /// offset   Optional offset into the buffer this view starts at
         ///
-        /// If buffer is null, a new allocation of a memref is created.
-        /// Offset is ignored.  If buffer is non-null, then we create a temp
-        /// view over a pre-allocated buffer (see createTempBuffer)
-
+        /// If buffer is null it allocates a Memref directly and Offset is ignored.
+        /// If not, it creates a view over the pre-allocated buffer at the given offset.
         Value*
             createTempMemref(Type type, Value* buffer, unsigned offset, PatternRewriter& rewriter);
-
         /// Inserts dealloc Ops for each temporary allocated by AllocOp
         void insertDeallocs(PatternRewriter& rewriter);
-
         NGraphTypeConverter& getTypeConverter() { return typeConverter; }
+        FuncOp getCallDecl(StringRef name,
+                           ArrayRef<Type> args,
+                           ArrayRef<Type> output,
+                           PatternRewriter& rewriter);
+
+        inline size_t insertAttrs(opAttrs attrs);
+
+        MemoryAnalysis* getMemAnalysis() const { return m_memAnalysis; }
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
-
         void findOutputValues();
         void insertNoAliasArgAttrs();
 
@@ -218,9 +267,12 @@ namespace
         // Track pre-assigned buffers  for each Value and re-use it if one is available.
         using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
         IdToMemRefMap m_id_to_memref;
-
+        MemoryAnalysis* m_memAnalysis;
         // TODO: Workaround for findOutputValues and buildOutputDefs. See NGCPU-470.
         std::string funcName;
+
+        // Store the attributes needed by callback
+        std::vector<opAttrs> m_attrsVec;
     };
 
     void DialectLoweringPass::runOnModule()
@@ -230,6 +282,9 @@ namespace
         OwningRewritePatternList patterns;
 
         populateNGraphToAffineConversionPatterns(patterns);
+
+        // Get Memory analysis for in-place memory optimizations
+        m_memAnalysis = &getAnalysis<MemoryAnalysis>();
 
         // Create target that defines legal ops for nGraph dialect to be lowered to.
         ConversionTarget target(getContext());
@@ -267,6 +322,8 @@ namespace
             // separate rewrite pattern. Retrieve new function after signature conversion.
             insertNoAliasArgAttrs();
         }
+
+        opAttrsVec = m_attrsVec;
     }
 
     void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
@@ -335,24 +392,25 @@ namespace
                 // will re-use the same buffer.
                 auto tensorType = origResult->getType().cast<NGTensorType>();
                 Value* newResult = nullptr;
-                Attribute bufferIdAttr = getBufferId(op);
+                auto bufferInfo = m_memAnalysis->getBufferInfo(op);
                 Type memRefType = typeConverter.convertType(tensorType);
-
                 Value* bufferValue = nullptr;
-                if (!bufferIdAttr)
+
+                if (!bufferInfo.isValid())
                 {
                     // Allocate new memref
                     newResult = createTempMemref(memRefType, nullptr, 0, rewriter);
                 }
                 else
                 {
-                    unsigned bufferId = bufferIdAttr.cast<IntegerAttr>().getInt();
+                    unsigned bufferId = bufferInfo.m_bufferId;
+                    unsigned offset = bufferInfo.m_offset;
                     // Re-use a buffer if it exist, else create a new one and update map
                     IdToMemRefMap::iterator it = m_id_to_memref.find(bufferId);
                     if (it == m_id_to_memref.end())
                     {
                         // create a new buffer
-                        bufferValue = createTempBuffer(memRefType, rewriter);
+                        bufferValue = createTempBuffer(bufferId, rewriter);
                         m_id_to_memref[bufferId] = bufferValue;
                     }
                     else
@@ -360,7 +418,7 @@ namespace
                         bufferValue = it->second;
                     }
                     // Create a temp view over the linear buffer
-                    newResult = createTempMemref(memRefType, bufferValue, 0, rewriter);
+                    newResult = createTempMemref(memRefType, bufferValue, offset, rewriter);
                 }
                 NGRAPH_CHECK(newResult != nullptr, "Temp memref value is not set");
                 newResults.push_back(newResult);
@@ -369,18 +427,17 @@ namespace
         return newResults;
     }
 
-    Value* DialectLoweringPass::createTempBuffer(Type type, PatternRewriter& rewriter)
+    Value* DialectLoweringPass::createTempBuffer(int bufferId, PatternRewriter& rewriter)
     {
-        MemRefType memRefType = type.cast<MemRefType>();
+        unsigned sizeInBytes = getMemAnalysis()->getBufferSize(bufferId);
+        NGRAPH_CHECK(bufferId >= 0, "Invalid buffer id to allocate");
+        NGRAPH_CHECK(sizeInBytes > 0, "Zero buffer allocation?");
 
-        NGRAPH_CHECK(memRefType.hasStaticShape(), "Dynamic shapes are not supported");
-
-        // deduce linear buffer shape
-        unsigned sizeInBytes = memRefType.getSizeInBits() / 8;
-
+        LLVM_DEBUG(llvm::dbgs() << "Allocating buffer of size " << sizeInBytes << " bytes\n");
         MemRefType bufferType =
-            MemRefType::get({sizeInBytes}, IntegerType::get(8, type.getContext()), {});
+            MemRefType::get({sizeInBytes}, IntegerType::get(8, rewriter.getContext()), {});
 
+        // TODO: Set alignment
         Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), bufferType);
 
         memRefsToDealloc.push_back(alloc);
@@ -403,7 +460,6 @@ namespace
                                                  unsigned offset,
                                                  PatternRewriter& rewriter)
     {
-        NGRAPH_CHECK(offset == 0, "Only zero offset is supported");
         MemRefType memRefType = type.cast<MemRefType>();
         if (buffer)
         {
@@ -413,7 +469,7 @@ namespace
             // linear
             // buffer
             // This is simply (d0, d1, d2, .. dN-1) --> d0 * S0 + d1 * S1 ... + dN-1 * SN-1
-            // Where Si is the stride along the i_th dimension
+            // Where Si is the stride along the i_th dimension in elements
             auto shape = memRefType.getShape();
             SmallVector<int64_t, 4> strides(shape.size(), 0);
             strides[shape.size() - 1] = 1;
@@ -462,6 +518,33 @@ namespace
         {
             rewriter.create<DeallocOp>(rewriter.getUnknownLoc(), value);
         }
+    }
+
+    mlir::FuncOp DialectLoweringPass::getCallDecl(StringRef name,
+                                                  ArrayRef<Type> args,
+                                                  ArrayRef<Type> output,
+                                                  PatternRewriter& rewriter)
+    {
+        auto module = getModule();
+        auto* context = getModule().getContext();
+        auto callBackFunc = module.lookupSymbol<mlir::FuncOp>(name);
+        if (!callBackFunc)
+        {
+            // Create a function declaration and insert to the module.
+            auto callBackType = rewriter.getFunctionType(args, output);
+            PatternRewriter::InsertionGuard insertGuard(rewriter);
+            rewriter.setInsertionPointToStart(module.getBody());
+            SmallVector<NamedAttribute, 4> attributes;
+            rewriter.create<mlir::FuncOp>(rewriter.getUnknownLoc(), name, callBackType, attributes);
+            callBackFunc = module.lookupSymbol<mlir::FuncOp>(name);
+        }
+        return callBackFunc;
+    }
+
+    inline size_t DialectLoweringPass::insertAttrs(opAttrs attrs)
+    {
+        m_attrsVec.push_back(attrs);
+        return m_attrsVec.size() - 1;
     }
 
     // NGDialect converters
@@ -535,6 +618,30 @@ namespace
     REWRITER(NGLessOp)
     {
         lowerBinaryElementwise<mlir::NGLessOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGGreaterEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGGreaterEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGLessEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGLessEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGEqOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGNotEqOp)
+    {
+        lowerBinaryElementwise<mlir::NGNotEqOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
@@ -878,22 +985,490 @@ namespace
     REWRITER(NGConvolutionOp)
     {
         auto convolOp = cast<NGConvolutionOp>(op);
-        auto loc = convolOp.getLoc();
-        ScopedContext scope(rewriter, loc);
 
         // Get operands
         Value* result = pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result, "Unexpected null result in Convolution Op");
         Value* images = operands[0];
         Value* filters = operands[1];
-        auto strides = convolOp.strides().getValue();
-        auto padBelow = convolOp.padBelow().getValue();
-        auto padAbove = convolOp.padBelow().getValue();
+        auto strides = convolOp.strides();
+        auto padBelow = convolOp.padBelow();
+        auto padAbove = convolOp.padBelow();
 
-        Type elemTy = images->getType().cast<MemRefType>().getElementType();
+        lowerConvolution(result,
+                         images,
+                         filters,
+                         strides,
+                         padBelow,
+                         padAbove,
+                         rewriter,
+                         pass,
+                         convolOp.getLoc());
 
+        rewriter.replaceOp(op, {result});
+        return matchSuccess();
+    }
+
+    REWRITER(NGGroupConvOp)
+    {
+        auto gConvOp = cast<NGGroupConvOp>(op);
+        ScopedContext scope(rewriter, gConvOp.getLoc());
+        // Get operands
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result, "Unexpected null result in Convolution Op");
+        Value* images = operands[0];
+        Value* filters = operands[1];
+        auto strides = gConvOp.strides();
+        auto padBelow = gConvOp.padBelow();
+        auto padAbove = gConvOp.padBelow();
+        int groups = gConvOp.groups().getSExtValue();
+
+        NGRAPH_CHECK(groups > 0, "Invalid number of groups");
+        // create outer group convolution loop
+        // for group = 0 to groups
+        IndexHandle iv;
+
+        ValueHandle lb = intrinsics::constant_index(0);
+        ValueHandle ub = intrinsics::constant_index(groups);
+        ValueHandle step = intrinsics::constant_index(1);
+
+        auto imagesType = images->getType().cast<MemRefType>();
+        auto filtersType = filters->getType().cast<MemRefType>();
+        auto imagesShape = imagesType.getShape();
+        auto filtersShape = filtersType.getShape();
+
+        // Filters shape contains num of groups ?
+        bool groupsInFilters = (filtersShape.size() != imagesShape.size());
+
+        NGRAPH_CHECK(imagesType.hasStaticShape() && filtersType.hasStaticShape(),
+                     "Dynamic shapes are not supported");
+        NGRAPH_CHECK(imagesShape[1] % groups == 0,
+                     "Channel dim is not divisible by number of groups");
+
+        NGRAPH_CHECK(groupsInFilters || filtersShape[0] % groups == 0,
+                     "Filters dim is not divisible by number of groups");
+
+        auto channelGroupSize = intrinsics::constant_index(imagesShape[1] / groups);
+        auto filtersGroupSize = intrinsics::constant_index(
+            groupsInFilters ? filtersShape[1] : filtersShape[0] / groups);
+
+        NGRAPH_CHECK(!groupsInFilters || groups == filtersShape[0]);
+
+        LoopBuilder::makeAffine(&iv, lb, ub, 1)([&] {
+            // lower/upper bounds on image channel dim and kernels dim
+            auto cLb = iv * channelGroupSize;
+            auto cUb = cLb + channelGroupSize;
+            auto kLb = iv * filtersGroupSize;
+            auto kUb = kLb + filtersGroupSize;
+            lowerConvolution(result,
+                             images,
+                             filters,
+                             strides,
+                             padBelow,
+                             padAbove,
+                             rewriter,
+                             pass,
+                             gConvOp.getLoc(),
+                             cLb,
+                             cUb,
+                             kLb,
+                             kUb,
+                             iv);
+        });
+        rewriter.replaceOp(op, {result});
+        return matchSuccess();
+    }
+    REWRITER(NGReturnOp)
+    {
+        pass.insertDeallocs(rewriter);
+        rewriter.replaceOpWithNewOp<ReturnOp>(op);
+        return matchSuccess();
+    }
+
+    // Use callback: Pooling, MatMul, Gemm, Softmax
+    static void castMemRef(SmallVector<mlir::Value*, 4> inputs,
+                           SmallVector<mlir::Value*, 4>& outputs,
+                           PatternRewriter& rewriter,
+                           UnrankedMemRefType type)
+    {
+        for (auto in : inputs)
+        {
+            auto out = rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), in, type);
+            outputs.push_back(out);
+        }
+    }
+
+    REWRITER(NGAvgPoolOp)
+    {
+        lowerPooling<mlir::NGAvgPoolOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGAvgPoolBackpropOp)
+    {
+        lowerPooling<mlir::NGAvgPoolBackpropOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGMaxPoolOp)
+    {
+        lowerPooling<mlir::NGMaxPoolOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGMaxPoolBackpropOp)
+    {
+        auto pooling = cast<NGMaxPoolBackpropOp>(op);
+        auto loc = pooling.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* src = operands[0];
+        Value* delta = operands[1];
+        ArrayRef<Attribute> windowShape = pooling.windowShape().getValue();
+        ArrayRef<Attribute> windowStrides = pooling.windowMovementStrides().getValue();
+        ArrayRef<Attribute> padBelow = pooling.padBelow().getValue();
+        ArrayRef<Attribute> padAbove = pooling.padAbove().getValue();
+
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(src && delta && result, "Unexpected null values in MaxPoolBackprop Op");
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto resultShape = resultTy.getShape();
+        auto srcTy = src->getType().dyn_cast<MemRefType>();
+        auto srcShape = srcTy.getShape();
+        auto deltaTy = delta->getType().dyn_cast<MemRefType>();
+        auto deltaShape = deltaTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(srcTy, "Unexpected non-memref src type");
+        NGRAPH_CHECK(deltaTy, "Unexpected non-memref delta type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == srcTy.getElementType() && elemTy == deltaTy.getElementType(),
+                     "Types mismatch in MaxPoolBackprop");
+
+        NGRAPH_CHECK((srcShape.size() == 4 && resultShape.size() == 4) ||
+                         (srcShape.size() == 5 && resultShape.size() == 5),
+                     "MKLDNN pooling operation is only supported for 3D and 5D tensors");
+
+        auto int64Ty = rewriter.getIntegerType(64);
+        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
+        SmallVector<mlir::Value*, 4> inputs = {src, delta, result};
+        SmallVector<mlir::Value*, 4> outputs;
+        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
+
+        FuncOp callBackFunc = pass.getCallDecl(
+            "__mlir_callback_2_inputs",
+            {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
+            {},
+            rewriter);
+
+        opAttrs attrs;
+        if (srcShape.size() == 4)
+        {
+            attrs.poolAttrs2d.includePaddingInAvgComputation = false;
+            for (auto i = 0; i < 2; i++)
+            {
+                attrs.poolAttrs2d.windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+            }
+        }
+        else if (srcShape.size() == 5)
+        {
+            opAttrs attrs;
+            attrs.poolAttrs3d.includePaddingInAvgComputation = false;
+            for (auto i = 0; i < 3; i++)
+            {
+                attrs.poolAttrs3d.windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+            }
+        }
+        auto index = pass.insertAttrs(attrs);
+        auto attrsIndexArg =
+            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
+        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MAXPOOLBACKPROP), 64);
+        SmallVector<mlir::Value*, 4> args = {
+            outputs[0], outputs[1], outputs[2], attrsIndexArg, opTypeArg};
+
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        rewriter.replaceOp(op, result);
+        return matchSuccess();
+    }
+
+    REWRITER(NGMatMulOp)
+    {
+        auto matmul = cast<NGMatMulOp>(op);
+        auto loc = matmul.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* lhs = operands[0];
+        Value* rhs = operands[1];
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs && rhs && result, "Unexpected null values in MatMulOp");
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto resultShape = resultTy.getShape();
+        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
+        auto lhsShape = lhsTy.getShape();
+        auto rhsTy = rhs->getType().dyn_cast<MemRefType>();
+        auto rhsShape = rhsTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
+        NGRAPH_CHECK(rhsTy, "Unexpected non-memref RHS type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == lhsTy.getElementType() && elemTy == rhsTy.getElementType(),
+                     "Types mismatch in MatMulOp");
+
+        NGRAPH_CHECK(lhsShape.size() == 2 && rhsShape.size() == 2 && resultShape.size() == 2,
+                     "MatMul operation is only supported for 2D tensors");
+
+        opAttrs attrs;
+        attrs.gemmAttrs2d.transposeA = matmul.transposeA();
+        attrs.gemmAttrs2d.transposeB = matmul.transposeB();
+        attrs.gemmAttrs2d.m = lhsShape[0];
+        attrs.gemmAttrs2d.k = lhsShape[1];
+        attrs.gemmAttrs2d.n = rhsShape[1];
+        attrs.gemmAttrs2d.lda = lhsShape[1];
+        attrs.gemmAttrs2d.ldb = rhsShape[1];
+
+        if (matmul.transposeA())
+        {
+            attrs.gemmAttrs2d.m = lhsShape[1];
+            attrs.gemmAttrs2d.k = lhsShape[0];
+        }
+        if (matmul.transposeB())
+        {
+            attrs.gemmAttrs2d.n = rhsShape[0];
+        }
+        attrs.gemmAttrs2d.ldc = attrs.gemmAttrs2d.n;
+
+        auto int64Ty = rewriter.getIntegerType(64);
+        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
+        auto callBackFunc = pass.getCallDecl(
+            "__mlir_callback_2_inputs",
+            {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
+            {},
+            rewriter);
+
+        auto index = pass.insertAttrs(attrs);
+        auto attrsIndexArg =
+            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
+        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MATMUL), 64);
+        SmallVector<mlir::Value*, 4> inputs = {lhs, rhs, result};
+        SmallVector<mlir::Value*, 4> outputs;
+        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
+        SmallVector<mlir::Value*, 4> args = {
+            outputs[0], outputs[1], outputs[2], attrsIndexArg, opTypeArg};
+
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        rewriter.replaceOp(op, result);
+
+        return matchSuccess();
+    }
+
+    REWRITER(NGGemmOp)
+    {
+        auto gemm = cast<NGGemmOp>(op);
+        auto loc = gemm.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* lhs = operands[0];
+        Value* rhs = operands[1];
+        Value* bias = operands[2];
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs && rhs && bias && result, "Unexpected null values in GemmOp");
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
+        auto lhsShape = lhsTy.getShape();
+        auto rhsTy = rhs->getType().dyn_cast<MemRefType>();
+        auto rhsShape = rhsTy.getShape();
+        auto biasTy = bias->getType().dyn_cast<MemRefType>();
+        auto biasShape = biasTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
+        NGRAPH_CHECK(rhsTy, "Unexpected non-memref RHS type");
+        NGRAPH_CHECK(biasTy, "Unexpected non-memref bias type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == lhsTy.getElementType() && elemTy == rhsTy.getElementType() &&
+                         elemTy == biasTy.getElementType(),
+                     "Types mismatch in GemmOp");
+
+        MemRefView vRes(result), vLhs(lhs), vRhs(rhs), vBias(bias);
+
+        NGRAPH_CHECK(vLhs.rank() == 2 && vRhs.rank() == 2 && vRes.rank() == 2 && vBias.rank() <= 2,
+                     "Gemm operation is only supported for 2D tensors");
+
+        opAttrs attrs;
+        attrs.gemmAttrs2d.transposeA = gemm.transA();
+        attrs.gemmAttrs2d.transposeB = gemm.transB();
+        attrs.gemmAttrs2d.alpha = gemm.alpha().convertToFloat();
+        attrs.gemmAttrs2d.beta = gemm.beta().convertToFloat();
+        attrs.gemmAttrs2d.m = lhsShape[0];
+        attrs.gemmAttrs2d.k = lhsShape[1];
+        attrs.gemmAttrs2d.n = rhsShape[1];
+        attrs.gemmAttrs2d.lda = lhsShape[1];
+        attrs.gemmAttrs2d.ldb = rhsShape[1];
+
+        if (gemm.transA())
+        {
+            attrs.gemmAttrs2d.m = lhsShape[1];
+            attrs.gemmAttrs2d.k = lhsShape[0];
+        }
+        if (gemm.transB())
+        {
+            attrs.gemmAttrs2d.n = rhsShape[0];
+        }
+        attrs.gemmAttrs2d.ldc = attrs.gemmAttrs2d.n;
+
+        int broadcastHint;
+        if (vBias.rank() == 0)
+        {
+            // Scalar
+            broadcastHint = 2;
+        }
+        else if (vBias.rank() == 2)
+        {
+            if (biasShape[0] == attrs.gemmAttrs2d.m && biasShape[1] == 1)
+            {
+                broadcastHint = 1;
+            }
+            else if (biasShape[0] == 1 && biasShape[1] == attrs.gemmAttrs2d.n)
+            {
+                broadcastHint = 0;
+            }
+            else
+            {
+                broadcastHint = -1;
+            }
+        }
+        else
+        {
+            if (biasShape[0] == attrs.gemmAttrs2d.m)
+            {
+                broadcastHint = 1;
+            }
+            else if (biasShape[0] == attrs.gemmAttrs2d.n)
+            {
+                broadcastHint = 0;
+            }
+        }
+        attrs.gemmAttrs2d.broadcastHint = broadcastHint;
+
+        auto int64Ty = rewriter.getIntegerType(64);
+        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
+        auto callBackFunc = pass.getCallDecl("__mlir_callback_3_inputs",
+                                             {unrankedMemrefTy,
+                                              unrankedMemrefTy,
+                                              unrankedMemrefTy,
+                                              unrankedMemrefTy,
+                                              int64Ty,
+                                              int64Ty},
+                                             {},
+                                             rewriter);
+
+        auto index = pass.insertAttrs(attrs);
+        auto attrsIndexArg =
+            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
+        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::GEMM), 64);
+        SmallVector<mlir::Value*, 4> inputs = {lhs, rhs, bias, result};
+        SmallVector<mlir::Value*, 4> outputs;
+        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
+        SmallVector<mlir::Value*, 4> args = {
+            outputs[0], outputs[1], outputs[2], outputs[3], attrsIndexArg, opTypeArg};
+
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        rewriter.replaceOp(op, result);
+
+        return matchSuccess();
+    }
+
+    REWRITER(NGSoftMaxOp)
+    {
+        auto softmax = cast<NGSoftMaxOp>(op);
+        auto loc = softmax.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* lhs = operands[0];
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs && result, "Unexpected null values in SoftmaxOp");
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto resultShape = resultTy.getShape();
+        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
+        auto lhsShape = lhsTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == lhsTy.getElementType(), "Types mismatch in SoftmaxOp");
+
+        NGRAPH_CHECK((lhsShape.size() == 2 && resultShape.size() == 2) ||
+                         (lhsShape.size() == 4 && resultShape.size() == 4),
+                     "MKLDNN Softmax operation is only supported for 2D and 4D tensors");
+
+        auto int64Ty = rewriter.getIntegerType(64);
+        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
+        auto axes = softmax.axes().getValue();
+        opAttrs attrs;
+        attrs.intAttr = axes[0].cast<IntegerAttr>().getInt();
+        auto index = pass.insertAttrs(attrs);
+        auto attrsIndexArg =
+            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
+        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::SOFTMAX), 64);
+
+        FuncOp callBackFunc =
+            pass.getCallDecl("__mlir_callback_1_input",
+                             {unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
+                             {},
+                             rewriter);
+
+        SmallVector<mlir::Value*, 4> inputs = {lhs, result};
+        SmallVector<mlir::Value*, 4> outputs;
+        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
+        SmallVector<mlir::Value*, 4> args = {outputs[0], outputs[1], attrsIndexArg, opTypeArg};
+
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        rewriter.replaceOp(op, result);
+
+        return matchSuccess();
+    }
+
+#undef REWRITER
+    /// End of pattern matchers
+
+    void lowerConvolution(Value* result,
+                          Value* images,
+                          Value* filters,
+                          ArrayAttr stridesAttr,
+                          ArrayAttr padBelowAttr,
+                          ArrayAttr padAboveAttr,
+                          PatternRewriter& rewriter,
+                          DialectLoweringPass& pass,
+                          Location loc,
+                          Value* cLb,
+                          Value* cUb,
+                          Value* kLb,
+                          Value* kUb,
+                          Value* gId)
+    {
         // Let Images shape be  [N, C_IN, D_1, ... D_f]
         // Let Filters shape be [C_OUT, C_IN, F_1, ... F_f]
+        //      (or [GROUPS, C_OUT, C_IN, F_1, ... F_f] in case of
+        //       group convolution with groups in filters shape)
         // Output shape will be [N, C_OUT, R_1, ..R_f]
         //   where R_i = (AdjD_i - AdjF_i + 1) / Strides[i]
         //
@@ -937,19 +1512,19 @@ namespace
         //           Output[n, k, r_1, .. r_f] +=
         //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
 
-        // Create view to write into result.
+        ScopedContext scope(rewriter, loc);
+        auto strides = stridesAttr.getValue();
+        auto padBelow = padBelowAttr.getValue();
+        auto padAbove = padBelowAttr.getValue();
+        Type elemTy = images->getType().cast<MemRefType>().getElementType();
+
+        // Create views
         MemRefView vRes(result), vImages(images), vFilters(filters);
-
-        // Indexed Values
+        // Create indexed Values
         IndexedValue iRes(result), iImages(images), iFilters(filters);
-
         // Bounds on batch size N
         ValueHandle batchLb = vImages.lb(0), batchUb = vImages.ub(0);
-        // Bounds on number of filters
-        ValueHandle numFiltersLb = vFilters.lb(0), numFiltersUb = vFilters.ub(0);
-        // Bound on number of channels
-        ValueHandle numChannelsLb = vImages.lb(1), numChannelsUb = vImages.ub(1);
-        // Bounds on result spatial dimensions
+        // Bounds on spatial dimensions
         SmallVector<ValueHandle, 4> resSpatialLbs, resSpatialUbs;
         SmallVector<ValueHandle, 4> imgSpatialLbs, imgSpatialUbs;
         SmallVector<ValueHandle, 4> filtersSpatialLbs, filtersSpatialUbs;
@@ -964,15 +1539,58 @@ namespace
         SmallVector<int, 4> padBelowIntValues;
         bool withPadding = false;
 
+        // Do we have an extra dim for groups or is it folded in numFilters ?
+        bool groupsInFilters = (vImages.rank() != vFilters.rank());
+        bool groupConvolution = (kLb != nullptr);
+
+        // Number of groups can be in filters shape only with group convolution
+        NGRAPH_CHECK(!groupsInFilters ||
+                     (kLb != nullptr && kUb != nullptr && cLb != nullptr && cUb != nullptr));
+
+        // Bounds on number of filters
+        ValueHandle numFiltersLb(rewriter.getIndexType());
+        ValueHandle numFiltersUb(rewriter.getIndexType());
+        if (groupConvolution)
+        {
+            if (groupsInFilters)
+            {
+                // use entire dim size if groups are out of the num filters dim
+                numFiltersLb = vFilters.lb(1);
+                numFiltersUb = vFilters.ub(1);
+            }
+            else
+            {
+                // use split dim within bounds generated in outer loop
+                numFiltersLb = ValueHandle(kLb);
+                numFiltersUb = ValueHandle(kUb);
+            }
+        }
+        else
+        {
+            numFiltersLb = vFilters.lb(0);
+            numFiltersUb = vFilters.ub(0);
+        }
+
+        // determine where spatial index starts in filters
+        int filtersSpatialIdx = 2;
+        const int imgSpatialIdx = 2;
+        if (groupConvolution && groupsInFilters)
+        {
+            filtersSpatialIdx = 3;
+        }
+        // Bounds on number of channels
+        ValueHandle numChannelsLb = (cLb == nullptr) ? vImages.lb(1) : ValueHandle(cLb);
+        ValueHandle numChannelsUb = (cUb == nullptr) ? vImages.ub(1) : ValueHandle(cUb);
+
         for (auto i = 0; i < spatialRank; i++)
         {
             // result spatial bounds and steps
-            resSpatialLbs.push_back(vRes.lb(i + 2));
-            resSpatialUbs.push_back(vRes.ub(i + 2));
-            resSteps.push_back(vRes.step(i + 2));
+            resSpatialLbs.push_back(vRes.lb(imgSpatialIdx + i));
+            resSpatialUbs.push_back(vRes.ub(imgSpatialIdx + i));
+            resSteps.push_back(vRes.step(imgSpatialIdx + i));
             // image spatial bounds
-            imgSpatialLbs.push_back(vImages.lb(i + 2));
-            imgSpatialUbs.push_back(vImages.ub(i + 2));
+            imgSpatialLbs.push_back(vImages.lb(imgSpatialIdx + i));
+            imgSpatialUbs.push_back(vImages.ub(imgSpatialIdx + i));
 
             // Check if we have any padding and collect pad values
             IntegerAttr iAttr = padBelow[i].cast<IntegerAttr>();
@@ -991,7 +1609,8 @@ namespace
             }
         }
 
-        NGRAPH_CHECK(vImages.rank() == vFilters.rank(), "Images and Filters have unequal ranks");
+        NGRAPH_CHECK((groupConvolution && groupsInFilters) || (vImages.rank() == vFilters.rank()),
+                     "Images and Filters have unequal ranks");
         NGRAPH_CHECK(resSpatialLbs.size() == resSpatialUbs.size() &&
                          resSpatialLbs.size() == spatialRank,
                      "Results spatial dims mismatches input");
@@ -1003,9 +1622,9 @@ namespace
 
         for (auto i = 0; i < spatialRank; i++)
         {
-            filtersSpatialLbs.push_back(vFilters.lb(i + 2));
-            filtersSpatialUbs.push_back(vFilters.ub(i + 2));
-            filtersSteps.push_back(vFilters.step(i + 2));
+            filtersSpatialLbs.push_back(vFilters.lb(filtersSpatialIdx + i));
+            filtersSpatialUbs.push_back(vFilters.ub(filtersSpatialIdx + i));
+            filtersSteps.push_back(vFilters.step(filtersSpatialIdx + i));
         }
 
         IntegerSet nonPaddedRange;
@@ -1057,7 +1676,16 @@ namespace
                         SmallVector<IndexHandle, 4> resIndices;
                         // Result indices
                         resIndices.push_back(n);
-                        resIndices.push_back(k);
+                        if (groupConvolution && groupsInFilters)
+                        {
+                            // compute global C_OUT from gID and k
+                            // gId * C_OUT (num of filters) + k
+                            resIndices.push_back(IndexHandle(ValueHandle(gId) * numFiltersUb + k));
+                        }
+                        else
+                        {
+                            resIndices.push_back(k);
+                        }
                         resIndices.insert(
                             resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
                         ValueHandle zero = createZeroConstant(elemTy);
@@ -1088,7 +1716,16 @@ namespace
                         SmallVector<IndexHandle, 4> resIndices;
                         // Result indices
                         resIndices.push_back(n);
-                        resIndices.push_back(k);
+                        if (groupConvolution && groupsInFilters)
+                        {
+                            // gId * C_OUT (num of filters) + k
+                            resIndices.push_back(IndexHandle(ValueHandle(gId) * numFiltersUb + k));
+                        }
+                        else
+                        {
+                            resIndices.push_back(k);
+                        }
+
                         resIndices.insert(
                             resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
                         // Filters spatial loop
@@ -1099,7 +1736,6 @@ namespace
                             SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
                             // Image indices
                             // Here we compute the virtual start index into the padded image.
-
                             imgIndices.push_back(n);
                             imgIndices.push_back(c);
                             for (auto i = 0; i < spatialRank; i++)
@@ -1108,8 +1744,20 @@ namespace
                                     IndexHandle(imgStartIndices[i] + filtersSpatialIndices[i]));
                             }
                             // Filter indices
+
+                            // If we are doing group convolution and filters shape dim0
+                            // holds the number of groups, we need to use group id as the first
+                            // index
+                            if (groupConvolution && groupsInFilters)
+                            {
+                                filtersIndices.push_back(IndexHandle(gId));
+                            }
+
                             filtersIndices.push_back(k);
-                            filtersIndices.push_back(c);
+                            // subtract lower bound of channel
+                            // if we are doing group convolution this bound will advance based
+                            // on the group id. For the filters, it should always start from 0
+                            filtersIndices.push_back(IndexHandle(c - numChannelsLb));
                             filtersIndices.insert(filtersIndices.end(),
                                                   filtersSpatialIndices.begin(),
                                                   filtersSpatialIndices.end());
@@ -1159,20 +1807,8 @@ namespace
                 });
             });
         });
-
-        rewriter.replaceOp(op, {result});
-        return matchSuccess();
     }
 
-    REWRITER(NGReturnOp)
-    {
-        pass.insertDeallocs(rewriter);
-        rewriter.replaceOpWithNewOp<ReturnOp>(op);
-        return matchSuccess();
-    }
-
-#undef REWRITER
-    /// End of pattern matchers
     template <typename OP>
     void lowerUnaryElementwise(Operation* op,
                                ArrayRef<Value*> operands,
@@ -1248,6 +1884,8 @@ namespace
         auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
         // Steps
         auto steps = vLHS.getSteps();
+        // element type of the operand
+        Type elemTy = result->getType().cast<MemRefType>().getElementType();
         AffineLoopNestBuilder(pivs, lbs, ubs, steps)(
             // single stmt body
             [&] {
@@ -1267,13 +1905,52 @@ namespace
                 {
                     iRes(ivs) = iLHS(ivs) / iRHS(ivs);
                 }
+                // TODO(pthoreho) For all comparision operators, use
+                // edsc::intrinsics::zero_extendi(ValueHandle(iLHS(ivs)) !=
+                // ValueHandle(iRHS(ivs)), IntegerType::get(8, op->getContext()));
+                // instead of edsc::intrinsics::select once `zero_extendi` is
+                // made available in the edsc::intrinsics namescope in MLIR repo.
                 else if (isa<NGGreaterOp>(op))
                 {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs));
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
                 }
                 else if (isa<NGLessOp>(op))
                 {
-                    iRes(ivs) = ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs));
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
+                }
+                else if (isa<NGGreaterEqOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) >= ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
+                }
+                else if (isa<NGLessEqOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) <= ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
+                }
+                else if (isa<NGEqOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) == ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
+                }
+                else if (isa<NGNotEqOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) != ValueHandle(iRHS(ivs)),
+                                                 createOneConstant(elemTy),
+                                                 createZeroConstant(elemTy));
                 }
                 else if (isa<NGMaxOp>(op))
                 {
@@ -1390,6 +2067,103 @@ namespace
         rewriter.replaceOp(op, result);
     }
 
+    template <typename OP>
+    void lowerPooling(Operation* op,
+                      ArrayRef<Value*> operands,
+                      PatternRewriter& rewriter,
+                      DialectLoweringPass& pass)
+    {
+        auto pooling = cast<OP>(op);
+        auto loc = pooling.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* lhs = operands[0];
+        ArrayRef<Attribute> windowShape = pooling.windowShape().getValue();
+        ArrayRef<Attribute> windowStrides = pooling.windowMovementStrides().getValue();
+        ArrayRef<Attribute> padBelow = pooling.padBelow().getValue();
+        ArrayRef<Attribute> padAbove = pooling.padAbove().getValue();
+
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs && result, "Unexpected null values in Pooling Op");
+
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto resultShape = resultTy.getShape();
+        auto lhsTy = lhs->getType().dyn_cast<MemRefType>();
+        auto lhsShape = lhsTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(lhsTy, "Unexpected non-memref LHS type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == lhsTy.getElementType(), "Types mismatch in Pooling");
+
+        NGRAPH_CHECK((lhsShape.size() == 4 && resultShape.size() == 4) ||
+                         (lhsShape.size() == 5 && resultShape.size() == 5),
+                     "MKLDNN pooling operation is only supported for 3D and 5D tensors");
+
+        auto int64Ty = rewriter.getIntegerType(64);
+        OpType ty;
+        bool includePadding = false;
+        if (auto avgPool = dyn_cast<NGAvgPoolOp>(op))
+        {
+            ty = OpType::AVGPOOL;
+            includePadding = avgPool.includePadding();
+        }
+        else if (auto avgPoolBprop = dyn_cast<NGAvgPoolBackpropOp>(op))
+        {
+            ty = OpType::AVGPOOLBACKPROP;
+            includePadding = avgPoolBprop.includePadding();
+        }
+        else if (isa<NGMaxPoolOp>(op))
+        {
+            ty = OpType::MAXPOOL;
+        }
+
+        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
+        SmallVector<mlir::Value*, 4> inputs = {lhs, result};
+        SmallVector<mlir::Value*, 4> outputs;
+        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
+
+        FuncOp callBackFunc =
+            pass.getCallDecl("__mlir_callback_1_input",
+                             {unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
+                             {},
+                             rewriter);
+
+        opAttrs attrs;
+        if (lhsShape.size() == 4)
+        {
+            attrs.poolAttrs2d.includePaddingInAvgComputation = includePadding;
+            for (auto i = 0; i < 2; i++)
+            {
+                attrs.poolAttrs2d.windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs2d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+            }
+        }
+        else if (lhsShape.size() == 5)
+        {
+            attrs.poolAttrs3d.includePaddingInAvgComputation = includePadding;
+            for (auto i = 0; i < 3; i++)
+            {
+                attrs.poolAttrs3d.windowShape[i] = windowShape[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.windowStrides[i] = windowStrides[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrs.poolAttrs3d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+            }
+        }
+        auto index = pass.insertAttrs(attrs);
+        auto attrsIndexArg =
+            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
+        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), static_cast<int64_t>(ty), 64);
+        SmallVector<mlir::Value*, 4> args = {outputs[0], outputs[1], attrsIndexArg, opTypeArg};
+
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        rewriter.replaceOp(op, result);
+    }
+
     ValueHandle createZeroConstant(mlir::Type type)
     {
         if (auto floatTy = type.dyn_cast<FloatType>())
@@ -1412,6 +2186,95 @@ namespace
             return intrinsics::constant_int(0, intTy.getWidth());
         }
         NGRAPH_UNREACHABLE("Unsupported type");
+    }
+
+    ValueHandle createOneConstant(mlir::Type type)
+    {
+        if (auto floatTy = type.dyn_cast<FloatType>())
+        {
+            if (floatTy.isF32())
+            {
+                return intrinsics::constant_float(llvm::APFloat(1.0f), floatTy);
+            }
+            else if (floatTy.isF64())
+            {
+                return intrinsics::constant_float(llvm::APFloat(1.0f), floatTy);
+            }
+            else
+            {
+                NGRAPH_UNREACHABLE("Unsupported floating-point precision");
+            }
+        }
+        else if (auto intTy = type.dyn_cast<IntegerType>())
+        {
+            return intrinsics::constant_int(1, intTy.getWidth());
+        }
+        NGRAPH_UNREACHABLE("Unsupported type");
+    }
+
+    // Given a concat op, it will check if dst and operands have
+    // a valid buffer/offset assignment that will make this op
+    // valid in-place
+    bool isInPlaceConcat(mlir::Operation* op, DialectLoweringPass& pass)
+    {
+        NGRAPH_CHECK(isa<NGConcatOp>(op), "Expecting concat operation");
+        auto concat = cast<NGConcatOp>(op);
+        auto concatAxis = concat.concatenation_axis();
+        auto result = concat.getResult();
+        auto shape = (result->getType().cast<NGTensorType>()).getShape();
+        auto memAnalysis = pass.getMemAnalysis();
+        BufferInfo bufferInfo = memAnalysis->getBufferInfo(op);
+
+        if (!bufferInfo.isValid())
+        {
+            // no buffer assignment to dst, nothing to do
+            return false;
+        }
+
+        auto dstBufferId = bufferInfo.m_bufferId;
+        auto dstOffset = bufferInfo.m_offset;
+
+        LLVM_DEBUG(llvm::dbgs() << ">> Check in-place concat\n");
+        LLVM_DEBUG(op->dump());
+        for (auto i = 0; i < shape.size(); i++)
+        {
+            if (i == concatAxis)
+            {
+                break;
+            }
+            if (shape[i] != 1)
+            {
+                LLVM_DEBUG(llvm::dbgs() << "Axis FAIL. Skipping instruction\n");
+                return false;
+            }
+        }
+        LLVM_DEBUG(llvm::dbgs() << "Axis OK\n");
+
+        // Check if the buffer id and offsets are consistent with what's exepcted
+        LLVM_DEBUG(llvm::dbgs() << "Dst (id, offset) = (" << dstBufferId << ", " << dstOffset
+                                << ")\n");
+        // relative offset in the buffer
+        int opndOffset = 0;
+        for (auto opnd : op->getOperands())
+        {
+            bufferInfo = memAnalysis->getBufferInfo(opnd->getDefiningOp());
+            auto srcBufferId = bufferInfo.m_bufferId;
+            auto srcOffset = bufferInfo.m_offset;
+            LLVM_DEBUG(llvm::dbgs() << "Src (id, offset) = (" << srcBufferId << ", " << srcOffset
+                                    << ")\n");
+            if (!bufferInfo.isValid() || srcBufferId != dstBufferId ||
+                srcOffset != (opndOffset + dstOffset))
+            {
+                // mismatch in buffer IDs or offsets
+                LLVM_DEBUG(llvm::dbgs() << "Buffer ID and Offsets FAIL. Skipping instruction\n");
+                return false;
+            }
+            auto tensorType = opnd->getType().cast<NGTensorType>();
+            opndOffset += tensorType.getNumElements();
+        }
+        LLVM_DEBUG(llvm::dbgs() << "Buffer ID and Offsets OK\n");
+
+        return true;
     }
 } // namespace
 

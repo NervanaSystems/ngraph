@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,48 @@ namespace
         replace_node(node, replacement_node);
     }
 
-    // Default is that we didn nothing
+    template <typename OpV0, typename OpV1>
+    void op_cast_reduction_node(const shared_ptr<OpV1>& node)
+    {
+        auto replacement_node = make_shared<OpV0>(node->input_value(0), node->input_value(1));
+        if (node->get_keep_dims())
+        {
+            string v1_op_name = string{node->get_type_name()} + ":v1";
+            string v0_op_name = string{OpV0{}.get_type_name()} + ":v0";
+
+            NGRAPH_CHECK(node->reduction_axes_constant(),
+                         "Unable to convert ",
+                         v1_op_name,
+                         "to ",
+                         v0_op_name,
+                         " if reduction axes are not constant (for keep_dims=true). Node: ",
+                         *node);
+            auto output_pshape = replacement_node->get_output_partial_shape(0);
+            NGRAPH_CHECK(output_pshape.is_static(),
+                         "Unable to convert ",
+                         v1_op_name,
+                         "to ",
+                         v0_op_name,
+                         " if output shape is dynamic (for keep_dims=true). Node: ",
+                         *node);
+            const auto output_shape = output_pshape.to_shape();
+            auto reshaped_output_shape = output_shape;
+            for (const auto& axis : node->get_reduction_axes())
+            {
+                reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
+            }
+            auto reshaped_product = make_shared<op::Reshape>(replacement_node->output(0),
+                                                             get_default_order(output_shape),
+                                                             reshaped_output_shape);
+            replace_node(node, reshaped_product);
+        }
+        else
+        {
+            replace_node(node, replacement_node);
+        }
+    }
+
+    // Default is that we did nothing
     bool op_cast(shared_ptr<Node> node) { return false; }
     bool op_cast(shared_ptr<op::v1::Add> node)
     {
@@ -224,9 +265,15 @@ namespace
         shared_ptr<Node> replacement_node;
 
         const auto target_shape_input = node->input_value(1).get_node_shared_ptr();
-        if (target_shape_input->is_constant() && node->get_output_partial_shape(0).is_static())
+        const auto input_rank = node->get_input_partial_shape(0).rank();
+        if (target_shape_input->is_constant() && node->get_output_partial_shape(0).is_static() &&
+            input_rank.is_static())
         {
-            replacement_node = builder::reshape(node->input_value(0), node->get_output_shape(0));
+            const auto output_shape = node->get_output_shape(0);
+            replacement_node =
+                make_shared<op::Reshape>(node->input_value(0),
+                                         get_default_order(static_cast<size_t>(input_rank)),
+                                         output_shape);
         }
         else
         {
@@ -355,7 +402,8 @@ namespace
         filters_shape[1] *= groups;
         filters_shape.erase(filters_shape.begin());
 
-        auto reshaped_filters = builder::reshape(node->input_value(1), filters_shape);
+        auto reshaped_filters = make_shared<op::v0::Reshape>(
+            filters_arg, get_default_order(filters_arg.get_shape().size()), filters_shape);
 
         auto pads_begin = node->get_pads_begin();
         auto pads_end = node->get_pads_end();
@@ -549,36 +597,27 @@ namespace
         return true;
     }
 
+    bool op_cast(shared_ptr<op::v1::ReduceMax> node)
+    {
+        op_cast_reduction_node<op::v0::Max, op::v1::ReduceMax>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::ReduceMin> node)
+    {
+        op_cast_reduction_node<op::v0::Min, op::v1::ReduceMin>(node);
+        return true;
+    }
+
     bool op_cast(shared_ptr<op::v1::ReduceProd> node)
     {
-        auto replacement_node =
-            make_shared<op::v0::Product>(node->input_value(0), node->input_value(1));
-        if (node->get_keep_dims())
-        {
-            NGRAPH_CHECK(node->reduction_axes_constant(),
-                         "Unable to convert ReduceProd:v1 to Product:v0 "
-                         "if reduction axes are not constant (for keep_dims=true). Node: ",
-                         *node);
-            auto output_pshape = replacement_node->get_output_partial_shape(0);
-            NGRAPH_CHECK(output_pshape.is_static(),
-                         "Unable to convert ReduceProd:v1 to Product:v0 "
-                         "if output shape is dynamic (for keep_dims=true). Node: ",
-                         *node);
-            const auto output_shape = output_pshape.to_shape();
-            auto reshaped_output_shape = output_shape;
-            for (const auto& axis : node->get_reduction_axes())
-            {
-                reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
-            }
-            auto reshaped_product = make_shared<op::Reshape>(replacement_node->output(0),
-                                                             get_default_order(output_shape),
-                                                             reshaped_output_shape);
-            replace_node(node, reshaped_product);
-        }
-        else
-        {
-            replace_node(node, replacement_node);
-        }
+        op_cast_reduction_node<op::v0::Product, op::v1::ReduceProd>(node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::ReduceSum> node)
+    {
+        op_cast_reduction_node<op::v0::Sum, op::v1::ReduceSum>(node);
         return true;
     }
 
@@ -716,39 +755,6 @@ namespace
         return true;
     }
 
-    bool op_cast(shared_ptr<op::v1::ReduceSum> node)
-    {
-        auto replacement_node =
-            make_shared<op::v0::Sum>(node->input_value(0), node->input_value(1));
-        if (node->get_keep_dims())
-        {
-            NGRAPH_CHECK(node->reduction_axes_constant(),
-                         "Unable to convert ReduceSum:v1 to Sum:v0 "
-                         "if reduction axes are not constant (for keep_dims=true). Node: ",
-                         *node);
-            auto output_pshape = replacement_node->get_output_partial_shape(0);
-            NGRAPH_CHECK(output_pshape.is_static(),
-                         "Unable to convert ReduceSum:v1 to Sum:v0 "
-                         "if output shape is dynamic (for keep_dims=true). Node: ",
-                         *node);
-            const auto output_shape = output_pshape.to_shape();
-            auto reshaped_output_shape = output_shape;
-            for (const auto& axis : node->get_reduction_axes())
-            {
-                reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
-            }
-            auto reshaped_product = make_shared<op::Reshape>(replacement_node->output(0),
-                                                             get_default_order(output_shape),
-                                                             reshaped_output_shape);
-            replace_node(node, reshaped_product);
-        }
-        else
-        {
-            replace_node(node, replacement_node);
-        }
-        return true;
-    }
-
     bool op_cast(shared_ptr<op::v1::TopK> node)
     {
         const auto axis = node->get_axis();
@@ -772,6 +778,44 @@ namespace
         // values output will be 0, indices 1
         vector<int64_t> output_order{1, 0};
         replace_node(node, replacement_node, output_order);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::v1::Transpose> node)
+    {
+        const auto data = node->input_value(0);
+
+        const auto data_pshape = data.get_partial_shape();
+        NGRAPH_CHECK(data_pshape.is_static(),
+                     "Unable to convert Transpose:v1 to Reshape:v0 "
+                     "if data shape is dynamic. Node: ",
+                     *node);
+        const auto data_shape = data_pshape.to_shape();
+
+        const auto order_node = node->input_value(1).get_node_shared_ptr();
+        NGRAPH_CHECK(order_node->is_constant(),
+                     "Unable to convert Transpose:v1 to Reshape:v0 "
+                     "if order node is not constant. Node: ",
+                     *node);
+        const auto order_const = as_type_ptr<op::Constant>(order_node);
+
+        auto order = order_const->get_axis_vector_val();
+        Shape out_shape = data_shape;
+        if (order.empty())
+        {
+            order.resize(out_shape.size());
+            iota(begin(order), end(order), 0);
+        }
+        else
+        {
+            for (size_t i = 0; i < order.size(); ++i)
+            {
+                out_shape[i] = data_shape.at(order.at(i));
+            }
+        }
+
+        auto replacement_node = make_shared<op::v0::Reshape>(data, order, out_shape);
+        replace_node(node, replacement_node);
         return true;
     }
 

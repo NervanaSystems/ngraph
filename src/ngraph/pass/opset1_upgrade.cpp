@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -379,6 +379,15 @@ namespace
         return true;
     }
 
+    bool op_cast(shared_ptr<op::Max> node)
+    {
+        bool keep_dims = false;
+        auto replacement_node =
+            make_shared<op::v1::ReduceMax>(node->input_value(0), node->input_value(1), keep_dims);
+        replace_node(node, replacement_node);
+        return true;
+    }
+
     bool op_cast(shared_ptr<op::Maximum> node)
     {
         op_cast_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);
@@ -435,6 +444,15 @@ namespace
             replacement_node = make_shared<op::v1::MaxPoolBackprop>(
                 node->input_value(0), node->input_value(1), strides, pads_begin, pads_end, kernel);
         }
+        replace_node(node, replacement_node);
+        return true;
+    }
+
+    bool op_cast(shared_ptr<op::Min> node)
+    {
+        bool keep_dims = false;
+        auto replacement_node =
+            make_shared<op::v1::ReduceMin>(node->input_value(0), node->input_value(1), keep_dims);
         replace_node(node, replacement_node);
         return true;
     }

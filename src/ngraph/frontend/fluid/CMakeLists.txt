@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@
 target_sources (ngraph PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/operators/layout_converter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/operators/layout_converter.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/operators/lookup_table.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/operators/lookup_table.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/operators/matmul.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/operators/matmul.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/operators/pool.cpp

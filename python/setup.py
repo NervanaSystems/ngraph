@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ __version__ = os.environ.get('NGRAPH_VERSION', '0.0.0-dev')
 PYNGRAPH_ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 NGRAPH_DEFAULT_INSTALL_DIR = os.environ.get('HOME')
 NGRAPH_ONNX_IMPORT_ENABLE = os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE')
+NGRAPH_PYTHON_DEBUG = os.environ.get('NGRAPH_PYTHON_DEBUG')
 
 
 def find_ngraph_dist_dir():
@@ -367,6 +368,13 @@ class BuildExt(build_ext):
             return True
         return False
 
+    def add_debug_or_release_flags(self):
+        """Return compiler flags for Release and Debug build types."""
+        if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
+            return ['-O0', '-g']
+        else:
+            return ['-O2', '-D_FORTIFY_SOURCE=2']
+
     def build_extensions(self):
         """Build extension providing extra compiler flags."""
         if sys.platform == 'win32':
@@ -388,7 +396,8 @@ class BuildExt(build_ext):
             add_platform_specific_link_args(ext.extra_link_args)
 
             ext.extra_compile_args += ['-Wformat', '-Wformat-security']
-            ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
+            ext.extra_compile_args += self.add_debug_or_release_flags()
+
             if sys.platform == 'darwin':
                 ext.extra_compile_args += ['-stdlib=libc++']
         build_ext.build_extensions(self)
