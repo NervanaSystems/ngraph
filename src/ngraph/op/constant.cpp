@@ -55,7 +55,6 @@ op::Constant::Constant(const element::Type& type,
     , m_data(new runtime::AlignedBuffer(
           std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f), host_alignment()))
 {
-    NGRAPH_INFO;
     NODE_VALIDATION_CHECK(this,
                           values.size() == shape_size(m_shape) || values.size() == 1,
                           "Did not get the expected number of literals for a constant of shape ",
@@ -75,7 +74,6 @@ op::Constant::Constant(const element::Type& type,
         {
         case element::Type_t::boolean:
         {
-            NGRAPH_INFO << "*****************************************************************************************************";
             bool value = stoi(values[0]) != 0;
             bool* target = m_data->get_ptr<bool>();
             std::fill(target, target + shape_size(m_shape), value);
