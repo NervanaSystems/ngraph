@@ -573,6 +573,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b1c2h2w2)
 
 NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b2c2h2w1)
 {
+    std::cout << "[dkalinow_test_branch] hello world" << std::endl;
     auto input_shape = Shape{2, 2, 2, 1};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);
     auto mean_shape = Shape{2};
