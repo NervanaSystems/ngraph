@@ -27,6 +27,8 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/provenance.hpp"
 
 using namespace std;
@@ -471,4 +473,66 @@ TEST(provenance, scaled_quantize_concat_unsigned)
             ASSERT_EQ(n->get_provenance_tags().size(), 1);
         }
     }
+}
+
+TEST(provenance, upgrade_pass_tag)
+{
+    const size_t axis = 2;
+    const size_t k = 10;
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
+
+    const auto topk_v0 = make_shared<op::v0::TopK>(data, axis, element::i32, k);
+    const auto result = make_shared<op::Result>(topk_v0);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.run_passes(f);
+
+    const auto pass_replacement_node =
+        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto topk_v1 = as_type_ptr<op::v1::TopK>(pass_replacement_node);
+
+    const std::string tag = "<Opset1_Upgrade (v0 TopK)>";
+    auto tag_check = [&tag](std::shared_ptr<ngraph::Node> node) {
+        auto tags = node->get_provenance_tags();
+        EXPECT_EQ(tags.find(tag) != tags.end(), true);
+    };
+    traverse_nodes(as_node_vector(topk_v1->outputs()),
+                           tag_check,
+                           false,
+                           as_node_vector(topk_v0->input_values()));
+}
+
+TEST(provenance, downgrade_pass_tag)
+{
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
+    const int32_t k = 10;
+    const auto k_node = op::Constant::create(element::i64, Shape{}, {k});
+    const size_t axis = 2;
+    const auto mode = op::v1::TopK::Mode::MAX;
+    const auto sort = op::v1::TopK::SortType::SORT_INDICES;
+    const auto elem_type = element::i64;
+
+    const auto topk_v1 = make_shared<op::v1::TopK>(data, k_node, axis, mode, sort, elem_type);
+    const auto result = make_shared<op::Result>(topk_v1);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.run_passes(f);
+
+    const auto pass_replacement_node =
+        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto topk_v0 = as_type_ptr<op::v0::TopK>(pass_replacement_node);
+
+    const std::string tag = "<Opset0_Downgrade (v1 TopK)>";
+    auto tag_check = [&tag](std::shared_ptr<ngraph::Node> node) {
+        auto tags = node->get_provenance_tags();
+        EXPECT_EQ(tags.find(tag) != tags.end(), true);
+    };
+    traverse_nodes(as_node_vector(topk_v0->outputs()),
+                           tag_check,
+                           false,
+                           as_node_vector(topk_v1->input_values()));
 }
