@@ -477,6 +477,8 @@ TEST(provenance, scaled_quantize_concat_unsigned)
 
 TEST(provenance, upgrade_pass_tag)
 {
+    set_provenance_enabled(true);
+
     const size_t axis = 2;
     const size_t k = 10;
     const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
@@ -506,6 +508,8 @@ TEST(provenance, upgrade_pass_tag)
 
 TEST(provenance, downgrade_pass_tag)
 {
+    set_provenance_enabled(true);
+
     const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
     const int32_t k = 10;
     const auto k_node = op::Constant::create(element::i64, Shape{}, {k});

@@ -27,6 +27,7 @@
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/provenance.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/type.hpp"
 #include "ngraph/validation_util.hpp"
@@ -860,11 +861,13 @@ namespace
         auto downgraded_node = op_cast(as_type_ptr<T>(node));
         if (downgraded_node)
         {
-            // Add provenance tag to downgraded node and all newly created nodes above
-            const std::string provenance_tag =
-                "<Opset0_Downgrade (v1 " + std::string(node->get_type_name()) + ")>";
-            downgraded_node->add_provenance_tag(provenance_tag);
-            downgraded_node->add_provenance_tags_above(node->input_values(), {provenance_tag});
+            if (ngraph::get_provenance_enabled())
+            {
+                const std::string provenance_tag =
+                    "<Opset0_Downgrade (v1 " + std::string(node->get_type_name()) + ")>";
+                downgraded_node->add_provenance_tag(provenance_tag);
+                downgraded_node->add_provenance_tags_above(node->input_values(), {provenance_tag});
+            }
             return true;
         }
         return false;
