@@ -84,8 +84,8 @@ namespace ngraph
                 /// \param shape The shape of the tensor constant.
                 /// \param values A list of string values to use as the constant data.
                 Constant(const element::Type& type,
-                        Shape shape,
-                        const std::vector<std::string>& values);
+                         Shape shape,
+                         const std::vector<std::string>& values);
 
                 /// \brief Constructs a tensor constant with the supplied data
                 ///

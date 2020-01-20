@@ -191,7 +191,7 @@ op::Constant::Constant(const element::Type& type,
         {
             vector<float> value = parse_string<float>(values);
             bfloat16* target = m_data->get_ptr<bfloat16>();
-            for(size_t i=0; i<value.size(); i++)
+            for (size_t i = 0; i < value.size(); i++)
             {
                 target[i] = value[i];
             }
@@ -201,7 +201,7 @@ op::Constant::Constant(const element::Type& type,
         {
             vector<float> value = parse_string<float>(values);
             float16* target = m_data->get_ptr<float16>();
-            for(size_t i=0; i<value.size(); i++)
+            for (size_t i = 0; i < value.size(); i++)
             {
                 target[i] = value[i];
             }
