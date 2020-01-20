@@ -55,6 +55,7 @@ op::Constant::Constant(const element::Type& type,
     , m_data(new runtime::AlignedBuffer(
           std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f), host_alignment()))
 {
+    NGRAPH_INFO;
     NODE_VALIDATION_CHECK(this,
                           values.size() == shape_size(m_shape) || values.size() == 1,
                           "Did not get the expected number of literals for a constant of shape ",
@@ -74,6 +75,7 @@ op::Constant::Constant(const element::Type& type,
         {
         case element::Type_t::boolean:
         {
+            NGRAPH_INFO << "*****************************************************************************************************";
             bool value = stoi(values[0]) != 0;
             bool* target = m_data->get_ptr<bool>();
             std::fill(target, target + shape_size(m_shape), value);
@@ -178,24 +180,13 @@ op::Constant::Constant(const element::Type& type,
     }
     else
     {
-        NGRAPH_INFO;
         switch (m_element_type)
         {
         case element::Type_t::boolean:
         {
-        NGRAPH_INFO;
-            vector<char> value = parse_string<char>(values);
-            bool* target = m_data->get_ptr<bool>();
-            // std::copy(value.begin(), value.end(), target);
-            memcpy(target, value.data(), value.size()*sizeof(char));
-            for (auto x : value)
-            {
-                NGRAPH_INFO << static_cast<int32_t>(x);
-            }
-            for (size_t i=0; i<value.size(); i++)
-            {
-                NGRAPH_INFO << static_cast<int32_t>(target[i]);
-            }
+            vector<uint8_t> value = parse_string<uint8_t>(values);
+            uint8_t* target = m_data->get_ptr<uint8_t>();
+            std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::bf16:
@@ -220,7 +211,6 @@ op::Constant::Constant(const element::Type& type,
         }
         case element::Type_t::f32:
         {
-        NGRAPH_INFO;
             vector<float> value = parse_string<float>(values);
             float* target = m_data->get_ptr<float>();
             std::copy(value.begin(), value.end(), target);
@@ -290,15 +280,10 @@ op::Constant::Constant(const element::Type& type,
             break;
         }
         case element::Type_t::undefined:
-        {
             throw std::runtime_error("deserialize unsupported type undefined");
-        }
         case element::Type_t::dynamic:
-        {
             throw std::runtime_error("deserialize unsupported type dynamic");
-        }
-        case element::Type_t::u1: { throw std::runtime_error("deserialize unsupported type u1");
-        }
+        case element::Type_t::u1: throw std::runtime_error("deserialize unsupported type u1");
         }
         m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
     }
