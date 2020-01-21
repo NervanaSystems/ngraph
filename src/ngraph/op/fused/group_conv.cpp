@@ -329,13 +329,9 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
     {
         output_pshape = get_output_shape();
 
-        // If auto_pad has one of following mode we infer paddings. Otherwise in EXPLICIT auto_pad
-        // mode we use what is provided.
-        if ((m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER) &&
-            output_pshape.is_static() && data_pshape.is_static() && filters_pshape.is_static())
+        if (output_pshape.is_static() && data_pshape.is_static() && filters_pshape.is_static())
         {
             Shape output_shape = output_pshape.to_shape();
-            // extract spatial shape values
             const Shape& data_shape = data_pshape.to_shape();
             const Shape& filters_shape = filters_pshape.to_shape();
             const size_t num_spatial_dims = data_shape.size() - 2;
@@ -344,15 +340,21 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
                                   "Output shape should be specified only and for "
                                   "all spatial dimensions.");
 
-            opset1::infer_conv_backprop_auto_padding(data_shape,
-                                                     filters_shape,
-                                                     output_shape,
-                                                     m_strides,
-                                                     m_dilations,
-                                                     m_auto_pad,
-                                                     m_output_padding,
-                                                     m_pads_begin,
-                                                     m_pads_end);
+            // If auto_pad has one of following mode we infer paddings. Otherwise in
+            // EXPLICIT auto_pad mode we use what is provided.
+            if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER)
+            {
+                opset1::infer_conv_backprop_auto_padding(
+                    Shape{std::next(data_shape.begin(), 2), std::end(data_shape)},
+                    Shape{std::next(filters_shape.begin(), 3), std::end(filters_shape)},
+                    output_shape,
+                    m_strides,
+                    m_dilations,
+                    m_auto_pad,
+                    m_output_padding,
+                    m_pads_begin,
+                    m_pads_end);
+            }
 
             // GROUP * C_OUTPUT
             output_shape.insert(output_shape.begin(), filters_shape.at(0) * filters_shape.at(2));
@@ -372,14 +374,15 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
             const Shape& data_shape = data_pshape.to_shape();
 
             Shape output_shape;
-            opset1::infer_output_spatial_shape(data_shape,
-                                               filters_shape,
-                                               m_strides,
-                                               m_dilations,
-                                               m_pads_begin,
-                                               m_pads_end,
-                                               m_output_padding,
-                                               output_shape);
+            opset1::infer_output_spatial_shape(
+                Shape{std::next(data_shape.begin(), 2), std::end(data_shape)},
+                Shape{std::next(filters_shape.begin(), 3), std::end(filters_shape)},
+                m_strides,
+                m_dilations,
+                m_pads_begin,
+                m_pads_end,
+                m_output_padding,
+                output_shape);
 
             // GROUP * C_OUTPUT
             output_shape.insert(output_shape.begin(), filters_shape.at(0) * filters_shape.at(2));
