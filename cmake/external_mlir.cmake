@@ -17,11 +17,9 @@
 include(ExternalProject)
 
 set(MLIR_LLVM_REPO_URL https://github.com/llvm/llvm-project.git)
-set(MLIR_REPO_URL https://github.com/tensorflow/mlir.git)
 
 # Change these commit IDs to move to latest stable versions
-set(MLIR_LLVM_COMMIT_ID c36773c7)
-set(MLIR_COMMIT_ID 606e96a1)
+set(MLIR_LLVM_COMMIT_ID d6295255)
 
 # MLIR environment variables. Some of them are used by LIT tool.
 
@@ -32,9 +30,10 @@ else()
 endif()
 
 set(MLIR_LLVM_ROOT ${MLIR_PROJECT_ROOT}/llvm-projects)
-set(MLIR_SOURCE_DIR ${MLIR_LLVM_ROOT}/llvm/projects/mlir)
-set(MLIR_BUILD_DIR ${MLIR_LLVM_ROOT}/build)
-set(MLIR_TOOLS_DIR ${MLIR_BUILD_DIR}/bin)
+set(MLIR_LLVM_SOURCE_DIR ${MLIR_LLVM_ROOT}/llvm)
+set(MLIR_SOURCE_DIR ${MLIR_LLVM_ROOT}/mlir)
+set(MLIR_LLVM_BUILD_DIR ${MLIR_PROJECT_ROOT}/build)
+set(MLIR_LLVM_TOOLS_DIR ${MLIR_LLVM_BUILD_DIR}/bin)
 set(NGRAPH_LIT_TEST_SRC_DIR ${CMAKE_SOURCE_DIR}/test/mlir)
 set(NGRAPH_LIT_TEST_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/test/mlir)
 
@@ -51,7 +50,7 @@ if (NOT NGRAPH_USE_PREBUILT_MLIR)
                     -DCMAKE_CXX_FLAGS:STRING=${CMAKE_ORIGINAL_CXX_FLAGS} .
                     WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
-    # clone and build llvm, mlir
+    # clone and build llvm + mlir
     include(ProcessorCount)
     ProcessorCount(N)
     if(("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles") AND (NOT N EQUAL 0))
@@ -64,7 +63,7 @@ if (NOT NGRAPH_USE_PREBUILT_MLIR)
 endif()
 
 # Enable modules for LLVM.
-set(LLVM_DIR "${MLIR_BUILD_DIR}/lib/cmake/llvm"
+set(LLVM_DIR "${MLIR_LLVM_BUILD_DIR}/lib/cmake/llvm"
     CACHE PATH "Path to LLVM cmake modules")
 list(APPEND CMAKE_MODULE_PATH "${LLVM_DIR}")
 include(AddLLVM)
@@ -77,7 +76,7 @@ message(STATUS "Using modules in: ${LLVM_DIR}")
 message(STATUS "LLVM RTTI is ${LLVM_ENABLE_RTTI}")
 
 set(MLIR_SRC_INCLUDE_PATH ${MLIR_SOURCE_DIR}/include)
-set(MLIR_BIN_INCLUDE_PATH ${MLIR_BUILD_DIR}/projects/mlir/include)
+set(MLIR_BIN_INCLUDE_PATH ${MLIR_LLVM_BUILD_DIR}/tools/mlir/include)
 set(MLIR_INCLUDE_PATHS ${MLIR_SRC_INCLUDE_PATH};${MLIR_BIN_INCLUDE_PATH})
 set(MLIR_LLVM_INCLUDE_PATH ${LLVM_INCLUDE_DIRS})
 
