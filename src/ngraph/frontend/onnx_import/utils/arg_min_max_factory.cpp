@@ -60,6 +60,7 @@ namespace ngraph
                                                           default_opset::TopK::SortType::NONE);
 
                 const auto indices = std::make_shared<ngraph::opset0::GetOutputElement>(topk, 1);
+
                 if (m_keep_dims == 0)
                 {
                     const auto reshaped_indices =
