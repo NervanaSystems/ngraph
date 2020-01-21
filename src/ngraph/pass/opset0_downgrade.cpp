@@ -379,9 +379,6 @@ namespace
     {
         const auto data_arg = node->input_value(0);
         const auto filters_arg = node->input_value(1);
-        const auto& strides = node->get_strides();
-        const auto& dilations = node->get_dilations();
-        const auto& output_padding = node->get_output_padding();
 
         NGRAPH_CHECK(data_arg.get_partial_shape().is_static(),
                      "Unable to convert GroupConvolutionBackpropData:1 to "
@@ -394,58 +391,22 @@ namespace
                      *node);
 
         auto filters_shape = filters_arg.get_shape();
-        const auto& data_shape = data_arg.get_shape();
         const size_t groups = filters_shape.at(0);
 
-        auto pads_begin = node->get_pads_begin();
-        auto pads_end = node->get_pads_end();
-
-        Shape output_shape;
-        if (node->inputs().size() > 2)
-        {
-            auto output_shape_input =
-                as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
-            NGRAPH_CHECK(output_shape_input,
-                         "Unable to convert GroupConvolutionBackpropData:v1 to "
-                         "GroupConvolutionBackpropData:v0 "
-                         "if output_shape is not constant. Node: ",
-                         *node);
-            output_shape = output_shape_input->get_shape_val();
-        }
-        else
-        {
-            const size_t num_spatial_dims = data_shape.size() - 2;
-
-            for (size_t i = 0; i < num_spatial_dims; ++i)
-            {
-                size_t val = strides[i] * (data_shape[i + 2] - 1) +
-                             dilations[i] * (filters_shape[i + 3] - 1) + 1 - pads_begin[i] -
-                             pads_end[i] + output_padding[i];
-                output_shape.push_back(val);
-            }
-        }
+        const PartialShape output_pshape{node->output(0).get_partial_shape()};
+        NGRAPH_CHECK(output_pshape.is_static(),
+                     "Unable to convert GroupConvolutionBackpropData:v1 to "
+                     "GroupConvolutionBackpropData:v0 "
+                     "if output_shape is dynamic. Node: ",
+                     *node);
+        Shape output_shape = output_pshape.to_shape();
 
         // Convert filters data layout from [GROUPS, C_INPUT, C_OUTPUT, K_D, ..., K_1]
         // into [C x M/group x k1 x k2 x ... x kn]
         filters_shape.erase(filters_shape.begin());
         filters_shape[0] *= groups;
 
-        output_shape.insert(output_shape.begin(), filters_shape[1] * groups);
-        output_shape.insert(output_shape.begin(), data_shape[0]);
-
         auto reshaped_filters = builder::opset1::reshape(node->input_value(1), filters_shape);
-        auto auto_pad = node->get_auto_pad();
-
-        if (auto_pad == op::PadType::SAME_UPPER || auto_pad == op::PadType::SAME_LOWER)
-        {
-            infer_auto_padding(output_shape,
-                               Shape(filters_shape.begin() + 2, filters_shape.end()),
-                               strides,
-                               dilations,
-                               auto_pad,
-                               pads_begin,
-                               pads_end);
-        }
 
         auto replacement_node = make_shared<op::v0::GroupConvolutionBackpropData>(
             op::Constant::create(data_arg.get_element_type(), output_shape, {0}),
@@ -453,8 +414,8 @@ namespace
             data_arg,
             node->get_strides(),
             node->get_dilations(),
-            pads_begin,
-            pads_end,
+            node->get_pads_begin(),
+            node->get_pads_end(),
             groups);
         replace_node(node, replacement_node);
         return true;
