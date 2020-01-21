@@ -31,7 +31,6 @@ using namespace mlir;
 
 OpBuilder createBuilder(MLIRContext* context)
 {
-    auto module = ModuleOp::create(UnknownLoc::get(context));
     auto funcType = FunctionType::get({}, {}, context);
     auto function = FuncOp::create(UnknownLoc::get(context), "main", funcType);
     function.addEntryBlock();
