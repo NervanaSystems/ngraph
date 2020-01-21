@@ -181,9 +181,10 @@ TEST(opset_transform, opset1_group_convolution_backprop_data_upgrade_pass)
     auto dilations = Strides{1};
     auto padding_begin = CoordinateDiff{2};
     auto padding_end = CoordinateDiff{3};
+    size_t groups = 4;
 
     auto group_conv_backprop = make_shared<op::v0::GroupConvolutionBackpropData>(
-        data_batch_shape, filters, delta, strides, dilations, padding_begin, padding_end, 4);
+        data_batch_shape, filters, delta, strides, dilations, padding_begin, padding_end, groups);
     auto result = make_shared<op::Result>(group_conv_backprop);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{filters, delta});
 
@@ -200,8 +201,7 @@ TEST(opset_transform, opset1_group_convolution_backprop_data_upgrade_pass)
     EXPECT_EQ(group_conv_backprop_v1_node->get_dilations(), dilations);
     EXPECT_EQ(group_conv_backprop_v1_node->get_pads_begin(), padding_begin);
     EXPECT_EQ(group_conv_backprop_v1_node->get_pads_end(), padding_end);
-    EXPECT_EQ(group_conv_backprop_v1_node->get_output_shape().to_shape(),
-              (data_batch_shape->get_shape()));
+    EXPECT_EQ(node->get_output_shape(0), (data_batch_shape->get_shape()));
     EXPECT_EQ(group_conv_backprop_v1_node->get_auto_pad(), op::PadType::EXPLICIT);
     EXPECT_EQ(group_conv_backprop_v1_node->get_output_padding(), (CoordinateDiff{0}));
 }
