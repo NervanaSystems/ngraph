@@ -865,7 +865,6 @@ namespace
             {
                 const std::string provenance_tag =
                     "<Opset0_Downgrade (v1 " + std::string(node->get_type_name()) + ")>";
-                downgraded_node->add_provenance_tag(provenance_tag);
                 downgraded_node->add_provenance_tags_above(node->input_values(), {provenance_tag});
             }
             return true;
