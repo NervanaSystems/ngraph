@@ -65,22 +65,26 @@ namespace ngraph
 
                     int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
 
-                    ASSERT_VALID_ARGUMENT(
-                        node,
-                        ((groups >= 0) &&
-                         (groups <= static_cast<int64_t>(data->get_shape().at(1))) &&
-                         (groups <= static_cast<int64_t>(filters->get_shape().at(0)))))
-                        << "incorrect value of 'group' attribute: " << groups;
+                    CHECK_VALID_NODE(node,
+                                     ((groups >= 0) &&
+                                      (groups <= static_cast<int64_t>(data->get_shape().at(1))) &&
+                                      (groups <= static_cast<int64_t>(filters->get_shape().at(0)))),
+                                     "incorrect value of 'group' attribute: ",
+                                     groups);
 
                     std::size_t n_data_channels{data_shape.at(1)};
                     std::size_t n_filters_channels{weights_shape.at(0)};
 
-                    ASSERT_VALID_ARGUMENT(node, n_data_channels % groups == 0)
-                        << "provided group attribute value must be a multiple of data channels "
-                           "count.";
-                    ASSERT_VALID_ARGUMENT(node, n_filters_channels % groups == 0)
-                        << "provided group attribute value must be a multiple of filter channels "
-                           "count.";
+                    CHECK_VALID_NODE(
+                        node,
+                        n_data_channels % groups == 0,
+                        "provided group attribute value must be a multiple of data channels "
+                        "count.");
+                    CHECK_VALID_NODE(
+                        node,
+                        n_filters_channels % groups == 0,
+                        "provided group attribute value must be a multiple of filter channels "
+                        "count.");
 
                     // reshape filters to match desired shape:
                     // [GROUPS, C_INPUT, C_OUTPUT, K_D, ..., K_1]
@@ -94,6 +98,16 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> conv_node;
                     if (!output_shape.empty())
                     {
+                        CHECK_VALID_NODE(
+                            node,
+                            output_shape.size() == num_spatial_dims,
+                            "incorrect output_shape size. Got: ",
+                            output_shape.size(),
+                            ", but expected: ",
+                            num_spatial_dims,
+                            "output_shape attribute must be defined for all and only input data "
+                            "spatial dimensions");
+
                         conv_node = std::make_shared<default_opset::GroupConvolutionBackpropData>(
                             data,
                             filters,
