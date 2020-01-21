@@ -180,11 +180,6 @@ namespace
     {
         const auto data_arg = node->input(0).get_source_output();
         const auto filters_arg = node->input(1).get_source_output();
-        const auto& strides = node->get_strides();
-        const auto& dilations = node->get_dilations();
-        const auto& output_padding = node->get_output_padding();
-
-        const size_t num_spatial_dims = strides.size();
 
         auto data_pshape = data_arg.get_partial_shape();
         auto filters_pshape = filters_arg.get_partial_shape();
@@ -194,6 +189,8 @@ namespace
                      "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
                      "if data shape N and filters shape C dimensions are not static. Node: ",
                      *node);
+
+        const size_t num_spatial_dims = static_cast<size_t>(data_pshape.rank()) - 2;
 
         const PartialShape output_pshape{node->output(0).get_partial_shape()};
         NGRAPH_CHECK(output_pshape.is_static(),
