@@ -335,6 +335,58 @@ TEST(provenance, add_group_above)
     EXPECT_EQ(m1->get_provenance_tags(), (ProvSet{"m1"}));
 }
 
+TEST(provenance, add_tags_above)
+{
+    auto x = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+    auto y = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+
+    auto a = make_shared<op::Add>(x, y);
+    auto b = make_shared<op::Multiply>(x, y);
+    auto c = make_shared<op::Subtract>(a, b);
+    auto d = make_shared<op::Abs>(c);
+
+    auto f = make_shared<Function>(d, ParameterVector{x, y});
+
+    // Add tags to Subtract and all nodes until Parameters (all above c, until params x, y)
+    c->add_provenance_tags_above(OutputVector{x, y}, {"tag_above_c - until_params"});
+    // Add tags to Abs and Subtract (above d, until c inputs)
+    d->add_provenance_tags_above(c->input_values(), {"tag_above_d - until_c_inputs"});
+    // Add tags to Abs and all nodes above
+    d->add_provenance_tags_above(OutputVector{}, {"tag_all_above_d"});
+
+    auto x_tags = x->get_provenance_tags();
+    EXPECT_EQ(x_tags.size(), 1);
+    EXPECT_EQ(x_tags.find("tag_all_above_d") != x_tags.end(), true);
+
+    auto y_tags = y->get_provenance_tags();
+    EXPECT_EQ(y_tags.size(), 1);
+    EXPECT_EQ(y_tags.find("tag_all_above_d") != y_tags.end(), true);
+
+    auto a_tags = a->get_provenance_tags();
+    EXPECT_EQ(a_tags.size(), 2);
+    EXPECT_EQ(a_tags.find("tag_above_c - until_params") != a_tags.end(), true);
+    EXPECT_EQ(a_tags.find("tag_above_d - until_c_inputs") != a_tags.end(), false);
+    EXPECT_EQ(a_tags.find("tag_all_above_d") != a_tags.end(), true);
+
+    auto b_tags = b->get_provenance_tags();
+    EXPECT_EQ(b_tags.size(), 2);
+    EXPECT_EQ(b_tags.find("tag_above_c - until_params") != b_tags.end(), true);
+    EXPECT_EQ(b_tags.find("tag_above_d - until_c_inputs") != b_tags.end(), false);
+    EXPECT_EQ(b_tags.find("tag_all_above_d") != b_tags.end(), true);
+
+    auto c_tags = c->get_provenance_tags();
+    EXPECT_EQ(c_tags.size(), 3);
+    EXPECT_EQ(c_tags.find("tag_above_c - until_params") != c_tags.end(), true);
+    EXPECT_EQ(c_tags.find("tag_above_d - until_c_inputs") != c_tags.end(), true);
+    EXPECT_EQ(c_tags.find("tag_all_above_d") != c_tags.end(), true);
+
+    auto d_tags = d->get_provenance_tags();
+    EXPECT_EQ(d_tags.size(), 2);
+    EXPECT_EQ(d_tags.find("tag_above_c - until_params") != d_tags.end(), false);
+    EXPECT_EQ(d_tags.find("tag_above_d - until_c_inputs") != d_tags.end(), true);
+    EXPECT_EQ(d_tags.find("tag_all_above_d") != d_tags.end(), true);
+}
+
 TEST(provenance, builder)
 {
     auto p1 = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
