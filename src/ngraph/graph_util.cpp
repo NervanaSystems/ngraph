@@ -708,7 +708,7 @@ static bool check_for_cycles_bkwd(std::shared_ptr<ngraph::Node> node,
     path_set.insert(node);
     for (size_t i = 0; i < node->inputs().size(); i++)
     {
-        auto arg = node->get_input_node_shr_ptr(i);
+        auto arg = node->get_input_node_shared_ptr(i);
         if (path_set.find(arg) != path_set.end())
         {
             for (auto it : path)

@@ -244,7 +244,7 @@ static void replace_collapse_node_user(std::shared_ptr<Node> collapsed_node,
         NGRAPH_DEBUG << "node_name: " << node->get_name();
         for (size_t i = 0; i < node->get_input_size(); i++)
         {
-            if (node->get_input_node_shr_ptr(i) == collapsed_node)
+            if (node->get_input_node_shared_ptr(i) == collapsed_node)
             {
                 node->set_argument(i, new_output);
             }
