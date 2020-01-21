@@ -9,7 +9,7 @@ Some operations are experimental.
 :ref:`more_about`
 
 .. hlist:: 
-   :columns: 3
+   :columns: 4
 
    * :doc:`abs`
    * :doc:`acos`
@@ -19,6 +19,8 @@ Some operations are experimental.
    * :doc:`and`
    * :doc:`any`
    * :doc:`asin`
+   * :doc:`arg_max`
+   * :doc:`arg_min`
    * :doc:`atan`
    * :doc:`avg_pool`
    * :doc:`avg_pool_backprop`
@@ -78,6 +80,8 @@ Some operations are experimental.
    * :doc:`tan`
    * :doc:`tanh`
    * :doc:`transpose`
+   * :doc:`unsqueeze`
+   * :doc:`variadic_split`
    * :doc:`xor`
 
 
@@ -92,6 +96,8 @@ Some operations are experimental.
    allreduce.rst
    and.rst
    any.rst
+   arg_max.rst
+   arg_min.rst
    asin.rst
    atan.rst
    avg_pool.rst
@@ -152,6 +158,8 @@ Some operations are experimental.
    tan.rst
    tanh.rst
    transpose.rst
+   unsqueeze.rst
+   variadic_split.rst
    xor.rst
 
 
