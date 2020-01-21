@@ -169,6 +169,7 @@ TEST(opset_transform, opset1_group_convolution_backprop_data_downgrade_pass)
     EXPECT_EQ(group_conv_backprop_v0_node->get_window_dilation_strides(), dilations);
     EXPECT_EQ(group_conv_backprop_v0_node->get_padding_below(), padding_begin);
     EXPECT_EQ(group_conv_backprop_v0_node->get_padding_above(), padding_end);
+    EXPECT_EQ(group_conv_backprop_v0_node->input(1).get_shape(), (Shape{256, 3, 10}));
     EXPECT_EQ(group_conv_backprop_v0_node->get_groups(), groups);
 }
 
