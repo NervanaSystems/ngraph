@@ -50,16 +50,9 @@ if (NOT NGRAPH_USE_PREBUILT_MLIR)
                     -DCMAKE_CXX_FLAGS:STRING=${CMAKE_ORIGINAL_CXX_FLAGS} .
                     WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
-    # clone and build llvm + mlir
-    include(ProcessorCount)
-    ProcessorCount(N)
-    if(("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles") AND (NOT N EQUAL 0))
-        execute_process(COMMAND "${CMAKE_COMMAND}" --build . -- -j${N}
-            WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
-    else()
-        execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-            WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
-    endif()
+    # Clone and build llvm + mlir.
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+                    WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 endif()
 
 # Enable modules for LLVM.
