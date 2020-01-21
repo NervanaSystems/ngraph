@@ -345,8 +345,6 @@ TEST(provenance, add_tags_above)
     auto c = make_shared<op::Subtract>(a, b);
     auto d = make_shared<op::Abs>(c);
 
-    auto f = make_shared<Function>(d, ParameterVector{x, y});
-
     // Add tags to Subtract and all nodes until Parameters (all above c, until params x, y)
     c->add_provenance_tags_above(OutputVector{x, y}, {"tag_above_c - until_params"});
     // Add tags to Abs and Subtract (above d, until c inputs)
@@ -527,7 +525,7 @@ TEST(provenance, scaled_quantize_concat_unsigned)
     }
 }
 
-TEST(provenance, upgrade_pass_tag)
+TEST(provenance, opset1_upgrade_pass_topk)
 {
     set_provenance_enabled(true);
 
@@ -558,7 +556,7 @@ TEST(provenance, upgrade_pass_tag)
                    as_node_vector(topk_v0->input_values()));
 }
 
-TEST(provenance, downgrade_pass_tag)
+TEST(provenance, opset0_downgrade_pass_topk)
 {
     set_provenance_enabled(true);
 
@@ -591,4 +589,90 @@ TEST(provenance, downgrade_pass_tag)
                    tag_check,
                    false,
                    as_node_vector(topk_v1->input_values()));
+}
+
+TEST(provenance, opset1_upgrade_pass_graph)
+{
+    set_provenance_enabled(true);
+
+    auto x = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+    auto y = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+
+    auto a = make_shared<op::v0::Add>(x, y);
+    auto b = make_shared<op::v0::Subtract>(x, y);
+    auto c = make_shared<op::v0::Abs>(b);
+    auto d = make_shared<op::v0::Multiply>(a, b);
+
+    auto f = make_shared<Function>(d, ParameterVector{x, y});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.run_passes(f);
+
+    for (auto node : f->get_ordered_ops())
+    {
+        auto tags = node->get_provenance_tags();
+        if (as_type_ptr<op::v1::Add>(node))
+        {
+            EXPECT_EQ(tags.size(), 1);
+            EXPECT_EQ(tags.find("<Opset1_Upgrade (v0 Add)>") != tags.end(), true);
+        }
+        else if (as_type_ptr<op::v1::Multiply>(node))
+        {
+            EXPECT_EQ(tags.size(), 1);
+            EXPECT_EQ(tags.find("<Opset1_Upgrade (v0 Multiply)>") != tags.end(), true);
+        }
+        else if (as_type_ptr<op::v1::Subtract>(node))
+        {
+            EXPECT_EQ(tags.size(), 1);
+            EXPECT_EQ(tags.find("<Opset1_Upgrade (v0 Subtract)>") != tags.end(), true);
+        }
+        else if (as_type_ptr<op::v0::Abs>(node))
+        {
+            EXPECT_EQ(tags.empty(), true);
+        }
+    }
+}
+
+TEST(provenance, opset0_downgrade_pass_graph)
+{
+    set_provenance_enabled(true);
+
+    auto x = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+    auto y = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+
+    auto a = make_shared<op::v1::Add>(x, y);
+    auto b = make_shared<op::v1::Subtract>(x, y);
+    auto c = make_shared<op::v0::Abs>(b);
+    auto d = make_shared<op::v1::Multiply>(a, b);
+
+    auto f = make_shared<Function>(d, ParameterVector{x, y});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.run_passes(f);
+
+    for (auto node : f->get_ordered_ops())
+    {
+        auto tags = node->get_provenance_tags();
+        if (as_type_ptr<op::v0::Add>(node))
+        {
+            EXPECT_EQ(tags.size(), 1);
+            EXPECT_EQ(tags.find("<Opset0_Downgrade (v1 Add)>") != tags.end(), true);
+        }
+        else if (as_type_ptr<op::v0::Multiply>(node))
+        {
+            EXPECT_EQ(tags.size(), 1);
+            EXPECT_EQ(tags.find("<Opset0_Downgrade (v1 Multiply)>") != tags.end(), true);
+        }
+        else if (as_type_ptr<op::v0::Subtract>(node))
+        {
+            EXPECT_EQ(tags.size(), 1);
+            EXPECT_EQ(tags.find("<Opset0_Downgrade (v1 Subtract)>") != tags.end(), true);
+        }
+        else if (as_type_ptr<op::v0::Abs>(node))
+        {
+            EXPECT_EQ(tags.empty(), true);
+        }
+    }
 }
