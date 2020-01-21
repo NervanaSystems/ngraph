@@ -79,6 +79,9 @@ Some operations are experimental.
    * :doc:`subtract`
    * :doc:`tan`
    * :doc:`tanh`
+   * :doc:`tensor_iterator`
+   * :doc:`tile`
+   * :doc:`topk`
    * :doc:`transpose`
    * :doc:`unsqueeze`
    * :doc:`variadic_split`
@@ -157,6 +160,9 @@ Some operations are experimental.
    subtract.rst
    tan.rst
    tanh.rst
+   tensor_iterator.rst
+   tile,rst
+   topk.rst
    transpose.rst
    unsqueeze.rst
    variadic_split.rst
