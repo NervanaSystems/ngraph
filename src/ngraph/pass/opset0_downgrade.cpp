@@ -195,38 +195,12 @@ namespace
                      "if data shape N and filters shape C dimensions are not static. Node: ",
                      *node);
 
-        auto filters_shape = filters_arg.get_shape();
-        const auto& data_shape = data_arg.get_shape();
-
-        Shape output_shape;
-        if (node->inputs().size() > 2)
-        {
-            auto output_shape_input =
-                as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
-            NGRAPH_CHECK(
-                output_shape_input,
-                "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
-                "if output_shape is not constant. Node: ",
-                *node);
-            output_shape = output_shape_input->get_shape_val();
-        }
-        else
-        {
-            auto pads_begin = node->get_pads_begin();
-            auto pads_end = node->get_pads_end();
-
-            for (size_t i = 0; i < num_spatial_dims; ++i)
-            {
-                size_t val = strides[i] * (data_shape[i + 2] - 1) +
-                             dilations[i] * (filters_shape[i + 2] - 1) + 1 - pads_begin[i] -
-                             pads_end[i] + output_padding[i];
-                output_shape.push_back(val);
-            }
-        }
-
-        // Add N and C dimenstions to output_shape
-        output_shape.insert(output_shape.begin(), filters_shape[1]);
-        output_shape.insert(output_shape.begin(), data_shape[0]);
+        const PartialShape output_pshape{node->output(0).get_partial_shape()};
+        NGRAPH_CHECK(output_pshape.is_static(),
+                     "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
+                     "if output shape is dynamic. Node: ",
+                     *node);
+        Shape output_shape = output_pshape.to_shape();
 
         auto replacement_node =
             make_shared<op::v0::ConvolutionBackpropData>(output_shape,
