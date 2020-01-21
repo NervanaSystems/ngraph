@@ -368,6 +368,14 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
     // and padding values.
     else
     {
+        NODE_VALIDATION_CHECK(this,
+                              m_auto_pad == PadType::VALID || m_auto_pad == PadType::EXPLICIT,
+                              "If output shape input is absent auto padding can't be used. "
+                              "Got auto_pad: <",
+                              m_auto_pad,
+                              "> Expected: ",
+                              PadType::VALID);
+
         if (data_pshape.is_static() && filters_pshape.is_static())
         {
             const Shape& filters_shape = filters_pshape.to_shape();
