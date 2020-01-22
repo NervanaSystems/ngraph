@@ -254,6 +254,48 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
         filters_et,
         ").");
 
+    if (data_pshape.is_static() && filters_pshape.is_static())
+    {
+        const Shape& data_shape = data_pshape.to_shape();
+        const Shape& filters_shape = filters_pshape.to_shape();
+
+        if (m_pads_begin.size() == 0)
+        {
+            m_pads_begin = conv_default_padding(this, data_pshape, filters_pshape);
+        }
+        if (m_pads_end.size() == 0)
+        {
+            m_pads_end = conv_default_padding(this, data_pshape, filters_pshape);
+        }
+        if (m_output_padding.size() == 0)
+        {
+            m_output_padding = conv_default_padding(this, data_pshape, filters_pshape);
+        }
+        if (m_strides.size() == 0)
+        {
+            m_strides = conv_default_strides(this, data_pshape, filters_pshape);
+        }
+        if (m_dilations.size() == 0)
+        {
+            m_dilations = conv_default_strides(this, data_pshape, filters_pshape);
+        }
+
+        const size_t num_spatial_dims = data_shape.size() - 2;
+
+        NODE_VALIDATION_CHECK(this,
+                              m_strides.size() == num_spatial_dims,
+                              "Strides should be defined for all and only spatial features.");
+
+        NODE_VALIDATION_CHECK(this,
+                              m_dilations.size() == num_spatial_dims,
+                              "Dilations should be defined for all and only spatial features.");
+
+        NODE_VALIDATION_CHECK(this,
+                              m_output_padding.size() == num_spatial_dims,
+                              "Output padding should be defined for all and only "
+                              "spatial features.");
+    }
+
     PartialShape result_shape;
     if (is_output_shape_present)
     {
