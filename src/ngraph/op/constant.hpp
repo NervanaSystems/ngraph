@@ -49,7 +49,8 @@ namespace ngraph
                 Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
                     : m_element_type(type)
                     , m_shape(shape)
-                    , m_data(new runtime::AlignedBuffer(m_element_type.size(), host_alignment()))
+                    , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
+                                                        host_alignment()))
                 {
                     NODE_VALIDATION_CHECK(
                         this,
