@@ -9,6 +9,8 @@
 
 ## Quick start
 
+ABC!
+
 To begin using nGraph with popular frameworks, please refer to the links below. 
 
 |  Framework (Version)       | Installation guide                     | Notes  
