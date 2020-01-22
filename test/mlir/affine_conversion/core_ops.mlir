@@ -150,7 +150,8 @@ func @simple_dot(%arg0: !ng.tensor<16x8xf32>, %arg1: !ng.tensor<8x32xf32>) -> !n
 // -----
 
 // std.view 
-// CHECK-DAG: #[[MAP0:[a-zA-Z0-9]+]] = (d0, d1) -> (d0 * 2 + d1)
+
+// CHECK:     #[[MAP0:[a-zA-Z0-9]+]] = affine_map<(d0, d1) -> (d0 * 2 + d1)>
 // CHECK:       %[[T1:[0-9]+]] = alloc() : memref<24xi8>
 // CHECK-NEXT:  %[[T2:[0-9]+]] = std.view %[[T1]][][] : memref<24xi8> to memref<3x2xf32, #[[MAP0]]>
 // CHECK:       affine.store %{{[0-9]+}}, %[[T2]][%{{.*}}, %{{.*}}] : memref<3x2xf32, #[[MAP0]]>
@@ -198,12 +199,12 @@ func @convolution(%arg0: !ng.tensor<1x2x2x2xf32>, %arg1: !ng.tensor<2x2x1x1xf32>
 // -----
 //
 // Group Convolution
-// CHECK-DAG: #[[M0:.*]] = (d0) -> (d0 * 2)
-// CHECK-DAG: #[[M1:.*]] = (d0) -> (d0 * 2 + 2)
-// CHECK-DAG: #[[M2:.*]] = (d0) -> (d0)
-// CHECK-DAG: #[[M3:.*]] = (d0) -> (d0 + 1)
-// CHECK-DAG: #[[M8:.*]] = (d0, d1) -> (d0 + d1)
-// CHECK-DAG: #[[M9:.*]] = (d0, d1) -> (d0 - d1 * 2)
+// CHECK-DAG: #[[M0:.*]] = affine_map<(d0) -> (d0 * 2)>
+// CHECK-DAG: #[[M1:.*]] = affine_map<(d0) -> (d0 * 2 + 2)>
+// CHECK-DAG: #[[M2:.*]] = affine_map<(d0) -> (d0)>
+// CHECK-DAG: #[[M3:.*]] = affine_map<(d0) -> (d0 + 1)>
+// CHECK-DAG: #[[M8:.*]] = affine_map<(d0, d1) -> (d0 + d1)>
+// CHECK-DAG: #[[M9:.*]] = affine_map<(d0, d1) -> (d0 - d1 * 2)>
 // CHECK-LABEL: func @groupConv
 //
 // Outer groups loops
