@@ -38,7 +38,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
             return modified;
         }
         auto subgraph_outputs = node->decompose_op();
-        
+
         if (ngraph::get_provenance_enabled())
         {
             // Capture the input values as an edge for provenance
@@ -46,14 +46,14 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
             auto provenance_tags = node->get_provenance_tags();
             const std::string tag = "<Decomposed from " + std::string(node->get_type_name()) + ">";
             provenance_tags.insert(tag);
-            
+
             // Transfer the new provenance tags to the newly created ops
             for (auto output_node : subgraph_outputs)
             {
                 output_node->add_provenance_tags_above(base_input_values, provenance_tags);
             }
         }
-       
+
         // Run recursively until no more fused ops
         auto subgraph = extract_subgraph(subgraph_outputs, node->get_arguments());
         for (auto subgraph_node : subgraph)
