@@ -14,29 +14,26 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
-#include "util/type_prop.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include "ngraph/runtime/reference/round.hpp"
 
-TEST(type_prop, log_softmax)
+namespace ngraph
 {
-    const auto data = make_shared<op::Parameter>(element::f64, Shape{2, 2});
-    const auto axis = 2;
-    try
+    namespace runtime
     {
-        const auto log_softmax = make_shared<op::LogSoftmax>(data, axis);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid axis value not detected";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Parameter axis "));
-    }
-    catch (...)
-    {
-        FAIL() << "Log softmax failed for unexpected reason";
+        namespace cpu
+        {
+            namespace kernel
+            {
+                template <typename ElementType>
+                void round(void* arg, void* output, size_t count, int arena)
+                {
+                    reference::round<ElementType>(static_cast<const ElementType*>(arg),
+                                                  static_cast<ElementType*>(output),
+                                                  count);
+                }
+            }
+        }
     }
 }

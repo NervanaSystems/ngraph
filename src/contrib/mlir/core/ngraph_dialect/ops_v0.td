@@ -61,14 +61,14 @@ def NGNotEqOp     : NG_Cmp_Op<"not.equal",  [OpVersion0]>;
 // Other
 def NGSelectOp    : NG_Ternary_Op<"select", [OpVersion0]>
 {
-  let verifier = [{ return verifyOp(this); }];
+  let verifier = [{ return verifyOp(*this); }];
 }
 
 // Dot Product
 def NGDotOp : NG_Binary_Op<"dot", [OpVersion0]>
 {
   // TODO: Add reduction axis attribute when needed.
-  let verifier = [{ return verifyOp(this); }];
+  let verifier = [{ return verifyOp(*this); }];
 }
 
 // TODO(amprocte): Might be nice to rebase this on some sort of NG_Variadic_Op
@@ -80,56 +80,56 @@ def NGConcatOp :
 {
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
-  let verifier = [{ return verifyOp(this); }];
+  let verifier = [{ return verifyOp(*this); }];
 }
 
 // Axis reduction operations.
 def NGSumRedOp : NG_Axis_Reduction_Op<"sum.red", [OpVersion0]>
 {
   let summary = "Axis sum reduction of a tensor.";
-  let verifier = [{ return verifyAxisReductionOp(this); }];
+  let verifier = [{ return verifyAxisReductionOp(*this); }];
 }
 
 def NGProdRedOp : NG_Axis_Reduction_Op<"prod.red", [OpVersion0]>
 {
   let summary = "Axis product reduction of a tensor.";
-  let verifier = [{ return verifyAxisReductionOp(this); }];
+  let verifier = [{ return verifyAxisReductionOp(*this); }];
 }
 
 def NGMinRedOp : NG_Axis_Reduction_Op<"min.red", [OpVersion0]>
 {
   let summary = "Axis minimum reduction of a tensor.";
-  let verifier = [{ return verifyAxisReductionOp(this); }];
+  let verifier = [{ return verifyAxisReductionOp(*this); }];
 }
 
 def NGMaxRedOp : NG_Axis_Reduction_Op<"max.red", [OpVersion0]>
 {
   let summary = "Axis maximum reduction of a tensor.";
-  let verifier = [{ return verifyAxisReductionOp(this); }];
+  let verifier = [{ return verifyAxisReductionOp(*this); }];
 }
 
 def NGArgMinRedOp : NG_Axis_Reduction_Op<"argmin.red", [OpVersion0]>
 {
   let summary = "Axis minimum index reduction of a tensor.";
-  let verifier = [{ return verifyIndexReductionOp(this); }];
+  let verifier = [{ return verifyIndexReductionOp(*this); }];
 }
 
 def NGArgMaxRedOp : NG_Axis_Reduction_Op<"argmax.red", [OpVersion0]>
 {
   let summary = "Axis maximum index reduction of a tensor.";
-  let verifier = [{ return verifyIndexReductionOp(this); }];
+  let verifier = [{ return verifyIndexReductionOp(*this); }];
 }
 
 def NGAllRedOp : NG_Axis_Reduction_Op<"all.red", [OpVersion0]>
 {
   let summary = "Axis logical AND reduction of a boolean tensor.";
-  let verifier = [{ return verifyLogicalReductionOp(this); }];
+  let verifier = [{ return verifyLogicalReductionOp(*this); }];
 }
 
 def NGAnyRedOp : NG_Axis_Reduction_Op<"any.red", [OpVersion0]>
 {
   let summary = "Axis logical OR reduction of a boolean tensor.";
-  let verifier = [{ return verifyLogicalReductionOp(this); }];
+  let verifier = [{ return verifyLogicalReductionOp(*this); }];
 }
 
 // Gather
@@ -147,7 +147,7 @@ def NGGatherOp :
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
-  let verifier = [{ return verifyOp(this); }];
+  let verifier = [{ return verifyOp(*this); }];
 }
 
 // Convolution
@@ -171,7 +171,7 @@ def NGConvolutionOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];
+  let verifier = [{ return verifyOp(*this); }];
   let extraClassDeclaration = [{
     void setStrides(ArrayAttr& arrayAttr)  { this->setAttr("strides", arrayAttr);  }
     void setPadBelow(ArrayAttr& arrayAttr) { this->setAttr("padBelow", arrayAttr); }
@@ -210,10 +210,10 @@ def NGAvgPoolOp :
     }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+    let verifier = [{ return verifyOp(*this); }];
     let builders = [
       OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, Value *arg," 
+      "Builder *builder, OperationState &tblgen_state, Type res, Value arg," 
        "ArrayAttr windowShape, ArrayAttr windowMovementStrides,"
        "ArrayAttr padBelow, ArrayAttr padAbove, BoolAttr includPadding, IntegerAttr padType", [{
         tblgen_state.addOperands(arg);
@@ -227,7 +227,7 @@ def NGAvgPoolOp :
       }]>,
 
       OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, Value *arg," 
+      "Builder *builder, OperationState &tblgen_state, Type res, Value arg," 
        "ArrayAttr windowShape, ArrayAttr windowMovementStrides,"
        "ArrayAttr padBelow, ArrayAttr padAbove, BoolAttr includPadding", [{
         tblgen_state.addOperands(arg);
@@ -252,8 +252,8 @@ def NGAvgPoolOp :
 }
 
 // AvgPool for back prop
-def NGAvgPoolBackPropOp :
-    NG_OneResult_Op<"avgPoolBackProp", [NoSideEffect, OpVersion0]>,
+def NGAvgPoolBackpropOp :
+    NG_OneResult_Op<"avgPoolBackprop", [NoSideEffect, OpVersion0]>,
     Arguments<(ins I64ArrayAttr :$forwardArgShape,
                NG_TensorType    :$delta, 
                I64ArrayAttr     :$windowShape,
@@ -269,7 +269,7 @@ def NGAvgPoolBackPropOp :
     }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+    let verifier = [{ return verifyOp(*this); }];
     
     let extraClassDeclaration = [{
       void setForwardArgShape(const ArrayAttr& arrayAttr) { this->setAttr("forwardArgShape", arrayAttr); }
@@ -296,7 +296,7 @@ def NGBatchNormTrainingOp :
     }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+    let verifier = [{ return verifyOp(*this); }];
 
     let extraClassDeclaration = [{
       void setEpsilon(const Attribute& attr)  { this->setAttr("epsilon", attr);  }
@@ -320,7 +320,7 @@ def NGBatchNormInferenceOp :
     }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+    let verifier = [{ return verifyOp(*this); }];
     let extraClassDeclaration = [{
       void setEpsilon(const Attribute& attr)  { this->setAttr("epsilon", attr);  }
     }];
@@ -345,7 +345,7 @@ def NGBatchNormTrainingBackPropOp :
     }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+    let verifier = [{ return verifyOp(*this); }];
     let extraClassDeclaration = [{
       void setEpsilon(const Attribute& attr)  { this->setAttr("epsilon", attr);  }
     }];
@@ -366,7 +366,7 @@ def NGBroadcastOp :
     }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+    let verifier = [{ return verifyOp(*this); }];
     let extraClassDeclaration = [{
       void setAxisSet(const ArrayAttr& attr)  { this->setAttr("axisSet", attr); }
       void setShape(const ArrayAttr& attr)    { this->setAttr("shape", attr);   }
@@ -387,7 +387,7 @@ def NGConstantOp :
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];
+  let verifier = [{ return verifyOp(*this); }];
 }
 
 // MaxPool
@@ -416,23 +416,10 @@ def NGMaxPoolOp :
     }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+    let verifier = [{ return verifyOp(*this); }];
     let builders = [
       OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, Value *arg," 
-       "ArrayAttr windowShape, ArrayAttr windowMovementStrides,"
-       "ArrayAttr padBelow, ArrayAttr padAbove, IntegerAttr padType", [{
-        tblgen_state.addOperands(arg);
-        tblgen_state.addAttribute("windowShape", windowShape);
-        tblgen_state.addAttribute("windowMovementStrides", windowMovementStrides);
-        tblgen_state.addAttribute("padBelow", padBelow);
-        tblgen_state.addAttribute("padAbove", padAbove);
-        tblgen_state.addAttribute("padType", padType);
-        tblgen_state.addTypes(res);
-      }]>,
-
-      OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, Value *arg," 
+      "Builder *builder, OperationState &tblgen_state, Type res, Value arg," 
        "ArrayAttr windowShape, ArrayAttr windowMovementStrides,"
        "ArrayAttr padBelow, ArrayAttr padAbove", [{
         tblgen_state.addOperands(arg);
@@ -455,11 +442,10 @@ def NGMaxPoolOp :
 }
 
 // MaxPool for back prop
-def NGMaxPoolBackPropOp :
-    NG_OneResult_Op<"maxPoolBackProp", [NoSideEffect, OpVersion0]>,
+def NGMaxPoolBackpropOp :
+    NG_OneResult_Op<"maxPoolBackprop", [NoSideEffect, OpVersion0]>,
     Arguments<(ins NG_TensorType :$argForward,
                NG_TensorType     :$delta, 
-               NG_TensorType     :$resultForward,
                I64ArrayAttr      :$windowShape,
                I64ArrayAttr      :$windowMovementStrides,
                I64ArrayAttr      :$padBelow,
@@ -472,25 +458,8 @@ def NGMaxPoolBackPropOp :
     }];
     
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
-    let builders = [
-      // Builder without resultForward
-      OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, " 
-       "Value *argForward, Value *delta, "
-       "ArrayAttr windowShape, ArrayAttr windowMovementStrides, "
-       "ArrayAttr padBelow, ArrayAttr padAbove", [{
-        tblgen_state.addOperands(argForward);
-        tblgen_state.addOperands(delta);
-        tblgen_state.addOperands(nullptr);
-        tblgen_state.addAttribute("windowShape", windowShape);
-        tblgen_state.addAttribute("windowMovementStrides", windowMovementStrides);
-        tblgen_state.addAttribute("padBelow", padBelow);
-        tblgen_state.addAttribute("padAbove", padAbove);
-        tblgen_state.addTypes(res);
-      }]>
-    ];
-
+    let verifier = [{ return verifyOp(*this); }];
+    
     let extraClassDeclaration = [{
       void setWindowShape(const ArrayAttr& arrayAttr)     { this->setAttr("windowShape", arrayAttr);     }
       void setWindowMovementStrides(const ArrayAttr& arrayAttr) { this->setAttr("windowMovementStrides", arrayAttr);}
@@ -528,12 +497,12 @@ def NGPadOp :
                DefaultValuedAttr<PadModeEnumAttr, "MLIRPadMode::CONSTANT"> :$padMode)>
 {
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+    let verifier = [{ return verifyOp(*this); }];
     let builders = [
       // Builder without padMode
       OpBuilder<
       "Builder *builder, OperationState &tblgen_state, Type res, " 
-       "Value *arg, Value *padValue, "
+       "Value arg, Value padValue, "
        "ArrayAttr padBelow, ArrayAttr padAbove", [{
         tblgen_state.addOperands(arg);
         tblgen_state.addOperands(padValue);
@@ -574,7 +543,7 @@ def NGReplaceSliceOp :
                    slice to be replaced.
     }];
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+    let verifier = [{ return verifyOp(*this); }];
     let extraClassDeclaration = [{
       void setLowerBounds(const ArrayAttr& arrayAttr) { this->setAttr("lowerBounds", arrayAttr); }
       void setUpperBounds(const ArrayAttr& arrayAttr) { this->setAttr("upperBounds", arrayAttr); }
@@ -602,7 +571,7 @@ def NGSliceOp :
                    slice to be replaced.
     }];
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+    let verifier = [{ return verifyOp(*this); }];
     let extraClassDeclaration = [{
       void setLowerBounds(const ArrayAttr& arrayAttr) { this->setAttr("lowerBounds", arrayAttr); }
       void setUpperBounds(const ArrayAttr& arrayAttr) { this->setAttr("upperBounds", arrayAttr); }
@@ -628,7 +597,7 @@ def NGReshapeOp :
                   Pi(a_i) = Pi(b_i)
     }];
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+    let verifier = [{ return verifyOp(*this); }];
     let extraClassDeclaration = [{
       void setAxisOrder(const ArrayAttr& arrayAttr) { this->setAttr("axisOrder", arrayAttr); }
       void setShape(const ArrayAttr& arrayAttr)     { this->setAttr("shape", arrayAttr); }
@@ -648,7 +617,7 @@ def NGSoftMaxOp :
     }];
 
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+    let verifier = [{ return verifyOp(*this); }];
     let extraClassDeclaration = [{
       void setAxes(const ArrayAttr& arrayAttr) { this->setAttr("axes", arrayAttr); }
     }];
@@ -675,7 +644,7 @@ def NGTopKOp :
     }];
 
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-    let verifier = [{ return verifyOp(this); }];
+    let verifier = [{ return verifyOp(*this); }];
     let extraClassDeclaration = [{
       void setK(const Attribute& attr)          { this->setAttr("k", attr); }
       void setAxis(const Attribute& attr)       { this->setAttr("axis", attr); }

@@ -14,26 +14,21 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/op/round.hpp"
 
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/runtime/cpu/cpu_external_function.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+constexpr NodeTypeInfo op::Round::type_info;
+
+op::Round::Round(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            namespace pass
-            {
-                class HalideSubgraphExtraction : public ngraph::pass::FunctionPass
-                {
-                public:
-                    HalideSubgraphExtraction() {}
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-            }
-        }
-    }
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::Round::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<Round>(new_args.at(0));
 }

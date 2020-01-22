@@ -16,28 +16,36 @@
 
 #pragma once
 
-#include <Halide.h>
-#include <HalideBuffer.h>
-#include <functional>
-#include <memory>
-#include <typeindex>
-#include <typeinfo>
-#include <unordered_map>
-#include <vector>
-
-#include "ngraph/node.hpp"
+#include <cmath>
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace cpu
+        namespace reference
         {
-            namespace halide
+            template <typename T>
+            T round_to_nearest_even(const T arg)
             {
-                const std::unordered_map<std::type_index,
-                                         std::function<Halide::Func(std::vector<Halide::Func>)>>&
-                    get_halide_generators();
+                const auto floor_arg = std::floor(arg);
+                const auto diff = arg - floor_arg;
+                if (diff < 0.5f || (diff == 0.5f && static_cast<int>(floor_arg) % 2 == 0))
+                {
+                    return floor_arg;
+                }
+                else
+                {
+                    return floor_arg + 1.0f;
+                }
+            }
+
+            template <typename T>
+            void round(const T* arg, T* out, size_t count)
+            {
+                for (size_t i = 0; i < count; ++i)
+                {
+                    out[i] = round_to_nearest_even(arg[i]);
+                }
             }
         }
     }

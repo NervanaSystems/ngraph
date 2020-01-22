@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "default_opset.hpp"
 #include "model.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "operator_set.hpp"
@@ -45,6 +46,15 @@ namespace ngraph
             }
             const std::string& get_name() const { return m_graph_proto->name(); }
             NodeVector make_ng_nodes(const Node& onnx_node) const;
+
+        protected:
+            void add_provenance_tag_to_initializer(
+                const Tensor& initializer, std::shared_ptr<default_opset::Constant> node) const;
+
+            void add_provenance_tag_to_input(const ValueInfo& input,
+                                             std::shared_ptr<ngraph::Node> node) const;
+
+            void add_provenance_tags(const Node& onnx_node, const NodeVector& ng_node_vector) const;
 
         private:
             const onnx::GraphProto* m_graph_proto;

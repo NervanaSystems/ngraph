@@ -148,7 +148,6 @@ set(SRC
     type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
     type_prop/layer_norm.cpp
-    type_prop/log_softmax.cpp
     type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
     type_prop/lstm_sequence.cpp
@@ -237,9 +236,6 @@ else()
         if (NOT NGRAPH_DEX_ONLY)
             list(APPEND SRC cpu_codegen.cpp)
         endif()
-        if (NGRAPH_HALIDE)
-            list(APPEND SRC halide.cpp)
-        endif()
         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
     endif()
 
@@ -322,6 +318,7 @@ set(MULTI_TEST_SRC
     backend/logical_or.in.cpp
     backend/logical_xor.in.cpp
     backend/lrn.in.cpp
+    backend/matmul.in.cpp
     backend/max.in.cpp
     backend/maximum.in.cpp
     backend/min.in.cpp
@@ -350,6 +347,7 @@ set(MULTI_TEST_SRC
     backend/reshape.in.cpp
     backend/reverse_sequence.in.cpp
     backend/reverse.in.cpp
+    backend/round.in.cpp
     backend/scatter.in.cpp
     backend/select.in.cpp
     backend/shape_of.in.cpp
@@ -498,6 +496,7 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND MULTI_TEST_SRC
             onnx/onnx_import.in.cpp
             onnx/onnx_import_convpool.in.cpp
+            onnx/onnx_import_provenance.in.cpp
             onnx/onnx_import_reshape.in.cpp
             onnx/onnx_import_rnn.in.cpp
             onnx/onnx_import_quant.in.cpp)
@@ -585,10 +584,6 @@ endif()
 
 if (NGRAPH_TBB_ENABLE)
     target_compile_definitions(unit-test PRIVATE "NGRAPH_TBB_ENABLE")
-endif()
-
-if (NGRAPH_HALIDE)
-    target_compile_definitions(unit-test PRIVATE "NGRAPH_HALIDE")
 endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
