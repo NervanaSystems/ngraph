@@ -71,9 +71,9 @@ namespace ngraph
         /// \param start_match_axis position in shape denoting start of the mutually equal shape
         ///
         /// \return Left and right node after broadcasting.
-        OutputVector legacy_style_broadcast_values_for_binary_operation(const Output<Node>& left,
-                                                                        const Output<Node>& right,
-                                                                        size_t start_match_axis);
+        OutputVector legacy_style_broadcast_for_binary_operation(const Output<Node>& left,
+                                                                 const Output<Node>& right,
+                                                                 size_t start_match_axis);
 
         /// \brief      Broadcast shape of two nodes to make them compatible for a matrix
         ///             multiplication.
@@ -91,8 +91,8 @@ namespace ngraph
         ///
         /// \return     The vector containing both outputs broadcasted.
         ///
-        OutputVector numpy_style_broadcast_values_for_matmul_operation(const Output<Node>& left,
-                                                                       const Output<Node>& right);
+        OutputVector numpy_style_broadcast_for_matmul_operation(const Output<Node>& left,
+                                                                const Output<Node>& right);
 
         /// \brief Cast shape of all input nodes for an element-wise operation that requires
         ///        shape-compatibility

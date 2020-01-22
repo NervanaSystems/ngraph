@@ -208,13 +208,10 @@ shared_ptr<Node> builder::opset1::squeeze(const Output<Node>& value, vector<size
         in_shape.at(axes.at(idx)) = 0;
     }
     Shape output_shape;
-    for (auto axis : in_shape)
-    {
-        if (axis != 0)
-        {
-            output_shape.push_back(axis);
-        }
-    }
+    copy_if(begin(in_shape), end(in_shape), back_inserter(output_shape), [](size_t a) {
+        return a != 0;
+    });
+
     return builder::opset1::reshape(value, output_shape);
 }
 

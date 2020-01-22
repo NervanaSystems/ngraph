@@ -92,7 +92,7 @@ NodeVector builder::MatmulFactory::make_matmul_op()
     if (left_rank > 1 && right_rank > 1)
     {
         const OutputVector& broadcasted_nodes =
-            op::numpy_style_broadcast_values_for_matmul_operation(left, right);
+            op::numpy_style_broadcast_for_matmul_operation(left, right);
 
         left = broadcasted_nodes.at(0);
         right = broadcasted_nodes.at(1);

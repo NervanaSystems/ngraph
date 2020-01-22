@@ -31,10 +31,8 @@ namespace ngraph
                 {
                     const Output<ngraph::Node> lhs_node = node.get_ng_inputs().at(0);
                     Output<ngraph::Node> rhs_node = node.get_ng_inputs().at(1);
-                    auto lhs_shape = lhs_node.get_shape();
-                    auto rhs_shape = rhs_node.get_shape();
-                    auto lhs_rank = lhs_shape.size();
-                    auto rhs_rank = rhs_shape.size();
+                    auto lhs_rank = lhs_node.get_shape().size();
+                    auto rhs_rank = rhs_node.get_shape().size();
                     auto axis = node.get_attribute_value<std::int64_t>("axis", lhs_rank - rhs_rank);
                     // Unidirectional broadcast right node to left shape.
                     rhs_node = ngraph::op::opset1::legacy_style_broadcast_for_binary_operation(

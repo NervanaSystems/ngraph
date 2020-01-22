@@ -276,9 +276,8 @@ namespace ngraph
                 value, Constant::create(element::i64, Shape{shape.size()}, shape));
         }
 
-        OutputVector
-            numpy_style_broadcast_values_for_matmul_operation(const Output<ngraph::Node>& left,
-                                                              const Output<ngraph::Node>& right)
+        OutputVector numpy_style_broadcast_for_matmul_operation(const Output<ngraph::Node>& left,
+                                                                const Output<ngraph::Node>& right)
         {
             const auto& left_shape = left.get_shape();
             const auto& right_shape = right.get_shape();
@@ -312,10 +311,9 @@ namespace ngraph
                     broadcast_node_numpy_style(right, right_output_shape, right_full_shape)};
         }
 
-        OutputVector
-            legacy_style_broadcast_values_for_binary_operation(const Output<ngraph::Node>& left,
-                                                               const Output<ngraph::Node>& right,
-                                                               size_t start_match_axis)
+        OutputVector legacy_style_broadcast_for_binary_operation(const Output<ngraph::Node>& left,
+                                                                 const Output<ngraph::Node>& right,
+                                                                 size_t start_match_axis)
         {
             const auto& left_shape = left.get_shape();
             const auto& right_shape = right.get_shape();
