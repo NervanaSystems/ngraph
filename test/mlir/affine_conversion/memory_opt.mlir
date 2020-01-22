@@ -1,6 +1,6 @@
 // RUN: ngraph-opt %s --split-input-file --ngraph-memory-opt --ngraph-memory-opt-concat --ngraph-memory-opt-eltwise  -convert-ngraph-to-affine  | FileCheck %s
 
-// CHECK-DAG: #[[MAP0:[a-zA-Z0-9]+]] = (d0, d1) -> (d0 * 2 + d1)
+// CHECK: #[[MAP0:[a-zA-Z0-9]+]] = affine_map<(d0, d1) -> (d0 * 2 + d1)>
 // CHECK-LABEL: test0	
 // CHECK: %[[B:.*]] = alloc() : memref<16xi8>
 // CHECK: std.view %[[B]][][] : memref<16xi8> to memref<2x2xf32, #[[MAP0]]>
@@ -17,8 +17,8 @@ func @test0(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tenso
 
 // -----
 
-// CHECK-DAG: #[[MAP0:[a-zA-Z0-9]+]] = (d0, d1) -> (d0 * 2 + d1)
-// CHECK-DAG: #[[MAP1:[a-zA-Z0-9]+]] = (d0, d1) -> (d0 * 2 + d1 + 4)
+// CHECK-DAG: #[[MAP0:[a-zA-Z0-9]+]] = affine_map<(d0, d1) -> (d0 * 2 + d1)>
+// CHECK-DAG: #[[MAP1:[a-zA-Z0-9]+]] = affine_map<(d0, d1) -> (d0 * 2 + d1 + 4)>
 // CHECK-LABEL: test1
 // CHECK: %[[B:.*]] = alloc() : memref<32xi8>
 // CHECK: std.view %[[B]][][] : memref<32xi8> to memref<2x2xf32, #[[MAP0]]>
@@ -35,10 +35,10 @@ func @test1(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tenso
 
 // -----
 
-// CHECK-DAG: #[[MAP0:[a-zA-Z0-9]+]] = (d0, d1, d2) -> (d0 * 4 + d1 * 2 + d2)
-// CHECK-DAG: #[[MAP1:[a-zA-Z0-9]+]] = (d0, d1, d2) -> (d0 * 4 + d1 * 2 + d2 + 4)
-// CHECK-DAG: #[[MAP2:[a-zA-Z0-9]+]] = (d0, d1, d2) -> (d0 * 8 + d1 * 2 + d2)
-// CHECK-DAG: #[[MAP3:[a-zA-Z0-9]+]] = (d0, d1, d2) -> (d0 * 16 + d1 * 2 + d2)
+// CHECK-DAG: #[[MAP0:[a-zA-Z0-9]+]] = affine_map<(d0, d1, d2) -> (d0 * 4 + d1 * 2 + d2)>
+// CHECK-DAG: #[[MAP1:[a-zA-Z0-9]+]] = affine_map<(d0, d1, d2) -> (d0 * 4 + d1 * 2 + d2 + 4)>
+// CHECK-DAG: #[[MAP2:[a-zA-Z0-9]+]] = affine_map<(d0, d1, d2) -> (d0 * 8 + d1 * 2 + d2)>
+// CHECK-DAG: #[[MAP3:[a-zA-Z0-9]+]] = affine_map<(d0, d1, d2) -> (d0 * 16 + d1 * 2 + d2)>
 // CHECK-LABEL: test2
 // CHECK: %[[B1:.*]] = alloc() : memref<32xi8>
 // CHECK: std.view %[[B1]][][] : memref<32xi8> to memref<1x2x2xf32, #[[MAP0]]>
@@ -66,13 +66,13 @@ func @test2(%arg0: !ng.tensor<1x2x2xf32>, %arg1: !ng.tensor<1x2x2xf32>) -> (!ng.
 
 // -----
 
-// CHECK-DAG: #[[MAP0:[a-zA-Z0-9]+]] = (d0, d1, d2) -> (d0 * 8 + d1 * 2 + d2)
-// CHECK-DAG: #[[MAP8:[a-zA-Z0-9]+]] = (d0, d1, d2) -> (d0 * 8 + d1 * 2 + d2 + 8)
-// CHECK-DAG: #[[MAP9:[a-zA-Z0-9]+]] = (d0, d1, d2) -> (d0 * 8 + d1 * 2 + d2 + 16)
-// CHECK-DAG: #[[MAP10:[a-zA-Z0-9]+]]  = (d0, d1, d2) -> (d0 * 8 + d1 * 2 + d2 + 24)
-// CHECK-DAG: #[[MAP11:[a-zA-Z0-9]+]]  = (d0, d1, d2) -> (d0 * 16 + d1 * 2 + d2)
-// CHECK-DAG: #[[MAP12:[a-zA-Z0-9]+]]  = (d0, d1, d2) -> (d0 * 16 + d1 * 2 + d2 + 16)
-// CHECK-DAG: #[[MAP13:[a-zA-Z0-9]+]]  = (d0, d1, d2) -> (d0 * 32 + d1 * 2 + d2)
+// CHECK-DAG: #[[MAP0:[a-zA-Z0-9]+]] = affine_map<(d0, d1, d2) -> (d0 * 8 + d1 * 2 + d2)>
+// CHECK-DAG: #[[MAP8:[a-zA-Z0-9]+]] = affine_map<(d0, d1, d2) -> (d0 * 8 + d1 * 2 + d2 + 8)>
+// CHECK-DAG: #[[MAP9:[a-zA-Z0-9]+]] = affine_map<(d0, d1, d2) -> (d0 * 8 + d1 * 2 + d2 + 16)>
+// CHECK-DAG: #[[MAP10:[a-zA-Z0-9]+]]  = affine_map<(d0, d1, d2) -> (d0 * 8 + d1 * 2 + d2 + 24)>
+// CHECK-DAG: #[[MAP11:[a-zA-Z0-9]+]]  = affine_map<(d0, d1, d2) -> (d0 * 16 + d1 * 2 + d2)>
+// CHECK-DAG: #[[MAP12:[a-zA-Z0-9]+]]  = affine_map<(d0, d1, d2) -> (d0 * 16 + d1 * 2 + d2 + 16)>
+// CHECK-DAG: #[[MAP13:[a-zA-Z0-9]+]]  = affine_map<(d0, d1, d2) -> (d0 * 32 + d1 * 2 + d2)>
 // CHECK-LABEL: test3
 // CHECK: %[[B:.*]] = alloc() : memref<128xi8>
 // CHECK: std.view %[[B]][][] : memref<128xi8> to memref<1x4x2xf32, #[[MAP0]]>
@@ -97,10 +97,10 @@ func @test3(%arg0: !ng.tensor<1x2x2xf32>, %arg1: !ng.tensor<1x2x2xf32>) -> !ng.t
 
 // -----
 
-//CHECK-DAG: #[[MAP4:[a-zA-Z0-9]+]] = (d0, d1, d2) -> (d0 * 4 + d1 * 2 + d2 + 4)
-//CHECK-DAG: #[[MAP5:[a-zA-Z0-9]+]] = (d0, d1, d2) -> (d0 * 4 + d1 * 2 + d2)
-//CHECK-DAG: #[[MAP6:[a-zA-Z0-9]+]] = (d0, d1, d2) -> (d0 * 4 + d1 * 2 + d2 + 8)
-//CHECK-DAG: #[[MAP12:[a-zA-Z0-9]+]] = (d0, d1, d2) -> (d0 * 12 + d1 * 2 + d2)
+//CHECK-DAG: #[[MAP4:[a-zA-Z0-9]+]] = affine_map<(d0, d1, d2) -> (d0 * 4 + d1 * 2 + d2 + 4)>
+//CHECK-DAG: #[[MAP5:[a-zA-Z0-9]+]] = affine_map<(d0, d1, d2) -> (d0 * 4 + d1 * 2 + d2)>
+//CHECK-DAG: #[[MAP6:[a-zA-Z0-9]+]] = affine_map<(d0, d1, d2) -> (d0 * 4 + d1 * 2 + d2 + 8)>
+//CHECK-DAG: #[[MAP12:[a-zA-Z0-9]+]] = affine_map<(d0, d1, d2) -> (d0 * 12 + d1 * 2 + d2)>
 // CHECK-LABEL: test4
 //CHECK: %[[B1:.*]] = alloc() : memref<1x2x2xf32>
 //CHECK: %[[B2:.*]] = alloc() : memref<48xi8>
