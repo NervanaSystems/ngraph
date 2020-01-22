@@ -49,9 +49,7 @@ namespace ngraph
                 Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
                     : m_element_type(type)
                     , m_shape(shape)
-                    , m_data(new runtime::AlignedBuffer(
-                          std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
-                          host_alignment()))
+                    , m_data(new runtime::AlignedBuffer(m_element_type.size(), host_alignment()))
                 {
                     NODE_VALIDATION_CHECK(
                         this,
@@ -376,7 +374,7 @@ namespace ngraph
                 static constexpr size_t host_alignment() { return 64; }
                 element::Type m_element_type;
                 Shape m_shape{};
-                std::unique_ptr<runtime::AlignedBuffer> m_data;
+                std::shared_ptr<runtime::AlignedBuffer> m_data;
                 bool m_all_elements_bitwise_identical;
                 bool are_all_data_elements_bitwise_identical() const;
                 Constant(const Constant&) = delete;
