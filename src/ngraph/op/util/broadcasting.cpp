@@ -510,6 +510,27 @@ namespace ngraph
                 std::vector<size_t> axes_mapping{get_axes_mapping(output_shape, broadcast_axes)};
                 return Constant::create(element::i64, Shape{axes_mapping.size()}, axes_mapping);
             }
+
+            Output<Node> make_broadcast(const Output<Node>& node,
+                                        const Shape& target_shape,
+                                        const AxisSet& broadcast_axes)
+            {
+                return std::make_shared<v1::Broadcast>(
+                    node,
+                    Constant::create(element::i64, Shape{target_shape.size()}, target_shape),
+                    get_axes_mapping_output(target_shape, broadcast_axes));
+            }
+
+            Output<Node> make_broadcast(const Output<Node>& node,
+                                        const Shape& target_shape,
+                                        std::size_t start_match_axis)
+            {
+                return std::make_shared<v1::Broadcast>(
+                    node,
+                    Constant::create(element::i64, Shape{target_shape.size()}, target_shape),
+                    get_axes_mapping_output(target_shape, node.get_shape(), start_match_axis));
+            }
+
         } // namespace opset1
 
     } // namespace  op

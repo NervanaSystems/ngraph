@@ -68,34 +68,15 @@ namespace ngraph
                         std::make_shared<default_opset::Constant>(
                             data->get_element_type(), data_shape, std::vector<float>{epsilon});
 
-                    scale = std::make_shared<default_opset::Broadcast>(
-                        scale,
-                        default_opset::Constant::create(
-                            ngraph::element::i64, Shape{data_shape.size()}, data_shape),
-                        ngraph::op::opset1::get_axes_mapping_output(data_shape, scale_shape, 1));
+                    scale = ngraph::op::opset1::make_broadcast(scale, data_shape, 1);
+                    bias = ngraph::op::opset1::make_broadcast(bias, data_shape, 1);
 
-                    bias = std::make_shared<default_opset::Broadcast>(
-                        bias,
-                        default_opset::Constant::create(
-                            ngraph::element::i64, Shape{data_shape.size()}, data_shape),
-                        ngraph::op::opset1::get_axes_mapping_output(data_shape, bias_shape, 1));
+                    Output<ngraph::Node> mean = builder::mean(data, reduction_axes);
+                    mean = ngraph::op::opset1::make_broadcast(mean, data_shape, reduction_axes);
 
-                    std::shared_ptr<ngraph::Node> mean = builder::mean(data, reduction_axes);
-
-                    mean = std::make_shared<default_opset::Broadcast>(
-                        mean,
-                        default_opset::Constant::create(
-                            element::i64, Shape{data_shape.size()}, data_shape),
-                        ngraph::op::opset1::get_axes_mapping_output(data_shape, reduction_axes));
-
-                    std::shared_ptr<ngraph::Node> variance =
-                        builder::variance(data, reduction_axes);
-
-                    variance = std::make_shared<default_opset::Broadcast>(
-                        variance,
-                        default_opset::Constant::create(
-                            element::i64, Shape{data_shape.size()}, data_shape),
-                        ngraph::op::opset1::get_axes_mapping_output(data_shape, reduction_axes));
+                    Output<ngraph::Node> variance = builder::variance(data, reduction_axes);
+                    variance =
+                        ngraph::op::opset1::make_broadcast(variance, data_shape, reduction_axes);
 
                     const auto sqrt = std::make_shared<default_opset::Sqrt>(variance + eps_node);
 

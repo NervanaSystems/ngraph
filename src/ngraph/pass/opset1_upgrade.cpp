@@ -20,6 +20,7 @@
 
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
 
@@ -106,24 +107,9 @@ namespace
 
     bool op_cast(shared_ptr<op::Broadcast> node)
     {
-        auto result_shape = node->get_broadcast_shape();
-        auto result_shape_node =
-            op::Constant::create(element::i64, Shape{result_shape.size()}, result_shape);
-        auto broadcast_axes = node->get_broadcast_axes();
-
-        // Flip broadcast_axes to get axes_mapping
-        std::vector<size_t> axes_mapping(result_shape.size());
-        std::iota(axes_mapping.begin(), axes_mapping.end(), 0);
-        for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); i++)
-        {
-            axes_mapping.erase(axes_mapping.begin() + *i);
-        }
-        auto axes_mapping_node =
-            op::Constant::create(element::i64, Shape{axes_mapping.size()}, axes_mapping);
-
-        auto replacement_node = make_shared<op::v1::Broadcast>(
-            node->input_value(0), result_shape_node->output(0), axes_mapping_node->output(0));
-        replace_node(node, replacement_node);
+        auto replacement_node = ngraph::op::opset1::make_broadcast(
+            node->input_value(0), node->get_broadcast_shape(), node->get_broadcast_axes());
+        replace_node(node, replacement_node.get_node_shared_ptr());
         return true;
     }
 

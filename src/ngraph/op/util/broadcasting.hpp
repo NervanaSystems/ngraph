@@ -212,6 +212,14 @@ namespace ngraph
             Output<Node> get_axes_mapping_output(const Shape& output_shape,
                                                  const AxisSet& broadcast_axes);
 
+            Output<Node> make_broadcast(const Output<Node>& node,
+                                        const Shape& target_shape,
+                                        const AxisSet& broadcast_axes);
+
+            Output<Node> make_broadcast(const Output<Node>& node,
+                                        const Shape& target_shape,
+                                        std::size_t start_match_axis);
+
         } // namespace opset1
     }     // namespace  op
 } // namespace  ngraph
