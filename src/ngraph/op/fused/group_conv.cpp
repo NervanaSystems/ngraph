@@ -382,7 +382,7 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
             const Shape& data_shape = data_pshape.to_shape();
 
             Shape output_shape;
-            opset1::infer_output_spatial_shape(
+            opset1::infer_conv_backprop_output_spatial_shape(
                 Shape{std::next(data_shape.begin(), 2), std::end(data_shape)},
                 Shape{std::next(filters_shape.begin(), 3), std::end(filters_shape)},
                 m_strides,

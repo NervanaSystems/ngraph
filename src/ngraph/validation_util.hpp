@@ -188,14 +188,14 @@ namespace ngraph
         /// \param[in]  output_padding    The output padding values.
         /// \param      output_spatial_shape  The placeholder for computed output spatial shape.
         ///
-        void infer_output_spatial_shape(const Shape& input_data_shape,
-                                        const Shape& filters_shape,
-                                        const Strides& strides,
-                                        const Strides& dilations,
-                                        const CoordinateDiff& pads_begin,
-                                        const CoordinateDiff& pads_end,
-                                        const CoordinateDiff& output_padding,
-                                        Shape& output_spatial_shape);
+        void infer_conv_backprop_output_spatial_shape(const Shape& input_data_shape,
+                                                      const Shape& filters_shape,
+                                                      const Strides& strides,
+                                                      const Strides& dilations,
+                                                      const CoordinateDiff& pads_begin,
+                                                      const CoordinateDiff& pads_end,
+                                                      const CoordinateDiff& output_padding,
+                                                      Shape& output_spatial_shape);
 
         ///
         /// \brief      Calculates padding values for ConvolutionBackpropData operator.

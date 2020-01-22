@@ -856,14 +856,14 @@ int64_t ngraph::normalize_axis(const std::string& node_description,
     return static_cast<int64_t>(axis);
 }
 
-void ngraph::opset1::infer_output_spatial_shape(const Shape& input_data_shape,
-                                                const Shape& filters_shape,
-                                                const Strides& strides,
-                                                const Strides& dilations,
-                                                const CoordinateDiff& pads_begin,
-                                                const CoordinateDiff& pads_end,
-                                                const CoordinateDiff& output_padding,
-                                                Shape& output_spatial_shape)
+void ngraph::opset1::infer_conv_backprop_output_spatial_shape(const Shape& input_data_shape,
+                                                              const Shape& filters_shape,
+                                                              const Strides& strides,
+                                                              const Strides& dilations,
+                                                              const CoordinateDiff& pads_begin,
+                                                              const CoordinateDiff& pads_end,
+                                                              const CoordinateDiff& output_padding,
+                                                              Shape& output_spatial_shape)
 {
     size_t num_spatial_dims = input_data_shape.size();
     NGRAPH_CHECK(filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
