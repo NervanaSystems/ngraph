@@ -214,6 +214,8 @@ add_library(onnx_import STATIC
         op/xor.hpp
         ops_bridge.cpp
         ops_bridge.hpp
+        utils/arg_min_max_factory.cpp
+        utils/arg_min_max_factory.hpp
         utils/common.cpp
         utils/common.hpp
         utils/convpool.cpp
