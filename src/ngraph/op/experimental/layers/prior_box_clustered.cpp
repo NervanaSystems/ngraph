@@ -37,14 +37,14 @@ void op::PriorBoxClustered::validate_and_infer_types()
     // shape node should have integer data type. For now we only allow i64
     auto layer_shape_et = get_input_element_type(0);
     NODE_VALIDATION_CHECK(this,
-                          layer_shape_et.compatible(element::Type_t::i64),
-                          "layer shape input must have element type i64, but has ",
+                          layer_shape_et.is_integral_number(),
+                          "layer shape input must be an integral number, but is: ",
                           layer_shape_et);
 
     auto image_shape_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
-                          image_shape_et.compatible(element::Type_t::i64),
-                          "image shape input must have element type i64, but has ",
+                          image_shape_et.is_integral_number(),
+                          "image shape input must be an integral number, but is: ",
                           image_shape_et);
 
     auto layer_shape_rank = get_input_partial_shape(0).rank();
