@@ -403,9 +403,7 @@ TEST(provenance, fused_decomposition_tag)
         auto tags = node->get_provenance_tags();
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
-
     const auto decomposed_op = f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-
     traverse_nodes(as_node_vector(decomposed_op->outputs()), tag_check, false, {p1});
 }
 
