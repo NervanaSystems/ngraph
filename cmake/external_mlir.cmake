@@ -24,12 +24,12 @@ set(MLIR_LLVM_COMMIT_ID d6295255)
 # MLIR environment variables. Some of them are used by LIT tool.
 
 if (NGRAPH_USE_PREBUILT_MLIR)
-    set(MLIR_PROJECT_ROOT ${MLIR_LLVM_PREBUILT_PATH}/mlir_project)
+    set(MLIR_PROJECT_ROOT ${MLIR_LLVM_PREBUILT_PATH})
 else()
     set(MLIR_PROJECT_ROOT ${CMAKE_CURRENT_BINARY_DIR}/mlir_project)
 endif()
 
-set(MLIR_LLVM_ROOT ${MLIR_PROJECT_ROOT}/llvm-projects)
+set(MLIR_LLVM_ROOT ${MLIR_PROJECT_ROOT}/llvm-project)
 set(MLIR_LLVM_SOURCE_DIR ${MLIR_LLVM_ROOT}/llvm)
 set(MLIR_SOURCE_DIR ${MLIR_LLVM_ROOT}/mlir)
 set(MLIR_LLVM_BUILD_DIR ${MLIR_PROJECT_ROOT}/build)
