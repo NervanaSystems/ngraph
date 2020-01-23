@@ -248,3 +248,26 @@ shared_ptr<Node> builder::opset1::expand_dims(const Output<Node>& value, size_t 
     output_shape.insert(empty_axis_it, 1);
     return builder::opset1::reshape(value, output_shape);
 }
+
+shared_ptr<Node> builder::opset1::squeeze(const Output<Node>& value, vector<int64_t> axes)
+{
+    if (axes.empty())
+    {
+        return value.get_node_shared_ptr();
+    }
+
+    Shape in_shape{value.get_shape()};
+    for (size_t idx = 0; idx < axes.size(); ++idx)
+    {
+        in_shape.at(axes.at(idx)) = 0;
+    }
+    Shape output_shape;
+    for (auto axis : in_shape)
+    {
+        if (axis != 0)
+        {
+            output_shape.push_back(axis);
+        }
+    }
+    return builder::opset1::reshape(value, output_shape);
+}
