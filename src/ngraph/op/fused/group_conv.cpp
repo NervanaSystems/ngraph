@@ -219,6 +219,16 @@ op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::GroupConvolutionBackpropData::is_dynamic() const
+{
+    bool is_dynamic = Node::is_dynamic();
+    if (get_inputs().size() == 3 && !is_dynamic)
+    {
+        return !is_type<op::Constant>(input_value(2).get_node());
+    }
+    return is_dynamic;
+}
+
 const PartialShape op::v1::GroupConvolutionBackpropData::get_output_shape() const
 {
     auto data_pshape = input(0).get_partial_shape();

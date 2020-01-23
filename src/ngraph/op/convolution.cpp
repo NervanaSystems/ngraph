@@ -204,6 +204,16 @@ op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& dat
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::ConvolutionBackpropData::is_dynamic() const
+{
+    bool is_dynamic = Node::is_dynamic();
+    if (get_inputs().size() == 3 && !is_dynamic)
+    {
+        return !is_type<op::Constant>(input_value(2).get_node());
+    }
+    return is_dynamic;
+}
+
 const PartialShape op::v1::ConvolutionBackpropData::get_output_shape() const
 {
     auto data_pshape = input(0).get_partial_shape();
@@ -257,7 +267,6 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
     if (data_pshape.is_static() && filters_pshape.is_static())
     {
         const Shape& data_shape = data_pshape.to_shape();
-        const Shape& filters_shape = filters_pshape.to_shape();
 
         if (m_pads_begin.size() == 0)
         {

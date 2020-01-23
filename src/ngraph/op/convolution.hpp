@@ -156,7 +156,8 @@ namespace ngraph
                                         const PadType& auto_pad = PadType::EXPLICIT,
                                         const CoordinateDiff& output_padding = {});
 
-                void validate_and_infer_types() override;
+                virtual bool is_dynamic() const override;
+                virtual void validate_and_infer_types() override;
 
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;
