@@ -376,8 +376,6 @@ namespace ngraph
                 std::shared_ptr<runtime::AlignedBuffer> m_data;
                 bool m_all_elements_bitwise_identical;
                 bool are_all_data_elements_bitwise_identical() const;
-                Constant(const Constant&) = delete;
-                Constant operator=(const Constant&) = delete;
             };
 
             /// \brief A scalar constant whose element type is the same as like.

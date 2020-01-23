@@ -516,7 +516,7 @@ AxisSet op::Constant::get_axis_set_val() const
 shared_ptr<Node> op::Constant::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Constant>(m_element_type, m_shape, m_data->get_ptr());
+    return make_shared<Constant>(*this);
 }
 
 template <typename T>
