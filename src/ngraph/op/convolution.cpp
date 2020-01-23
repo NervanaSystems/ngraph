@@ -241,7 +241,8 @@ const PartialShape op::v1::ConvolutionBackpropData::get_output_shape() const
 void op::v1::ConvolutionBackpropData::set_output_shape(const Shape& shape)
 {
     this->input(2).replace_source_output(
-        op::Constant::create(element::i64, Shape{shape.size()}, shape)->output(0));
+        op::Constant::create(this->get_input_element_type(2), Shape{shape.size()}, shape)
+            ->output(0));
 }
 
 void op::v1::ConvolutionBackpropData::validate_and_infer_types()

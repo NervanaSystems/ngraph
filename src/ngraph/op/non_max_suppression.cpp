@@ -153,38 +153,7 @@ int64_t op::v1::NonMaxSuppression::max_boxes_output_from_input() const
 
     const auto max_output_boxes_input =
         as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-#endif
-    switch (static_cast<element::Type_t>(max_output_boxes_input->get_element_type()))
-    {
-    case element::Type_t::i8:
-    {
-        max_output_boxes = max_output_boxes_input->get_vector<int8_t>().at(0);
-        break;
-    }
-    case element::Type_t::i16:
-    {
-        max_output_boxes = max_output_boxes_input->get_vector<int16_t>().at(0);
-        break;
-    }
-    case element::Type_t::i32:
-    {
-        max_output_boxes = max_output_boxes_input->get_vector<int32_t>().at(0);
-        break;
-    }
-    case element::Type_t::i64:
-    {
-        max_output_boxes = max_output_boxes_input->get_vector<int64_t>().at(0);
-        break;
-    }
-    default: break;
-    }
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
+    max_output_boxes = max_output_boxes_input->cast_vector<int64_t>().at(0);
 
     return max_output_boxes;
 }

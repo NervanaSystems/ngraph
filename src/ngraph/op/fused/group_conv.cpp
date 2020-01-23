@@ -256,7 +256,8 @@ const PartialShape op::v1::GroupConvolutionBackpropData::get_output_shape() cons
 void op::v1::GroupConvolutionBackpropData::set_output_shape(const Shape& shape)
 {
     this->input(2).replace_source_output(
-        op::Constant::create(element::i64, Shape{shape.size()}, shape)->output(0));
+        op::Constant::create(this->get_input_element_type(2), Shape{shape.size()}, shape)
+            ->output(0));
 }
 
 void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()

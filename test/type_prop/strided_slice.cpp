@@ -26,7 +26,7 @@ using namespace ngraph;
 TEST(type_prop, strided_slice_begin_incorrect_type)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-    auto begin = make_shared<op::Parameter>(element::i32, Shape{4});
+    auto begin = make_shared<op::Parameter>(element::f16, Shape{4});
     auto end = make_shared<op::Parameter>(element::i64, Shape{4});
     try
     {
@@ -37,7 +37,7 @@ TEST(type_prop, strided_slice_begin_incorrect_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Begin mask must have element type i64"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Begin mask must be an integral number"));
     }
     catch (...)
     {
@@ -49,7 +49,7 @@ TEST(type_prop, strided_slice_end_incorrect_type)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
     auto begin = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto end = make_shared<op::Parameter>(element::i32, Shape{4});
+    auto end = make_shared<op::Parameter>(element::boolean, Shape{4});
     try
     {
         auto strided_slice = make_shared<op::v1::StridedSlice>(
@@ -59,7 +59,7 @@ TEST(type_prop, strided_slice_end_incorrect_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("End mask must have element type i64"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("End mask must be an integral number"));
     }
     catch (...)
     {
