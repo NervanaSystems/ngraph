@@ -501,9 +501,6 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
             onnx/onnx_import_reshape.in.cpp
             onnx/onnx_import_rnn.in.cpp
             onnx/onnx_import_quant.in.cpp)
-    if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnx/onnxifi.cpp onnx/onnxifi_span.cpp)
-    endif()
 endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
@@ -598,11 +595,6 @@ endif()
 
 if (NGRAPH_GPUH_ENABLE)
     target_link_libraries(unit-test PRIVATE gpuh_backend)
-endif()
-
-if (NGRAPH_ONNXIFI_ENABLE)
-    target_include_directories(unit-test SYSTEM PUBLIC ${ONNX_INCLUDE_DIR})
-    target_link_libraries(unit-test PRIVATE onnxifi-ngraph)
 endif()
 
 if (NGRAPH_MLIR_ENABLE)
