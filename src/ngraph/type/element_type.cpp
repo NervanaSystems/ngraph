@@ -282,6 +282,11 @@ bool element::Type::is_real() const
     return get_type_info_map().at(m_type).m_is_real;
 }
 
+bool element::Type::is_integral_number() const
+{
+    return is_integral() && (m_type != element::boolean);
+}
+
 bool element::Type::is_signed() const
 {
     return get_type_info_map().at(m_type).m_is_signed;

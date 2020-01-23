@@ -37,14 +37,14 @@ void op::PriorBox::validate_and_infer_types()
     // shape node should have integer data type. For now we only allow i64
     auto layer_shape_et = get_input_element_type(0);
     NODE_VALIDATION_CHECK(this,
-                          layer_shape_et.compatible(element::Type_t::i64),
-                          "layer shape input must have element type i64, but has ",
+                          layer_shape_et.is_integral_number(),
+                          "layer shape input must be an integral number, but is: ",
                           layer_shape_et);
 
     auto image_shape_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
-                          image_shape_et.compatible(element::Type_t::i64),
-                          "image shape input must have element type i64, but has ",
+                          image_shape_et.is_integral_number(),
+                          "image shape input must be an integral number, but is: ",
                           image_shape_et);
 
     auto layer_shape_rank = get_input_partial_shape(0).rank();
@@ -66,22 +66,10 @@ void op::PriorBox::validate_and_infer_types()
                               const_shape->get_shape());
 
         auto layer_shape = const_shape->get_shape_val();
-        size_t num_priors = 0;
-        // {Prior boxes, Variance-adjusted prior boxes}
-        if (m_attrs.scale_all_sizes)
-        {
-            num_priors = ((m_attrs.flip ? 2 : 1) * m_attrs.aspect_ratio.size() + 1) *
-                             m_attrs.min_size.size() +
-                         m_attrs.max_size.size();
-        }
-        else
-        {
-            num_priors =
-                (m_attrs.flip ? 2 : 1) * m_attrs.aspect_ratio.size() + m_attrs.min_size.size() - 1;
-        }
 
-        set_output_type(
-            0, element::f32, Shape{2, 4 * layer_shape[0] * layer_shape[1] * num_priors});
+        set_output_type(0,
+                        element::f32,
+                        Shape{2, 4 * layer_shape[0] * layer_shape[1] * number_of_priors(m_attrs)});
     }
     else
     {
@@ -93,4 +81,50 @@ shared_ptr<Node> op::PriorBox::copy_with_new_args(const NodeVector& new_args) co
 {
     check_new_args_count(this, new_args);
     return make_shared<PriorBox>(new_args.at(0), new_args.at(1), m_attrs);
+}
+
+size_t op::PriorBox::number_of_priors(const PriorBoxAttrs& attrs)
+{
+    // Starting with 0 number of prior and then various conditions on attributes will contribute
+    // real number of prior boxes as PriorBox is a fat thing with several modes of
+    // operation that will be checked in order in the next statements.
+    size_t num_priors = 0;
+
+    // Total number of boxes around each point; depends on whether flipped boxes are included
+    // plus one box 1x1.
+    size_t total_aspect_ratios = normalized_aspect_ratio(attrs.aspect_ratio, attrs.flip).size();
+
+    if (attrs.scale_all_sizes)
+        num_priors = total_aspect_ratios * attrs.min_size.size() + attrs.max_size.size();
+    else
+        num_priors = total_aspect_ratios + attrs.min_size.size() - 1;
+
+    if (!attrs.fixed_size.empty())
+        num_priors = total_aspect_ratios * attrs.fixed_size.size();
+
+    for (auto density : attrs.density)
+    {
+        auto rounded_density = static_cast<size_t>(density);
+        auto density_2d = (rounded_density * rounded_density - 1);
+        if (!attrs.fixed_ratio.empty())
+            num_priors += attrs.fixed_ratio.size() * density_2d;
+        else
+            num_priors += total_aspect_ratios * density_2d;
+    }
+
+    return num_priors;
+}
+
+std::vector<float> op::PriorBox::normalized_aspect_ratio(const std::vector<float>& aspect_ratio,
+                                                         bool flip)
+{
+    std::set<float> unique_ratios;
+    for (auto ratio : aspect_ratio)
+    {
+        unique_ratios.insert(std::round(ratio * 1e6) / 1e6);
+        if (flip)
+            unique_ratios.insert(std::round(1 / ratio * 1e6) / 1e6);
+    }
+    unique_ratios.insert(1);
+    return std::vector<float>(unique_ratios.begin(), unique_ratios.end());
 }

@@ -68,7 +68,7 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
             int64_t axis = ngraph::normalize_axis(this, axis_val, data_rank);
 
             auto split_lengths =
-                as_type_ptr<op::Constant>(split_lengths_input)->get_vector<int64_t>();
+                as_type_ptr<op::Constant>(split_lengths_input)->cast_vector<int64_t>();
             // Adjust split lengths in case of negatives
             size_t sum_of_splits = 0;
             int64_t negative_one = -1;

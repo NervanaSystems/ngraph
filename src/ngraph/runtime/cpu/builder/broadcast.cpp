@@ -43,7 +43,7 @@ namespace ngraph
                 out_shape = broadcast->get_shape();
 
                 // TODO(jmenon): Shape transformations, rank reduction etc. needs to be general
-                // and not in any one builder. Move this to the Halide analysis phase.
+                // and not in any one builder.
 
                 // Transform output shape - ex. [4, 1, 2, 2] -> [4, 1, 4]
                 // if we're not broadcasting along axes 2 and 3
