@@ -431,7 +431,13 @@ OPTIONS
             if (!backend.empty())
             {
                 cout << "\n---- Benchmark ----\n";
+                stopwatch t1;
+                t1.start();
                 shared_ptr<Function> f = deserialize(model);
+                stringstream ss;
+                ss.imbue(locale(""));
+                ss << t1.get_milliseconds();
+                cout << "deserialize took " << ss.str() << "ms\n";
                 vector<runtime::PerformanceCounter> perf_data;
                 if (double_buffer)
                 {
