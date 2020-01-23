@@ -354,35 +354,35 @@ TEST(provenance, add_tags_above)
 
     auto x_tags = x->get_provenance_tags();
     EXPECT_EQ(x_tags.size(), 1);
-    EXPECT_EQ(x_tags.find("tag_all_above_d") != x_tags.end(), true);
+    EXPECT_TRUE(x_tags.find("tag_all_above_d") != x_tags.end());
 
     auto y_tags = y->get_provenance_tags();
     EXPECT_EQ(y_tags.size(), 1);
-    EXPECT_EQ(y_tags.find("tag_all_above_d") != y_tags.end(), true);
+    EXPECT_TRUE(y_tags.find("tag_all_above_d") != y_tags.end());
 
     auto a_tags = a->get_provenance_tags();
     EXPECT_EQ(a_tags.size(), 2);
-    EXPECT_EQ(a_tags.find("tag_above_c - until_params") != a_tags.end(), true);
-    EXPECT_EQ(a_tags.find("tag_above_d - until_c_inputs") != a_tags.end(), false);
-    EXPECT_EQ(a_tags.find("tag_all_above_d") != a_tags.end(), true);
+    EXPECT_TRUE(a_tags.find("tag_above_c - until_params") != a_tags.end());
+    EXPECT_FALSE(a_tags.find("tag_above_d - until_c_inputs") != a_tags.end());
+    EXPECT_TRUE(a_tags.find("tag_all_above_d") != a_tags.end());
 
     auto b_tags = b->get_provenance_tags();
     EXPECT_EQ(b_tags.size(), 2);
-    EXPECT_EQ(b_tags.find("tag_above_c - until_params") != b_tags.end(), true);
-    EXPECT_EQ(b_tags.find("tag_above_d - until_c_inputs") != b_tags.end(), false);
-    EXPECT_EQ(b_tags.find("tag_all_above_d") != b_tags.end(), true);
+    EXPECT_TRUE(b_tags.find("tag_above_c - until_params") != b_tags.end());
+    EXPECT_FALSE(b_tags.find("tag_above_d - until_c_inputs") != b_tags.end());
+    EXPECT_TRUE(b_tags.find("tag_all_above_d") != b_tags.end());
 
     auto c_tags = c->get_provenance_tags();
     EXPECT_EQ(c_tags.size(), 3);
-    EXPECT_EQ(c_tags.find("tag_above_c - until_params") != c_tags.end(), true);
-    EXPECT_EQ(c_tags.find("tag_above_d - until_c_inputs") != c_tags.end(), true);
-    EXPECT_EQ(c_tags.find("tag_all_above_d") != c_tags.end(), true);
+    EXPECT_TRUE(c_tags.find("tag_above_c - until_params") != c_tags.end());
+    EXPECT_TRUE(c_tags.find("tag_above_d - until_c_inputs") != c_tags.end());
+    EXPECT_TRUE(c_tags.find("tag_all_above_d") != c_tags.end());
 
     auto d_tags = d->get_provenance_tags();
     EXPECT_EQ(d_tags.size(), 2);
-    EXPECT_EQ(d_tags.find("tag_above_c - until_params") != d_tags.end(), false);
-    EXPECT_EQ(d_tags.find("tag_above_d - until_c_inputs") != d_tags.end(), true);
-    EXPECT_EQ(d_tags.find("tag_all_above_d") != d_tags.end(), true);
+    EXPECT_FALSE(d_tags.find("tag_above_c - until_params") != d_tags.end());
+    EXPECT_TRUE(d_tags.find("tag_above_d - until_c_inputs") != d_tags.end());
+    EXPECT_TRUE(d_tags.find("tag_all_above_d") != d_tags.end());
 }
 
 TEST(provenance, builder)
@@ -548,7 +548,7 @@ TEST(provenance, opset1_upgrade_pass_topk)
     const std::string tag = "<Opset1_Upgrade (v0 TopK)>";
     auto tag_check = [&tag](std::shared_ptr<ngraph::Node> node) {
         auto tags = node->get_provenance_tags();
-        EXPECT_EQ(tags.find(tag) != tags.end(), true);
+        EXPECT_TRUE(tags.find(tag) != tags.end());
     };
     traverse_nodes(as_node_vector(topk_v1->outputs()),
                    tag_check,
@@ -583,7 +583,7 @@ TEST(provenance, opset0_downgrade_pass_topk)
     const std::string tag = "<Opset0_Downgrade (v1 TopK)>";
     auto tag_check = [&tag](std::shared_ptr<ngraph::Node> node) {
         auto tags = node->get_provenance_tags();
-        EXPECT_EQ(tags.find(tag) != tags.end(), true);
+        EXPECT_TRUE(tags.find(tag) != tags.end());
     };
     traverse_nodes(as_node_vector(topk_v0->outputs()),
                    tag_check,
@@ -615,21 +615,21 @@ TEST(provenance, opset1_upgrade_pass_graph)
         if (as_type_ptr<op::v1::Add>(node))
         {
             EXPECT_EQ(tags.size(), 1);
-            EXPECT_EQ(tags.find("<Opset1_Upgrade (v0 Add)>") != tags.end(), true);
+            EXPECT_TRUE(tags.find("<Opset1_Upgrade (v0 Add)>") != tags.end());
         }
         else if (as_type_ptr<op::v1::Multiply>(node))
         {
             EXPECT_EQ(tags.size(), 1);
-            EXPECT_EQ(tags.find("<Opset1_Upgrade (v0 Multiply)>") != tags.end(), true);
+            EXPECT_TRUE(tags.find("<Opset1_Upgrade (v0 Multiply)>") != tags.end());
         }
         else if (as_type_ptr<op::v1::Subtract>(node))
         {
             EXPECT_EQ(tags.size(), 1);
-            EXPECT_EQ(tags.find("<Opset1_Upgrade (v0 Subtract)>") != tags.end(), true);
+            EXPECT_TRUE(tags.find("<Opset1_Upgrade (v0 Subtract)>") != tags.end());
         }
         else if (as_type_ptr<op::v0::Abs>(node))
         {
-            EXPECT_EQ(tags.empty(), true);
+            EXPECT_TRUE(tags.empty());
         }
     }
 }
@@ -658,21 +658,21 @@ TEST(provenance, opset0_downgrade_pass_graph)
         if (as_type_ptr<op::v0::Add>(node))
         {
             EXPECT_EQ(tags.size(), 1);
-            EXPECT_EQ(tags.find("<Opset0_Downgrade (v1 Add)>") != tags.end(), true);
+            EXPECT_TRUE(tags.find("<Opset0_Downgrade (v1 Add)>") != tags.end());
         }
         else if (as_type_ptr<op::v0::Multiply>(node))
         {
             EXPECT_EQ(tags.size(), 1);
-            EXPECT_EQ(tags.find("<Opset0_Downgrade (v1 Multiply)>") != tags.end(), true);
+            EXPECT_TRUE(tags.find("<Opset0_Downgrade (v1 Multiply)>") != tags.end());
         }
         else if (as_type_ptr<op::v0::Subtract>(node))
         {
             EXPECT_EQ(tags.size(), 1);
-            EXPECT_EQ(tags.find("<Opset0_Downgrade (v1 Subtract)>") != tags.end(), true);
+            EXPECT_TRUE(tags.find("<Opset0_Downgrade (v1 Subtract)>") != tags.end());
         }
         else if (as_type_ptr<op::v0::Abs>(node))
         {
-            EXPECT_EQ(tags.empty(), true);
+            EXPECT_TRUE(tags.empty());
         }
     }
 }
