@@ -120,9 +120,11 @@ op::Constant::~Constant()
 string op::Constant::convert_value_to_string(size_t index) const
 {
     string rc;
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+#endif
     switch (get_element_type())
     {
     case element::Type_t::boolean: rc = to_string(get_vector<char>()[index]); break;
@@ -148,7 +150,9 @@ string op::Constant::convert_value_to_string(size_t index) const
     case element::Type_t::undefined: throw runtime_error("unsupported type");
     case element::Type_t::dynamic: throw runtime_error("unsupported type");
     }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
+#endif
     return rc;
 }
 
@@ -156,9 +160,11 @@ vector<string> op::Constant::get_value_strings() const
 {
     vector<string> rc;
 
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+#endif
     switch (get_element_type())
     {
     case element::Type_t::boolean:
@@ -243,15 +249,17 @@ vector<string> op::Constant::get_value_strings() const
     case element::Type_t::undefined: throw runtime_error("unsupported type");
     case element::Type_t::dynamic: throw runtime_error("unsupported type");
     }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
+#endif
 
     return rc;
 }
 
 Shape op::Constant::get_shape_val() const
 {
-    NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_shape = get_vector<int64_t>();
+    NGRAPH_CHECK(m_element_type.is_integral_number());
+    std::vector<int64_t> out_shape = cast_vector<int64_t>();
     Shape output_shape(shape_size(m_shape));
     std::transform(out_shape.begin(), out_shape.end(), output_shape.begin(), [&](const int64_t& v) {
         return (v > 0) ? v : 0;
@@ -297,8 +305,8 @@ CoordinateDiff op::Constant::get_coordinate_diff_val() const
 
 AxisVector op::Constant::get_axis_vector_val() const
 {
-    NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_axis_vector = get_vector<int64_t>();
+    NGRAPH_CHECK(m_element_type.is_integral_number());
+    std::vector<int64_t> out_axis_vector = cast_vector<int64_t>();
     AxisVector output_axis_vector(shape_size(m_shape));
     std::transform(out_axis_vector.begin(),
                    out_axis_vector.end(),
@@ -309,10 +317,10 @@ AxisVector op::Constant::get_axis_vector_val() const
 
 AxisSet op::Constant::get_axis_set_val() const
 {
-    NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_axis_set = get_vector<int64_t>();
+    NGRAPH_CHECK(m_element_type.is_integral_number());
+    std::vector<int64_t> out_axis_set = cast_vector<int64_t>();
     AxisSet output_axis_set;
-    for (auto& axis : get_vector<int64_t>())
+    for (auto& axis : out_axis_set)
     {
         output_axis_set.insert(axis > 0 ? axis : 0);
     }
@@ -349,9 +357,11 @@ static bool test_bitwise_identical(const op::Constant* constant)
 bool op::Constant::are_all_data_elements_bitwise_identical() const
 {
     bool rc = false;
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+#endif
     switch (get_element_type())
     {
     case element::Type_t::boolean:
@@ -387,7 +397,9 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
     case element::Type_t::undefined:
     case element::Type_t::dynamic: break;
     }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
+#endif
     return rc;
 }
 

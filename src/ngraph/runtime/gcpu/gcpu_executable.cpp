@@ -127,8 +127,10 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
 
         // get op type
         element::Type type;
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
+#endif
         switch (type_id)
         {
         case ngraph::runtime::interpreter::OP_TYPEID::Convert:
@@ -154,7 +156,9 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
             break;
         default: type = op->get_output_element_type(0); break;
         }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
+#endif
 
         if (m_performance_counters_enabled)
         {
