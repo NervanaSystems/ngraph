@@ -258,8 +258,8 @@ vector<string> op::Constant::get_value_strings() const
 
 Shape op::Constant::get_shape_val() const
 {
-    NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_shape = get_vector<int64_t>();
+    NGRAPH_CHECK(m_element_type.is_integral_number());
+    std::vector<int64_t> out_shape = cast_vector<int64_t>();
     Shape output_shape(shape_size(m_shape));
     std::transform(out_shape.begin(), out_shape.end(), output_shape.begin(), [&](const int64_t& v) {
         return (v > 0) ? v : 0;
@@ -305,8 +305,8 @@ CoordinateDiff op::Constant::get_coordinate_diff_val() const
 
 AxisVector op::Constant::get_axis_vector_val() const
 {
-    NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_axis_vector = get_vector<int64_t>();
+    NGRAPH_CHECK(m_element_type.is_integral_number());
+    std::vector<int64_t> out_axis_vector = cast_vector<int64_t>();
     AxisVector output_axis_vector(shape_size(m_shape));
     std::transform(out_axis_vector.begin(),
                    out_axis_vector.end(),
@@ -317,10 +317,10 @@ AxisVector op::Constant::get_axis_vector_val() const
 
 AxisSet op::Constant::get_axis_set_val() const
 {
-    NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_axis_set = get_vector<int64_t>();
+    NGRAPH_CHECK(m_element_type.is_integral_number());
+    std::vector<int64_t> out_axis_set = cast_vector<int64_t>();
     AxisSet output_axis_set;
-    for (auto& axis : get_vector<int64_t>())
+    for (auto& axis : out_axis_set)
     {
         output_axis_set.insert(axis > 0 ? axis : 0);
     }
