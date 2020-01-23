@@ -161,7 +161,7 @@ void op::v1::Reshape::validate_and_infer_types()
     auto pattern_et = get_input_element_type(1);
     // check data types
     NODE_VALIDATION_CHECK(
-        this, pattern_et.compatible(element::Type_t::i64), "Pattern must have element type i64.");
+        this, pattern_et.is_integral_number(), "Pattern must be an integral number.");
 
     // check shapes
     const PartialShape& pattern_shape = get_input_partial_shape(1);
@@ -176,7 +176,7 @@ void op::v1::Reshape::validate_and_infer_types()
 
     if (auto const_shape = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
-        std::vector<int64_t> out_shape_val = const_shape->get_vector<int64_t>();
+        std::vector<int64_t> out_shape_val = const_shape->cast_vector<int64_t>();
         NODE_VALIDATION_CHECK(this,
                               std::none_of(out_shape_val.begin(),
                                            out_shape_val.end(),
