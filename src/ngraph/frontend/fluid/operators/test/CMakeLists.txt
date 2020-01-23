@@ -24,6 +24,11 @@ if(NOT NGRAPH_CPU_ENABLE)
     return()
 endif()
 
+if(NOT NGRAPH_TEST_UTIL_ENABLE)
+    message(WARNING "Fluid test: Turning on test util!")
+    set(NGRAPH_TEST_UTIL_ENABLE ON)
+endif()
+
 message(STATUS "fluid tests enabled")
 
 if(LINUX)

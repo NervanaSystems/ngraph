@@ -33,6 +33,7 @@
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
+#include <mlir/IR/StandardTypes.h>
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>

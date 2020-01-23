@@ -163,6 +163,14 @@ namespace ngraph
     template <>
     double parse_string<double>(const std::string& s);
 
+    /// template specializations for int8_t and uint8_t to handle the fact that default
+    /// implementation ends up treating values as characters so that the number "0" turns into
+    /// the parsed value 48, which is it's ASCII value
+    template <>
+    int8_t parse_string<int8_t>(const std::string& s);
+    template <>
+    uint8_t parse_string<uint8_t>(const std::string& s);
+
     /// Parses a list of strings containing literals of the underlying type.
     template <typename T>
     std::vector<T> parse_string(const std::vector<std::string>& ss)
