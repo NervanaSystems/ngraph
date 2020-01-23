@@ -21,6 +21,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/util.hpp"
@@ -240,11 +241,13 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                     auto recv_node_name = "RECV_" + to_string(fake_node_ctr);
                     auto send_node_name = "SEND_" + to_string(fake_node_ctr);
 
-                    m_ss << "    " << recv_node_name << "[shape=\"box\" style=\"solid,filled\" "
-                                                        "fillcolor=\"#ffcccc\" label=\"Receive["
+                    m_ss << "    " << recv_node_name
+                         << "[shape=\"box\" style=\"solid,filled\" "
+                            "fillcolor=\"#ffcccc\" label=\"Receive["
                          << arg->get_name() << "]\"]\n";
-                    m_ss << "    " << send_node_name << "[shape=\"box\" style=\"solid,filled\" "
-                                                        "fillcolor=\"#ccffcc\" label=\"Send["
+                    m_ss << "    " << send_node_name
+                         << "[shape=\"box\" style=\"solid,filled\" "
+                            "fillcolor=\"#ccffcc\" label=\"Send["
                          << node->get_name() << "]\"]\n";
 
                     m_ss << "    " << arg->get_name() << " -> " << send_node_name
@@ -348,9 +351,14 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
         {
             // The shapes of the Outputs of a multi-output op
             // will be printed for its corresponding `GetOutputElement`s
-            label << " " << (node->get_output_size() != 1
-                                 ? string("[skipped]")
-                                 : pretty_partial_shape(node->get_output_partial_shape(0)));
+            label << " "
+                  << (node->get_output_size() != 1
+                          ? string("[skipped]")
+                          : pretty_partial_shape(node->get_output_partial_shape(0)));
+            if (auto reshape = dynamic_cast<const op::Reshape*>(&(*node)))
+            {
+                label << "\ninput_order=" << reshape->get_input_order();
+            }
         }
 
         static const char* nvtot = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
