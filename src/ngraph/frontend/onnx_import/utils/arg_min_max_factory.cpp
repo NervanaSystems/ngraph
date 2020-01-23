@@ -63,8 +63,8 @@ namespace ngraph
 
                 if (m_keep_dims == 0)
                 {
-                    const auto reshaped_indices =
-                        ngraph::builder::opset1::squeeze(indices, {m_normalized_axis});
+                    const auto reshaped_indices = ngraph::builder::opset1::squeeze(
+                        indices, {static_cast<std::size_t>(m_normalized_axis)});
                     return std::make_shared<default_opset::Convert>(reshaped_indices, element::i64);
                 }
                 return std::make_shared<default_opset::Convert>(indices, element::i64);

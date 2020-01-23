@@ -195,26 +195,6 @@ shared_ptr<Node> builder::opset1::reorder_axes(const Output<Node>& value, vector
         ->add_provenance_group_members_above({value});
 }
 
-shared_ptr<Node> builder::opset1::squeeze(const Output<Node>& value, vector<size_t> axes)
-{
-    if (axes.empty())
-    {
-        return value.get_node_shared_ptr();
-    }
-
-    Shape in_shape{value.get_shape()};
-    for (size_t idx = 0; idx < axes.size(); ++idx)
-    {
-        in_shape.at(axes.at(idx)) = 0;
-    }
-    Shape output_shape;
-    copy_if(begin(in_shape), end(in_shape), back_inserter(output_shape), [](size_t a) {
-        return a != 0;
-    });
-
-    return builder::opset1::reshape(value, output_shape);
-}
-
 shared_ptr<Node> builder::opset1::transpose(const Output<Node>& value)
 {
     vector<size_t> axes_order(value.get_shape().size());
@@ -249,7 +229,7 @@ shared_ptr<Node> builder::opset1::expand_dims(const Output<Node>& value, size_t 
     return builder::opset1::reshape(value, output_shape);
 }
 
-shared_ptr<Node> builder::opset1::squeeze(const Output<Node>& value, vector<int64_t> axes)
+shared_ptr<Node> builder::opset1::squeeze(const Output<Node>& value, vector<size_t> axes)
 {
     if (axes.empty())
     {
