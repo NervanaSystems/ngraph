@@ -123,16 +123,6 @@ namespace ngraph
             std::shared_ptr<Node> reorder_axes(const Output<Node>& value,
                                                std::vector<size_t> axes_order = {});
 
-            /// \brief      Remove empty axes from input tensor.
-            ///
-            /// \param[in]  value  The value to be squeezed.
-            /// \param[in]  axes   The vector defining indexes of axes to be removed.
-            ///
-            /// \return     The squeezed node.
-            ///
-            std::shared_ptr<Node> squeeze(const Output<Node>& value,
-                                          std::vector<std::size_t> axes = {0});
-
             /// \brief      Return transposed vlaue (with axes in reversed order).
             ///
             /// \param      Value to transpose.
@@ -166,7 +156,7 @@ namespace ngraph
             ///
             /// \return     Reshape:v1 op.
             std::shared_ptr<Node> squeeze(const Output<Node>& value,
-                                          std::vector<std::int64_t> axes = {0});
+                                          std::vector<std::size_t> axes = {0});
         }
     } // namespace  builder
 } // namespace  ngraph
