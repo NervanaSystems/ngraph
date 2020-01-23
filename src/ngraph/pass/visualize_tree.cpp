@@ -21,6 +21,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/util.hpp"
@@ -351,6 +352,10 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
             label << " " << (node->get_output_size() != 1
                                  ? string("[skipped]")
                                  : pretty_partial_shape(node->get_output_partial_shape(0)));
+            if (auto reshape = dynamic_cast<const op::Reshape*>(&(*node)))
+            {
+                label << "\ninput_order=" << reshape->get_input_order();
+            }
         }
 
         static const char* nvtot = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
