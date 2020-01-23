@@ -270,10 +270,6 @@ if (NGRAPH_CPU_ENABLE)
     message(STATUS "NGRAPH_TBB_ENABLE:                    ${NGRAPH_TBB_ENABLE}")
 endif()
 
-if("${CMAKE_GENERATOR}" STREQUAL "Ninja" AND NGRAPH_MLIR_ENABLE)
-    message(FATAL_ERROR "Ninja generator not supported.")
-endif()
-
 if (NGRAPH_CPU_ENABLE AND NGRAPH_MLIR_ENABLE)
     #MLIR uses the latest version of LLVM which requires C++14.
     set(NGRAPH_CXX_STANDARD 14)
