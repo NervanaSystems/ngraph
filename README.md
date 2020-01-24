@@ -27,6 +27,15 @@ The Python wheels for nGraph have been tested and are supported on the following
 * Debian 10
 * macOS 10.14.3 (Mojave)
 
+To install via pip, run: 
+
+```python
+
+pip install --upgrade pip==19.3.1
+pip install ngraph-core
+```
+
+
 Frameworks using nGraph Compiler stack to execute workloads have shown 
 [**up to 45X**](https://ai.intel.com/ngraph-compiler-stack-beta-release/) 
 performance boost when compared to native framework implementations. We've also 

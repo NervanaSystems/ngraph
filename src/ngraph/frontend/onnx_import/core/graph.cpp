@@ -92,7 +92,7 @@ namespace ngraph
             }
         } // namespace detail
 
-        Graph::Graph(const onnx::GraphProto& graph_proto, Model& model, const Weights& weights)
+        Graph::Graph(const onnx::GraphProto& graph_proto, Model& model)
             : m_graph_proto{&graph_proto}
             , m_model{&model}
         {
@@ -123,7 +123,7 @@ namespace ngraph
                 }
 
                 const auto value_info = m_inputs.back();
-                auto ng_node = value_info.get_ng_node(m_parameters, m_initializers, weights);
+                auto ng_node = value_info.get_ng_node(m_parameters, m_initializers);
                 add_provenance_tag_to_input(value_info, ng_node);
                 m_ng_node_cache[input.name()] = std::move(ng_node);
             }
