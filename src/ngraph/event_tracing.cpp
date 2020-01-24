@@ -27,7 +27,7 @@ using namespace std;
 
 NGRAPH_API mutex ngraph::Event::s_file_mutex;
 NGRAPH_API ofstream ngraph::Event::s_event_log;
-NGRAPH_API bool ngraph::Event::s_tracing_enabled = ngraph::getenv_bool("NGRAPH_ENABLE_TRACING");
+NGRAPH_API bool ngraph::Event::s_tracing_enabled = ngraph::getenv_bool(ngraph::EnvVarEnum::NGRAPH_ENABLE_TRACING);
 NGRAPH_API bool ngraph::Event::s_event_writer_registered = false;
 NGRAPH_API std::function<void(const ngraph::Event& event)> ngraph::Event::s_event_writer;
 

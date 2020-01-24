@@ -105,7 +105,7 @@ protected:
 
 TEST_P(all_close_f_param_test, test_boundaries)
 {
-    if (getenv_bool("NGRAPH_GTEST_INFO"))
+    if (getenv_bool(ngraph::EnvVarEnum::NGRAPH_GTEST_INFO))
     {
         // Print short string documenting which test is being run
         std::cout << "[   INFO   ] Test params: (" << expected << ", " << tolerance_bits << ")\n";
@@ -262,7 +262,7 @@ protected:
 
 TEST_P(all_close_f_double_param_test, test_boundaries)
 {
-    if (getenv_bool("NGRAPH_GTEST_INFO"))
+    if (getenv_bool(ngraph::EnvVarEnum::NGRAPH_GTEST_INFO))
     {
         // Print short string documenting which test is being run
         std::cout << "[   INFO   ] Test params: (" << expected << ", " << tolerance_bits << ")\n";

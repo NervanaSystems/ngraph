@@ -69,7 +69,7 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
     vector<MatchClosure> original_matchers{m_matchers};
     // This check is very expensive and is only needed for experimental features, so we will hide
     // it behind an environment variable for now. TODO: Find a less expensive way to handle this.
-    static bool s_rerun_dynamic_check = getenv_bool("NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK");
+    static bool s_rerun_dynamic_check = getenv_bool(ngraph::EnvVarEnum::NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK);
     bool is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
     do
     {
@@ -124,7 +124,7 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
 
 static vector<regex> initialize_fusion_regexes()
 {
-    static const string nsf = getenv_string("NGRAPH_DISABLED_FUSIONS");
+    static const string nsf = getenv_string(ngraph::EnvVarEnum::NGRAPH_DISABLED_FUSIONS);
     vector<regex> regexes;
     if (!nsf.empty())
     {
@@ -209,7 +209,7 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
 
     // This check is very expensive and is only needed for experimental features, so we will hide
     // it behind an environment variable for now. TODO: Find a less expensive way to handle this.
-    static bool s_rerun_dynamic_check = getenv_bool("NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK");
+    static bool s_rerun_dynamic_check = getenv_bool(ngraph::EnvVarEnum::NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK);
 
     auto run_matchers = [&]() -> bool {
         bool is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();

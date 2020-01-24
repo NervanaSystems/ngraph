@@ -405,7 +405,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     }
 
     bool all_below_min_signal = below_min_count == distances.size();
-    if (rc && (getenv_bool("NGRAPH_GTEST_INFO")))
+    if (rc && (getenv_bool(ngraph::EnvVarEnum::NGRAPH_GTEST_INFO)))
     {
         // Short unobtrusive message when passing
         std::cout << "[   INFO   ] Verifying match of <= " << (FLOAT_MANTISSA_BITS - tolerance_bits)
@@ -537,7 +537,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     }
 
     bool all_below_min_signal = below_min_count == distances.size();
-    if (rc && (getenv_bool("NGRAPH_GTEST_INFO")))
+    if (rc && (getenv_bool(ngraph::EnvVarEnum::NGRAPH_GTEST_INFO)))
     {
         // Short unobtrusive message when passing
         std::cout << "[   INFO   ] Verifying match of >= "

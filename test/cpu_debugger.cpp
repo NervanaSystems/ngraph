@@ -41,7 +41,7 @@ using namespace std;
 
 bool static is_codegen_mode()
 {
-    static bool codegen_mode = getenv_bool("NGRAPH_CODEGEN");
+    static bool codegen_mode = getenv_bool(ngraph::EnvVarEnum::NGRAPH_CODEGEN);
     ;
     return codegen_mode;
 }

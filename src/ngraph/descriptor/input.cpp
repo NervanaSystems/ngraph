@@ -58,7 +58,7 @@ void descriptor::Input::replace_output(Output& new_output)
     m_output = &new_output;
     m_src_node = std::shared_ptr<Node>(new_output.get_node());
 
-    if (getenv_bool("NGRAPH_ENABLE_REPLACE_CHECK"))
+    if (getenv_bool(EnvVarEnum::NGRAPH_ENABLE_REPLACE_CHECK))
     {
         // the result of copy_with_new_args will be thrown away or
         // an exception will be thrown by `m_node`'s class c-tor

@@ -71,7 +71,7 @@ namespace ngraph
         NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES = 41,
         NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES = 42,
         OMP_NUM_THREADS = 43,
-        NGRAPH_MAX_ENV_VAR = OMP_NUM_THREADS
+        NGRAPH_ENV_VARS_COUNT
     };
     //}
     // template class NGRAPH_API ngraph::EnumMask<ngraph::EnvVarEnum>;
@@ -93,14 +93,14 @@ namespace ngraph
     /// \param env_var The string name of the environment variable to get.
     /// \return Returns string by value or an empty string if the environment
     ///         variable is not set.
-    std::string getenv_string(const char* env_var);
+    std::string getenv_string(const EnvVarEnum env_var);
 
     /// \brief Get the names environment variable as an integer. If the value is not a
     ///        valid integer then an exception is thrown.
     /// \param env_var The string name of the environment variable to get.
     /// \param default_value The value to return if the environment variable is not set.
     /// \return Returns value or default_value if the environment variable is not set.
-    int32_t getenv_int(const char* env_var, int32_t default_value = -1);
+    int32_t getenv_int(const EnvVarEnum env_var/*, int32_t default_value = -1*/);
 
     /// \brief Get the names environment variable as a boolean. If the value is not a
     ///        valid boolean then an exception is thrown. Valid booleans are one of
@@ -110,20 +110,21 @@ namespace ngraph
     /// \param env_var The string name of the environment variable to get.
     /// \param default_value The value to return if the environment variable is not set.
     /// \return Returns the boolean value of the environment variable.
-    bool getenv_bool(const char* env_var, bool default_value = false);
+    bool getenv_bool(const EnvVarEnum env_var/*, bool default_value = false*/);
 
     /// \brief Adds the environment variable with it's value to the map.
     /// \param env_var The string name of the environment variable to add.
     /// \param val The string value of the environment variable to add.
-    void addenv_to_cache(const char* env_var, const char* val);
+    void addenv_to_cache(const EnvVarEnum env_var, const char* val);
 
     /// \brief Gets value of the environment variable from the map.
     /// \param env_var The string name of the environment variable to get.
     /// \return Returns string value of the environment variable.
-    std::string getenv_from_cache(const char* env_var);
+    std::string getenv_from_cache(const EnvVarEnum env_var);
 
     /// \brief Logs the current environment variables and their values.
     void log_all_envvar();
+    void log_registry_envvar();
 
     /// \brief Set the environment variable.
     /// \param env_var The string name of the environment variable to set.
@@ -134,20 +135,21 @@ namespace ngraph
     /// \return Returns 0 if successful, -1 in case of error.
     // template <typename ET>
     // NGRAPH_API int set_environment(ET env_var, const char* value, const int overwrite = 0);
-    NGRAPH_API int set_environment(EnvVarEnum env_var, const char* value, const int overwrite = 0);
+    NGRAPH_API int set_environment(const EnvVarEnum env_var, const char* value, const int overwrite = 0);
 
     /// \brief Unset the environment variable.
     /// \param env_var The string name of the environment variable to unset.
     /// \return Returns 0 if successful, -1 in case of error.
     // template <typename ET>
-    NGRAPH_API int unset_environment(EnvVarEnum env_var);
+    NGRAPH_API int unset_environment(const EnvVarEnum env_var);
 
     /// \brief Check if the environment variable is present in the cache map.
     /// \param env_var The string name of the environment variable to check.
     /// \return Returns true if found, else false.
-    bool env_cache_contains(const char* env_var);
+    bool env_cache_contains(const EnvVarEnum env_var);
 
     /// \brief Delete the environment variable from the cache map.
     /// \param env_var The string name of the environment variable to delete.
-    void erase_env_from_cache(const char* env_var);
+    void erase_env_from_cache(const EnvVarEnum env_var);
+
 }

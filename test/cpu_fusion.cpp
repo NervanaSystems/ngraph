@@ -94,6 +94,11 @@
 using namespace ngraph;
 using namespace std;
 
+TEST(cpu_fusion, log_env_registry)
+{
+    log_registry_envvar();
+}
+
 TEST(cpu_fusion, gemm_pattern)
 {
     Shape shape_w{2, 4};
@@ -1210,7 +1215,7 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
 
 TEST(cpu_fusion, fuse_deconv)
 {
-    bool use_deconv_fuse = (getenv_bool("NGRAPH_DECONV_FUSE"));
+    bool use_deconv_fuse = (getenv_bool(ngraph::EnvVarEnum::NGRAPH_DECONV_FUSE));
     if (!use_deconv_fuse)
     {
         set_environment(EnvVarEnum::NGRAPH_DECONV_FUSE, "1", 1);

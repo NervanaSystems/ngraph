@@ -33,7 +33,7 @@ pass::PassConfig::PassConfig()
     // E.g., NGRAPH_PASS_ENABLES="CoreFusion:0;LikeReplacement:1;CPUCollapseDims" would
     //       set disables on CoreFusion and enables on LikeReplacement and CPUCollapseDims
     //
-    static const string pass_enables = getenv_string("NGRAPH_PASS_ENABLES");
+    static const string pass_enables = getenv_string(ngraph::EnvVarEnum::NGRAPH_PASS_ENABLES);
     if (!pass_enables.empty())
     {
         stringstream ss;
@@ -61,7 +61,7 @@ pass::PassConfig::PassConfig()
     //  would set false on "OptimizeForMemory", true on "MemoryAssignment::ReuseMemory" and true on
     //  "UseDefaultLayouts"
     //
-    static const string pass_attributes = getenv_string("NGRAPH_PASS_ATTRIBUTES");
+    static const string pass_attributes = getenv_string(ngraph::EnvVarEnum::NGRAPH_PASS_ATTRIBUTES);
     if (!pass_attributes.empty())
     {
         stringstream ss;

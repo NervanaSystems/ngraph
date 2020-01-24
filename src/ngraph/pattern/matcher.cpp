@@ -227,7 +227,7 @@ namespace ngraph
             // This env var allows one to specify node name patterns to abort pattern matching
             // at particular nodes. The upshot is that one can quickly zero in on an offending
             // fusion by disabling individual fusions or optimizations that use Matcher.
-            static const std::string node_skip_cregex = getenv_string("NGRAPH_FAIL_MATCH_AT");
+            static const std::string node_skip_cregex = getenv_string(ngraph::EnvVarEnum::NGRAPH_FAIL_MATCH_AT);
             if (!node_skip_cregex.empty())
             {
                 static const std::regex node_skip_regex(node_skip_cregex);

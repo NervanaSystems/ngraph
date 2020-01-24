@@ -23,7 +23,7 @@ using namespace ngraph;
 runtime::cpu::CPU_DebugTracer::CPU_DebugTracer()
     : m_serial_number(0)
 {
-    static const bool debug_t = getenv_bool("NGRAPH_CPU_DEBUG_TRACER");
+    static const bool debug_t = getenv_bool(ngraph::EnvVarEnum::NGRAPH_CPU_DEBUG_TRACER);
     if (debug_t)
     {
         m_enable_tracing = true;
@@ -39,8 +39,8 @@ void runtime::cpu::CPU_DebugTracer::init_streams()
         return;
     }
 
-    static string trace_file_path = getenv_string("NGRAPH_CPU_TRACER_LOG");
-    static string trace_bin_file_path = getenv_string("NGRAPH_CPU_BIN_TRACER_LOG");
+    static string trace_file_path = getenv_string(ngraph::EnvVarEnum::NGRAPH_CPU_TRACER_LOG);
+    static string trace_bin_file_path = getenv_string(ngraph::EnvVarEnum::NGRAPH_CPU_BIN_TRACER_LOG);
     if (trace_file_path.empty())
     {
         trace_file_path = "trace_meta.log";

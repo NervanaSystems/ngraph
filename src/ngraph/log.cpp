@@ -123,7 +123,7 @@ void ngraph::LogPrintf(const char* fmt, ...)
 // This function will be executed only once during startup (loading of the DSO)
 static bool CheckLoggingLevel()
 {
-    if (getenv_bool("NGRAPH_DISABLE_LOGGING"))
+    if (getenv_bool(ngraph::EnvVarEnum::NGRAPH_DISABLE_LOGGING))
     {
         return true;
     }

@@ -37,8 +37,8 @@ using namespace std;
 using namespace ngraph;
 
 pass::Manager::Manager()
-    : m_visualize(getenv_bool("NGRAPH_ENABLE_VISUALIZE_TRACING"))
-    , m_serialize(getenv_bool("NGRAPH_ENABLE_SERIALIZE_TRACING"))
+    : m_visualize(getenv_bool(ngraph::EnvVarEnum::NGRAPH_ENABLE_VISUALIZE_TRACING))
+    , m_serialize(getenv_bool(ngraph::EnvVarEnum::NGRAPH_ENABLE_SERIALIZE_TRACING))
 
 {
 }
@@ -49,7 +49,7 @@ pass::Manager::~Manager()
 
 void pass::Manager::run_passes(shared_ptr<Function> func, bool /* transitive */)
 {
-    static bool profile_enabled = getenv_bool("NGRAPH_PROFILE_PASS_ENABLE");
+    static bool profile_enabled = getenv_bool(ngraph::EnvVarEnum::NGRAPH_PROFILE_PASS_ENABLE);
 
     get_state().set_function(func);
     vector<std::pair<shared_ptr<Function>, bool>> fs{std::make_pair(func, func->is_dynamic())};
@@ -139,7 +139,7 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool /* transitive */)
 
             if (m_visualize)
             {
-                static const string format = getenv_string("NGRAPH_VISUALIZE_TRACING_FORMAT");
+                static const string format = getenv_string(ngraph::EnvVarEnum::NGRAPH_VISUALIZE_TRACING_FORMAT);
                 auto file_ext = format.empty() ? "svg" : format;
                 pass::VisualizeTree vt(base_filename + std::string(".") + file_ext);
                 vt.set_ops_to_details(get_state().get_visualize_tree_ops_map());

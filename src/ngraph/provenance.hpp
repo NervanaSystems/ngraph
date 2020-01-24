@@ -22,7 +22,7 @@
 
 namespace ngraph
 {
-    static bool s_provenance_enabled = getenv_bool("NGRAPH_PROVENANCE_ENABLE");
+    static bool s_provenance_enabled = getenv_bool(ngraph::EnvVarEnum::NGRAPH_PROVENANCE_ENABLE);
     void set_provenance_enabled(bool enabled);
     bool get_provenance_enabled();
 }
