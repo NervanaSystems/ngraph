@@ -55,6 +55,12 @@ ngraph::Coordinate::Coordinate(const Coordinate& axes)
 ngraph::Coordinate::Coordinate(size_t n, size_t initial_value)
     : std::vector<size_t>(n, initial_value)
 {
+    static size_t max = 0;
+    if(n > max) 
+    {
+       max = n;
+      std::cout << "Coordinate : New Max " << max  << std::endl;
+    }
 }
 
 ngraph::Coordinate::~Coordinate()
