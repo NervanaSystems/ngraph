@@ -164,7 +164,7 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
-                /// \return The data batch shape.
+                /// \return The output spatial dimensions shape.
                 const PartialShape get_output_shape() const;
                 void set_output_shape(const Shape& output_shape);
                 /// \return The strides from the forward prop.

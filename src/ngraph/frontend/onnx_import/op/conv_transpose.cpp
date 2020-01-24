@@ -53,8 +53,8 @@ namespace ngraph
                     auto dilations = convpool::get_dilations(node);
                     auto paddings = convpool::get_pads(node);
                     ngraph::op::PadType auto_pad_type = convpool::get_auto_pad(node);
-                    CoordinateDiff padding_below = paddings.first;
-                    CoordinateDiff padding_above = paddings.second;
+                    CoordinateDiff pads_begin = paddings.first;
+                    CoordinateDiff pads_end = paddings.second;
 
                     std::vector<std::int64_t> output_shape{
                         node.get_attribute_value<std::vector<std::int64_t>>("output_shape", {})};
@@ -124,8 +124,8 @@ namespace ngraph
                             data,
                             filters,
                             strides,
-                            padding_below,
-                            padding_above,
+                            pads_begin,
+                            pads_end,
                             dilations,
                             auto_pad_type,
                             CoordinateDiff(std::begin(output_padding), std::end(output_padding)));
