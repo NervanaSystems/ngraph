@@ -17,9 +17,9 @@
 
 import lit.llvm
 
-config.llvm_tools_dir = "@MLIR_TOOLS_DIR@"
-config.mlir_obj_root = "@MLIR_BUILD_DIR@"
-config.mlir_tools_dir = "@MLIR_TOOLS_DIR@"
+config.llvm_tools_dir = "@MLIR_LLVM_TOOLS_DIR@"
+config.mlir_obj_root = "@MLIR_LLVM_BUILD_DIR@"
+config.mlir_tools_dir = "@MLIR_LLVM_TOOLS_DIR@"
 config.suffixes = ['.mlir']
 
 config.ngraph_mlir_tools_dir = "@NGRAPH_BUILD_BIN@"
