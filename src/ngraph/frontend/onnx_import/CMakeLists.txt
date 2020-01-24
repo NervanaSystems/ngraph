@@ -20,7 +20,6 @@ add_library(onnx_import_interface OBJECT
         core/node.cpp
         core/node.hpp
         core/operator_set.hpp
-        core/weight.hpp
         onnx.cpp
         onnx.hpp)
 

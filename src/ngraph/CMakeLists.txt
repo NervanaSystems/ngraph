@@ -555,11 +555,24 @@ set (SRC
     pass/pass_util.cpp
     pattern/matcher.cpp
     pattern/matcher.hpp
+    pattern/op/any.cpp
     pattern/op/any.hpp
+    pattern/op/any_of.cpp
     pattern/op/any_of.hpp
+    pattern/op/branch.cpp
+    pattern/op/branch.hpp
+    pattern/op/capture.cpp
+    pattern/op/capture.hpp
+    pattern/op/label.cpp
     pattern/op/label.hpp
+    pattern/op/or.cpp
+    pattern/op/or.hpp
+    pattern/op/pattern.cpp
     pattern/op/pattern.hpp
+    pattern/op/skip.cpp
     pattern/op/skip.hpp
+    pattern/op/true.cpp
+    pattern/op/true.hpp
     placement.cpp
     placement.hpp
     provenance.cpp
