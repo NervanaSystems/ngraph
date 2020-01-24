@@ -18,7 +18,7 @@
 
 #include <onnx/onnx_pb.h>
 
-#include "ngraph/frontend/onnx_import/default_opset.hpp"
+#include "default_opset.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "node.hpp"

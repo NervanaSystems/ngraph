@@ -35,14 +35,17 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, onnx_dynamic_dims_to_ngraph_dynamic
     const auto& graph_inputs = function->get_parameters();
     EXPECT_EQ(graph_inputs.size(), 3);
 
+    // all inputs in the model have a 2D partial shape {?, 2}
     for (const auto& input : graph_inputs)
     {
         const auto& input_ps = input->get_partial_shape();
         EXPECT_TRUE(input_ps.is_dynamic());
-        EXPECT_TRUE(input_ps.rank().is_static());
+
+        ASSERT_TRUE(input_ps.rank().is_static());
         EXPECT_EQ(static_cast<size_t>(input_ps.rank()), 2);
+
         EXPECT_TRUE(input_ps[0].is_dynamic());
-        EXPECT_TRUE(input_ps[1].is_static());
+        ASSERT_TRUE(input_ps[1].is_static());
         EXPECT_EQ(static_cast<size_t>(input_ps[1]), 2);
     }
 
@@ -51,10 +54,11 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, onnx_dynamic_dims_to_ngraph_dynamic
 
     const auto out = *(graph_outputs.cbegin());
     const auto& out_ps = out->get_output_partial_shape(0);
-    EXPECT_TRUE(out_ps.rank().is_static());
+    ASSERT_TRUE(out_ps.rank().is_static());
     EXPECT_EQ(static_cast<size_t>(out_ps.rank()), 2);
+
     EXPECT_TRUE(out_ps[0].is_dynamic());
-    EXPECT_TRUE(out_ps[1].is_static());
+    ASSERT_TRUE(out_ps[1].is_static());
     EXPECT_EQ(static_cast<size_t>(out_ps[1]), 2);
 }
 
