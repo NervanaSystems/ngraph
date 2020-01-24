@@ -610,14 +610,14 @@ std::ostream& Node::write_description(std::ostream& out, uint32_t depth) const
             out << sep << arg;
             sep = ", ";
         }
-        out << ") /* -> (";
+        out << "):(";
         sep = "";
         for (size_t i = 0; i < get_output_size(); i++)
         {
             out << sep << get_output_element_type(i) << get_output_partial_shape(i);
             sep = ", ";
         }
-        out << ") */";
+        out << ")";
     }
     return out;
 }
@@ -952,30 +952,30 @@ namespace ngraph
 {
     std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
     {
-        return output.get_node()->write_description(out, 0) << ".output(" << output.get_index()
-                                                            << ") /* " << output.get_element_type()
-                                                            << output.get_partial_shape() << " */";
+        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
+                                                            << "]:" << output.get_element_type()
+                                                            << output.get_partial_shape();
     }
 
     std::ostream& operator<<(std::ostream& out, const Output<const Node>& output)
     {
-        return output.get_node()->write_description(out, 0) << ".output(" << output.get_index()
-                                                            << ") /* " << output.get_element_type()
-                                                            << output.get_partial_shape() << " */";
+        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
+                                                            << "]:" << output.get_element_type()
+                                                            << output.get_partial_shape();
     }
 
     std::ostream& operator<<(std::ostream& out, const Input<Node>& input)
     {
         return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
-                                                           << ") /* " << input.get_element_type()
-                                                           << input.get_partial_shape() << " */";
+                                                           << "):" << input.get_element_type()
+                                                           << input.get_partial_shape();
     }
 
     std::ostream& operator<<(std::ostream& out, const Input<const Node>& input)
     {
         return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
-                                                           << ") /* " << input.get_element_type()
-                                                           << input.get_partial_shape() << " */";
+                                                           << "):" << input.get_element_type()
+                                                           << input.get_partial_shape();
     }
 }
 
