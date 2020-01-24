@@ -129,3 +129,26 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, scalar_initializers_shape_check)
         }
     }
 }
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, dynamic_rank_input_check)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/a_plus_b_dyn_rank.prototxt"));
+
+    const auto& graph_inputs = function->get_parameters();
+    ASSERT_EQ(graph_inputs.size(), 2);
+
+    const auto dyn_rank_input = graph_inputs[0];
+    const auto scalar_input = graph_inputs[1];
+
+    EXPECT_TRUE(dyn_rank_input->get_partial_shape().rank().is_dynamic());
+
+    ASSERT_TRUE(scalar_input->get_partial_shape().is_static());
+    EXPECT_EQ(scalar_input->get_partial_shape().to_shape(), Shape{});
+
+    const auto& graph_outputs = function->get_results();
+    EXPECT_EQ(graph_outputs.size(), 1);
+
+    const auto out = *(graph_outputs.cbegin());
+    EXPECT_TRUE(out->get_output_partial_shape(0).rank().is_dynamic());
+}
