@@ -590,50 +590,35 @@ const op::AutoBroadcastSpec& Node::get_autob() const
 
 namespace ngraph
 {
-    ostream& operator<<(ostream& out, const Node& node)
-    {
-        return out << NodeDescription(node, false);
-    }
+    ostream& operator<<(ostream& out, const Node& node) { return node.write_description(out, 1); }
+    ostream& operator<<(ostream& out, const Node* node) { return node->write_description(out, 1); }
 }
 
-std::ostream& Node::write_short_description(std::ostream& out) const
+std::ostream& Node::write_description(std::ostream& out, uint32_t depth) const
 {
-    return out << get_name();
-}
-
-static std::string pretty_element_type(const element::Type& et)
-{
-    if (et.is_dynamic())
+    if (depth == 0)
     {
-        return "?";
+        out << get_name();
     }
     else
     {
-        return et.c_type_string();
+        out << "v" << get_type_info().version << "::" << get_type_info().name << " " << get_name()
+            << "(";
+        string sep = "";
+        for (auto arg : input_values())
+        {
+            out << sep << arg;
+            sep = ", ";
+        }
+        out << ") /* -> (";
+        sep = "";
+        for (size_t i = 0; i < get_output_size(); i++)
+        {
+            out << sep << get_output_element_type(i) << get_output_partial_shape(i);
+            sep = ", ";
+        }
+        out << ") */";
     }
-}
-
-std::ostream& Node::write_long_description(std::ostream& out) const
-{
-    out << description() << '[' << get_name() << "](";
-    string sep = "";
-    for (auto arg : get_arguments())
-    {
-        out << sep << NodeDescription(*arg, true) << ": "
-            << pretty_element_type(arg->get_output_element_type(0))
-            << arg->get_output_partial_shape(0);
-        sep = ", ";
-    }
-    out << ") -> (";
-    sep = "";
-    for (size_t i = 0; i < get_output_size(); i++)
-    {
-        out << sep << pretty_element_type(get_output_element_type(i))
-            << get_output_partial_shape(i);
-        sep = ", ";
-    }
-    out << ")";
-
     return out;
 }
 
@@ -961,6 +946,37 @@ bool Node::is_dynamic() const
         }
     }
     return false;
+}
+
+namespace ngraph
+{
+    std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
+    {
+        return output.get_node()->write_description(out, 0) << ".output(" << output.get_index()
+                                                            << ") /* " << output.get_element_type()
+                                                            << output.get_partial_shape() << " */";
+    }
+
+    std::ostream& operator<<(std::ostream& out, const Output<const Node>& output)
+    {
+        return output.get_node()->write_description(out, 0) << ".output(" << output.get_index()
+                                                            << ") /* " << output.get_element_type()
+                                                            << output.get_partial_shape() << " */";
+    }
+
+    std::ostream& operator<<(std::ostream& out, const Input<Node>& input)
+    {
+        return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
+                                                           << ") /* " << input.get_element_type()
+                                                           << input.get_partial_shape() << " */";
+    }
+
+    std::ostream& operator<<(std::ostream& out, const Input<const Node>& input)
+    {
+        return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
+                                                           << ") /* " << input.get_element_type()
+                                                           << input.get_partial_shape() << " */";
+    }
 }
 
 Input<Node> Node::input(size_t input_index)
