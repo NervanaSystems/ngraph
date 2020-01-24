@@ -14,27 +14,30 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "core/node.hpp"
-#include "utils/arg_min_max_factory.hpp"
+#include "ngraph/pattern/op/or.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
-namespace ngraph
+using namespace std;
+using namespace ngraph;
+
+constexpr NodeTypeInfo pattern::op::Or::type_info;
+
+const NodeTypeInfo& pattern::op::Or::get_type_info() const
 {
-    namespace onnx_import
+    return type_info;
+}
+
+bool pattern::op::Or::match_value(Matcher* matcher,
+                                  const Output<Node>& pattern_value,
+                                  const Output<Node>& graph_value)
+{
+    for (auto input_value : input_values())
     {
-        namespace op
+        auto saved = matcher->start_match();
+        if (matcher->match_value(input_value, graph_value))
         {
-            namespace set_1
-            {
-                NodeVector argmin(const Node& node)
-                {
-                    const utils::ArgMinMaxFactory arg_factory(node);
-                    return {arg_factory.make_arg_min()};
-                }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            return saved.finish(true);
+        }
+    }
+    return false;
+}

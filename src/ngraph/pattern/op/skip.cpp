@@ -14,27 +14,24 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "core/node.hpp"
-#include "utils/arg_min_max_factory.hpp"
+#include "ngraph/pattern/op/skip.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
-namespace ngraph
+using namespace std;
+using namespace ngraph;
+
+constexpr NodeTypeInfo pattern::op::Skip::type_info;
+
+const NodeTypeInfo& pattern::op::Skip::get_type_info() const
 {
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector argmin(const Node& node)
-                {
-                    const utils::ArgMinMaxFactory arg_factory(node);
-                    return {arg_factory.make_arg_min()};
-                }
+    return type_info;
+}
 
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+bool pattern::op::Skip::match_value(Matcher* matcher,
+                                    const Output<Node>& pattern_value,
+                                    const Output<Node>& graph_value)
+{
+    matcher->add_node(graph_value);
+    return m_predicate(graph_value) ? matcher->match_arguments(pattern_value, graph_value)
+                                    : matcher->match_value(input_value(0), graph_value);
+}
