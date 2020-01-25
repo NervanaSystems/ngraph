@@ -648,10 +648,11 @@ if (NGRAPH_TEST_UTIL_ENABLE)
 endif()
 
 add_subdirectory(test)
-add_subdirectory(doc/examples)
 
 if (NGRAPH_DOC_BUILD_ENABLE)
     add_subdirectory(doc)
+else()
+    add_subdirectory(doc/examples)
 endif()
 
 if (NGRAPH_PYTHON_BUILD_ENABLE)
