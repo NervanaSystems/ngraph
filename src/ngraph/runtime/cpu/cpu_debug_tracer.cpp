@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/cpu_debug_tracer.hpp"
-#include "ngraph/env_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -44,11 +43,11 @@ void runtime::cpu::CPU_DebugTracer::init_streams()
         getenv_string(ngraph::EnvVarEnum::NGRAPH_CPU_BIN_TRACER_LOG);
     if (trace_file_path.empty())
     {
-        trace_file_path = "trace_meta.log";
+        trace_file_path = const_cast<char*>("trace_meta.log");
     }
-    if (trace_bin_file_path.empty())
+    if (trace_bin_file_path == nullptr)
     {
-        trace_bin_file_path = "trace_bin_data.log";
+        trace_bin_file_path = const_cast<char*>("trace_bin_data.log");
     }
 
     m_tracer_stream.open(trace_file_path, ios_base::out | ios_base::ate);

@@ -36,9 +36,9 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-runtime::interpreter::OP_TYPEID
-    runtime::interpreter::INTExecutable::get_typeid(const NodeTypeInfo& type_info)
+runtime::interpreter::OP_TYPEID runtime::interpreter::INTExecutable::get_typeid(const Node& node)
 {
+    const NodeTypeInfo& type_info = node.get_type_info();
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
     // {Abs::type_info, OP_TYPEID::Abs},
     // {Acos::type_info, OP_TYPEID::Acos},
@@ -63,7 +63,13 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
+#ifdef INTERPRETER_FORCE_SERIALIZE
+    // To verify that the serializer works correctly let's just run this graph round-trip
+    string ser = serialize(function);
+    m_function = deserialize(ser);
+#else
     m_function = clone_function(*function);
+#endif
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();

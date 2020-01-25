@@ -34,6 +34,7 @@
 #include "util/test_case.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
+#include "util/type_prop.hpp"
 
 using namespace ngraph;
 
@@ -410,17 +411,31 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_relu)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum_opset1)
 {
-    // Simple Sum test
-    auto function =
-        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sum.prototxt"));
+    // Simple Sum test for opset1.
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/sum_opset1.prototxt"));
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input<float>({3.f, 0.f, 2.f});
     test_case.add_input<float>({1.f, 3.f, 4.f});
     test_case.add_input<float>({2.f, 6.f, 6.f});
     test_case.add_expected_output<float>(Shape{3}, {6.f, 9.f, 12.f});
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum)
+{
+    // Simple Sum test for opset8.
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sum.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({3.f});
+    test_case.add_input<float>({1.f, 3.f, 4.f});
+    test_case.add_input<float>({2.f, 6.f, 6.f});
+    test_case.add_expected_output<float>(Shape{3}, {6.f, 12.f, 13.f});
     test_case.run();
 }
 
@@ -485,10 +500,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_cum_sum_3d_exclusive_reverse)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_min_two_inputs)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_min_two_inputs_opset1)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/min_two_inputs.prototxt"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/min_two_inputs_opset1.prototxt"));
 
     // input data shape (3, )
     Inputs inputs;
@@ -500,10 +515,25 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_min_two_inputs)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_max)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_min_two_inputs)
 {
-    auto function =
-        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/max.prototxt"));
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/min_two_inputs.prototxt"));
+
+    // input data shape (3, )
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{2.f});
+    inputs.emplace_back(std::vector<float>{1.f, 4.f, 4.f});
+
+    Outputs expected_outputs{{1.f, 2.f, 2.f}};
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_max_opset1)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/max_opset1.prototxt"));
 
     // input data shape (3, )
     Inputs inputs;
@@ -516,10 +546,27 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_max)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mean)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_max)
 {
     auto function =
-        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/mean.prototxt"));
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/max.prototxt"));
+
+    // input data shape (3, )
+    Inputs inputs;
+
+    inputs.emplace_back(std::vector<float>{1.f, 4.f, 4.f});
+    inputs.emplace_back(std::vector<float>{3.f});
+    inputs.emplace_back(std::vector<float>{2.f, 5.f, 3.f});
+
+    Outputs expected_outputs{{3.f, 5.f, 4.f}};
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mean_opset1)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/mean_opset1.prototxt"));
 
     // input data shape (3, )
     Inputs inputs;
@@ -528,6 +575,22 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mean)
     inputs.emplace_back(std::vector<float>{2.f, 6.f, 6.f});
 
     Outputs expected_outputs{{2.f, 3.f, 4.f}};
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mean)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/mean.prototxt"));
+
+    // input data shape (3, )
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{3.f});
+    inputs.emplace_back(std::vector<float>{1.f, 2.f, 5.f});
+    inputs.emplace_back(std::vector<float>{2.f, 7.f, 7.f});
+
+    Outputs expected_outputs{{2.f, 4.f, 5.f}};
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
@@ -1812,6 +1875,32 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_gatherND_float)
     test_case.add_input<float>({0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f});
     test_case.add_input<int64_t>({0, 1, 1, 0});
     test_case.add_expected_output<float>(Shape{2, 2}, {2.f, 3.f, 4.f, 5.f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_pad_constant)
+{
+    const auto pad_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/pad_constant.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(pad_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({1.f, 1.2f, 2.3f, 3.4f, 4.5f, 5.7f});
+    test_case.add_expected_output<float>(
+        Shape{3, 4}, {0.f, 0.f, 1.f, 1.2f, 0.f, 0.f, 2.3f, 3.4f, 0.f, 0.f, 4.5f, 5.7f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reciprocal)
+{
+    const auto reciprocal_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/reciprocal.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(reciprocal_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({1.f, 2.f, 3.f, 4.f, 5.f, 6.f});
+    test_case.add_expected_output<float>(Shape{3, 2},
+                                         {1.f, 1 / 2.f, 1 / 3.f, 1 / 4.f, 1 / 5.f, 1 / 6.f});
 
     test_case.run();
 }

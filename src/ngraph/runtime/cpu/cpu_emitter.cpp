@@ -22,7 +22,6 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-#include "ngraph/env_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
@@ -2332,6 +2331,21 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Round)
+            {
+                (void)external_function;
+                (void)node;
+                writer.block_begin();
+                size_t element_count = out[0].get_size();
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = round(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sqrt)
             {
                 (void)external_function;
@@ -3375,17 +3389,17 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3])
-                           << ", cg_ctx->mkldnn_workspaces[" << deps[5] << "]);\n";
+                           << ", cg_ctx->mkldnn_workspaces[" << deps[4] << "]);\n";
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(deps[4])
-                           << ",deps, OpType::MAXPOOLBACKPROPFORWARD, "
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index - 1)
+                           << ", deps, OpType::MAXPOOLBACKPROPFORWARD, "
                            << to_string(scratchpad_size) << ");\n";
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << args[1].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3])
-                           << ", cg_ctx->mkldnn_workspaces[" << deps[5] << "]);\n";
+                           << ", cg_ctx->mkldnn_workspaces[" << deps[4] << "]);\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
 

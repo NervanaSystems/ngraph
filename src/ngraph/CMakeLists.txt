@@ -293,6 +293,8 @@ set (SRC
     op/reduce_mean.hpp
     op/reduce_sum.cpp
     op/reduce_sum.hpp
+    op/round.cpp
+    op/round.hpp
     op/quantize.cpp
     op/quantize.hpp
     op/quantized_convolution.cpp
@@ -385,8 +387,6 @@ set (SRC
     op/fused/gru_cell.hpp
     op/fused/layer_norm.cpp
     op/fused/layer_norm.hpp
-    op/fused/log_softmax.cpp
-    op/fused/log_softmax.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
     op/fused/lstm_sequence.cpp
@@ -403,8 +403,6 @@ set (SRC
     op/fused/partial_slice.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
-    op/fused/reciprocal.cpp
-    op/fused/reciprocal.hpp
     op/fused/rnn_cell.cpp
     op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
