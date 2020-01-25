@@ -58,7 +58,7 @@ static int GetNumCores()
 
 static int GetNumThreadPools()
 {
-    int count = ngraph::getenv_int(ngraph::EnvVarEnum::NGRAPH_INTRA_OP_PARALLELISM); //", 1);
+    int count = ngraph::getenv_int(ngraph::EnvVarEnum::NGRAPH_INTRA_OP_PARALLELISM);
     return count < 1 ? 1 : count;
 }
 

@@ -189,7 +189,6 @@ string file_util::get_temp_directory_path()
     string path;
     for (const string& var : potential_tmps)
     {
-        // path = getenv_string(var.c_str());
         if (!path.empty())
         {
             break;

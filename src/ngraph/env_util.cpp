@@ -88,7 +88,6 @@ int ngraph::set_environment(const ngraph::EnvVarEnum env_var_enum,
     }
     addenv_to_cache(env_var_enum, value);
 
-// log_all_envvar();
 #ifdef _WIN32
     return _putenv_s(env_var, value);
 #elif defined(__linux) || defined(__APPLE__)
@@ -101,7 +100,6 @@ int ngraph::unset_environment(const ngraph::EnvVarEnum env_var_enum)
 {
     const char* env_var = get_env_var_name(env_var_enum).c_str();
     erase_env_from_cache(env_var_enum);
-// log_all_envvar();
 #ifdef _WIN32
     return _putenv_s(env_var, "");
 #elif defined(__linux) || defined(__APPLE__)
@@ -125,7 +123,6 @@ void ngraph::log_all_envvar()
     while (it != get_env_var_cache().end())
     {
         NGRAPH_DEBUG << "\t" << get_env_var_name(it->first) << " = " << it->second << std::endl;
-        std::cout << "\t" << get_env_var_name(it->first) << " = " << it->second << std::endl;
         it++;
     }
 }
@@ -180,7 +177,7 @@ std::string ngraph::getenv_string(const ngraph::EnvVarEnum env_var)
     }
 }
 
-int32_t ngraph::getenv_int(const ngraph::EnvVarEnum env_var /*, int32_t default_value*/)
+int32_t ngraph::getenv_int(const ngraph::EnvVarEnum env_var)
 {
     char* err;
     if (env_cache_contains(env_var))
@@ -202,7 +199,7 @@ int32_t ngraph::getenv_int(const ngraph::EnvVarEnum env_var /*, int32_t default_
     else
     {
         const char* env_p = ::getenv(get_env_var_name(env_var).c_str());
-        int32_t env_int = strtol(get_env_var_default(env_var).c_str(), &err, 0); // default_value;
+        int32_t env_int = strtol(get_env_var_default(env_var).c_str(), &err, 0);
         // If env_var is not "" or undefined
         if (env_p && *env_p)
         {
@@ -239,7 +236,7 @@ int32_t ngraph::getenv_int(const ngraph::EnvVarEnum env_var /*, int32_t default_
     }
 }
 
-bool ngraph::getenv_bool(const ngraph::EnvVarEnum env_var /*, bool default_value*/)
+bool ngraph::getenv_bool(const ngraph::EnvVarEnum env_var)
 {
     string value = to_lower(getenv_string(env_var));
     static const set<string> off = {"0", "false", "off", "FALSE", "OFF", "no", "NO"};
@@ -247,7 +244,7 @@ bool ngraph::getenv_bool(const ngraph::EnvVarEnum env_var /*, bool default_value
     bool rc = false;
     if (value == "")
     {
-        rc = false; // default_value;
+        rc = false;
     }
     else if (off.find(value) != off.end())
     {

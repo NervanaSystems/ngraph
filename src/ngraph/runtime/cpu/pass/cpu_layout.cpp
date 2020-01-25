@@ -344,7 +344,7 @@ void set_layouts_binaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* exter
         vector<memory::desc> i_mds;
         vector<memory::desc> o_mds;
         static int32_t select =
-            getenv_int(ngraph::EnvVarEnum::NGRAPH_PASS_CPU_LAYOUT_ELTWISE); //", 0);
+            getenv_int(ngraph::EnvVarEnum::NGRAPH_PASS_CPU_LAYOUT_ELTWISE);
         i_mds.push_back(arg_mds[select]);
         i_mds.push_back(arg_mds[select]);
         o_mds.push_back(arg_mds[select]);

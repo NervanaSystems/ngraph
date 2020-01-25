@@ -32,21 +32,3 @@ int port_close(FILE* stream)
     return pclose(stream);
 #endif
 }
-
-/*int set_environment(const char* name, const char* value, int overwrite)
-{
-#ifdef _WIN32
-    return _putenv_s(name, value);
-#elif defined(__linux) || defined(__APPLE__)
-    return setenv(name, value, overwrite);
-#endif
-}
-
-int unset_environment(const char* name)
-{
-#ifdef _WIN32
-    return _putenv_s(name, "");
-#elif defined(__linux) || defined(__APPLE__)
-    return unsetenv(name);
-#endif
-}*/

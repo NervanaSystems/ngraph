@@ -38,7 +38,7 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
     , m_compiled_destroy_ctx_func(compiled_destroy_ctx_func)
     , m_compiled_function(compiled_function)
 {
-    static const int32_t m_num_ctx = getenv_int(ngraph::EnvVarEnum::NGRAPH_CPU_CONCURRENCY); //, 1);
+    static const int32_t m_num_ctx = getenv_int(ngraph::EnvVarEnum::NGRAPH_CPU_CONCURRENCY);
     if (m_num_ctx > std::thread::hardware_concurrency())
     {
         throw ngraph_error(
@@ -241,7 +241,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
             // CPURuntimeContextCG class.
             ctx->G = new tbb::flow::graph;
             static const int32_t parallelism =
-                getenv_int(ngraph::EnvVarEnum::NGRAPH_INTER_OP_PARALLELISM); //, 1);
+                getenv_int(ngraph::EnvVarEnum::NGRAPH_INTER_OP_PARALLELISM);
             ctx->c =
                 new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
         }
