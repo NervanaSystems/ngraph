@@ -20,12 +20,12 @@
                       __LINE__,                                                                    \
                       ngraph::default_logger_handler_func)                                         \
         .stream()
+#include "reshape_sinking.hpp"
 #include <algorithm>
 #include <iostream>
 #include <numeric>
 #include <set>
 #include <unordered_set>
-#include "reshape_sinking.hpp"
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/graph_util.hpp"
@@ -36,10 +36,12 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/util/arithmetic_reduction.hpp"
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -80,7 +82,7 @@ static void
     write_reshapemap(ReshapeMap& reorders, shared_ptr<Node> target, shared_ptr<op::Reshape> reshape)
 {
     NGRAPH_DEBUG1 << "Write ReshapeMap[" << target->get_name()
-                 << "] = " << describe_reshape(reshape);
+                  << "] = " << describe_reshape(reshape);
     reorders[target] = reshape;
 }
 
@@ -88,32 +90,51 @@ static shared_ptr<op::Reshape> read_reshapemap(ReshapeMap& reorders, shared_ptr<
 {
     auto reorder = reorders.at(target);
     NGRAPH_DEBUG1 << "Read ReshapeMap[" << target->get_name() << "]  -> "
-                 << describe_reshape(reorder);
+                  << describe_reshape(reorder);
     return reorder;
 }
 
 static shared_ptr<op::Reshape> combine_reshapes(shared_ptr<op::Reshape> r1,
-                                                shared_ptr<op::Reshape> r2)
+                                                shared_ptr<op::Reshape> r2, ReshapeMap& reorders)
 {
-    auto default_order = ngraph::get_default_order(r1->get_shape());
-    auto perm_r1 = apply_permutation(default_order, r1->get_input_order());
-    auto perm_r2 = apply_permutation(perm_r1, r2->get_input_order());
-    auto rreshape = make_reshape(r2->get_argument(0), perm_r2, r2->get_shape());
+    auto order = ngraph::get_default_order(r1->get_shape());
+    Shape shape;
+    if (r1->get_shape().size() == r2->get_shape().size())
+    {
+        if (r1->get_input_order().size() == order.size())
+        order = apply_permutation(order, r1->get_input_order());
+        order = apply_permutation(order, r2->get_input_order());
+        shape = r2->get_shape(); 
+    }
+    else
+    {
+        NGRAPH_DEBUG1 << "ranking changing " << describe_reshape(r1) << " and "
+                      << describe_reshape(r2);
+    auto arg_reshape = reorders.at(r2->get_argument(0));
+    auto order = arg_reshape->get_input_order();
+    auto def_order = ngraph::get_permutation_to_default_order(order);
+    shape = ngraph::apply_permutation(arg_reshape->get_shape(), def_order);
+    if (shape.size() < r2->get_shape().size())
+    shape.push_back(1);
+    else
+      shape.pop_back();
+    }
+    auto rreshape = make_reshape(r2->get_argument(0), order, shape);
     NGRAPH_DEBUG1 << "Combining " << describe_reshape(r1) << " and " << describe_reshape(r2)
-                 << " into " << describe_reshape(rreshape);
+                  << " into " << describe_reshape(rreshape);
     return rreshape;
 }
 
 static void insert_reshape(shared_ptr<Node> target, shared_ptr<Node> reshape, size_t input_index)
 {
     NGRAPH_DEBUG1 << "Inserting reshape at input " << target->get_name() << " input index "
-                 << input_index;
+                  << input_index;
     auto arg = target->input(input_index).get_source_output();
     NGRAPH_DEBUG1 << "Arg shape: " << arg.get_shape();
     auto new_reshape = reshape->copy_with_new_inputs({arg});
     new_reshape->merge_provenance_tags_from(reshape);
     NGRAPH_DEBUG1 << "Inserting reshape " << describe_reshape(new_reshape) << " at input "
-                 << target->get_name() << " input index " << input_index;
+                  << target->get_name() << " input index " << input_index;
     target->input(input_index).replace_source_output(new_reshape->output(0));
 }
 
@@ -122,6 +143,12 @@ static void delete_reshape(shared_ptr<Node> reshape)
     NGRAPH_DEBUG1 << "Removing reshape " << reshape->get_name();
     if (!reshape->get_users().empty())
     {
+        NGRAPH_DEBUG1 << "Replacing " << *reshape << *reshape->input(0).get_source_output().get_node_shared_ptr();
+        if (auto new_reshape = dynamic_pointer_cast<op::Reshape>(reshape->output(0).get_node_shared_ptr())) {
+        auto reshape_cast = dynamic_pointer_cast<op::Reshape>(reshape);
+        if (new_reshape->get_input_order().size() != reshape_cast->get_input_order().size())
+        new_reshape->set_input_order(reshape_cast->get_input_order());
+        }
         ngraph::replace_node(
             reshape, reshape->input(0).get_source_output().get_node_shared_ptr(), true);
     }
@@ -168,7 +195,9 @@ struct Swimmer
 //we prefer nchw since a lot of ngraph ops require this format,
 //so keeping things in nchw allows us to eliminate as many reshapes
 //as possible
-void swim(Input<Node> input, shared_ptr<op::Reshape> reshape, set<shared_ptr<Node>>& reshapes_to_delete)
+void swim(Input<Node> input,
+          shared_ptr<op::Reshape> reshape,
+          set<shared_ptr<Node>>& reshapes_to_delete)
 {
     Swimmer sw{input, reshape};
     list<Swimmer> work_queue;
@@ -188,7 +217,7 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape, set<shared_ptr<Nod
             csw.input.replace_source_output(new_reshape->output(0));
         };
         // Only swim past nodes which have a single user
-        if (n->get_users(true).size() > 1)
+        if (n->get_users().size() > 1)
         {
             materialize();
             continue;
@@ -203,35 +232,20 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape, set<shared_ptr<Nod
         }
         if (auto input_reshape = dynamic_pointer_cast<op::Reshape>(n))
         {
-            /* if ((csw.reshape->get_output_shape().size() != csw.reshape->get_input_order().size()) || */
-            /*     (!csw.reshape->get_is_transpose())) */
-            /* { */
-            /*     materialize(); */
-            /*     continue; */
-            /* } */
-            /* else */
-            /* { */
-                auto new_reshape = make_reshape(input_reshape->get_argument(0),
-                                                input_reshape->get_input_order(),
-                                                csw.reshape->get_shape());
-                new_reshape->merge_provenance_tags_from(input_reshape);
-                NGRAPH_DEBUG1 << "Swim: Replacing " << *input_reshape << " with " << *new_reshape;
-                csw.input.replace_source_output(new_reshape->output(0));
-                if (auto next_node_broadcast =
-                        dynamic_pointer_cast<op::Broadcast>(new_reshape->get_argument(0)))
-                {
-                    Swimmer nsw{new_reshape->input(0), new_reshape};
-                    work_queue.push_back(nsw);
-                    mark_reshape_for_deletion(new_reshape, reshapes_to_delete);
-                }
-                if (auto next_node_reshape =
-                        dynamic_pointer_cast<op::Reshape>(new_reshape->get_argument(0)))
-                {
-                    Swimmer nsw{new_reshape->input(0), new_reshape};
-                    work_queue.push_back(nsw);
-                    mark_reshape_for_deletion(new_reshape, reshapes_to_delete);
-                }
-            /* } */
+            auto new_reshape = make_reshape(input_reshape->get_argument(0),
+                                            input_reshape->get_input_order(),
+                                            csw.reshape->get_shape());
+            new_reshape->merge_provenance_tags_from(input_reshape);
+            NGRAPH_DEBUG1 << "Swim: Replacing " << *input_reshape << " with " << *new_reshape;
+            csw.input.replace_source_output(new_reshape->output(0));
+            // swim up if next node is Reshape or Broadcast
+            if (dynamic_pointer_cast<op::Broadcast>(new_reshape->get_argument(0)) ||
+                dynamic_pointer_cast<op::Reshape>(new_reshape->get_argument(0)))
+            {
+                Swimmer nsw{new_reshape->input(0), new_reshape};
+                work_queue.push_back(nsw);
+                mark_reshape_for_deletion(new_reshape, reshapes_to_delete);
+            }
         }
         else if (dynamic_pointer_cast<op::Broadcast>(n))
         {
@@ -239,9 +253,10 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape, set<shared_ptr<Nod
             auto old_broadcast = static_pointer_cast<op::Broadcast>(n);
             auto broadcast_axes = old_broadcast->get_broadcast_axes();
             auto broadcast_reshape = csw.reshape;
-            if (broadcast_reshape->get_shape().size()-old_broadcast->get_shape().size() > 1) {
-            materialize();
-            continue;
+            if (broadcast_reshape->get_shape().size() - old_broadcast->get_shape().size() > 1)
+            {
+                materialize();
+                continue;
             }
             bool in_order = true;
             AxisSet new_broadcast_axes;
@@ -263,18 +278,21 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape, set<shared_ptr<Nod
                 }
             }
 
-            if (old_broadcast->get_argument(0)->get_shape().size() == 1 && new_broadcast_axes.size() != broadcast_reshape->get_shape().size()-1) {
-            for (size_t i = 2; i < broadcast_reshape->get_shape().size(); i++)
-              new_broadcast_axes.insert(i);
+            if (old_broadcast->get_argument(0)->get_shape().size() == 1 &&
+                new_broadcast_axes.size() != broadcast_reshape->get_shape().size() - 1)
+            {
+                for (size_t i = 2; i < broadcast_reshape->get_shape().size(); i++)
+                    new_broadcast_axes.insert(i);
             }
 
-            if (new_broadcast_axes.size() != broadcast_reshape->get_shape().size()-1) {
-            materialize();
-            continue;
+            if (new_broadcast_axes.size() != broadcast_reshape->get_shape().size() - 1)
+            {
+                materialize();
+                continue;
             }
 
-
-            NGRAPH_DEBUG1 << *old_broadcast << *broadcast_reshape  << input_order << broadcast_axes << new_broadcast_axes;
+            NGRAPH_DEBUG1 << *old_broadcast << *broadcast_reshape << input_order << broadcast_axes
+                          << new_broadcast_axes;
 
             auto broadcast_input = old_broadcast->get_argument(0);
             if (!in_order)
@@ -328,7 +346,7 @@ static void convert_binary_to_default_order(shared_ptr<Node> binary,
         ngraph::get_permutation_to_default_order(reorders.at(right)->get_input_order());
     auto new_shape = apply_permutation(left->get_shape(), perm_to_def);
     NGRAPH_DEBUG1 << "right = " << ngraph::vector_to_string(right->get_shape()) << ", "
-                 << right->get_name();
+                  << right->get_name();
     auto new_reshape = make_reshape(left, perm_to_def, new_shape);
     NGRAPH_DEBUG1 << "left : About to swim " << describe_reshape(new_reshape) << " up to "
                   << left->get_name();
@@ -356,13 +374,16 @@ static void materialize_shapes(shared_ptr<Node> n,
         {
             auto arg_reshape = reorders.at(arg);
             NGRAPH_DEBUG1 << "Materializing " << describe_reshape(arg_reshape) << " for "
-                         << arg->get_name();
+                          << arg->get_name();
             mark_reshape_for_deletion(arg_reshape, reshapes_to_delete);
             auto arg_shape = arg->get_shape();
             if (arg_reshape->get_input_order() != get_default_order(arg->get_shape()))
             {
                 // Insert if arg needs to be transposed.
+                auto reshape = dynamic_pointer_cast<op::Reshape>(arg);
+                /* if (!(reshape && reshape->get_shape() == arg_reshape->get_shape())) */
                 insert_reshape(n, arg_reshape, i);
+
             }
             //no swimming up
         }
@@ -376,12 +397,22 @@ static void sink_reshape(shared_ptr<op::Reshape> reshape,
 {
     NGRAPH_DEBUG1 << "Sinking Reshape :" << describe_reshape(reshape);
     auto orig_reshape = reorders.at(reshape->get_argument(0));
+    auto axis_change_1 = [](const Shape& s1, const Shape& s2) {
+        Shape ss, ss1(s1), ss2(s2);
+        sort(ss1.begin(), ss1.end());
+        sort(ss2.begin(), ss2.end());
+        set_symmetric_difference(ss1.begin(), ss1.end(), ss2.begin(), ss2.end(), back_inserter(ss));
+        return ss.size() == 1 && ss[0] == 1;
+
+    };
     // 1) Not a Transpose or 2) Rank changing operation.
-    if ((reshape->get_output_shape().size() != reshape->get_input_order().size()) ||
-        (!reshape->get_is_transpose()))
+    /* if (!axis_change_1(reshape->get_output_shape(), orig_reshape->get_output_shape()) || */
+    if ( 
+        (reshape->get_output_shape().size() != reshape->get_input_order().size() && !axis_change_1(reshape->get_output_shape(), orig_reshape->get_output_shape())))
+        /* (!reshape->get_is_transpose())) */
     {
         NGRAPH_DEBUG1 << "Materializing " << describe_reshape(orig_reshape) << " for reshape "
-                     << describe_reshape(reshape);
+                      << describe_reshape(reshape);
         insert_reshape(reshape, orig_reshape, 0);
         mark_reshape_for_deletion(orig_reshape, reshapes_to_delete);
         write_reshapemap(reorders, reshape, create_default_reshape(reshape));
@@ -389,7 +420,7 @@ static void sink_reshape(shared_ptr<op::Reshape> reshape,
     else
     {
         //combine both reshapes
-        auto new_reshape = combine_reshapes(orig_reshape, reshape);
+        auto new_reshape = combine_reshapes(orig_reshape, reshape,reorders);
         //remove original reshape now it's combined with a new one
         //should be safe to remove an already detached node
         mark_reshape_for_deletion(orig_reshape, reshapes_to_delete);
@@ -419,7 +450,7 @@ static void sink_binary(shared_ptr<op::util::BinaryElementwiseArithmetic> binary
     if (reorders.at(left)->get_input_order() == reorders.at(right)->get_input_order())
     {
         NGRAPH_DEBUG1 << "Propagating " << describe_reshape(reorders.at(left)) << " for "
-                     << binary->get_name();
+                      << binary->get_name();
         write_reshapemap(reorders, binary, read_reshapemap(reorders, left));
         //at this point, both reshapes will be eventually removed
         mark_reshape_for_deletion(reorders.at(left), reshapes_to_delete);
@@ -580,10 +611,44 @@ static void sink_dequantize(shared_ptr<op::Dequantize> dequantize,
                                                       dequantize->get_element_type(),
                                                       axes_in_def_order);
 
+    NGRAPH_DEBUG1 << *dequantize << *new_dequantize;
+
     ngraph::replace_node(dequantize, new_dequantize);
     write_reshapemap(reorders, new_dequantize, arg_reshape);
 }
 
+static void sink_reduce(shared_ptr<op::util::ArithmeticReduction> reduce,
+                        ReshapeMap& reorders,
+                        set<shared_ptr<Node>>& /* reshapes_to_delete */)
+{
+    auto arg_reshape = reorders.at(reduce->get_argument(0));
+    auto order = arg_reshape->get_input_order();
+    AxisVector reduced_order(order);
+    for (auto& i : reduce->get_reduction_axes())
+    {
+        reduced_order.erase(reduced_order.begin() + i);
+    }
+    auto def_order = ngraph::get_permutation_to_default_order(order);
+    auto input_shape = ngraph::apply_permutation(arg_reshape->get_shape(), def_order);
+    auto dummy_correct_shape =
+        make_shared<pattern::op::Label>(arg_reshape->get_element_type(), input_shape);
+    AxisSet new_axis_set;
+    for (auto& i : reduce->get_reduction_axes())
+    {
+        new_axis_set.emplace(order[i]);
+    }
+    auto new_reduce = make_shared<op::Max>(dummy_correct_shape, new_axis_set);
+
+    ngraph::replace_node(dummy_correct_shape, reduce->get_argument(0));
+    ngraph::replace_node(reduce, new_reduce);
+    auto new_reshape = make_reshape(new_reduce, reduced_order, reduce->get_shape());
+    NGRAPH_DEBUG1 << "Propagating " << describe_reshape(new_reshape) << " for "
+                  << reduce->get_name();
+    write_reshapemap(reorders, new_reduce, new_reshape);
+    NGRAPH_DEBUG1 << *arg_reshape << order << def_order << input_shape << "\n";
+    NGRAPH_DEBUG1 << *reduce << reduce->get_reduction_axes() << "\n";
+    NGRAPH_DEBUG1 << *new_reduce << new_reduce->get_reduction_axes() << "\n";
+}
 //The goal of ReshapeSinking is to remove
 //round-trip reshapes(i.e. nhwc->nchw(nchw-only-op)->nhwc)
 //around nchw-only-op (e.g.Convolution, Batchnorm, Avg/MaxPool)
@@ -662,6 +727,10 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
         {
             sink_concat(concat, reorders, reshapes_to_delete);
         }
+        else if (auto reduce = dynamic_pointer_cast<op::util::ArithmeticReduction>(n))
+        {
+            sink_reduce(reduce, reorders, reshapes_to_delete);
+        }
         else
         {
             materialize_shapes(n, reorders, reshapes_to_delete);
@@ -673,11 +742,13 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
     for (auto r : reshapes_to_delete)
     {
         delete_reshape(r);
+        NGRAPH_DEBUG1 << reshapes_to_delete.size();
     }
 
     //make sure shapes are always materialized before results
     for (auto r : results)
     {
+        NGRAPH_DEBUG1 << "Checking results";
         NGRAPH_CHECK(r->get_shape() == r->get_argument(0)->get_shape() &&
                          r->get_element_type() == r->get_argument(0)->get_element_type(),
                      " op::Result = ",
@@ -689,6 +760,7 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
     //STEP 3: fix wrong shape info wholesale
     for (auto n : f->get_ordered_ops())
     {
+        NGRAPH_DEBUG1 << "validating nodes";
         n->revalidate_and_infer_types();
     }
     return true;
