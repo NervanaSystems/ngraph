@@ -40,7 +40,8 @@ void runtime::cpu::CPU_DebugTracer::init_streams()
     }
 
     static string trace_file_path = getenv_string(ngraph::EnvVarEnum::NGRAPH_CPU_TRACER_LOG);
-    static string trace_bin_file_path = getenv_string(ngraph::EnvVarEnum::NGRAPH_CPU_BIN_TRACER_LOG);
+    static string trace_bin_file_path =
+        getenv_string(ngraph::EnvVarEnum::NGRAPH_CPU_BIN_TRACER_LOG);
     if (trace_file_path.empty())
     {
         trace_file_path = "trace_meta.log";

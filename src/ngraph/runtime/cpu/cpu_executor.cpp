@@ -58,7 +58,7 @@ static int GetNumCores()
 
 static int GetNumThreadPools()
 {
-    int count = ngraph::getenv_int(ngraph::EnvVarEnum::NGRAPH_INTRA_OP_PARALLELISM);//", 1);
+    int count = ngraph::getenv_int(ngraph::EnvVarEnum::NGRAPH_INTRA_OP_PARALLELISM); //", 1);
     return count < 1 ? 1 : count;
 }
 
@@ -79,8 +79,11 @@ namespace ngraph
                         // Eigen threadpool will still be used for reductions
                         // and other tensor operations that dont use a parallelFor
                         int num_threads_per_pool =
-                            ngraph::getenv_int(ngraph::EnvVarEnum::NGRAPH_CPU_EIGEN_THREAD_COUNT) > 0 ?
-				ngraph::getenv_int(ngraph::EnvVarEnum::NGRAPH_CPU_EIGEN_THREAD_COUNT) : GetNumCores();
+                            ngraph::getenv_int(ngraph::EnvVarEnum::NGRAPH_CPU_EIGEN_THREAD_COUNT) >
+                                    0
+                                ? ngraph::getenv_int(
+                                      ngraph::EnvVarEnum::NGRAPH_CPU_EIGEN_THREAD_COUNT)
+                                : GetNumCores();
                         if (num_threads_per_pool < 1 || num_threads_per_pool > GetNumCores())
                         {
                             throw ngraph_error(

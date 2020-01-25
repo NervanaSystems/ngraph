@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "ngraph/env_util.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -97,6 +98,11 @@ using namespace std;
 TEST(cpu_fusion, log_env_registry)
 {
     log_registry_envvar();
+}
+
+TEST(cpu_fusion, log_env_cache)
+{
+    log_all_envvar();
 }
 
 TEST(cpu_fusion, gemm_pattern)

@@ -234,12 +234,14 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
 
         ctx->states = m_external_function->m_states.data();
 #if defined(NGRAPH_TBB_ENABLE)
-        if (m_external_function->is_direct_execution() && getenv_bool(ngraph::EnvVarEnum::NGRAPH_CPU_USE_TBB))
+        if (m_external_function->is_direct_execution() &&
+            getenv_bool(ngraph::EnvVarEnum::NGRAPH_CPU_USE_TBB))
         {
             // For codegen mode, graph and global control are now part of the code generated
             // CPURuntimeContextCG class.
             ctx->G = new tbb::flow::graph;
-            static const int32_t parallelism = getenv_int(ngraph::EnvVarEnum::NGRAPH_INTER_OP_PARALLELISM);//, 1);
+            static const int32_t parallelism =
+                getenv_int(ngraph::EnvVarEnum::NGRAPH_INTER_OP_PARALLELISM); //, 1);
             ctx->c =
                 new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
         }
@@ -279,7 +281,8 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         }
 
 #if defined(NGRAPH_TBB_ENABLE)
-        if (m_external_function->is_direct_execution() && getenv_bool(ngraph::EnvVarEnum::NGRAPH_CPU_USE_TBB))
+        if (m_external_function->is_direct_execution() &&
+            getenv_bool(ngraph::EnvVarEnum::NGRAPH_CPU_USE_TBB))
         {
             // For codegen mode, graph and global control are now part of a code generated
             // CPURuntimeContext class.

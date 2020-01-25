@@ -368,7 +368,8 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
         stringstream label;
         label << "label=\"" << get_node_name(node);
 
-        static const bool nvtos = getenv_bool(ngraph::EnvVarEnum::NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES);
+        static const bool nvtos =
+            getenv_bool(ngraph::EnvVarEnum::NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES);
         if (nvtos)
         {
             // The shapes of the Outputs of a multi-output op
@@ -378,7 +379,8 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
                                  : pretty_partial_shape(node->get_output_partial_shape(0)));
         }
 
-        static const bool nvtot = getenv_bool(ngraph::EnvVarEnum::NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES);
+        static const bool nvtot =
+            getenv_bool(ngraph::EnvVarEnum::NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES);
         if (nvtot)
         {
             // The types of the Outputs of a multi-output op
