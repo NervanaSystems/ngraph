@@ -117,6 +117,7 @@ std::string ngraph::runtime::plaidml::tile_converter(const std::string& tensor_n
     case PLAIDML_DATA_FLOAT16: return "as_float(" + tensor_name + ", 16)";
     case PLAIDML_DATA_FLOAT32: return "as_float(" + tensor_name + ", 32)";
     case PLAIDML_DATA_FLOAT64: return "as_float(" + tensor_name + ", 64)";
+    case PLAIDML_DATA_BFLOAT16: return "as_bfloat16(" + tensor_name + ", 16)";
     case PLAIDML_DATA_INVALID:
     case PLAIDML_DATA_INT128:
     case PLAIDML_DATA_PRNG: throw std::runtime_error{"Unsupported type conversion"};
