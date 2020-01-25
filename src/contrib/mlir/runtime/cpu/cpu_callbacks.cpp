@@ -216,17 +216,24 @@ static void __mlir_mkldnn_convbias(size_t rank,
     if (rank == 3)
     {
         auto convAttrs = getAttrs(index).convAttrs1d;
-        auto conv_desc =
-            mkldnn::convolution_forward::desc(mkldnn::prop_kind::forward_inference,
-                                              alg,
-                                              data_desc,
-                                              weights_desc,
-                                              bias_desc,
-                                              result_desc,
-                                              mkldnn::memory::dims{convAttrs.windowStrides[0]},
-                                              mkldnn::memory::dims{convAttrs.windowDilation[0] - 1},
-                                              mkldnn::memory::dims{convAttrs.padBelow[0]},
-                                              mkldnn::memory::dims{convAttrs.padAbove[0]});
+        try
+        {
+            auto conv_desc = mkldnn::convolution_forward::desc(
+                mkldnn::prop_kind::forward_inference,
+                alg,
+                data_desc,
+                weights_desc,
+                bias_desc,
+                result_desc,
+                mkldnn::memory::dims{convAttrs.windowStrides[0]},
+                mkldnn::memory::dims{convAttrs.windowDilation[0] - 1},
+                mkldnn::memory::dims{convAttrs.padBelow[0]},
+                mkldnn::memory::dims{convAttrs.padAbove[0]});
+        }
+        catch (const mkldnn::error& e)
+        {
+            throw ngraph_error("Could not create mkldnn conv descriptor " + std::string(e.message));
+        }
         if (convAttrs.withRelu)
         {
             attr.set_post_ops(ops);
@@ -256,22 +263,30 @@ static void __mlir_mkldnn_convbias(size_t rank,
     else if (rank == 5)
     {
         auto convAttrs = getAttrs(index).convAttrs3d;
-        auto conv_desc = mkldnn::convolution_forward::desc(
-            mkldnn::prop_kind::forward_inference,
-            alg,
-            data_desc,
-            weights_desc,
-            bias_desc,
-            result_desc,
-            mkldnn::memory::dims{
-                convAttrs.windowStrides[0], convAttrs.windowStrides[1], convAttrs.windowStrides[2]},
-            mkldnn::memory::dims{convAttrs.windowDilation[0] - 1,
-                                 convAttrs.windowDilation[1] - 1,
-                                 convAttrs.windowDilation[2] - 1},
-            mkldnn::memory::dims{
-                convAttrs.padBelow[0], convAttrs.padBelow[1], convAttrs.padBelow[2]},
-            mkldnn::memory::dims{
-                convAttrs.padAbove[0], convAttrs.padAbove[1], convAttrs.padAbove[2]});
+        try
+        {
+            auto conv_desc = mkldnn::convolution_forward::desc(
+                mkldnn::prop_kind::forward_inference,
+                alg,
+                data_desc,
+                weights_desc,
+                bias_desc,
+                result_desc,
+                mkldnn::memory::dims{convAttrs.windowStrides[0],
+                                     convAttrs.windowStrides[1],
+                                     convAttrs.windowStrides[2]},
+                mkldnn::memory::dims{convAttrs.windowDilation[0] - 1,
+                                     convAttrs.windowDilation[1] - 1,
+                                     convAttrs.windowDilation[2] - 1},
+                mkldnn::memory::dims{
+                    convAttrs.padBelow[0], convAttrs.padBelow[1], convAttrs.padBelow[2]},
+                mkldnn::memory::dims{
+                    convAttrs.padAbove[0], convAttrs.padAbove[1], convAttrs.padAbove[2]});
+        }
+        catch (const mkldnn::error& e)
+        {
+            throw ngraph_error("Could not create mkldnn conv descriptor " + std::string(e.message));
+        }
         if (convAttrs.withRelu)
         {
             attr.set_post_ops(ops);
@@ -358,23 +373,31 @@ static void __mlir_mkldnn_maxpoolbackprop(size_t rank,
     if (rank == 4)
     {
         poolAttrs<2> pAttrs = getAttrs(index).poolAttrs2d;
-        auto maxpool_desc_f = mkldnn::pooling_forward::desc(
-            mkldnn::prop_kind::forward_training,
-            mkldnn::algorithm::pooling_max,
-            diff_src_desc,
-            diff_dst_desc,
-            mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
-            mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
-            mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
-            mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
-        auto maxpool_desc_b = mkldnn::pooling_backward::desc(
-            mkldnn::algorithm::pooling_max,
-            diff_src_desc,
-            diff_dst_desc,
-            mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
-            mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
-            mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
-            mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
+        try
+        {
+            auto maxpool_desc_f = mkldnn::pooling_forward::desc(
+                mkldnn::prop_kind::forward_training,
+                mkldnn::algorithm::pooling_max,
+                diff_src_desc,
+                diff_dst_desc,
+                mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
+                mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
+                mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
+                mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
+            auto maxpool_desc_b = mkldnn::pooling_backward::desc(
+                mkldnn::algorithm::pooling_max,
+                diff_src_desc,
+                diff_dst_desc,
+                mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
+                mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
+                mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
+                mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
+        }
+        catch (const mkldnn::error& e)
+        {
+            throw ngraph_error("Could not create mkldnn max pooling descriptor " +
+                               std::string(e.message));
+        }
         maxpool_pd_f = mkldnn::pooling_forward::primitive_desc(maxpool_desc_f, attr, cpu_engine);
         maxpool_pd_b = mkldnn::pooling_backward::primitive_desc(
             maxpool_desc_b, attr, cpu_engine, maxpool_pd_f);
@@ -382,27 +405,35 @@ static void __mlir_mkldnn_maxpoolbackprop(size_t rank,
     else if (rank == 5)
     {
         poolAttrs<3> pAttrs = getAttrs(index).poolAttrs3d;
-        auto maxpool_desc_f = mkldnn::pooling_forward::desc(
-            mkldnn::prop_kind::forward_training,
-            mkldnn::algorithm::pooling_max,
-            diff_src_desc,
-            diff_dst_desc,
-            mkldnn::memory::dims{
-                pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
-            mkldnn::memory::dims{
-                pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
-            mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
-            mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
-        auto maxpool_desc_b = mkldnn::pooling_backward::desc(
-            mkldnn::algorithm::pooling_max,
-            diff_src_desc,
-            diff_dst_desc,
-            mkldnn::memory::dims{
-                pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
-            mkldnn::memory::dims{
-                pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
-            mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
-            mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
+        try
+        {
+            auto maxpool_desc_f = mkldnn::pooling_forward::desc(
+                mkldnn::prop_kind::forward_training,
+                mkldnn::algorithm::pooling_max,
+                diff_src_desc,
+                diff_dst_desc,
+                mkldnn::memory::dims{
+                    pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
+                mkldnn::memory::dims{
+                    pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
+                mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
+                mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
+            auto maxpool_desc_b = mkldnn::pooling_backward::desc(
+                mkldnn::algorithm::pooling_max,
+                diff_src_desc,
+                diff_dst_desc,
+                mkldnn::memory::dims{
+                    pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
+                mkldnn::memory::dims{
+                    pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
+                mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
+                mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
+        }
+        catch (const mkldnn::error& e)
+        {
+            throw ngraph_error("Could not create mkldnn max pooling descriptor " +
+                               std::string(e.message));
+        }
         auto maxpool_pd_f =
             mkldnn::pooling_forward::primitive_desc(maxpool_desc_f, attr, cpu_engine);
         maxpool_pd_f = mkldnn::pooling_forward::primitive_desc(maxpool_desc_f, attr, cpu_engine);
@@ -489,27 +520,35 @@ static void __mlir_mkldnn_avgpoolbackprop(size_t rank,
     if (rank == 4)
     {
         poolAttrs<2> pAttrs = getAttrs(index).poolAttrs2d;
-        auto avgpool_desc_f = mkldnn::pooling_forward::desc(
-            mkldnn::prop_kind::forward_training,
-            (pAttrs.includePaddingInAvgComputation
-                 ? mkldnn::algorithm::pooling_avg_include_padding
-                 : mkldnn::algorithm::pooling_avg_exclude_padding),
-            diff_src_desc,
-            diff_dst_desc,
-            mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
-            mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
-            mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
-            mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
-        auto avgpool_desc_b = mkldnn::pooling_backward::desc(
-            (pAttrs.includePaddingInAvgComputation
-                 ? mkldnn::algorithm::pooling_avg_include_padding
-                 : mkldnn::algorithm::pooling_avg_exclude_padding),
-            diff_src_desc,
-            diff_dst_desc,
-            mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
-            mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
-            mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
-            mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
+        try
+        {
+            auto avgpool_desc_f = mkldnn::pooling_forward::desc(
+                mkldnn::prop_kind::forward_training,
+                (pAttrs.includePaddingInAvgComputation
+                     ? mkldnn::algorithm::pooling_avg_include_padding
+                     : mkldnn::algorithm::pooling_avg_exclude_padding),
+                diff_src_desc,
+                diff_dst_desc,
+                mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
+                mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
+                mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
+                mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
+            auto avgpool_desc_b = mkldnn::pooling_backward::desc(
+                (pAttrs.includePaddingInAvgComputation
+                     ? mkldnn::algorithm::pooling_avg_include_padding
+                     : mkldnn::algorithm::pooling_avg_exclude_padding),
+                diff_src_desc,
+                diff_dst_desc,
+                mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
+                mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
+                mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
+                mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
+        }
+        catch (const mkldnn::error& e)
+        {
+            throw ngraph_error("Could not create mkldnn avg pooling descriptor " +
+                               std::string(e.message));
+        }
         auto avgpool_pd_f =
             mkldnn::pooling_forward::primitive_desc(avgpool_desc_f, attr, cpu_engine);
         avgpool_pd_b = mkldnn::pooling_backward::primitive_desc(
@@ -518,31 +557,39 @@ static void __mlir_mkldnn_avgpoolbackprop(size_t rank,
     else if (rank == 5)
     {
         poolAttrs<3> pAttrs = getAttrs(index).poolAttrs3d;
-        auto avgpool_desc_f = mkldnn::pooling_forward::desc(
-            mkldnn::prop_kind::forward_training,
-            (pAttrs.includePaddingInAvgComputation
-                 ? mkldnn::algorithm::pooling_avg_include_padding
-                 : mkldnn::algorithm::pooling_avg_exclude_padding),
-            diff_src_desc,
-            diff_dst_desc,
-            mkldnn::memory::dims{
-                pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
-            mkldnn::memory::dims{
-                pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
-            mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
-            mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
-        auto avgpool_desc_b = mkldnn::pooling_backward::desc(
-            (pAttrs.includePaddingInAvgComputation
-                 ? mkldnn::algorithm::pooling_avg_include_padding
-                 : mkldnn::algorithm::pooling_avg_exclude_padding),
-            diff_src_desc,
-            diff_dst_desc,
-            mkldnn::memory::dims{
-                pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
-            mkldnn::memory::dims{
-                pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
-            mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
-            mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
+        try
+        {
+            auto avgpool_desc_f = mkldnn::pooling_forward::desc(
+                mkldnn::prop_kind::forward_training,
+                (pAttrs.includePaddingInAvgComputation
+                     ? mkldnn::algorithm::pooling_avg_include_padding
+                     : mkldnn::algorithm::pooling_avg_exclude_padding),
+                diff_src_desc,
+                diff_dst_desc,
+                mkldnn::memory::dims{
+                    pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
+                mkldnn::memory::dims{
+                    pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
+                mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
+                mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
+            auto avgpool_desc_b = mkldnn::pooling_backward::desc(
+                (pAttrs.includePaddingInAvgComputation
+                     ? mkldnn::algorithm::pooling_avg_include_padding
+                     : mkldnn::algorithm::pooling_avg_exclude_padding),
+                diff_src_desc,
+                diff_dst_desc,
+                mkldnn::memory::dims{
+                    pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
+                mkldnn::memory::dims{
+                    pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
+                mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
+                mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
+        }
+        catch (const mkldnn::error& e)
+        {
+            throw ngraph_error("Could not create mkldnn avg pooling descriptor " +
+                               std::string(e.message));
+        }
         auto avgpool_pd_f =
             mkldnn::pooling_forward::primitive_desc(avgpool_desc_f, attr, cpu_engine);
         avgpool_pd_b = mkldnn::pooling_backward::primitive_desc(
@@ -617,15 +664,23 @@ static void __mlir_mkldnn_pooling(
                                     : (pAttrs.includePaddingInAvgComputation
                                            ? mkldnn::algorithm::pooling_avg_include_padding
                                            : mkldnn::algorithm::pooling_avg_exclude_padding);
-        auto pool_desc = mkldnn::pooling_forward::desc(
-            mkldnn::prop_kind::forward_inference,
-            alg,
-            input_desc,
-            result_desc,
-            mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
-            mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
-            mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
-            mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
+        try
+        {
+            auto pool_desc = mkldnn::pooling_forward::desc(
+                mkldnn::prop_kind::forward_inference,
+                alg,
+                input_desc,
+                result_desc,
+                mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
+                mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
+                mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
+                mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
+        }
+        catch (const mkldnn::error& e)
+        {
+            throw ngraph_error("Could not create mkldnn pooling descriptor " +
+                               std::string(e.message));
+        }
         pool_pd = mkldnn::pooling_forward::primitive_desc(pool_desc, attr, cpu_engine);
     }
     else if (rank == 5)
@@ -636,17 +691,25 @@ static void __mlir_mkldnn_pooling(
                                     : (pAttrs.includePaddingInAvgComputation
                                            ? mkldnn::algorithm::pooling_avg_include_padding
                                            : mkldnn::algorithm::pooling_avg_exclude_padding);
-        auto pool_desc = mkldnn::pooling_forward::desc(
-            mkldnn::prop_kind::forward_inference,
-            alg,
-            input_desc,
-            result_desc,
-            mkldnn::memory::dims{
-                pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
-            mkldnn::memory::dims{
-                pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
-            mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
-            mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
+        try
+        {
+            auto pool_desc = mkldnn::pooling_forward::desc(
+                mkldnn::prop_kind::forward_inference,
+                alg,
+                input_desc,
+                result_desc,
+                mkldnn::memory::dims{
+                    pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
+                mkldnn::memory::dims{
+                    pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
+                mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
+                mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
+        }
+        catch (const mkldnn::error& e)
+        {
+            throw ngraph_error("Could not create mkldnn pooing descriptor " +
+                               std::string(e.message));
+        }
         pool_pd = mkldnn::pooling_forward::primitive_desc(pool_desc, attr, cpu_engine);
     }
 
@@ -702,8 +765,15 @@ static void __mlir_mkldnn_softmax(size_t rank,
     // build mkldnn primitive and execute
     mkldnn::memory::data_type dtype = mkldnn::memory::data_type::f32;
     auto input_desc = mkldnn::memory::desc(dims, dtype, strides);
-    auto softmax_desc =
-        mkldnn::softmax_forward::desc(mkldnn::prop_kind::forward_scoring, input_desc, softmax_axis);
+    try
+    {
+        auto softmax_desc = mkldnn::softmax_forward::desc(
+            mkldnn::prop_kind::forward_scoring, input_desc, softmax_axis);
+    }
+    catch (const mkldnn::error& e)
+    {
+        throw ngraph_error("Could not create mkldnn softmax descriptor " + std::string(e.message));
+    }
     mkldnn::primitive_attr attr;
     mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
     auto softmax_pd = mkldnn::softmax_forward::primitive_desc(softmax_desc, attr, cpu_engine);

@@ -44,6 +44,11 @@
 #define DEBUG_TYPE PASS_NAME
 
 std::vector<ngraph::runtime::ngmlir::opAttrs> opAttrsVec;
+inline size_t static insertAttrs(ngraph::runtime::ngmlir::opAttrs attrs)
+{
+    opAttrsVec.push_back(attrs);
+    return opAttrsVec.size() - 1;
+}
 
 // anonymous namespace
 // no need to expose any of the following outside of this file
@@ -219,8 +224,6 @@ namespace
                            ArrayRef<Type> output,
                            PatternRewriter& rewriter);
 
-        inline size_t insertAttrs(opAttrs attrs);
-
         MemoryAnalysis* getMemAnalysis() const { return m_memAnalysis; }
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
@@ -240,9 +243,6 @@ namespace
         MemoryAnalysis* m_memAnalysis;
         // TODO: Workaround for findOutputValues and buildOutputDefs. See NGCPU-470.
         std::string funcName;
-
-        // Store the attributes needed by callback
-        std::vector<opAttrs> m_attrsVec;
     };
 
     void DialectLoweringPass::runOnModule()
@@ -292,8 +292,6 @@ namespace
             // separate rewrite pattern. Retrieve new function after signature conversion.
             insertNoAliasArgAttrs();
         }
-
-        opAttrsVec = m_attrsVec;
     }
 
     void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
@@ -509,12 +507,6 @@ namespace
             callBackFunc = module.lookupSymbol<mlir::FuncOp>(name);
         }
         return callBackFunc;
-    }
-
-    inline size_t DialectLoweringPass::insertAttrs(opAttrs attrs)
-    {
-        m_attrsVec.push_back(attrs);
-        return m_attrsVec.size() - 1;
     }
 
     // NGDialect converters
@@ -1349,7 +1341,7 @@ namespace
                 attrs.poolAttrs3d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
             }
         }
-        auto index = pass.insertAttrs(attrs);
+        auto index = insertAttrs(attrs);
         auto attrsIndexArg =
             rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
@@ -1419,7 +1411,7 @@ namespace
             {},
             rewriter);
 
-        auto index = pass.insertAttrs(attrs);
+        auto index = insertAttrs(attrs);
         auto attrsIndexArg =
             rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
@@ -1539,7 +1531,7 @@ namespace
                                              {},
                                              rewriter);
 
-        auto index = pass.insertAttrs(attrs);
+        auto index = insertAttrs(attrs);
         auto attrsIndexArg =
             rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
@@ -1586,7 +1578,7 @@ namespace
         auto axes = softmax.axes().getValue();
         opAttrs attrs;
         attrs.intAttr = axes[0].cast<IntegerAttr>().getInt();
-        auto index = pass.insertAttrs(attrs);
+        auto index = insertAttrs(attrs);
         auto attrsIndexArg =
             rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
@@ -1697,7 +1689,7 @@ namespace
             }
         }
 
-        auto index = pass.insertAttrs(attrs);
+        auto index = insertAttrs(attrs);
         auto attrsIndexArg =
             rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
@@ -2056,7 +2048,7 @@ namespace
                 attrs.poolAttrs3d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
             }
         }
-        auto index = pass.insertAttrs(attrs);
+        auto index = insertAttrs(attrs);
         auto attrsIndexArg =
             rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
