@@ -1172,7 +1172,7 @@ namespace
                 attrs.poolAttrs3d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
             }
         }
-        auto index = pass.insertAttrs(attrs);
+        auto index = insertAttrs(attrs);
         auto attrsIndexArg =
             rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
@@ -1449,9 +1449,9 @@ namespace
         auto padBelow = convBias.padBelow().getValue();
         auto padAbove = convBias.padBelow().getValue();
 
-        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        auto resultTy = result.getType().dyn_cast<MemRefType>();
         auto resultShape = resultTy.getShape();
-        auto imagesTy = images->getType().dyn_cast<MemRefType>();
+        auto imagesTy = images.getType().dyn_cast<MemRefType>();
         auto imagesShape = imagesTy.getShape();
         NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
         NGRAPH_CHECK(imagesTy, "Unexpected non-memref LHS type");
@@ -1525,7 +1525,7 @@ namespace
             rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::CONVOLUTIONBIAS), 64);
-        SmallVector<mlir::Value*, 4> args = {
+        SmallVector<mlir::Value, 4> args = {
             imagesCast, filtersCast, biasCast, resultCast, attrsIndexArg, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
