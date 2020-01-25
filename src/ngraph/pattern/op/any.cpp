@@ -14,31 +14,23 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/pattern/op/any.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
-#include <Halide.h>
-#include <HalideBuffer.h>
-#include <functional>
-#include <memory>
-#include <typeindex>
-#include <typeinfo>
-#include <unordered_map>
-#include <vector>
+using namespace std;
+using namespace ngraph;
 
-#include "ngraph/node.hpp"
+constexpr NodeTypeInfo pattern::op::Any::type_info;
 
-namespace ngraph
+const NodeTypeInfo& pattern::op::Any::get_type_info() const
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            namespace halide
-            {
-                const std::unordered_map<std::type_index,
-                                         std::function<Halide::Func(std::vector<Halide::Func>)>>&
-                    get_halide_generators();
-            }
-        }
-    }
+    return type_info;
+}
+
+bool pattern::op::Any::match_value(Matcher* matcher,
+                                   const Output<Node>& pattern_value,
+                                   const Output<Node>& graph_value)
+{
+    matcher->add_node(graph_value);
+    return m_predicate(graph_value) && matcher->match_arguments(pattern_value, graph_value);
 }

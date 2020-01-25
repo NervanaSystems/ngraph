@@ -68,7 +68,7 @@ namespace
         struct TensorInfo
         {
             // MLIR values this tensor maps to.
-            mlir::Value* m_value;
+            mlir::Value m_value;
         };
 
     private:
@@ -84,7 +84,7 @@ namespace
         mlir::Type getMlirType(const ngraph::Node* node);
 
         TensorInfo getTensorValue(descriptor::Tensor* tensor);
-        void updateTensorValue(descriptor::Tensor* tensor, mlir::Value* value);
+        void updateTensorValue(descriptor::Tensor* tensor, mlir::Value value);
 
         template <typename Op>
         static mlir::Operation* createOp(NgDialectConversionPass& NgDialectObj,
@@ -112,7 +112,8 @@ namespace
         /// Converts an ngraph shape to an I64 array attribute
         template <typename T>
         mlir::ArrayAttr getShapeAsAttr(T ngShape);
-
+        /// Returns the builder
+        mlir::OpBuilder& getBuilder() { return m_builder; }
         /// Return the real input node corresponding to the fake node
         ngraph::Node* getOriginArg(ngraph::Node* node) const;
 
@@ -175,7 +176,7 @@ void NgDialectConversionPass::runOnModule()
     int i = 0;
     for (auto input : kernelInputs)
     {
-        mlir::Value* arg = function.getArgument(i);
+        auto arg = function.getArgument(i);
         TensorInfo tensorInfo{arg};
         m_tensorToValueMap.insert(TensorToInfo(input->get_output_tensor_ptr().get(), tensorInfo));
         i++;
@@ -263,7 +264,7 @@ mlir::Type NgDialectConversionPass::getMlirType(const ngraph::Node* node)
     return getMlirType(outTensor);
 }
 
-void NgDialectConversionPass::updateTensorValue(descriptor::Tensor* tensor, mlir::Value* value)
+void NgDialectConversionPass::updateTensorValue(descriptor::Tensor* tensor, mlir::Value value)
 {
     NGRAPH_CHECK(m_tensorToValueMap.find(tensor) == m_tensorToValueMap.end(),
                  "tensor value already defined");
@@ -306,7 +307,7 @@ void NgDialectConversionPass::buildNgDialect(mlir::FuncOp function)
         {
             for (auto i = 0; i < op->getNumResults(); i++)
             {
-                mlir::Value* result = op->getResult(i);
+                auto result = op->getResult(i);
                 if (result)
                 {
                     updateTensorValue(np->get_output_tensor_ptr(i).get(), result);
@@ -452,6 +453,27 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Convolutio
 
     attr = NgDialectObj.getShapeAsAttr(convNode->get_padding_above());
     convOp.setPadAbove(attr);
+
+    return op;
+}
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::GroupConvolution)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGGroupConvOp>(ngNode);
+    auto gConvNode = static_cast<const ngraph::op::GroupConvolution*>(ngNode);
+    auto gConvOp = llvm::cast<mlir::NGGroupConvOp>(op);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(gConvNode->get_window_movement_strides());
+    gConvOp.setStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(gConvNode->get_padding_below());
+    gConvOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(gConvNode->get_padding_above());
+    gConvOp.setPadAbove(attr);
+
+    gConvOp.setGroups(NgDialectObj.getBuilder().getI64IntegerAttr(gConvNode->get_groups()));
     return op;
 }
 
@@ -602,7 +624,6 @@ template <>
 mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Softmax)
 {
     mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGSoftMaxOp>(ngNode, 1);
-    auto softmaxNode = static_cast<const ngraph::op::Softmax*>(ngNode);
     auto softmaxOp = llvm::cast<mlir::NGSoftMaxOp>(op);
 
     auto originArg = NgDialectObj.getOriginArg(ngNode->input_value(1).get_node());
@@ -613,11 +634,10 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Softmax)
     softmaxOp.setAxes(attr);
     return op;
 }
-
 template <typename Op>
 mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ngNode, int inNum)
 {
-    std::vector<mlir::Value*> argValues;
+    std::vector<mlir::Value> argValues;
     std::vector<mlir::Type> resTypes;
     auto inputMap = m_compiledKernel->get_input_map();
     std::shared_ptr<descriptor::Tensor> argTensor;
@@ -653,7 +673,7 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
 
     return (m_builder.create<Op,
                              ArrayRef<mlir::Type>,
-                             ArrayRef<mlir::Value*>,
+                             ArrayRef<mlir::Value>,
                              ArrayRef<mlir::NamedAttribute>>(
                 mlir::UnknownLoc::get(m_context), resTypes, argValues, {/* no attrs */}))
         .getOperation();
@@ -666,7 +686,7 @@ const NgDialectConversionPass::MLIRCompOpMap NgDialectConversionPass::opDispatch
 
 void NgDialectConversionPass::createReturn()
 {
-    std::vector<mlir::Value*> valueList;
+    std::vector<mlir::Value> valueList;
     for (auto output : m_compiledKernel->get_kernel_outputs())
     {
         valueList.push_back(getTensorValue(output->get_output_tensor_ptr().get()).m_value);
