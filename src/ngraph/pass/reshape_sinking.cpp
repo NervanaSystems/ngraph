@@ -95,33 +95,14 @@ static shared_ptr<op::Reshape> read_reshapemap(ReshapeMap& reorders, shared_ptr<
 }
 
 static shared_ptr<op::Reshape> combine_reshapes(shared_ptr<op::Reshape> r1,
-                                                shared_ptr<op::Reshape> r2, ReshapeMap& reorders)
+                                                shared_ptr<op::Reshape> r2)
 {
-    auto order = ngraph::get_default_order(r1->get_shape());
-    Shape shape;
-    if (r1->get_shape().size() == r2->get_shape().size())
-    {
-        if (r1->get_input_order().size() == order.size())
-        order = apply_permutation(order, r1->get_input_order());
-        order = apply_permutation(order, r2->get_input_order());
-        shape = r2->get_shape(); 
-    }
-    else
-    {
-        NGRAPH_DEBUG1 << "ranking changing " << describe_reshape(r1) << " and "
-                      << describe_reshape(r2);
-    auto arg_reshape = reorders.at(r2->get_argument(0));
-    auto order = arg_reshape->get_input_order();
-    auto def_order = ngraph::get_permutation_to_default_order(order);
-    shape = ngraph::apply_permutation(arg_reshape->get_shape(), def_order);
-    if (shape.size() < r2->get_shape().size())
-    shape.push_back(1);
-    else
-      shape.pop_back();
-    }
-    auto rreshape = make_reshape(r2->get_argument(0), order, shape);
-    NGRAPH_DEBUG1 << "Combining " << describe_reshape(r1) << " and " << describe_reshape(r2)
-                  << " into " << describe_reshape(rreshape);
+    auto default_order = ngraph::get_default_order(r1->get_shape());
+    auto perm_r1 = apply_permutation(default_order, r1->get_input_order());
+    auto perm_r2 = apply_permutation(perm_r1, r2->get_input_order());
+    auto rreshape = make_reshape(r2->get_argument(0), perm_r2, r2->get_shape());
+    NGRAPH_DEBUG << "Combining " << describe_reshape(r1) << " and " << describe_reshape(r2)
+                 << " into " << describe_reshape(rreshape);
     return rreshape;
 }
 
@@ -396,8 +377,10 @@ static void sink_reshape(shared_ptr<op::Reshape> reshape,
                          set<shared_ptr<Node>>& reshapes_to_delete)
 {
     NGRAPH_DEBUG1 << "Sinking Reshape :" << describe_reshape(reshape);
+    shared_ptr<op::Reshape> new_reshape;
+    shared_ptr<op::Reshape> new_reshape_in_map;
     auto orig_reshape = reorders.at(reshape->get_argument(0));
-    auto axis_change_1 = [](const Shape& s1, const Shape& s2) {
+    auto is_reshape_diff_one = [](const Shape& s1, const Shape& s2) {
         Shape ss, ss1(s1), ss2(s2);
         sort(ss1.begin(), ss1.end());
         sort(ss2.begin(), ss2.end());
@@ -405,11 +388,29 @@ static void sink_reshape(shared_ptr<op::Reshape> reshape,
         return ss.size() == 1 && ss[0] == 1;
 
     };
+    auto replace_reshape = [&]() {
+        //remove original reshape now it's combined with a new one
+        //should be safe to remove an already detached node
+        mark_reshape_for_deletion(orig_reshape, reshapes_to_delete);
+        //replace reshape with combined one
+        ngraph::replace_node(reshape, new_reshape);
+        if (new_reshape->get_input_order().size() == new_reshape->get_shape().size())
+        mark_reshape_for_deletion(new_reshape, reshapes_to_delete);
+        write_reshapemap(reorders, new_reshape, new_reshape_in_map);
+    };
+    if (
+        is_reshape_diff_one(reshape->get_output_shape(), orig_reshape->get_output_shape()))
+      {
+        //combine both reshapes
+        new_reshape = make_reshape(reshape->get_argument(0), orig_reshape->get_input_order(),reshape->get_shape());
+        new_reshape_in_map = make_reshape(new_reshape, ngraph::get_default_order(new_reshape->get_shape()), reshape->get_shape());
+        replace_reshape();
+      }
     // 1) Not a Transpose or 2) Rank changing operation.
     /* if (!axis_change_1(reshape->get_output_shape(), orig_reshape->get_output_shape()) || */
-    if ( 
-        (reshape->get_output_shape().size() != reshape->get_input_order().size() && !axis_change_1(reshape->get_output_shape(), orig_reshape->get_output_shape())))
-        /* (!reshape->get_is_transpose())) */
+    else if (
+        reshape->get_output_shape().size() != reshape->get_input_order().size()
+        || !reshape->get_is_transpose())
     {
         NGRAPH_DEBUG1 << "Materializing " << describe_reshape(orig_reshape) << " for reshape "
                       << describe_reshape(reshape);
@@ -420,14 +421,9 @@ static void sink_reshape(shared_ptr<op::Reshape> reshape,
     else
     {
         //combine both reshapes
-        auto new_reshape = combine_reshapes(orig_reshape, reshape,reorders);
-        //remove original reshape now it's combined with a new one
-        //should be safe to remove an already detached node
-        mark_reshape_for_deletion(orig_reshape, reshapes_to_delete);
-        //replace reshape with combined one
-        ngraph::replace_node(reshape, new_reshape);
-        mark_reshape_for_deletion(new_reshape, reshapes_to_delete);
-        write_reshapemap(reorders, new_reshape, new_reshape);
+        new_reshape = combine_reshapes(orig_reshape, reshape);
+        new_reshape_in_map = new_reshape;
+        replace_reshape();
     }
 }
 
