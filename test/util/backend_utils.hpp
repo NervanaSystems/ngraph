@@ -19,7 +19,10 @@
 #ifdef NGRAPH_UNIT_TEST_OPENVINO_ENABLE
 #include <ie_core.hpp>
 #include <string>
+#include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/opsets/opset.hpp"
+#include "../../../inference-engine/thirdparty/clDNN/common/googletest-fused/gtest/gtest.h"
 
 using namespace std;
 using namespace ngraph;
@@ -73,6 +76,15 @@ private:
 public:
     Executable(std::shared_ptr<Function> func, std::string _device)
     {
+        auto opset = ngraph::get_opset1();
+        bool all_opset1(true);
+        for (auto &node : func->get_ops()) {
+            if (!opset.contains_op_type(node.get())) all_opset1 = false;
+        }
+
+        if (!all_opset1)
+            THROW_IE_EXCEPTION << "UNSUPPORTED OPS DETECTED!";
+
         network = CNNNetwork(func);
         device = _device;
     }
@@ -80,44 +92,45 @@ public:
     bool call_with_validate(const vector<shared_ptr<ov_runtime::Tensor>>& outputs,
                             const vector<shared_ptr<ov_runtime::Tensor>>& inputs)
     {
-        Core ie;
+        try {
+            Core ie;
 
-        //  Loading model to the plugin (BACKEND_NAME)
-        ExecutableNetwork exeNetwork = ie.LoadNetwork(network, device);
-        //  Create infer request
-        InferRequest inferRequest = exeNetwork.CreateInferRequest();
-        //  Prepare input and output blobs
-        InputsDataMap inputInfo = network.getInputsInfo();
+            //  Loading model to the plugin (BACKEND_NAME)
+            ExecutableNetwork exeNetwork = ie.LoadNetwork(network, device);
+            //  Create infer request
+            InferRequest inferRequest = exeNetwork.CreateInferRequest();
+            //  Prepare input and output blobs
+            InputsDataMap inputInfo = network.getInputsInfo();
 
-        if (inputInfo.size() != inputs.size())
-        {
-            THROW_IE_EXCEPTION << "Function inputs number differ from number of given inputs";
+            if (inputInfo.size() != inputs.size()) {
+                THROW_IE_EXCEPTION << "Function inputs number differ from number of given inputs";
+            }
+
+            size_t i = 0;
+            for (auto &it : inputInfo) {
+                inferRequest.SetBlob(
+                        it.first, fill_blob(it.second->getTensorDesc().getDims(), inputs[i++]->data));
+            }
+
+            //  Prepare output blobs
+            std::string output_name = network.getOutputsInfo().begin()->first;
+
+            inferRequest.Infer();
+            Blob::Ptr output = inferRequest.GetBlob(output_name);
+
+            float *output_ptr = output->buffer().as<float *>();
+            // TODO: how to get size without explicit calculation?
+            size_t size = 1;
+            for (const auto &dim : output->getTensorDesc().getDims()) {
+                size *= dim;
+            }
+            //  Vector initialization from pointer
+            std::vector<float> result(output_ptr, output_ptr + size);
+            outputs[0]->data = result;
+            return true;
+        } catch(...) {
+            THROW_IE_EXCEPTION << "FAILED";
         }
-
-        size_t i = 0;
-        for (auto& it : inputInfo)
-        {
-            inferRequest.SetBlob(
-                it.first, fill_blob(it.second->getTensorDesc().getDims(), inputs[i++]->data));
-        }
-
-        //  Prepare output blobs
-        std::string output_name = network.getOutputsInfo().begin()->first;
-
-        inferRequest.Infer();
-        Blob::Ptr output = inferRequest.GetBlob(output_name);
-
-        float* output_ptr = output->buffer().as<float*>();
-        // TODO: how to get size without explicit calculation?
-        size_t size = 1;
-        for (const auto& dim : output->getTensorDesc().getDims())
-        {
-            size *= dim;
-        }
-        //  Vector initialization from pointer
-        std::vector<float> result(output_ptr, output_ptr + size);
-        outputs[0]->data = result;
-        return true;
     }
 };
 
