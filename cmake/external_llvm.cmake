@@ -19,17 +19,20 @@ set(LLVM_INSTALL_ROOT ${EXTERNAL_PROJECTS_ROOT}/llvm)
 
 configure_file(${CMAKE_SOURCE_DIR}/cmake/llvm_fetch.cmake.in ${LLVM_PROJECT_ROOT}/CMakeLists.txt @ONLY)
 
-execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" -DCMAKE_CXX_FLAGS:STRING=${CMAKE_ORIGINAL_CXX_FLAGS} .
+execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}"
+    -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
+    -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
+    -DCMAKE_CXX_FLAGS:STRING=${CMAKE_ORIGINAL_CXX_FLAGS} .
     WORKING_DIRECTORY "${LLVM_PROJECT_ROOT}")
 
 # clone and build llvm
 include(ProcessorCount)
 ProcessorCount(N)
 if(("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles") AND (NOT N EQUAL 0))
-    execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_llvm -- -j${N}
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build . -- -j${N}
         WORKING_DIRECTORY "${LLVM_PROJECT_ROOT}")
 else()
-    execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_llvm
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build .
         WORKING_DIRECTORY "${LLVM_PROJECT_ROOT}")
 endif()
 
