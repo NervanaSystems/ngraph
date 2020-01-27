@@ -202,11 +202,10 @@ NodeVector op::CrossEntropy2Backprop::decompose_op() const
     auto dy = input_value(3);
 
     auto reshape = [&](const Output<Node>& input, ngraph::Shape shape) {
-        std::vector<size_t> input_order(input.get_shape().size());
-        std::iota(std::begin(input_order), std::end(input_order), 0);
-        std::shared_ptr<ngraph::Node> reshape =
-            std::make_shared<op::Reshape>(input, ngraph::AxisVector(input_order), shape);
-        return reshape;
+        const auto reshape_pattern = op::Constant::create(element::i64, Shape{shape.size()}, shape);
+        std::shared_ptr<ngraph::Node> input_reshape =
+            std::make_shared<op::v1::Reshape>(input, reshape_pattern, false);
+        return input_reshape;
     };
 
     auto create_one_hot = [&](const Output<Node>& label, const Output<Node>& x) {
@@ -216,10 +215,7 @@ NodeVector op::CrossEntropy2Backprop::decompose_op() const
         if (label_shape.back() == 1 && label_shape.size() > 1)
         {
             label_shape.pop_back();
-            const auto reshape_pattern =
-                op::Constant::create(element::i64, Shape{label_shape.size()}, label_shape);
-            std::shared_ptr<ngraph::Node> X =
-                std::make_shared<op::v1::Reshape>(label, reshape_pattern, false);
+            auto X = reshape(label, label_shape);
             return std::make_shared<ngraph::op::OneHot>(X, x_shape, x_shape_size);
         }
         return std::make_shared<ngraph::op::OneHot>(label, x_shape, x_shape_size);
