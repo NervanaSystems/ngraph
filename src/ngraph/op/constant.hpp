@@ -87,9 +87,7 @@ namespace ngraph
                          Shape shape,
                          const std::vector<std::string>& values);
 
-                /// \brief Constructs a tensor constant with the same initialization value copied
-                ///        across the tensor. This constructor is to support deserialization of
-                ///        constants.
+                /// \brief Constructs a tensor constant with the supplied data
                 ///
                 /// \param type The element type of the tensor constant.
                 /// \param shape The shape of the tensor constant.

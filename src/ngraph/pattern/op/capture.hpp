@@ -25,29 +25,34 @@ namespace ngraph
     {
         namespace op
         {
-            /// The graph value is added to the matched value list. If the predicate is true, the
-            /// match succeeds if the arguments match; if the predicate is false, the match succeeds
-            /// if the pattern input matches the graph value.
-            class NGRAPH_API Skip : public Pattern
+            /// Experimental for support of recurrent matches.
+            ///
+            /// Capture adds the pattern value map to a list of pattern value maps and resets
+            /// matches for pattern nodes not in the static node list. The match always succeeds.
+            class NGRAPH_API Capture : public Pattern
             {
             public:
-                static constexpr NodeTypeInfo type_info{"patternSkip", 0};
+                static constexpr NodeTypeInfo type_info{"patternCapture", 0};
                 const NodeTypeInfo& get_type_info() const override;
-                Skip(const Output<Node>& arg, ValuePredicate pred)
-                    : Pattern({arg}, pred)
+                Capture(const Output<Node>& arg)
+                    : Pattern({arg})
                 {
                     set_output_type(0, arg.get_element_type(), arg.get_partial_shape());
                 }
 
-                Skip(const Output<Node>& arg, NodePredicate pred = nullptr)
-                    : Pattern({arg}, as_value_predicate(pred))
+                /// \brief static nodes are retained after a capture. All other nodes are dropped
+                std::set<Node*> get_static_nodes() { return m_static_nodes; }
+                void set_static_nodes(const std::set<Node*>& static_nodes)
                 {
-                    set_output_type(0, arg.get_element_type(), arg.get_partial_shape());
+                    m_static_nodes = static_nodes;
                 }
 
                 virtual bool match_value(pattern::Matcher* matcher,
                                          const Output<Node>& pattern_value,
                                          const Output<Node>& graph_value) override;
+
+            protected:
+                std::set<Node*> m_static_nodes;
             };
         }
     }
