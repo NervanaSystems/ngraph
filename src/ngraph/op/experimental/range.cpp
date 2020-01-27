@@ -240,11 +240,10 @@ void op::Range::validate_and_infer_types()
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
-   if(!result_shape.is_dynamic())
-   {
+    if (!result_shape.is_dynamic())
+    {
         set_output_type(0, result_et, result_shape);
-   }
-
+    }
 }
 
 shared_ptr<Node> op::Range::copy_with_new_args(const NodeVector& new_args) const

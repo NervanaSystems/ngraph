@@ -521,6 +521,8 @@ set (SRC
     pass/memory_layout.hpp
     pass/memory_visualize.cpp
     pass/memory_visualize.hpp
+    pass/min_max_propagation.cpp
+    pass/min_max_propagation.hpp
     pass/nop_elimination.cpp
     pass/nop_elimination.hpp
     pass/pass.cpp
@@ -615,8 +617,7 @@ set (SRC
 
 set(SRC ${SRC}
     runtime/dynamic/dynamic_backend.cpp
-    runtime/dynamic/dynamic_backend.hpp
-        pass/min_max_propagation.cpp pass/min_max_propagation.hpp)
+    runtime/dynamic/dynamic_backend.hpp)
 
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
