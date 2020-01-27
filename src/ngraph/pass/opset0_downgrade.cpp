@@ -460,12 +460,12 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::LogicalOr> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);;
+        return op_cast_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::LogicalXor> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Xor, op::v1::LogicalXor>(node);;
+        return op_cast_binary_elementwise_node<op::v0::Xor, op::v1::LogicalXor>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Maximum> node)
@@ -604,7 +604,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ReduceSum> node)
     {
-        return  op_cast_reduction_node<op::v0::Sum, op::v1::ReduceSum>(node);
+        return op_cast_reduction_node<op::v0::Sum, op::v1::ReduceSum>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Reverse> node)
