@@ -52,7 +52,7 @@ op::FakeQuantize::FakeQuantize(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-void op::FakeQuantize::pre_validate_and_infer_types()
+void op::FakeQuantize::validate_and_infer_types()
 {
     PartialShape data_pshape = get_input_partial_shape(0);
 
@@ -77,6 +77,7 @@ void op::FakeQuantize::pre_validate_and_infer_types()
             NODE_VALIDATION_CHECK(this, false, "Unsupported auto broadcast specification");
         }
     }
+    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
 NodeVector op::FakeQuantize::decompose_op() const
