@@ -24,6 +24,8 @@ include(ExternalProject)
 set(GTEST_GIT_REPO_URL https://github.com/google/googletest.git)
 set(GTEST_GIT_LABEL release-1.8.1)
 
+set(INSTALL_GTEST OFF)
+
 if(${CMAKE_VERSION} VERSION_LESS 3.11)
     set(GTEST_PROJECT_ROOT ${EXTERNAL_PROJECTS_ROOT}/gtest-project)
     set(GTEST_SOURCE_DIR ${GTEST_PROJECT_ROOT}/gtest-src)
