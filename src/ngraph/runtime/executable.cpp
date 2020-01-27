@@ -114,6 +114,16 @@ size_t runtime::Executable::get_preferred_pipeline_depth() const
     return 2;
 }
 
+void runtime::Executable::set_parameters(const ngraph::ParameterVector& params)
+{
+    m_parameters = params;
+}
+
+void runtime::Executable::set_results(const ngraph::ResultVector& results)
+{
+    m_results = results;
+}
+
 void runtime::Executable::set_parameters_and_results(const Function& func)
 {
     m_parameters = func.get_parameters();
