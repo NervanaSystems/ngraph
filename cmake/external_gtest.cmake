@@ -58,8 +58,7 @@ else()
 endif()
 
 if(WIN32)
-    target_compile_definitions(gtest PRIVATE gtest_force_shared_crt=ON)
-    target_compile_definitions(gmock PRIVATE gtest_force_shared_crt=ON)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 endif()
 
 if(UNIX)
