@@ -357,6 +357,24 @@ namespace
         EXPECT_FALSE(node.is_binary_elementwise_logical());
     }
 
+    void op_is_CrossEntropy2()
+    {
+        op::CrossEntropy2 node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
+    void op_is_CrossEntropy2Backprop()
+    {
+        op::CrossEntropy2Backprop node;
+        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
+        EXPECT_FALSE(node.is_binary_elementwise_comparison());
+        EXPECT_FALSE(node.is_binary_elementwise_logical());
+    }
+
     void op_is_CropAndResize()
     {
         op::CropAndResize node;

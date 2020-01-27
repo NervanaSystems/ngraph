@@ -51,6 +51,7 @@ set(SRC
     build_graph.cpp
     builder_autobroadcast.cpp
     check.cpp
+    constant.cpp
     constant_folding.cpp
     concat_fusion.cpp
     control_dependencies.cpp
@@ -236,9 +237,6 @@ else()
         if (NOT NGRAPH_DEX_ONLY)
             list(APPEND SRC cpu_codegen.cpp)
         endif()
-        if (NGRAPH_HALIDE)
-            list(APPEND SRC halide.cpp)
-        endif()
         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
     endif()
 
@@ -321,6 +319,7 @@ set(MULTI_TEST_SRC
     backend/logical_or.in.cpp
     backend/logical_xor.in.cpp
     backend/lrn.in.cpp
+    backend/matmul.in.cpp
     backend/max.in.cpp
     backend/maximum.in.cpp
     backend/min.in.cpp
@@ -502,9 +501,6 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
             onnx/onnx_import_reshape.in.cpp
             onnx/onnx_import_rnn.in.cpp
             onnx/onnx_import_quant.in.cpp)
-    if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnx/onnxifi.cpp onnx/onnxifi_span.cpp)
-    endif()
 endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
@@ -588,10 +584,6 @@ if (NGRAPH_TBB_ENABLE)
     target_compile_definitions(unit-test PRIVATE "NGRAPH_TBB_ENABLE")
 endif()
 
-if (NGRAPH_HALIDE)
-    target_compile_definitions(unit-test PRIVATE "NGRAPH_HALIDE")
-endif()
-
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
@@ -603,11 +595,6 @@ endif()
 
 if (NGRAPH_GPUH_ENABLE)
     target_link_libraries(unit-test PRIVATE gpuh_backend)
-endif()
-
-if (NGRAPH_ONNXIFI_ENABLE)
-    target_include_directories(unit-test SYSTEM PUBLIC ${ONNX_INCLUDE_DIR})
-    target_link_libraries(unit-test PRIVATE onnxifi-ngraph)
 endif()
 
 if (NGRAPH_MLIR_ENABLE)

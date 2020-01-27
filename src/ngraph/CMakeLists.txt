@@ -363,6 +363,8 @@ set (SRC
     op/fused/conv_fused.hpp
     op/fused/crossentropy.cpp
     op/fused/crossentropy.hpp
+    op/fused/crossentropy2.cpp
+    op/fused/crossentropy2.hpp
     op/fused/hard_sigmoid.cpp
     op/fused/hard_sigmoid.hpp
     op/fused/depth_to_space.cpp
@@ -496,6 +498,8 @@ set (SRC
     pass/constant_folding.cpp
     pass/constant_folding.hpp
     pass/constant_to_broadcast.cpp
+    pass/convert_fp32_to_fp16.hpp
+    pass/convert_fp32_to_fp16.cpp
     pass/core_fusion.cpp
     pass/core_fusion.hpp
     pass/cse.cpp
@@ -557,11 +561,24 @@ set (SRC
     pass/pass_util.cpp
     pattern/matcher.cpp
     pattern/matcher.hpp
+    pattern/op/any.cpp
     pattern/op/any.hpp
+    pattern/op/any_of.cpp
     pattern/op/any_of.hpp
+    pattern/op/branch.cpp
+    pattern/op/branch.hpp
+    pattern/op/capture.cpp
+    pattern/op/capture.hpp
+    pattern/op/label.cpp
     pattern/op/label.hpp
+    pattern/op/or.cpp
+    pattern/op/or.hpp
+    pattern/op/pattern.cpp
     pattern/op/pattern.hpp
+    pattern/op/skip.cpp
     pattern/op/skip.hpp
+    pattern/op/true.cpp
+    pattern/op/true.hpp
     placement.cpp
     placement.hpp
     provenance.cpp

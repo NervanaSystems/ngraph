@@ -1354,6 +1354,21 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], args[2], soft_label, ignore_index);
             break;
         }
+        case OP_TYPEID::CrossEntropy2:
+        {
+            auto soft_label = node_js.at("soft_label");
+            auto ignore_index = node_js.at("ignore_index");
+            node = make_shared<op::CrossEntropy2>(args[0], args[1], soft_label, ignore_index);
+            break;
+        }
+        case OP_TYPEID::CrossEntropy2Backprop:
+        {
+            auto soft_label = node_js.at("soft_label");
+            auto ignore_index = node_js.at("ignore_index");
+            node = make_shared<op::CrossEntropy2Backprop>(
+                args[0], args[1], args[2], args[3], soft_label, ignore_index);
+            break;
+        }
         case OP_TYPEID::CropAndResize:
         {
             auto resize_method =
@@ -3529,6 +3544,20 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::CrossEntropyBackprop:
     {
         auto tmp = static_cast<const op::CrossEntropyBackprop*>(&n);
+        node["soft_label"] = tmp->get_soft_label();
+        node["ignore_index"] = tmp->get_ignore_index();
+        break;
+    }
+    case OP_TYPEID::CrossEntropy2:
+    {
+        auto tmp = static_cast<const op::CrossEntropy2*>(&n);
+        node["soft_label"] = tmp->get_soft_label();
+        node["ignore_index"] = tmp->get_ignore_index();
+        break;
+    }
+    case OP_TYPEID::CrossEntropy2Backprop:
+    {
+        auto tmp = static_cast<const op::CrossEntropy2Backprop*>(&n);
         node["soft_label"] = tmp->get_soft_label();
         node["ignore_index"] = tmp->get_ignore_index();
         break;

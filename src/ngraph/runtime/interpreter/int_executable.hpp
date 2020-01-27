@@ -1850,6 +1850,8 @@ protected:
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
         case OP_TYPEID::CrossEntropy:
         case OP_TYPEID::CrossEntropyBackprop:
+        case OP_TYPEID::CrossEntropy2:
+        case OP_TYPEID::CrossEntropy2Backprop:
         case OP_TYPEID::DepthToSpace:
         case OP_TYPEID::Elu:
         case OP_TYPEID::FakeQuantize:
