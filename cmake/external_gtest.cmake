@@ -26,6 +26,10 @@ set(GTEST_GIT_LABEL release-1.8.1)
 
 set(INSTALL_GTEST OFF CACHE BOOL "enable googletest install" FORCE)
 
+if(WIN32)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+endif()
+
 if(${CMAKE_VERSION} VERSION_LESS 3.11)
     set(GTEST_PROJECT_ROOT ${EXTERNAL_PROJECTS_ROOT}/gtest-project)
     set(GTEST_SOURCE_DIR ${GTEST_PROJECT_ROOT}/gtest-src)
@@ -57,10 +61,6 @@ else()
         FetchContent_Populate(googletest)
         add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
     endif()
-endif()
-
-if(WIN32)
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 endif()
 
 if(UNIX)
