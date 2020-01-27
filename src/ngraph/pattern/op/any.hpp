@@ -25,7 +25,8 @@ namespace ngraph
     {
         namespace op
         {
-            /// \brief Anys are used in patterns to express arbitrary queries on a node
+            /// The graph value is to the matched value list. If the predicate is true for the node
+            /// and the arguments match, the match succeeds.
             class NGRAPH_API Any : public Pattern
             {
             public:
@@ -35,26 +36,38 @@ namespace ngraph
                 ///        shape.
                 Any(const element::Type& type,
                     const PartialShape& s,
-                    Predicate pred,
-                    const NodeVector& wrapped_nodes)
-                    : Pattern(wrapped_nodes, pred)
+                    ValuePredicate pred,
+                    const OutputVector& wrapped_values)
+                    : Pattern(wrapped_values, pred)
                 {
-                    if (!pred)
-                    {
-                        throw ngraph_error("predicate is required");
-                    }
                     set_output_type(0, type, s);
                 }
-
-                /// \brief creates a Any node containing a sub-pattern described by the type and
-                ///        shape of \sa node.
-                Any(std::shared_ptr<Node> node, Predicate pred, const NodeVector& wrapped_nodes)
-                    : Any(node->get_element_type(),
-                          node->get_output_partial_shape(0),
-                          pred,
-                          wrapped_nodes)
+                Any(const element::Type& type,
+                    const PartialShape& s,
+                    NodePredicate pred,
+                    const NodeVector& wrapped_values)
+                    : Any(type, s, as_value_predicate(pred), as_output_vector(wrapped_values))
                 {
                 }
+                /// \brief creates a Any node containing a sub-pattern described by the type and
+                ///        shape of \sa node.
+                Any(const Output<Node>& node,
+                    ValuePredicate pred,
+                    const OutputVector& wrapped_values)
+                    : Any(node.get_element_type(), node.get_partial_shape(), pred, wrapped_values)
+                {
+                }
+                Any(const Output<Node>& node, NodePredicate pred, const NodeVector& wrapped_values)
+                    : Any(node.get_element_type(),
+                          node.get_partial_shape(),
+                          as_value_predicate(pred),
+                          as_output_vector(wrapped_values))
+                {
+                }
+
+                bool match_value(pattern::Matcher* matcher,
+                                 const Output<Node>& pattern_value,
+                                 const Output<Node>& graph_value) override;
             };
         }
     }

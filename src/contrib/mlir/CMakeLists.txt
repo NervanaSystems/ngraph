@@ -38,6 +38,7 @@ set(SRC
     core/pass/ng_dialect_fused_ops.hpp
     runtime/cpu/memory_manager.cpp
     runtime/cpu/cpu_runtime.cpp
+    runtime/cpu/cpu_callbacks.cpp
     utils.cpp
 )
 
@@ -92,7 +93,8 @@ target_link_libraries(
 )
 
 # Link ngraph 
-target_link_libraries(mlir_backend PUBLIC ngraph)
+target_link_libraries(mlir_backend PUBLIC ngraph libmkl libmkldnn)
+target_include_directories(mlir_backend SYSTEM PUBLIC libmkldnn)
 
 # table-gen dialect ops
 # include table-gen helpers

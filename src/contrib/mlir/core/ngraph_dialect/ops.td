@@ -78,7 +78,7 @@ class NG_Unary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
   // TODO: Implement
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
-  let verifier = [{ return verifyUnaryArithOp(this); }];
+  let verifier = [{ return verifyUnaryArithOp(*this); }];
 }
 
 // Base class for arithmetic binary operations without side effects.
@@ -98,7 +98,7 @@ class NG_Binary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
   // TODO: Implement
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
-  let verifier = [{ return verifyBinaryArithOp(this); }];
+  let verifier = [{ return verifyBinaryArithOp(*this); }];
 }
 
 // Base class for comparison operations with verifier.
@@ -109,7 +109,7 @@ class NG_Cmp_Op<string mnemonic, list<OpTrait> traits = []> :
   // TODO: Implement
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
-  let verifier = [{ return verifyCmpOp(this); }];
+  let verifier = [{ return verifyCmpOp(*this); }];
 }
 
 // Base class for ternary operations without side effects.
@@ -133,7 +133,7 @@ class NG_Axis_Reduction_Op<string mnemonic, list<OpTrait> traits = []> :
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
   // TODO
-  let verifier = [{ return verifyAxisReductionOp(this); }];
+  let verifier = [{ return verifyAxisReductionOp(*this); }];
 }
 
 // Base class for terminator operations.

@@ -122,7 +122,7 @@ TEST(cpu_fusion, gemm_pattern)
     auto pbroadcast = make_shared<op::Broadcast>(b, dot->get_shape(), AxisSet{0});
     auto padd = pdot + pbroadcast;
 
-    TestMatcher n(nullptr);
+    TestMatcher n;
     ASSERT_TRUE(n.match(padd, add));
     ASSERT_EQ(n.get_pattern_map()[W], A);
     ASSERT_EQ(n.get_pattern_map()[x], B);

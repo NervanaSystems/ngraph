@@ -65,12 +65,12 @@ using namespace mlir::edsc::op;
 
 namespace mlir
 {
-    static Value* createSgemmOp(
-        PatternRewriter& rewriter, Operation* old_op, Value* input1, Value* input2, Value* input3)
+    static Value createSgemmOp(
+        PatternRewriter& rewriter, Operation* old_op, Value input1, Value input2, Value input3)
     {
         auto castedOp0 = dyn_cast_or_null<NGAddOp>(old_op);
         (void)castedOp0;
-        SmallVector<Value*, 4> values;
+        SmallVector<Value, 4> values;
         (void)values;
         SmallVector<NamedAttribute, 4> attrs;
         (void)attrs;
@@ -87,9 +87,9 @@ namespace mlir
         attrs.emplace_back(rewriter.getIdentifier("transB"), rewriter.getBoolAttr(false));
         SmallVector<Type, 4> types;
         (void)types;
-        for (auto* v : castedOp0.getODSResults(0))
+        for (auto v : castedOp0.getODSResults(0))
         {
-            types.push_back(v->getType());
+            types.push_back(v.getType());
         }
         return rewriter.create<NGGemmOp>(castedOp0.getLoc(), types, values, attrs);
     }
@@ -125,9 +125,6 @@ NgDialectFusedOpsPass::NgDialectFusedOpsPass(const NgDialectFusedOpsPass& obj)
 void NgDialectFusedOpsPass::runOnModule()
 {
     OwningRewritePatternList patterns;
-
-    /* populuate the generated pattern
-     * patterns.insert<MatMulBiasPattern>(m_context);*/
     mlir::populateWithGenerated(m_context, &patterns);
 
     // Gather functions to be processed. Note that new functions will be added to module as part
