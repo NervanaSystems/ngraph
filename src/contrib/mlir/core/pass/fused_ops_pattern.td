@@ -35,6 +35,8 @@ include "core/ngraph_dialect/ops.td"
 //
 // Each def will corresponding to a C++ class
 
-// class for defining the pattern to fuse MatMul + Bias
+// Native code call to c++ helper funnction to create SGEMM Op
+def createSgemmOp :  NativeCodeCall<"createSgemmOp($_builder, $0->getDefiningOp(), $1, $2, $3)">;
 
-def MatMulBiasPattern : Pat<(NGAddOp ( NGDotOp $input1, $input2), $add_input), (NGMatMulBiasOp $input1, $input2, $add_input)>;
+// class for defining the pattern to fuse MatMul + Bias
+def MatMulBiasPattern : Pat<(NGAddOp:$old_op ( NGDotOp $input1, $input2), $add_input), (createSgemmOp $old_op, $input1, $input2, $add_input)>;

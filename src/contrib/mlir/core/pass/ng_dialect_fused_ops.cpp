@@ -65,6 +65,35 @@ using namespace mlir::edsc::op;
 
 namespace mlir
 {
+    static Value* createSgemmOp(
+        PatternRewriter& rewriter, Operation* old_op, Value* input1, Value* input2, Value* input3)
+    {
+        auto castedOp0 = dyn_cast_or_null<NGAddOp>(old_op);
+        (void)castedOp0;
+        SmallVector<Value*, 4> values;
+        (void)values;
+        SmallVector<NamedAttribute, 4> attrs;
+        (void)attrs;
+        values.push_back(input1);
+        values.push_back(input2);
+        values.push_back(input3);
+        attrs.emplace_back(
+            rewriter.getIdentifier("alpha"),
+            rewriter.getFloatAttr(mlir::Builder(rewriter.getContext()).getF32Type(), 1.0));
+        attrs.emplace_back(
+            rewriter.getIdentifier("beta"),
+            rewriter.getFloatAttr(mlir::Builder(rewriter.getContext()).getF32Type(), 1.0));
+        attrs.emplace_back(rewriter.getIdentifier("transA"), rewriter.getBoolAttr(false));
+        attrs.emplace_back(rewriter.getIdentifier("transB"), rewriter.getBoolAttr(false));
+        SmallVector<Type, 4> types;
+        (void)types;
+        for (auto* v : castedOp0.getODSResults(0))
+        {
+            types.push_back(v->getType());
+        }
+        return rewriter.create<NGGemmOp>(castedOp0.getLoc(), types, values, attrs);
+    }
+
 #include "fused_ops_pattern.h.inc"
 }
 namespace
