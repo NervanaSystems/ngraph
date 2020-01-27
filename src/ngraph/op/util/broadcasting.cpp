@@ -272,8 +272,8 @@ namespace ngraph
         std::shared_ptr<ngraph::Node> numpy_style_broadcast(const Output<ngraph::Node>& value,
                                                             const Shape& shape)
         {
-            return std::make_shared<v1::Broadcast>(
-                value, Constant::create(element::i64, Shape{shape.size()}, shape));
+            auto bcast_shape = get_numpy_broadcast_shapes({value.get_shape(), shape});
+            return broadcast_node_numpy_style(value, bcast_shape.first, bcast_shape.second[0]);
         }
 
         OutputVector numpy_style_broadcast_for_matmul_operation(const Output<ngraph::Node>& left,
