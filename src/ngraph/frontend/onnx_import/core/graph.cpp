@@ -13,11 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <onnx/onnx_pb.h>
+#include "onnx/defs/function.h"
+#include "onnx/defs/schema.h"
+#include "onnx/proto_utils.h"
+#include "onnx/string_utils.h"
 
 #include <functional>
 #include <numeric>
 #include <sstream>
-
 #include "graph.hpp"
 #include "node.hpp"
 #include "utils/common.hpp"
@@ -92,12 +96,29 @@ namespace ngraph
             }
         } // namespace detail
 
+
         Graph::Graph(const onnx::GraphProto& graph_proto, Model& model)
             : m_graph_proto{&graph_proto}
             , m_model{&model}
         {
+            auto schema_registry = onnx::OpSchemaRegistry::Instance();
+            for (const auto& node : m_graph_proto.node())
+            {
+                const auto node_op_schema =
+                    schema_registry->GetSchema(node.op_type(), static_cast<int>(11), node.domain());
+
+                if (node_op_schema && node_op_schema->HasFunction())
+                {
+                    auto proto_func = node_op_schema->GetFunction();
+                    onnx::FunctionExpandHelper(node, *proto_func, m_graph_proto);
+                }
+                else
+                {
+                    std::cout << "has no function" << std::endl;
+                }
+            }
             // Process all initializers in the graph
-            for (const auto& initializer_tensor : m_graph_proto->initializer())
+            for (const auto& initializer_tensor : m_graph_proto.initializer())
             {
                 if (initializer_tensor.has_name())
                 {
@@ -112,7 +133,7 @@ namespace ngraph
             }
 
             // Process all ONNX graph inputs, convert them to nGraph nodes and store in cache
-            for (const auto& input : m_graph_proto->input())
+            for (const auto& input : m_graph_proto.input())
             {
                 m_inputs.emplace_back(input);
 
@@ -129,14 +150,14 @@ namespace ngraph
             }
 
             // Process all graph outputs
-            for (const auto& output : m_graph_proto->output())
+            for (const auto& output : m_graph_proto.output())
             {
                 m_outputs.emplace_back(output);
             }
 
             // Verify that ONNX graph contains only nodes of available operator types
             std::map<std::string, std::reference_wrapper<const onnx::NodeProto>> unknown_operators;
-            for (const auto& node_proto : m_graph_proto->node())
+            for (const auto& node_proto : m_graph_proto.node())
             {
                 if (!m_model->is_operator_available(node_proto))
                 {
@@ -167,7 +188,7 @@ namespace ngraph
                          detail::to_string(unknown_operators));
 
             // Process ONNX graph nodes, convert to nGraph nodes
-            for (const auto& node_proto : m_graph_proto->node())
+            for (const auto& node_proto : m_graph_proto.node())
             {
                 m_nodes.emplace_back(node_proto, *this);
                 const Node& node{m_nodes.back()};
@@ -186,7 +207,7 @@ namespace ngraph
         NodeVector Graph::get_ng_outputs() const
         {
             NodeVector results;
-            for (const auto& output : m_graph_proto->output())
+            for (const auto& output : m_graph_proto.output())
             {
                 results.emplace_back(get_ng_node_from_cache(output.name()));
             }

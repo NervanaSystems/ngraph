@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include <onnx/onnx_pb.h>
-
+// #include "onnx/defs/schema.h"
 #include "model.hpp"
 #include "ngraph/log.hpp"
 #include "ops_bridge.hpp"
