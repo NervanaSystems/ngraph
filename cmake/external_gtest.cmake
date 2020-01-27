@@ -23,31 +23,39 @@ include(ExternalProject)
 
 set(GTEST_GIT_REPO_URL https://github.com/google/googletest.git)
 set(GTEST_GIT_LABEL release-1.8.1)
-set(GTEST_PROJECT_ROOT ${EXTERNAL_PROJECTS_ROOT}/gtest-project)
-set(GTEST_SOURCE_DIR ${GTEST_PROJECT_ROOT}/gtest-src)
-set(GTEST_BINARY_DIR ${GTEST_PROJECT_ROOT}/gtest-build)
 
-configure_file(${CMAKE_SOURCE_DIR}/cmake/gtest_fetch.cmake.in ${GTEST_PROJECT_ROOT}/CMakeLists.txt @ONLY)
+if(${CMAKE_VERSION} VERSION_LESS 3.11)
+    set(GTEST_PROJECT_ROOT ${EXTERNAL_PROJECTS_ROOT}/gtest-project)
+    set(GTEST_SOURCE_DIR ${GTEST_PROJECT_ROOT}/gtest-src)
+    set(GTEST_BINARY_DIR ${GTEST_PROJECT_ROOT}/gtest-build)
 
-execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}"
-    -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
-    -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
-    WORKING_DIRECTORY "${GTEST_PROJECT_ROOT}")
+    configure_file(${CMAKE_SOURCE_DIR}/cmake/gtest_fetch.cmake.in ${GTEST_PROJECT_ROOT}/CMakeLists.txt @ONLY)
 
-# clone and build googletest
-include(ProcessorCount)
-ProcessorCount(N)
-if(("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles") AND (NOT N EQUAL 0))
-    execute_process(COMMAND "${CMAKE_COMMAND}" --build . -- -j${N}
+    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}"
+        -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
+        -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
         WORKING_DIRECTORY "${GTEST_PROJECT_ROOT}")
-else()
+
     execute_process(COMMAND "${CMAKE_COMMAND}" --build .
         WORKING_DIRECTORY "${GTEST_PROJECT_ROOT}")
-endif()
 
-add_subdirectory("${GTEST_SOURCE_DIR}"
-                 "${GTEST_BINARY_DIR}"
-)
+    add_subdirectory("${GTEST_SOURCE_DIR}"
+                     "${GTEST_BINARY_DIR}"
+    )
+else()
+    include(FetchContent)
+    FetchContent_Declare(
+      googletest
+      GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
+      GIT_TAG        ${GTEST_GIT_LABEL}
+    )
+
+    FetchContent_GetProperties(googletest)
+    if(NOT googletest_POPULATED)
+        FetchContent_Populate(googletest)
+        add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+    endif()
+endif()
 
 if(WIN32)
     target_compile_definitions(gtest PRIVATE gtest_force_shared_crt=ON)
