@@ -159,4 +159,3 @@ include "core/ngraph_dialect/ops_v1.td"
 
 // Fused Ops
 include "core/ngraph_dialect/fused_ops.td"
-

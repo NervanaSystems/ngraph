@@ -129,6 +129,7 @@ mlir::LogicalResult verifyOp(NGConcatOp op)
     return mlir::success();
 }
 
+template <>
 mlir::LogicalResult verifyOp(NGSelectOp op)
 {
     mlir::Type t0 = op.getOperation()->getOperand(0).getType();
