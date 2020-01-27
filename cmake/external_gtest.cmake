@@ -51,11 +51,13 @@ add_subdirectory("${GTEST_SOURCE_DIR}"
 
 if(WIN32)
     target_compile_definitions(gtest PRIVATE gtest_force_shared_crt=ON)
+    target_compile_definitions(gmock PRIVATE gtest_force_shared_crt=ON)
 endif()
 
 if(UNIX)
     # workaround for compile error
     # related: https://github.com/intel/mkl-dnn/issues/55
-    target_compile_options(gtext PRIVATE -Wno-unused-result -Wno-undef)
+    target_compile_options(gtest PRIVATE -Wno-unused-result -Wno-undef)
+    target_compile_options(gmock PRIVATE -Wno-unused-result -Wno-undef)
 endif()
 

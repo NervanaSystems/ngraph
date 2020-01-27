@@ -56,7 +56,7 @@ add_executable(fluid-test ${SRC})
 target_include_directories(fluid-test PRIVATE "../../../../../../test")
 
 target_link_libraries(fluid-test PRIVATE ngraph_test_util)
-target_link_libraries(fluid-test PRIVATE ngraph gtest)
+target_link_libraries(fluid-test PRIVATE ngraph gtest gmock)
 
 if(NOT WIN32)
     target_link_libraries(fluid-test PRIVATE pthread)
