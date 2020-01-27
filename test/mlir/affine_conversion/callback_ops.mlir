@@ -10,7 +10,7 @@
 //       CHECK: %1 = memref_cast %arg1 : memref<1x1x3x3xf32> to memref<*xf32>
 //       CHECK: %2 = memref_cast %arg2 : memref<1xf32> to memref<*xf32>
 //       CHECK: %3 = memref_cast %arg3 : memref<1x1x1x1xf32> to memref<*xf32>
-//       CHECK: %[[C1:.*]] = constant 0 : i64
+//       CHECK: %[[C1:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: %[[C2:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: call @__mlir_callback_3_inputs(%0, %1, %2, %3, %c0_i64, %c12_i64) : (memref<*xf32>, memref<*xf32>, memref<*xf32>, memref<*xf32>, i64, i64) -> ()
 func @simple_convbias(%arg0: !ng.tensor<1x1x3x3xf32>, %arg1: !ng.tensor<1x1x3x3xf32>, %arg2: !ng.tensor<1xf32>) -> !ng.tensor<1x1x1x1xf32> {
@@ -22,7 +22,7 @@ func @simple_convbias(%arg0: !ng.tensor<1x1x3x3xf32>, %arg1: !ng.tensor<1x1x3x3x
 
 // Softmax Op
 // CHECK-LABEL: func @simple_softmax
-//       CHECK: %[[C1:.*]] = constant 0 : i64
+//       CHECK: %[[C1:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: %[[C2:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: %0 = memref_cast %arg0 : memref<2x3xf32> to memref<*xf32>
 //       CHECK: %1 = memref_cast %arg2 : memref<2x3xf32> to memref<*xf32>
@@ -36,7 +36,7 @@ func @simple_softmax(%arg0: !ng.tensor<2x3xf32>, %arg1: !ng.tensor<1x!ng.i64>) -
 
 // Gemm Op
 // CHECK-LABEL: func @simple_gemm
-//       CHECK: %[[C1:.*]] = constant 0 : i64
+//       CHECK: %[[C1:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: %[[C2:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: %0 = memref_cast %arg0 : memref<3x6xf32> to memref<*xf32>
 //       CHECK: %1 = memref_cast %arg1 : memref<6x4xf32> to memref<*xf32>
@@ -52,7 +52,7 @@ func @simple_gemm(%arg0: !ng.tensor<3x6xf32>, %arg1: !ng.tensor<6x4xf32>, %arg2:
 
 // MatMul Op
 // CHECK-LABEL: func @simple_matmul
-//       CHECK: %[[C1:.*]] = constant 0 : i64
+//       CHECK: %[[C1:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: %[[C2:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: %0 = memref_cast %arg0 : memref<3x2xf32> to memref<*xf32>
 //       CHECK: %1 = memref_cast %arg1 : memref<2x3xf32> to memref<*xf32>
@@ -69,7 +69,7 @@ func @simple_matmul(%arg0: !ng.tensor<3x2xf32>, %arg1: !ng.tensor<2x3xf32>) -> !
 // CHECK-LABEL: func @simple_avgpool
 //       CHECK: %0 = memref_cast %arg0 : memref<2x1x3x3xf32> to memref<*xf32>
 //       CHECK: %1 = memref_cast %arg1 : memref<2x1x3x3xf32> to memref<*xf32>
-//       CHECK: %[[C1:.*]] = constant 0 : i64
+//       CHECK: %[[C1:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: %[[C2:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: call @__mlir_callback_1_input(%0, %1, %[[C1]], %[[C2]]) : (memref<*xf32>, memref<*xf32>, i64, i64) -> ()
 func @simple_avgpool(%arg0: !ng.tensor<2x1x3x3xf32>) -> !ng.tensor<2x1x3x3xf32> {
@@ -83,7 +83,7 @@ func @simple_avgpool(%arg0: !ng.tensor<2x1x3x3xf32>) -> !ng.tensor<2x1x3x3xf32> 
 // CHECK-LABEL: func @simple_avgpoolbackprop
 //       CHECK: %0 = memref_cast %arg0 : memref<2x2x2x2xf32> to memref<*xf32>
 //       CHECK: %1 = memref_cast %arg1 : memref<2x2x3x3xf32> to memref<*xf32>
-//       CHECK: %[[C1:.*]] = constant 0 : i64
+//       CHECK: %[[C1:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: %[[C2:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: call @__mlir_callback_1_input(%0, %1, %[[C1]], %[[C2]]) : (memref<*xf32>, memref<*xf32>, i64, i64) -> ()
 func @simple_avgpoolbackprop(%arg0: !ng.tensor<2x2x2x2xf32>) -> !ng.tensor<2x2x3x3xf32> {
@@ -97,7 +97,7 @@ func @simple_avgpoolbackprop(%arg0: !ng.tensor<2x2x2x2xf32>) -> !ng.tensor<2x2x3
 // CHECK-LABEL: func @simple_maxpool
 //       CHECK: %0 = memref_cast %arg0 : memref<64x3x7x8x10xf32> to memref<*xf32>
 //       CHECK: %1 = memref_cast %arg1 : memref<64x3x9x6x5xf32> to memref<*xf32>
-//       CHECK: %[[C1:.*]] = constant 0 : i64
+//       CHECK: %[[C1:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: %[[C2:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: call @__mlir_callback_1_input(%0, %1, %[[C1]], %[[C2]]) : (memref<*xf32>, memref<*xf32>, i64, i64) -> ()
 func @simple_maxpool(%arg0: !ng.tensor<64x3x7x8x10xf32>) -> !ng.tensor<64x3x9x6x5xf32> {
@@ -112,7 +112,7 @@ func @simple_maxpool(%arg0: !ng.tensor<64x3x7x8x10xf32>) -> !ng.tensor<64x3x9x6x
 //       CHECK: %0 = memref_cast %arg0 : memref<2x2x5x5xf32> to memref<*xf32>
 //       CHECK: %1 = memref_cast %arg1 : memref<2x2x4x3xf32> to memref<*xf32>
 //       CHECK: %2 = memref_cast %arg2 : memref<2x2x5x5xf32> to memref<*xf32>
-//       CHECK: %[[C1:.*]] = constant 0 : i64
+//       CHECK: %[[C1:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: %[[C2:.*]] = constant {{[0-9]+}} : i64
 //       CHECK: call @__mlir_callback_2_inputs(%0, %1, %2, %[[C1]], %[[C2]]) : (memref<*xf32>, memref<*xf32>, memref<*xf32>, i64, i64) -> ()
 func @simple_maxpoolbackprop(%arg0: !ng.tensor<2x2x5x5xf32>, %arg1: !ng.tensor<2x2x4x3xf32>) -> !ng.tensor<2x2x5x5xf32> {
