@@ -616,7 +616,7 @@ set (SRC
 set(SRC ${SRC}
     runtime/dynamic/dynamic_backend.cpp
     runtime/dynamic/dynamic_backend.hpp
-    )
+        pass/min_max_propagation.cpp pass/min_max_propagation.hpp)
 
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
