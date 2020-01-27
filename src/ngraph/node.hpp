@@ -255,6 +255,9 @@ namespace ngraph
                              const element::Type& element_type,
                              const PartialShape& pshape);
 
+        void set_output_max_partial_shape(size_t i, const PartialShape& partial_shape);
+        const PartialShape& get_output_max_partial_shape(size_t i);
+
         virtual bool is_parameter() const { return false; }
         virtual bool is_output() const;
         virtual bool is_constant() const;
