@@ -363,6 +363,8 @@ set (SRC
     op/fused/conv_fused.hpp
     op/fused/crossentropy.cpp
     op/fused/crossentropy.hpp
+    op/fused/crossentropy2.cpp
+    op/fused/crossentropy2.hpp
     op/fused/hard_sigmoid.cpp
     op/fused/hard_sigmoid.hpp
     op/fused/depth_to_space.cpp
