@@ -44,7 +44,7 @@ namespace ngraph
             {
                 return m_ng_node_cache.at(name);
             }
-            const std::string& get_name() const { return m_graph_proto->name(); }
+            const std::string& get_name() const { return m_graph_proto.name(); }
             NodeVector make_ng_nodes(const Node& onnx_node) const;
 
         protected:
@@ -57,7 +57,7 @@ namespace ngraph
             void add_provenance_tags(const Node& onnx_node, const NodeVector& ng_node_vector) const;
 
         private:
-            const onnx::GraphProto* m_graph_proto;
+            onnx::GraphProto m_graph_proto;
             std::vector<Node> m_nodes;
             std::vector<ValueInfo> m_inputs;
             std::vector<ValueInfo> m_outputs;
