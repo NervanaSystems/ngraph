@@ -43,15 +43,12 @@ namespace
     shared_ptr<Node> op_cast(shared_ptr<Node> node) { return nullptr; }
     shared_ptr<Node> op_cast(shared_ptr<op::Add> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::Add, op::v1::Add>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::Add, op::v1::Add>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::And> node)
     {
-        auto replacement_node =
-            op_cast_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::AvgPool> node)
@@ -247,8 +244,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Equal> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::Gather> node)
@@ -264,16 +260,12 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Greater> node)
     {
-        auto replacement_node =
-            op_cast_binary_elementwise_node<op::v0::Greater, op::v1::Greater>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::Greater, op::v1::Greater>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::GreaterEq> node)
     {
-        auto replacement_node =
-            op_cast_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEqual>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEqual>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v0::GroupConvolution> node)
@@ -374,15 +366,12 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Less> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::Less, op::v1::Less>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::Less, op::v1::Less>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::LessEq> node)
     {
-        auto replacement_node =
-            op_cast_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::Max> node)
@@ -396,9 +385,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Maximum> node)
     {
-        auto replacement_node =
-            op_cast_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::MaxPool> node)
@@ -466,16 +453,12 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Minimum> node)
     {
-        auto replacement_node =
-            op_cast_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::Multiply> node)
     {
-        auto replacement_node =
-            op_cast_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::Not> node)
@@ -487,9 +470,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::NotEqual> node)
     {
-        auto replacement_node =
-            op_cast_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::OneHot> node)
@@ -515,9 +496,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Or> node)
     {
-        auto replacement_node =
-            op_cast_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::Pad> node)
@@ -541,8 +520,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Power> node)
     {
-        auto replacement_node = op_cast_binary_elementwise_node<op::v0::Power, op::v1::Power>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::Power, op::v1::Power>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::Product> node)
@@ -651,9 +629,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Subtract> node)
     {
-        auto replacement_node =
-            op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
-        return replacement_node;
+        return op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::Sum> node)
