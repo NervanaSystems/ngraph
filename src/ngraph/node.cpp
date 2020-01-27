@@ -333,6 +333,18 @@ void Node::set_output_type(size_t i,
     descriptor.set_partial_shape(partial_shape);
 }
 
+void Node::set_output_max_partial_shape(size_t i, const PartialShape& partial_shape)
+{
+    auto& descriptor = get_output_descriptor(i);
+    descriptor.set_partial_shape(partial_shape);
+}
+
+const PartialShape& Node::get_output_max_partial_shape(size_t i)
+{
+    auto& descriptor = get_output_descriptor(i);
+    return descriptor.get_max_partial_shape();
+}
+
 std::deque<descriptor::Output>& Node::get_outputs()
 {
     return m_outputs;

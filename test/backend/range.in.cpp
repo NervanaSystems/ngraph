@@ -16,6 +16,8 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/min_max_propagation.hpp"
 #include "util/all_close_f.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
@@ -45,7 +47,6 @@ NGRAPH_TEST(${BACKEND_NAME}, range)
     auto step = make_shared<op::Parameter>(element::i32, Shape{});
 
     auto range = make_shared<op::Range>(start, stop, step);
-    ASSERT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
 
     auto f = make_shared<Function>(NodeVector{range}, ParameterVector{start, stop, step});
 
@@ -80,4 +81,47 @@ NGRAPH_TEST(${BACKEND_NAME}, range)
 
         ASSERT_EQ(results, test.expected_result);
     }
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, range_subgraph)
+{
+    // Create a graph for f(start,stop,step) = Range(start,stop,step).
+    auto start = make_shared<op::Parameter>(element::i32, Shape{});
+    auto stop = make_shared<op::Parameter>(element::i32, Shape{});
+    auto step = make_shared<op::Parameter>(element::i32, Shape{});
+    PartialShape out_max_shape{15};
+
+    auto range = make_shared<op::Range>(start, stop, step);
+    range->output(0).set_max_partial_shape(out_max_shape);
+
+    auto negative = make_shared<op::Negative>(range);
+
+    auto f = make_shared<Function>(NodeVector{negative}, ParameterVector{start, stop, step});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto handle = backend->compile(f);
+    pass::Manager passes;
+    passes.register_pass<pass::MinMaxShapePropagation>();
+    passes.run_passes(f);
+
+    auto t_start = backend->create_tensor(element::i32, Shape{});
+    copy_data(t_start, vector<int32_t>{0});
+    auto t_stop = backend->create_tensor(element::i32, Shape{});
+    copy_data(t_stop, vector<int32_t>{10});
+    auto t_step = backend->create_tensor(element::i32, Shape{});
+    copy_data(t_step, vector<int32_t>{1});
+    auto result = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+    vector<int32_t> expected_result{0, -1, -2, -3, -4, -5, -6, -7, -8, -9};
+
+    EXPECT_EQ(out_max_shape, range->get_output_partial_shape(0));
+    EXPECT_EQ(out_max_shape, range->output(0).get_max_partial_shape());
+    EXPECT_EQ(out_max_shape, negative->get_output_shape(0));
+    // should this be true?
+    // EXPECT_EQ(out_max_shape, negative->output(0).get_max_partial_shape());
+    handle->call_with_validate({result}, {t_start, t_stop, t_step});
+    EXPECT_EQ(out_max_shape, range->get_output_shape(0));
+    EXPECT_EQ(PartialShape{10}, result->get_shape());
+    ASSERT_EQ(expected_result, read_vector<int32_t>(result));
 }
