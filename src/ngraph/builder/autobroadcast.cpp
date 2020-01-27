@@ -16,13 +16,16 @@
 
 #include "ngraph/builder/autobroadcast.hpp"
 
+#include <memory>
+#include <numeric>
+#include <sstream>
+
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/util.hpp"
-
-#include <memory>
-#include <sstream>
 
 using namespace std;
 
@@ -207,5 +210,116 @@ namespace ngraph
             return {arg1_out, arg2_out};
         }
 
-    } // namespace builder
+        namespace opset1
+        {
+            Output<Node> legacy_style_broadcast_for_binary_operation(const Output<Node>& left,
+                                                                     const Output<Node>& right,
+                                                                     size_t start_match_axis)
+            {
+                const auto& left_shape = left.get_shape();
+                const auto& right_shape = right.get_shape();
+
+                bool dimensions_identical = (left_shape == right_shape);
+                if (dimensions_identical)
+                {
+                    return right;
+                }
+
+                // Prepare new shape of right operand for broadcasting
+                // Remove dimensions with length=1 from back
+                auto new_right_shape = right_shape;
+                for (int dimension = new_right_shape.size() - 1; dimension >= 0; --dimension)
+                {
+                    if (new_right_shape.at(dimension) == 1)
+                    {
+                        new_right_shape.pop_back();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                // Find first dimensions at front with length different from 1
+                std::size_t num_ones = 0;
+                for (std::size_t dimension : new_right_shape)
+                {
+                    if (dimension == 1)
+                    {
+                        ++num_ones;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                // Remove dimensions with length=1 from front
+                new_right_shape.erase(std::begin(new_right_shape),
+                                      std::next(std::begin(new_right_shape), num_ones));
+
+                auto reshape_right = reshape(right, new_right_shape);
+
+                // Move broadcast start axis parameter to right
+                start_match_axis += num_ones;
+
+                return make_broadcast(reshape_right, left_shape, start_match_axis);
+            }
+
+            std::vector<std::size_t> get_axes_mapping(const Shape& output_shape,
+                                                      const AxisSet& broadcast_axes)
+            {
+                NGRAPH_CHECK((broadcast_axes.size() <= output_shape.size()));
+                std::vector<size_t> axes_mapping(output_shape.size());
+                std::iota(axes_mapping.begin(), axes_mapping.end(), 0);
+                for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); ++i)
+                {
+                    axes_mapping.erase(axes_mapping.begin() + *i);
+                }
+                return axes_mapping;
+            }
+
+            Output<Node> get_axes_mapping_output(const Shape& output_shape,
+                                                 const Shape& input_shape,
+                                                 std::size_t start_match_axis)
+            {
+                NGRAPH_CHECK((input_shape.size() + start_match_axis <= output_shape.size()));
+                std::vector<std::size_t> mapping(input_shape.size());
+                std::iota(std::begin(mapping), std::end(mapping), start_match_axis);
+
+                return ngraph::op::Constant::create(element::i64, Shape{mapping.size()}, mapping);
+            }
+
+            Output<Node> get_axes_mapping_output(const Shape& output_shape,
+                                                 const AxisSet& broadcast_axes)
+            {
+                std::vector<size_t> axes_mapping{get_axes_mapping(output_shape, broadcast_axes)};
+                return ngraph::op::Constant::create(
+                    element::i64, Shape{axes_mapping.size()}, axes_mapping);
+            }
+
+            Output<Node> make_broadcast(const Output<Node>& node,
+                                        const Shape& target_shape,
+                                        const AxisSet& broadcast_axes)
+            {
+                return std::make_shared<ngraph::op::v1::Broadcast>(
+                    node,
+                    ngraph::op::Constant::create(
+                        element::i64, Shape{target_shape.size()}, target_shape),
+                    get_axes_mapping_output(target_shape, broadcast_axes));
+            }
+
+            Output<Node> make_broadcast(const Output<Node>& node,
+                                        const Shape& target_shape,
+                                        std::size_t start_match_axis)
+            {
+                return std::make_shared<ngraph::op::v1::Broadcast>(
+                    node,
+                    ngraph::op::Constant::create(
+                        element::i64, Shape{target_shape.size()}, target_shape),
+                    get_axes_mapping_output(target_shape, node.get_shape(), start_match_axis));
+            }
+
+        } // namespace opset1
+    }     // namespace builder
 } // namespace ngraph
