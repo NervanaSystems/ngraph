@@ -45,10 +45,13 @@ set(NGRAPH_LIT_TEST_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/test/mlir)
 if (NOT NGRAPH_USE_PREBUILT_MLIR)
     configure_file(${CMAKE_SOURCE_DIR}/cmake/mlir_fetch.cmake.in ${MLIR_PROJECT_ROOT}/CMakeLists.txt @ONLY)
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+                    -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
+                    -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
+                    -DCMAKE_CXX_FLAGS:STRING=${CMAKE_ORIGINAL_CXX_FLAGS} .
                     WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
     # Clone and build llvm + mlir.
-    execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir_llvm
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build .
                     WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 endif()
 
