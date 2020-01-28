@@ -610,7 +610,7 @@ std::ostream& Node::write_description(std::ostream& out, uint32_t depth) const
             out << sep << arg;
             sep = ", ";
         }
-        out << "):(";
+        out << ") -> (";
         sep = "";
         for (size_t i = 0; i < get_output_size(); i++)
         {
