@@ -270,7 +270,7 @@ namespace ngraph
         virtual bool is_dynamic() const;
         virtual bool has_state() const { return false; }
         size_t get_instance_id() const { return m_instance_id; }
-        /// Writes a description of a node to a stream
+        /// \brief Writes a description of a node to a stream
         /// \param os The stream; should be returned
         /// \param depth How many levels of inputs to describe
         /// \returns The stream os
