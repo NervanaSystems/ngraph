@@ -72,7 +72,7 @@ namespace ngraph
             ValueInfo& operator=(ValueInfo&&) = delete;
 
             const std::string& get_name() const { return m_value_info_proto->name(); }
-            const PartialShape& get_partial_shape() const { return m_partial_shape; }
+            const PartialShape& get_shape() const { return m_partial_shape; }
             const element::Type& get_element_type() const
             {
                 if (!m_value_info_proto->type().tensor_type().has_elem_type())
@@ -99,7 +99,7 @@ namespace ngraph
         protected:
             std::shared_ptr<op::Parameter> get_ng_parameter() const
             {
-                return std::make_shared<op::Parameter>(get_element_type(), get_partial_shape());
+                return std::make_shared<op::Parameter>(get_element_type(), get_shape());
             }
 
             std::shared_ptr<op::Constant> get_ng_constant(const Tensor& tensor) const

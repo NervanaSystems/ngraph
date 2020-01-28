@@ -77,7 +77,7 @@ namespace ngraph
                                                           const PartialShape& shape)
             {
                 std::stringstream tag_builder;
-                tag_builder << "<ONNX Input (" << input_name << ") " << shape << ">";
+                tag_builder << "<ONNX Input (" << input_name << ") Shape: " << shape << ">";
                 return tag_builder.str();
             }
 
@@ -217,7 +217,7 @@ namespace ngraph
                                                 std::shared_ptr<ngraph::Node> node) const
         {
             const std::string tag =
-                detail::build_input_provenance_tag(input.get_name(), input.get_partial_shape());
+                detail::build_input_provenance_tag(input.get_name(), input.get_shape());
 
             node->add_provenance_tag(tag);
         }
