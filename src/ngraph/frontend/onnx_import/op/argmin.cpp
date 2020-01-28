@@ -14,11 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "argmin.hpp"
 #include "core/node.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/opsets/opset0.hpp"
-#include "utils/reduction.hpp"
+#include "utils/arg_min_max_factory.hpp"
 
 namespace ngraph
 {
@@ -30,7 +27,8 @@ namespace ngraph
             {
                 NodeVector argmin(const Node& node)
                 {
-                    return {reduction::make_ng_index_reduction_op<ngraph::opset0::ArgMin>(node)};
+                    const utils::ArgMinMaxFactory arg_factory(node);
+                    return {arg_factory.make_arg_min()};
                 }
 
             } // namespace set_1
