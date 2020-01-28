@@ -130,12 +130,12 @@ namespace
         using TensorToInfoMap = std::unordered_map<descriptor::Tensor*, TensorInfo>;
         using MLIRCompOpFunction = std::function<mlir::Operation*(
             NgDialectConversionPass& NgDialectObj, const ngraph::Node*)>;
-        using MLIRCompOpMap = std::unordered_map<std::type_index, MLIRCompOpFunction>;
+        using MLIRCompOpMap = std::unordered_map<Node::type_info_t, MLIRCompOpFunction>;
 
         // Maps tensor to the value it represents in the IR
         // use for MLIR dialect gen
         TensorToInfoMap m_tensorToValueMap;
-        static const MLIRCompOpMap opDispatcher;
+        static const MLIRCompOpMap& get_op_dispatcher();
     };
 
 } // end of namespace
@@ -291,10 +291,11 @@ void NgDialectConversionPass::buildNgDialect(mlir::FuncOp function)
     m_builder.setInsertionPoint(&region.front(), region.front().begin());
     const NodeVector& subGraph = m_compiledKernel->get_node_list();
 
+    auto& op_dispatcher = get_op_dispatcher();
     for (auto np : subGraph)
     {
-        auto it = opDispatcher.find(TI(*np));
-        if (it == opDispatcher.end())
+        auto it = op_dispatcher.find(np->get_type_info());
+        if (it == op_dispatcher.end())
         {
             throw unsupported_op{std::string{"The MLIR backend doesn't currently implement the '"} +
                                  np->description() + "' operation"};
@@ -655,10 +656,14 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
         .getOperation();
 }
 
-const NgDialectConversionPass::MLIRCompOpMap NgDialectConversionPass::opDispatcher{
-#define MLIR_OP(OP) {TI(ngraph::op::OP), &NgDialectConversionPass::createOp<ngraph::op::OP>},
+const NgDialectConversionPass::MLIRCompOpMap& NgDialectConversionPass::get_op_dispatcher()
+{
+    static MLIRCompOpMap op_dispatcher{
+#define MLIR_OP(OP) {ngraph::op::OP::type_info, &NgDialectConversionPass::createOp<ngraph::op::OP>},
 #include "contrib/mlir/core/ops_supported.inc"
-};
+    };
+    return op_dispatcher;
+}
 
 void NgDialectConversionPass::createReturn()
 {
