@@ -27,6 +27,8 @@ using namespace ngraph::descriptor;
 using namespace ngraph::op;
 using namespace ngraph::pass;
 
+#define TI(x) std::type_index(typeid(x))
+
 int MLIRSubgraphExtractionPass::MLIRSubgraph::m_curr_graph_id = 0;
 
 void MLIRSubgraphExtractionPass::MLIRSubgraph::add_inputs(NodeVector& inputs)
@@ -160,11 +162,11 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
         for (auto it = nodes_ready.begin(); it != nodes_ready.end();)
         {
             auto node = *it;
-            if (is_type<Result>(node))
+            if (TI(Result) == TI(*node))
             {
                 erase_node(it, nodes_ready);
             }
-            else if (is_type<Parameter>(node))
+            else if (TI(Parameter) == TI(*node))
             {
                 process_successors(node, node_to_size_map, nodes_ready);
                 erase_node(it, nodes_ready);
@@ -207,7 +209,7 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
                 for (auto it = nodes_ready.begin(); it != nodes_ready.end();)
                 {
                     auto node = *it;
-                    if (is_type<Result>(node))
+                    if (TI(Result) == TI(*node))
                     {
                         erase_node(it, nodes_ready);
                     }
@@ -234,7 +236,7 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
                 for (auto it = nodes_ready.begin(); it != nodes_ready.end();)
                 {
                     auto node = *it;
-                    if (is_type<Result>(node))
+                    if (TI(Result) == TI(*node))
                     {
                         erase_node(it, nodes_ready);
                     }
@@ -282,11 +284,11 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
         auto& outputs = sg.get_outputs();
         auto& nodes = sg.get_nodes();
 
-        OutputVector inputs_vector(inputs.begin(), inputs.end());
-        OutputVector outputs_vector(outputs.begin(), outputs.end());
+        NodeVector inputs_vector(inputs.begin(), inputs.end());
+        NodeVector outputs_vector(outputs.begin(), outputs.end());
         // must store nodes in topological order
         auto nodes_list = subgraph_topological_sort(nodes);
-        OutputVector nodes_vector(nodes_list.begin(), nodes_list.end());
+        NodeVector nodes_vector(nodes_list.begin(), nodes_list.end());
         auto ck = std::make_shared<CompiledKernel>(nodes_vector, outputs_vector, inputs_vector);
 
         ck_nodes.push_back(ck);
@@ -418,22 +420,24 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
     }
 }
 
+#define TI(x) std::type_index(typeid(x))
+
 bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node)
 {
-    if (is_type<Parameter>(node) || is_type<Result>(node))
+    if (TI(Parameter) == TI(*node) || TI(Result) == TI(*node))
     {
         return true;
     }
 
     // supported by backend ?
-    if (m_supported_ops.find(node->get_type_info()) == m_supported_ops.end())
+    if (m_supported_ops.find(TI(*node)) == m_supported_ops.end())
     {
         return false;
     }
 
     // check on invariants expected by MLIR backend
 
-    if (is_type<ngraph::op::Divide>(node))
+    if (TI(ngraph::op::Divide) == TI(*node))
     {
         auto* div = static_cast<ngraph::op::Divide*>(node.get());
         if (div->is_pythondiv())
@@ -446,7 +450,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     }
 
     // Dot is 2D only
-    if (is_type<ngraph::op::Dot>(node))
+    if (TI(ngraph::op::Dot) == TI(*node))
     {
         if (node->get_input_shape(0).size() != 2 || node->get_input_shape(1).size() != 2)
         {
@@ -458,7 +462,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         }
     }
 
-    if (is_type<ngraph::op::Convolution>(node))
+    if (TI(ngraph::op::Convolution) == TI(*node))
     {
         // No padding for now
         auto conv_node = static_cast<ngraph::op::Convolution*>(node.get());
@@ -580,7 +584,7 @@ void MLIRSubgraphExtractionPass::clean_up()
     m_node_to_graph.clear();
 }
 
-const std::set<ngraph::Node::type_info_t> MLIRSubgraphExtractionPass::m_supported_ops{
-#define MLIR_OP(OP) ngraph::op::OP::type_info,
+const std::set<std::type_index> MLIRSubgraphExtractionPass::m_supported_ops{
+#define MLIR_OP(OP) TI(ngraph::op::OP),
 #include "contrib/mlir/core/ops_supported.inc"
 };
