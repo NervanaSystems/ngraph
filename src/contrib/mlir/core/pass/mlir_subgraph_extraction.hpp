@@ -107,7 +107,7 @@ namespace ngraph
 
             void sanity_check(std::shared_ptr<Function> func, NodeVector& ck_nodes);
             void clean_up();
-            static const std::set<ngraph::Node::type_info_t>& get_supported_ops();
+            static const std::set<ngraph::Node::type_info_t>& getSupportedOps();
 
         private:
             using IDGraphMap = std::unordered_map<int, MLIRSubgraph>;

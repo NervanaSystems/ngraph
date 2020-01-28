@@ -426,8 +426,8 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     }
 
     // supported by backend ?
-    auto& supported_ops = get_supported_ops();
-    if (supported_ops.find(node->get_type_info()) == supported_ops.end())
+    auto& supportedOps = getSupportedOps();
+    if (supportedOps.find(node->get_type_info()) == supportedOps.end())
     {
         return false;
     }
@@ -574,11 +574,11 @@ void MLIRSubgraphExtractionPass::clean_up()
     m_node_to_graph.clear();
 }
 
-const std::set<ngraph::Node::type_info_t>& MLIRSubgraphExtractionPass::get_supported_ops()
+const std::set<ngraph::Node::type_info_t>& MLIRSubgraphExtractionPass::getSupportedOps()
 {
-    static std::set<Node::type_info_t> supported_ops{
+    static std::set<Node::type_info_t> supportedOps{
 #define MLIR_OP(OP) OP::type_info,
 #include "contrib/mlir/core/ops_supported.inc"
     };
-    return supported_ops;
+    return supportedOps;
 }
