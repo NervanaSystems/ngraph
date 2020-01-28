@@ -82,9 +82,17 @@ public:
             if (!opset.contains_op_type(node.get())) all_opset1 = false;
         }
 
-        if (!all_opset1)
-            THROW_IE_EXCEPTION << "UNSUPPORTED OPS DETECTED!";
-
+        if (!all_opset1) {
+            std::cout << "UNSUPPORTED OPS DETECTED!" << endl;
+            THROW_IE_EXCEPTION << "Exit from test";
+        }
+        else {
+            cout << "Nodes in test: ";
+            for (auto &node : func->get_ops()) {
+                cout << node->get_type_info().name << " ";
+            }
+            cout << "\n" << endl;
+        }
         network = CNNNetwork(func);
         device = _device;
     }
