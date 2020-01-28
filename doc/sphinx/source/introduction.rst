@@ -142,7 +142,7 @@ work for what will ultimately be a fragile setup that is costly to maintain.
    **Figure C**:  Inevitable scaling problem
 
 
-Integrating PlaidML with nGraph provides flexbility to support the latest deep
+Integrating PlaidML with nGraph provides flexibility to support the latest deep
 learning models in the absence of hand-optimized kernels for new operations.
 PlaidML works together with nGraph to address the exponential growth of
 kernels.
@@ -161,7 +161,7 @@ We developed nGraph and integrated it with PlaidML to allow developers to
 accelerate deep learning performance and address the problem of scalable
 kernel libraries. To address the problem of scaling backends, nGraph applies 
 graph-level optimizations to deep learning computations and unifies 
-computational graphsfrom deep learning frameworks with nGraph IR.
+computational graphs from deep learning frameworks with nGraph IR.
 
 In conjunction with nGraph's graph-level optimizations, PlaidML automatically
 applies low-level optimizations to improve deep learning performance.
