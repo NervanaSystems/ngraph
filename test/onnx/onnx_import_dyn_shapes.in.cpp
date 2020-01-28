@@ -18,10 +18,10 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/frontend/onnx_import/default_opset.hpp"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
+#include "util/test_case.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 #include "util/type_prop.hpp"
-#include "util/test_case.hpp"
 
 using namespace ngraph;
 using namespace ngraph::onnx_import;
@@ -71,7 +71,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, ab_plus_c_inference)
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/ab_plus_c.prototxt"));
 
-   auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
 
     struct ExpectedValuesGenerator
     {
