@@ -161,7 +161,7 @@ Some operations are experimental.
    tan.rst
    tanh.rst
    tensor_iterator.rst
-   tile,rst
+   tile.rst
    topk.rst
    transpose.rst
    unsqueeze.rst

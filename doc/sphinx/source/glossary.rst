@@ -238,5 +238,10 @@ Glossary
       successfully load its serialized graph as an nGraph :term:`function 
       graph`
 
+   workload
+   
+      A workload is an :abbr:`Artificial Intelligence (AI)` training job that 
+      can be executed via one of the distributed training methods.   
+
 
  
