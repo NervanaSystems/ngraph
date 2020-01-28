@@ -491,6 +491,20 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
     return m_inputs[index].get_output().get_node();
 }
 
+Node* Node::get_input_node_ptr(size_t index) const
+{
+    NGRAPH_CHECK(
+        index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
+    return m_inputs[index].get_output().get_node().get();
+}
+
+std::shared_ptr<Node> Node::get_input_node_shared_ptr(size_t index) const
+{
+    NGRAPH_CHECK(
+        index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
+    return m_inputs[index].get_output().get_node();
+}
+
 NodeVector Node::get_arguments() const
 {
     NodeVector result;
