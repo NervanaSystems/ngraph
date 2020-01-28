@@ -77,7 +77,7 @@ namespace ngraph
                                                           const PartialShape& shape)
             {
                 std::stringstream tag_builder;
-                tag_builder << "<ONNX Input (" << input_name << ") Shape: " << shape << ">";
+                tag_builder << "<ONNX Input (" << input_name << ") Shape:" << shape << ">";
                 return tag_builder.str();
             }
 
