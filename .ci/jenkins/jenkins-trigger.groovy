@@ -23,7 +23,7 @@
 //
 
 String JENKINS_BRANCH = "aslepko/scott_dldt"
-String TIMEOUTTIME = "3600"
+String TIMEOUTTIME = "7200"
 
 // Constants
 JENKINS_DIR = '.'
