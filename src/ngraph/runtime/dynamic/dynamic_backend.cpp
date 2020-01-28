@@ -128,15 +128,13 @@ bool runtime::dynamic::DynamicExecutable::call(
         if (m_wrapped_function->get_parameters()[loop_count]->is_relevant_to_shapes())
         {
             // Caching on values of Shape relevant inputs
-            void* data_ptr = malloc(input->get_size_in_bytes());
-            input->read(data_ptr, input->get_size_in_bytes());
-            // assuming that shape relevant inputs are int64_t
-            int64_t* result = (int64_t*)data_ptr;
+            int size = input->get_size_in_bytes() / (input->get_element_type().bitwidth() / 8);
+            std::vector<int64_t> data(size);
+            input->read(data.data(), input->get_size_in_bytes());
             for (int i = 0; i < input->get_element_count(); i++)
             {
-                merged_input_shapes.emplace_back(result[i]);
+                merged_input_shapes.emplace_back(data[i]);
             }
-            free(data_ptr);
         }
         else
         {
