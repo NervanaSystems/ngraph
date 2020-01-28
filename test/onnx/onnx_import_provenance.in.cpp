@@ -20,6 +20,7 @@
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/provenance.hpp"
 #include "util/test_control.hpp"
 #include "util/type_prop.hpp"
 
@@ -54,9 +55,9 @@ void test_provenance_tags(const std::shared_ptr<Function> function,
         if (as_type_ptr<NodeToCheck>(ng_node))
         {
             const auto tags = ng_node->get_provenance_tags();
-            ASSERT_EQ(tags.size() > 0, true) << "Node " << ng_node->get_friendly_name()
+            ASSERT_TRUE(tags.size() > 0) << "Node " << ng_node->get_friendly_name()
                                              << " should have at least one provenance tag.";
-            EXPECT_EQ(tags.find(expected_provenance_tag) != tags.end(), true);
+            EXPECT_TRUE(tags.find(expected_provenance_tag) != tags.end());
         }
     }
 }
@@ -101,6 +102,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_parameters)
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_downgrade_pass)
 {
+    set_provenance_enabled(true);
+
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_downgrade_topk.prototxt"));
 
@@ -108,6 +111,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_downgrade_pass)
     pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(function);
 
-    test_provenance_tags<default_opset::TopK>(function, "<ONNX TopK (TOPK -> values, indices)>");
-    test_provenance_tags<default_opset::TopK>(function, "<Opset0_Downgrade (v1 TopK)>");
+    test_provenance_tags<op::v0::TopK>(function, "<ONNX TopK (TOPK -> values, indices)>");
+    test_provenance_tags<op::v0::TopK>(function, "<Opset0_Downgrade (v1 TopK)>");
 }
