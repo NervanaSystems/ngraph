@@ -817,7 +817,7 @@ namespace ngraph
         void set_max_partial_shape(const PartialShape& partial_shape);
         /// \return The minimal partial shape
         const PartialShape& get_min_partial_shape() const;
-        /// Set the minumal partial shape
+        /// Set the minimal partial shape
         void set_min_partial_shape(const PartialShape& partial_shape);
 
         /// \return A set containing handles for all inputs targeted by the output referenced by
