@@ -94,8 +94,12 @@ namespace ngraph
 
                 std::vector<PerformanceCounter> get_performance_data() const override;
 
+                std::shared_ptr<runtime::Tensor> create_input_tensor(size_t input_index) override;
+
                 std::shared_ptr<runtime::Tensor> create_input_tensor(size_t input_index,
                                                                      void* memory_pointer) override;
+
+                std::shared_ptr<runtime::Tensor> create_output_tensor(size_t output_index) override;
 
                 std::shared_ptr<runtime::Tensor>
                     create_output_tensor(size_t output_index, void* memory_pointer) override;
@@ -104,6 +108,12 @@ namespace ngraph
                     create_input_tensor(size_t input_index,
                                         size_t pipeline_depth,
                                         std::vector<void*> memory_pointers) override;
+
+                std::vector<std::shared_ptr<runtime::Tensor>>
+                    create_input_tensor(size_t input_index, size_t pipeline_depth) override;
+
+                std::vector<std::shared_ptr<runtime::Tensor>>
+                    create_output_tensor(size_t output_index, size_t pipeline_depth) override;
 
                 std::vector<std::shared_ptr<runtime::Tensor>>
                     create_output_tensor(size_t output_index,
