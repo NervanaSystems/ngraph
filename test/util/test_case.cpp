@@ -25,11 +25,18 @@ ngraph::test::NgraphTestCase::NgraphTestCase(const std::shared_ptr<Function>& fu
     : m_function(function)
     , m_backend(ngraph::runtime::Backend::create(backend_name, mode == BackendMode::DYNAMIC ? true : false))
 {
+    if(mode == BackendMode::STATIC)
+    {
+        NGRAPH_CHECK(!m_function->is_dynamic(), "For dynamic function using dynamic backend is expected.");
+    }
     m_executable = m_backend->compile(m_function);
     for (auto i = 0; i < m_function->get_output_size(); ++i)
     {
-        m_result_tensors.emplace_back(
-            m_backend->create_dynamic_tensor(m_function->get_output_element_type(i), m_function->get_output_partial_shape(i)));
+        const auto& output_tensor = (mode == BackendMode::DYNAMIC)
+            ? m_backend->create_dynamic_tensor(m_function->get_output_element_type(i), m_function->get_output_partial_shape(i))
+            : m_backend->create_tensor(m_function->get_output_element_type(i), m_function->get_output_shape(i));
+
+        m_result_tensors.emplace_back(output_tensor);
     }
 }
 

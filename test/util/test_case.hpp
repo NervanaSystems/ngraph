@@ -57,11 +57,13 @@ namespace ngraph
             template <typename T>
             void add_input(ngraph::Shape shape, const std::vector<T>& values)
             {
-                auto params = m_function->get_parameters();
-
+                const auto params = m_function->get_parameters();
                 NGRAPH_CHECK(m_input_index < params.size(),
                     "All function parameters already have inputs.");
 
+                const auto& input_pshape = params.at(m_input_index)->get_partial_shape();
+                NGRAPH_CHECK(input_pshape.compatible(shape),
+                    "Passed input shape is not compatible with nGraph function.");
 
                 auto tensor = m_backend->create_tensor(params.at(m_input_index)->get_element_type(), shape);
                 copy_data(tensor, values);
@@ -74,8 +76,11 @@ namespace ngraph
             template <typename T>
             void add_input(const std::vector<T>& values)
             {
-                auto params = m_function->get_parameters();
-                return add_input<T>(params.at(m_input_index)->get_shape(), values);
+                const auto& input_pshape = m_function->get_parameters().at(m_input_index)->get_partial_shape();
+                NGRAPH_CHECK(input_pshape.is_static(),
+                    "Input partial shape must be static for static backend.");
+
+                return add_input<T>(input_pshape.to_shape(), values);
             }
 
             template <typename T>
@@ -110,6 +115,10 @@ namespace ngraph
                              "All function results already have expected outputs.");
 
                 auto function_output_type = results.at(m_output_index)->get_element_type();
+
+                const auto& output_pshape = results.at(m_output_index)->get_output_partial_shape(0);
+                NGRAPH_CHECK(output_pshape.compatible(expected_shape),
+                    "Passed output shape is not compatible with nGraph function.");
 
                 m_expected_outputs.emplace_back(std::make_shared<ngraph::op::Constant>(
                     function_output_type, expected_shape, values));
