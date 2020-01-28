@@ -587,7 +587,7 @@ namespace ngraph
         void set_min_partial_shape(const PartialShape& partial_shape);
         /// \return The element type of the last connected output
         const element::Type& get_cached_output_element_type() const;
-        /// Update the element type of the last connected output
+        /// \brief Update the element type of the last connected output
         void set_cached_output_element_type(const element::Type& element_type);
         /// \return The shape of the last connected output
         const PartialShape& get_cached_output_partial_shape() const;
