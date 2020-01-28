@@ -195,3 +195,7 @@ NGRAPH_DEFINE_ENVVAR(ngraph::EnvVarEnum::OMP_NUM_THREADS,
                      "OMP_NUM_THREADS",
                      "",
                      "By default it uses the max number of cores available")
+NGRAPH_DEFINE_ENVVAR(ngraph::EnvVarEnum::NGRAPH_TMPDIR,
+                     "NGRAPH_TMPDIR",
+                     "/tmp",
+                     "By default it uses the max number of cores available")

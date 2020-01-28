@@ -25,7 +25,7 @@ using namespace std;
 namespace ngraph
 {
     /// \brief List of currently supported environment variables
-    enum class EnvVarEnum : uint32_t
+    enum NGRAPH_API class EnvVarEnum : uint32_t
     {
         NGRAPH_CODEGEN = 0,
         NGRAPH_COMPILER_DEBUGINFO_ENABLE = 1,
@@ -71,6 +71,7 @@ namespace ngraph
         NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES = 41,
         NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES = 42,
         OMP_NUM_THREADS = 43,
+        NGRAPH_TMPDIR = 44,
         NGRAPH_ENV_VARS_COUNT
     };
 
@@ -85,14 +86,14 @@ namespace ngraph
     /// \param env_var The enum value of the environment variable to get.
     /// \return Returns string by value or an empty string if the environment
     ///         variable is not set.
-    std::string getenv_string(const EnvVarEnum env_var);
+    NGRAPH_API std::string getenv_string(const EnvVarEnum env_var);
 
     /// \brief Get the names environment variable as an integer. If the value is not a
     ///        valid integer then an exception is thrown.
     /// \param env_var enum value of the environment variable to get.
     /// \param default_value The value to return if the environment variable is not set.
     /// \return Returns value or default_value if the environment variable is not set.
-    int32_t getenv_int(const EnvVarEnum env_var);
+    NGRAPH_API int32_t getenv_int(const EnvVarEnum env_var);
 
     /// \brief Get the names environment variable as a boolean. If the value is not a
     ///        valid boolean then an exception is thrown. Valid booleans are one of
@@ -102,23 +103,23 @@ namespace ngraph
     /// \param env_var The enum value of the environment variable to get.
     /// \param default_value The value to return if the environment variable is not set.
     /// \return Returns the boolean value of the environment variable.
-    bool getenv_bool(const EnvVarEnum env_var);
+    NGRAPH_API bool getenv_bool(const EnvVarEnum env_var);
 
     /// \brief Adds the environment variable with it's value to the map.
     /// \param env_var The enum value of the environment variable to add.
     /// \param val The string value of the environment variable to add.
-    void addenv_to_cache(const EnvVarEnum env_var, const char* val);
+    // void addenv_to_cache(const EnvVarEnum env_var, const char* val);
 
     /// \brief Gets value of the environment variable from the map.
     /// \param env_var The enum value of the environment variable to get.
     /// \return Returns string value of the environment variable.
-    std::string getenv_from_cache(const EnvVarEnum env_var);
+    // std::string getenv_from_cache(const EnvVarEnum env_var);
 
     /// \brief Logs the current environment variables and their current values.
-    void log_all_envvar();
+    NGRAPH_API void log_envvar_cache();
 
     /// \brief Logs all environment variables and their default values.
-    void log_registry_envvar();
+    NGRAPH_API void log_envvar_registry();
 
     /// \brief Set the environment variable.
     /// \param env_var The enum value of the environment variable to set.
@@ -141,21 +142,21 @@ namespace ngraph
     /// \brief Check if the environment variable is present in the cache map.
     /// \param env_var The enum value the environment variable to check.
     /// \return Returns true if found, else false.
-    bool env_cache_contains(const EnvVarEnum env_var);
+    // bool env_cache_contains(const EnvVarEnum env_var);
 
     /// \brief Delete the environment variable from the cache map.
     /// \param env_var The enum value of the environment variable to delete.
-    void erase_env_from_cache(const EnvVarEnum env_var);
+    // void erase_env_from_cache(const EnvVarEnum env_var);
 
     /// \brief Get string name of the environment variable from the registry.
     /// \param env_var The enum value of the environment variable.
-    string get_env_var_name(const ngraph::EnvVarEnum env_var);
+    NGRAPH_API string get_env_var_name(const ngraph::EnvVarEnum env_var);
 
     /// \brief Get default value of the environment variable from the registry.
     /// \param env_var The enum value of the environment variable.
-    string get_env_var_default(const ngraph::EnvVarEnum env_var);
+    NGRAPH_API string get_env_var_default(const ngraph::EnvVarEnum env_var);
 
     /// \brief Get description of the environment variable from the registry.
     /// \param env_var The enum value of the environment variable.
-    string get_env_var_desc(const ngraph::EnvVarEnum env_var);
+    NGRAPH_API string get_env_var_desc(const ngraph::EnvVarEnum env_var);
 }

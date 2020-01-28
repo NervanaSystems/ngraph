@@ -157,9 +157,9 @@ static std::string GetExecutablePath(const char* Argv0)
 }
 
 codegen::CompilerCore::CompilerCore()
-    : m_debuginfo_enabled(getenv_bool("NGRAPH_COMPILER_DEBUGINFO_ENABLE"))
-    , m_enable_diag_output(getenv_bool("NGRAPH_COMPILER_DIAG_ENABLE"))
-    , m_enable_pass_report(getenv_bool("NGRAPH_COMPILER_REPORT_ENABLE"))
+    : m_debuginfo_enabled(getenv_bool(ngraph::EnvVarEnum::NGRAPH_COMPILER_DEBUGINFO_ENABLE))
+    , m_enable_diag_output(getenv_bool(ngraph::EnvVarEnum::NGRAPH_COMPILER_DIAG_ENABLE))
+    , m_enable_pass_report(getenv_bool(ngraph::EnvVarEnum::NGRAPH_COMPILER_REPORT_ENABLE))
     , m_source_name("code.cpp")
 {
     initialize();

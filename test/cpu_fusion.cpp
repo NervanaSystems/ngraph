@@ -97,12 +97,12 @@ using namespace std;
 
 TEST(cpu_fusion, log_env_registry)
 {
-    log_registry_envvar();
+    log_envvar_registry();
 }
 
 TEST(cpu_fusion, log_env_cache)
 {
-    log_all_envvar();
+    log_envvar_cache();
 }
 
 TEST(cpu_fusion, gemm_pattern)

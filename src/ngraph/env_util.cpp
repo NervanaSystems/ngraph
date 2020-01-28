@@ -23,6 +23,57 @@
 
 using namespace std;
 
+std::unordered_map<ngraph::EnvVarEnum, std::string>& get_env_var_cache()
+{
+    static std::unordered_map<ngraph::EnvVarEnum, string> s_env_var_cache;
+    return s_env_var_cache;
+}
+
+void addenv_to_cache(const ngraph::EnvVarEnum env_var, const char* val)
+{
+    get_env_var_cache().emplace(env_var, val);
+}
+
+bool env_cache_contains(const ngraph::EnvVarEnum env_var)
+{
+    if (get_env_var_cache().find(env_var) != get_env_var_cache().end())
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+std::string getenv_from_cache(const ngraph::EnvVarEnum env_var)
+{
+    if (env_cache_contains(env_var))
+    {
+        return get_env_var_cache().at(env_var);
+    }
+    else
+    {
+        return "";
+    }
+}
+
+void erase_env_from_cache(const ngraph::EnvVarEnum env_var)
+{
+    get_env_var_cache().erase(env_var);
+}
+
+void ngraph::log_envvar_cache()
+{
+    NGRAPH_DEBUG << "List of all environment variables:\n";
+    std::unordered_map<ngraph::EnvVarEnum, std::string>::iterator it = get_env_var_cache().begin();
+    while (it != get_env_var_cache().end())
+    {
+        NGRAPH_DEBUG << "\t" << get_env_var_name(it->first) << " = " << it->second << std::endl;
+        it++;
+    }
+}
+
 static map<ngraph::EnvVarEnum, ngraph::EnvVarInfo> get_env_registry()
 {
     // This expands the env var list in env_tbl.hpp into a list of enumerations that look like this:
@@ -55,7 +106,7 @@ string ngraph::get_env_var_desc(const ngraph::EnvVarEnum env_var)
     return get_env_registry()[env_var].desc;
 }
 
-void ngraph::log_registry_envvar()
+void ngraph::log_envvar_registry()
 {
     NGRAPH_DEBUG << "List of all environment variables in registry:\n";
     for (uint32_t i = 0; i < uint32_t(ngraph::EnvVarEnum::NGRAPH_ENV_VARS_COUNT); i++)
@@ -110,56 +161,6 @@ int ngraph::unset_environment(const ngraph::EnvVarEnum env_var_enum)
 //----------------------
 
 // --------- below this is caching apis
-std::unordered_map<ngraph::EnvVarEnum, std::string>& get_env_var_cache()
-{
-    static std::unordered_map<ngraph::EnvVarEnum, string> s_env_var_cache;
-    return s_env_var_cache;
-}
-
-void ngraph::log_all_envvar()
-{
-    NGRAPH_DEBUG << "List of all environment variables:\n";
-    std::unordered_map<ngraph::EnvVarEnum, std::string>::iterator it = get_env_var_cache().begin();
-    while (it != get_env_var_cache().end())
-    {
-        NGRAPH_DEBUG << "\t" << get_env_var_name(it->first) << " = " << it->second << std::endl;
-        it++;
-    }
-}
-
-void ngraph::addenv_to_cache(const ngraph::EnvVarEnum env_var, const char* val)
-{
-    get_env_var_cache().emplace(env_var, val);
-}
-
-bool ngraph::env_cache_contains(const ngraph::EnvVarEnum env_var)
-{
-    if (get_env_var_cache().find(env_var) != get_env_var_cache().end())
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-std::string ngraph::getenv_from_cache(const ngraph::EnvVarEnum env_var)
-{
-    if (env_cache_contains(env_var))
-    {
-        return get_env_var_cache().at(env_var);
-    }
-    else
-    {
-        return "";
-    }
-}
-
-void ngraph::erase_env_from_cache(const ngraph::EnvVarEnum env_var)
-{
-    get_env_var_cache().erase(env_var);
-}
 
 std::string ngraph::getenv_string(const ngraph::EnvVarEnum env_var)
 {

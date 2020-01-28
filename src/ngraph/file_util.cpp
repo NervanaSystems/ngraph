@@ -186,14 +186,14 @@ string file_util::get_temp_directory_path()
 {
     const vector<string> potential_tmps = {"NGRAPH_TMP", "TMPDIR", "TMP", "TEMP", "TEMPDIR"};
 
-    string path;
-    for (const string& var : potential_tmps)
+    string path = getenv_string(ngraph::EnvVarEnum::NGRAPH_TMPDIR);
+    /*for (const string& var : potential_tmps)
     {
         if (!path.empty())
         {
             break;
         }
-    }
+    }*/
     if (path.empty())
     {
         path = "/tmp";

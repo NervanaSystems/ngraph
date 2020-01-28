@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <thread>
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
@@ -43,7 +44,7 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
         throw ngraph_error(
             "Unexpected value specified for NGRAPH_CPU_CONCURRENCY "
             "(" +
-            std::string(envConcurrency) + "). Please specify a value in range [1-" +
+            std::to_string(m_num_ctx) + "). Please specify a value in range [1-" +
             std::to_string(std::thread::hardware_concurrency()) + "]");
     }
 
