@@ -990,8 +990,12 @@ TEST(cpu_fusion, conv_horizontal_fusion)
     auto cpu_results = execute(cpu_f, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 
-    size_t cpu_cb = count_ops_of_type<op::ConvolutionBias>(cpu_f);
-    ASSERT_EQ(cpu_cb, 1);
+    size_t cpu_ck = count_ops_of_type<op::CompiledKernel>(cpu_f);
+    if (!cpu_ck)
+    {
+        size_t cpu_cb = count_ops_of_type<op::ConvolutionBias>(cpu_f);
+        ASSERT_EQ(cpu_cb, 1);
+    }
 }
 
 // ConvolutionBiasAdd relies on an in-place fused MKLDNN kernel.

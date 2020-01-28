@@ -1058,7 +1058,7 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
     unset_environment("NGRAPH_CPU_CONCURRENCY");
 }
 
-TEST(cpu_test, constant_convertlayout)
+TEST(cpu_test, MLIR_DISABLE_TEST(constant_convertlayout))
 {
     Shape data_shape{1, 64, 56, 56};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
