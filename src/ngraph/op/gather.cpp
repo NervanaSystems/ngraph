@@ -183,7 +183,7 @@ size_t op::v1::Gather::get_axis() const
     auto axes_input_node = input_value(AXIS).get_node_shared_ptr();
     if (auto const_op = as_type_ptr<op::Constant>(axes_input_node))
     {
-        axis = const_op->get_vector<int64_t>()[0];
+        axis = const_op->cast_vector<int64_t>()[0];
     }
     if (axis < 0)
     {
