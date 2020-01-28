@@ -18,6 +18,7 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/frontend/onnx_import/default_opset.hpp"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/provenance.hpp"
@@ -50,16 +51,19 @@ template <typename NodeToCheck>
 void test_provenance_tags(const std::shared_ptr<Function> function,
                           const std::string& expected_provenance_tag)
 {
+    int node_count = 0;
     for (const auto ng_node : function->get_ordered_ops())
     {
         if (as_type_ptr<NodeToCheck>(ng_node))
         {
+            ++node_count;
             const auto tags = ng_node->get_provenance_tags();
             ASSERT_TRUE(tags.size() > 0) << "Node " << ng_node->get_friendly_name()
                                              << " should have at least one provenance tag.";
             EXPECT_TRUE(tags.find(expected_provenance_tag) != tags.end());
         }
     }
+    EXPECT_TRUE(node_count > 0) << "Expected type of node doesn't exist in graph.";
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_only_output)
