@@ -20,6 +20,7 @@ will install to a system location.
 
 .. code-block:: console
    
+   pip install --upgrade pip==19.3.1
    pip install tensorflow
    pip install ngraph-tensorflow-bridge
 

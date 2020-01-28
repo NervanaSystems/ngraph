@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/cache.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
@@ -100,6 +101,8 @@ public:
 private:
     std::shared_ptr<ngraph::Function> m_wrapped_function;
     std::shared_ptr<ngraph::runtime::Backend> m_wrapped_backend;
+    std::shared_ptr<ngraph::runtime::LRUCache> m_lru =
+        std::make_shared<ngraph::runtime::LRUCache>();
     bool m_enable_performance_collection;
 };
 

@@ -183,7 +183,6 @@ endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
-    option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
 
 if (NOT NGRAPH_JSON_ENABLE)
@@ -277,10 +276,6 @@ message(STATUS "NGRAPH_USE_LEGACY_MKLDNN:             ${NGRAPH_USE_LEGACY_MKLDNN
 message(STATUS "NGRAPH_USE_PREBUILT_LLVM:             ${NGRAPH_USE_PREBUILT_LLVM}")
 message(STATUS "NGRAPH_USE_PREBUILT_MLIR:             ${NGRAPH_USE_PREBUILT_MLIR}")
 message(STATUS "NGRAPH_WARNINGS_AS_ERRORS:            ${NGRAPH_WARNINGS_AS_ERRORS}")
-
-if("${CMAKE_GENERATOR}" STREQUAL "Ninja" AND NGRAPH_MLIR_ENABLE)
-    message(FATAL_ERROR "Ninja generator not supported.")
-endif()
 
 if (NGRAPH_CPU_ENABLE AND NGRAPH_MLIR_ENABLE)
     #MLIR uses the latest version of LLVM which requires C++14.
@@ -658,10 +653,11 @@ if (NGRAPH_TEST_UTIL_ENABLE)
 endif()
 
 add_subdirectory(test)
-add_subdirectory(doc/examples)
 
 if (NGRAPH_DOC_BUILD_ENABLE)
     add_subdirectory(doc)
+else()
+    add_subdirectory(doc/examples)
 endif()
 
 if (NGRAPH_PYTHON_BUILD_ENABLE)
