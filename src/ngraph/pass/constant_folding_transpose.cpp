@@ -16,7 +16,7 @@
 
 #include "constant_folding.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
-#include "ngraph/runtime/reference/reshape.hpp"
+#include "ngraph/runtime/opt_kernel/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -31,11 +31,11 @@ shared_ptr<op::Constant> fold_constant_transpose(shared_ptr<op::Constant> consta
 
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
 
-    runtime::reference::reshape<T>(constant_data->get_data_ptr<T>(),
-                                   buffer.get_ptr<T>(),
-                                   constant_data->get_shape(),
-                                   input_order,
-                                   out_shape);
+    runtime::opt_kernel::reshape<T>(constant_data->get_data_ptr<T>(),
+                                    buffer.get_ptr<T>(),
+                                    constant_data->get_shape(),
+                                    input_order,
+                                    out_shape);
 
     return make_shared<op::Constant>(transpose->get_element_type(), out_shape, buffer.get_ptr<T>());
 }
