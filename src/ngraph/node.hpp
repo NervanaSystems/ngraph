@@ -805,7 +805,7 @@ namespace ngraph
         }
         /// \return The inferred min shape
         const PartialShape& get_inferred_min_partial_shape() const;
-        /// Set the inferred min shape
+        /// \brief Set the inferred min shape
         void set_inferred_min_partial_shape(const PartialShape& element_type);
         /// \return The inferred max shape
         const PartialShape& get_inferred_max_partial_shape() const;
