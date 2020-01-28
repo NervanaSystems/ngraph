@@ -34,14 +34,20 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a generic padding operation.
                 Pad() = default;
-                /// \brief Constructs a generic padding operation.
+                /// \brief Constructs a padding operation. Padding embeds the values of the input
+                /// tensor into a larger tensor initialized to arg_pad_value.
                 ///
-                /// \param arg The node producing input tensor to be padded.
+                /// \param arg The node producing the input tensor to be padded.
                 /// \param arg_pad_value The node producing the scalar value
-                /// to be inserted for padding.
-                /// \param padding_below The padding-below widths.
-                /// \param padding_above The padding-above widths.
+                /// to be used outside the are initialized by arg when pad_mode is CONSTANT.
+                /// \param padding_below How many elements to add on
+                /// each axis before index 0 of arg. Rank must match arg.
+                /// \param padding_above How many elements to add on
+                /// each axis after the last element of arg. Rank must match arg.
                 /// \param pad_mode The padding mode: CONSTANT(default), EDGE, REFLECT or SYMMETRIC.
+                /// CONSTANT initializes new elements with arg_pad_value, EDGE uses the nearest
+                /// value from arg. REFLECT and SYMMETRIC tile the background by flipping arg
+                /// at the edge (SYMMETRIC) or on the last row/column/etc. (REFLECT).
                 Pad(const Output<Node>& arg,
                     const Output<Node>& arg_pad_value,
                     const CoordinateDiff& padding_below,
@@ -95,14 +101,18 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a generic padding operation.
                 ///
-                /// \param arg The node producing input tensor to be padded.
-                /// \param pads_begin The node which specifies the number of padding elements at the
-                /// beginning of each axis
-                /// \param pads_end The node which specifies the number of padding elements at the
-                /// end of each axis
-                /// \param arg_pad_value The node with value which set to extended elements
+                /// \param arg The output producing input tensor to be padded.
+                /// \param pads_begin The output which specifies the number of padding elements
+                /// added
+                /// before position 0 on each axis of arg.
+                /// \param pads_end The output which specifies the number of padding elements
+                /// after the last element on each axis.
+                /// \param arg_pad_value The scalar output with the value used for padding
                 /// if pad_mode is CONSTANT
                 /// \param pad_mode The padding mode: CONSTANT, EDGE, REFLECT or SYMMETRIC.
+                /// CONSTANT initializes new elements with arg_pad_value, EDGE uses the nearest
+                /// value from arg. REFLECT and SYMMETRIC tile the background by flipping arg
+                /// at the edge (SYMMETRIC) or on the last row/column/etc. (REFLECT).
                 Pad(const Output<Node>& arg,
                     const Output<Node>& pads_begin,
                     const Output<Node>& pads_end,
@@ -111,11 +121,11 @@ namespace ngraph
 
                 /// \brief Constructs a generic padding operation.
                 ///
-                /// \param arg The node producing input tensor to be padded.
-                /// \param pads_begin The node which specifies the number of padding elements
-                /// at the beginning of each axis
-                /// \param pads_end The node which specifies the number of padding elements
-                /// at the end of each axis
+                /// \param arg The output producing input tensor to be padded.
+                /// \param pads_begin The output which specifies the number of padding elements
+                /// added
+                /// \param pads_end The output which specifies the number of padding elements
+                /// after the last element on each axis.
                 /// \param pad_mode The padding mode: CONSTANT, EDGE, REFLECT or SYMMETRIC.
                 Pad(const Output<Node>& arg,
                     const Output<Node>& pads_begin,
@@ -131,10 +141,10 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 /// return The node which specifies the number of padding elements
-                /// at the beginning of each axis
+                /// added at the beginning of each axis
                 CoordinateDiff get_pads_begin() const;
                 /// return The node which specifies the number of padding elements
-                /// at the end of each axis
+                /// added at the end of each axis
                 CoordinateDiff get_pads_end() const;
 
                 /// \return The padding mode.
