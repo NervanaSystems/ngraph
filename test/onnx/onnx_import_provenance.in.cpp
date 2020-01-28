@@ -55,7 +55,7 @@ void test_provenance_tags(const std::shared_ptr<Function> function,
         {
             const auto tags = ng_node->get_provenance_tags();
             ASSERT_EQ(tags.size() > 0, true) << "Node " << ng_node->get_friendly_name()
-                                             << " should have almost one provenance tag.";
+                                             << " should have at least one provenance tag.";
             EXPECT_EQ(tags.find(expected_provenance_tag) != tags.end(), true);
         }
     }
