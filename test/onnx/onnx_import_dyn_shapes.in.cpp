@@ -21,9 +21,11 @@
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 #include "util/type_prop.hpp"
+#include "util/test_case.hpp"
 
 using namespace ngraph;
 using namespace ngraph::onnx_import;
+using namespace ngraph::test;
 
 static std::string s_manifest = "${MANIFEST}";
 
@@ -69,11 +71,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, ab_plus_c_inference)
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/ab_plus_c.prototxt"));
 
-    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
-    auto executable = backend->compile(function);
-
-    auto out_tensor = backend->create_dynamic_tensor(function->get_output_element_type(0),
-                                                     function->get_output_partial_shape(0));
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
 
     struct ExpectedValuesGenerator
     {
@@ -90,29 +88,20 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, ab_plus_c_inference)
 
     for (size_t batch = 1; batch <= NUM_BATCHES_TO_TEST; ++batch)
     {
-        const Shape input_shape = Shape{batch, 2};
-        const auto elems_in_tensor = shape_size(input_shape);
-
-        auto input_A = backend->create_tensor(element::i64, input_shape);
-        auto input_B = backend->create_tensor(element::i64, input_shape);
-        auto input_C = backend->create_tensor(element::i64, input_shape);
-
+        const Shape shape{batch, 2};
+        const auto elems_in_tensor = shape_size(shape);
         std::vector<int64_t> input_values(elems_in_tensor);
         std::iota(input_values.begin(), input_values.end(), 1);
 
-        copy_data(input_A, input_values);
-        copy_data(input_B, input_values);
-        copy_data(input_C, input_values);
-
-        executable->call_with_validate({out_tensor}, {input_A, input_B, input_C});
-
-        const auto results = read_vector<int64_t>(out_tensor);
-        EXPECT_EQ(results.size(), elems_in_tensor);
+        test_case.add_input<int64_t>(shape, input_values);
+        test_case.add_input<int64_t>(shape, input_values);
+        test_case.add_input<int64_t>(shape, input_values);
 
         std::vector<int64_t> expected_values(elems_in_tensor);
         std::generate(expected_values.begin(), expected_values.end(), ExpectedValuesGenerator{});
+        test_case.add_expected_output<int64_t>(shape, expected_values);
 
-        EXPECT_TRUE(results == expected_values);
+        test_case.run();
     }
 }
 

@@ -28,15 +28,21 @@ namespace ngraph
 {
     namespace test
     {
+        /// \brief Indicates which version of backend (dynamic or static) should be using in NgraphTestCase
+        enum class BackendMode
+        {
+            // Use static version of backend
+            STATIC,
+            // Use dynamic version of backend
+            DYNAMIC
+        };
+
         class NgraphTestCase
         {
         public:
             NgraphTestCase(const std::shared_ptr<Function>& function,
-                           const std::string& backend_name)
-                : m_function(function)
-                , m_backend(ngraph::runtime::Backend::create(backend_name))
-            {
-            }
+                const std::string& backend_name,
+                const BackendMode mode = BackendMode::STATIC);
 
             /// \brief Makes the test case print the expected and computed values to the console.
             ///        This should only be used for debugging purposes.
@@ -49,20 +55,27 @@ namespace ngraph
             NgraphTestCase& dump_results(bool dump = true);
 
             template <typename T>
-            void add_input(const std::vector<T>& values)
+            void add_input(ngraph::Shape shape, const std::vector<T>& values)
             {
                 auto params = m_function->get_parameters();
 
                 NGRAPH_CHECK(m_input_index < params.size(),
-                             "All function parameters already have inputs.");
+                    "All function parameters already have inputs.");
 
-                auto tensor = m_backend->create_tensor(params.at(m_input_index)->get_element_type(),
-                                                       params.at(m_input_index)->get_shape());
+
+                auto tensor = m_backend->create_tensor(params.at(m_input_index)->get_element_type(), shape);
                 copy_data(tensor, values);
 
                 m_input_tensors.push_back(tensor);
 
                 ++m_input_index;
+            }
+
+            template <typename T>
+            void add_input(const std::vector<T>& values)
+            {
+                auto params = m_function->get_parameters();
+                return add_input<T>(params.at(m_input_index)->get_shape(), values);
             }
 
             template <typename T>
@@ -97,8 +110,6 @@ namespace ngraph
                              "All function results already have expected outputs.");
 
                 auto function_output_type = results.at(m_output_index)->get_element_type();
-                m_result_tensors.emplace_back(
-                    m_backend->create_tensor(function_output_type, expected_shape));
 
                 m_expected_outputs.emplace_back(std::make_shared<ngraph::op::Constant>(
                     function_output_type, expected_shape, values));
@@ -195,6 +206,7 @@ namespace ngraph
         protected:
             std::shared_ptr<Function> m_function;
             std::shared_ptr<runtime::Backend> m_backend;
+            std::shared_ptr<ngraph::runtime::Executable> m_executable;
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_input_tensors;
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_result_tensors;
             std::vector<std::shared_ptr<ngraph::op::Constant>> m_expected_outputs;
