@@ -140,7 +140,6 @@ void MLIRCPURuntime::execute()
 void MLIRCPURuntime::cleanup()
 {
     // Free void double pointer arguments without freeing external tensor data.
-    int i = 0;
     for (auto* arg : m_invokeArgs)
     {
         auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(arg));

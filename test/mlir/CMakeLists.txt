@@ -16,7 +16,7 @@
 
 # Enable use of the lit tool that we build from MLIR repo.
 set(LLVM_LIT ${LLVM_MAIN_SRC_DIR}/utils/lit/lit.py)
-set(LLVM_DEFAULT_EXTERNAL_LIT ${MLIR_TOOLS_DIR}/llvm-lit)
+set(LLVM_DEFAULT_EXTERNAL_LIT ${MLIR_LLVM_TOOLS_DIR}/llvm-lit)
 
 configure_lit_site_cfg(
     ${CMAKE_CURRENT_SOURCE_DIR}/lit.site.cfg.py.in

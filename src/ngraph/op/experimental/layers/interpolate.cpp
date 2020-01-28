@@ -35,8 +35,8 @@ op::Interpolate::Interpolate(const Output<Node>& image,
 void op::Interpolate::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(1).compatible(element::Type_t::i64),
-                          "output shape must have element type i64.");
+                          get_input_element_type(1).is_integral_number(),
+                          "output shape must be an integral number.");
     set_input_is_relevant_to_shape(1);
 
     PartialShape output_shape = PartialShape(get_input_partial_shape(0));
@@ -51,7 +51,7 @@ void op::Interpolate::validate_and_infer_types()
 
     if (auto const_shape = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
-        auto out_shape = static_cast<const int64_t*>(const_shape->get_data_ptr());
+        auto out_shape = const_shape->cast_vector<int64_t>();
         size_t i = 0;
         for (auto axis : m_attrs.axes)
         {

@@ -206,7 +206,7 @@ CoordinateDiff op::v1::Pad::get_pads_begin() const
     CoordinateDiff pads_begin_coord{};
     if (auto pads_begin_const = as_type_ptr<op::Constant>(pads_begin_node))
     {
-        pads_begin_coord = pads_begin_const->get_vector<ptrdiff_t>();
+        pads_begin_coord = pads_begin_const->cast_vector<ptrdiff_t>();
     }
     return pads_begin_coord;
 }
@@ -217,7 +217,7 @@ CoordinateDiff op::v1::Pad::get_pads_end() const
     CoordinateDiff pads_end_coord{};
     if (auto pads_end_const = as_type_ptr<op::Constant>(pads_end_node))
     {
-        pads_end_coord = pads_end_const->get_vector<ptrdiff_t>();
+        pads_end_coord = pads_end_const->cast_vector<ptrdiff_t>();
     }
     return pads_end_coord;
 }
@@ -252,14 +252,14 @@ void op::v1::Pad::validate_and_infer_types()
     }
 
     NODE_VALIDATION_CHECK(this,
-                          pads_begin_element_type.compatible(element::Type_t::i64),
-                          "pads_begin must be type i64 (axes type: ",
+                          pads_begin_element_type.is_integral_number(),
+                          "pads_begin must be an integral number, but is: ",
                           pads_begin_element_type,
                           ").");
 
     NODE_VALIDATION_CHECK(this,
-                          pads_end_element_type.compatible(element::Type_t::i64),
-                          "pads_end must be type i64 (axes type: ",
+                          pads_end_element_type.is_integral_number(),
+                          "pads_end must be an integral number, but is: ",
                           pads_end_element_type,
                           ").");
 

@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <functional>
 #include <memory.h>
 
@@ -35,43 +36,56 @@ namespace ngraph
 
     namespace pattern
     {
-        using RPatternMap = std::map<std::shared_ptr<op::Label>, NodeVector>;
+        class Matcher;
 
-        template <typename T>
-        std::function<bool(std::shared_ptr<Node>)> has_class()
+        class NGRAPH_API MatcherState
         {
-            auto pred = [](std::shared_ptr<Node> node) -> bool { return is_type<T>(node); };
+        public:
+            MatcherState(Matcher*);
+            bool finish(bool is_successful);
+            ~MatcherState();
 
-            return pred;
-        }
+        protected:
+            Matcher* m_matcher;
+            PatternValueMap m_pattern_value_map;
+            PatternValueMaps m_pattern_value_maps;
+            size_t m_watermark;
+            size_t m_capture_size;
+            bool m_restore{true};
+        };
 
-        namespace op
-        {
-            class Label;
-        }
-
-        /// \brief Matcher matches (compares) two graphs
+        /// Matcher looks for node patterns in a computation graph. The patterns are described by an
+        /// automaton that is described by an extended computation graph. The matcher executes
+        /// by attempting to match the start node of the pattern to a computation graph value
+        /// (output of a Node). In addition to determing if a match occurs, a pattern node may add
+        /// graph nodes to a list of matched nodes, associate nodes with graph values, and start
+        /// submatches. Submatches add match state changes to the enclosing match if the submatch
+        /// succeeds; otherwise the state is reverted.
         ///
+        /// The default match behavior of a pattern node with a graph nodes is that the computation
+        /// graph value is added to the end of the matched value list and the match succeeds if the
+        /// node/pattern types match and the input values match. In the case of a commutative node,
+        /// the inputs can match in any order. If the matcher is in strict mode, the graph value
+        /// element type and shape must also match.
+        ///
+        /// Pattern nodes that have different match behavior are in ngraph::pattern::op and have
+        /// descriptions of their match behavior.
         class NGRAPH_API Matcher
         {
         public:
-            using PatternMap = std::map<std::shared_ptr<op::Label>, std::shared_ptr<Node>>;
+            using PatternMap = ngraph::pattern::PatternMap;
+
             // Avoid implicit string construction from nullptr.
             Matcher(const std::shared_ptr<Node>& pattern_node, std::nullptr_t name) = delete;
 
-            Matcher(const std::shared_ptr<Node>& pattern_node)
+            Matcher(const Output<Node>& pattern_node)
                 : m_pattern_node{pattern_node}
-                , m_depth{0}
-                , m_name{"Unnamed"}
-                , m_strict_mode{false}
             {
             }
 
-            Matcher(const std::shared_ptr<Node>& pattern_node, const std::string& name)
+            Matcher(const Output<Node>& pattern_node, const std::string& name)
                 : m_pattern_node(pattern_node)
-                , m_depth{0}
                 , m_name{name}
-                , m_strict_mode{false}
             {
             }
             /// \brief Constructs a Matcher object
@@ -79,11 +93,8 @@ namespace ngraph
             /// \param pattern_node is a pattern sub graph that will be matched against input graphs
             /// \param name is a string which is used for logging and disabling a matcher
             /// \param strict_mode forces a matcher to consider shapes and ET of nodes
-            Matcher(const std::shared_ptr<Node>& pattern_node,
-                    const std::string& name,
-                    bool strict_mode)
+            Matcher(const Output<Node>& pattern_node, const std::string& name, bool strict_mode)
                 : m_pattern_node(pattern_node)
-                , m_depth(0)
                 , m_name(name)
                 , m_strict_mode(strict_mode)
             {
@@ -92,14 +103,15 @@ namespace ngraph
             virtual ~Matcher() {}
             /// \brief Matches a pattern to \p graph_node
             ///
-            /// \param graph_node is an input graph to be matched against
-            bool match(const std::shared_ptr<Node>& graph_node);
+            /// \param graph_value is an input graph to be matched against
+            bool match(const Output<Node>& graph_value);
 
             /// \brief Matches a pattern to \p graph_node
             ///
-            /// \param graph_node is an input graph to be matched against
+            /// \param graph_value is an input graph to be matched against
             /// \param previous_matches contains previous mappings from labels to nodes to use
-            bool match(const std::shared_ptr<Node>& graph_node, const PatternMap& previous_matches);
+            bool match(const Output<Node>& graph_value, const PatternMap& previous_matches);
+            bool match(const Output<Node>& graph_value, const PatternValueMap& previous_matches);
 
             template <typename T>
             static std::shared_ptr<T> unique_match(std::shared_ptr<Node> node)
@@ -123,65 +135,53 @@ namespace ngraph
             }
 
             bool is_contained_match(const NodeVector& exclusions = {}, bool ignore_unused = true);
-            const NodeVector& get_matched_nodes() { return m_matched_list; }
+            const NodeVector get_matched_nodes() { return as_node_vector(m_matched_list); }
+            const OutputVector& get_matched_values() const { return m_matched_list; }
+            OutputVector& get_matched_values() { return m_matched_list; }
             void reset() {}
             const std::string& get_name() { return m_name; }
-            std::shared_ptr<Node> get_pattern() { return m_pattern_node; }
+            std::shared_ptr<Node> get_pattern() { return m_pattern_node.as_single_output_node(); }
+            Output<Node> get_pattern_value() { return m_pattern_node; }
             std::shared_ptr<Node> get_match_root();
-            PatternMap get_pattern_map() { return PatternMap{m_pattern_map}; }
+            Output<Node> get_match_value();
+            PatternMap get_pattern_map() const;
+            PatternValueMap& get_pattern_value_map() { return m_pattern_map; }
+            PatternValueMaps& get_pattern_value_maps() { return m_pattern_value_maps; }
             /// \brief Low-level helper to match recurring patterns
             ///
             /// \param graph is a graph to be matched against
             /// \param pattern is a recurring pattern
             /// \param rpattern specifies a node to recur from next
             /// \param patterns a map from labels to matches
-            friend op::Label; // TODO: refine to match_class
+
+            size_t add_node(Output<Node> node);
+
+            bool virtual match_value(const ngraph::Output<Node>& pattern_value,
+                                     const ngraph::Output<Node>& graph_value);
+
+            bool is_strict_mode() { return m_strict_mode; }
+            virtual bool match_arguments(const Output<Node>& pattern_value,
+                                         const Output<Node>& graph_value);
+
+            void capture(const std::set<Node*>& static_nodes);
+
+            size_t get_number_of_recurrent_matches() const { return m_pattern_value_maps.size(); }
+            NodeVector get_bound_nodes_for_pattern(const Output<Node>& pattern) const;
+            size_t get_number_of_bound_labels() const;
+            /// \brief Try a match
+            MatcherState start_match();
+
+            Output<Node> m_match_root;
+            Output<Node> m_pattern_node;
+            PatternValueMap m_pattern_map;
+            PatternValueMaps m_pattern_value_maps;
+            OutputVector m_matched_list;
 
         protected:
-            void add_node(std::shared_ptr<Node> node) { m_matched_list.push_back(node); }
-            bool abort_match(size_t watermark, bool matched)
-            {
-                if (!matched)
-                {
-                    m_matched_list.erase(m_matched_list.begin() + watermark, m_matched_list.end());
-                }
-                return matched;
-            }
+            bool match_permutation(const OutputVector& pattern_args, const OutputVector& args);
 
-            bool virtual match_node(const std::shared_ptr<Node>& pattern_node,
-                                    const std::shared_ptr<Node>& graph_node,
-                                    PatternMap& pattern_map);
-
-            virtual bool match_arguments(const std::shared_ptr<Node>& pattern_node,
-                                         const std::shared_ptr<Node>& graph_node,
-                                         PatternMap& pattern_map);
-
-            std::shared_ptr<Node> m_match_root;
-            std::shared_ptr<Node> m_pattern_node;
-            PatternMap m_pattern_map;
-            NodeVector m_matched_list;
-
-        private:
-            static std::string pad(size_t num) { return std::string(num, ' '); }
-            bool match_permutation(const NodeVector& pattern_args,
-                                   const NodeVector& args,
-                                   PatternMap& pattern_map);
-            bool match_pattern(const std::shared_ptr<op::Label>& pattern_node,
-                               const std::shared_ptr<Node>& graph_node,
-                               PatternMap& pattern_map);
-            bool match_skip(const std::shared_ptr<op::Skip>& pattern_node,
-                            const std::shared_ptr<Node>& graph_node,
-                            PatternMap& pattern_map);
-            bool match_any(const std::shared_ptr<op::Any>& pattern_node,
-                           const std::shared_ptr<Node>& graph_node,
-                           PatternMap& pattern_map);
-            bool match_any_of(const std::shared_ptr<op::AnyOf>& pattern_node,
-                              const std::shared_ptr<Node>& graph_node,
-                              PatternMap& pattern_map);
-
-            size_t m_depth;
-            std::string m_name;
-            bool m_strict_mode;
+            std::string m_name{"unnamed"};
+            bool m_strict_mode{false};
         };
 
         class RecurrentMatcher
@@ -190,30 +190,60 @@ namespace ngraph
             /// \brief Constructs a RecurrentMatcher object. Reccurent Matchers are used to match
             ///        repeating patterns (e.g. RNN, LSTM, GRU cells)
             ///
+            /// \param initial_pattern is a pattern sub graph describing the initial cell
             /// \param pattern is a pattern sub graph describing an individual cell
             /// \param rpattern is a (recurring) label to denote which node the next match should
             ///                 start at
             /// \param correlated_patterns is a set of labels whose bound nodes must remain the same
             ///                            across all cells
-            RecurrentMatcher(std::shared_ptr<Node> pattern,
-                             std::shared_ptr<op::Label> rpattern,
-                             const std::set<std::shared_ptr<op::Label>>& correlated_patterns)
-                : m_pattern(pattern)
+            RecurrentMatcher(const Output<Node>& initial_pattern,
+                             const Output<Node>& pattern,
+                             const std::shared_ptr<Node>& rpattern,
+                             const std::set<std::shared_ptr<Node>>& correlated_patterns)
+                : m_initial_pattern(initial_pattern)
+                , m_pattern(pattern)
                 , m_recurrent_pattern(rpattern)
                 , m_correlated_patterns(correlated_patterns)
             {
             }
 
+            /// \brief Constructs a RecurrentMatcher object. Reccurent Matchers are used to match
+            ///        repeating patterns (e.g. RNN, LSTM, GRU cells)
+            ///
+            /// \param pattern is a pattern sub graph describing an individual cell
+            /// \param rpattern is a (recurring) label to denote which node the next match should
+            ///                 start at
+            /// \param correlated_patterns is a set of labels whose bound nodes must remain the same
+            ///                            across all cells
+            RecurrentMatcher(const Output<Node>& pattern,
+                             const std::shared_ptr<Node>& rpattern,
+                             const std::set<std::shared_ptr<Node>>& correlated_patterns)
+                : RecurrentMatcher(pattern, pattern, rpattern, correlated_patterns)
+            {
+            }
+
+            RecurrentMatcher(const Output<Node>& initial_pattern,
+                             const Output<Node>& pattern,
+                             const std::shared_ptr<Node>& rpattern,
+                             const std::set<std::shared_ptr<op::Label>>& correlated_patterns);
+
+            RecurrentMatcher(const Output<Node>& pattern,
+                             const std::shared_ptr<Node>& rpattern,
+                             const std::set<std::shared_ptr<op::Label>>& correlated_patterns)
+                : RecurrentMatcher(pattern, pattern, rpattern, correlated_patterns)
+            {
+            }
+
             /// \brief Returns a vector of bound nodes for a given label (used in a pattern
             /// describing an individual cell
-            NodeVector get_bound_nodes_for_pattern(std::shared_ptr<op::Label> pattern) const
+            NodeVector get_bound_nodes_for_pattern(const std::shared_ptr<Node>& pattern) const
             {
                 if (m_matches.count(pattern) == 0)
                 {
                     throw ngraph_error("No bound nodes for a given label");
                 }
 
-                return NodeVector{m_matches.at(pattern)};
+                return as_node_vector(m_matches.at(pattern));
             }
 
             size_t get_number_of_recurrent_matches() const
@@ -228,15 +258,17 @@ namespace ngraph
 
             size_t get_number_of_bound_labels() const { return m_matches.size(); }
             /// \brief Tries to match a pattern for an individual cell to a given \p graph
-            bool match(std::shared_ptr<Node> graph);
+            bool match(Output<Node> graph);
 
-            std::shared_ptr<Node> get_match_root() { return m_match_root; }
+            std::shared_ptr<Node> get_match_root() { return m_match_root.get_node_shared_ptr(); }
+            Output<Node> get_match_value() { return m_match_root; }
         private:
-            std::shared_ptr<Node> m_pattern;
-            std::shared_ptr<op::Label> m_recurrent_pattern;
-            const std::set<std::shared_ptr<op::Label>> m_correlated_patterns;
-            RPatternMap m_matches;
-            std::shared_ptr<Node> m_match_root;
+            Output<Node> m_initial_pattern;
+            Output<Node> m_pattern;
+            std::shared_ptr<Node> m_recurrent_pattern;
+            const std::set<std::shared_ptr<Node>> m_correlated_patterns;
+            RPatternValueMap m_matches;
+            Output<Node> m_match_root;
         };
     }
 }

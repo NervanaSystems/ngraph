@@ -67,6 +67,11 @@ namespace ngraph
         }
     } // namespace op
 
+    namespace pattern
+    {
+        class Matcher;
+    }
+
     using ResultVector = std::vector<std::shared_ptr<op::v0::Result>>;
 
     namespace autodiff
@@ -260,6 +265,7 @@ namespace ngraph
         virtual bool is_constant() const;
         virtual bool is_null() const { return false; }
         virtual bool is_op() const { return false; }
+        virtual bool is_pattern() const { return false; }
         virtual bool is_commutative() const { return false; }
         virtual bool is_dynamic() const;
         virtual bool has_state() const { return false; }
@@ -505,6 +511,10 @@ namespace ngraph
             return m_op_annotations;
         }
 
+        virtual bool match_value(pattern::Matcher* matcher,
+                                 const Output<Node>& pattern_value,
+                                 const Output<Node>& graph_value);
+
     private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
@@ -725,6 +735,12 @@ namespace ngraph
         /// A null output
         Output() = default;
 
+        void reset()
+        {
+            m_node.reset();
+            m_index = 0;
+        }
+
         /// This output position for a different node
         Output<Node> for_node(const std::shared_ptr<Node>& node) { return Output(node, m_index); }
         /// \return A pointer to the node referred to by this output handle.
@@ -830,6 +846,12 @@ namespace ngraph
 
         /// A null output
         Output() = default;
+
+        void reset()
+        {
+            m_node.reset();
+            m_index = 0;
+        }
 
         /// This output position for a different node
         Output<const Node> for_node(const std::shared_ptr<const Node>& node)

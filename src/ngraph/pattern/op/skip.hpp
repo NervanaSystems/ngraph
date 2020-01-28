@@ -25,19 +25,29 @@ namespace ngraph
     {
         namespace op
         {
-            /// \brief \p Skip allows users to specify unexpected nodes in a pattern
-            /// and skip them if a predicate condition is satisfied.
-            ///
+            /// The graph value is added to the matched value list. If the predicate is true, the
+            /// match succeeds if the arguments match; if the predicate is false, the match succeeds
+            /// if the pattern input matches the graph value.
             class NGRAPH_API Skip : public Pattern
             {
             public:
                 static constexpr NodeTypeInfo type_info{"patternSkip", 0};
                 const NodeTypeInfo& get_type_info() const override;
-                Skip(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
-                    : Pattern(NodeVector{arg}, predicate)
+                Skip(const Output<Node>& arg, ValuePredicate pred)
+                    : Pattern({arg}, pred)
                 {
-                    set_output_type(0, arg->get_element_type(), arg->get_output_partial_shape(0));
+                    set_output_type(0, arg.get_element_type(), arg.get_partial_shape());
                 }
+
+                Skip(const Output<Node>& arg, NodePredicate pred = nullptr)
+                    : Pattern({arg}, as_value_predicate(pred))
+                {
+                    set_output_type(0, arg.get_element_type(), arg.get_partial_shape());
+                }
+
+                virtual bool match_value(pattern::Matcher* matcher,
+                                         const Output<Node>& pattern_value,
+                                         const Output<Node>& graph_value) override;
             };
         }
     }
