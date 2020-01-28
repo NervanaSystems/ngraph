@@ -76,13 +76,6 @@ namespace ngraph
                 {
                 }
 
-                /// \brief \p a base class for \sa Skip and \sa Label
-                ///
-                Pattern(const NodeVector& nodes, Predicate pred)
-                    : Pattern(as_output_vector(nodes), pred)
-                {
-                }
-
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& /* new_args */) const override
                 {
