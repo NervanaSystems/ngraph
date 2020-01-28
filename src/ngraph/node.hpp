@@ -376,6 +376,9 @@ namespace ngraph
         std::shared_ptr<Node> get_argument(size_t index) const
             NGRAPH_DEPRECATED("use input_value(i).");
 
+        Node* get_input_node_ptr(size_t index) const;
+        std::shared_ptr<Node> get_input_node_shared_ptr(size_t index) const;
+
     protected:
         // Will be replaced with an OutputVector version
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;

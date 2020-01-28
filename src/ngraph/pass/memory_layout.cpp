@@ -60,7 +60,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<Function> function)
                     {
                         auto output = &node->output(oi_pair.output).get_tensor();
                         auto input = &node->input(oi_pair.input).get_tensor();
-                        auto input_node = node->input(oi_pair.input).get_source_output().get_node();
+                        auto input_node = node->get_input_node_ptr(oi_pair.input);
 
                         // For destructive kernel, this should be the last use
                         // Non-destructive kernels can pass through if memory sharing is disabled
