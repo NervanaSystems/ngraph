@@ -24,12 +24,12 @@ set(MLIR_LLVM_COMMIT_ID d6295255)
 # MLIR environment variables. Some of them are used by LIT tool.
 
 if (NGRAPH_USE_PREBUILT_MLIR)
-    set(MLIR_PROJECT_ROOT ${MLIR_LLVM_PREBUILT_PATH}/mlir_project)
+    set(MLIR_PROJECT_ROOT ${MLIR_LLVM_PREBUILT_PATH})
 else()
     set(MLIR_PROJECT_ROOT ${CMAKE_CURRENT_BINARY_DIR}/mlir_project)
 endif()
 
-set(MLIR_LLVM_ROOT ${MLIR_PROJECT_ROOT}/llvm-projects)
+set(MLIR_LLVM_ROOT ${MLIR_PROJECT_ROOT}/llvm-project)
 set(MLIR_LLVM_SOURCE_DIR ${MLIR_LLVM_ROOT}/llvm)
 set(MLIR_SOURCE_DIR ${MLIR_LLVM_ROOT}/mlir)
 set(MLIR_LLVM_BUILD_DIR ${MLIR_PROJECT_ROOT}/build)
@@ -45,10 +45,13 @@ set(NGRAPH_LIT_TEST_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/test/mlir)
 if (NOT NGRAPH_USE_PREBUILT_MLIR)
     configure_file(${CMAKE_SOURCE_DIR}/cmake/mlir_fetch.cmake.in ${MLIR_PROJECT_ROOT}/CMakeLists.txt @ONLY)
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+                    -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
+                    -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
+                    -DCMAKE_CXX_FLAGS:STRING=${CMAKE_ORIGINAL_CXX_FLAGS} .
                     WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
     # Clone and build llvm + mlir.
-    execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir_llvm
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build .
                     WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 endif()
 

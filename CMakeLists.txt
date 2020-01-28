@@ -182,7 +182,6 @@ endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
-    option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
 
 if (NOT NGRAPH_JSON_ENABLE)
@@ -269,10 +268,6 @@ message(STATUS "NGRAPH_NATIVE_ARCH_ENABLE:            ${NGRAPH_NATIVE_ARCH_ENABL
 message(STATUS "NGRAPH_EXPORT_TARGETS_ENABLE:         ${NGRAPH_EXPORT_TARGETS_ENABLE}")
 if (NGRAPH_CPU_ENABLE)
     message(STATUS "NGRAPH_TBB_ENABLE:                    ${NGRAPH_TBB_ENABLE}")
-endif()
-
-if("${CMAKE_GENERATOR}" STREQUAL "Ninja" AND NGRAPH_MLIR_ENABLE)
-    message(FATAL_ERROR "Ninja generator not supported.")
 endif()
 
 if (NGRAPH_CPU_ENABLE AND NGRAPH_MLIR_ENABLE)
@@ -653,10 +648,11 @@ if (NGRAPH_TEST_UTIL_ENABLE)
 endif()
 
 add_subdirectory(test)
-add_subdirectory(doc/examples)
 
 if (NGRAPH_DOC_BUILD_ENABLE)
     add_subdirectory(doc)
+else()
+    add_subdirectory(doc/examples)
 endif()
 
 if (NGRAPH_PYTHON_BUILD_ENABLE)

@@ -89,6 +89,7 @@ namespace ngraph
             // TODO: We may want to revisit this definition when we do a more general cleanup of
             // element types:
             bool is_integral() const { return !is_real(); }
+            bool is_integral_number() const;
             bool is_signed() const;
             bool is_quantized() const;
             size_t bitwidth() const;
