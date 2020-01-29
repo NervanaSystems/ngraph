@@ -21,7 +21,7 @@ include(ExternalProject)
 # ONNX.proto definition version
 #------------------------------------------------------------------------------
 
-set(ONNX_VERSION 1.5.0)
+set(ONNX_VERSION 1.6.0)
 
 #------------------------------------------------------------------------------
 # Download and install libonnx ...
@@ -55,7 +55,6 @@ ExternalProject_Add(
     BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/bin"
     INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx"
     EXCLUDE_FROM_ALL TRUE
-    BUILD_BYPRODUCTS ${EXTERNAL_PROJECTS_ROOT}/onnx/bin/libonnx.a ${EXTERNAL_PROJECTS_ROOT}/onnx/bin/libonnx_proto.a
 )
 
 # -----------------------------------------------------------------------------
