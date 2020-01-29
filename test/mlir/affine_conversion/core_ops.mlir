@@ -135,8 +135,8 @@ func @simple_lesseq(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !
 // CHECK:       }
 // CHECK-NEXT:  }
 // CHECK:       affine.for %[[K:.*]] = 0 to 16
-// CHECK-NEXT:  affine.for %[[M:.*]] = 0 to 32
 // CHECK-NEXT:  affine.for {{%.*}} = 0 to 8
+// CHECK-NEXT:  affine.for %[[M:.*]] = 0 to 32
 // CHECK:       affine.load
 // CHECK:       affine.load
 // CHECK:       mulf
