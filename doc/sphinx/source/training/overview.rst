@@ -12,10 +12,17 @@ application workload (such as with a distributed TensorFlow script) and leveragi
 infrastructure (container, Docker, or Kubernetes-specific) to spawn processes on 
 many nodes which communicate and work together.
 
+About Workloads 
+---------------
+
+A workload is an :abbr:`Artificial Intelligence (AI)` training job that can be 
+executed via one of the :ref:`distributed-training-methods` across one of the 
+possible :ref:`network-topologies` with dedicated NNP-T devices.
+
 There are a number of assumptions or constraints imposed by the 
 :abbr:`DL (Deep Learning)` workload which have to be facilitated by the 
 infrastructure.  For example, Synchronous :term:`SGD` workloads typically require 
-all ``N`` processes to run -- and if one job fails, they all fail. Jobs using 
+all ``*N*`` processes to run -- and if one job fails, they all fail. Jobs using 
 *asynchronous* techniques, however, (parameter server, for example) can tolerate 
 varying numbers of worker processes dynamically. Jobs using only data center 
 fabric for communication can be scheduled with more leniency on physical 
@@ -23,20 +30,15 @@ placement, while NNP-T jobs using :abbr:`Inter-Chip Links (ICL)` (ICL) in a ring
 or mesh topology have to be scheduled using adjacent accelerators.
 
 In nGraph, we enable the :abbr:`High-Performance Compute (HPC)`, or HPC techniques 
-which use MPI to launch distributed training, providing excellent scaling efficiency 
-with very light overhead. In the current distributed training, nGraph focuses on 
-data parallelism by launching a series of duplicated graphs on each device. In 
-the current hardware topology, the communication happens on the device without 
-copying data to the host. By today, the nGraph supports the data parallelism on 
-two framework: TensorFlow* and PaddlePaddle.
+that use MPI to launch distributed training, providing excellent scaling efficiency 
+with very light overhead. See the :doc:`../core/constructing-graphs/distribute-train`
+documentation for detail on how to deploy data-parallel training. Currently nGraph 
+launching a series of duplicated graphs on each device; communication happens 
+on the device without copying data to the host. nGraph supports data parallelism 
+on two frameworks: TensorFlow* and PaddlePaddle.
 
-About Workloads 
----------------
 
-A workload is an :abbr:`Artificial Intelligence (AI)` training job that can be 
-executed via one of the distributed training methods across one of the possible
-network topologies supported by NNP-T devices.
-
+.. _distributed-training-methods:
 
 Distributed Training Methods
 ----------------------------
@@ -45,6 +47,8 @@ Distributed Training Methods
 * Multi-chip training
 * Multi-chassis training
 
+
+.. _network-topologies:
 
 Network Topologies
 ------------------
@@ -68,3 +72,4 @@ provides fair sharing, fault tolerance, bin-packing, and hardware abstraction
 that makes the use of large compute clusters easy while providing a standardized 
 experience for users.  For more detail on **kube-nnp**, see the documentation 
 provided with the software.
+
