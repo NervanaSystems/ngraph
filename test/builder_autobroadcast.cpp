@@ -58,7 +58,7 @@ TEST(autobroadcast, no_broadcast_incompatable)
     auto rhs = getParamFromShape(s6789);
 
     EXPECT_THROW(ngraph::builder::numpy_broadcast({lhs, rhs}),
-                 ngraph::builder::autobroadcast_incompatible_shapes);
+                 ngraph::builder::numpy_autobroadcast_incompatible_shapes);
 }
 
 // basic broadcast test
