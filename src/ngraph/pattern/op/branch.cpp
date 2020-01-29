@@ -14,20 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <gtest/gtest.h>
-#include <vector>
+#include "ngraph/pattern/op/branch.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
-#include "ngraph/frontend/onnxifi/span.hpp"
+using namespace std;
+using namespace ngraph;
 
-TEST(onnxifi, span)
+constexpr NodeTypeInfo pattern::op::Branch::type_info;
+
+const NodeTypeInfo& pattern::op::Branch::get_type_info() const
 {
-    using namespace ngraph::onnxifi;
+    return type_info;
+}
 
-    std::vector<float> floats{0.f, 0.25f, 0.5f, 1.f, 2.f, 3.f, 4.f, 5.5f};
-    char* buffer{reinterpret_cast<char*>(floats.data())};
-    Span<float> span{buffer, floats.size()};
-    for (std::size_t index{0}; index < span.size(); ++index)
-    {
-        EXPECT_EQ(span.at(index), floats.at(index));
-    }
+bool pattern::op::Branch::match_value(Matcher* matcher,
+                                      const Output<Node>& pattern_value,
+                                      const Output<Node>& graph_value)
+{
+    return matcher->match_value(get_destination(), graph_value);
 }

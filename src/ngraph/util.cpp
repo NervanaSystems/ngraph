@@ -401,6 +401,36 @@ namespace ngraph
         }
         return result;
     }
+
+    template <>
+    int8_t parse_string<int8_t>(const std::string& s)
+    {
+        char* err;
+        int8_t result = strtol(s.c_str(), &err, 10);
+
+        // Check that (1) parsing succeeded and (2) the entire string was used.
+        if (*err != 0)
+        {
+            throw std::runtime_error("Could not parse literal '" + s + "'");
+        }
+
+        return result;
+    }
+
+    template <>
+    uint8_t parse_string<uint8_t>(const std::string& s)
+    {
+        char* err;
+        uint8_t result = strtol(s.c_str(), &err, 10);
+
+        // Check that (1) parsing succeeded and (2) the entire string was used.
+        if (*err != 0)
+        {
+            throw std::runtime_error("Could not parse literal '" + s + "'");
+        }
+
+        return result;
+    }
 }
 
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv)
@@ -639,6 +669,19 @@ vector<float> read_float_vector(shared_ptr<runtime::Tensor> tv)
         // Changed from vector ctor to explicit for loop to add static_cast
         // This silences MSVC warnings
         for (char value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
+    else if (element_type == element::bf16)
+    {
+        vector<bfloat16> vec = read_vector<bfloat16>(tv);
+        float_vec = bfloat16::to_float_vector(vec);
+    }
+    else if (element_type == element::f16)
+    {
+        vector<float16> vec = read_vector<float16>(tv);
+        for (float16 value : vec)
         {
             float_vec.push_back(static_cast<float>(value));
         }

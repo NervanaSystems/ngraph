@@ -48,6 +48,7 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/pattern/op/or.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -244,7 +245,7 @@ static void replace_collapse_node_user(std::shared_ptr<Node> collapsed_node,
         NGRAPH_DEBUG << "node_name: " << node->get_name();
         for (size_t i = 0; i < node->get_input_size(); i++)
         {
-            if (node->input(i).get_source_output().get_node_shared_ptr() == collapsed_node)
+            if (node->get_input_node_shared_ptr(i) == collapsed_node)
             {
                 node->set_argument(i, new_output);
             }
@@ -398,8 +399,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         {
             // swap the inputs if the cell_state and hidden state does not
             // belong to the same Lstm
-            if (hidden_state->input(0).get_source_output().get_node() !=
-                cell_state->input(0).get_source_output().get_node())
+            if (hidden_state->get_input_node_ptr(0) != cell_state->get_input_node_ptr(0))
             {
                 swap_lstm_inputs();
             }
@@ -540,8 +540,11 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                    ref_rnn_type);
     auto lstm_goe = std::make_shared<ngraph::op::GetOutputElement>(lstm, 1);
     // We cannot attach labels to multi-output nodes, so we attach a label to the goe instead
-    auto lstm_goe_label =
-        std::make_shared<pattern::op::Label>(lstm_goe, nullptr, NodeVector{lstm_goe});
+    auto lstm_goe_label = std::make_shared<pattern::op::Label>(
+        lstm_goe,
+        nullptr,
+        OutputVector{std::make_shared<pattern::op::Or>(
+            OutputVector{lstm_goe, std::make_shared<ngraph::op::GetOutputElement>(lstm, 0)})});
     auto lstm_goe_slice =
         std::make_shared<ngraph::op::Slice>(lstm_goe_label, Coordinate{10, 0}, Coordinate{20, 100});
 
@@ -935,6 +938,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     };
 
     auto m = std::make_shared<pattern::RecurrentMatcher>(
+        std::make_shared<ngraph::op::GetOutputElement>(lstm, 1),
         lstm_goe,
         lstm_ct,
         std::set<std::shared_ptr<pattern::op::Label>>{lstm_weights_layer_shared,
@@ -1255,10 +1259,8 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [rnn_left_to_right, rnn_right_to_left](pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
-        auto rnn_ltor_node =
-            std::static_pointer_cast<ngraph::op::Rnn>(pattern_map[rnn_left_to_right]);
-        auto rnn_rtol_node =
-            std::static_pointer_cast<ngraph::op::Rnn>(pattern_map[rnn_right_to_left]);
+        auto rnn_ltor_node = as_type_ptr<ngraph::op::Rnn>(pattern_map[rnn_left_to_right]);
+        auto rnn_rtol_node = as_type_ptr<ngraph::op::Rnn>(pattern_map[rnn_right_to_left]);
 
         if (rnn_ltor_node->get_src_sequence_length() != rnn_rtol_node->get_src_sequence_length())
         {

@@ -359,6 +359,33 @@ std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t ind
     return ::serialize(func, indent, false);
 }
 
+std::string
+    ngraph::serialize_types(const std::vector<std::pair<PartialShape, element::Type>>& types)
+{
+    json attrs = json::array();
+    for (const auto& n : types)
+    {
+        json j;
+        j["shape"] = write_partial_shape(n.first);
+        j["type"] = write_element_type(n.second);
+        attrs.push_back(j);
+    }
+    return attrs.dump();
+}
+
+std::vector<std::pair<PartialShape, element::Type>>
+    ngraph::deserialize_types(const std::string& str)
+{
+    std::vector<std::pair<PartialShape, element::Type>> outs;
+    json js = json::parse(str);
+    for (auto& j : js)
+    {
+        auto s = read_partial_shape(j["shape"]);
+        auto t = read_element_type(j["type"]);
+        outs.emplace_back(s, t);
+    }
+    return outs;
+}
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 {
     shared_ptr<Function> rc;
@@ -780,9 +807,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
         OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
 
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+#endif
 
         switch (get_typeid(type_info))
         {
@@ -3012,7 +3042,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             throw runtime_error(ss.str());
         }
         }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
+#endif
 
         for (auto& control_dep : control_deps_inputs)
         {
@@ -3152,9 +3184,12 @@ json JSONSerializer::serialize_node(const Node& n)
         node["provenance_tags"] = provenance_tags;
     }
 
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+#endif
     switch (get_typeid(type_info))
     {
     case OP_TYPEID::Abs: { break;
@@ -4661,6 +4696,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::UnknownOp: { break;
     }
     }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
     return node;
 }

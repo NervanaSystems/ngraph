@@ -16,24 +16,30 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/pattern/op/pattern.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pattern
     {
-        namespace cpu
+        namespace op
         {
-            namespace pass
+            /// \brief The match always succeeds.
+            class NGRAPH_API True : public Pattern
             {
-                class HalideSubgraphExtraction : public ngraph::pass::FunctionPass
+            public:
+                static constexpr NodeTypeInfo type_info{"patternTrue", 0};
+                const NodeTypeInfo& get_type_info() const override;
+                /// \brief Always matches, does not add node to match list.
+                True()
+                    : Pattern(OutputVector{})
                 {
-                public:
-                    HalideSubgraphExtraction() {}
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-            }
+                }
+                bool match_value(pattern::Matcher* matcher,
+                                 const Output<Node>& pattern_value,
+                                 const Output<Node>& graph_value) override;
+            };
         }
     }
 }

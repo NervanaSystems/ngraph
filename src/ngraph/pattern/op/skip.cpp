@@ -14,14 +14,24 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+#include "ngraph/pattern/op/skip.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
-#pragma once
+using namespace std;
+using namespace ngraph;
 
-#include <mlir/Pass/Pass.h>
+constexpr NodeTypeInfo pattern::op::Skip::type_info;
 
-namespace mlir
+const NodeTypeInfo& pattern::op::Skip::get_type_info() const
 {
-    std::unique_ptr<Pass> createMemoryOptimizationPass();
+    return type_info;
+}
+
+bool pattern::op::Skip::match_value(Matcher* matcher,
+                                    const Output<Node>& pattern_value,
+                                    const Output<Node>& graph_value)
+{
+    matcher->add_node(graph_value);
+    return m_predicate(graph_value) ? matcher->match_arguments(pattern_value, graph_value)
+                                    : matcher->match_value(input_value(0), graph_value);
 }
