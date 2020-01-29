@@ -85,11 +85,11 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_multiple_outputs_op)
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_constants)
 {
     test_provenance_tags<default_opset::Constant>("onnx/provenance_input_tags.prototxt",
-                                                  "<ONNX Input (initializer_of_A) Shape{0}>");
+                                                  "<ONNX Input (initializer_of_A) Shape:{1}>");
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_parameters)
 {
     test_provenance_tags<default_opset::Parameter>("onnx/provenance_input_tags.prototxt",
-                                                   "<ONNX Input (input_B) Shape{0}>");
+                                                   "<ONNX Input (input_B) Shape:{}>");
 }
