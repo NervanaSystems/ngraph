@@ -89,24 +89,6 @@ static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
     return {target_shape, full_shapes};
 }
 
-/// \brief Calculate the output shape of numpy-style broadcast operation for all input nodes.
-///
-/// \param inputs A vector of input nodes for which a common shape should be found
-/// \return A pair that contains the target shape as its first object and a vector of padded
-///         input shapes ready to be broadcasted as the second object
-// static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
-//     get_numpy_broadcast_shapes(const ngraph::NodeVector& inputs)
-// {
-//     std::vector<ngraph::Shape> input_shapes;
-
-//     for (const auto& input : inputs)
-//     {
-//         input_shapes.push_back(input->get_shape());
-//     }
-
-//     return get_numpy_broadcast_shapes(input_shapes);
-// }
-
 static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
     get_numpy_broadcast_shapes(const ngraph::OutputVector& values)
 {
