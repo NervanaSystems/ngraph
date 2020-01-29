@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+
 #include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/util.hpp"
 
@@ -25,7 +26,7 @@ using namespace std;
 namespace ngraph
 {
     /// \brief List of currently supported environment variables
-    NGRAPH_API enum class EnvVarEnum : uint32_t
+    enum class NGRAPH_API EnvVarEnum : uint32_t
     {
         NGRAPH_CODEGEN = 0,
         NGRAPH_COMPILER_DEBUGINFO_ENABLE = 1,
