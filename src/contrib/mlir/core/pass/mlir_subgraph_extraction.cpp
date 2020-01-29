@@ -418,6 +418,7 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
     }
 }
 
+template <typename T>
 static bool can_use_mkldnn_conv_callback(ngraph::Node* node)
 {
     auto convolution = static_cast<const T*>(node);
