@@ -25,7 +25,6 @@ namespace ngraph
 {
     namespace pass
     {
-        std::unique_ptr<mlir::Pass> createNgDialectFusedOpsPass(mlir::ModuleOp module,
-                                                                mlir::MLIRContext* context);
+        std::unique_ptr<mlir::Pass> createNgDialectFusedOpsPass();
     }
 }

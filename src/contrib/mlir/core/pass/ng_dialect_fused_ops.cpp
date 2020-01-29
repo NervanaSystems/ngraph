@@ -34,8 +34,6 @@
 #include <mlir/Transforms/Passes.h>
 
 #include <iostream>
-#define DEBUG_TYPE "mlir-compiler"
-#define PASS_NAME "ngraph_dialect_fusion"
 
 using llvm::SmallVector;
 using llvm::StringRef;
@@ -46,17 +44,17 @@ using namespace mlir;
 using namespace mlir::edsc;
 using namespace mlir::edsc::op;
 
+#define PASS_NAME "fuse-ngraph-dialect"
+#define DEBUG_TYPE "mlir-compiler"
+
 namespace mlir
 {
     static Value createSgemmOp(
         PatternRewriter& rewriter, Operation* old_op, Value input1, Value input2, Value input3)
     {
         auto castedOp0 = dyn_cast_or_null<NGAddOp>(old_op);
-        SmallVector<Value, 4> values;
+        SmallVector<Value, 4> values{input1, input2, input3};
         SmallVector<NamedAttribute, 4> attrs;
-        values.push_back(input1);
-        values.push_back(input2);
-        values.push_back(input3);
         attrs.emplace_back(
             rewriter.getIdentifier("alpha"),
             rewriter.getFloatAttr(mlir::Builder(rewriter.getContext()).getF32Type(), 1.0));
@@ -80,35 +78,26 @@ namespace
     class NgDialectFusedOpsPass : public mlir::ModulePass<NgDialectFusedOpsPass>
     {
     public:
-        NgDialectFusedOpsPass(mlir::ModuleOp& module, mlir::MLIRContext* context)
-            : m_module(module)
-            , m_context(context)
-        {
-        }
-
+        NgDialectFusedOpsPass() {}
         NgDialectFusedOpsPass(const NgDialectFusedOpsPass& obj);
 
     private:
         void runOnModule() override;
-        mlir::ModuleOp m_module;
-        mlir::MLIRContext* m_context;
     };
 }
 
 NgDialectFusedOpsPass::NgDialectFusedOpsPass(const NgDialectFusedOpsPass& obj)
-    : m_module(obj.m_module)
-    , m_context(obj.m_context)
 {
 }
 
 void NgDialectFusedOpsPass::runOnModule()
 {
     OwningRewritePatternList patterns;
-    mlir::populateWithGenerated(m_context, &patterns);
+    mlir::populateWithGenerated(&getContext(), &patterns);
 
     // Gather functions to be processed. Note that new functions will be added to module as part
     // of the function signature conversion so we have to collect the original ones before hand.
-    SmallVector<FuncOp, 2> origFuncOps(m_module.getOps<FuncOp>());
+    SmallVector<FuncOp, 2> origFuncOps(getModule().getOps<FuncOp>());
 
     for (auto origFunc : origFuncOps)
     {
@@ -116,8 +105,10 @@ void NgDialectFusedOpsPass::runOnModule()
     }
 }
 
-std::unique_ptr<Pass> ngraph::pass::createNgDialectFusedOpsPass(mlir::ModuleOp module,
-                                                                mlir::MLIRContext* context)
+std::unique_ptr<Pass> ngraph::pass::createNgDialectFusedOpsPass()
 {
-    return std::make_unique<NgDialectFusedOpsPass>(module, context);
+    return std::make_unique<NgDialectFusedOpsPass>();
 }
+
+static PassRegistration<NgDialectFusedOpsPass>
+    pass(PASS_NAME, "Fuse ngraph dialct based on the pattern match");
