@@ -22,7 +22,7 @@ possible :ref:`network-topologies` with dedicated NNP-T devices.
 There are a number of assumptions or constraints imposed by the 
 :abbr:`DL (Deep Learning)` workload which have to be facilitated by the 
 infrastructure.  For example, Synchronous :term:`SGD` workloads typically require 
-all ``*N*`` processes to run -- and if one job fails, they all fail. Jobs using 
+all ``N`` processes to run -- and if one job fails, they all fail. Jobs using 
 *asynchronous* techniques, however, (parameter server, for example) can tolerate 
 varying numbers of worker processes dynamically. Jobs using only data center 
 fabric for communication can be scheduled with more leniency on physical 
@@ -33,9 +33,9 @@ In nGraph, we enable the :abbr:`High-Performance Compute (HPC)`, or HPC techniqu
 that use MPI to launch distributed training, providing excellent scaling efficiency 
 with very light overhead. See the :doc:`../core/constructing-graphs/distribute-train`
 documentation for detail on how to deploy data-parallel training. Currently nGraph 
-launching a series of duplicated graphs on each device; communication happens 
-on the device without copying data to the host. nGraph supports data parallelism 
-on two frameworks: TensorFlow* and PaddlePaddle.
+launches a series of duplicated graphs on each device; communication happens 
+on the device without copying data to the host. nGraph currently supports data 
+parallelism on two frameworks: TensorFlow* and PaddlePaddle.
 
 
 .. _distributed-training-methods:
