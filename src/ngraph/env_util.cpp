@@ -23,6 +23,13 @@
 
 using namespace std;
 
+struct EnvVarInfo
+{
+    string env_str;
+    string default_val;
+    string desc;
+};
+
 std::unordered_map<ngraph::EnvVarEnum, std::string>& get_env_var_cache()
 {
     static std::unordered_map<ngraph::EnvVarEnum, string> s_env_var_cache;
@@ -74,7 +81,7 @@ void ngraph::log_envvar_cache()
     }
 }
 
-static map<ngraph::EnvVarEnum, ngraph::EnvVarInfo> get_env_registry()
+static map<ngraph::EnvVarEnum, EnvVarInfo> get_env_registry()
 {
     // This expands the env var list in env_tbl.hpp into a list of enumerations that look like this:
     // {ngraph::EnvVarEnum::NGRAPH_CODEGEN, {"NGRAPH_CODEGEN", "FALSE", "Enable ngraph codegen"}},
@@ -82,7 +89,7 @@ static map<ngraph::EnvVarEnum, ngraph::EnvVarInfo> get_env_registry()
     //                            "FALSE", "Enable compiler debug info when codegen is enabled"}},
     // ...
 
-    static const map<ngraph::EnvVarEnum, ngraph::EnvVarInfo> envvar_info_map{
+    static const map<ngraph::EnvVarEnum, EnvVarInfo> envvar_info_map{
 #define NGRAPH_DEFINE_ENVVAR(ENUMID, NAME, DEFAULT, DESCRIPTION)                                   \
     {ENUMID, {NAME, DEFAULT, DESCRIPTION}},
 #include "ngraph/env_tbl.hpp"
@@ -118,10 +125,6 @@ void ngraph::log_envvar_registry()
     }
 }
 
-// Above this is registry related stuff
-//--------------------------
-
-// template <typename ET>
 int ngraph::set_environment(const ngraph::EnvVarEnum env_var_enum,
                             const char* value,
                             const int overwrite)
@@ -146,7 +149,6 @@ int ngraph::set_environment(const ngraph::EnvVarEnum env_var_enum,
 #endif
 }
 
-// template <typename ET>
 int ngraph::unset_environment(const ngraph::EnvVarEnum env_var_enum)
 {
     const char* env_var = get_env_var_name(env_var_enum).c_str();
@@ -157,10 +159,6 @@ int ngraph::unset_environment(const ngraph::EnvVarEnum env_var_enum)
     return unsetenv(env_var);
 #endif
 }
-// set and unset programmatical apis
-//----------------------
-
-// --------- below this is caching apis
 
 std::string ngraph::getenv_string(const ngraph::EnvVarEnum env_var)
 {

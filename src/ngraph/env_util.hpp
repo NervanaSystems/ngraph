@@ -25,7 +25,7 @@ using namespace std;
 namespace ngraph
 {
     /// \brief List of currently supported environment variables
-    enum NGRAPH_API class EnvVarEnum : uint32_t
+    NGRAPH_API enum class EnvVarEnum : uint32_t
     {
         NGRAPH_CODEGEN = 0,
         NGRAPH_COMPILER_DEBUGINFO_ENABLE = 1,
@@ -75,13 +75,6 @@ namespace ngraph
         NGRAPH_ENV_VARS_COUNT
     };
 
-    struct EnvVarInfo
-    {
-        string env_str;
-        string default_val;
-        string desc;
-    };
-
     /// \brief Get the names environment variable as a string.
     /// \param env_var The enum value of the environment variable to get.
     /// \return Returns string by value or an empty string if the environment
@@ -105,16 +98,6 @@ namespace ngraph
     /// \return Returns the boolean value of the environment variable.
     NGRAPH_API bool getenv_bool(const EnvVarEnum env_var);
 
-    /// \brief Adds the environment variable with it's value to the map.
-    /// \param env_var The enum value of the environment variable to add.
-    /// \param val The string value of the environment variable to add.
-    // void addenv_to_cache(const EnvVarEnum env_var, const char* val);
-
-    /// \brief Gets value of the environment variable from the map.
-    /// \param env_var The enum value of the environment variable to get.
-    /// \return Returns string value of the environment variable.
-    // std::string getenv_from_cache(const EnvVarEnum env_var);
-
     /// \brief Logs the current environment variables and their current values.
     NGRAPH_API void log_envvar_cache();
 
@@ -128,25 +111,13 @@ namespace ngraph
     ///         0 = do not overwrite.
     ///         1 = overwrite the environment variable with this new value.
     /// \return Returns 0 if successful, -1 in case of error.
-    // template <typename ET>
-    // NGRAPH_API int set_environment(ET env_var, const char* value, const int overwrite = 0);
     NGRAPH_API int
         set_environment(const EnvVarEnum env_var, const char* value, const int overwrite = 0);
 
     /// \brief Unset the environment variable.
     /// \param env_var The enum value of the environment variable to unset.
     /// \return Returns 0 if successful, -1 in case of error.
-    // template <typename ET>
     NGRAPH_API int unset_environment(const EnvVarEnum env_var);
-
-    /// \brief Check if the environment variable is present in the cache map.
-    /// \param env_var The enum value the environment variable to check.
-    /// \return Returns true if found, else false.
-    // bool env_cache_contains(const EnvVarEnum env_var);
-
-    /// \brief Delete the environment variable from the cache map.
-    /// \param env_var The enum value of the environment variable to delete.
-    // void erase_env_from_cache(const EnvVarEnum env_var);
 
     /// \brief Get string name of the environment variable from the registry.
     /// \param env_var The enum value of the environment variable.
