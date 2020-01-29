@@ -282,11 +282,11 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
         auto& outputs = sg.get_outputs();
         auto& nodes = sg.get_nodes();
 
-        NodeVector inputs_vector(inputs.begin(), inputs.end());
-        NodeVector outputs_vector(outputs.begin(), outputs.end());
+        OutputVector inputs_vector(inputs.begin(), inputs.end());
+        OutputVector outputs_vector(outputs.begin(), outputs.end());
         // must store nodes in topological order
         auto nodes_list = subgraph_topological_sort(nodes);
-        NodeVector nodes_vector(nodes_list.begin(), nodes_list.end());
+        OutputVector nodes_vector(nodes_list.begin(), nodes_list.end());
         auto ck = std::make_shared<CompiledKernel>(nodes_vector, outputs_vector, inputs_vector);
 
         ck_nodes.push_back(ck);
