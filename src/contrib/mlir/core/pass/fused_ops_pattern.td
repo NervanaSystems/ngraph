@@ -29,10 +29,7 @@ include "core/ngraph_dialect/ops.td"
 // This files declares nGraph fused operations that table-gen uses to create C++ code
 // For more information about tablegen. See https://llvm.org/docs/TableGen/index.html
 //
-// The output files are fused_ops.h.inc and fused_ops.cpp.inc and are generated at build time
-// The file declares base classes to ease opcode definitions and hoist common parts out.
-// Each class fixes a set of attributes. For example:
-//
+// The output file fused_ops_pattern.h.inc is generated at build time
 // Each def will corresponding to a C++ class
 
 // Native code call to c++ helper funnction to create SGEMM Op

@@ -22,31 +22,14 @@
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
 
-#include <llvm/ADT/DenseSet.h>
-#include <llvm/ADT/STLExtras.h>
-#include <llvm/Analysis/TargetTransformInfo.h>
-#include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
 #include <llvm/IR/Module.h>
-#include <llvm/Support/ErrorOr.h>
-#include <llvm/Support/MemoryBuffer.h>
-#include <llvm/Support/SourceMgr.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Target/TargetMachine.h>
-#include <mlir/Conversion/LoopToStandard/ConvertLoopToStandard.h>
-#include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
-#include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
-#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 #include <mlir/EDSC/Builders.h>
 #include <mlir/EDSC/Helpers.h>
 #include <mlir/EDSC/Intrinsics.h>
-#include <mlir/ExecutionEngine/ExecutionEngine.h>
-#include <mlir/ExecutionEngine/OptUtils.h>
-#include <mlir/IR/AffineExpr.h>
 #include <mlir/IR/IntegerSet.h>
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/IR/StandardTypes.h>
 #include <mlir/Pass/PassManager.h>
-#include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>
 #include <mlir/Transforms/Passes.h>
 
@@ -69,11 +52,8 @@ namespace mlir
         PatternRewriter& rewriter, Operation* old_op, Value input1, Value input2, Value input3)
     {
         auto castedOp0 = dyn_cast_or_null<NGAddOp>(old_op);
-        (void)castedOp0;
         SmallVector<Value, 4> values;
-        (void)values;
         SmallVector<NamedAttribute, 4> attrs;
-        (void)attrs;
         values.push_back(input1);
         values.push_back(input2);
         values.push_back(input3);
@@ -86,7 +66,6 @@ namespace mlir
         attrs.emplace_back(rewriter.getIdentifier("transA"), rewriter.getBoolAttr(false));
         attrs.emplace_back(rewriter.getIdentifier("transB"), rewriter.getBoolAttr(false));
         SmallVector<Type, 4> types;
-        (void)types;
         for (auto v : castedOp0.getODSResults(0))
         {
             types.push_back(v.getType());
