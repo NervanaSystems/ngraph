@@ -20,6 +20,7 @@
 #include <string>
 
 #include "chrome_trace.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/log.hpp"
 
 using namespace std;
@@ -27,7 +28,7 @@ using namespace ngraph;
 
 static bool read_tracing_env_var()
 {
-    static const bool is_enabled = (getenv("NGRAPH_ENABLE_TRACING") != nullptr);
+    static const bool is_enabled = getenv_bool("NGRAPH_ENABLE_TRACING");
 
     return is_enabled;
 }
