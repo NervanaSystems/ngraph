@@ -50,17 +50,18 @@ namespace ngraph
             return os.str();
         }
 
-        /// \brief Calculate the output shape of numpy-style broadcast operation for two shapes.
         ///
-        /// more info:
-        /// https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules
-        /// example:
-        /// left: [3, 1, 10] right: [5, 1]
-        /// return: [3, 5, 10]
+        /// \brief      Calculate the output shape of numpy-style broadcast operation for two
+        ///             shapes.
         ///
-        /// \param lhs_shape First input shape.
-        /// \param rhs_shape Second input Shape.
-        /// \return Broadcast shape of input shapes.
+        /// \note       More info: https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules
+        ///             Example: left: [3, 1, 10] right: [5, 1] return: [3, 5, 10]
+        ///
+        /// \param      lhs_shape  First input shape.
+        /// \param      rhs_shape  Second input Shape.
+        ///
+        /// \return     Broadcast shape of input shapes.
+        ///
         static Shape calculate_broadcast_shape(Shape lhs_shape, Shape rhs_shape)
         {
             Shape result;
@@ -89,20 +90,22 @@ namespace ngraph
             return result;
         };
 
-        /// \brief Calculate the output shape of numpy-style broadcast operation for all input
-        /// shapes.
         ///
-        /// This function finds the maximum tensor shape that will be the result of element-wise
-        /// operation
-        /// that will be applied to the input shapes vector. The function also prepares the shape of
-        /// each
-        /// input for the element-wise operation by left-padding those shapes so that their rank is
-        /// equal
-        /// to the left_shape's rank.
+        /// \brief      Calculate the output shape of numpy-style broadcast operation for all input
+        ///             shapes.
         ///
-        /// \param input_shapes A vector of input shapes for which a common shape should be found
-        /// \return A pair that contains the target shape as its first object and a vector of padded
-        ///         input shapes ready to be broadcasted as the second object
+        ///             This function finds the maximum tensor shape that will be the result of
+        ///             element-wise operation that will be applied to the input shapes vector.
+        ///             The function also prepares the shape of each input for the element-wise
+        ///             operation by left-padding those shapes so that their rank is equal to the
+        ///             left_shape's rank.
+        ///
+        /// \param      input_shapes  A vector of input shapes for which a common shape should be
+        ///                           found
+        ///
+        /// \return     A pair that contains the target shape as its first object and a vector of
+        ///             padded input shapes ready to be broadcasted as the second object
+        ///
         static std::pair<Shape, std::vector<Shape>>
             get_numpy_broadcast_shapes(const std::vector<Shape>& input_shapes)
         {

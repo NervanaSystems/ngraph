@@ -40,21 +40,30 @@ namespace ngraph
             static std::string error_str(const ngraph::Shape& shape1, const ngraph::Shape& shape2);
         };
 
-        /// \brief Cast shape of all input nodes for an element-wise operation that requires
-        ///        shape-compatibility
         ///
-        /// \param values Original list of inputs
+        /// \brief      Broadcast all values, if necessary, to obtain equal shapes according
+        ///             to NumPy's auto-broadcasting scheme.
         ///
-        /// \return Numpy-style broadcasted list of nodes.
+        /// \note       There are some shape combinations which the autobroadcast algoritm cannot
+        ///             handle. An exception is thrown when such combinations are provided to this
+        ///             function.
+        ///
+        /// \param      values  Vector of output values.
+        ///
+        /// \exception  ngraph::builder::numpy_autobroadcast_incompatible_shapes
+        ///
+        /// \return     Vector of broadcasted values.
+        ///
         OutputVector numpy_broadcast_outputs(const OutputVector& values);
 
-        /// \brief Cast shape of an output to the requested output shape using NumPy's broadcasting
-        ///        rules
         ///
-        /// \param value original value
-        /// \param shape requested output shape
+        /// \brief      Broadcast input value to provided shape using NumPy's auto-broadcasting rules.
         ///
-        /// \return Broadcast output.
+        /// \param      value  Input value
+        /// \param      shape  Requested output shape
+        ///
+        /// \return     Node producing values with requested shape.
+        ///
         std::shared_ptr<Node> numpy_broadcast(const Output<Node>& value, const Shape& shape);
 
         /// \brief Wrap two graph values, if necessary, to obtain values with identical shapes,
@@ -139,22 +148,25 @@ namespace ngraph
                 operand1, shaped_op2_op3.first, shaped_op2_op3.second);
         }
 
-        /// \brief Cast shape of two outputs to make them compatible for an element-wise binary
-        ///        operation.
         ///
-        /// If necessary the right-hand-side argument will be broadcast to match the shape
-        /// of left-hand-side argument. The starting of the mutually equal shape is
-        /// specified by the argument "start_match_axis", and if it is not set,
-        /// suffix matching is assumed.
+        /// \brief      Cast shape of two outputs to make them compatible for an element-wise binary
+        ///             operation.
         ///
-        /// This style of broadcast was used in ONNX Op sets prior to version 7, where it was
-        /// replaced by numpy-style broadcasting.
+        /// \note       If necessary the right-hand-side argument will be broadcast to match the
+        ///             shape of left-hand-side argument. The starting of the mutually equal shape
+        ///             is specified by the argument "start_match_axis", and if it is not set suffix
+        ///             matching is assumed.
         ///
-        /// \param left Node which contain input of binary op.
-        /// \param right Node which contain input of binary op.
-        /// \param start_match_axis position in shape denoting start of the mutually equal shape
+        /// \note       This style of broadcast was used in ONNX Op sets prior to version 7, where
+        ///             it was replaced by NumPy style auto-broadcasting mechanism.
         ///
-        /// \return Left and right node after broadcasting.
+        /// \param      left              Node which contain input of binary op.
+        /// \param      right             Node which contain input of binary op.
+        /// \param      start_match_axis  Position in shape denoting start of the mutually equal
+        ///                               shape
+        ///
+        /// \return     Left and right node after broadcasting.
+        ///
         OutputVector legacy_broadcast_for_binary_operation(const Output<Node>& left,
                                                            const Output<Node>& right,
                                                            size_t start_match_axis);
