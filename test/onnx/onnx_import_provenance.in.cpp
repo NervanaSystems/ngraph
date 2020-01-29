@@ -94,14 +94,14 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_constants)
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_input_tags.prototxt"));
     test_provenance_tags<default_opset::Constant>(function,
-                                                  "<ONNX Input (initializer_of_A) Shape{0}>");
+                                                  "<ONNX Input (initializer_of_A) Shape:{1}>");
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_parameters)
 {
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_input_tags.prototxt"));
-    test_provenance_tags<default_opset::Parameter>(function, "<ONNX Input (input_B) Shape{0}>");
+    test_provenance_tags<default_opset::Parameter>(function, "<ONNX Input (input_B) Shape:{}>");
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_downgrade_pass)
