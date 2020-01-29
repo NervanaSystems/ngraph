@@ -18,9 +18,11 @@
 
 #include <cstdlib>
 
+#include "ngraph/env_util.hpp"
+
 namespace ngraph
 {
-    static bool s_provenance_enabled = std::getenv("NGRAPH_PROVENANCE_ENABLE") != nullptr;
+    static bool s_provenance_enabled = getenv_bool("NGRAPH_PROVENANCE_ENABLE");
     void set_provenance_enabled(bool enabled);
     bool get_provenance_enabled();
 }
