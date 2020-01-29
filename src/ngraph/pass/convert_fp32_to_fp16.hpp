@@ -16,13 +16,29 @@
 
 #pragma once
 
-#include <cstdlib>
-
-#include "ngraph/env_util.hpp"
+#include <ngraph/pass/graph_rewrite.hpp>
 
 namespace ngraph
 {
-    static bool s_provenance_enabled = getenv_bool("NGRAPH_PROVENANCE_ENABLE");
-    void set_provenance_enabled(bool enabled);
-    bool get_provenance_enabled();
-}
+    namespace pass
+    {
+        class ConvertFP32ToFP16;
+
+    } // namespace pass
+} // namespace ngraph
+
+class NGRAPH_API ngraph::pass::ConvertFP32ToFP16 : public ngraph::pass::GraphRewrite
+{
+public:
+    ConvertFP32ToFP16()
+        : GraphRewrite()
+    {
+        convert_constants_precision();
+        convert_parameters_precision();
+    }
+
+private:
+    void convert_constants_precision();
+
+    void convert_parameters_precision();
+};

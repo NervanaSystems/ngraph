@@ -344,7 +344,7 @@ namespace
         unsigned inputCount = f.getType().getNumInputs();
         // we find out output values by looking at returned values
         // any return should return all outputs of the subgraph
-        f.walk([this, &outputCount, inputCount](NGReturnOp ret) {
+        f.walk([&outputCount, inputCount](NGReturnOp ret) {
             for (unsigned i = 0; i < ret.getNumOperands(); i++)
             {
                 // annotate instructions defining outputs with the arg idx of the output
@@ -1316,38 +1316,39 @@ namespace
         }
         attrs.gemmAttrs2d.ldc = attrs.gemmAttrs2d.n;
 
-        int broadcastHint;
+        BroadcastType broadcastHint = BroadcastType::ERROR;
         if (vBias.rank() == 0)
         {
             // Scalar
-            broadcastHint = 2;
+            broadcastHint = BroadcastType::ROWCOLUMN;
         }
         else if (vBias.rank() == 2)
         {
             if (biasShape[0] == attrs.gemmAttrs2d.m && biasShape[1] == 1)
             {
-                broadcastHint = 1;
+                broadcastHint = BroadcastType::COLUMN;
             }
             else if (biasShape[0] == 1 && biasShape[1] == attrs.gemmAttrs2d.n)
             {
-                broadcastHint = 0;
+                broadcastHint = BroadcastType::ROW;
             }
-            else
+            else if (biasShape[0] == attrs.gemmAttrs2d.m && biasShape[1] == attrs.gemmAttrs2d.n)
             {
-                broadcastHint = -1;
+                broadcastHint = BroadcastType::NONE;
             }
         }
         else
         {
             if (biasShape[0] == attrs.gemmAttrs2d.m)
             {
-                broadcastHint = 1;
+                broadcastHint = BroadcastType::COLUMN;
             }
             else if (biasShape[0] == attrs.gemmAttrs2d.n)
             {
-                broadcastHint = 0;
+                broadcastHint = BroadcastType::ROW;
             }
         }
+        NGRAPH_CHECK(broadcastHint != BroadcastType::ERROR, "Unhandled broadcast");
         attrs.gemmAttrs2d.broadcastHint = broadcastHint;
 
         auto int64Ty = rewriter.getIntegerType(64);

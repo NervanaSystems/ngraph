@@ -870,7 +870,7 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
                        matOut,
                        std::max<size_t>(1, ldc));
 
-    if (broadcastHint == 0)
+    if (broadcastHint == BroadcastType::ROW)
     {
         std::vector<float> ones(m, 1.0f);
         cblas::cblas_sgemm(cblas::Layout::RowMajor,
@@ -888,7 +888,7 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
                            matOut,
                            std::max<size_t>(1, ldc));
     }
-    else if (broadcastHint == 1)
+    else if (broadcastHint == BroadcastType::COLUMN)
     {
         std::vector<float> ones(n, 1.0f);
         cblas::cblas_sgemm(cblas::Layout::RowMajor,
@@ -906,7 +906,7 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
                            matOut,
                            std::max<size_t>(1, ldc));
     }
-    else if (broadcastHint == 2)
+    else if (broadcastHint == BroadcastType::ROWCOLUMN)
     {
         std::vector<float> ones(m, 1.0f);
         std::vector<float> bias(n, *matC);
@@ -925,7 +925,7 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
                            matOut,
                            std::max<size_t>(1, ldc));
     }
-    else
+    else if (broadcastHint == BroadcastType::NONE)
     {
         std::vector<float> identity(n * n, 0.0f);
         for (auto i = 0; i < n * n; i += n + 1)
@@ -946,6 +946,10 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
                            1.0f,
                            matOut,
                            std::max<size_t>(1, ldc));
+    }
+    else
+    {
+        NGRAPH_UNREACHABLE("Unsupported broadcast");
     }
 }
 
