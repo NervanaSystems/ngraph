@@ -39,6 +39,8 @@ graph {
     type {
       tensor_type {
         elem_type: 6
+        shape {
+        }
       }
     }
   }
