@@ -439,8 +439,6 @@ set (SRC
     op/util/binary_elementwise_comparison.hpp
     op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise_logical.hpp
-    op/util/broadcasting.cpp
-    op/util/broadcasting.hpp
     op/util/fused_op.cpp
     op/util/fused_op.hpp
     op/util/index_reduction.cpp

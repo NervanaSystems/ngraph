@@ -22,11 +22,11 @@
 
 #include "conv_transpose.hpp"
 #include "exceptions.hpp"
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/opsets/opset0.hpp"
 #include "ngraph/shape.hpp"
 #include "utils/convpool.hpp"
@@ -118,7 +118,7 @@ namespace ngraph
 
                     return {std::make_shared<ngraph::opset0::Add>(
                         conv_node,
-                        ngraph::op::make_broadcast_node(bias, conv_node->get_shape(), 1))};
+                        ngraph::builder::make_broadcast_node(bias, conv_node->get_shape(), 1))};
                 }
 
             } // namespace set_1

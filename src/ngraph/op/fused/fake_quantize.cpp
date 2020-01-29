@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "fake_quantize.hpp"
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
@@ -30,7 +31,6 @@
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;
@@ -90,7 +90,7 @@ NodeVector op::FakeQuantize::decompose_op() const
 
     if (m_auto_broadcast.m_type == AutoBroadcastType::NUMPY)
     {
-        OutputVector broadcasted_nodes = numpy_style_broadcast_values(
+        OutputVector broadcasted_nodes = builder::numpy_broadcast_outputs(
             OutputVector{data, input_low, input_high, output_low, output_high});
 
         data = broadcasted_nodes.at(0);
@@ -101,9 +101,9 @@ NodeVector op::FakeQuantize::decompose_op() const
     }
     else if (m_auto_broadcast.m_type == AutoBroadcastType::PDPD)
     {
-        OutputVector broadcasted_nodes =
-            pdpd_style_broadcast(OutputVector{data, input_low, input_high, output_low, output_high},
-                                 m_auto_broadcast.m_axis);
+        OutputVector broadcasted_nodes = builder::pdpd_broadcast(
+            OutputVector{data, input_low, input_high, output_low, output_high},
+            m_auto_broadcast.m_axis);
 
         data = broadcasted_nodes.at(0);
         input_low = broadcasted_nodes.at(1);
