@@ -3,27 +3,22 @@ producer_name: "nGraph ONNX Importer"
 graph {
   node {
     input: "initializer_of_A"
-    input: "input_B"
+    input: "initializer_of_B"
     output: "output_of_add"
     op_type: "Add"
     name: "Add_node"
   }
   name: "test_graph"
   initializer {
-    dims: 1
     data_type: 7
     int64_data: 1
     name: "initializer_of_A"
   }
-  input {
-    name: "input_B"
-    type {
-      tensor_type {
-        elem_type: 7
-        shape {
-        }
-      }
-    }
+  initializer {
+    dims: 0
+    data_type: 7
+    int64_data: 2
+    name: "initializer_of_B"
   }
   output {
     name: "output_of_add"

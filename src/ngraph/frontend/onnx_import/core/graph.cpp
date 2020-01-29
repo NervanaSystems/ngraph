@@ -74,10 +74,10 @@ namespace ngraph
             }
 
             static std::string build_input_provenance_tag(const std::string& input_name,
-                                                          const Shape& shape)
+                                                          const PartialShape& shape)
             {
                 std::stringstream tag_builder;
-                tag_builder << "<ONNX Input (" << input_name << ") " << shape << ">";
+                tag_builder << "<ONNX Input (" << input_name << ") Shape:" << shape << ">";
                 return tag_builder.str();
             }
 
