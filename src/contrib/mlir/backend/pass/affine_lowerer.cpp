@@ -346,7 +346,7 @@ namespace
         unsigned inputCount = f.getType().getNumInputs();
         // we find out output values by looking at returned values
         // any return should return all outputs of the subgraph
-        f.walk([this, &outputCount, inputCount](NGReturnOp ret) {
+        f.walk([&outputCount, inputCount](NGReturnOp ret) {
             for (unsigned i = 0; i < ret.getNumOperands(); i++)
             {
                 // annotate instructions defining outputs with the arg idx of the output
@@ -1324,7 +1324,7 @@ namespace
         }
         attrs.gemmAttrs2d.ldc = attrs.gemmAttrs2d.n;
 
-        int broadcastHint;
+        int broadcastHint = -2;
         if (vBias.rank() == 0)
         {
             // Scalar
@@ -1356,6 +1356,7 @@ namespace
                 broadcastHint = 0;
             }
         }
+        NGRAPH_CHECK(broadcastHint != -2, "Unhandled broadcast");
         attrs.gemmAttrs2d.broadcastHint = broadcastHint;
 
         auto int64Ty = rewriter.getIntegerType(64);
