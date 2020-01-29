@@ -21,6 +21,8 @@ using namespace ngraph;
 
 bool pass::MinMaxShapePropagation::run_on_function(std::shared_ptr<Function> f)
 {
+    bool is_max_output_shape_set = false;
+    PartialShape max_output_shape;
     for (auto& node : f->get_ordered_ops())
     {
         if (node->is_parameter() || node->is_constant())
@@ -34,11 +36,16 @@ bool pass::MinMaxShapePropagation::run_on_function(std::shared_ptr<Function> f)
             // if max shape is set for the output shape, propagate the max.
             if (!node->output(0).get_max_partial_shape().is_dynamic())
             {
-                node->set_output_max_partial_shape(0, node->output(0).get_max_partial_shape());
+                is_max_output_shape_set = true;
+                max_output_shape = node->output(0).get_max_partial_shape();
+                node->set_output_max_partial_shape(0, max_output_shape);
                 // Propagate the shape
                 f->validate_nodes_and_infer_types();
-                // propagate the max ?
             }
+        }
+        else if (is_max_output_shape_set) // propagate the max ?
+        {
+            node->output(0).set_max_partial_shape(max_output_shape);
         }
     }
     return true;

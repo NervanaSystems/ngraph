@@ -89,14 +89,22 @@ NGRAPH_TEST(${BACKEND_NAME}, range_subgraph)
     auto start = make_shared<op::Parameter>(element::i32, Shape{});
     auto stop = make_shared<op::Parameter>(element::i32, Shape{});
     auto step = make_shared<op::Parameter>(element::i32, Shape{});
+    auto start_2 = make_shared<op::Parameter>(element::i32, Shape{});
     PartialShape out_max_shape{15};
+    PartialShape out_max_shape_2{10};
 
+    // subgraph
     auto range = make_shared<op::Range>(start, stop, step);
-    range->output(0).set_max_partial_shape(out_max_shape);
-
     auto negative = make_shared<op::Negative>(range);
+    auto abs = make_shared<op::Abs>(negative);
+    auto sum = make_shared<op::Sum>(abs, AxisSet{0});
+    auto range_2 = make_shared<op::Range>(start_2, sum, step);
+    auto negative_2 = make_shared<op::Negative>(range_2);
 
-    auto f = make_shared<Function>(NodeVector{negative}, ParameterVector{start, stop, step});
+    range->output(0).set_max_partial_shape(out_max_shape);
+    range_2->output(0).set_max_partial_shape(out_max_shape_2);
+    auto f =
+        make_shared<Function>(NodeVector{negative_2}, ParameterVector{start, stop, step, start_2});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 
@@ -111,17 +119,22 @@ NGRAPH_TEST(${BACKEND_NAME}, range_subgraph)
     copy_data(t_stop, vector<int32_t>{10});
     auto t_step = backend->create_tensor(element::i32, Shape{});
     copy_data(t_step, vector<int32_t>{1});
+    auto t_start_2 = backend->create_tensor(element::i32, Shape{});
+    copy_data(t_start_2, vector<int32_t>{40});
     auto result = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
 
-    vector<int32_t> expected_result{0, -1, -2, -3, -4, -5, -6, -7, -8, -9};
+    vector<int32_t> expected_result{-40, -41, -42, -43, -44};
 
-    EXPECT_EQ(out_max_shape, range->get_output_partial_shape(0));
+    EXPECT_EQ(out_max_shape, range->get_output_shape(0));
     EXPECT_EQ(out_max_shape, range->output(0).get_max_partial_shape());
     EXPECT_EQ(out_max_shape, negative->get_output_shape(0));
-    // should this be true?
-    // EXPECT_EQ(out_max_shape, negative->output(0).get_max_partial_shape());
-    handle->call_with_validate({result}, {t_start, t_stop, t_step});
-    EXPECT_EQ(out_max_shape, range->get_output_shape(0));
-    EXPECT_EQ(PartialShape{10}, result->get_shape());
+
+    EXPECT_EQ(out_max_shape, negative->output(0).get_max_partial_shape());
+    EXPECT_EQ(out_max_shape, abs->output(0).get_max_partial_shape());
+    EXPECT_EQ(out_max_shape, sum->output(0).get_max_partial_shape());
+    EXPECT_EQ(out_max_shape_2, range_2->output(0).get_max_partial_shape());
+    EXPECT_EQ(out_max_shape_2, negative_2->output(0).get_max_partial_shape());
+    handle->call_with_validate({result}, {t_start, t_stop, t_step, t_start_2});
+    EXPECT_EQ(PartialShape{5}, result->get_shape());
     ASSERT_EQ(expected_result, read_vector<int32_t>(result));
 }
