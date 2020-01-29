@@ -40,6 +40,23 @@ namespace ngraph
             static std::string error_str(const ngraph::Shape& shape1, const ngraph::Shape& shape2);
         };
 
+        /// \brief Cast shape of all input nodes for an element-wise operation that requires
+        ///        shape-compatibility
+        ///
+        /// \param values Original list of inputs
+        ///
+        /// \return Numpy-style broadcasted list of nodes.
+        OutputVector numpy_broadcast_outputs(const OutputVector& values);
+
+        /// \brief Cast shape of an output to the requested output shape using NumPy's broadcasting
+        ///        rules
+        ///
+        /// \param value original value
+        /// \param shape requested output shape
+        ///
+        /// \return Broadcast output.
+        std::shared_ptr<Node> numpy_broadcast(const Output<Node>& value, const Shape& shape);
+
         /// \brief Wrap two graph values, if necessary, to obtain values with identical shapes,
         /// using NumPy's auto-broadcast rules.
         ///
@@ -121,29 +138,6 @@ namespace ngraph
             return std::make_shared<NodeType>(
                 operand1, shaped_op2_op3.first, shaped_op2_op3.second);
         }
-
-        //-----------------------------------------------------------------------------------------
-        //
-        //                      ONNX HELPER FUNCTIONS
-        //
-        //-----------------------------------------------------------------------------------------
-
-        /// \brief Cast shape of all input nodes for an element-wise operation that requires
-        ///        shape-compatibility
-        ///
-        /// \param values Original list of inputs
-        ///
-        /// \return Numpy-style broadcasted list of nodes.
-        OutputVector numpy_broadcast_outputs(const OutputVector& values);
-
-        /// \brief Cast shape of an output to the requested output shape using NumPy's broadcasting
-        ///        rules
-        ///
-        /// \param value original value
-        /// \param shape requested output shape
-        ///
-        /// \return Broadcast output.
-        std::shared_ptr<Node> numpy_broadcast(const Output<Node>& value, const Shape& shape);
 
         /// \brief Cast shape of two outputs to make them compatible for an element-wise binary
         ///        operation.
