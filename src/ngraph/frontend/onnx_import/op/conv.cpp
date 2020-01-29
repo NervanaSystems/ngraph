@@ -55,7 +55,7 @@ namespace ngraph
                             filters_shape.at(0) = filters_shape.at(0) / groups;
                             filters_shape.insert(filters_shape.begin(), groups);
 
-                            auto reshaped_filters =
+                            const auto reshaped_filters =
                                 ngraph::builder::opset1::reshape(filters, filters_shape);
 
                             return std::make_shared<default_opset::GroupConvolution>(
@@ -84,10 +84,10 @@ namespace ngraph
                 NodeVector conv(const Node& node)
                 {
                     const NodeVector& inputs = node.get_ng_inputs();
-                    auto data = inputs.at(0);
-                    auto filters = inputs.at(1);
+                    const auto data = inputs.at(0);
+                    const auto filters = inputs.at(1);
 
-                    int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
+                    const int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
 
                     ASSERT_VALID_ARGUMENT(
                         node,
@@ -96,8 +96,8 @@ namespace ngraph
                          (groups <= static_cast<int64_t>(filters->get_shape().at(0)))))
                         << "incorrect value of 'group' attribute: " << groups;
 
-                    std::size_t n_data_channels{data->get_shape().at(1)};
-                    std::size_t n_filters_channels{filters->get_shape().at(0)};
+                    const std::size_t n_data_channels{data->get_shape().at(1)};
+                    const std::size_t n_filters_channels{filters->get_shape().at(0)};
 
                     ASSERT_VALID_ARGUMENT(node, n_data_channels % groups == 0)
                         << "provided group attribute value must be a multiple of data channels "
@@ -106,21 +106,21 @@ namespace ngraph
                         << "provided group attribute value must be a multiple of filter channels "
                            "count.";
 
-                    auto strides = convpool::get_strides(node);
-                    auto dilations = convpool::get_dilations(node);
-                    auto paddings = convpool::get_pads(node);
-                    ngraph::op::PadType auto_pad_type = convpool::get_auto_pad(node);
+                    const auto strides = convpool::get_strides(node);
+                    const auto dilations = convpool::get_dilations(node);
+                    const auto paddings = convpool::get_pads(node);
+                    const ngraph::op::PadType auto_pad_type = convpool::get_auto_pad(node);
                     const auto& padding_below = paddings.first;
                     const auto& padding_above = paddings.second;
 
-                    auto conv_node = make_ng_convolution(data,
-                                                         filters,
-                                                         strides,
-                                                         dilations,
-                                                         padding_below,
-                                                         padding_above,
-                                                         groups,
-                                                         auto_pad_type);
+                    const auto conv_node = make_ng_convolution(data,
+                                                               filters,
+                                                               strides,
+                                                               dilations,
+                                                               padding_below,
+                                                               padding_above,
+                                                               groups,
+                                                               auto_pad_type);
 
                     // no bias param
                     if (inputs.size() < 3)
@@ -128,10 +128,10 @@ namespace ngraph
                         return {conv_node};
                     }
 
-                    auto bias = inputs.at(2);
+                    const auto bias = inputs.at(2);
                     const Shape& new_shape = conv_node->get_shape();
 
-                    auto broadcasted_bias = std::make_shared<default_opset::Broadcast>(
+                    const auto broadcasted_bias = std::make_shared<default_opset::Broadcast>(
                         bias,
                         default_opset::Constant::create(
                             element::i64, Shape{new_shape.size()}, new_shape),
