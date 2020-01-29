@@ -40,6 +40,7 @@
 #include "op/clip.hpp"
 #include "op/concat.hpp"
 #include "op/constant.hpp"
+#include "op/constant_of_shape.hpp"
 #include "op/conv.hpp"
 #include "op/conv_integer.hpp"
 #include "op/conv_transpose.hpp"
@@ -257,6 +258,7 @@ namespace ngraph
             REGISTER_OPERATOR("Clip", 11, clip);
             REGISTER_OPERATOR("Concat", 1, concat);
             REGISTER_OPERATOR("Constant", 1, constant);
+            REGISTER_OPERATOR("ConstantOfShape", 1, constant_of_shape);
             REGISTER_OPERATOR("Conv", 1, conv);
             REGISTER_OPERATOR("ConvInteger", 1, conv_integer);
             REGISTER_OPERATOR("ConvTranspose", 1, conv_transpose);
