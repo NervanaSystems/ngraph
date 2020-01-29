@@ -419,7 +419,7 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
                 continue;
             }
 
-            auto arg = m_convertlayout->input(0).get_source_output().get_node_shared_ptr();
+            auto arg = m_convertlayout->get_input_node_shared_ptr(0);
             if (is_type<ngraph::op::Constant>(arg))
             {
                 auto m_input = static_pointer_cast<ngraph::op::Constant>(arg);
