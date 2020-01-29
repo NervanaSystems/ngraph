@@ -129,13 +129,14 @@ namespace ngraph
                     }
 
                     auto bias = inputs.at(2);
-                    const Shape& new_shape = conv_node->get_shape();
+                    Shape new_shape(conv_node->get_shape().size(), 1);
+                    new_shape[1] = conv_node->get_shape()[1];
 
-                    auto broadcasted_bias = std::make_shared<ngraph::opset0::Broadcast>(
+                    auto reshaped_bias = std::make_shared<ngraph::opset1::Reshape>(
                         bias,
-                        new_shape,
-                        ngraph::op::calculate_broadcast_axes(new_shape, bias->get_shape(), 1));
-                    return {std::make_shared<ngraph::opset0::Add>(conv_node, broadcasted_bias)};
+                        ngraph::op::Constant::create(element::i64, Shape{new_shape.size()}, new_shape),
+                        true);
+                    return {std::make_shared<default_opset::Add>(conv_node, reshaped_bias)};
                 }
 
             } // namespace set_1
