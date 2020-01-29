@@ -184,6 +184,8 @@ int main(int argc, char** argv)
     bool visualize = false;
     int warmup_iterations = 1;
     bool copy_data = true;
+    bool compare = false;
+    bool save_tensors = false;
     bool dot_file = false;
     bool double_buffer = false;
 
@@ -222,6 +224,14 @@ int main(int argc, char** argv)
         else if (arg == "--no_copy_data")
         {
             copy_data = false;
+        }
+        else if (arg == "--compare")
+        {
+            compare = true;
+        }
+        else if (arg == "--save_tensors")
+        {
+            save_tensors = true;
         }
         else if (arg == "-v" || arg == "--visualize")
         {
@@ -292,6 +302,8 @@ OPTIONS
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
+        --compare                 compare outputs with tensors from <file>.out
+        --save_tensors            save input and output tensors to <file>.in and <file>.out
         --dot                     Generate Graphviz dot file
         --double_buffer           Double buffer inputs and outputs
 )###";
@@ -447,7 +459,7 @@ OPTIONS
                 else
                 {
                     perf_data = run_benchmark(
-                        f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                        f, backend, iterations, timing_detail, warmup_iterations, copy_data, compare, save_tensors, model+".in", model+".out");
                 }
                 auto perf_shape = to_perf_shape(f, perf_data);
                 aggregate_perf_data.insert(

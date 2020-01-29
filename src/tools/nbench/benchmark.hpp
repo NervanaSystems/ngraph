@@ -29,4 +29,8 @@ std::vector<ngraph::runtime::PerformanceCounter> run_benchmark(std::shared_ptr<n
                                                                size_t iterations,
                                                                bool timing_detail,
                                                                size_t warmup_iterations,
-                                                               bool copy_data);
+                                                               bool copy_data,
+                                                               bool compare,
+                                                               bool save_tensors,
+                                                               const std::string& in_file,
+                                                               const std::string& out_file);
