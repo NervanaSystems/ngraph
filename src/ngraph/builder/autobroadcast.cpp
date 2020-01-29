@@ -214,7 +214,7 @@ namespace ngraph
 {
     namespace builder
     {
-        autobroadcast_incompatible_shapes::autobroadcast_incompatible_shapes(
+        numpy_autobroadcast_incompatible_shapes::numpy_autobroadcast_incompatible_shapes(
             const ngraph::Shape& shape1, const ngraph::Shape& shape2)
             : ngraph::ngraph_error(error_str(shape1, shape2))
             , m_shape1(shape1)
@@ -222,18 +222,8 @@ namespace ngraph
         {
         }
 
-        const ngraph::Shape& autobroadcast_incompatible_shapes::get_shape1() const
-        {
-            return m_shape1;
-        }
-
-        const ngraph::Shape& autobroadcast_incompatible_shapes::get_shape2() const
-        {
-            return m_shape2;
-        }
-
-        std::string autobroadcast_incompatible_shapes::error_str(const ngraph::Shape& shape1,
-                                                                 const ngraph::Shape& shape2)
+        std::string numpy_autobroadcast_incompatible_shapes::error_str(const ngraph::Shape& shape1,
+                                                                       const ngraph::Shape& shape2)
         {
             ostringstream os;
             os << "Auto-broadcast not possible for these input shapes:"
@@ -257,9 +247,9 @@ namespace ngraph
         ///        be.
         ///
         /// If this algorithm cannot handle the particular combination of shapes supplied as
-        /// inputs, throw an ngraph::builder::autobroadcast_incompatible_shapes exception.
+        /// inputs, throw an ngraph::builder::numpy_autobroadcast_incompatible_shapes exception.
         ///
-        /// \exception ngraph::builder::autobroadcast_incompatible_shapes
+        /// \exception ngraph::builder::numpy_autobroadcast_incompatible_shapes
         static Autobroadcast_plan
             compute_shapes_and_broadcast_axes(const ngraph::Shape& arg1_in_shape,
                                               const ngraph::Shape& arg2_in_shape)
@@ -309,7 +299,7 @@ namespace ngraph
                 }
                 else
                 {
-                    throw autobroadcast_incompatible_shapes(arg1_in_shape, arg2_in_shape);
+                    throw numpy_autobroadcast_incompatible_shapes(arg1_in_shape, arg2_in_shape);
                 }
 
                 if (arg1_size)

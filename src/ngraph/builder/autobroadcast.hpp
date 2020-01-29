@@ -27,14 +27,11 @@ namespace ngraph
 {
     namespace builder
     {
-        class autobroadcast_incompatible_shapes : public ngraph::ngraph_error
+        class numpy_autobroadcast_incompatible_shapes : public ngraph::ngraph_error
         {
         public:
-            autobroadcast_incompatible_shapes(const ngraph::Shape& shape1,
-                                              const ngraph::Shape& shape2);
-
-            const ngraph::Shape& get_shape1() const;
-            const ngraph::Shape& get_shape2() const;
+            numpy_autobroadcast_incompatible_shapes(const ngraph::Shape& shape1,
+                                                    const ngraph::Shape& shape2);
 
         private:
             const ngraph::Shape m_shape1;
@@ -70,7 +67,7 @@ namespace ngraph
         /// - If an exception was not thrown, then the return value's \p first and \p second
         ///   elements point to ngraph::Node objects whose output values have the same shape.
         ///
-        /// \exception ngraph::builder::autobroadcast_incompatible_shapes
+        /// \exception ngraph::builder::numpy_autobroadcast_incompatible_shapes
         std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
             numpy_broadcast(const std::pair<Output<Node>, Output<Node>>& args);
 
@@ -87,7 +84,7 @@ namespace ngraph
         ///
         /// \return The sink node of any/all nodes created by this function.  Will never be null.
         ///
-        /// \exception ngraph::builder::autobroadcast_incompatible_shapes
+        /// \exception ngraph::builder::numpy_autobroadcast_incompatible_shapes
         template <typename NodeType>
         std::shared_ptr<NodeType>
             make_with_numpy_broadcast(const Output<Node>& operand1_reshapeable,
@@ -114,7 +111,7 @@ namespace ngraph
         ///
         /// \return The sink node of any/all nodes created by this function.  Will never be null.
         ///
-        /// \exception ngraph::builder::autobroadcast_incompatible_shapes
+        /// \exception ngraph::builder::numpy_autobroadcast_incompatible_shapes
         template <typename NodeType>
         std::shared_ptr<Node> make_with_numpy_broadcast(const Output<Node>& operand1,
                                                         const Output<Node>& operand2_reshapeable,
