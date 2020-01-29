@@ -346,7 +346,7 @@ namespace
         unsigned inputCount = f.getType().getNumInputs();
         // we find out output values by looking at returned values
         // any return should return all outputs of the subgraph
-        f.walk([this, &outputCount, inputCount](NGReturnOp ret) {
+        f.walk([&outputCount, inputCount](NGReturnOp ret) {
             for (unsigned i = 0; i < ret.getNumOperands(); i++)
             {
                 // annotate instructions defining outputs with the arg idx of the output
