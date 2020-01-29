@@ -22,7 +22,7 @@
 using namespace ngraph;
 
 std::shared_ptr<Function>
-    ngraph::specialize_function(std::shared_ptr<Function> f,
+    ngraph::specialize_function(std::shared_ptr<const Function> f,
                                 const std::vector<element::Type>& parameter_element_types,
                                 const std::vector<PartialShape>& parameter_shapes,
                                 const std::vector<void*>& parameter_values)
@@ -32,7 +32,7 @@ std::shared_ptr<Function>
 }
 
 std::shared_ptr<Function>
-    ngraph::specialize_function(std::shared_ptr<Function> f,
+    ngraph::specialize_function(std::shared_ptr<const Function> f,
                                 const std::vector<element::Type>& parameter_element_types,
                                 const std::vector<PartialShape>& parameter_shapes,
                                 const std::vector<void*>& parameter_values,
