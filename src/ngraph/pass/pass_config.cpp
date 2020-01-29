@@ -33,7 +33,7 @@ pass::PassConfig::PassConfig()
     // E.g., NGRAPH_PASS_ENABLES="CoreFusion:0;LikeReplacement:1;CPUCollapseDims" would
     //       set disables on CoreFusion and enables on LikeReplacement and CPUCollapseDims
     //
-    static const string pass_enables = getenv_string("NGRAPH_PASS_ENABLES");
+    string pass_enables = getenv_string("NGRAPH_PASS_ENABLES");
     if (!pass_enables.empty())
     {
         stringstream ss;
