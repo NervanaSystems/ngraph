@@ -26,7 +26,7 @@ using namespace std;
 namespace ngraph
 {
     /// \brief List of currently supported environment variables
-    enum class NGRAPH_API EnvVarEnum : uint32_t
+    enum class EnvVarEnum : uint32_t
     {
         NGRAPH_CODEGEN = 0,
         NGRAPH_COMPILER_DEBUGINFO_ENABLE = 1,
