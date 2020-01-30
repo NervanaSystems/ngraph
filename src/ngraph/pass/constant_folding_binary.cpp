@@ -528,7 +528,7 @@ shared_ptr<op::Constant> fold_constant_binary_arithmetic(shared_ptr<op::Constant
                                               b->get_shape(),
                                               subtract_v1_node->get_autob());
             return make_shared<op::Constant>(
-                    binary->get_output_element_type(0), out_shape, data_ptr);
+                binary->get_output_element_type(0), out_shape, data_ptr);
         }
         else
         {
@@ -573,7 +573,8 @@ bool is_supported_binary_op(std::shared_ptr<Node> n)
         is_type<op::v1::Maximum>(n) || is_type<op::v0::Minimum>(n) || is_type<op::v1::Minimum>(n) ||
         is_type<op::v0::And>(n) || is_type<op::v1::LogicalAnd>(n) || is_type<op::v0::Or>(n) ||
         is_type<op::v1::LogicalOr>(n) || is_type<op::v0::Xor>(n) ||
-        is_type<op::v1::LogicalXor>(n) || is_type<op::v0::Subtract>(n) || is_type<op::v1::Subtract>(n));
+        is_type<op::v1::LogicalXor>(n) || is_type<op::v0::Subtract>(n) ||
+        is_type<op::v1::Subtract>(n));
 }
 
 void pass::ConstantFolding::construct_constant_binary()
