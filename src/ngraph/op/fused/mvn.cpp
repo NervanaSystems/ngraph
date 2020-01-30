@@ -18,11 +18,11 @@
 #include "mvn.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;

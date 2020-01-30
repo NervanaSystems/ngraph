@@ -21,7 +21,6 @@
 #include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/op/util/rnn_cell_base.hpp"
 #include "ngraph/util.hpp"
 
