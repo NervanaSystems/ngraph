@@ -21,7 +21,7 @@ include(ExternalProject)
 # ONNX.proto definition version
 #------------------------------------------------------------------------------
 
-set(ONNX_VERSION 1.5.0)
+set(ONNX_VERSION 1.6.0)
 
 #------------------------------------------------------------------------------
 # Download and install libonnx ...

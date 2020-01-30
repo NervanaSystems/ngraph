@@ -103,8 +103,8 @@ namespace ngraph
             auto schema_registry = onnx::OpSchemaRegistry::Instance();
             for (const auto& node : m_graph_proto.node())
             {
-                const auto node_op_schema =
-                    schema_registry->GetSchema(node.op_type(), static_cast<int>(11), node.domain());
+                const auto node_op_schema = schema_registry->GetSchema(
+                    node.op_type(), static_cast<int>(ONNX_OPSET_VERSION), node.domain());
 
                 if (node_op_schema && node_op_schema->HasFunction())
                 {
