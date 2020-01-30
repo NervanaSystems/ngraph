@@ -132,7 +132,7 @@ namespace ngraph
                     Shape new_shape(conv_node->get_shape().size(), 1);
                     new_shape[1] = conv_node->get_shape()[1];
 
-                    auto reshaped_bias = std::make_shared<ngraph::opset1::Reshape>(
+                    auto reshaped_bias = std::make_shared<default_opset::Reshape>(
                         bias,
                         default_opset::Constant::create(
                             element::i64, Shape{new_shape.size()}, new_shape),
