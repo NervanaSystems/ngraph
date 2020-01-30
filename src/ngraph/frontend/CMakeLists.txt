@@ -29,7 +29,7 @@ if (NGRAPH_FLUID_ENABLE)
     add_subdirectory(fluid)
 endif()
 
-option(NGRAPH_ATEN_ENABLE "Enable build for PyTorch ATen support" ON)
+option(NGRAPH_ATEN_ENABLE "Enable build for PyTorch ATen support" OFF)
 NORMALIZE_BOOL(NGRAPH_ATEN_ENABLE)
 message(STATUS "NGRAPH_ATEN_ENABLE:                   ${NGRAPH_ATEN_ENABLE}")
 
