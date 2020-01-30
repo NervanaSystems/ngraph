@@ -352,30 +352,59 @@ TEST(provenance, builder)
     }
 }
 
-TEST(provenance, fused)
+TEST(provenance, fused_copy_origin_tags)
 {
+    set_provenance_enabled(true);
+
     auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{2, 3, 4});
     p1->add_provenance_tag("P1");
     auto g = make_shared<op::Gelu>(p1);
     g->add_provenance_tag("G");
     auto r = make_shared<op::Result>(g);
     auto f = make_shared<Function>(ResultVector{r}, ParameterVector{p1});
+
     pass::Manager manager;
     manager.register_pass<pass::FusedOpDecomposition>();
     manager.run_passes(f);
+
     traverse_nodes(f, [&](const std::shared_ptr<Node>& node) {
+        auto tags = node->get_provenance_tags();
         if (node == p1)
         {
-            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"P1"}));
+            EXPECT_EQ(tags.size(), 1);
+            EXPECT_TRUE(tags.find("P1") != tags.end());
         }
         else if (node == r)
         {
         }
         else
         {
-            EXPECT_EQ(node->get_provenance_tags(), (ProvSet{"G"}));
+            EXPECT_TRUE(tags.find("G") != tags.end());
+            EXPECT_TRUE(tags.find("<Decomposed from Gelu>") != tags.end());
         }
     });
+}
+
+TEST(provenance, fused_decomposition_tag)
+{
+    set_provenance_enabled(true);
+
+    auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{2, 3, 4});
+    auto fused_op = make_shared<op::MVN>(p1);
+    auto result = make_shared<op::Result>(fused_op);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{p1});
+
+    pass::Manager manager;
+    manager.register_pass<pass::FusedOpDecomposition>();
+    manager.run_passes(f);
+
+    const auto tag = "<Decomposed from MVN>";
+    auto tag_check = [&tag](std::shared_ptr<ngraph::Node> node) {
+        auto tags = node->get_provenance_tags();
+        EXPECT_TRUE(tags.find(tag) != tags.end());
+    };
+    const auto decomposed_op = f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    traverse_nodes(as_node_vector(decomposed_op->outputs()), tag_check, false, {p1});
 }
 
 TEST(provenance, topk_setk)
