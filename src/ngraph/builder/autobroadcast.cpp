@@ -155,10 +155,11 @@ namespace ngraph
                                                      const Shape& output_shape,
                                                      const Shape& source_shape)
         {
+            shared_ptr<Node> broadcasted_node = value.as_single_output_node();
             // If node already has the required shape, return original node
             if (output_shape == value.get_shape())
             {
-                return value.as_single_output_node();
+                return broadcasted_node;
             }
 
             if (source_shape.size() != output_shape.size())
@@ -170,11 +171,11 @@ namespace ngraph
             AxisVector broadcast_axes;
             Shape squeezed_shape;
             // Positions of axes which have length of 1 are needed to calculate broadcast_axes
-            // for nGraph broadcast operation. We need to remove all ones from source shape
+            // for nGraph broadcast operation. We need to remove ones from source shape
             // to avoid broadcasting axis conflict.
             for (size_t index = 0; index < output_shape.size(); ++index)
             {
-                if (source_shape.at(index) == 1)
+                if (source_shape.at(index) == 1 && output_shape.at(index) != 1)
                 {
                     broadcast_axes.push_back(index);
                 }
@@ -184,11 +185,18 @@ namespace ngraph
                 }
             }
 
-            // Remove axes which have length of 1 from source shape
-            Output<Node> broadcasted_value = std::make_shared<op::Reshape>(
-                value, get_default_order(value.get_shape()), squeezed_shape);
+            if (squeezed_shape != value.get_shape())
+            {
+                broadcasted_node = builder::reshape(value, squeezed_shape);
+            }
 
-            return std::make_shared<op::Broadcast>(broadcasted_value, output_shape, broadcast_axes);
+            if (!broadcast_axes.empty())
+            {
+                broadcasted_node =
+                    make_shared<op::Broadcast>(broadcasted_node, output_shape, broadcast_axes);
+            }
+
+            return broadcasted_node;
         }
 
         /// \brief      Broadcast input node.
