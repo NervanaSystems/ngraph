@@ -57,7 +57,8 @@ namespace ngraph
         OutputVector numpy_broadcast_outputs(const OutputVector& values);
 
         ///
-        /// \brief      Broadcast input value to provided shape using NumPy's auto-broadcasting rules.
+        /// \brief      Broadcast input value to provided shape using NumPy's auto-broadcasting
+        ///             rules.
         ///
         /// \param      value  Input value
         /// \param      shape  Requested output shape

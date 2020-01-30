@@ -54,7 +54,8 @@ namespace ngraph
         /// \brief      Calculate the output shape of numpy-style broadcast operation for two
         ///             shapes.
         ///
-        /// \note       More info: https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules
+        /// \note       More info:
+        /// https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules
         ///             Example: left: [3, 1, 10] right: [5, 1] return: [3, 5, 10]
         ///
         /// \param      lhs_shape  First input shape.
