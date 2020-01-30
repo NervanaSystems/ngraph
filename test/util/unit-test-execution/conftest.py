@@ -2,11 +2,6 @@ import logging as log
 import sys
 import subprocess
 import os
-# import re
-# from pathlib import Path
-# from shutil import copyfile
-# from typing import Iterable, List
-
 import pytest
 
 
@@ -18,17 +13,17 @@ def pytest_addoption(parser):
         required=True,
     )
 
+
 @pytest.fixture(scope="session")
 def gtest_filter(request):
     return request.config.getoption('gtest_filter')
 
 
-def shell(cmd, env=None, cwd=None):
+def shell(cmd, env=None):
     """
     Run command execution in specified environment
     :param cmd: list containing command and its parameters
     :param env: set of environment variables to set for this command
-    :param cwd: working directory from which execute call
     :return:
     """
     if sys.platform.startswith('linux') or sys.platform == 'darwin':
@@ -37,7 +32,7 @@ def shell(cmd, env=None, cwd=None):
         cmd = " ".join(cmd)
 
     sys.stdout.write("Running command:\n" + "".join(cmd) + "\n")
-    p = subprocess.Popen(cmd, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    p = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                          universal_newlines=True)
     stdout = []
     while True:
@@ -70,15 +65,15 @@ def create_list_test(stdout):
                 list_test.append(first_name + second_name.strip())
     return list_test
 
+
 def pytest_generate_tests(metafunc):
     gtest_filter = metafunc.config.getoption(name='gtest_filter')
     if 'gtest_filter' in metafunc.fixturenames and gtest_filter is not None:
-        executable = os.path.join("/home/abelyako/repositories/dldt/bin/intel64/Debug", "unit-test")
+        executable = os.path.join(os.environ.get('PATH_TO_EXE'), "unit-test")
         cmd_line = executable + ' --gtest_filter=' + gtest_filter + ' --gtest_list_tests'
         log.info('Executing {} for getting list of test'.format(executable))
         retcode, stdout = shell(cmd=cmd_line)
         assert retcode == 0, "unit-test --gtest_list_tests execution failed. Return code: {}".format(retcode)
         stdout = stdout.split('\n')
         list_test = create_list_test(stdout)
-        print('a')
         metafunc.parametrize(argnames="gtest_filter", argvalues=list_test)
