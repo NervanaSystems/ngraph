@@ -34,7 +34,7 @@ static inline opAttrs getAttrs(size_t index)
     return opAttrsVec[index];
 }
 
-static bool inline compare_mkldnn_dims(mkldnn_dims_t& arr1, mkldnn_dims_t& arr2, size_t size)
+static bool inline compareMkldnnDims(mkldnn_dims_t& arr1, mkldnn_dims_t& arr2, size_t size)
 {
     for (auto i = 0; i < size; i++)
     {
@@ -46,8 +46,7 @@ static bool inline compare_mkldnn_dims(mkldnn_dims_t& arr1, mkldnn_dims_t& arr2,
     return true;
 }
 
-static bool
-    compare_mkldnn_strides_order(mkldnn_dims_t& strides1, mkldnn_dims_t& strides2, size_t size)
+static bool compareMkldnnStridesOrder(mkldnn_dims_t& strides1, mkldnn_dims_t& strides2, size_t size)
 {
     std::vector<size_t> indices1(size, 0), indices2(size, 0);
     for (size_t i = 0; i < size; i++)
@@ -72,8 +71,7 @@ static bool
     return true;
 }
 
-static bool compare_mkldnn_md_formats(const mkldnn::memory::desc& lhs,
-                                      const mkldnn::memory::desc& rhs)
+static bool compareMkldnnMdFormats(const mkldnn::memory::desc& lhs, const mkldnn::memory::desc& rhs)
 {
     mkldnn_memory_desc_t md1 = lhs.data, md2 = rhs.data;
 
@@ -97,58 +95,58 @@ static bool compare_mkldnn_md_formats(const mkldnn::memory::desc& lhs,
     auto blk2 = md2.format_desc.blocking;
 
     if (blk1.inner_nblks != blk2.inner_nblks ||
-        !compare_mkldnn_dims(blk1.inner_blks, blk2.inner_blks, blk1.inner_nblks) ||
-        !compare_mkldnn_dims(blk1.inner_idxs, blk2.inner_idxs, blk1.inner_nblks))
+        !compareMkldnnDims(blk1.inner_blks, blk2.inner_blks, blk1.inner_nblks) ||
+        !compareMkldnnDims(blk1.inner_idxs, blk2.inner_idxs, blk1.inner_nblks))
     {
         return false;
     }
 
-    return compare_mkldnn_strides_order(blk1.strides, blk2.strides, md1.ndims);
+    return compareMkldnnStridesOrder(blk1.strides, blk2.strides, md1.ndims);
 }
 
-static mkldnn::memory convert_layout_if_diff(const mkldnn::memory::desc& lhs,
-                                             const mkldnn::memory::desc& rhs,
-                                             void* ptr,
-                                             mkldnn::engine cpu_engine)
+static mkldnn::memory convertLayoutIfDiff(const mkldnn::memory::desc& lhs,
+                                          const mkldnn::memory::desc& rhs,
+                                          void* ptr,
+                                          mkldnn::engine cpuEngine)
 {
-    if (!compare_mkldnn_md_formats(lhs, rhs))
+    if (!compareMkldnnMdFormats(lhs, rhs))
     {
-        mkldnn::memory reorder_in = {lhs, cpu_engine, ptr};
-        mkldnn::memory reorder_out = {rhs, cpu_engine};
-        mkldnn::reorder convert(reorder_in, reorder_out);
-        std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, reorder_in},
-                                                             {MKLDNN_ARG_DST, reorder_out}};
-        mkldnn::stream s(cpu_engine);
+        mkldnn::memory reorderIn = {lhs, cpuEngine, ptr};
+        mkldnn::memory reorderOut = {rhs, cpuEngine};
+        mkldnn::reorder convert(reorderIn, reorderOut);
+        std::unordered_map<int, mkldnn::memory> execArgs = {{MKLDNN_ARG_SRC, reorderIn},
+                                                            {MKLDNN_ARG_DST, reorderOut}};
+        mkldnn::stream s(cpuEngine);
         try
         {
-            convert.execute(s, exec_args);
+            convert.execute(s, execArgs);
             s.wait();
         }
         catch (const mkldnn::error& e)
         {
             throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
         }
-        return reorder_out;
+        return reorderOut;
     }
     else
     {
-        return mkldnn::memory{lhs, cpu_engine, ptr};
+        return mkldnn::memory{lhs, cpuEngine, ptr};
     }
 }
 
-static void convert_output_layout(mkldnn::memory& reorder_in,
-                                  const mkldnn::memory::desc& rhs,
-                                  void* ptr,
-                                  mkldnn::engine cpu_engine)
+static void convertOutputLayout(mkldnn::memory& reorderIn,
+                                const mkldnn::memory::desc& rhs,
+                                void* ptr,
+                                mkldnn::engine cpuEngine)
 {
-    mkldnn::memory reorder_out = {rhs, cpu_engine, ptr};
-    mkldnn::reorder convert(reorder_in, reorder_out);
-    std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, reorder_in},
-                                                         {MKLDNN_ARG_DST, reorder_out}};
-    mkldnn::stream s(cpu_engine);
+    mkldnn::memory reorderOut = {rhs, cpuEngine, ptr};
+    mkldnn::reorder convert(reorderIn, reorderOut);
+    std::unordered_map<int, mkldnn::memory> execArgs = {{MKLDNN_ARG_SRC, reorderIn},
+                                                        {MKLDNN_ARG_DST, reorderOut}};
+    mkldnn::stream s(cpuEngine);
     try
     {
-        convert.execute(s, exec_args);
+        convert.execute(s, execArgs);
         s.wait();
     }
     catch (const mkldnn::error& e)
@@ -157,7 +155,7 @@ static void convert_output_layout(mkldnn::memory& reorder_in,
     }
 }
 
-static mkldnn::algorithm get_conv_algo()
+static mkldnn::algorithm getConvAlgo()
 {
 #if defined(NGRAPH_ENABLE_CPU_CONV_AUTO)
     return mkldnn::algorithm::convolution_auto;
@@ -195,36 +193,36 @@ static void __mlir_mkldnn_convbias(size_t rank,
     }
 
     // build mkldnn primitive and execute
-    mkldnn::algorithm alg = get_conv_algo();
+    mkldnn::algorithm alg = getConvAlgo();
     mkldnn::memory::data_type dtype = mkldnn::memory::data_type::f32;
-    auto data_desc = mkldnn::memory::desc(dataDims, dtype, mkldnn::memory::FORMAT::any);
-    auto data_desc_origin = mkldnn::memory::desc(dataDims, dtype, dataStrides);
-    auto weights_desc = mkldnn::memory::desc(weightsDims, dtype, mkldnn::memory::FORMAT::any);
-    auto weights_desc_origin = mkldnn::memory::desc(weightsDims, dtype, weightsStrides);
-    auto bias_desc = mkldnn::memory::desc(biasDims, dtype, mkldnn::memory::FORMAT::any);
-    auto result_desc = mkldnn::memory::desc(resultDims, dtype, mkldnn::memory::FORMAT::any);
-    auto result_desc_origin = mkldnn::memory::desc(resultDims, dtype, resultStrides);
+    auto dataDesc = mkldnn::memory::desc(dataDims, dtype, mkldnn::memory::FORMAT::any);
+    auto dataDescOrigin = mkldnn::memory::desc(dataDims, dtype, dataStrides);
+    auto weightsDesc = mkldnn::memory::desc(weightsDims, dtype, mkldnn::memory::FORMAT::any);
+    auto weightsDescOrigin = mkldnn::memory::desc(weightsDims, dtype, weightsStrides);
+    auto biasDesc = mkldnn::memory::desc(biasDims, dtype, mkldnn::memory::FORMAT::any);
+    auto resultDesc = mkldnn::memory::desc(resultDims, dtype, mkldnn::memory::FORMAT::any);
+    auto resultDescOrigin = mkldnn::memory::desc(resultDims, dtype, resultStrides);
 
     mkldnn::primitive_attr attr;
-    mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
-    mkldnn::convolution_forward::primitive_desc conv_pd;
+    mkldnn::engine cpuEngine(mkldnn::engine::kind::cpu, 0);
+    mkldnn::convolution_forward::primitive_desc convPd;
     mkldnn::post_ops ops;
-    const float ops_scale = 1.f;
-    const float ops_alpha = -0.f; // relu negative slope
-    const float ops_beta = 0.f;
-    ops.append_eltwise(ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+    const float opsScale = 1.f;
+    const float opsAlpha = -0.f; // relu negative slope
+    const float opsBeta = 0.f;
+    ops.append_eltwise(opsScale, mkldnn::algorithm::eltwise_relu, opsAlpha, opsBeta);
     if (rank == 3)
     {
         auto convAttrs = getAttrs(index).convAttrs1d;
         try
         {
-            auto conv_desc = mkldnn::convolution_forward::desc(
+            auto convDesc = mkldnn::convolution_forward::desc(
                 mkldnn::prop_kind::forward_inference,
                 alg,
-                data_desc,
-                weights_desc,
-                bias_desc,
-                result_desc,
+                dataDesc,
+                weightsDesc,
+                biasDesc,
+                resultDesc,
                 mkldnn::memory::dims{convAttrs.windowStrides[0]},
                 mkldnn::memory::dims{convAttrs.windowDilation[0] - 1},
                 mkldnn::memory::dims{convAttrs.padBelow[0]},
@@ -233,7 +231,7 @@ static void __mlir_mkldnn_convbias(size_t rank,
             {
                 attr.set_post_ops(ops);
             }
-            conv_pd = mkldnn::convolution_forward::primitive_desc(conv_desc, attr, cpu_engine);
+            convPd = mkldnn::convolution_forward::primitive_desc(convDesc, attr, cpuEngine);
         }
         catch (const mkldnn::error& e)
         {
@@ -245,13 +243,13 @@ static void __mlir_mkldnn_convbias(size_t rank,
         auto convAttrs = getAttrs(index).convAttrs2d;
         try
         {
-            auto conv_desc = mkldnn::convolution_forward::desc(
+            auto convDesc = mkldnn::convolution_forward::desc(
                 mkldnn::prop_kind::forward_inference,
                 alg,
-                data_desc,
-                weights_desc,
-                bias_desc,
-                result_desc,
+                dataDesc,
+                weightsDesc,
+                biasDesc,
+                resultDesc,
                 mkldnn::memory::dims{convAttrs.windowStrides[0], convAttrs.windowStrides[1]},
                 mkldnn::memory::dims{convAttrs.windowDilation[0] - 1,
                                      convAttrs.windowDilation[1] - 1},
@@ -261,7 +259,7 @@ static void __mlir_mkldnn_convbias(size_t rank,
             {
                 attr.set_post_ops(ops);
             }
-            conv_pd = mkldnn::convolution_forward::primitive_desc(conv_desc, attr, cpu_engine);
+            convPd = mkldnn::convolution_forward::primitive_desc(convDesc, attr, cpuEngine);
         }
         catch (const mkldnn::error& e)
         {
@@ -273,13 +271,13 @@ static void __mlir_mkldnn_convbias(size_t rank,
         auto convAttrs = getAttrs(index).convAttrs3d;
         try
         {
-            auto conv_desc = mkldnn::convolution_forward::desc(
+            auto convDesc = mkldnn::convolution_forward::desc(
                 mkldnn::prop_kind::forward_inference,
                 alg,
-                data_desc,
-                weights_desc,
-                bias_desc,
-                result_desc,
+                dataDesc,
+                weightsDesc,
+                biasDesc,
+                resultDesc,
                 mkldnn::memory::dims{convAttrs.windowStrides[0],
                                      convAttrs.windowStrides[1],
                                      convAttrs.windowStrides[2]},
@@ -294,7 +292,7 @@ static void __mlir_mkldnn_convbias(size_t rank,
             {
                 attr.set_post_ops(ops);
             }
-            conv_pd = mkldnn::convolution_forward::primitive_desc(conv_desc, attr, cpu_engine);
+            convPd = mkldnn::convolution_forward::primitive_desc(convDesc, attr, cpuEngine);
         }
         catch (const mkldnn::error& e)
         {
@@ -302,33 +300,33 @@ static void __mlir_mkldnn_convbias(size_t rank,
         }
     }
 
-    mkldnn::convolution_forward conv(conv_pd);
-    mkldnn::memory data = convert_layout_if_diff(
-        data_desc_origin, conv_pd.src_desc(), memRefData->allocatedPtr, cpu_engine);
-    mkldnn::memory weights = convert_layout_if_diff(
-        weights_desc_origin, conv_pd.weights_desc(), memRefWeights->allocatedPtr, cpu_engine);
-    mkldnn::memory bias{conv_pd.bias_desc(), cpu_engine, memRefBias->allocatedPtr};
+    mkldnn::convolution_forward conv(convPd);
+    mkldnn::memory data =
+        convertLayoutIfDiff(dataDescOrigin, convPd.src_desc(), memRefData->allocatedPtr, cpuEngine);
+    mkldnn::memory weights = convertLayoutIfDiff(
+        weightsDescOrigin, convPd.weights_desc(), memRefWeights->allocatedPtr, cpuEngine);
+    mkldnn::memory bias{convPd.bias_desc(), cpuEngine, memRefBias->allocatedPtr};
     mkldnn::memory out;
-    bool need_convert = false;
-    if (!compare_mkldnn_md_formats(result_desc_origin, conv_pd.dst_desc()))
+    bool needConvert = false;
+    if (!compareMkldnnMdFormats(resultDescOrigin, convPd.dst_desc()))
     {
-        out = mkldnn::memory(conv_pd.dst_desc(), cpu_engine);
-        need_convert = true;
+        out = mkldnn::memory(convPd.dst_desc(), cpuEngine);
+        needConvert = true;
     }
     else
     {
-        out = mkldnn::memory(conv_pd.dst_desc(), cpu_engine, memRefOutput->allocatedPtr);
+        out = mkldnn::memory(convPd.dst_desc(), cpuEngine, memRefOutput->allocatedPtr);
     }
 
-    std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, data},
-                                                         {MKLDNN_ARG_WEIGHTS, weights},
-                                                         {MKLDNN_ARG_BIAS, bias},
-                                                         {MKLDNN_ARG_DST, out}};
+    std::unordered_map<int, mkldnn::memory> execArgs = {{MKLDNN_ARG_SRC, data},
+                                                        {MKLDNN_ARG_WEIGHTS, weights},
+                                                        {MKLDNN_ARG_BIAS, bias},
+                                                        {MKLDNN_ARG_DST, out}};
 
-    mkldnn::stream s(cpu_engine);
+    mkldnn::stream s(cpuEngine);
     try
     {
-        conv.execute(s, exec_args);
+        conv.execute(s, execArgs);
         s.wait();
     }
     catch (const mkldnn::error& e)
@@ -336,9 +334,9 @@ static void __mlir_mkldnn_convbias(size_t rank,
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
     }
 
-    if (need_convert)
+    if (needConvert)
     {
-        convert_output_layout(out, result_desc_origin, memRefOutput->allocatedPtr, cpu_engine);
+        convertOutputLayout(out, resultDescOrigin, memRefOutput->allocatedPtr, cpuEngine);
     }
 }
 
@@ -366,44 +364,43 @@ static void __mlir_mkldnn_maxpoolbackprop(size_t rank,
     }
 
     // build mkldnn primitive and execute
-    auto required_format = rank == 4 ? mkldnn::memory::FORMAT::nchw : mkldnn::memory::FORMAT::ncdhw;
+    auto requiredFormat = rank == 4 ? mkldnn::memory::FORMAT::nchw : mkldnn::memory::FORMAT::ncdhw;
     mkldnn::memory::data_type dtype = mkldnn::memory::data_type::f32;
-    auto diff_dst_desc = mkldnn::memory::desc(deltaDims, dtype, required_format);
-    auto diff_src_desc = mkldnn::memory::desc(outDims, dtype, required_format);
-    auto src_desc_origin = mkldnn::memory::desc(srcDims, dtype, srcStrides);
-    auto diff_dst_desc_origin = mkldnn::memory::desc(deltaDims, dtype, deltaStrides);
-    auto diff_src_desc_origin = mkldnn::memory::desc(outDims, dtype, outStrides);
+    auto diffDstDesc = mkldnn::memory::desc(deltaDims, dtype, requiredFormat);
+    auto diffSrcDesc = mkldnn::memory::desc(outDims, dtype, requiredFormat);
+    auto srcDescOrigin = mkldnn::memory::desc(srcDims, dtype, srcStrides);
+    auto diffDstDescOrigin = mkldnn::memory::desc(deltaDims, dtype, deltaStrides);
+    auto diffSrcDescOrigin = mkldnn::memory::desc(outDims, dtype, outStrides);
 
     mkldnn::primitive_attr attr;
-    mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
-    mkldnn::pooling_forward::primitive_desc maxpool_pd_f;
-    mkldnn::pooling_backward::primitive_desc maxpool_pd_b;
+    mkldnn::engine cpuEngine(mkldnn::engine::kind::cpu, 0);
+    mkldnn::pooling_forward::primitive_desc maxpoolPdF;
+    mkldnn::pooling_backward::primitive_desc maxpoolPdB;
     if (rank == 4)
     {
         poolAttrs<2> pAttrs = getAttrs(index).poolAttrs2d;
         try
         {
-            auto maxpool_desc_f = mkldnn::pooling_forward::desc(
+            auto maxpoolDescF = mkldnn::pooling_forward::desc(
                 mkldnn::prop_kind::forward_training,
                 mkldnn::algorithm::pooling_max,
-                diff_src_desc,
-                diff_dst_desc,
+                diffSrcDesc,
+                diffDstDesc,
                 mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
                 mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
                 mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
                 mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
-            auto maxpool_desc_b = mkldnn::pooling_backward::desc(
+            auto maxpoolDescB = mkldnn::pooling_backward::desc(
                 mkldnn::algorithm::pooling_max,
-                diff_src_desc,
-                diff_dst_desc,
+                diffSrcDesc,
+                diffDstDesc,
                 mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
                 mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
                 mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
                 mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
-            maxpool_pd_f =
-                mkldnn::pooling_forward::primitive_desc(maxpool_desc_f, attr, cpu_engine);
-            maxpool_pd_b = mkldnn::pooling_backward::primitive_desc(
-                maxpool_desc_b, attr, cpu_engine, maxpool_pd_f);
+            maxpoolPdF = mkldnn::pooling_forward::primitive_desc(maxpoolDescF, attr, cpuEngine);
+            maxpoolPdB =
+                mkldnn::pooling_backward::primitive_desc(maxpoolDescB, attr, cpuEngine, maxpoolPdF);
         }
         catch (const mkldnn::error& e)
         {
@@ -416,31 +413,30 @@ static void __mlir_mkldnn_maxpoolbackprop(size_t rank,
         poolAttrs<3> pAttrs = getAttrs(index).poolAttrs3d;
         try
         {
-            auto maxpool_desc_f = mkldnn::pooling_forward::desc(
+            auto maxpoolDescF = mkldnn::pooling_forward::desc(
                 mkldnn::prop_kind::forward_training,
                 mkldnn::algorithm::pooling_max,
-                diff_src_desc,
-                diff_dst_desc,
+                diffSrcDesc,
+                diffDstDesc,
                 mkldnn::memory::dims{
                     pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
                 mkldnn::memory::dims{
                     pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
                 mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
                 mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
-            auto maxpool_desc_b = mkldnn::pooling_backward::desc(
+            auto maxpoolDescB = mkldnn::pooling_backward::desc(
                 mkldnn::algorithm::pooling_max,
-                diff_src_desc,
-                diff_dst_desc,
+                diffSrcDesc,
+                diffDstDesc,
                 mkldnn::memory::dims{
                     pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
                 mkldnn::memory::dims{
                     pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
                 mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
                 mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
-            maxpool_pd_f =
-                mkldnn::pooling_forward::primitive_desc(maxpool_desc_f, attr, cpu_engine);
-            maxpool_pd_b = mkldnn::pooling_backward::primitive_desc(
-                maxpool_desc_b, attr, cpu_engine, maxpool_pd_f);
+            maxpoolPdF = mkldnn::pooling_forward::primitive_desc(maxpoolDescF, attr, cpuEngine);
+            maxpoolPdB =
+                mkldnn::pooling_backward::primitive_desc(maxpoolDescB, attr, cpuEngine, maxpoolPdF);
         }
         catch (const mkldnn::error& e)
         {
@@ -449,40 +445,39 @@ static void __mlir_mkldnn_maxpoolbackprop(size_t rank,
         }
     }
 
-    mkldnn::pooling_forward maxpool_f(maxpool_pd_f);
-    mkldnn::memory src_mem = convert_layout_if_diff(
-        src_desc_origin, maxpool_pd_b.diff_src_desc(), memRefSrc->allocatedPtr, cpu_engine);
-    mkldnn::memory dst_mem{maxpool_pd_b.diff_dst_desc(), cpu_engine};
-    mkldnn::memory workspace{maxpool_pd_f.workspace_desc(), cpu_engine};
+    mkldnn::pooling_forward maxpoolF(maxpoolPdF);
+    mkldnn::memory srcMem = convertLayoutIfDiff(
+        srcDescOrigin, maxpoolPdB.diff_src_desc(), memRefSrc->allocatedPtr, cpuEngine);
+    mkldnn::memory dstMem{maxpoolPdB.diff_dst_desc(), cpuEngine};
+    mkldnn::memory workspace{maxpoolPdF.workspace_desc(), cpuEngine};
 
-    mkldnn::pooling_backward maxpool_b(maxpool_pd_b);
-    mkldnn::memory diff_dst = convert_layout_if_diff(
-        diff_dst_desc_origin, maxpool_pd_b.diff_dst_desc(), memRefDelta->allocatedPtr, cpu_engine);
-    mkldnn::memory diff_src;
-    bool need_convert = false;
-    if (!compare_mkldnn_md_formats(diff_src_desc_origin, maxpool_pd_b.diff_src_desc()))
+    mkldnn::pooling_backward maxpoolB(maxpoolPdB);
+    mkldnn::memory diffDst = convertLayoutIfDiff(
+        diffDstDescOrigin, maxpoolPdB.diff_dst_desc(), memRefDelta->allocatedPtr, cpuEngine);
+    mkldnn::memory diffSrc;
+    bool needConvert = false;
+    if (!compareMkldnnMdFormats(diffSrcDescOrigin, maxpoolPdB.diff_src_desc()))
     {
-        diff_src = mkldnn::memory(maxpool_pd_b.diff_src_desc(), cpu_engine);
-        need_convert = true;
+        diffSrc = mkldnn::memory(maxpoolPdB.diff_src_desc(), cpuEngine);
+        needConvert = true;
     }
     else
     {
-        diff_src =
-            mkldnn::memory(maxpool_pd_b.diff_src_desc(), cpu_engine, memRefOutput->allocatedPtr);
+        diffSrc = mkldnn::memory(maxpoolPdB.diff_src_desc(), cpuEngine, memRefOutput->allocatedPtr);
     }
 
-    std::unordered_map<int, mkldnn::memory> exec_args_f = {
-        {MKLDNN_ARG_SRC, src_mem}, {MKLDNN_ARG_WORKSPACE, workspace}, {MKLDNN_ARG_DST, dst_mem}};
-    std::unordered_map<int, mkldnn::memory> exec_args_b = {{MKLDNN_ARG_DIFF_DST, diff_dst},
-                                                           {MKLDNN_ARG_WORKSPACE, workspace},
-                                                           {MKLDNN_ARG_DIFF_SRC, diff_src}};
+    std::unordered_map<int, mkldnn::memory> execArgsF = {
+        {MKLDNN_ARG_SRC, srcMem}, {MKLDNN_ARG_WORKSPACE, workspace}, {MKLDNN_ARG_DST, dstMem}};
+    std::unordered_map<int, mkldnn::memory> execArgsB = {{MKLDNN_ARG_DIFF_DST, diffDst},
+                                                         {MKLDNN_ARG_WORKSPACE, workspace},
+                                                         {MKLDNN_ARG_DIFF_SRC, diffSrc}};
 
-    mkldnn::stream s(cpu_engine);
+    mkldnn::stream s(cpuEngine);
     try
     {
-        maxpool_f.execute(s, exec_args_f);
+        maxpoolF.execute(s, execArgsF);
         s.wait();
-        maxpool_b.execute(s, exec_args_b);
+        maxpoolB.execute(s, execArgsB);
         s.wait();
     }
     catch (const mkldnn::error& e)
@@ -490,10 +485,9 @@ static void __mlir_mkldnn_maxpoolbackprop(size_t rank,
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
     }
 
-    if (need_convert)
+    if (needConvert)
     {
-        convert_output_layout(
-            diff_src, diff_src_desc_origin, memRefOutput->allocatedPtr, cpu_engine);
+        convertOutputLayout(diffSrc, diffSrcDescOrigin, memRefOutput->allocatedPtr, cpuEngine);
     }
 }
 
@@ -516,45 +510,45 @@ static void __mlir_mkldnn_avgpoolbackprop(size_t rank,
     }
 
     // build mkldnn primitive and execute
-    auto required_format = rank == 4 ? mkldnn::memory::FORMAT::nchw : mkldnn::memory::FORMAT::ncdhw;
+    auto requiredFormat = rank == 4 ? mkldnn::memory::FORMAT::nchw : mkldnn::memory::FORMAT::ncdhw;
     mkldnn::memory::data_type dtype = mkldnn::memory::data_type::f32;
-    auto diff_dst_desc = mkldnn::memory::desc(dims, dtype, required_format);
-    auto diff_src_desc = mkldnn::memory::desc(outDims, dtype, required_format);
-    auto diff_dst_desc_origin = mkldnn::memory::desc(dims, dtype, strides);
-    auto diff_src_desc_origin = mkldnn::memory::desc(outDims, dtype, outStrides);
+    auto diffDstDesc = mkldnn::memory::desc(dims, dtype, requiredFormat);
+    auto diffSrcDesc = mkldnn::memory::desc(outDims, dtype, requiredFormat);
+    auto diffDstDescOrigin = mkldnn::memory::desc(dims, dtype, strides);
+    auto diffSrcDescOrigin = mkldnn::memory::desc(outDims, dtype, outStrides);
     mkldnn::primitive_attr attr;
-    mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
-    mkldnn::pooling_backward::primitive_desc avgpool_pd_b;
+    mkldnn::engine cpuEngine(mkldnn::engine::kind::cpu, 0);
+    mkldnn::pooling_backward::primitive_desc avgpoolPdB;
     if (rank == 4)
     {
         poolAttrs<2> pAttrs = getAttrs(index).poolAttrs2d;
         try
         {
-            auto avgpool_desc_f = mkldnn::pooling_forward::desc(
+            auto avgpoolDescF = mkldnn::pooling_forward::desc(
                 mkldnn::prop_kind::forward_training,
                 (pAttrs.includePaddingInAvgComputation
                      ? mkldnn::algorithm::pooling_avg_include_padding
                      : mkldnn::algorithm::pooling_avg_exclude_padding),
-                diff_src_desc,
-                diff_dst_desc,
+                diffSrcDesc,
+                diffDstDesc,
                 mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
                 mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
                 mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
                 mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
-            auto avgpool_desc_b = mkldnn::pooling_backward::desc(
+            auto avgpoolDescB = mkldnn::pooling_backward::desc(
                 (pAttrs.includePaddingInAvgComputation
                      ? mkldnn::algorithm::pooling_avg_include_padding
                      : mkldnn::algorithm::pooling_avg_exclude_padding),
-                diff_src_desc,
-                diff_dst_desc,
+                diffSrcDesc,
+                diffDstDesc,
                 mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
                 mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
                 mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
                 mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
-            auto avgpool_pd_f =
-                mkldnn::pooling_forward::primitive_desc(avgpool_desc_f, attr, cpu_engine);
-            avgpool_pd_b = mkldnn::pooling_backward::primitive_desc(
-                avgpool_desc_b, attr, cpu_engine, avgpool_pd_f);
+            auto avgpoolPdF =
+                mkldnn::pooling_forward::primitive_desc(avgpoolDescF, attr, cpuEngine);
+            avgpoolPdB =
+                mkldnn::pooling_backward::primitive_desc(avgpoolDescB, attr, cpuEngine, avgpoolPdF);
         }
         catch (const mkldnn::error& e)
         {
@@ -567,35 +561,35 @@ static void __mlir_mkldnn_avgpoolbackprop(size_t rank,
         poolAttrs<3> pAttrs = getAttrs(index).poolAttrs3d;
         try
         {
-            auto avgpool_desc_f = mkldnn::pooling_forward::desc(
+            auto avgpoolDescF = mkldnn::pooling_forward::desc(
                 mkldnn::prop_kind::forward_training,
                 (pAttrs.includePaddingInAvgComputation
                      ? mkldnn::algorithm::pooling_avg_include_padding
                      : mkldnn::algorithm::pooling_avg_exclude_padding),
-                diff_src_desc,
-                diff_dst_desc,
+                diffSrcDesc,
+                diffDstDesc,
                 mkldnn::memory::dims{
                     pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
                 mkldnn::memory::dims{
                     pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
                 mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
                 mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
-            auto avgpool_desc_b = mkldnn::pooling_backward::desc(
+            auto avgpoolDescB = mkldnn::pooling_backward::desc(
                 (pAttrs.includePaddingInAvgComputation
                      ? mkldnn::algorithm::pooling_avg_include_padding
                      : mkldnn::algorithm::pooling_avg_exclude_padding),
-                diff_src_desc,
-                diff_dst_desc,
+                diffSrcDesc,
+                diffDstDesc,
                 mkldnn::memory::dims{
                     pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
                 mkldnn::memory::dims{
                     pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
                 mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
                 mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
-            auto avgpool_pd_f =
-                mkldnn::pooling_forward::primitive_desc(avgpool_desc_f, attr, cpu_engine);
-            avgpool_pd_b = mkldnn::pooling_backward::primitive_desc(
-                avgpool_desc_b, attr, cpu_engine, avgpool_pd_f);
+            auto avgpoolPdF =
+                mkldnn::pooling_forward::primitive_desc(avgpoolDescF, attr, cpuEngine);
+            avgpoolPdB =
+                mkldnn::pooling_backward::primitive_desc(avgpoolDescB, attr, cpuEngine, avgpoolPdF);
         }
         catch (const mkldnn::error& e)
         {
@@ -604,27 +598,27 @@ static void __mlir_mkldnn_avgpoolbackprop(size_t rank,
         }
     }
 
-    mkldnn::pooling_backward avgpool(avgpool_pd_b);
-    mkldnn::memory in = convert_layout_if_diff(
-        diff_dst_desc_origin, avgpool_pd_b.diff_dst_desc(), memRefInput->allocatedPtr, cpu_engine);
+    mkldnn::pooling_backward avgpool(avgpoolPdB);
+    mkldnn::memory in = convertLayoutIfDiff(
+        diffDstDescOrigin, avgpoolPdB.diff_dst_desc(), memRefInput->allocatedPtr, cpuEngine);
     mkldnn::memory out;
-    bool need_convert = false;
-    if (!compare_mkldnn_md_formats(diff_src_desc_origin, avgpool_pd_b.diff_src_desc()))
+    bool needConvert = false;
+    if (!compareMkldnnMdFormats(diffSrcDescOrigin, avgpoolPdB.diff_src_desc()))
     {
-        out = mkldnn::memory(avgpool_pd_b.diff_src_desc(), cpu_engine);
-        need_convert = true;
+        out = mkldnn::memory(avgpoolPdB.diff_src_desc(), cpuEngine);
+        needConvert = true;
     }
     else
     {
-        out = mkldnn::memory(avgpool_pd_b.diff_src_desc(), cpu_engine, memRefOutput->allocatedPtr);
+        out = mkldnn::memory(avgpoolPdB.diff_src_desc(), cpuEngine, memRefOutput->allocatedPtr);
     }
-    std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_DIFF_DST, in},
-                                                         {MKLDNN_ARG_DIFF_SRC, out}};
+    std::unordered_map<int, mkldnn::memory> execArgs = {{MKLDNN_ARG_DIFF_DST, in},
+                                                        {MKLDNN_ARG_DIFF_SRC, out}};
 
-    mkldnn::stream s(cpu_engine);
+    mkldnn::stream s(cpuEngine);
     try
     {
-        avgpool.execute(s, exec_args);
+        avgpool.execute(s, execArgs);
         s.wait();
     }
     catch (const mkldnn::error& e)
@@ -632,9 +626,9 @@ static void __mlir_mkldnn_avgpoolbackprop(size_t rank,
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
     }
 
-    if (need_convert)
+    if (needConvert)
     {
-        convert_output_layout(out, diff_src_desc_origin, memRefOutput->allocatedPtr, cpu_engine);
+        convertOutputLayout(out, diffSrcDescOrigin, memRefOutput->allocatedPtr, cpuEngine);
     }
 }
 
@@ -655,15 +649,15 @@ static void __mlir_mkldnn_pooling(
     }
 
     // build mkldnn primitive and execute
-    auto required_format = rank == 4 ? mkldnn::memory::FORMAT::nchw : mkldnn::memory::FORMAT::ncdhw;
+    auto requiredFormat = rank == 4 ? mkldnn::memory::FORMAT::nchw : mkldnn::memory::FORMAT::ncdhw;
     mkldnn::memory::data_type dtype = mkldnn::memory::data_type::f32;
-    auto input_desc = mkldnn::memory::desc(dims, dtype, required_format);
-    auto result_desc = mkldnn::memory::desc(outDims, dtype, required_format);
-    auto input_desc_origin = mkldnn::memory::desc(dims, dtype, strides);
-    auto result_desc_origin = mkldnn::memory::desc(outDims, dtype, outStrides);
+    auto inputDesc = mkldnn::memory::desc(dims, dtype, requiredFormat);
+    auto resultDesc = mkldnn::memory::desc(outDims, dtype, requiredFormat);
+    auto inputDescOrigin = mkldnn::memory::desc(dims, dtype, strides);
+    auto resultDescOrigin = mkldnn::memory::desc(outDims, dtype, outStrides);
     mkldnn::primitive_attr attr;
-    mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
-    mkldnn::pooling_forward::primitive_desc pool_pd;
+    mkldnn::engine cpuEngine(mkldnn::engine::kind::cpu, 0);
+    mkldnn::pooling_forward::primitive_desc poolPd;
     if (rank == 4)
     {
         poolAttrs<2> pAttrs = getAttrs(index).poolAttrs2d;
@@ -674,16 +668,16 @@ static void __mlir_mkldnn_pooling(
                                            : mkldnn::algorithm::pooling_avg_exclude_padding);
         try
         {
-            auto pool_desc = mkldnn::pooling_forward::desc(
+            auto poolDesc = mkldnn::pooling_forward::desc(
                 mkldnn::prop_kind::forward_inference,
                 alg,
-                input_desc,
-                result_desc,
+                inputDesc,
+                resultDesc,
                 mkldnn::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
                 mkldnn::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
                 mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
                 mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
-            pool_pd = mkldnn::pooling_forward::primitive_desc(pool_desc, attr, cpu_engine);
+            poolPd = mkldnn::pooling_forward::primitive_desc(poolDesc, attr, cpuEngine);
         }
         catch (const mkldnn::error& e)
         {
@@ -701,18 +695,18 @@ static void __mlir_mkldnn_pooling(
                                            : mkldnn::algorithm::pooling_avg_exclude_padding);
         try
         {
-            auto pool_desc = mkldnn::pooling_forward::desc(
+            auto poolDesc = mkldnn::pooling_forward::desc(
                 mkldnn::prop_kind::forward_inference,
                 alg,
-                input_desc,
-                result_desc,
+                inputDesc,
+                resultDesc,
                 mkldnn::memory::dims{
                     pAttrs.windowStrides[0], pAttrs.windowStrides[1], pAttrs.windowStrides[2]},
                 mkldnn::memory::dims{
                     pAttrs.windowShape[0], pAttrs.windowShape[1], pAttrs.windowShape[2]},
                 mkldnn::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1], pAttrs.padBelow[2]},
                 mkldnn::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1], pAttrs.padAbove[2]});
-            pool_pd = mkldnn::pooling_forward::primitive_desc(pool_desc, attr, cpu_engine);
+            poolPd = mkldnn::pooling_forward::primitive_desc(poolDesc, attr, cpuEngine);
         }
         catch (const mkldnn::error& e)
         {
@@ -721,27 +715,27 @@ static void __mlir_mkldnn_pooling(
         }
     }
 
-    mkldnn::pooling_forward pool(pool_pd);
-    mkldnn::memory in = convert_layout_if_diff(
-        input_desc_origin, pool_pd.src_desc(), memRefInput->allocatedPtr, cpu_engine);
+    mkldnn::pooling_forward pool(poolPd);
+    mkldnn::memory in = convertLayoutIfDiff(
+        inputDescOrigin, poolPd.src_desc(), memRefInput->allocatedPtr, cpuEngine);
     mkldnn::memory out;
-    bool need_convert = false;
-    if (!compare_mkldnn_md_formats(result_desc_origin, pool_pd.dst_desc()))
+    bool needConvert = false;
+    if (!compareMkldnnMdFormats(resultDescOrigin, poolPd.dst_desc()))
     {
-        out = mkldnn::memory(pool_pd.dst_desc(), cpu_engine);
-        need_convert = true;
+        out = mkldnn::memory(poolPd.dst_desc(), cpuEngine);
+        needConvert = true;
     }
     else
     {
-        out = mkldnn::memory(pool_pd.dst_desc(), cpu_engine, memRefOutput->allocatedPtr);
+        out = mkldnn::memory(poolPd.dst_desc(), cpuEngine, memRefOutput->allocatedPtr);
     }
-    std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, in},
-                                                         {MKLDNN_ARG_DST, out}};
+    std::unordered_map<int, mkldnn::memory> execArgs = {{MKLDNN_ARG_SRC, in},
+                                                        {MKLDNN_ARG_DST, out}};
 
-    mkldnn::stream s(cpu_engine);
+    mkldnn::stream s(cpuEngine);
     try
     {
-        pool.execute(s, exec_args);
+        pool.execute(s, execArgs);
         s.wait();
     }
     catch (const mkldnn::error& e)
@@ -749,9 +743,9 @@ static void __mlir_mkldnn_pooling(
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
     }
 
-    if (need_convert)
+    if (needConvert)
     {
-        convert_output_layout(out, result_desc_origin, memRefOutput->allocatedPtr, cpu_engine);
+        convertOutputLayout(out, resultDescOrigin, memRefOutput->allocatedPtr, cpuEngine);
     }
 }
 
@@ -768,36 +762,36 @@ static void __mlir_mkldnn_softmax(size_t rank,
         dims[i] = memRefInput->shapeAndStrides[i];
         strides[i] = memRefInput->shapeAndStrides[rank + i];
     }
-    auto softmax_axis = getAttrs(index).intAttr;
+    auto softmaxAxis = getAttrs(index).intAttr;
 
     // build mkldnn primitive and execute
     mkldnn::memory::data_type dtype = mkldnn::memory::data_type::f32;
-    auto input_desc = mkldnn::memory::desc(dims, dtype, strides);
-    mkldnn::softmax_forward::primitive_desc softmax_pd;
-    mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
+    auto inputDesc = mkldnn::memory::desc(dims, dtype, strides);
+    mkldnn::softmax_forward::primitive_desc softmaxPd;
+    mkldnn::engine cpuEngine(mkldnn::engine::kind::cpu, 0);
     try
     {
-        auto softmax_desc = mkldnn::softmax_forward::desc(
-            mkldnn::prop_kind::forward_scoring, input_desc, softmax_axis);
+        auto softmaxDesc = mkldnn::softmax_forward::desc(
+            mkldnn::prop_kind::forward_scoring, inputDesc, softmaxAxis);
         mkldnn::primitive_attr attr;
-        softmax_pd = mkldnn::softmax_forward::primitive_desc(softmax_desc, attr, cpu_engine);
+        softmaxPd = mkldnn::softmax_forward::primitive_desc(softmaxDesc, attr, cpuEngine);
     }
     catch (const mkldnn::error& e)
     {
         throw ngraph_error("Could not create mkldnn softmax descriptor " + std::string(e.message));
     }
-    mkldnn::softmax_forward softmax(softmax_pd);
+    mkldnn::softmax_forward softmax(softmaxPd);
 
-    mkldnn::memory in{softmax_pd.src_desc(), cpu_engine, memRefInput->allocatedPtr};
-    mkldnn::memory out{softmax_pd.dst_desc(), cpu_engine, memRefOutput->allocatedPtr};
+    mkldnn::memory in{softmaxPd.src_desc(), cpuEngine, memRefInput->allocatedPtr};
+    mkldnn::memory out{softmaxPd.dst_desc(), cpuEngine, memRefOutput->allocatedPtr};
 
-    std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, in},
-                                                         {MKLDNN_ARG_DST, out}};
+    std::unordered_map<int, mkldnn::memory> execArgs = {{MKLDNN_ARG_SRC, in},
+                                                        {MKLDNN_ARG_DST, out}};
 
-    mkldnn::stream s(cpu_engine);
+    mkldnn::stream s(cpuEngine);
     try
     {
-        softmax.execute(s, exec_args);
+        softmax.execute(s, execArgs);
         s.wait();
     }
     catch (const mkldnn::error& e)
