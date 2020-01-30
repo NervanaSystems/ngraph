@@ -134,7 +134,7 @@ namespace ngraph
 
                     auto reshaped_bias = std::make_shared<ngraph::opset1::Reshape>(
                         bias,
-                        ngraph::op::Constant::create(
+                        default_opset::Constant::create(
                             element::i64, Shape{new_shape.size()}, new_shape),
                         true);
                     return {std::make_shared<default_opset::Add>(conv_node, reshaped_bias)};
