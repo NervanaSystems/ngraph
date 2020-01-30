@@ -83,16 +83,21 @@ namespace ngraph
 
                 NodeVector conv(const Node& node)
                 {
+                    // in the current implementation we assume that the data input rank is static
+                    // and only the 'batch' dimension can be dynamic
                     const NodeVector& inputs = node.get_ng_inputs();
                     const auto data = inputs.at(0);
                     const auto filters = inputs.at(1);
 
                     const int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
-
                     NGRAPH_CHECK(groups >= 1,
                                  "The 'groups' attribute of a Conv node must be greater or equal "
                                  "to 1. Got: ",
                                  groups);
+
+                    const auto& data_ps = data->get_output_partial_shape(0);
+                    NGRAPH_CHECK(data_ps.rank().is_static(),
+                                 "The input data tensor's rank has to be known (static)");
 
                     ASSERT_VALID_ARGUMENT(
                         node,
