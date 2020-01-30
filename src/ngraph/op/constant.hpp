@@ -93,6 +93,8 @@ namespace ngraph
                 /// \param data A void* to constant data.
                 Constant(const element::Type& type, const Shape& shape, const void* data);
 
+                Constant(const Constant& other);
+
                 virtual ~Constant() override;
 
                 void validate_and_infer_types() override

@@ -299,6 +299,15 @@ op::Constant::Constant(const element::Type& type, const Shape& shape, const void
     m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
 }
 
+op::Constant::Constant(const Constant& other)
+    : m_element_type(other.m_element_type)
+    , m_shape(other.m_shape)
+    , m_data(other.m_data)
+    , m_all_elements_bitwise_identical(m_all_elements_bitwise_identical)
+{
+    constructor_validate_and_infer_types();
+}
+
 op::Constant::~Constant()
 {
 }
