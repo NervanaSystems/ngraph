@@ -18,21 +18,26 @@
 class TestMatcher : public ngraph::pattern::Matcher
 {
     using ngraph::pattern::Matcher::Matcher;
-    bool virtual match_node(const std::shared_ptr<ngraph::Node>& pattern_node,
-                            const std::shared_ptr<ngraph::Node>& graph_node,
-                            PatternMap& pattern_map) override
+
+public:
+    TestMatcher()
+        : TestMatcher(ngraph::Output<ngraph::Node>{})
     {
-        if (ngraph::as_type_ptr<::ngraph::op::Parameter>(pattern_node))
+    }
+    bool virtual match_value(const ngraph::Output<ngraph::Node>& pattern_value,
+                             const ngraph::Output<ngraph::Node>& graph_value) override
+    {
+        if (ngraph::is_type<::ngraph::op::Parameter>(pattern_value.get_node_shared_ptr()))
         {
-            bool result = pattern_node == ngraph::as_type_ptr<::ngraph::op::Parameter>(graph_node);
+            bool result = pattern_value == graph_value;
             if (result)
             {
-                m_matched_list.push_back(graph_node);
+                m_matched_list.push_back(graph_value.get_node_shared_ptr());
             }
             return result;
         }
 
-        return this->ngraph::pattern::Matcher::match_node(pattern_node, graph_node, pattern_map);
+        return this->ngraph::pattern::Matcher::match_value(pattern_value, graph_value);
     }
 
 public:
@@ -44,15 +49,7 @@ public:
         NGRAPH_DEBUG << "Starting match pattern = " << pattern_node->get_name()
                      << " , graph_node = " << graph_node->get_name();
 
-        m_pattern_map.clear();
-        m_match_root.reset();
-        m_matched_list.clear();
-
-        bool is_match = match_node(pattern_node, graph_node, m_pattern_map);
-        if (is_match)
-        {
-            m_match_root = graph_node;
-        }
-        return is_match;
+        m_pattern_node = pattern_node;
+        return ngraph::pattern::Matcher::match(graph_node, ngraph::pattern::PatternValueMap{});
     }
 };
