@@ -96,24 +96,32 @@ namespace ngraph
                                  groups);
 
                     const auto& data_ps = data->get_output_partial_shape(0);
+                    const auto& filters_ps = filters->get_output_partial_shape(0);
                     NGRAPH_CHECK(data_ps.rank().is_static(),
                                  "The input data tensor's rank has to be known (static)");
 
-                    ASSERT_VALID_ARGUMENT(
-                        node,
-                        ((groups <= static_cast<int64_t>(data->get_shape().at(1))) &&
-                         (groups <= static_cast<int64_t>(filters->get_shape().at(0)))))
-                        << "incorrect value of 'group' attribute: " << groups;
+                    NGRAPH_CHECK(filters_ps.rank().is_static(),
+                                 "The filters(weights) tensor's rank has to be known (static)");
 
-                    const std::size_t n_data_channels{data->get_shape().at(1)};
-                    const std::size_t n_filters_channels{filters->get_shape().at(0)};
+                    NGRAPH_CHECK(data_ps[1].is_static(),
+                                 "The input data channel dimension has to be known (static)");
 
-                    ASSERT_VALID_ARGUMENT(node, n_data_channels % groups == 0)
-                        << "provided group attribute value must be a multiple of data channels "
-                           "count.";
-                    ASSERT_VALID_ARGUMENT(node, n_filters_channels % groups == 0)
-                        << "provided group attribute value must be a multiple of filter channels "
-                           "count.";
+                    NGRAPH_CHECK(filters_ps[0].is_static(),
+                                 "The number of feature maps has to be known (static)");
+
+                    const auto n_data_channels = static_cast<size_t>(data_ps[1]);
+                    const auto n_feature_maps = static_cast<size_t>(filters_ps[0]);
+                    NGRAPH_CHECK(groups <= n_data_channels && groups <= n_feature_maps,
+                                 "Incorrect value of 'group' attribute: ",
+                                 groups);
+
+                    NGRAPH_CHECK(n_data_channels % groups == 0,
+                                 "Provided group attribute value must be a multiple of data "
+                                 "channels count.");
+
+                    NGRAPH_CHECK(n_feature_maps % groups == 0,
+                                 "Provided group attribute value must be a multiple of filter "
+                                 "channels count.");
 
                     const auto strides = convpool::get_strides(node);
                     const auto dilations = convpool::get_dilations(node);
