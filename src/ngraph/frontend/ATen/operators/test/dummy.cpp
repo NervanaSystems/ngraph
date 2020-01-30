@@ -42,4 +42,3 @@ NGRAPH_TEST(CPU, dummy)
 {
     ASSERT_TRUE(true);
 }
-
