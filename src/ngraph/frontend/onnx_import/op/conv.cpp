@@ -89,10 +89,14 @@ namespace ngraph
 
                     const int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
 
+                    NGRAPH_CHECK(groups >= 1,
+                                 "The 'groups' attribute of a Conv node must be greater or equal "
+                                 "to 1. Got: ",
+                                 groups);
+
                     ASSERT_VALID_ARGUMENT(
                         node,
-                        ((groups >= 0) &&
-                         (groups <= static_cast<int64_t>(data->get_shape().at(1))) &&
+                        ((groups <= static_cast<int64_t>(data->get_shape().at(1))) &&
                          (groups <= static_cast<int64_t>(filters->get_shape().at(0)))))
                         << "incorrect value of 'group' attribute: " << groups;
 
