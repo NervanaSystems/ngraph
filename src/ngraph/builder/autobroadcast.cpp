@@ -41,8 +41,8 @@ namespace ngraph
         {
         }
 
-        std::string numpy_autobroadcast_incompatible_shapes::error_str(const Shape& shape1,
-                                                                       const Shape& shape2)
+        string numpy_autobroadcast_incompatible_shapes::error_str(const Shape& shape1,
+                                                                  const Shape& shape2)
         {
             ostringstream os;
             os << "Auto-broadcast not possible for these input shapes:"
@@ -68,24 +68,24 @@ namespace ngraph
             Shape result;
             auto lhs_rank = lhs_shape.size();
             auto rhs_rank = rhs_shape.size();
-            auto max_rank = std::max(lhs_rank, rhs_rank);
+            auto max_rank = max(lhs_rank, rhs_rank);
 
             // left-pad the lhs_shape with zeros
-            lhs_shape.insert(std::begin(lhs_shape), max_rank - lhs_rank, 1);
+            lhs_shape.insert(begin(lhs_shape), max_rank - lhs_rank, 1);
             // left-pad the rhs_shape with zeros
-            rhs_shape.insert(std::begin(rhs_shape), max_rank - rhs_rank, 1);
+            rhs_shape.insert(begin(rhs_shape), max_rank - rhs_rank, 1);
 
-            for (std::size_t index = 0; index < max_rank; ++index)
+            for (size_t index = 0; index < max_rank; ++index)
             {
-                std::size_t lhs_dim = lhs_shape.at(index);
-                std::size_t rhs_dim = rhs_shape.at(index);
+                size_t lhs_dim = lhs_shape.at(index);
+                size_t rhs_dim = rhs_shape.at(index);
 
                 if (lhs_dim != rhs_dim && lhs_dim != 1 && rhs_dim != 1)
                 {
                     throw numpy_autobroadcast_incompatible_shapes(lhs_shape, rhs_shape);
                 }
 
-                result.push_back(std::max(lhs_dim, rhs_dim));
+                result.push_back(max(lhs_dim, rhs_dim));
             }
 
             return result;
@@ -107,30 +107,27 @@ namespace ngraph
         /// \return     A pair that contains the target shape as its first object and a vector of
         ///             padded input shapes ready to be broadcasted as the second object
         ///
-        static std::pair<Shape, std::vector<Shape>>
-            get_numpy_broadcast_shapes(const std::vector<Shape>& input_shapes)
+        static pair<Shape, vector<Shape>>
+            get_numpy_broadcast_shapes(const vector<Shape>& input_shapes)
         {
-            Shape target_shape = std::accumulate(std::begin(input_shapes),
-                                                 std::end(input_shapes),
-                                                 Shape{},
-                                                 calculate_broadcast_shape);
+            Shape target_shape = accumulate(
+                begin(input_shapes), end(input_shapes), Shape{}, calculate_broadcast_shape);
 
-            std::vector<Shape> full_shapes;
+            vector<Shape> full_shapes;
             for (const Shape& input : input_shapes)
             {
                 Shape padded_shape{input};
                 padded_shape.insert(
-                    std::begin(padded_shape), target_shape.size() - padded_shape.size(), 1);
-                full_shapes.push_back(std::move(padded_shape));
+                    begin(padded_shape), target_shape.size() - padded_shape.size(), 1);
+                full_shapes.push_back(move(padded_shape));
             }
 
             return {target_shape, full_shapes};
         }
 
-        static std::pair<Shape, std::vector<Shape>>
-            get_numpy_broadcast_shapes(const OutputVector& values)
+        static pair<Shape, vector<Shape>> get_numpy_broadcast_shapes(const OutputVector& values)
         {
-            std::vector<Shape> input_shapes;
+            vector<Shape> input_shapes;
 
             for (const auto& input : values)
             {
@@ -144,10 +141,8 @@ namespace ngraph
         ///
         /// \note       The source shape does not have to be the actual shape of input node. However
         ///             it should be a superset of it (containing it as a continuous subset). This
-        ///             implies
-        ///             we may expand the number of axes of input node.
-        ///             The ranks of source_shape and output_shape must be equal. This means that
-        ///             the
+        ///             implies we may expand the number of axes of input node. The ranks of
+        ///             source_shape and output_shape must be equal. This means that the
         ///             source_shape has to be padded with ones for this operation.
         ///
         /// \param[in]  value         The input Node to be broadcast.
@@ -156,9 +151,9 @@ namespace ngraph
         ///
         /// \return     The broadcasted Node.
         ///
-        static std::shared_ptr<Node> numpy_broadcast_node(const Output<Node>& value,
-                                                          const Shape& output_shape,
-                                                          const Shape& source_shape)
+        static shared_ptr<Node> numpy_broadcast_node(const Output<Node>& value,
+                                                     const Shape& output_shape,
+                                                     const Shape& source_shape)
         {
             // If node already has the required shape, return original node
             if (output_shape == value.get_shape())
@@ -177,7 +172,7 @@ namespace ngraph
             // Positions of axes which have length of 1 are needed to calculate broadcast_axes
             // for nGraph broadcast operation. We need to remove all ones from source shape
             // to avoid broadcasting axis conflict.
-            for (std::size_t index = 0; index < output_shape.size(); ++index)
+            for (size_t index = 0; index < output_shape.size(); ++index)
             {
                 if (source_shape.at(index) == 1)
                 {
@@ -204,9 +199,9 @@ namespace ngraph
         ///
         /// \return     The broadcasted Node.
         ///
-        static std::shared_ptr<Node> broadcast_value_pdpd_style(const Output<Node>& value,
-                                                                const Shape& output_shape,
-                                                                int64_t axis)
+        static shared_ptr<Node> broadcast_value_pdpd_style(const Output<Node>& value,
+                                                           const Shape& output_shape,
+                                                           int64_t axis)
         {
             auto value_shape = value.get_shape();
 
@@ -241,17 +236,17 @@ namespace ngraph
             auto trimmed_value = value;
             if (value_shape != trimmed_value_shape)
             {
-                trimmed_value = std::make_shared<op::Reshape>(
+                trimmed_value = make_shared<op::Reshape>(
                     value, get_default_order(value_shape), trimmed_value_shape);
             }
 
-            auto value_bcast = std::make_shared<op::Broadcast>(trimmed_value, output_shape, axes);
+            auto value_bcast = make_shared<op::Broadcast>(trimmed_value, output_shape, axes);
 
-            return std::move(value_bcast);
+            return move(value_bcast);
         }
 
-        std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
-            numpy_broadcast(const std::pair<Output<Node>, Output<Node>>& args)
+        pair<shared_ptr<Node>, shared_ptr<Node>>
+            numpy_broadcast(const pair<Output<Node>, Output<Node>>& args)
         {
             NGRAPH_CHECK(args.first.get_node());
             NGRAPH_CHECK(args.second.get_node());
@@ -269,7 +264,7 @@ namespace ngraph
             NodeVector bcasted_outputs =
                 as_node_vector(numpy_broadcast_outputs({args.first, args.second}));
 
-            return std::make_pair(bcasted_outputs.at(0), bcasted_outputs.at(1));
+            return make_pair(bcasted_outputs.at(0), bcasted_outputs.at(1));
         }
 
         OutputVector numpy_broadcast_outputs(const OutputVector& values)
@@ -283,7 +278,7 @@ namespace ngraph
             auto bcast_shapes = get_numpy_broadcast_shapes(values);
 
             OutputVector broadcasted_inputs;
-            for (std::size_t i = 0; i < values.size(); ++i)
+            for (size_t i = 0; i < values.size(); ++i)
             {
                 broadcasted_inputs.push_back(
                     numpy_broadcast_node(values[i], bcast_shapes.first, bcast_shapes.second[i]));
@@ -291,7 +286,7 @@ namespace ngraph
             return broadcasted_inputs;
         }
 
-        std::shared_ptr<Node> numpy_broadcast(const Output<Node>& value, const Shape& shape)
+        shared_ptr<Node> numpy_broadcast(const Output<Node>& value, const Shape& shape)
         {
             auto bcast_shape = get_numpy_broadcast_shapes({value.get_shape(), shape});
             return numpy_broadcast_node(value, bcast_shape.first, bcast_shape.second[0]);
@@ -303,30 +298,30 @@ namespace ngraph
             const auto& left_shape = left.get_shape();
             const auto& right_shape = right.get_shape();
             // Broadcast only _stack of matrices_ axes.
-            const auto& numpy_shapes = get_numpy_broadcast_shapes(
-                {Shape{std::begin(left_shape), std::next(std::end(left_shape), -2)},
-                 Shape{std::begin(right_shape), std::next(std::end(right_shape), -2)}});
+            const auto& numpy_shapes =
+                get_numpy_broadcast_shapes({Shape{begin(left_shape), next(end(left_shape), -2)},
+                                            Shape{begin(right_shape), next(end(right_shape), -2)}});
 
             // Prepare tensors output shapes with broadcasted _stack of matrices_ axes.
             auto left_output_shape = numpy_shapes.first;
             auto right_output_shape = numpy_shapes.first;
             // Append the last two axes original dimensions.
-            left_output_shape.insert(std::end(left_output_shape),
-                                     std::next(std::begin(left_shape), left_shape.size() - 2),
-                                     std::end(left_shape));
-            right_output_shape.insert(std::end(right_output_shape),
-                                      std::next(std::begin(right_shape), right_shape.size() - 2),
-                                      std::end(right_shape));
+            left_output_shape.insert(end(left_output_shape),
+                                     next(begin(left_shape), left_shape.size() - 2),
+                                     end(left_shape));
+            right_output_shape.insert(end(right_output_shape),
+                                      next(begin(right_shape), right_shape.size() - 2),
+                                      end(right_shape));
 
             auto left_full_shape = numpy_shapes.second.at(0);
             auto right_full_shape = numpy_shapes.second.at(1);
             // Append the last two axes original dimensions.
-            left_full_shape.insert(std::end(left_full_shape),
-                                   std::next(std::begin(left_shape), left_shape.size() - 2),
-                                   std::end(left_shape));
-            right_full_shape.insert(std::end(right_full_shape),
-                                    std::next(std::begin(right_shape), right_shape.size() - 2),
-                                    std::end(right_shape));
+            left_full_shape.insert(end(left_full_shape),
+                                   next(begin(left_shape), left_shape.size() - 2),
+                                   end(left_shape));
+            right_full_shape.insert(end(right_full_shape),
+                                    next(begin(right_shape), right_shape.size() - 2),
+                                    end(right_shape));
 
             return {numpy_broadcast_node(left, left_output_shape, left_full_shape),
                     numpy_broadcast_node(right, right_output_shape, right_full_shape)};
@@ -361,8 +356,8 @@ namespace ngraph
             }
 
             // Find first dimensions at front with length different from 1
-            std::size_t num_ones = 0;
-            for (std::size_t dimension : new_right_shape)
+            size_t num_ones = 0;
+            for (size_t dimension : new_right_shape)
             {
                 if (dimension == 1)
                 {
@@ -375,16 +370,15 @@ namespace ngraph
             }
 
             // Remove dimensions with length=1 from front
-            new_right_shape.erase(std::begin(new_right_shape),
-                                  std::next(std::begin(new_right_shape), num_ones));
+            new_right_shape.erase(begin(new_right_shape), next(begin(new_right_shape), num_ones));
 
-            auto reshape_right = std::make_shared<op::Reshape>(
-                right, get_default_order(right_shape), new_right_shape);
+            auto reshape_right =
+                make_shared<op::Reshape>(right, get_default_order(right_shape), new_right_shape);
 
             // Move broadcast start axis parameter to right
             start_match_axis += num_ones;
 
-            auto broadcast_right = std::make_shared<op::Broadcast>(
+            auto broadcast_right = make_shared<op::Broadcast>(
                 reshape_right,
                 left_shape,
                 calculate_broadcast_axes(left_shape, new_right_shape, start_match_axis));
@@ -400,7 +394,7 @@ namespace ngraph
             }
 
             OutputVector broadcasted_inputs{inputs[0]};
-            for (std::size_t i = 1; i < inputs.size(); ++i)
+            for (size_t i = 1; i < inputs.size(); ++i)
             {
                 broadcasted_inputs.push_back(
                     broadcast_value_pdpd_style(inputs[i], inputs[0].get_shape(), axis));
@@ -410,16 +404,16 @@ namespace ngraph
 
         AxisSet calculate_broadcast_axes(const Shape& output_shape,
                                          const Shape& input_shape,
-                                         std::size_t start_match_axis)
+                                         size_t start_match_axis)
         {
-            std::vector<std::size_t> result(output_shape.size() - input_shape.size());
+            vector<size_t> result(output_shape.size() - input_shape.size());
             // Populate the result vector with monotonic increasing series from 0 until
             // output_shape_size, excluding values in range:
             // [start_match_axis, start_match_axis + input_shape.size()]
-            std::iota(std::begin(result), std::begin(result) + start_match_axis, 0);
-            std::iota(std::begin(result) + start_match_axis,
-                      std::end(result),
-                      start_match_axis + input_shape.size());
+            iota(begin(result), begin(result) + start_match_axis, 0);
+            iota(begin(result) + start_match_axis,
+                 end(result),
+                 start_match_axis + input_shape.size());
             return result;
         }
 
@@ -454,8 +448,8 @@ namespace ngraph
                 }
 
                 // Find first dimensions at front with length different from 1
-                std::size_t num_ones = 0;
-                for (std::size_t dimension : new_right_shape)
+                size_t num_ones = 0;
+                for (size_t dimension : new_right_shape)
                 {
                     if (dimension == 1)
                     {
@@ -468,8 +462,8 @@ namespace ngraph
                 }
 
                 // Remove dimensions with length=1 from front
-                new_right_shape.erase(std::begin(new_right_shape),
-                                      std::next(std::begin(new_right_shape), num_ones));
+                new_right_shape.erase(begin(new_right_shape),
+                                      next(begin(new_right_shape), num_ones));
 
                 auto reshape_right = reshape(right, new_right_shape);
 
@@ -479,12 +473,12 @@ namespace ngraph
                 return make_broadcast(reshape_right, left_shape, start_match_axis);
             }
 
-            std::vector<std::size_t> get_axes_mapping(const Shape& output_shape,
-                                                      const AxisSet& broadcast_axes)
+            vector<size_t> get_axes_mapping(const Shape& output_shape,
+                                            const AxisSet& broadcast_axes)
             {
                 NGRAPH_CHECK((broadcast_axes.size() <= output_shape.size()));
-                std::vector<size_t> axes_mapping(output_shape.size());
-                std::iota(axes_mapping.begin(), axes_mapping.end(), 0);
+                vector<size_t> axes_mapping(output_shape.size());
+                iota(axes_mapping.begin(), axes_mapping.end(), 0);
                 for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); ++i)
                 {
                     axes_mapping.erase(axes_mapping.begin() + *i);
@@ -494,11 +488,11 @@ namespace ngraph
 
             Output<Node> get_axes_mapping_output(const Shape& output_shape,
                                                  const Shape& input_shape,
-                                                 std::size_t start_match_axis)
+                                                 size_t start_match_axis)
             {
                 NGRAPH_CHECK((input_shape.size() + start_match_axis <= output_shape.size()));
-                std::vector<std::size_t> mapping(input_shape.size());
-                std::iota(std::begin(mapping), std::end(mapping), start_match_axis);
+                vector<size_t> mapping(input_shape.size());
+                iota(begin(mapping), end(mapping), start_match_axis);
 
                 return op::Constant::create(element::i64, Shape{mapping.size()}, mapping);
             }
@@ -506,7 +500,7 @@ namespace ngraph
             Output<Node> get_axes_mapping_output(const Shape& output_shape,
                                                  const AxisSet& broadcast_axes)
             {
-                std::vector<size_t> axes_mapping{get_axes_mapping(output_shape, broadcast_axes)};
+                vector<size_t> axes_mapping{get_axes_mapping(output_shape, broadcast_axes)};
                 return op::Constant::create(element::i64, Shape{axes_mapping.size()}, axes_mapping);
             }
 
@@ -514,7 +508,7 @@ namespace ngraph
                                         const Shape& target_shape,
                                         const AxisSet& broadcast_axes)
             {
-                return std::make_shared<op::v1::Broadcast>(
+                return make_shared<op::v1::Broadcast>(
                     node,
                     op::Constant::create(element::i64, Shape{target_shape.size()}, target_shape),
                     get_axes_mapping_output(target_shape, broadcast_axes));
@@ -522,9 +516,9 @@ namespace ngraph
 
             Output<Node> make_broadcast(const Output<Node>& node,
                                         const Shape& target_shape,
-                                        std::size_t start_match_axis)
+                                        size_t start_match_axis)
             {
-                return std::make_shared<op::v1::Broadcast>(
+                return make_shared<op::v1::Broadcast>(
                     node,
                     op::Constant::create(element::i64, Shape{target_shape.size()}, target_shape),
                     get_axes_mapping_output(target_shape, node.get_shape(), start_match_axis));
