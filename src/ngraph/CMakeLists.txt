@@ -81,6 +81,8 @@ set (SRC
     distributed.cpp
     distributed.hpp
     enum_names.hpp
+    env_util.cpp
+    env_util.hpp
     except.hpp
     factory.cpp
     factory.hpp
