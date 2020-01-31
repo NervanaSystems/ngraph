@@ -1,15 +1,75 @@
 import logging as log
 import sys
 import os
-import subprocess
 import csv
 import pytest
 import re
+from conftest import shell
 
 log.basicConfig(format="[ %(levelname)s ]  %(msg)s", stream=sys.stdout, level=log.INFO)
 
 pytest.operation_dictionary = {}
 pytest.avaliable_plugins = []
+
+
+def save_coverage_to_csv(csv_path, header):
+    with open(csv_path, 'w', newline='') as f:
+        csv_writer = csv.writer(f, delimiter='|', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        csv_writer.writerow(i for i in header)
+        i = 1
+        for key in sorted(pytest.operation_dictionary):
+            line = [i, key]
+            for plugin in pytest.avaliable_plugins:
+                if not plugin in pytest.operation_dictionary[key]:
+                    line.append('0/0')
+                else:
+                    line.append('/'.join(str(x) for x in pytest.operation_dictionary[key][plugin]))
+            csv_writer.writerow(line)
+            i += 1
+
+
+def get_color(value):
+    if '/' in value:
+        passed, total = [int(x.strip()) for x in value.split('/')]
+        if passed == total and total != 0:
+            return "#d1ffd3"
+        elif passed == total and total == 0:
+            return "#dadada"
+        else:
+            return "#ffdbdb"
+    else:
+        return "white"
+
+
+def csv_to_html_table(csv_path, html_path, headers=None, delimiter=","):
+    with open(csv_path) as f:
+        content = f.readlines()
+
+    # reading file content into list
+    rows = [x.strip() for x in content]
+    table = "<!DOCTYPE html><html><head><title>Opset1 operations results</title></head><body><table border=1>"
+
+    # creating HTML header row if header is provided
+    if headers is not None:
+        table += "<tr>"
+        table += "".join(["<th>" + cell + "</th>" for cell in headers])
+        table += "</tr>"
+    else:
+        table += "<tr>"
+        table += "".join(["<th>" + cell + "</th>" for cell in rows[0].split(delimiter)])
+        table += "</tr>"
+        rows = rows[1:]
+
+    # Converting csv to html row by row
+    for row in rows:
+        table += "<tr>" + "".join(["<td style=background-color:%s>" % (get_color(cell)) + cell + "</td>"
+                                   for cell in row.split(delimiter)]) + "</tr>" + "\n"
+    table += "</table></body></html><br>"
+
+    # Saving html file
+    fh = open(html_path, "w")
+    fh.write(table)
+    fh.close()
 
 
 def setup_module():
@@ -26,43 +86,12 @@ def teardown_module():
     :return:
     """
     csv_path = "nodes_coverage.csv"
-    header = ["Operation"] + [p + " passed / total" for p in pytest.avaliable_plugins]
-    with open(csv_path, 'w', newline='') as f:
-        csv_writer = csv.writer(f, delimiter='|', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        csv_writer.writerow(i for i in header)
-        for key in sorted(pytest.operation_dictionary):
-            line = [key]
-            for plugin in pytest.avaliable_plugins:
-                if not plugin in pytest.operation_dictionary[key]:
-                    line.append('0')
-                else:
-                    line.append('/'.join(str(x) for x in pytest.operation_dictionary[key][plugin]))
-            csv_writer.writerow(line)
+    header = ["#", "Operation"] + [p + " passed / total" for p in pytest.avaliable_plugins]
+    save_coverage_to_csv(csv_path=csv_path, header=header)
 
-
-def shell(cmd, env=None):
-    """
-    Run command execution in specified environment
-    :param cmd: list containing command and its parameters
-    :param env: set of environment variables to set for this command
-    :return:
-    """
-    if sys.platform.startswith('linux') or sys.platform == 'darwin':
-        cmd = ['/bin/bash', '-c', "unset OMP_NUM_THREADS; " + cmd]
-    else:
-        cmd = " ".join(cmd)
-
-    sys.stdout.write("Running command:\n" + "".join(cmd) + "\n")
-    p = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         universal_newlines=True)
-    stdout = []
-    while True:
-        line = p.stdout.readline()
-        stdout.append(line)
-        print(line.rstrip())
-        if line == '' and p.poll() != None:
-            break
-    return p.returncode, ''.join(stdout)
+    # Convert csv file to html for better visualization
+    html_path = "nodes_coverage.html"
+    csv_to_html_table(csv_path=csv_path, html_path=html_path, delimiter="|")
 
 
 def test(gtest_filter):
@@ -94,8 +123,6 @@ def test(gtest_filter):
     # Filling dictionary with operation coverage
     # How many time one operation is tested
     for n in nodes_list:
-        if not n in pytest.operation_dictionary:
-            pytest.operation_dictionary[n] = {}
         if plugin in pytest.operation_dictionary[n]:
             numerator, denominator = pytest.operation_dictionary[n][plugin]
             pytest.operation_dictionary[n][plugin] = (numerator if retcode != 0 else numerator + 1,
