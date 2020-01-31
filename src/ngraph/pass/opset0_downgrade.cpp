@@ -157,10 +157,9 @@ namespace
             replacement_node = make_shared<op::DynBroadcast>(
                 arg,
                 target_shape_input,
-                make_shared<op::Range>(
-                    make_zero(element::i64, {}),
-                    make_shared<op::ShapeOf>(target_shape_input),
-                    make_constant_from_string("1", element::i64, {})));
+                make_shared<op::Range>(make_zero(element::i64, {}),
+                                       make_shared<op::ShapeOf>(target_shape_input),
+                                       make_constant_from_string("1", element::i64, {})));
         }
         else
         {

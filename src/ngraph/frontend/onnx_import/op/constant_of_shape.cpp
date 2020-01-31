@@ -17,8 +17,8 @@
 #include "constant.hpp"
 #include "core/tensor.hpp"
 #include "default_opset.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/builder/reshape.hpp"
+#include "ngraph/op/constant.hpp"
 
 namespace ngraph
 {
@@ -41,9 +41,8 @@ namespace ngraph
                     {
                         constant_value = default_opset::Constant::create(element::f32, {}, {0});
                     }
-                    return {std::make_shared<default_opset::Broadcast>(
-                        constant_value,
-                        node.get_ng_inputs()[0])};
+                    return {std::make_shared<default_opset::Broadcast>(constant_value,
+                                                                       node.get_ng_inputs()[0])};
                 }
 
             } // namespace set_1
