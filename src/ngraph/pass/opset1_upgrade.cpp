@@ -423,7 +423,7 @@ namespace
         auto kernel = node->get_window_shape();
 
         shared_ptr<Node> replacement_node;
-        if (node->get_inputs().size() == 3)
+        if (node->get_input_size() == 3)
         {
             replacement_node = make_shared<op::v1::MaxPoolBackprop>(node->input_value(0),
                                                                     node->input_value(1),

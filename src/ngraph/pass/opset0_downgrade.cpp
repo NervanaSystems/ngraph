@@ -505,7 +505,7 @@ namespace
         const auto delta = node->input_value(1);
 
         shared_ptr<Node> replacement_node;
-        if (node->get_inputs().size() == 3)
+        if (node->get_input_size() == 3)
         {
             const auto result_forward = node->input_value(2);
             replacement_node = make_shared<op::v0::MaxPoolBackprop>(arg_forward,
