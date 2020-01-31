@@ -14,15 +14,31 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
+#include <algorithm>
+#include <cinttypes>
+#include <cmath>
 #include <cstdlib>
+#include <random>
+#include <string>
 
-#include "ngraph/env_util.hpp"
+#undef IN_NGRAPH_LIBRARY
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
+#include "util/all_close.hpp"
+#include "util/all_close_f.hpp"
+#include "util/ndarray.hpp"
+#include "util/random.hpp"
+#include "util/test_control.hpp"
+#include "util/test_tools.hpp"
 
-namespace ngraph
+static std::mt19937_64 random_generator;
+
+using namespace std;
+using namespace ngraph;
+
+static string s_manifest = "test.manifest";
+
+NGRAPH_TEST(CPU, dummy)
 {
-    static bool s_provenance_enabled = getenv_bool("NGRAPH_PROVENANCE_ENABLE");
-    void set_provenance_enabled(bool enabled);
-    bool get_provenance_enabled();
+    ASSERT_TRUE(true);
 }
