@@ -52,8 +52,8 @@ op::Constant::Constant(const element::Type& type,
                        const std::vector<std::string>& values)
     : m_element_type(type)
     , m_shape(shape)
-    , m_data(new runtime::AlignedBuffer(
-          std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f), host_alignment()))
+    , m_data(
+          new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(), host_alignment()))
 {
     NODE_VALIDATION_CHECK(this,
                           values.size() == shape_size(m_shape) || values.size() == 1,
@@ -290,13 +290,22 @@ op::Constant::Constant(const element::Type& type,
 op::Constant::Constant(const element::Type& type, const Shape& shape, const void* data)
     : m_element_type(type)
     , m_shape(shape)
-    , m_data(nullptr)
+    , m_data(
+          new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(), host_alignment()))
 {
-    size_t size = std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f);
-    m_data.reset(new runtime::AlignedBuffer(size, host_alignment()));
+    size_t size = shape_size(m_shape) * m_element_type.size();
     std::memcpy(m_data->get_ptr(), data, size);
     constructor_validate_and_infer_types();
     m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
+}
+
+op::Constant::Constant(const Constant& other)
+    : m_element_type(other.m_element_type)
+    , m_shape(other.m_shape)
+    , m_data(other.m_data)
+    , m_all_elements_bitwise_identical(other.m_all_elements_bitwise_identical)
+{
+    constructor_validate_and_infer_types();
 }
 
 op::Constant::~Constant()
@@ -516,7 +525,7 @@ AxisSet op::Constant::get_axis_set_val() const
 shared_ptr<Node> op::Constant::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Constant>(m_element_type, m_shape, m_data->get_ptr());
+    return make_shared<Constant>(*this);
 }
 
 template <typename T>
