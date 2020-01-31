@@ -31,7 +31,7 @@ endif()
 
 include(ExternalProject)
 
-set(PYBIND11_SOURCE_DIR "${CMAKE_BINARY_DIR}/pybind11")
+set(PYBIND11_SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/pybind11")
 
 ExternalProject_Add(
         pybind11
@@ -43,8 +43,8 @@ ExternalProject_Add(
         INSTALL_COMMAND ""
 )
 
-set(BUILD_SH_IN "${CMAKE_CURRENT_SOURCE_DIR}/python/configure_file/build_wheel.sh.in")
-set(BUILD_SH    "${CMAKE_CURRENT_BINARY_DIR}/python/build_wheel.sh")
+set(BUILD_SH_IN "${CMAKE_CURRENT_SOURCE_DIR}/configure_file/build_wheel.sh.in")
+set(BUILD_SH    "${CMAKE_CURRENT_BINARY_DIR}/build_wheel.sh")
 configure_file(${BUILD_SH_IN} ${BUILD_SH} @ONLY)
 
 add_custom_command(
