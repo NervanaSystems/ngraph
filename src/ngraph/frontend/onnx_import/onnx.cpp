@@ -70,7 +70,7 @@ namespace ngraph
             }
 
             Model model{model_proto};
-            Graph graph{model_proto.graph(), model, weights};
+            Graph graph{model_proto.graph(), model,  &model_proto, weights};
             auto function = std::make_shared<Function>(
                 graph.get_ng_outputs(), graph.get_ng_parameters(), graph.get_name());
             for (std::size_t i{0}; i < function->get_output_size(); ++i)
