@@ -81,8 +81,8 @@ namespace ngraph
                 const auto& input_pshape =
                     m_function->get_parameters().at(m_input_index)->get_partial_shape();
                 NGRAPH_CHECK(input_pshape.is_static(),
-                             "Input shape defined in Function must be fully known when static "
-                             "backend is used.");
+                             "Input data shape must be provided, if shape defined in Functions is "
+                             "not fully known.");
 
                 return add_input<T>(input_pshape.to_shape(), values);
             }
