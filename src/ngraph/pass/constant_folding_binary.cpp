@@ -504,7 +504,7 @@ shared_ptr<op::Constant> fold_constant_binary_arithmetic(shared_ptr<op::Constant
             return make_shared<op::Constant>(
                 binary->get_output_element_type(0), out_shape, data_ptr);
         }
-        else if (auto subtract_node = as_type_ptr<op::Subtract>(binary))
+        else if (auto subtract_v0_node = as_type_ptr<op::Subtract>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
@@ -513,7 +513,20 @@ shared_ptr<op::Constant> fold_constant_binary_arithmetic(shared_ptr<op::Constant
                                               data_ptr,
                                               a->get_shape(),
                                               b->get_shape(),
-                                              subtract_node->get_autob());
+                                              subtract_v0_node->get_autob());
+            return make_shared<op::Constant>(
+                binary->get_output_element_type(0), out_shape, data_ptr);
+        }
+        else if (auto subtract_v1_node = as_type_ptr<op::v1::Subtract>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            runtime::reference::subtract<Tin>(a->get_data_ptr<Tin>(),
+                                              b->get_data_ptr<Tin>(),
+                                              data_ptr,
+                                              a->get_shape(),
+                                              b->get_shape(),
+                                              subtract_v1_node->get_autob());
             return make_shared<op::Constant>(
                 binary->get_output_element_type(0), out_shape, data_ptr);
         }
@@ -560,7 +573,8 @@ bool is_supported_binary_op(std::shared_ptr<Node> n)
         is_type<op::v1::Maximum>(n) || is_type<op::v0::Minimum>(n) || is_type<op::v1::Minimum>(n) ||
         is_type<op::v0::And>(n) || is_type<op::v1::LogicalAnd>(n) || is_type<op::v0::Or>(n) ||
         is_type<op::v1::LogicalOr>(n) || is_type<op::v0::Xor>(n) ||
-        is_type<op::v1::LogicalXor>(n) || is_type<op::Subtract>(n));
+        is_type<op::v1::LogicalXor>(n) || is_type<op::v0::Subtract>(n) ||
+        is_type<op::v1::Subtract>(n));
 }
 
 void pass::ConstantFolding::construct_constant_binary()

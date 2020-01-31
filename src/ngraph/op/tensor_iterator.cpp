@@ -141,13 +141,6 @@ shared_ptr<op::TensorIterator::OutputDescription>
 
 Input<Node> op::TensorIterator::input_for_value(const Output<Node>& value)
 {
-    for (auto input : inputs())
-    {
-        if (input.get_source_output() == value)
-        {
-            return input;
-        }
-    }
     auto input_index = get_input_size();
     set_argument(input_index, value);
     return Input<Node>(this, input_index);

@@ -53,8 +53,7 @@ shared_ptr<Node> op::Dropout::copy_with_new_args(const NodeVector& new_args) con
 bool op::Dropout::get_use_seed() const
 {
     bool use_seed = false;
-    if (auto const_op =
-            as_type_ptr<op::Constant>(input(2).get_source_output().get_node_shared_ptr()))
+    if (auto const_op = as_type_ptr<op::Constant>(get_input_node_shared_ptr(2)))
     {
         auto use_seed_ptr = static_cast<const int32_t*>(const_op->get_data_ptr());
         use_seed = static_cast<const bool>(*use_seed_ptr);
@@ -65,8 +64,7 @@ bool op::Dropout::get_use_seed() const
 uint64_t op::Dropout::get_seed() const
 {
     uint64_t seed = 0;
-    if (auto const_op =
-            as_type_ptr<op::Constant>(input(3).get_source_output().get_node_shared_ptr()))
+    if (auto const_op = as_type_ptr<op::Constant>(get_input_node_shared_ptr(3)))
     {
         auto seed_ptr = static_cast<const uint64_t*>(const_op->get_data_ptr());
         seed = *seed_ptr;

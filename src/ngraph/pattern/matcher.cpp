@@ -18,6 +18,7 @@
 #include <regex>
 
 #include "matcher.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -109,8 +110,8 @@ namespace ngraph
             // This env var allows one to specify node name patterns to abort pattern matching
             // at particular nodes. The upshot is that one can quickly zero in on an offending
             // fusion by disabling individual fusions or optimizations that use Matcher.
-            static const char* node_skip_cregex = std::getenv("NGRAPH_FAIL_MATCH_AT");
-            if (node_skip_cregex)
+            static const std::string node_skip_cregex = getenv_string("NGRAPH_FAIL_MATCH_AT");
+            if (!node_skip_cregex.empty())
             {
                 static const std::regex node_skip_regex(node_skip_cregex);
                 if (std::regex_match(graph_node->get_name(), node_skip_regex))
