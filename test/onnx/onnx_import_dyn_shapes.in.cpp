@@ -184,7 +184,8 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, avg_pool_dyn_shape)
 
     auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
 
-    std::vector<float> input_values{0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f};
+    std::vector<float> input_values{
+        0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f};
 
     test_case.add_input<float>(Shape{1, 1, 4, 4}, input_values);
 

@@ -43,14 +43,14 @@ namespace ngraph
         public:
             NgraphTestCase(const std::shared_ptr<Function>& function,
                            const std::string& backend_name,
-                           BackendMode mode = BackendMode::STATIC);
+                           BackendMode mode = BackendMode::DYNAMIC);
 
             /// \brief Makes the test case print the expected and computed values to the console.
             ///        This should only be used for debugging purposes.
             ///
             /// Just before the assertion is done, the current test case will gather expected and
             /// computed values, format them as 2 columns and print out to the console along with
-            //  a corresponding index in the vector.
+            /// a corresponding index in the vector.
             ///
             /// \param dump - Indicates if the test case should perform the console printout
             NgraphTestCase& dump_results(bool dump = true);
@@ -81,7 +81,8 @@ namespace ngraph
                 const auto& input_pshape =
                     m_function->get_parameters().at(m_input_index)->get_partial_shape();
                 NGRAPH_CHECK(input_pshape.is_static(),
-                             "Input partial shape must be static for static backend.");
+                             "Input shape defined in Function must be fully known when static "
+                             "backend is used.");
 
                 return add_input<T>(input_pshape.to_shape(), values);
             }

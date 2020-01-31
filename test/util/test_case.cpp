@@ -23,8 +23,7 @@ ngraph::test::NgraphTestCase::NgraphTestCase(const std::shared_ptr<Function>& fu
                                              const std::string& backend_name,
                                              const BackendMode mode)
     : m_function(function)
-    , m_backend(ngraph::runtime::Backend::create(backend_name,
-                                                 mode == BackendMode::DYNAMIC ? true : false))
+    , m_backend(ngraph::runtime::Backend::create(backend_name, mode == BackendMode::DYNAMIC))
 {
     if (mode == BackendMode::STATIC)
     {
@@ -60,9 +59,10 @@ void ngraph::test::NgraphTestCase::run(size_t tolerance_bits)
         const auto& element_type = result_tensor->get_element_type();
 
         EXPECT_EQ(expected_result_constant->get_output_size(), 1);
-        const auto& expected_shape = expected_result_constant->get_output_partial_shape(0);
-        const auto& result_shape = result_tensor->get_partial_shape();
-        EXPECT_TRUE(result_shape.compatible(expected_shape));
+        const auto& expected_shape = expected_result_constant->get_shape();
+        const auto& result_shape = result_tensor->get_shape();
+
+        EXPECT_EQ(expected_shape, result_shape);
 
         if (m_value_comparators.count(element_type) == 0)
         {
