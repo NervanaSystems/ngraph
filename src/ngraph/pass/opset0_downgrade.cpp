@@ -146,14 +146,32 @@ namespace
     bool op_cast(shared_ptr<op::v1::Broadcast> node)
     {
         auto arg = node->input_value(0);
-        NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
-        auto target_shape =
-            static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
-                ->get_shape_val();
-        NGRAPH_CHECK(node->get_broadcast_axes().first);
-        auto replacement_node =
-            make_shared<op::v0::Broadcast>(arg, target_shape, node->get_broadcast_axes().second);
+        auto arg_pshape = arg.get_partial_shape();
+        auto arg_rank = arg_pshape.rank();
+        auto target_shape_input = node->input_value(1);
 
+        shared_ptr<Node> replacement_node;
+
+        if (arg_rank.is_static() && static_cast<size_t>(arg_rank) == 0)
+        {
+            replacement_node = make_shared<op::DynBroadcast>(
+                arg,
+                target_shape_input,
+                make_shared<op::Range>(
+                    make_zero(element::i64, {}),
+                    make_shared<op::ShapeOf>(target_shape_input),
+                    make_constant_from_string("1", element::i64, {})));
+        }
+        else
+        {
+            NGRAPH_CHECK(target_shape_input.get_node_shared_ptr()->is_constant());
+            auto target_shape =
+                static_pointer_cast<op::Constant>(target_shape_input.get_node_shared_ptr())
+                    ->get_shape_val();
+            NGRAPH_CHECK(node->get_broadcast_axes().first);
+            replacement_node = make_shared<op::v0::Broadcast>(
+                arg, target_shape, node->get_broadcast_axes().second);
+        }
         replace_node(node, replacement_node);
         return true;
     }
