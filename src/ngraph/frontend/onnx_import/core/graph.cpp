@@ -19,10 +19,11 @@
 #include "onnx/proto_utils.h"
 #include "onnx/string_utils.h"
 
+#include <string>
 #include <functional>
 #include <numeric>
 #include <sstream>
-#include <string>
+#include <fstream>
 #include "graph.hpp"
 #include "node.hpp"
 #include "utils/common.hpp"
@@ -97,38 +98,29 @@ namespace ngraph
             }
         } // namespace detail
 
-
         Graph::Graph(const onnx::GraphProto& graph_proto, Model& model)
             : m_graph_proto{&graph_proto}
             , m_model{&model}
         {
-            const onnx::OpSchemaRegistry* schema_registry = onnx::OpSchemaRegistry::Instance();
+             onnx::GraphProto gp;
+           const onnx::OpSchemaRegistry* schema_registry = onnx::OpSchemaRegistry::Instance();
             for (const auto& node : m_graph_proto.node())
             {
-                const auto node_op_schema = schema_registry->GetSchema(
-                    node.op_type(), static_cast<int>(ONNX_OPSET_VERSION), node.domain());
+                const auto node_op_schema =
+                    schema_registry->GetSchema(node.op_type(), static_cast<int>(ONNX_OPSET_VERSION), node.domain());
 
                 if (node_op_schema && node_op_schema->HasFunction())
                 {
                     const onnx::FunctionProto* proto_func = node_op_schema->GetFunction();
-                    onnx::FunctionExpandHelper(node, *proto_func, m_graph_proto);
+
+                    onnx::FunctionExpandHelper(node, *proto_func, gp);
+
                 }
                 else
                 {
                     std::cout << "has no function" << std::endl;
                 }
             }
-
-            // DEBUG
-            for (const auto& node : m_graph_proto.node())
-            {
-                std::cout << node.op_type() << std::endl;
-            }
-            std::string data;
-            m_graph_proto.SerializeToString(&data);
-            std::cout << data;
-
-            // END DEBUG
 
             // Process all initializers in the graph
             for (const auto& initializer_tensor : m_graph_proto.initializer())

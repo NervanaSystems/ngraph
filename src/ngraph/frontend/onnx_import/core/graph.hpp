@@ -57,6 +57,7 @@ namespace ngraph
 
         private:
             onnx::GraphProto m_graph_proto;
+            onnx::ModelProto m_model_proto;
             std::vector<Node> m_nodes;
             std::vector<ValueInfo> m_inputs;
             std::vector<ValueInfo> m_outputs;
