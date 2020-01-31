@@ -18,6 +18,7 @@
 #include "core/tensor.hpp"
 #include "default_opset.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/builder/reshape.hpp"
 
 namespace ngraph
 {
@@ -34,6 +35,7 @@ namespace ngraph
                     {
                         auto value_tensor = node.get_attribute_value<Tensor>("value");
                         constant_value = value_tensor.get_ng_constant();
+                        constant_value = builder::opset1::squeeze(constant_value);
                     }
                     else
                     {
@@ -41,7 +43,7 @@ namespace ngraph
                     }
                     return {std::make_shared<default_opset::Broadcast>(
                         constant_value,
-                        std::make_shared<default_opset::ShapeOf>(node.get_ng_inputs()[0]))};
+                        node.get_ng_inputs()[0])};
                 }
 
             } // namespace set_1
