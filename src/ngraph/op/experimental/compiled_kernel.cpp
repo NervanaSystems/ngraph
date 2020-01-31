@@ -39,7 +39,7 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
         nm[args.at(i).get_node()] = new_args.at(i);
     }
 
-    OutputVector new_node_list;
+    NodeVector new_node_list;
     for (auto n : m_node_list)
     {
         OutputVector cur_args;
@@ -63,7 +63,7 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
     OutputVector new_outputs;
     for (auto o : m_output_nodes)
     {
-        new_outputs.push_back(nm.at(o.get()));
+        new_outputs.push_back(nm.at(o.get_node())->output(o.get_index()));
     }
 
     auto ck =
@@ -75,12 +75,12 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
     return std::move(ck);
 }
 
-ngraph::op::CompiledKernel::CompiledKernel(const OutputVector& node_list,
+ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
                                            const OutputVector& outputs,
                                            const OutputVector& args)
     : Op(args)
-    , m_node_list(as_node_vector(node_list))
-    , m_output_nodes(as_node_vector(outputs))
+    , m_node_list(node_list)
+    , m_output_nodes(outputs)
 {
     constructor_validate_and_infer_types();
     encapsulate_nodes();
@@ -89,13 +89,12 @@ ngraph::op::CompiledKernel::CompiledKernel(const OutputVector& node_list,
     for (size_t i = 0; i < outputs.size(); ++i)
     {
         auto& o = outputs.at(i);
-
-        auto node = o.get_node();
-        if (std::find(node_list.begin(), node_list.end(), o) == node_list.end())
+        if (std::find(node_list.begin(), node_list.end(), o.get_node_shared_ptr()) ==
+            node_list.end())
         {
-            NODE_VALIDATION_CHECK(this, false, *node, " isn't in node_list");
+            NODE_VALIDATION_CHECK(this, false, *o.get_node(), " isn't in node_list");
         }
-        set_output_type(i, node->get_element_type(), node->get_shape());
+        set_output_type(i, o.get_element_type(), o.get_shape());
     }
 }
 
