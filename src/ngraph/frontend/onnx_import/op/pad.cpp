@@ -72,7 +72,7 @@ namespace ngraph
                         node.get_attribute_value<std::string>("mode", "constant");
                     ngraph::op::PadMode pad_mode = get_pad_mode(mode);
 
-                    auto paddings = convpool::get_pads(node, data_shape);
+                    auto paddings = convpool::get_pads(node);
                     ngraph::CoordinateDiff padding_below = paddings.first;
                     ngraph::CoordinateDiff padding_above = paddings.second;
 

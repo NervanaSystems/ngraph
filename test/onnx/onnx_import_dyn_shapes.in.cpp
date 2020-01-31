@@ -175,3 +175,21 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, dynamic_rank_input_inference)
         test_case.run();
     }
 }
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, avg_pool_dyn_shape)
+{
+    // the model contains a single Add operation that takes a fully dynamic input and a scalar
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/average_pool_2d_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    std::vector<float> input_values{0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f};
+
+    test_case.add_input<float>(Shape{1, 1, 4, 4}, input_values);
+
+    std::vector<float> expected_values{2.5f, 4.5f, 10.5f, 12.5f};
+    test_case.add_expected_output<float>(Shape{1, 1, 2, 2}, expected_values);
+
+    test_case.run();
+}
