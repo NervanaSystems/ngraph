@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,10 +25,9 @@ namespace ngraph
     {
         /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a
         ///        bounding box, optionally with stride.
-        class DynReplaceSlice : public Op
+        class NGRAPH_API DynReplaceSlice : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"DynReplaceSlice", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             DynReplaceSlice() = default;
@@ -67,7 +66,7 @@ namespace ngraph
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                                           const OutputVector& deltas) override;
 
         private:
             /// Helper method to compute output shape

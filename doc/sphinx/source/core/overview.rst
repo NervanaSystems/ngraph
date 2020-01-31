@@ -1,7 +1,8 @@
 .. core/overview.rst:
 
+.. _ngraph_core:
 
-Basic concepts
+Basic Concepts
 ==============
 
 .. figure:: ../graphics/nGraphCompilerstack.png

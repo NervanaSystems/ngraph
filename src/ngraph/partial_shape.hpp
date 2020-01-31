@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include <stddef.h>
 
+#include "ngraph/attribute_adapter.hpp"
 #include "ngraph/dimension.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/rank.hpp"
@@ -25,6 +26,11 @@
 
 namespace ngraph
 {
+    namespace op
+    {
+        struct AutoBroadcastSpec;
+    }
+
     /// \brief Class representing a shape that may be partially or totally dynamic.
     ///
     /// XXX: THIS CLASS IS EXPERIMENTAL AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
@@ -36,7 +42,7 @@ namespace ngraph
     ///     (Informal notation examples: `{1,2,?,4}`, `{?,?,?}`)
     /// \li Static rank, and static dimensions on all axes.
     ///     (Informal notation examples: `{1,2,3,4}`, `{6}`, `{}`)
-    class PartialShape
+    class NGRAPH_API PartialShape
     {
     public:
         /// \brief Constructs a shape with static rank from an initializer list of Dimension.
@@ -176,7 +182,9 @@ namespace ngraph
         /// \param i The index of the dimension being selected.
         /// \return A reference to the `i`th Dimension of this shape.
         Dimension& operator[](size_t i) { return m_dimensions[i]; }
-        friend std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
+        /// \brief Returns a vector of the dimensions. This has no meaning if dynamic.
+        explicit operator std::vector<Dimension>() const { return m_dimensions; }
+        friend NGRAPH_API std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
         friend PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
 
         /// \brief Try to merge one shape into another.
@@ -274,5 +282,20 @@ namespace ngraph
     /// {1,?,2,3}
     /// {2,3,4}
     /// \endcode
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
+
+    template <>
+    class AttributeAdapter<PartialShape> : public ValueReference<PartialShape>,
+                                           public ValueAccessor<void>
+    {
+    public:
+        AttributeAdapter(PartialShape& value)
+            : ValueReference<PartialShape>(value)
+        {
+        }
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<PartialShape>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

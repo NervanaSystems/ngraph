@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -114,6 +114,16 @@ size_t runtime::Executable::get_preferred_pipeline_depth() const
     return 2;
 }
 
+void runtime::Executable::set_parameters(const ngraph::ParameterVector& params)
+{
+    m_parameters = params;
+}
+
+void runtime::Executable::set_results(const ngraph::ResultVector& results)
+{
+    m_results = results;
+}
+
 void runtime::Executable::set_parameters_and_results(const Function& func)
 {
     m_parameters = func.get_parameters();
@@ -135,7 +145,19 @@ shared_ptr<runtime::Tensor> runtime::Executable::create_input_tensor(size_t /* i
     throw runtime_error("create_input_tensor unimplemented");
 }
 
+shared_ptr<runtime::Tensor> runtime::Executable::create_input_tensor(size_t /* input_index */,
+                                                                     void* /* memory_pointer */)
+{
+    throw runtime_error("create_input_tensor unimplemented");
+}
+
 shared_ptr<runtime::Tensor> runtime::Executable::create_output_tensor(size_t /* output_index */)
+{
+    throw runtime_error("create_output_tensor unimplemented");
+}
+
+shared_ptr<runtime::Tensor> runtime::Executable::create_output_tensor(size_t /* output_index */,
+                                                                      void* /* memory_pointer */)
 {
     throw runtime_error("create_output_tensor unimplemented");
 }
@@ -146,9 +168,21 @@ vector<shared_ptr<runtime::Tensor>>
     throw runtime_error("create_input_tensor unimplemented");
 }
 
+vector<shared_ptr<runtime::Tensor>> runtime::Executable::create_input_tensor(
+    size_t /* input_index */, size_t /* pipeline_depth */, std::vector<void*> /* memory_pointer */)
+{
+    throw runtime_error("create_input_tensor unimplemented");
+}
+
 vector<shared_ptr<runtime::Tensor>>
     runtime::Executable::create_output_tensor(size_t /* output_index */,
                                               size_t /* pipeline_depth */)
+{
+    throw runtime_error("create_output_tensor unimplemented");
+}
+
+vector<shared_ptr<runtime::Tensor>> runtime::Executable::create_output_tensor(
+    size_t /* output_index */, size_t /* pipeline_depth */, std::vector<void*> /* memory_pointer */)
 {
     throw runtime_error("create_output_tensor unimplemented");
 }

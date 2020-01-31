@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -381,12 +381,12 @@ TEST(type_prop, broadcast_v1_broadcast_shape_et_wrong)
     try
     {
         auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
-        FAIL() << "Broadcast: did not detect shape element type not i64";
+        FAIL() << "Broadcast: did not detect shape element type not integral number";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Broadcast shape must have element type i64"));
+                             std::string("Broadcast shape must be an integral number"));
     }
     catch (...)
     {
@@ -404,12 +404,12 @@ TEST(type_prop, broadcast_v1_axes_et_wrong)
     try
     {
         auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
-        FAIL() << "Broadcast: did not detect axes element type not i64";
+        FAIL() << "Broadcast: did not detect axes element type not integral numbers";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Broadcast axes must have element type i64"));
+                             std::string("Broadcast axes must be integral numbers, but are:"));
     }
     catch (...)
     {

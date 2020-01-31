@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,10 @@ namespace ngraph
 
     namespace op
     {
-        class Parameter;
+        namespace v0
+        {
+            class Parameter;
+        }
     }
 
     void traverse_nodes(const std::shared_ptr<const Function> p,
@@ -81,6 +84,7 @@ namespace ngraph
     ///
     /// \param target Node to be replaced.
     /// \param replacement Node to replace `target` with.
+    /// \param output_order Vector determines order of replacement node's outputs.
     ///
     /// This is primarily used in graph-rewriting passes. For example, we
     /// might "fuse" two Concat operations as follows:
@@ -209,6 +213,11 @@ namespace ngraph
     ///        auto new_N = N->copy_with_new_args(N->get_arguments());
     ///        shared_ptr<Node> M = make_shared<SomeUnaryOp>(new_N);
     ///        replace_node(N, M);
+    NGRAPH_API
+    void replace_node(std::shared_ptr<Node> target,
+                      std::shared_ptr<Node> replacement,
+                      const std::vector<int64_t>& output_order);
+    NGRAPH_API
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
     /// \brief Replace multiple nodes in a function.
@@ -234,8 +243,8 @@ namespace ngraph
     ///      `body_replacement_map`, behavior is unspecified.
     void replace_nodes(
         const std::shared_ptr<Function>& f,
-        const std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Parameter>>&
-            parameter_replacement_map,
+        const std::unordered_map<std::shared_ptr<op::v0::Parameter>,
+                                 std::shared_ptr<op::v0::Parameter>>& parameter_replacement_map,
         const std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>>&
             body_replacement_map);
 
@@ -263,7 +272,7 @@ namespace ngraph
                 size_t arg_count = node->get_input_size();
                 for (size_t i = 0; i < arg_count; ++i)
                 {
-                    Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
+                    Node* dep = node->get_input_node_ptr(arg_count - i - 1);
                     if (nodes_done.count(dep) == 0)
                     {
                         can_add = false;
@@ -323,7 +332,7 @@ namespace ngraph
                 size_t arg_count = node->get_input_size();
                 for (size_t i = 0; i < arg_count; ++i)
                 {
-                    Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
+                    Node* dep = node->get_input_node_ptr(arg_count - i - 1);
                     if (nodes_done.count(dep) == 0 && nodes_to_emit.count(node) != 0)
                     {
                         can_add = false;
@@ -394,7 +403,7 @@ namespace ngraph
     // Assert that nodes in the function is colocated and return that placement
     Placement get_colocated_function_placement(std::shared_ptr<Function> func);
 
-    std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
+    std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::v0::Parameter>>
         insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
                                       const std::shared_ptr<Node>& dst_node);
 

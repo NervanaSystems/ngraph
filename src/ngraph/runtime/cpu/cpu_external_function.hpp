@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,10 +26,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#if defined(NGRAPH_HALIDE)
-#include <Halide.h>
-#endif
 
 #if !defined(NGRAPH_DEX_ONLY)
 
@@ -184,25 +180,6 @@ namespace ngraph
 
                 const std::vector<PerformanceCounter>& get_perf_counters();
 
-#if defined(NGRAPH_HALIDE)
-                std::unordered_map<std::string, Halide::Func>& get_halide_functions()
-                {
-                    return halide_functions;
-                }
-                std::unordered_map<std::string, Halide::ImageParam>& get_subgraph_params()
-                {
-                    return subgraph_params;
-                }
-                std::unordered_map<std::string, int>& get_subgraph_param_sizes()
-                {
-                    return subgraph_param_sizes;
-                }
-                std::unordered_map<std::string, size_t>> &get_subgraph_param_indices()
-                {
-                    return subgraph_param_indices;
-                }
-#endif
-
             protected:
                 void build(ngraph::pass::PassConfig& pass_config);
 
@@ -343,13 +320,6 @@ namespace ngraph
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
                 std::vector<runtime::PerformanceCounter> m_perf_counters;
-
-#if defined(NGRAPH_HALIDE)
-                std::unordered_map<std::string, Halide::Func> halide_functions;
-                std::unordered_map<std::string, Halide::ImageParam> subgraph_params;
-                std::unordered_map<std::string, int> subgraph_param_sizes;
-                std::unordered_map<std::string, size_t> subgraph_param_indices;
-#endif
 
                 /// Map each node with mkldnn implementation to its mkldnn primitive creating
                 /// string, deps, mkldnn primitive index, and mkldnn scratchpad size.

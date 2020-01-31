@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "misc.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -32,7 +33,9 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -58,7 +61,6 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
-#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -66,6 +68,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -120,7 +123,7 @@ TEST(cpu_fusion, gemm_pattern)
     auto pbroadcast = make_shared<op::Broadcast>(b, dot->get_shape(), AxisSet{0});
     auto padd = pdot + pbroadcast;
 
-    TestMatcher n(nullptr);
+    TestMatcher n;
     ASSERT_TRUE(n.match(padd, add));
     ASSERT_EQ(n.get_pattern_map()[W], A);
     ASSERT_EQ(n.get_pattern_map()[x], B);
@@ -286,6 +289,25 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     auto broadcast = make_shared<op::Broadcast>(C, dot->get_shape(), AxisSet{0});
     auto add = dot + broadcast;
     auto graph = make_shared<op::Abs>(add);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
+    auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
+    pass_manager.run_passes(func);
+    ASSERT_NE(as_type_ptr<op::MatmulBias>(graph->get_argument(0)), nullptr);
+}
+
+TEST(cpu_fusion, matmul_f64)
+{
+    Shape shape{};
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    Shape shape_b{1};
+    auto A = make_shared<op::Parameter>(element::f64, shape_w);
+    auto B = make_shared<op::Parameter>(element::f64, shape_x);
+    auto C = make_shared<op::Parameter>(element::f64, shape_b);
+
+    auto dot = make_shared<op::Dot>(A, B);
+    auto graph = make_shared<op::Abs>(dot);
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
@@ -507,12 +529,12 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     ngraph::autodiff::Adjoints adjoints(OutputVector{convolution_bias},
                                         OutputVector{conv_test.delta});
 
-    auto d_data = adjoints.backprop_node(conv_test.data);
-    auto d_weights = adjoints.backprop_node(conv_test.weights);
-    auto d_bias = adjoints.backprop_node(conv_test.bias);
+    auto d_data = adjoints.backprop_output(conv_test.data);
+    auto d_weights = adjoints.backprop_output(conv_test.weights);
+    auto d_bias = adjoints.backprop_output(conv_test.bias);
 
     auto df = make_shared<Function>(
-        NodeVector{d_data, d_weights, d_bias},
+        OutputVector{d_data, d_weights, d_bias},
         ParameterVector{conv_test.data, conv_test.weights, conv_test.bias, conv_test.delta});
     auto handle = backend->compile(df);
     handle->call_with_validate(
@@ -546,11 +568,11 @@ TEST(cpu_fusion, conv_bias_bprop)
 
     ngraph::autodiff::Adjoints adjoints(OutputVector{conv_bias}, OutputVector{delta});
 
-    auto d_data = adjoints.backprop_node(data_batch);
-    auto d_weights = adjoints.backprop_node(filters);
-    auto d_bias = adjoints.backprop_node(bias);
+    auto d_data = adjoints.backprop_output(data_batch);
+    auto d_weights = adjoints.backprop_output(filters);
+    auto d_bias = adjoints.backprop_output(bias);
 
-    auto df = make_shared<Function>(NodeVector{d_data, d_weights, d_bias},
+    auto df = make_shared<Function>(OutputVector{d_data, d_weights, d_bias},
                                     ParameterVector{data_batch, filters, bias, delta});
 
     pass_manager.run_passes(df);
@@ -1081,6 +1103,73 @@ TEST(cpu_fusion, conv_add)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
+#if MKLDNN_VERSION_MAJOR < 1
+static double gelu_backprop_factor(double x)
+{
+    auto pi = 4.0 * std::atan(1.0);
+    return 0.5 * (1.0 + erf(x * sqrt(1.0 / 2.0))) + (x * exp(-x * x / 2.0)) / sqrt(2.0 * pi);
+}
+
+TEST(cpu_fusion, fuse_gelu_backprop_f32)
+{
+    Shape shape_a{2, 1, 600, 600};
+
+    auto make_function = [shape_a]() {
+        auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto gbpfactor = std::make_shared<op::GeluBackpropFactor>(A);
+        auto delta = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto gbp = gbpfactor * delta;
+
+        auto f = make_shared<Function>(NodeVector{gbp}, ParameterVector{A, delta});
+        return f;
+    };
+    auto fuse_func = make_function();
+    // Test fusion
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.run_passes(fuse_func);
+        ASSERT_EQ(count_ops_of_type<op::GeluBackprop>(fuse_func), 1);
+    }
+
+    // Test values
+    {
+        test::Uniform<float> rng(1.0f, 100.0f);
+        vector<vector<float>> args;
+        for (shared_ptr<op::Parameter> param : fuse_func->get_parameters())
+        {
+            auto name = param->get_name();
+            vector<float> tensor_val(shape_size(param->get_shape()));
+            rng.initialize(tensor_val);
+            args.push_back(tensor_val);
+        }
+
+        auto backend = runtime::Backend::create("CPU");
+
+        // Create some tensors for input/output
+        auto a = backend->create_tensor(element::f32, shape_a);
+        auto delta = backend->create_tensor(element::f32, shape_a);
+        copy_data(a, args[0]);
+        copy_data(delta, args[1]);
+        auto result = backend->create_tensor(element::f32, shape_a);
+
+        std::transform(args[0].begin(), args[0].end(), args[0].begin(), [](float x) -> float {
+            return static_cast<float>(gelu_backprop_factor(static_cast<double>(x)));
+        });
+
+        std::transform(args[0].begin(),
+                       args[0].end(),
+                       args[1].begin(),
+                       args[0].begin(),
+                       [](float x, float delta) -> float { return static_cast<float>(x * delta); });
+
+        auto handle = backend->compile(fuse_func);
+        handle->call_with_validate({result}, {a, delta});
+        EXPECT_TRUE(test::all_close(args[0], read_vector<float>(result), 0.007f, 0.007f));
+    }
+}
+#endif
+
 shared_ptr<Function> gen_deconv(const bool add_goe)
 {
     Shape conv_out_shape{100, 64, 1, 1};
@@ -1122,7 +1211,7 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
 
 TEST(cpu_fusion, fuse_deconv)
 {
-    bool use_deconv_fuse = (getenv("NGRAPH_DECONV_FUSE") != nullptr);
+    bool use_deconv_fuse = (getenv_bool("NGRAPH_DECONV_FUSE"));
     if (!use_deconv_fuse)
     {
         set_environment("NGRAPH_DECONV_FUSE", "1", 1);
@@ -1451,9 +1540,9 @@ TEST(cpu_fusion, max_pool_with_indices)
 
     ngraph::autodiff::Adjoints adjoints(ngraph::OutputVector{max_pool}, ngraph::OutputVector{C});
 
-    auto dinput = adjoints.backprop_node(input);
+    auto dinput = adjoints.backprop_output(input);
 
-    auto df = std::make_shared<Function>(NodeVector{dinput}, ParameterVector{input, C});
+    auto df = std::make_shared<Function>(OutputVector{dinput}, ParameterVector{input, C});
 
     auto f = std::make_shared<Function>(NodeVector{max_pool}, ParameterVector{input});
 
@@ -1561,7 +1650,7 @@ static std::pair<std::shared_ptr<ngraph::Function>, OutputVector>
     transform(back_parameters.begin(),
               back_parameters.end(),
               dYdXs.begin(),
-              [&adjoint](const std::shared_ptr<Node>& X) { return adjoint.backprop_node(X); });
+              [&adjoint](const std::shared_ptr<Node>& X) { return adjoint.backprop_output(X); });
 
     // create the backward function
     std::vector<std::shared_ptr<ngraph::op::Parameter>> param_adjoints;
@@ -2330,9 +2419,9 @@ void sigmoid_multiply_fusion_backward_compute(runtime::Backend* backend,
         make_shared<op::SigmoidMultiply>(input_0_alt, input_1_alt, input_0_type, input_1_type);
 
     ngraph::autodiff::Adjoints adjoints(OutputVector{sigmoid_mul}, OutputVector{delta_param});
-    auto d_input_0 = adjoints.backprop_node(input_0_adjoint);
-    auto d_input_1 = adjoints.backprop_node(input_1_adjoint);
-    auto df = make_shared<Function>(NodeVector{d_input_0, d_input_1}, back_params);
+    auto d_input_0 = adjoints.backprop_output(input_0_adjoint);
+    auto d_input_1 = adjoints.backprop_output(input_1_adjoint);
+    auto df = make_shared<Function>(OutputVector{d_input_0, d_input_1}, back_params);
     auto handle = backend->compile(df);
     handle->call_with_validate({d_input_0_tensor, d_input_1_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
@@ -3616,53 +3705,14 @@ TEST(cpu_fusion, sigmoid_multiply_fusion)
     ASSERT_EQ(ccg, 18);
 }
 
-TEST(cpu_fusion, fuse_batch_mat_mul_transpose)
-{
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/batch_dot_3.json");
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    pass_manager.run_passes(func);
-    size_t ccg = count_ops_of_type<op::BatchMatMulTranspose>(func);
-    ASSERT_EQ(ccg, 1);
-}
-
-TEST(cpu_fusion, fuse_batch_mat_mul_transpose_forward)
-{
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-
-    const std::string file_name("mxnet/batch_dot_3.json");
-    auto cpu_f = make_function_from_file(file_name);
-    auto int_f = make_function_from_file(file_name);
-    pass_manager.run_passes(cpu_f);
-    test::Uniform<float> rng(0.0f, 1.0f);
-    vector<vector<float>> args;
-
-    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
-    {
-        vector<float> tensor_val(shape_size(param->get_shape()));
-        rng.initialize(tensor_val);
-        args.push_back(tensor_val);
-    }
-    auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
-    for (size_t i = 0; i < int_results.size(); i++)
-    {
-        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
-    }
-}
-
-TEST(cpu_fusion, fuse_batch_dot_backward)
+TEST(batch_fusion, fuse_batch_dot_backward)
 {
     const std::string file_name("mxnet/batch_dot_3.json");
     auto cpu_f = make_function_from_file(file_name);
     auto int_f = make_function_from_file(file_name);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.register_pass<ngraph::pass::BatchFusion>();
     pass_manager.run_passes(cpu_f);
 
     auto int_df = autodiff::backprop_function(int_f);
@@ -3898,12 +3948,14 @@ TEST(cpu_fusion, lstm_cell)
         const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
         const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
-        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, H_t, C_t, W, R, hidden_size);
         auto ht = make_shared<op::GetOutputElement>(lstm_cell, 0);
         auto ct = make_shared<op::GetOutputElement>(lstm_cell, 1);
 
-        auto lstm_function =
-            make_shared<Function>(NodeVector{ht, ct}, ParameterVector{X, W, R, H_t, C_t});
+        auto lstm_function = make_shared<Function>(NodeVector{ht, ct},
+                                                   ParameterVector{
+                                                       X, H_t, C_t, W, R,
+                                                   });
         return lstm_function;
     };
     auto lstm_function_cpu = make_function();
@@ -3973,28 +4025,4 @@ TEST(cpu_fusion, validate_fuse_gru_inputs)
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
-
-#if defined(AUTODIFF_BACKEND_CPU) && !defined(NGRAPH_JSON_DISABLE)
-NGRAPH_TEST(cpu_fusion, backwards_batchmatmultranspose_tensor2_tensor2)
-{
-    auto backend = runtime::Backend::create("CPU");
-
-    const std::string file_name("mxnet/batch_dot_3.json");
-    auto f = make_function_from_file(file_name);
-
-    test::Uniform<float> rng(-1.0f, 1.0f);
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> args;
-    for (shared_ptr<op::Parameter> param : f->get_parameters())
-    {
-        args.push_back(rng.initialize(backend->create_tensor<float>(param->get_shape())));
-    }
-
-    auto g = make_function_from_file(file_name);
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.run_passes(g);
-    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), f, g, args, .01f, .01f));
-}
-#endif
-
 #endif

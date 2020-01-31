@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ namespace ngraph
         class Output;
 
         // Describes a tensor that is an input to an op, directly or indirectly via a tuple
-        class Input
+        class NGRAPH_API Input
         {
             friend class ngraph::Node;
 
@@ -99,6 +99,10 @@ namespace ngraph
             /// \return the element type of the connected output
             const element::Type& get_element_type() const;
 
+            Input(const Input&) = default;
+            Input(Input&&) = default;
+            Input& operator=(const Input&) = default;
+
         protected:
             // owner of an argument node (in lieu of m_arguments)
             std::shared_ptr<Node> m_src_node;
@@ -109,9 +113,6 @@ namespace ngraph
         private:
             bool m_is_relevant_to_shape;
             bool m_is_relevant_to_value;
-            Input(const Input&) = delete;
-            Input(Input&&) = delete;
-            Input& operator=(const Input&) = delete;
         };
     }
 }

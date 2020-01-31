@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -97,7 +97,7 @@ void op::v0::Gather::validate_and_infer_types()
 }
 
 void op::v0::Gather::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const NodeVector& /* deltas */)
+                                       const OutputVector& /* deltas */)
 {
     throw ngraph_error("Not yet implemented");
 }
@@ -134,7 +134,7 @@ void op::v1::Gather::validate_and_infer_types()
     if (input_rank.is_static() && axis != AXIS_NOT_SET_VALUE)
     {
         NODE_VALIDATION_CHECK(this,
-                              axis >= 0 && axis < static_cast<size_t>(input_rank),
+                              axis < static_cast<size_t>(input_rank),
                               "The axis must => 0 and <= input_rank (axis: ",
                               axis,
                               ").");
@@ -183,7 +183,7 @@ size_t op::v1::Gather::get_axis() const
     auto axes_input_node = input_value(AXIS).get_node_shared_ptr();
     if (auto const_op = as_type_ptr<op::Constant>(axes_input_node))
     {
-        axis = const_op->get_vector<int64_t>()[0];
+        axis = const_op->cast_vector<int64_t>()[0];
     }
     if (axis < 0)
     {
@@ -197,7 +197,7 @@ size_t op::v1::Gather::get_axis() const
 }
 
 void op::v1::Gather::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const NodeVector& /* deltas */)
+                                       const OutputVector& /* deltas */)
 {
     throw ngraph_error("Not yet implemented");
 }

@@ -1,0 +1,140 @@
+# ******************************************************************************
+# Copyright 2017-2020 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ******************************************************************************
+
+cmake_minimum_required(VERSION 3.4.3)
+
+include(ExternalProject)
+
+project(llvm NONE)
+
+set(NGRAPH_USE_PREBUILT_LLVM @NGRAPH_USE_PREBUILT_LLVM@)
+set(LLVM_TARBALL_URL @LLVM_TARBALL_URL@)
+set(LLVM_SHA1_HASH @LLVM_SHA1_HASH@)
+
+if(NGRAPH_USE_PREBUILT_LLVM)
+    message(STATUS "LLVM: Using prebuilt LLVM")
+    # Override default LLVM binaries
+    if(NOT DEFINED LLVM_TARBALL_URL)
+        if(APPLE)
+            set(NGRAPH_LLVM_VERSION 8.0.0)
+            set(LLVM_TARBALL_URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-apple-darwin.tar.xz)
+            set(LLVM_SHA1_HASH a5674f2ce5b9ed1b67d92689d319ed3b46d66e29)
+        elseif(UNIX AND NOT APPLE)
+            set(NGRAPH_LLVM_VERSION 8.0.0)
+            if(EXISTS /etc/lsb-release)
+                execute_process(COMMAND grep DISTRIB_RELEASE /etc/lsb-release OUTPUT_VARIABLE UBUNTU_VER_LINE)
+                string(REGEX MATCH "[0-9.]+" UBUNTU_VER ${UBUNTU_VER_LINE})
+                message(STATUS "Ubuntu version: ${UBUNTU_VER} detected.")
+                set(LLVM_TARBALL_URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-linux-gnu-ubuntu-${UBUNTU_VER}.tar.xz)
+                if(UBUNTU_VER MATCHES "14.04")
+                    set(LLVM_SHA1_HASH 552ea458b70961b7922a4bbe9de1434688342dbf)
+                elseif(UBUNTU_VER MATCHES "16.04")
+                    set(LLVM_SHA1_HASH 2be69be355b012ae206dbc0ea7d84b831d77dc27)
+                elseif(UBUNTU_VER MATCHES "18.04")
+                    set(LLVM_SHA1_HASH 6aeb8aa0998d37be67d886b878f27de5e5ccc5e4)
+                else()
+                    message(FATAL_ERROR "No prebuilt LLVM available for Ubuntu ${UBUNTU_VER} on llvm.org, please set LLVM_TARBALL_URL manually.")
+                endif()
+            else()
+                message(FATAL_ERROR "Prebuilt LLVM: Only Ubuntu Linux is supported.")
+            endif()
+        else()
+            message(FATAL_ERROR "Prebuilt LLVM: unsupported OS.")
+        endif()
+    else()
+        if(NOT DEFINED LLVM_SHA1_HASH)
+            message(FATAL_ERROR "Prebuilt LLVM: please provide LLVM_SHA_HASH.")
+        endif()
+    endif()
+
+    ExternalProject_Add(
+        ext_llvm
+        PREFIX llvm
+        URL ${LLVM_TARBALL_URL}
+        URL_HASH SHA1=${LLVM_SHA1_HASH}
+        CMAKE_GENERATOR "${CMAKE_GENERATOR}"
+        CMAKE_GENERATOR_PLATFORM "${CMAKE_GENERATOR_PLATFORM}"
+        CMAKE_GENERATOR_TOOLSET "${CMAKE_GENERATOR_TOOLSET}"
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        UPDATE_COMMAND ""
+        SOURCE_DIR @LLVM_INSTALL_ROOT@
+        DOWNLOAD_NO_PROGRESS TRUE
+        )
+
+else()
+    message(STATUS "LLVM: Building LLVM from source")
+
+    # Revert prior changes to make incremental build work.
+    set(LLVM_PATCH_REVERT_COMMAND cd @LLVM_PROJECT_ROOT@/llvm/src/ext_llvm && git reset HEAD --hard)
+
+    set(LLVM_CMAKE_ARGS @NGRAPH_FORWARD_CMAKE_ARGS@
+                   -DCMAKE_INSTALL_PREFIX=@LLVM_INSTALL_ROOT@
+                   -DLLVM_ENABLE_PROJECTS:STRING=clang$<SEMICOLON>openmp
+                   -DLLVM_INCLUDE_DOCS=OFF
+                   -DLLVM_INCLUDE_TESTS=OFF
+                   -DLLVM_INCLUDE_GO_TESTS=OFF
+                   -DLLVM_INCLUDE_EXAMPLES=OFF
+                   -DLLVM_INCLUDE_BENCHMARKS=OFF
+                   -DLLVM_BUILD_TOOLS=OFF
+                   -DLLVM_BUILD_UTILS=OFF
+                   -DLLVM_BUILD_RUNTIMES=OFF
+                   -DLLVM_BUILD_RUNTIME=OFF
+                   -DLLVM_TARGETS_TO_BUILD=X86
+                   -DLLVM_ENABLE_BINDINGS=OFF
+                   -DLLVM_ENABLE_TERMINFO=OFF
+                   -DLLVM_ENABLE_ZLIB=OFF
+                   -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON
+                   -DLIBOMP_OMPT_SUPPORT=OFF
+                   -DCLANG_ENABLE_ARCMT=OFF
+                   -DCLANG_ANALYZER_ENABLE_Z3_SOLVER=OFF
+                   -DCLANG_ENABLE_STATIC_ANALYZER=OFF)
+
+    if(${CMAKE_VERSION} VERSION_LESS 3.7)
+        ExternalProject_Add(
+            ext_llvm
+            PREFIX llvm
+            GIT_REPOSITORY https://github.com/llvm/llvm-project.git
+            GIT_TAG llvmorg-8.0.0
+            CMAKE_GENERATOR "${CMAKE_GENERATOR}"
+            CMAKE_GENERATOR_PLATFORM "${CMAKE_GENERATOR_PLATFORM}"
+            CMAKE_GENERATOR_TOOLSET "${CMAKE_GENERATOR_TOOLSET}"
+            UPDATE_COMMAND ""
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} ../ext_llvm/llvm -G "@CMAKE_GENERATOR@" -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM} -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET} ${LLVM_CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+            PATCH_COMMAND ${LLVM_PATCH_REVERT_COMMAND}
+            COMMAND git apply --ignore-space-change --ignore-whitespace @CMAKE_CURRENT_SOURCE_DIR@/cmake/llvm.patch
+            DOWNLOAD_NO_PROGRESS TRUE
+            )
+    else()
+        ExternalProject_Add(
+            ext_llvm
+            PREFIX llvm
+            GIT_REPOSITORY https://github.com/llvm/llvm-project.git
+            GIT_TAG llvmorg-8.0.0
+            GIT_SHALLOW 1
+            CMAKE_GENERATOR "${CMAKE_GENERATOR}"
+            CMAKE_GENERATOR_PLATFORM "${CMAKE_GENERATOR_PLATFORM}"
+            CMAKE_GENERATOR_TOOLSET "${CMAKE_GENERATOR_TOOLSET}"
+            CMAKE_ARGS ${LLVM_CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+            UPDATE_COMMAND ""
+            PATCH_COMMAND ${LLVM_PATCH_REVERT_COMMAND}
+            COMMAND git apply --ignore-space-change --ignore-whitespace @CMAKE_CURRENT_SOURCE_DIR@/cmake/llvm.patch
+            SOURCE_SUBDIR llvm
+            DOWNLOAD_NO_PROGRESS TRUE
+            )
+    endif()
+endif()

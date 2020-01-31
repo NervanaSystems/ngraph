@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,9 +17,7 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/elu.hpp"
-
+#include "default_opset.hpp"
 #include "elu.hpp"
 
 namespace ngraph
@@ -35,7 +33,7 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
                     double alpha = node.get_attribute_value<double>("alpha", 1);
 
-                    return NodeVector{std::make_shared<ngraph::op::Elu>(data, alpha)};
+                    return NodeVector{std::make_shared<default_opset::Elu>(data, alpha)};
                 }
 
             } // namespace set_1

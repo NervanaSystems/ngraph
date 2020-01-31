@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,13 +46,16 @@ set(SRC
     aligned_buffer.cpp
     all_close_f.cpp
     assertion.cpp
+    attributes.cpp
     bfloat16.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
     check.cpp
+    constant.cpp
     constant_folding.cpp
     concat_fusion.cpp
     control_dependencies.cpp
+    convert_u1_to_string.cpp
     coordinate.cpp
     copy.cpp
     cpio.cpp
@@ -69,17 +72,28 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    op_is.cpp
+    opset1.cpp
+    opset_pass/binary_elementwise_opset_pass.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
-    opset_pass/generate_mask_opset_pass.cpp
+    opset_pass/dyn_reshape_opset_pass.cpp
+    opset_pass/logical_and_opset_pass.cpp
+    opset_pass/logical_not_opset_pass.cpp
+    opset_pass/logical_or_opset_pass.cpp
+    opset_pass/logical_xor_opset_pass.cpp
+    opset_pass/one_hot_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
+    opset_pass/generate_mask_opset_pass.cpp
     opset_pass/pad_opset_pass.cpp
     opset_pass/poolings_opset_pass.cpp
-    opset_pass/product_opset_pass.cpp
+    opset_pass/reduction_opset_pass.cpp
     opset_pass/reverse_opset_pass.cpp
+    opset_pass/select_opset_pass.cpp
+    opset_pass/slice_opset_pass.cpp
     opset_pass/softmax_opset_pass.cpp
-    opset_pass/sum_opset_pass.cpp
     opset_pass/topk_opset_pass.cpp
+    opset_pass/transpose_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
     pass_liveness.cpp
@@ -98,15 +112,19 @@ set(SRC
     type_prop/any.cpp
     type_prop/avg_pool.cpp
     type_prop/batch_mat_mul.cpp
+    type_prop/batch_mat_mul_transpose.cpp
     type_prop/batch_norm.cpp
     type_prop/binary_elementwise.cpp
     type_prop/broadcast.cpp
     type_prop/clamp.cpp
+    type_prop/compat.cpp
     type_prop/concat.cpp
     type_prop/constant.cpp
     type_prop/convert.cpp
     type_prop/convolution.cpp
     type_prop/convolution_bias.cpp
+    type_prop/crop_and_resize.cpp
+    type_prop/deformable_psroi_pooling.cpp
     type_prop/depth_to_space.cpp
     type_prop/dequantize.cpp
     type_prop/dot.cpp
@@ -115,11 +133,13 @@ set(SRC
     type_prop/dyn_replace_slice.cpp
     type_prop/dyn_reshape.cpp
     type_prop/dyn_slice.cpp
+    type_prop/strided_slice.cpp
     type_prop/elu.cpp
     type_prop/embedding_lookup.cpp
     type_prop/fake_quantize.cpp
     type_prop/gather.cpp
     type_prop/gather_nd.cpp
+    type_prop/gather_tree.cpp
     type_prop/gemm.cpp
     type_prop/get_output_element.cpp
     type_prop/grn.cpp
@@ -135,6 +155,7 @@ set(SRC
     type_prop/matmul.cpp
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
+    type_prop/non_max_suppression.cpp
     type_prop/normalize.cpp
     type_prop/one_hot.cpp
     type_prop/pad.cpp
@@ -170,6 +191,7 @@ set(SRC
     type_prop/transpose.cpp
     type_prop/unary_elementwise.cpp
     type_prop/unsqueeze.cpp
+    type_prop/variadic_split.cpp
     type_prop_benchmark.cpp
     type_prop_layers.cpp
     util.cpp
@@ -215,9 +237,6 @@ else()
         if (NOT NGRAPH_DEX_ONLY)
             list(APPEND SRC cpu_codegen.cpp)
         endif()
-        if (NGRAPH_HALIDE)
-            list(APPEND SRC halide.cpp)
-        endif()
         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
     endif()
 
@@ -258,6 +277,7 @@ set(MULTI_TEST_SRC
     backend/arg_reduce.in.cpp
     backend/asin.in.cpp
     backend/atan.in.cpp
+    backend/atan2.in.cpp
     backend/auto_broadcast.in.cpp
     backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp
@@ -274,12 +294,14 @@ set(MULTI_TEST_SRC
     backend/convolution.in.cpp
     backend/cos.in.cpp
     backend/cosh.in.cpp
+    backend/cum_sum.in.cpp
     backend/divide.in.cpp
     backend/dot.in.cpp
     backend/dyn_broadcast.in.cpp
     backend/dyn_replace_slice_reference.in.cpp
     backend/dyn_reshape.in.cpp
     backend/dyn_slice_reference.in.cpp
+    backend/strided_slice.in.cpp
     backend/dynamic.in.cpp
     backend/embedding_lookup.in.cpp
     backend/erf.in.cpp
@@ -290,12 +312,14 @@ set(MULTI_TEST_SRC
     backend/gather.in.cpp
     backend/gelu.in.cpp
     backend/generate_mask.in.cpp
+    backend/group_convolution.in.cpp
     backend/layer_norm.in.cpp
     backend/log.in.cpp
     backend/logical_and.in.cpp
     backend/logical_or.in.cpp
     backend/logical_xor.in.cpp
     backend/lrn.in.cpp
+    backend/matmul.in.cpp
     backend/max.in.cpp
     backend/maximum.in.cpp
     backend/min.in.cpp
@@ -324,6 +348,7 @@ set(MULTI_TEST_SRC
     backend/reshape.in.cpp
     backend/reverse_sequence.in.cpp
     backend/reverse.in.cpp
+    backend/round.in.cpp
     backend/scatter.in.cpp
     backend/select.in.cpp
     backend/shape_of.in.cpp
@@ -338,7 +363,7 @@ set(MULTI_TEST_SRC
     backend/sum.in.cpp
     backend/tan.in.cpp
     backend/tanh.in.cpp
-    backend/tensorview_custom_mem.in.cpp
+    backend/tile.in.cpp
     backend/topk.in.cpp
     backend/transpose.in.cpp
     backend/unhandled_op.in.cpp
@@ -419,7 +444,6 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
             backend/subtract.in.cpp
             backend/tan.in.cpp
             backend/tanh.in.cpp
-            backend/tensorview_custom_mem.in.cpp
             backend/transpose.in.cpp
             backend/validate_call.in.cpp
             backend/zero_sized.in.cpp
@@ -458,6 +482,7 @@ endif()
 
 if (NGRAPH_MLIR_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
+    list(APPEND SRC mlir/ops_test.cpp)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
@@ -472,12 +497,11 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND MULTI_TEST_SRC
             onnx/onnx_import.in.cpp
             onnx/onnx_import_convpool.in.cpp
+            onnx/onnx_import_dyn_shapes.in.cpp
+            onnx/onnx_import_provenance.in.cpp
             onnx/onnx_import_reshape.in.cpp
             onnx/onnx_import_rnn.in.cpp
             onnx/onnx_import_quant.in.cpp)
-    if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnx/onnxifi.cpp onnx/onnxifi_span.cpp)
-    endif()
 endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
@@ -516,11 +540,7 @@ if(NGRAPH_ADDRESS_SANITIZER)
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
-if(NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
-    target_link_libraries(unit-test PRIVATE ngraph gtest)
-else()
-    target_link_libraries(unit-test PRIVATE ngraph libgtest)
-endif()
+target_link_libraries(unit-test PRIVATE ngraph libgtest)
 
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
@@ -535,9 +555,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
 endif()
 
-# So many type_prop tests these days that we need to set /bigobj flag for MSVS.
+# So many type_prop tests these days that we need to set /bigobj flag for MSVC.
 # We should probably split up type_prop.cpp.
-if (MSVS)
+if (MSVC)
     target_compile_options(unit-test PRIVATE "/bigobj")
 endif()
 
@@ -565,10 +585,6 @@ if (NGRAPH_TBB_ENABLE)
     target_compile_definitions(unit-test PRIVATE "NGRAPH_TBB_ENABLE")
 endif()
 
-if (NGRAPH_HALIDE)
-    target_compile_definitions(unit-test PRIVATE "NGRAPH_HALIDE")
-endif()
-
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
@@ -582,27 +598,28 @@ if (NGRAPH_GPUH_ENABLE)
     target_link_libraries(unit-test PRIVATE gpuh_backend)
 endif()
 
-if (NGRAPH_ONNXIFI_ENABLE)
-    target_include_directories(unit-test SYSTEM PUBLIC ${ONNX_INCLUDE_DIR})
-    target_link_libraries(unit-test PRIVATE onnxifi-ngraph)
+if (NGRAPH_MLIR_ENABLE)
+    target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
 endif()
 
-# If all the runtime libraries are installed into one location, that will make life easier.
-if (MSVS)
-    add_custom_target(unit-test-check
-        COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
-        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
-        DEPENDS unit-test
-    )
-else()
-    add_custom_target(unit-test-check
-        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test --cpath ${EXTERNAL_PROJECTS_ROOT}/src/ngraph/ \${ARGS}
-        DEPENDS unit-test
+if (NOT NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
+    # If all the runtime libraries are installed into one location, that will make life easier.
+    if (MSVC)
+        add_custom_target(unit-test-check
+            COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
+            COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+            DEPENDS unit-test
+        )
+    else()
+        add_custom_target(unit-test-check
+            COMMAND ${PROJECT_BINARY_DIR}/test/unit-test --cpath ${EXTERNAL_PROJECTS_ROOT}/src/ngraph/ \${ARGS}
+            DEPENDS unit-test
+        )
+    endif()
+
+    add_custom_target(check
+        DEPENDS
+        style-check
+        unit-test-check
     )
 endif()
-
-add_custom_target(check
-    DEPENDS
-    style-check
-    unit-test-check
-)

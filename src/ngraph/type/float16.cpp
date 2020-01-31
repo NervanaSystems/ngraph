@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ float16::float16(float value)
         uint32_t iv;
     };
     fv = value;
+    uint32_t hidden_one = 0x00800000;
     uint32_t sign = iv & 0x80000000;
     uint32_t biased_exp = (iv & 0x7F800000) >> 23;
     uint32_t raw_frac = (iv & 0x007FFFFF);
@@ -67,19 +68,21 @@ float16::float16(float value)
     }
     else if (exp < -14)
     {
-        // denorm or 0
+        // denorm
         biased_exp = 0;
-        raw_frac |= 0x00800000;
-        raw_frac = raw_frac >> (exp + 16);
+        raw_frac |= hidden_one;
+        uint32_t exp_shift = (-15 - exp) + 1;
+        uint32_t shift = exp_shift + (23 - frac_size);
+        raw_frac = (raw_frac + (hidden_one >> (frac_size - exp_shift + 1))) >> shift;
     }
-    else if (exp > 15)
+    else if (exp > 15 || (exp == 15 && raw_frac > 0x7fef00 /* numpy overflow value */))
     {
         biased_exp = 0x1F;
         raw_frac = 0;
     }
-    else
+    else if ((biased_exp != 0 || raw_frac != 0))
     {
-        raw_frac = raw_frac >> (23 - frac_size);
+        raw_frac = (raw_frac + 0x1000) >> (23 - frac_size);
         biased_exp = exp + exp_bias;
     }
     m_value = (sign >> 16) | (biased_exp << frac_size) | raw_frac;

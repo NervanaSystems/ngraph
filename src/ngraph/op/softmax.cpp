@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ void op::v0::Softmax::validate_and_infer_types()
             for (auto axis : m_axes)
             {
                 NODE_VALIDATION_CHECK(this,
-                                      axis >= 0 && axis < static_cast<size_t>(input_shape.rank()),
+                                      axis < static_cast<size_t>(input_shape.rank()),
                                       "Reduction axis (",
                                       axis,
                                       ") is out of bounds (argument shape: ",
@@ -124,7 +124,7 @@ shared_ptr<Node> op::v0::Softmax::copy_with_new_args(const NodeVector& new_args)
     return make_shared<Softmax>(new_args.at(0), new_args.at(1));
 }
 
-void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
     NGRAPH_CHECK(are_axes_constant(), "axes need to be constant");
@@ -162,25 +162,19 @@ op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
     , m_axis(axis)
 {
     constructor_validate_and_infer_types();
-
-    const PartialShape& input_shape = get_input_partial_shape(0);
-    NODE_VALIDATION_CHECK(this,
-                          input_shape.rank().is_static(),
-                          "Input node rank must be static (input_shape=",
-                          input_shape,
-                          ").");
-    NODE_VALIDATION_CHECK(this,
-                          axis < static_cast<size_t>(input_shape.rank()),
-                          "Reduction axis (",
-                          axis,
-                          ") is out of bounds (argument shape: ",
-                          input_shape,
-                          ").");
 }
 
 void op::v1::Softmax::validate_and_infer_types()
 {
     const PartialShape& input_shape = get_input_partial_shape(0);
+    if (input_shape.rank().is_static())
+        NODE_VALIDATION_CHECK(this,
+                              m_axis < static_cast<size_t>(input_shape.rank()),
+                              "Reduction axis (",
+                              m_axis,
+                              ") is out of bounds (argument shape: ",
+                              input_shape,
+                              ").");
     if (input_shape.is_static())
         set_output_type(0, get_input_element_type(0), input_shape.to_shape());
     else
@@ -194,7 +188,7 @@ shared_ptr<Node> op::v1::Softmax::copy_with_new_args(const NodeVector& new_args)
 }
 
 void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                        const NodeVector& /* deltas */)
+                                        const OutputVector& /* deltas */)
 {
     throw ngraph_error("op::v1::Softmax::generate_adjoints function is not implemented yet");
 

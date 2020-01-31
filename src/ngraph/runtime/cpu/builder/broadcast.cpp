@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ namespace ngraph
                 out_shape = broadcast->get_shape();
 
                 // TODO(jmenon): Shape transformations, rank reduction etc. needs to be general
-                // and not in any one builder. Move this to the Halide analysis phase.
+                // and not in any one builder.
 
                 // Transform output shape - ex. [4, 1, 2, 2] -> [4, 1, 4]
                 // if we're not broadcasting along axes 2 and 3

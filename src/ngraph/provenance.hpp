@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,11 @@
 
 #include <cstdlib>
 
+#include "ngraph/env_util.hpp"
+
 namespace ngraph
 {
-    static bool s_provenance_enabled = std::getenv("NGRAPH_PROVENANCE_ENABLE") != nullptr;
+    static bool s_provenance_enabled = getenv_bool("NGRAPH_PROVENANCE_ENABLE");
     void set_provenance_enabled(bool enabled);
     bool get_provenance_enabled();
 }

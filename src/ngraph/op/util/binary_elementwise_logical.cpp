@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,4 +51,10 @@ op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const string& node_
 void op::util::BinaryElementwiseLogical::validate_and_infer_types()
 {
     validate_and_infer_elementwise_logical(m_autob);
+}
+
+bool op::util::BinaryElementwiseLogical::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("autob", m_autob);
+    return true;
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,8 @@
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/compiler/compiler.hpp"
+#include "contrib/mlir/backend/cpu/cpu_backend.hpp"
+#include "contrib/mlir/core/compiler.hpp"
 #endif
 
 using namespace ngraph;
@@ -95,7 +96,9 @@ shared_ptr<runtime::Executable>
     if (std::getenv("NGRAPH_MLIR") != nullptr)
     {
         // Initialize MLIR compiler
-        ngmlir::MLIRCompiler::init_mlir();
+        ngmlir::MLIRCompiler::init();
+        // Initialize MLIR backend
+        ngmlir::MLIRCPUBackend::init();
     }
 #endif
 
@@ -205,6 +208,118 @@ vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performanc
                   instance.m_external_function->get_perf_counters().end());
     }
     return rc;
+}
+
+shared_ptr<ngraph::op::Parameter> runtime::cpu::CPU_Executable::get_parameter(size_t index) const
+{
+    const ParameterVector& parameters = get_parameters();
+    NGRAPH_CHECK(index < parameters.size(), "create_tensor for input out of bounds");
+    return parameters[index];
+}
+
+shared_ptr<ngraph::op::Result> runtime::cpu::CPU_Executable::get_result(size_t index) const
+{
+    const ResultVector& results = get_results();
+    NGRAPH_CHECK(index < results.size(), "create_tensor for input out of bounds");
+    return results[index];
+}
+
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_input_tensor(size_t input_index)
+{
+    shared_ptr<op::Parameter> parameter = get_parameter(input_index);
+    return make_shared<runtime::cpu::CPUTensorView>(parameter->get_element_type(),
+                                                    parameter->get_shape());
+}
+
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_input_tensor(size_t input_index,
+                                                                              void* memory_pointer)
+{
+    shared_ptr<op::Parameter> parameter = get_parameter(input_index);
+    return make_shared<runtime::cpu::CPUTensorView>(
+        parameter->get_element_type(), parameter->get_shape(), memory_pointer);
+}
+
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_output_tensor(size_t output_index)
+{
+    shared_ptr<op::Result> result = get_result(output_index);
+    return make_shared<runtime::cpu::CPUTensorView>(result->get_element_type(),
+                                                    result->get_shape());
+}
+
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_output_tensor(size_t output_index,
+                                                                               void* memory_pointer)
+{
+    shared_ptr<op::Result> result = get_result(output_index);
+    return make_shared<runtime::cpu::CPUTensorView>(
+        result->get_element_type(), result->get_shape(), memory_pointer);
+}
+
+vector<shared_ptr<runtime::Tensor>>
+    runtime::cpu::CPU_Executable::create_input_tensor(size_t input_index, size_t pipeline_depth)
+{
+    return create_input_tensor(input_index, pipeline_depth, std::vector<void*>{});
+}
+vector<shared_ptr<runtime::Tensor>> runtime::cpu::CPU_Executable::create_input_tensor(
+    size_t input_index, size_t pipeline_depth, std::vector<void*> memory_pointers)
+{
+    bool mem_ptr_size = memory_pointers.size();
+    if (mem_ptr_size > 0)
+    {
+        NGRAPH_CHECK(pipeline_depth == mem_ptr_size,
+                     "create_input_tensor mismatch in pipeline_depth and memory_pointers");
+    }
+    vector<shared_ptr<runtime::cpu::CPUTensorView>> tensors;
+    shared_ptr<op::Parameter> parameter = get_parameter(input_index);
+    for (size_t i = 0; i < pipeline_depth; i++)
+    {
+        shared_ptr<runtime::cpu::CPUTensorView> tensor;
+        auto t = make_shared<runtime::cpu::CPUTensorView>(parameter->get_element_type(),
+                                                          parameter->get_shape(),
+                                                          mem_ptr_size > 0 ? memory_pointers[i]
+                                                                           : nullptr);
+        tensor = static_pointer_cast<runtime::cpu::CPUTensorView>(t);
+        tensors.push_back(tensor);
+    }
+    vector<shared_ptr<runtime::Tensor>> result_tensors;
+    for (const shared_ptr<runtime::cpu::CPUTensorView>& tensor : tensors)
+    {
+        result_tensors.push_back(tensor);
+    }
+    return result_tensors;
+}
+
+vector<shared_ptr<runtime::Tensor>>
+    runtime::cpu::CPU_Executable::create_output_tensor(size_t output_index, size_t pipeline_depth)
+{
+    return create_output_tensor(output_index, pipeline_depth, std::vector<void*>{});
+}
+vector<shared_ptr<runtime::Tensor>> runtime::cpu::CPU_Executable::create_output_tensor(
+    size_t output_index, size_t pipeline_depth, std::vector<void*> memory_pointers)
+{
+    bool mem_ptr_size = memory_pointers.size();
+    if (mem_ptr_size > 0)
+    {
+        NGRAPH_CHECK(pipeline_depth == mem_ptr_size,
+                     "create_output_tensor mismatch in pipeline_depth and memory_pointers");
+    }
+    vector<shared_ptr<runtime::cpu::CPUTensorView>> tensors;
+    shared_ptr<op::Result> result = get_result(output_index);
+    for (size_t i = 0; i < pipeline_depth; i++)
+    {
+        shared_ptr<runtime::cpu::CPUTensorView> tensor;
+        auto t = make_shared<runtime::cpu::CPUTensorView>(result->get_element_type(),
+                                                          result->get_shape(),
+                                                          mem_ptr_size > 0 ? memory_pointers[i]
+                                                                           : nullptr);
+        tensor = static_pointer_cast<runtime::cpu::CPUTensorView>(t);
+        tensors.push_back(tensor);
+    }
+    vector<shared_ptr<runtime::Tensor>> result_tensors;
+    for (const shared_ptr<runtime::cpu::CPUTensorView>& tensor : tensors)
+    {
+        result_tensors.push_back(tensor);
+    }
+    return result_tensors;
 }
 
 bool runtime::cpu::CPU_Backend::is_supported(const Node& /* op */) const

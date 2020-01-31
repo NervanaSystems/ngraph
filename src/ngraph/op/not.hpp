@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,24 +22,49 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise logical negation operation.
-        class Not : public Op
+        namespace v1
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Not", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a logical negation operation.
-            Not() = default;
-            /// \brief Constructs a logical negation operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Not(const Output<Node>& arg);
+            /// \brief Elementwise logical negation operation.
+            class NGRAPH_API LogicalNot : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"LogicalNot", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a logical negation operation.
+                LogicalNot() = default;
+                /// \brief Constructs a logical negation operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                LogicalNot(const Output<Node>& arg);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
-    }
-}
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        namespace v0
+        {
+            /// \brief Elementwise logical negation operation.
+            class NGRAPH_API Not : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Not", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a logical negation operation.
+                Not() = default;
+                /// \brief Constructs a logical negation operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                Not(const Output<Node>& arg);
+
+                void validate_and_infer_types() override;
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+
+        using v0::Not;
+    } // namespace op
+} // namespace ngraph

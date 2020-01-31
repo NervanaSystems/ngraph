@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,10 +24,9 @@ namespace ngraph
     namespace op
     {
         /// \brief Relu(Convolution) forward prop for batched convolution operation.
-        class QuantizedConvolutionRelu : public Op
+        class NGRAPH_API QuantizedConvolutionRelu : public Op
         {
         public:
-            NGRAPH_API
             static constexpr NodeTypeInfo type_info{"QuantizedConvolutionRelu", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             QuantizedConvolutionRelu() = default;

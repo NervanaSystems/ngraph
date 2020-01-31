@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,19 +26,22 @@ namespace ngraph
 {
     namespace op
     {
-        /// An op directly representing backend-specific code.
-        ///
-        /// N.B. Not all backends support all operation languages; a
-        /// given backend might only support a given passthrough
-        /// operation language in certain modes.
-        class Passthrough;
+        namespace v0
+        {
+            /// An op directly representing backend-specific code.
+            ///
+            /// N.B. Not all backends support all operation languages; a
+            /// given backend might only support a given passthrough
+            /// operation language in certain modes.
+            class Passthrough;
+        }
+        using v0::Passthrough;
     }
 }
 
-class ngraph::op::Passthrough final : public Op
+class NGRAPH_API ngraph::op::v0::Passthrough final : public Op
 {
 public:
-    NGRAPH_API
     static constexpr NodeTypeInfo type_info{"Passthrough", 0};
     const NodeTypeInfo& get_type_info() const override { return type_info; }
     Passthrough() = default;

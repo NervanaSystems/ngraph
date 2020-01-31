@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -165,7 +165,7 @@ static bool simplify_concat(shared_ptr<Node> n)
     }
 
     auto concat = static_pointer_cast<op::Concat>(n);
-    size_t concat_axis = concat->get_concatenation_axis();
+    auto concat_axis = concat->get_concatenation_axis();
 
     auto slice_shape = branch_tip->get_users(true).at(0)->get_shape();
     size_t slice_axis = numeric_limits<size_t>::max();

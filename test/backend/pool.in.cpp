@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1408,6 +1408,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_bprop_2d_2channel_2image_dyn_shape)
 
     float denom = 2 * 2;
 
+    ex->call_with_validate({t_r}, {deltas, forward_shape});
+    ex->call_with_validate({t_r}, {deltas, forward_shape});
     ex->call_with_validate({t_r}, {deltas, forward_shape});
 
     ASSERT_EQ(t_r->get_shape(), (Shape{2, 2, 3, 3}));

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,9 @@ namespace ngraph
 {
     namespace op
     {
-        // clang-format off
+        namespace v0
+        {
+            // clang-format off
         /// \brief Elementwise tangent operation.
         ///
         /// ## Inputs
@@ -36,25 +38,26 @@ namespace ngraph
         /// | Type                   | Description                                                                          |
         /// | ---------------------- | ------------------------------------------------------------------------------------ |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \tan(\texttt{arg}[i_1,\dots,i_n])\f$ |
-        // clang-format on
-        class Tan : public util::UnaryElementwiseArithmetic
-        {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Tan", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a tangent operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Tan(const Output<Node>& arg);
-            Tan() = default;
+            // clang-format on
+            class NGRAPH_API Tan : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Tan", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a tangent operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                Tan(const Output<Node>& arg);
+                Tan() = default;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
+            };
+        }
+        using v0::Tan;
     }
 }

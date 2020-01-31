@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -571,7 +571,8 @@ TEST(type_prop, pad_v1_arg_pads_begin_incompatible_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("pads_begin must be type i64 (axes type:"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("pads_begin must be an integral number, but is:"));
     }
     catch (...)
     {
@@ -594,7 +595,8 @@ TEST(type_prop, pad_v1_arg_pads_end_incompatible_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("pads_end must be type i64 (axes type:"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("pads_end must be an integral number, but is:"));
     }
     catch (...)
     {

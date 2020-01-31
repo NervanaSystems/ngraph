@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,8 +16,15 @@
 
 #pragma once
 
+#include <cstdint>
+#include <cstring>
+#include <functional>
 #include <memory>
+#include <string>
 #include <utility>
+#include <vector>
+
+#include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {
@@ -28,12 +35,37 @@ namespace ngraph
 
     /// Type information for a type system without inheritance; instances have exactly one type not
     /// related to any other type.
-    struct DiscreteTypeInfo
+    struct NGRAPH_API DiscreteTypeInfo
     {
         const char* name;
         uint64_t version;
 
-        bool is_castable(const DiscreteTypeInfo& target_type) const { return this == &target_type; }
+        bool is_castable(const DiscreteTypeInfo& target_type) const { return *this == target_type; }
+        // For use as a key
+        bool operator<(const DiscreteTypeInfo& b) const
+        {
+            return version < b.version || (version == b.version && strcmp(name, b.name) < 0);
+        }
+        bool operator<=(const DiscreteTypeInfo& b) const
+        {
+            return version < b.version || (version == b.version && strcmp(name, b.name) <= 0);
+        }
+        bool operator>(const DiscreteTypeInfo& b) const
+        {
+            return version < b.version || (version == b.version && strcmp(name, b.name) > 0);
+        }
+        bool operator>=(const DiscreteTypeInfo& b) const
+        {
+            return version < b.version || (version == b.version && strcmp(name, b.name) >= 0);
+        }
+        bool operator==(const DiscreteTypeInfo& b) const
+        {
+            return version == b.version && strcmp(name, b.name) == 0;
+        }
+        bool operator!=(const DiscreteTypeInfo& b) const
+        {
+            return version != b.version || strcmp(name, b.name) != 0;
+        }
     };
 
     /// \brief Tests if value is a pointer/shared_ptr that can be statically cast to a
@@ -71,4 +103,13 @@ namespace ngraph
         return is_type<Type>(value) ? std::static_pointer_cast<Type>(value)
                                     : std::shared_ptr<Type>();
     }
+}
+
+namespace std
+{
+    template <>
+    struct hash<ngraph::DiscreteTypeInfo>
+    {
+        size_t operator()(const ngraph::DiscreteTypeInfo& k) const;
+    };
 }

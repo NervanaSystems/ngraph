@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,13 +15,15 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
-#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 
 using namespace std;
 using namespace ngraph;
+using namespace ngraph::element;
 
 namespace ngraph
 {
@@ -43,6 +45,9 @@ namespace ngraph
                 const auto& arg0_shape = mm->get_a_shape();
                 const auto& arg1_shape = mm->get_b_shape();
                 const auto& arg2_shape = node->get_shape();
+                const auto element_type = mm->get_input_element_type(0);
+                NGRAPH_CHECK(element_type == element::f32 || element_type == element::f64,
+                             "MatmulBias element type not supported");
 
                 auto m = arg0_shape[0];
                 auto n = arg1_shape[1];
@@ -79,23 +84,47 @@ namespace ngraph
                                    arg2_shape,
                                    arg0_buffer_index,
                                    arg1_buffer_index,
-                                   out0_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* /* ectx */) {
-                    cblas::cblas_sgemm(
-                        cblas::Layout::RowMajor,
-                        transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
-                        transpose_B ? cblas::Transpose::Transpose : cblas::Transpose::None,
-                        m,
-                        n,
-                        k,
-                        1.0f,
-                        static_cast<float*>(ctx->buffer_data[arg0_buffer_index]),
-                        max<size_t>(1, lda),
-                        static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
-                        max<size_t>(1, ldb),
-                        beta,
-                        static_cast<float*>(ctx->buffer_data[out0_buffer_index]),
-                        max<size_t>(1, arg2_shape[1]));
+                                   out0_buffer_index,
+                                   element_type](CPURuntimeContext* ctx,
+                                                 CPUExecutionContext* /* ectx */) {
+                    switch (element_type)
+                    {
+                    case Type_t::f32:
+                        cblas::cblas_sgemm(
+                            cblas::Layout::RowMajor,
+                            transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                            transpose_B ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                            m,
+                            n,
+                            k,
+                            1.0f,
+                            static_cast<float*>(ctx->buffer_data[arg0_buffer_index]),
+                            max<size_t>(1, lda),
+                            static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
+                            max<size_t>(1, ldb),
+                            beta,
+                            static_cast<float*>(ctx->buffer_data[out0_buffer_index]),
+                            max<size_t>(1, arg2_shape[1]));
+                        break;
+                    case Type_t::f64:
+                        cblas::cblas_dgemm(
+                            cblas::Layout::RowMajor,
+                            transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                            transpose_B ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                            m,
+                            n,
+                            k,
+                            1.0f,
+                            static_cast<double*>(ctx->buffer_data[arg0_buffer_index]),
+                            max<size_t>(1, lda),
+                            static_cast<double*>(ctx->buffer_data[arg1_buffer_index]),
+                            max<size_t>(1, ldb),
+                            beta,
+                            static_cast<double*>(ctx->buffer_data[out0_buffer_index]),
+                            max<size_t>(1, arg2_shape[1]));
+                        break;
+                    default: NGRAPH_UNREACHABLE("Matmul element type is not supported");
+                    }
                 };
 
                 CPUKernelFunctor bias_functor = [](CPURuntimeContext* /* ctx */,
@@ -103,6 +132,8 @@ namespace ngraph
 
                 if (args.size() > 2)
                 {
+                    NGRAPH_CHECK(element_type == element::f32,
+                                 "Bias element type is not supported");
                     auto arg2_buffer_index =
                         external_function->get_buffer_index(args[2].get_name());
 
@@ -399,6 +430,6 @@ namespace ngraph
                 REGISTER_OP_BUILDER(BatchMatMul);
                 REGISTER_OP_BUILDER(BatchMatMulTranspose);
             }
-        }
-    }
-}
+        } // namespace cpu
+    }     // namespace runtime
+} // namespace ngraph

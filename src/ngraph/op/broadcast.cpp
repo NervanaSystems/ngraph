@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,12 @@ op::v1::Broadcast::Broadcast(const Output<Node>& arg,
     , m_broadcast_spec(broadcast_spec)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::v1::Broadcast::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("broadcast_spec", m_broadcast_spec);
+    return true;
 }
 
 std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
@@ -109,10 +115,9 @@ void op::v1::Broadcast::validate_and_infer_types()
     // shape node should have integer data type. For now we only allow i64
     auto shape_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
-                          shape_et.compatible(element::Type_t::i64),
-                          "Broadcast shape must have element type i64, but has ",
+                          shape_et.is_integral_number(),
+                          "Broadcast shape must be an integral number, but is: ",
                           shape_et);
-
     // shape node should produce a one dimensional shape.
     auto broadcast_shape_rank = get_input_partial_shape(1).rank();
     NODE_VALIDATION_CHECK(this,
@@ -125,10 +130,9 @@ void op::v1::Broadcast::validate_and_infer_types()
         // axes_mapping node should have integer data type. For now we only allow i64
         auto axes_et = get_input_element_type(2);
         NODE_VALIDATION_CHECK(this,
-                              axes_et.compatible(element::Type_t::i64),
-                              "Broadcast axes must have element type i64, but has ",
+                              axes_et.is_integral_number(),
+                              "Broadcast axes must be integral numbers, but are: ",
                               axes_et);
-
         // axes_mapping node should produce a one dimensional shape.
         auto axes_shape_rank = get_input_partial_shape(2).rank();
         NODE_VALIDATION_CHECK(this,
@@ -250,7 +254,7 @@ shared_ptr<Node> op::v1::Broadcast::copy_with_new_args(const NodeVector& new_arg
         new_args.at(0), new_args.at(1), new_args.at(2), m_broadcast_spec);
 }
 
-void op::v1::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -284,6 +288,13 @@ op::v0::Broadcast::Broadcast(const Output<Node>& arg,
                              const AxisSet& broadcast_axes)
     : Broadcast(OutputVector{arg}, shape, broadcast_axes)
 {
+}
+
+bool op::v0::Broadcast::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("shape", m_shape);
+    visitor.on_attribute("broadcast_axes", m_broadcast_axes);
+    return true;
 }
 
 void op::v0::Broadcast::validate_and_infer_types()
@@ -335,7 +346,7 @@ shared_ptr<Node> op::v0::Broadcast::copy_with_new_args(const NodeVector& new_arg
     return make_shared<v0::Broadcast>(new_args.at(0), m_shape, m_broadcast_axes);
 }
 
-void op::v0::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -353,6 +364,14 @@ op::v0::BroadcastLike::BroadcastLike(const Output<Node>& arg,
     , m_initial_broadcast_axes(initial_broadcast_axes)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::v0::BroadcastLike::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("shape", m_shape);
+    visitor.on_attribute("broadcast_axes", m_broadcast_axes);
+    visitor.on_attribute("initial_broadcast_axes", m_initial_broadcast_axes);
+    return true;
 }
 
 shared_ptr<Node> op::v0::BroadcastLike::copy_with_new_args(const NodeVector& new_args) const

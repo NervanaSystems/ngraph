@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@
 #endif
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/compiler/pass/mlir_subgraph_extraction.hpp"
+#include "contrib/mlir/core/pass/mlir_subgraph_extraction.hpp"
 #endif
 
 #include "ngraph/descriptor/input.hpp"
@@ -56,6 +56,7 @@
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
+#include "ngraph/op/atan2.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -67,6 +68,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/cum_sum.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
@@ -84,8 +86,12 @@
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
+#include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/matmul.hpp"
+#include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -171,7 +177,6 @@
 #include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -179,6 +184,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -200,7 +206,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
-#include "ngraph/runtime/cpu/pass/halide_subgraph_extraction.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -321,8 +326,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Any), &runtime::cpu::CPU_Emitter::emit<op::Any>},
     {TI(ngraph::op::All), &runtime::cpu::CPU_Emitter::emit<op::All>},
     {TI(ngraph::op::BatchMatMul), &runtime::cpu::CPU_Emitter::emit<op::BatchMatMul>},
-    {TI(ngraph::op::BatchMatMulTranspose),
-     &runtime::cpu::CPU_Emitter::emit<op::BatchMatMulTranspose>},
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::emit<op::Concat>},
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::emit<op::Divide>},
     {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::emit<op::Equal>},
@@ -357,6 +360,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Sinh), &runtime::cpu::CPU_Emitter::emit<op::Sinh>},
     {TI(ngraph::op::Cos), &runtime::cpu::CPU_Emitter::emit<op::Cos>},
     {TI(ngraph::op::Cosh), &runtime::cpu::CPU_Emitter::emit<op::Cosh>},
+    {TI(ngraph::op::CumSum), &runtime::cpu::CPU_Emitter::emit<op::CumSum>},
     {TI(ngraph::op::Tan), &runtime::cpu::CPU_Emitter::emit<op::Tan>},
     {TI(ngraph::op::Tanh), &runtime::cpu::CPU_Emitter::emit<op::Tanh>},
     {TI(ngraph::op::TopK), &runtime::cpu::CPU_Emitter::emit<op::TopK>},
@@ -365,6 +369,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::ArgMax), &runtime::cpu::CPU_Emitter::emit<op::ArgMax>},
     {TI(ngraph::op::Acos), &runtime::cpu::CPU_Emitter::emit<op::Acos>},
     {TI(ngraph::op::Atan), &runtime::cpu::CPU_Emitter::emit<op::Atan>},
+    {TI(ngraph::op::Atan2), &runtime::cpu::CPU_Emitter::emit<op::Atan2>},
     {TI(ngraph::op::ReplaceSlice), &runtime::cpu::CPU_Emitter::emit<op::ReplaceSlice>},
     {TI(ngraph::op::UpdateSlice), &runtime::cpu::CPU_Emitter::emit<op::UpdateSlice>},
     {TI(ngraph::op::OneHot), &runtime::cpu::CPU_Emitter::emit<op::OneHot>},
@@ -448,7 +453,9 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<ngraph::op::DeconvolutionBias>},
     {TI(ngraph::op::Dropout), &runtime::cpu::CPU_Emitter::emit<op::Dropout>},
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
-};
+    {TI(ngraph::op::Gelu), &runtime::cpu::CPU_Emitter::emit<op::Gelu>},
+    {TI(ngraph::op::GeluBackprop), &runtime::cpu::CPU_Emitter::emit<op::GeluBackprop>},
+    {TI(ngraph::op::Round), &runtime::cpu::CPU_Emitter::emit<op::Round>}};
 
 static void
     generate_isnan_isinf_check(CodeWriter& writer,
@@ -546,6 +553,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/convolution.hpp"
+#include "ngraph/runtime/reference/cum_sum.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/runtime/reference/embedding_lookup.hpp"
@@ -1180,7 +1188,22 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     auto dex = is_direct_execution();
     auto is_supported = [dex](const Node& node) {
+#ifdef NGRAPH_MLIR_ENABLE
+        if (std::getenv("NGRAPH_MLIR") != nullptr && std::getenv("NGRAPH_MLIR_CALLBACK") != nullptr)
+        {
+            if (typeid(ngraph::op::MatMul) == typeid(node) &&
+                node.get_input_element_type(0) == element::f32)
+            {
+                return true;
+            }
 
+            if (typeid(ngraph::op::Gemm) == typeid(node) &&
+                node.get_input_element_type(0) == element::f32)
+            {
+                return true;
+            }
+        }
+#endif
         // this checks averts the decomposition of LSTMCell
         // we will map LSTMCell to LSTM CPU op in the later
         // graph pass
@@ -1199,6 +1222,31 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
             {
                 return false;
             }
+        }
+        else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
+        {
+#if MKLDNN_VERSION_MAJOR < 1
+            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
+            return false;
+#else
+            // TODO: will be supported in mkldnn v1.1
+            return false;
+#endif
+        }
+        else if (typeid(ngraph::op::Gelu) == typeid(node))
+        {
+#if MKLDNN_VERSION_MAJOR < 1
+            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
+            return false;
+#else
+            // TODO: will be supported in mkldnn v1.1
+            return false;
+#endif
+        }
+        // GroupConvolution is only supported with MKLDNN
+        else if (auto conv = as_type<ngraph::op::GroupConvolution>(const_cast<Node*>(&node)))
+        {
+            return mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolution>(conv);
         }
 
         if (dex)
@@ -1237,12 +1285,12 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(BiDirectionalRnn, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPURnnMatFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(BatchFusion, true, ngraph::pass)
-    REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass)
     REGISTER_KNOBBED_PASS(ReshapeElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(RecurrentReshapeElimination, false, ngraph::pass)
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         CoreFusion, true, ngraph::pass, ngraph::pass::FusionType::ALL_FUSIONS)
+    REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported)
     REGISTER_KNOBBED_PASS(CPUPreFusion, true, runtime::cpu::pass)
 
     // Disable CPUFusion if MLIR is enabled to preserve core ops.
@@ -1253,9 +1301,6 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)
-#if defined(NGRAPH_HALIDE)
-    REGISTER_KNOBBED_PASS(HalideSubgraphExtraction, true, ngraph::runtime::cpu::pass)
-#endif
 
 #ifdef NGRAPH_MLIR_ENABLE
     if (std::getenv("NGRAPH_MLIR") != nullptr)
@@ -1348,6 +1393,7 @@ static void dump_one_kernel_with_type(runtime::cpu::CPU_DebugTracer& debug_trace
     case element::Type_t::f64:
     case element::Type_t::i16:
     case element::Type_t::i64:
+    case element::Type_t::u1:
     case element::Type_t::u16:
     case element::Type_t::u32:
     case element::Type_t::u64:
@@ -1410,6 +1456,11 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
+    if (std::getenv("NGRAPH_ENABLE_VISUALIZE_TRACING"))
+    {
+        // Enable per_pass_validation if required for debug purpose
+        pass_manager.set_per_pass_validation(false);
+    }
     register_common_passes(pass_manager, pass_config);
     pass_manager.run_passes(m_function, false);
 

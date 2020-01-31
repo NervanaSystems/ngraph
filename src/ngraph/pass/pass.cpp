@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,4 +50,22 @@ void pass::PassBase::set_property(const PassPropertyMask& prop, bool value)
     {
         m_property.clear(prop);
     }
+}
+
+// The symbols are requiered to be in cpp file to workaround RTTI issue on Android LLVM
+
+pass::ModulePass::~ModulePass()
+{
+}
+
+pass::FunctionPass::~FunctionPass()
+{
+}
+
+pass::NodePass::~NodePass()
+{
+}
+
+pass::CallGraphPass::~CallGraphPass()
+{
 }

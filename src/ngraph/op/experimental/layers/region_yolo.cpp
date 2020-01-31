@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,13 +28,15 @@ op::RegionYolo::RegionYolo(const Output<Node>& input,
                            const bool do_softmax,
                            const vector<int64_t>& mask,
                            const int axis,
-                           const int end_axis)
+                           const int end_axis,
+                           const vector<float>& anchors)
     : Op({input})
     , m_num_coords(num_coords)
     , m_num_classes(num_classes)
     , m_num_regions(num_regions)
     , m_do_softmax(do_softmax)
     , m_mask(mask)
+    , m_anchors(anchors)
     , m_axis(axis)
     , m_end_axis(end_axis)
 {
@@ -96,5 +98,6 @@ shared_ptr<Node> op::RegionYolo::copy_with_new_args(const NodeVector& new_args) 
                                    m_do_softmax,
                                    m_mask,
                                    m_axis,
-                                   m_end_axis);
+                                   m_end_axis,
+                                   m_anchors);
 }

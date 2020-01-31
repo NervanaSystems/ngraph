@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ namespace ngraph
 /// \brief Interface to a generic backend.
 ///
 /// Backends are responsible for function execution and value allocation.
-class ngraph::runtime::Backend
+class NGRAPH_API ngraph::runtime::Backend
 {
 public:
     virtual ~Backend();

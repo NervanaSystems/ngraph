@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,9 @@ void op::util::ArithmeticReductionKeepDims::validate_and_infer_types()
         auto input_shape = get_input_partial_shape(0);
         auto input_rank = input_shape.rank();
         PartialShape result_shape{PartialShape::dynamic()};
+
+        if (input_rank.is_static())
+            result_shape = PartialShape::dynamic(input_rank);
 
         if (input_rank.is_static() && reduction_axes_constant())
         {

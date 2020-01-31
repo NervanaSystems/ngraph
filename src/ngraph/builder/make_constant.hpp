@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -94,6 +94,8 @@ namespace ngraph
                 throw ngraph_error("make_constant: Unsupported element type 'dynamic'");
             case element::Type_t::boolean:
                 throw ngraph_error("make_constant: Unsupported element type 'boolean'");
+            case element::Type_t::u1:
+                throw ngraph_error("make_constant: Unsupported element type 'u1'");
             case element::Type_t::undefined:
                 throw ngraph_error("make_constant: Unsupported element type 'undefined'");
             }

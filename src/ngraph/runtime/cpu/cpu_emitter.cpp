@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,12 +28,12 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
-#include "ngraph/op/and.hpp"
 #include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
+#include "ngraph/op/atan2.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -45,6 +45,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/cum_sum.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
@@ -61,7 +62,9 @@
 #include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
@@ -69,7 +72,6 @@
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
-#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -79,11 +81,9 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
-#include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
@@ -110,12 +110,10 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
-#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -123,6 +121,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -946,10 +945,26 @@ namespace ngraph
                          dot->get_reduction_axes_count() == 1)
                 {
                     // Emit an MKL SGEMM call if possible
-                    if (args[0].get_element_type() == element::f32)
+                    auto element_type = args[0].get_element_type();
+                    if (element_type == element::f32)
                     {
                         writer.block_begin();
                         writer << "cblas::cblas_sgemm("
+                               << "cblas::Layout::RowMajor, "
+                               << "cblas::Transpose::None, "
+                               << "cblas::Transpose::None, " << arg0_shape[0] << ", "
+                               << arg1_shape[1] << ", " << arg0_shape[1] << ",\n"
+                               << "        1.0f, " << args[0].get_name() << ", "
+                               << max(1UL, arg0_shape[1]) << ", " << args[1].get_name() << ", "
+                               << max(1UL, arg1_shape[1]) << ", 0.0f,\n"
+                               << "        " << out[0].get_name() << ", " << max(1UL, arg1_shape[1])
+                               << ");\n";
+                        writer.block_end();
+                    }
+                    else if (element_type == element::f64)
+                    {
+                        writer.block_begin();
+                        writer << "cblas::cblas_dgemm("
                                << "cblas::Layout::RowMajor, "
                                << "cblas::Transpose::None, "
                                << "cblas::Transpose::None, " << arg0_shape[0] << ", "
@@ -1895,6 +1910,21 @@ namespace ngraph
                 writer.block_end();
             }
 
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Atan2)
+            {
+                (void)external_function;
+                (void)node;
+                writer.block_begin();
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = atan2(" << args[0].get_name() << ", "
+                       << args[1].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
             static void emitArgMinArgMax(const std::vector<TensorViewWrapper>& args,
                                          const std::vector<TensorViewWrapper>& out,
                                          size_t reduction_axis,
@@ -2296,6 +2326,21 @@ namespace ngraph
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = floor(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Round)
+            {
+                (void)external_function;
+                (void)node;
+                writer.block_begin();
+                size_t element_count = out[0].get_size();
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = round(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
                 writer.block_end();
             }
@@ -3344,17 +3389,17 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3])
-                           << ", cg_ctx->mkldnn_workspaces[" << deps[5] << "]);\n";
+                           << ", cg_ctx->mkldnn_workspaces[" << deps[4] << "]);\n";
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(deps[4])
-                           << ",deps, OpType::MAXPOOLBACKPROPFORWARD, "
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index - 1)
+                           << ", deps, OpType::MAXPOOLBACKPROPFORWARD, "
                            << to_string(scratchpad_size) << ");\n";
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << args[1].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3])
-                           << ", cg_ctx->mkldnn_workspaces[" << deps[5] << "]);\n";
+                           << ", cg_ctx->mkldnn_workspaces[" << deps[4] << "]);\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
 
@@ -3654,6 +3699,61 @@ namespace ngraph
                     writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
                            << alpha << " ? " << args[0].get_name() << "[i] : " << alpha << ";\n";
                     writer.block_end();
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Gelu)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    size_t gelu_index;
+                    std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, gelu_index, deps, scratchpad_size);
+
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << out[0].get_name() << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(gelu_index)
+                           << ", deps, OpType::GELU, " << to_string(scratchpad_size) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("Gelu is only supported with MKLDNN kernel for f32.");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GeluBackprop)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    size_t gelu_bprop_index;
+                    std::vector<std::size_t> deps;
+                    size_t scratchpad_size;
+                    emit_build_primitives(
+                        external_function, node, writer, gelu_bprop_index, deps, scratchpad_size);
+
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << out[0].get_name() << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(gelu_bprop_index)
+                           << ", deps, OpType::GELUBACKPROP, " << to_string(scratchpad_size)
+                           << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("GeluBackprop is only supported with MKLDNN for f32.");
                 }
             }
 
@@ -4113,6 +4213,17 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::LogicalXor)
+            {
+                (void)external_function;
+                (void)node;
+                writer << "reference::logical_xor(" << args[0].get_name() << ",\n"
+                       << "                       " << args[1].get_name() << ",\n"
+                       << "                       " << out[0].get_name() << ",\n"
+                       << "                       " << out[0].get_size() << ");\n";
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Xor)
             {
                 (void)external_function;
@@ -4513,14 +4624,32 @@ namespace ngraph
                 }
                 else
                 {
+                    auto out_rank = out_shape.size();
+                    arg_shape.insert(arg_shape.begin(), out_rank - arg_rank, 1);
                     writer.block_begin();
                     writer << "cpu::kernel::tile<" << et.c_type_string() << ", "
-                           << std::to_string(arg_rank) << ">(" << args[0].get_name() << ", "
+                           << std::to_string(out_rank) << ">(" << args[0].get_name() << ", "
                            << out[0].get_name() << ", {" << join(arg_shape) << "}, {"
                            << join(out_shape) << "}, 0);\n";
 
                     writer.block_end();
                 }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::CumSum)
+            {
+                const ngraph::op::CumSum* cumsum = static_cast<const ngraph::op::CumSum*>(node);
+                writer.block_begin();
+                writer << "reference::cumsum<" << args[0].get_element_type().c_type_string();
+                writer << ",           " << args[1].get_element_type().c_type_string() << ">(";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << args[1].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            {" << join(args[0].get_shape()) << "},\n";
+                writer << "            " << cumsum->is_exclusive() << ",\n";
+                writer << "            " << cumsum->is_reverse() << ");\n";
+                writer.block_end();
             }
 
 #undef TI

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,9 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/type.hpp"
 #include "zero_dim_tensor_elimination.hpp"
 
 using namespace std;
@@ -129,6 +131,20 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
                              << new_concat->get_name();
                 replace_node(concat, new_concat);
                 continue;
+            }
+        }
+        else if (auto replace_slice = as_type_ptr<op::ReplaceSlice>(n))
+        {
+            const Shape& replacement_shape = replace_slice->input(1).get_shape();
+            if (shape_size(replacement_shape) == 0)
+            {
+                // Op is a noop
+                Output<Node> source_output = replace_slice->input(0).get_source_output();
+                Output<Node> output = replace_slice->output(0);
+                for (Input<Node> input : output.get_target_inputs())
+                {
+                    input.replace_source_output(source_output);
+                }
             }
         }
 

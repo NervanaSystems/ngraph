@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "ngraph/except.hpp"
+#include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {
@@ -34,7 +35,7 @@ namespace ngraph
             };
 
             /// \brief Base class for annotations added to graph ops
-            class OpAnnotations
+            class NGRAPH_API OpAnnotations
             {
             public:
                 virtual ~OpAnnotations() = default;

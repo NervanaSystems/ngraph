@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,23 +20,6 @@
 
 using namespace std;
 using namespace ngraph;
-
-TEST(type_prop, lrn_invalid_arg_rank)
-{
-    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2});
-    double alpha = 0.1, beta = 0.2, bias = 0.3;
-    size_t size = 3;
-    try
-    {
-        auto lrn = make_shared<op::LRN>(data, alpha, beta, bias, size);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid input tensor rank not detected";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument must have rank >= 3"));
-    }
-}
 
 TEST(type_prop, lrn_invalid_axes_rank)
 {

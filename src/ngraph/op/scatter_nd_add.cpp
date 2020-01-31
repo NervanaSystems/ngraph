@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,18 +77,16 @@ void op::ScatterNDAdd::validate_and_infer_types()
     bool compatible = true;
     if (inputs_shape.is_static() && indices_shape.is_static() && updates_shape.is_static())
     {
-        for (size_t i = 0; i < static_cast<size_t>(indices_shape.rank()) - 1; i++)
+        size_t indices_rank = static_cast<size_t>(indices_shape.rank());
+        size_t updates_rank = static_cast<size_t>(updates_shape.rank());
+        for (size_t i = 0; i < indices_rank - 1; i++)
         {
             compatible = compatible && updates_shape[i].same_scheme(indices_shape[i]);
         }
-        size_t j =
-            static_cast<size_t>(indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]);
-        for (size_t i = j; i < static_cast<size_t>(inputs_shape.rank()); i++)
+        size_t j = static_cast<size_t>(indices_shape[indices_rank - 1]);
+        for (size_t i = indices_rank - 1; i < updates_rank; i++, j++)
         {
-            compatible =
-                compatible &&
-                updates_shape[static_cast<size_t>(indices_shape.rank()) + i - 2].same_scheme(
-                    inputs_shape[i]);
+            compatible = compatible && updates_shape[i].same_scheme(inputs_shape[j]);
         }
     }
 

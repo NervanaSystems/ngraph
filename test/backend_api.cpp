@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,6 +98,6 @@ TEST(backend_api, executable_can_create_tensor)
     auto cpu = runtime::Backend::create("CPU");
 
     EXPECT_TRUE(interpreter->executable_can_create_tensors());
-    EXPECT_FALSE(cpu->executable_can_create_tensors());
+    EXPECT_TRUE(cpu->executable_can_create_tensors());
 }
 #endif

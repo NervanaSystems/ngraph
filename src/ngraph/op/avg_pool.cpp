@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -76,6 +76,19 @@ op::v0::AvgPool::AvgPool(const Output<Node>& arg,
               include_padding_in_avg_computation,
               PadType::EXPLICIT)
 {
+}
+
+bool op::v0::AvgPool::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("window_shape", m_window_shape);
+    visitor.on_attribute("window_movement_strides", m_window_movement_strides);
+    visitor.on_attribute("padding_below", m_padding_below);
+    visitor.on_attribute("padding_above", m_padding_above);
+    visitor.on_attribute("include_padding_in_avg_computation",
+                         m_include_padding_in_avg_computation);
+    visitor.on_attribute("pad_type", m_pad_type);
+    visitor.on_attribute("ceil_mode", m_ceil_mode);
+    return true;
 }
 
 void op::v0::AvgPool::validate_and_infer_types()
@@ -251,6 +264,18 @@ op::v0::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
     constructor_validate_and_infer_types();
 }
 
+bool op::v0::AvgPoolBackprop::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("forward_arg_shape", m_forward_arg_shape);
+    visitor.on_attribute("window_shape", m_window_shape);
+    visitor.on_attribute("window_movement_strides", m_window_movement_strides);
+    visitor.on_attribute("padding_below", m_padding_below);
+    visitor.on_attribute("padding_above", m_padding_above);
+    visitor.on_attribute("include_padding_in_avg_computation",
+                         m_include_padding_in_avg_computation);
+    return true;
+}
+
 void op::v0::AvgPoolBackprop::validate_and_infer_types()
 {
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
@@ -358,7 +383,7 @@ shared_ptr<Node> op::v0::AvgPoolBackprop::copy_with_new_args(const NodeVector& n
                                             m_include_padding_in_avg_computation);
 }
 
-void op::v0::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (m_ceil_mode)
     {
@@ -418,6 +443,18 @@ op::v1::AvgPool::AvgPool(const Output<Node>& arg,
               rounding_type,
               op::PadType::EXPLICIT)
 {
+}
+
+bool op::v1::AvgPool::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("kernel", m_kernel);
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("exclude_pad", m_exclude_pad);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    visitor.on_attribute("rounding_type", m_rounding_type);
+    return true;
 }
 
 void op::v1::AvgPool::validate_and_infer_types()
@@ -575,6 +612,16 @@ op::v1::AvgPoolBackprop::AvgPoolBackprop(const Output<Node>& delta,
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::AvgPoolBackprop::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("kernel", m_kernel);
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("exclude_pad", m_exclude_pad);
+    return true;
+}
+
 const Shape op::v1::AvgPoolBackprop::get_forward_arg_shape() const
 {
     Shape shape;
@@ -680,7 +727,7 @@ shared_ptr<Node> op::v1::AvgPoolBackprop::copy_with_new_args(const NodeVector& n
                                             m_exclude_pad);
 }
 
-void op::v1::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (m_rounding_type == op::RoundingType::CEIL)
     {

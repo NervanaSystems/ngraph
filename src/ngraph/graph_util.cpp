@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <numeric>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -85,9 +86,9 @@ void ngraph::traverse_nodes(const NodeVector& subgraph_results,
         if (instances_seen.insert(n).second)
         {
             f(n->shared_from_this());
-            for (auto input : n->inputs())
+            for (size_t i = 0; i < n->inputs().size(); i++)
             {
-                stack.push(input.get_source_output().get_node());
+                stack.push(n->get_input_node_ptr(i));
             }
 
             if (include_control_deps)
@@ -131,12 +132,20 @@ NodeVector ngraph::find_common_args(std::shared_ptr<Node> node1, std::shared_ptr
     return common_args;
 }
 
-void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
+void ngraph::replace_node(std::shared_ptr<Node> target,
+                          std::shared_ptr<Node> replacement,
+                          const std::vector<int64_t>& output_order)
 {
     if (target->is_output())
     {
         throw ngraph_error("Result nodes cannot be replaced.");
     }
+
+    NGRAPH_CHECK(target->get_output_size() == output_order.size(),
+                 "Target output size: ",
+                 target->get_output_size(),
+                 " must be equal output_order size: ",
+                 output_order.size());
 
     NGRAPH_CHECK(!target->get_users().empty(),
                  "Attempted to replace unreachable node '",
@@ -178,12 +187,19 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     {
         for (auto& input : target->output(i).get_target_inputs())
         {
-            input.replace_source_output(replacement->output(i));
+            input.replace_source_output(replacement->output(output_order[i]));
         }
     }
 
     replacement->add_node_control_dependents(target);
     target->clear_control_dependents();
+}
+
+void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
+{
+    auto default_output_order = vector<int64_t>(target->get_output_size());
+    std::iota(default_output_order.begin(), default_output_order.end(), 0);
+    replace_node(target, replacement, default_output_order);
 }
 
 void ngraph::replace_nodes(
@@ -690,9 +706,9 @@ static bool check_for_cycles_bkwd(std::shared_ptr<ngraph::Node> node,
 {
     path.push_back(node);
     path_set.insert(node);
-    for (auto& input : node->inputs())
+    for (size_t i = 0; i < node->inputs().size(); i++)
     {
-        auto arg = input.get_source_output().get_node_shared_ptr();
+        auto arg = node->get_input_node_shared_ptr(i);
         if (path_set.find(arg) != path_set.end())
         {
             for (auto it : path)
