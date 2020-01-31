@@ -37,36 +37,34 @@ namespace ngraph
 
             namespace detail
             {
-                Strides get_strides_helper(const Node& node,
-                                           const std::string& name,
-                                           const Shape& kernel_shape)
+                Strides get_strides_helper(const Node& node, const std::string& name)
                 {
-                    return node.get_attribute_value<std::vector<std::size_t>>(
-                        name, std::vector<std::size_t>(kernel_shape.size(), 1UL));
+                    if (!node.has_attribute(name))
+                    {
+                        const auto data_rank =
+                            node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
+                        CHECK_VALID_NODE(node,
+                                         data_rank.is_static(),
+                                         "If '",
+                                         name,
+                                         "' is not provided data rank must be static");
+                        const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
+                        const std::vector<std::size_t> default_strides(data_spatial_dims, 1UL);
+                        return node.get_attribute_value<std::vector<std::size_t>>(name,
+                                                                                  default_strides);
+                    }
+                    return node.get_attribute_value<std::vector<std::size_t>>(name);
                 }
             } // namespace detail
 
             Strides get_strides(const Node& node)
             {
-                std::string name = "strides";
-                if (!node.has_attribute(name))
-                {
-                    const auto data_rank =
-                        node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
-                    CHECK_VALID_NODE(node,
-                                     data_rank.is_static(),
-                                     "If `strides` is not provided data rank must be static");
-                    const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
-                    const std::vector<std::size_t> default_strides(data_spatial_dims, 1UL);
-                    return node.get_attribute_value<std::vector<std::size_t>>(name,
-                                                                              default_strides);
-                }
-                return node.get_attribute_value<std::vector<std::size_t>>(name);
+                return detail::get_strides_helper(node, "strides");
             }
 
             Strides get_dilations(const Node& node)
             {
-                return detail::get_strides_helper(node, "dilations", get_kernel_shape(node));
+                return detail::get_strides_helper(node, "dilations");
             }
 
             ngraph::op::PadType get_auto_pad(const Node& node)

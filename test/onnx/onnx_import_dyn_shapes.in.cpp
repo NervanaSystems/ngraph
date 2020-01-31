@@ -184,7 +184,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, avg_pool_dyn_shape)
 
     auto test_case = NgraphTestCase(function, "${BACKEND_NAME}");
 
-    const Shape shape{ 1, 1, 4, 4 };
+    const Shape shape{1, 1, 4, 4};
     const auto elems_in_tensor = shape_size(shape);
     std::vector<float> input_values(elems_in_tensor);
     std::iota(input_values.begin(), input_values.end(), 0.f);
@@ -204,7 +204,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, max_pool_dyn_shape)
 
     auto test_case = NgraphTestCase(function, "${BACKEND_NAME}");
 
-    const Shape shape{ 1, 1, 4, 4 };
+    const Shape shape{1, 1, 4, 4};
     const auto elems_in_tensor = shape_size(shape);
     std::vector<float> input_values(elems_in_tensor);
     std::iota(input_values.begin(), input_values.end(), 0.f);
@@ -212,7 +212,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, max_pool_dyn_shape)
     test_case.add_input<float>(shape, input_values);
 
     std::vector<float> expected_values{0.f, 2.f, 3.f, 8.f, 10.f, 11.f, 12.f, 14.f, 15.f};
-    test_case.add_expected_output<float>(Shape{ 1, 1, 3, 3 }, expected_values);
+    test_case.add_expected_output<float>(Shape{1, 1, 3, 3}, expected_values);
 
     test_case.run();
 }
