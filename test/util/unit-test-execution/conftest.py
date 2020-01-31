@@ -76,4 +76,18 @@ def pytest_generate_tests(metafunc):
         assert retcode == 0, "unit-test --gtest_list_tests execution failed. Return code: {}".format(retcode)
         stdout = stdout.split('\n')
         list_test = create_list_test(stdout)
+
+        # Find all opset1 operations: execute test 'opset.dump'
+        cmd_line_all_op = executable + ' --gtest_filter=opset.dump'
+        log.info('Executing {} for getting list of test'.format(cmd_line_all_op))
+        retcode_op1, stdout_op1 = shell(cmd=cmd_line_all_op)
+        assert retcode_op1 == 0, "unit-test --gtest_filter=opset.dump execution failed. Return code: {}".format(retcode)
+        # Parsing stdout to storing name of opset1 operations
+        stdout_op1 = stdout_op1.split('\n')
+        operation_opset1 = []
+        for line in stdout_op1:
+            if 'All opset1 operations:' in line:
+                operation_opset1 = list(set(line.replace('All opset1 operations:', '').strip().split(' ')))
+        for op in operation_opset1:
+            pytest.operation_dictionary[op] = {}
         metafunc.parametrize(argnames="gtest_filter", argvalues=list_test)

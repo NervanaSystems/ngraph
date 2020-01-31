@@ -91,7 +91,7 @@ public:
             for (auto &node : func->get_ops()) {
                 cout << node->get_type_info().name << " ";
             }
-            cout << "\n" << endl;
+            cout << endl;
         }
         network = CNNNetwork(func);
         device = _device;

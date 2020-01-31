@@ -14,8 +14,9 @@ To run please do the following:
     b. pytest --gtest_filter="<your test name>"
 5. To get html report add "--html=report.html" to pytest cmd line
     (but before install this module "pip install pytest-html")
-6.This test get result of opset1 operation (passed and failed) and also creates csv file 'nodes_coverage.csv'
-    after execution. Here you may find name of operations and its passrate and coverage for several plugins
+6.This test get result of opset1 operation (passed and failed) and also creates csv file 'nodes_coverage.csv' and
+    'nodes_coverage.html' after execution. Here you may find name of operations and its passrate and coverage
+    for several plugins.
     Example:
     Operation | GPU passed / total | CPU passed / total
     Abs       | 1/2                | 1/2
