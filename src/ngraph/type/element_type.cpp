@@ -239,9 +239,7 @@ namespace ngraph
 
 std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
 {
-    out << "element::Type{" << obj.bitwidth() << ", " << obj.is_real() << ", " << obj.is_signed()
-        << ", " << obj.is_quantized() << ", \"" << obj.c_type_string() << "\"}";
-    return out;
+    return out << obj.get_type_name();
 }
 
 bool element::Type::compatible(const element::Type& t) const
