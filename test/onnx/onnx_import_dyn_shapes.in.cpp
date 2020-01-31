@@ -71,7 +71,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, ab_plus_c_inference)
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/ab_plus_c.prototxt"));
 
-    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}");
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
 
     struct ExpectedValuesGenerator
     {
@@ -152,7 +152,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, dynamic_rank_input_inference)
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/a_plus_b_dyn_rank.prototxt"));
 
-    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}");
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
 
     const size_t RANKS_TO_TEST = 3;
     const int64_t SCALAR_INPUT_VAL = 5;
