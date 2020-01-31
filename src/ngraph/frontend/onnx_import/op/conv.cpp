@@ -46,7 +46,7 @@ namespace ngraph
                                             const ngraph::Strides& dilations,
                                             const ngraph::CoordinateDiff& padding_below,
                                             const ngraph::CoordinateDiff& padding_above,
-                                            int groups,
+                                            int64_t groups,
                                             const ngraph::op::PadType& auto_pad)
                     {
                         if (groups > 1)
@@ -115,6 +115,37 @@ namespace ngraph
                                      "Provided group attribute value must be a multiple of filter "
                                      "channels count.");
                     }
+
+                    std::shared_ptr<ngraph::Node>
+                        add_bias(const std::shared_ptr<ngraph::Node>& ng_conv,
+                                 const std::shared_ptr<ngraph::Node>& bias)
+                    {
+                        std::shared_ptr<ngraph::Node> broadcasted_bias;
+
+                        if (ng_conv->is_dynamic())
+                        {
+                            const auto shape_of_conv =
+                                std::make_shared<default_opset::ShapeOf>(ng_conv);
+
+                            broadcasted_bias = std::make_shared<default_opset::Broadcast>(
+                                bias,
+                                shape_of_conv,
+                                default_opset::Constant::create(element::i64, Shape{1}, {1}));
+                        }
+                        else
+                        {
+                            const Shape& conv_shape = ng_conv->get_shape();
+                            const auto target_shape = default_opset::Constant::create(
+                                element::i64, Shape{conv_shape.size()}, conv_shape);
+
+                            broadcasted_bias = std::make_shared<default_opset::Broadcast>(
+                                bias,
+                                target_shape,
+                                default_opset::Constant::create(element::i64, Shape{1}, {1}));
+                        }
+
+                        return {std::make_shared<default_opset::Add>(ng_conv, broadcasted_bias)};
+                    }
                 } // namespace
 
                 NodeVector conv(const Node& node)
@@ -151,16 +182,10 @@ namespace ngraph
                     {
                         return {conv_node};
                     }
-
-                    const auto bias = inputs.at(2);
-                    const Shape& new_shape = conv_node->get_shape();
-
-                    const auto broadcasted_bias = std::make_shared<default_opset::Broadcast>(
-                        bias,
-                        default_opset::Constant::create(
-                            element::i64, Shape{new_shape.size()}, new_shape),
-                        default_opset::Constant::create(element::i64, Shape{1}, {1}));
-                    return {std::make_shared<default_opset::Add>(conv_node, broadcasted_bias)};
+                    else
+                    {
+                        return {add_bias(conv_node, inputs.at(2))};
+                    }
                 }
 
             } // namespace set_1
