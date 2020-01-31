@@ -22,6 +22,7 @@
 #include <functional>
 #include <numeric>
 #include <sstream>
+#include <string>
 #include "graph.hpp"
 #include "node.hpp"
 #include "utils/common.hpp"
@@ -100,7 +101,7 @@ namespace ngraph
             : m_graph_proto{graph_proto}
             , m_model{&model}
         {
-            auto schema_registry = onnx::OpSchemaRegistry::Instance();
+            const onnx::OpSchemaRegistry* schema_registry = onnx::OpSchemaRegistry::Instance();
             for (const auto& node : m_graph_proto.node())
             {
                 const auto node_op_schema = schema_registry->GetSchema(
@@ -108,7 +109,7 @@ namespace ngraph
 
                 if (node_op_schema && node_op_schema->HasFunction())
                 {
-                    auto proto_func = node_op_schema->GetFunction();
+                    const onnx::FunctionProto* proto_func = node_op_schema->GetFunction();
                     onnx::FunctionExpandHelper(node, *proto_func, m_graph_proto);
                 }
                 else
@@ -116,6 +117,18 @@ namespace ngraph
                     std::cout << "has no function" << std::endl;
                 }
             }
+
+            // DEBUG
+            for (const auto& node : m_graph_proto.node())
+            {
+                std::cout << node.op_type() << std::endl;
+            }
+            std::string data;
+            m_graph_proto.SerializeToString(&data);
+            std::cout << data;
+
+            // END DEBUG
+
             // Process all initializers in the graph
             for (const auto& initializer_tensor : m_graph_proto.initializer())
             {
