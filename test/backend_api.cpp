@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,13 +77,12 @@ TEST(backend_api, save_load)
     copy_data<float>(a, {1.f, 2.f, 3.f, 4.f});
     copy_data<float>(b, {5.f, 6.f, 7.f, 8.f});
 
+    stringstream file;
     {
-        ofstream file("test.interpreter_save");
         auto handle = backend->compile(f);
         handle->save(file);
     }
     {
-        ifstream file("test.interpreter_save");
         auto handle = backend->load(file);
         ASSERT_NE(handle, nullptr);
         handle->call_with_validate({result}, {a, b});
@@ -99,6 +98,6 @@ TEST(backend_api, executable_can_create_tensor)
     auto cpu = runtime::Backend::create("CPU");
 
     EXPECT_TRUE(interpreter->executable_can_create_tensors());
-    EXPECT_FALSE(cpu->executable_can_create_tensors());
+    EXPECT_TRUE(cpu->executable_can_create_tensors());
 }
 #endif

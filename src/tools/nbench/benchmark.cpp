@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                                                   const string& backend_name,
                                                   size_t iterations,
                                                   bool timing_detail,
-                                                  int warmup_iterations,
+                                                  size_t warmup_iterations,
                                                   bool copy_data)
 {
     stopwatch timer;
@@ -38,8 +38,9 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     auto backend = runtime::Backend::create(backend_name);
     auto exec = backend->compile(f, timing_detail);
     timer.stop();
-    cout.imbue(locale(""));
-    cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
+    stringstream ss;
+    ss.imbue(locale(""));
+    ss << "compile time: " << timer.get_milliseconds() << "ms" << endl;
 
     vector<shared_ptr<runtime::HostTensor>> arg_data;
     vector<shared_ptr<runtime::Tensor>> args;
@@ -111,7 +112,8 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     }
     t1.stop();
     float time = t1.get_milliseconds();
-    cout << time / iterations << "ms per iteration" << endl;
+    ss << time / iterations << "ms per iteration" << endl;
+    cout << ss.str();
 
     vector<runtime::PerformanceCounter> perf_data = exec->get_performance_data();
     return perf_data;

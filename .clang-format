@@ -24,7 +24,6 @@ BreakBeforeBraces: Allman
 BreakConstructorInitializersBeforeComma: true
 
 ColumnLimit: 100
-CommentPragmas: '.*'
 
 IndentCaseLabels: false
 IndentWrappedFunctionNames: true

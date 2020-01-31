@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,8 @@ namespace ngraph
                            const Shape& out_shape)
             {
                 using namespace std;
-                // Create a CoordinateTransform for "indices" that visits only the first element along inner most axis
+                // Create a CoordinateTransform for "indices" that visits only the first element
+                // along inner most axis
                 size_t indices_ndim = static_cast<size_t>(indices_shape.size());
                 Coordinate indices_outer_start_corner(indices_ndim, 0);
                 Coordinate indices_outer_end_corner(indices_shape);
@@ -53,7 +54,8 @@ namespace ngraph
                                                             indices_strides,
                                                             indices_axis_order);
 
-                // Create a matching CoordinateTransform for "out" that visits the same outer coordinates
+                // Create a matching CoordinateTransform for "out" that visits the same outer
+                // coordinates
                 size_t out_ndim = static_cast<size_t>(out_shape.size());
                 Coordinate out_start_corner(out_ndim, 0);
                 Coordinate out_end_corner(out_shape);
@@ -81,6 +83,8 @@ namespace ngraph
                     for (size_t i = 0; i < slice_rank; i++)
                     {
                         U index = indices[indices_index];
+                        // take care of negative indices
+                        index = index >= 0 ? index : index + params_shape[i];
                         params_start_corner[i] = index;
                         params_end_corner[i] = index + 1;
                         indices_index++;

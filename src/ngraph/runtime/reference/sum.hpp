@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
 
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/shape_util.hpp"
+#include "ngraph/type/bfloat16.hpp"
+#include "ngraph/type/float16.hpp"
 
 namespace ngraph
 {
@@ -45,7 +47,7 @@ namespace ngraph
             }
 
             template <typename T>
-            typename std::enable_if<std::is_integral<T>::value, bool>::type is_finite(T x)
+            typename std::enable_if<std::is_integral<T>::value, bool>::type is_finite(T /* x */)
             {
                 return true;
             }

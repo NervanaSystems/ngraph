@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,66 +36,48 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::FakeQuantize::type_name{"FakeQuantize"};
+constexpr NodeTypeInfo op::FakeQuantize::type_info;
 
 op::FakeQuantize::FakeQuantize(const Output<Node>& data,
                                const Output<Node>& input_low,
                                const Output<Node>& input_high,
                                const Output<Node>& output_low,
                                const Output<Node>& output_high,
-                               size_t levels)
+                               size_t levels,
+                               const AutoBroadcastSpec& auto_broadcast)
     : FusedOp({data, input_low, input_high, output_low, output_high})
     , m_levels(levels)
+    , m_auto_broadcast(auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
 
-void op::FakeQuantize::pre_validate_and_infer_types()
+void op::FakeQuantize::validate_and_infer_types()
 {
-    const auto& data_pshape = get_input_partial_shape(0);
-    const auto& input_low_pshape = get_input_partial_shape(1);
-    const auto& input_high_pshape = get_input_partial_shape(2);
-    const auto& output_low_pshape = get_input_partial_shape(3);
-    const auto& output_high_pshape = get_input_partial_shape(4);
+    PartialShape data_pshape = get_input_partial_shape(0);
 
-    if (data_pshape.is_static() && input_low_pshape.is_static() && input_high_pshape.is_static() &&
-        output_low_pshape.is_static() && output_high_pshape.is_static())
+    for (auto i = 1; i <= 4; i++)
     {
-        const Shape data_shape{data_pshape.to_shape()};
-        const Shape input_low_shape{input_low_pshape.to_shape()};
-        const Shape input_high_shape{input_high_pshape.to_shape()};
-        const Shape output_low_shape{output_low_pshape.to_shape()};
-        const Shape output_high_shape{output_high_pshape.to_shape()};
-
-        NODE_VALIDATION_CHECK(
-            this,
-            (input_low_shape.size() == 0 ||
-             (input_low_shape.size() == 1 && input_low_shape.at(0) == data_shape.at(1))),
-            "Input low tensor shape: ",
-            input_low_shape,
-            ", must either be a scalar or a vector of size equal to number of channels.");
-        NODE_VALIDATION_CHECK(
-            this,
-            (input_high_shape.size() == 0 ||
-             (input_high_shape.size() == 1 && input_high_shape.at(0) == data_shape.at(1))),
-            "Input high tensor shape: ",
-            input_high_shape,
-            ", must either be a scalar or a vector of size equal to number of channels.");
-        NODE_VALIDATION_CHECK(
-            this,
-            (output_low_shape.size() == 0 ||
-             (output_low_shape.size() == 1 && output_low_shape.at(0) == data_shape.at(1))),
-            "Output low tensor shape: ",
-            output_low_shape,
-            ", must either be a scalar or a vector of size equal to number of channels.");
-        NODE_VALIDATION_CHECK(
-            this,
-            (output_high_shape.size() == 0 ||
-             (output_high_shape.size() == 1 && output_high_shape.at(0) == data_shape.at(1))),
-            "Output high tensor shape: ",
-            output_high_shape,
-            ", must either be a scalar or a vector of size equal to number of channels.");
+        if (m_auto_broadcast.m_type == op::AutoBroadcastType::NONE)
+        {
+            NODE_VALIDATION_CHECK(this,
+                                  PartialShape::merge_into(data_pshape, get_input_partial_shape(i)),
+                                  "Argument shapes are inconsistent.");
+        }
+        else if (m_auto_broadcast.m_type == op::AutoBroadcastType::NUMPY ||
+                 m_auto_broadcast.m_type == op::AutoBroadcastType::PDPD)
+        {
+            NODE_VALIDATION_CHECK(this,
+                                  PartialShape::broadcast_merge_into(
+                                      data_pshape, get_input_partial_shape(i), m_auto_broadcast),
+                                  "Argument shapes are inconsistent.");
+        }
+        else
+        {
+            NODE_VALIDATION_CHECK(this, false, "Unsupported auto broadcast specification");
+        }
     }
+    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
 NodeVector op::FakeQuantize::decompose_op() const
@@ -106,7 +88,7 @@ NodeVector op::FakeQuantize::decompose_op() const
     Output<Node> output_low{input_value(3)};
     Output<Node> output_high{input_value(4)};
 
-    if (input_low.get_shape().size() == 0)
+    if (m_auto_broadcast.m_type == AutoBroadcastType::NUMPY)
     {
         OutputVector broadcasted_nodes = numpy_style_broadcast_values(
             OutputVector{data, input_low, input_high, output_low, output_high});
@@ -117,13 +99,17 @@ NodeVector op::FakeQuantize::decompose_op() const
         output_low = broadcasted_nodes.at(3);
         output_high = broadcasted_nodes.at(4);
     }
-    else
+    else if (m_auto_broadcast.m_type == AutoBroadcastType::PDPD)
     {
-        input_low = legacy_style_broadcast_values_for_binary_operation(data, input_low, 1).at(1);
-        input_high = legacy_style_broadcast_values_for_binary_operation(data, input_high, 1).at(1);
-        output_low = legacy_style_broadcast_values_for_binary_operation(data, output_low, 1).at(1);
-        output_high =
-            legacy_style_broadcast_values_for_binary_operation(data, output_high, 1).at(1);
+        OutputVector broadcasted_nodes =
+            pdpd_style_broadcast(OutputVector{data, input_low, input_high, output_low, output_high},
+                                 m_auto_broadcast.m_axis);
+
+        data = broadcasted_nodes.at(0);
+        input_low = broadcasted_nodes.at(1);
+        input_high = broadcasted_nodes.at(2);
+        output_low = broadcasted_nodes.at(3);
+        output_high = broadcasted_nodes.at(4);
     }
 
     const auto input_data_shape = data.get_shape();

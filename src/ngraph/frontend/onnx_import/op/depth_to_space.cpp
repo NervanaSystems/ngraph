@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "depth_to_space.hpp"
-#include "ngraph/op/fused/depth_to_space.hpp"
+#include "default_opset.hpp"
 
 namespace ngraph
 {
@@ -28,12 +28,18 @@ namespace ngraph
                 NodeVector depth_to_space(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
-                    std::size_t block_size = node.get_attribute_value<std::int64_t>("blocksize");
-                    return NodeVector{std::make_shared<ngraph::op::DepthToSpace>(data, block_size)};
+                    const auto mode = node.get_attribute_value<std::string>("mode", "DCR");
+                    const auto ngraph_mode =
+                        (mode == "DCR")
+                            ? default_opset::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST
+                            : default_opset::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST;
+                    const auto block_size = node.get_attribute_value<std::int64_t>("blocksize");
+                    return NodeVector{std::make_shared<default_opset::DepthToSpace>(
+                        data, ngraph_mode, block_size)};
                 }
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

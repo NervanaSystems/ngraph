@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@ void regclass_pyngraph_Bool(py::module m);
 void regclass_pyngraph_Float32(py::module m);
 void regclass_pyngraph_Float64(py::module m);
 void regclass_pyngraph_Int8(py::module m);
-//void regclass_pyngraph_Int16(py::module m);
+// void regclass_pyngraph_Int16(py::module m);
 void regclass_pyngraph_Int32(py::module m);
 void regclass_pyngraph_Int64(py::module m);
 void regclass_pyngraph_UInt8(py::module m);
-//void regclass_pyngraph_UInt16(py::module m);
+// void regclass_pyngraph_UInt16(py::module m);
 void regclass_pyngraph_UInt32(py::module m);
 void regclass_pyngraph_UInt64(py::module m);

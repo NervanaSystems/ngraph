@@ -1,4 +1,4 @@
-.. fusion/passes-that-use-matcher.rst:
+.. core/passes/passes-that-use-matcher.rst:
 
 
 Passes that use Matcher

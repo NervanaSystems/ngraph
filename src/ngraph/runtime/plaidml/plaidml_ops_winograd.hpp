@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,8 +38,8 @@ namespace ngraph
 class ngraph::runtime::plaidml::op::Winograd final : public ngraph::op::Op
 {
 public:
-    static const std::string type_name;
-    const std::string& description() const override { return type_name; }
+    static constexpr NodeTypeInfo type_info{"plaidmlWinograd", 0};
+    const NodeTypeInfo& get_type_info() const override { return type_info; }
     Winograd(std::shared_ptr<Convolution> conv, const OutputVector& args);
 
     void validate_and_infer_types() final;

@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,3 +17,5 @@
 add_executable(serialize_onnx serialize_onnx.cpp)
 add_dependencies(serialize_onnx ngraph)
 target_link_libraries(serialize_onnx ngraph)
+
+install(TARGETS serialize_onnx RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})

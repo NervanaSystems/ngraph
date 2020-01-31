@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ void randomize(std::function<T()> rand,
     {
         temp.push_back(rand());
     }
-    t->write(&temp[0], 0, element_count * sizeof(T));
+    t->write(&temp[0], element_count * sizeof(T));
 }
 
 // Get a scalar value from a tensor, optionally at an element offset
@@ -58,7 +58,7 @@ T get_scalar(const std::shared_ptr<ngraph::runtime::Tensor>& t,
              size_t element_offset = 0)
 {
     T result;
-    t->read(&result, element_offset * sizeof(T), sizeof(T));
+    t->read(&result + (element_offset * sizeof(T)), sizeof(T));
     return result;
 }
 
@@ -68,7 +68,7 @@ void set_scalar(const std::shared_ptr<ngraph::runtime::Tensor>& t,
                 T value,
                 size_t element_offset = 0)
 {
-    t->write(&value, element_offset * sizeof(T), sizeof(T));
+    t->write(&value + (element_offset * sizeof(T)), sizeof(T));
 }
 
 // Show a shape
@@ -87,7 +87,8 @@ std::ostream& operator<<(std::ostream& s, const ngraph::Shape& shape)
     return s;
 }
 
-// A debug class that supports various ways to dump information about a tensor.
+// A debug class that supports various ways to dump information about a
+// tensor.
 class TensorDumper
 {
 protected:

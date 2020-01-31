@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,9 +24,10 @@ namespace ngraph
     {
         namespace util
         {
-            /// \brief Abstract base class for arithmetic reduction operations, i.e., operations where chosen axes of the input tensors
-            ///        are eliminated (reduced out) by repeated application of a particular binary arithmetic operation.
-            class ArithmeticReduction : public Op
+            /// \brief Abstract base class for arithmetic reduction operations, i.e., operations
+            ///        where chosen axes of the input tensors are eliminated (reduced out) by
+            ///        repeated application of a particular binary arithmetic operation.
+            class NGRAPH_API ArithmeticReduction : public Op
             {
             protected:
                 /// \brief Constructs an arithmetic reduction operation.

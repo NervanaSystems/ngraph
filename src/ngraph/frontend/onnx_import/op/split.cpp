@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
 #include <cstdint>
 #include <vector>
 
-#include "ngraph/op/fused/split.hpp"
-#include "op/split.hpp"
+#include "default_opset.hpp"
+#include "split.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -31,33 +32,34 @@ namespace ngraph
                 NodeVector split(const Node& node)
                 {
                     const auto input = node.get_ng_inputs().at(0);
-                    const auto outputs_number = node.get_output_names().size();
                     const auto axis = node.get_attribute_value<int64_t>("axis", 0);
+                    const auto axis_node =
+                        default_opset::Constant::create(element::i64, Shape{}, {axis});
 
-                    try
+                    std::shared_ptr<ngraph::Node> split;
+                    if (node.has_attribute("split"))
                     {
-                        const auto length_parts =
+                        const auto splits =
                             node.get_attribute_value<std::vector<std::size_t>>("split");
-                        const auto fused_split =
-                            std::make_shared<ngraph::op::Split>(input, axis, length_parts);
 
-                        return fused_split->decompose_op();
+                        const auto split_lengths = default_opset::Constant::create(
+                            element::u64, Shape{splits.size()}, splits);
+
+                        split = std::make_shared<default_opset::VariadicSplit>(
+                            input, axis_node, split_lengths);
                     }
-                    catch (const error::node::UnknownAttribute&)
+                    else
                     {
-                        // an exception will be caught if the input node does not contain
-                        // the 'split' attribute - this means we should split the input tensor
-                        // into same-length parts equal to the number of node outputs
-                        const auto fused_split =
-                            std::make_shared<ngraph::op::Split>(input, axis, outputs_number);
-
-                        return fused_split->decompose_op();
+                        const auto outputs_number = node.get_output_names().size();
+                        split = std::make_shared<default_opset::Split>(
+                            input, axis_node, outputs_number);
                     }
+                    return common::get_outputs(split);
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

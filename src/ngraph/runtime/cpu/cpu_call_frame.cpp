@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -119,7 +119,7 @@ void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
-    auto id = 0;
+    size_t id = 0;
     auto disable_caching = false;
     {
         std::unique_lock<std::mutex> lck(m_mutex);
@@ -128,7 +128,7 @@ void runtime::cpu::CPU_CallFrame::call(
             m_cv.wait(lck);
         }
 
-        for (auto i = 0; i < m_num_ctx; i++)
+        for (size_t i = 0; i < m_num_ctx; i++)
         {
             if (m_id_pool[i])
             {
@@ -181,7 +181,7 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
 
 void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
 {
-    for (auto i = 0; i < m_num_ctx; i++)
+    for (size_t i = 0; i < m_num_ctx; i++)
     {
         m_id_pool[i] = true;
         auto ctx = new CPURuntimeContext;
@@ -207,11 +207,24 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
             ctx->memory_buffers.push_back(buffer);
         }
         const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
-
+        // Create scratchpad
+        auto scratchpad_size = mkldnn_emitter->get_max_scratchpad_size();
         if (m_external_function->is_direct_execution())
         {
             ctx->mkldnn_primitives =
                 std::vector<mkldnn::primitive*>(mkldnn_emitter->get_mkldnn_primitives().size());
+            ctx->mkldnn_memories =
+                std::vector<mkldnn::memory*>(mkldnn_emitter->get_mkldnn_memories().size());
+            ctx->mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>(
+                mkldnn_emitter->get_mkldnn_scratchpad_mds().size());
+            if (scratchpad_size > 0)
+            {
+                ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment, allocator);
+            }
+            else
+            {
+                ctx->scratchpad_buffer = nullptr;
+            }
         }
         else
         {
@@ -220,7 +233,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
         }
 
         ctx->states = m_external_function->m_states.data();
-
+#if defined(NGRAPH_TBB_ENABLE)
         if (m_external_function->is_direct_execution() &&
             std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
         {
@@ -232,13 +245,14 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
             ctx->c =
                 new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
         }
+#endif
     }
     m_num_ctx_available = m_num_ctx;
 }
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
 {
-    for (auto i = 0; i < m_num_ctx; i++)
+    for (size_t i = 0; i < m_num_ctx; i++)
     {
         auto ctx = m_ctx_vec.back();
         m_ctx_vec.pop_back();
@@ -249,10 +263,24 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         {
             delete p;
         }
+        for (auto m : ctx->mkldnn_memories)
+        {
+            delete m;
+        }
         for (auto buffer : ctx->memory_buffers)
         {
             delete buffer;
         }
+        for (auto s : ctx->mkldnn_scratchpad_mds)
+        {
+            delete s;
+        }
+        if (m_external_function->is_direct_execution())
+        {
+            delete ctx->scratchpad_buffer;
+        }
+
+#if defined(NGRAPH_TBB_ENABLE)
         if (m_external_function->is_direct_execution() &&
             std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
         {
@@ -273,6 +301,7 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
             }
             delete ctx->c;
         }
+#endif
         delete ctx;
     }
     m_num_ctx_available = 0;

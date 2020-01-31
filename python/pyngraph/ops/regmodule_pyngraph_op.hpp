@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@
 #include "pyngraph/ops/convolution.hpp"
 #include "pyngraph/ops/cos.hpp"
 #include "pyngraph/ops/cosh.hpp"
+#include "pyngraph/ops/dequantize.hpp"
 #include "pyngraph/ops/divide.hpp"
 #include "pyngraph/ops/dot.hpp"
 #include "pyngraph/ops/equal.hpp"
@@ -49,11 +50,16 @@
 #include "pyngraph/ops/fused/gelu.hpp"
 #include "pyngraph/ops/fused/gemm.hpp"
 #include "pyngraph/ops/fused/grn.hpp"
+#include "pyngraph/ops/fused/group_conv.hpp"
 #include "pyngraph/ops/fused/hard_sigmoid.hpp"
 #include "pyngraph/ops/fused/mvn.hpp"
 #include "pyngraph/ops/fused/prelu.hpp"
+#include "pyngraph/ops/fused/rnn_cell.hpp"
 #include "pyngraph/ops/fused/scale_shift.hpp"
+#include "pyngraph/ops/fused/shuffle_channels.hpp"
 #include "pyngraph/ops/fused/space_to_depth.hpp"
+#include "pyngraph/ops/fused/squared_difference.hpp"
+#include "pyngraph/ops/fused/squeeze.hpp"
 #include "pyngraph/ops/fused/unsqueeze.hpp"
 #include "pyngraph/ops/get_output_element.hpp"
 #include "pyngraph/ops/greater.hpp"
@@ -78,6 +84,9 @@
 #include "pyngraph/ops/passthrough.hpp"
 #include "pyngraph/ops/power.hpp"
 #include "pyngraph/ops/product.hpp"
+#include "pyngraph/ops/quantize.hpp"
+#include "pyngraph/ops/quantized_convolution.hpp"
+#include "pyngraph/ops/quantized_dot.hpp"
 #include "pyngraph/ops/relu.hpp"
 #include "pyngraph/ops/replace_slice.hpp"
 #include "pyngraph/ops/reshape.hpp"

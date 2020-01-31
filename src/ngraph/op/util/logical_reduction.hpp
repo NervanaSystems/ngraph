@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,9 +24,10 @@ namespace ngraph
     {
         namespace util
         {
-            /// \brief Abstract base class for logical reduction operations, i.e., operations where chosen axes of the input tensors
-            ///        are eliminated (reduced out) by repeated application of a particular binary logical operation.
-            class LogicalReduction : public Op
+            /// \brief Abstract base class for logical reduction operations, i.e., operations where
+            ///        chosen axes of the input tensors are eliminated (reduced out) by repeated
+            ///        application of a particular binary logical operation.
+            class NGRAPH_API LogicalReduction : public Op
             {
             protected:
                 /// \brief Constructs a logical reduction operation.

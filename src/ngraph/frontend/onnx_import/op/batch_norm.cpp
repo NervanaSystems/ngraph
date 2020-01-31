@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@
 #include <cstdint>
 #include <memory>
 
-#include "ngraph/frontend/onnx_import/core/null_node.hpp"
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/op/batch_norm.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op/batch_norm.hpp"
+#include "batch_norm.hpp"
+#include "core/null_node.hpp"
+#include "default_opset.hpp"
+#include "exceptions.hpp"
+#include "ngraph/opsets/opset0.hpp"
 
 namespace ngraph
 {
@@ -57,7 +57,7 @@ namespace ngraph
                     {
                         mean = inputs.at(3);
                         var = inputs.at(4);
-                        return {std::make_shared<ngraph::op::BatchNormInference>(
+                        return {std::make_shared<default_opset::BatchNormInference>(
                                     x, scale, bias, mean, var, epsilon),
                                 after_bn_mean,
                                 after_bn_var,
@@ -65,17 +65,17 @@ namespace ngraph
                                 saved_var};
                     }
 
-                    return {
-                        std::make_shared<ngraph::op::BatchNormTraining>(x, scale, bias, epsilon),
-                        after_bn_mean,
-                        after_bn_var,
-                        saved_mean,
-                        saved_var};
+                    return {std::make_shared<ngraph::opset0::BatchNormTraining>(
+                                x, scale, bias, epsilon),
+                            after_bn_mean,
+                            after_bn_var,
+                            saved_mean,
+                            saved_var};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

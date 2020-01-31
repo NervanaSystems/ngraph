@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string op::DeconvolutionBias::type_name{"DeconvolutionBias"};
+constexpr NodeTypeInfo op::DeconvolutionBias::type_info;
 
 op::DeconvolutionBias::DeconvolutionBias(const Shape& data_batch_shape,
                                          const Output<Node>& filters,
@@ -73,7 +73,8 @@ void op::DeconvolutionBias::validate_and_infer_types()
     // Window movement strides  q_x       p_x
     // Window dilation strides  p_f       p_f
     // Padding below            a_x       (S_f - 1)p_f - a_x
-    // Padding above            b_x       (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q_x) - b_x
+    // Padding above            b_x       (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f)
+    //                                    % q_x) - b_x
     // Data dilation strides    p_x       q_x
     // Output shape             S_o       S_x
     //
@@ -155,8 +156,8 @@ void op::DeconvolutionBias::validate_and_infer_types()
     set_output_type(0, forward_result_et, m_data_batch_shape);
 }
 
-void op::DeconvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
-                                              const NodeVector& deltas)
+void op::DeconvolutionBias::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                              const OutputVector& /* deltas */)
 {
     throw ngraph_error("DeconvolutionBias generate_adjoints not supported implemented");
 }

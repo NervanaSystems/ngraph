@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -155,7 +155,8 @@ namespace ngraph
                     //
                     // with unit stride.
                     //
-                    // We iterate this over the *padded* data, so below we will need to check for coordinates that fall in the padding area.
+                    // We iterate this over the *padded* data, so below we will need to check for
+                    // coordinates that fall in the padding area.
 
                     size_t n_spatial_dimensions = arg_shape.size() - 2;
 

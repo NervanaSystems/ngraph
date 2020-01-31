@@ -44,6 +44,6 @@ Outputs
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Max
+.. doxygenclass:: ngraph::op::v0::Max
    :project: ngraph
    :members: m_axes

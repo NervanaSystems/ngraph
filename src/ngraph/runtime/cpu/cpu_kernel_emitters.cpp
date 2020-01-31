@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 #include <algorithm>
+#include <limits>
 #include <map>
 
 #include "ngraph/code_writer.hpp"
@@ -96,7 +97,7 @@ vector<string> open_for_loops(CodeWriter& writer, const Shape& top, const Shape&
 
     return index_vars;
 }
-//close the for loops created by open_for_loops
+// close the for loops created by open_for_loops
 void close_for_loops(CodeWriter& writer, const vector<string>& index_vars)
 {
     for (size_t i = index_vars.size(); i-- > 0;)
@@ -613,7 +614,7 @@ void ngraph::runtime::cpu::kernel::emit_reduce(CodeWriter& writer,
 
         // calculate the output indexes based on what's being reduced
         vector<string> out_indexes;
-        size_t outer_arg_index = -1;
+        size_t outer_arg_index = std::numeric_limits<size_t>::max();
         for (size_t i = 0; i < index_vars.size(); ++i)
         {
             if (reduction_axes.count(i) == 0)
@@ -627,7 +628,7 @@ void ngraph::runtime::cpu::kernel::emit_reduce(CodeWriter& writer,
         }
 
         // make the first output shape our outer loop, optimize with openmp
-        if (outer_arg_index != -1)
+        if (outer_arg_index != std::numeric_limits<size_t>::max())
         {
             writer << start_index_loop(
                 index_vars[outer_arg_index], 0, arg0_shape[outer_arg_index], true);

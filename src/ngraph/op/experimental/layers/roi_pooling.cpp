@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ROIPooling::type_name{"ROIPooling"};
+constexpr NodeTypeInfo op::ROIPooling::type_info;
 
-op::ROIPooling::ROIPooling(const shared_ptr<Node>& input,
-                           const shared_ptr<Node>& coords,
+op::ROIPooling::ROIPooling(const Output<Node>& input,
+                           const Output<Node>& coords,
                            const Shape& output_size,
                            const float spatial_scale,
                            const string& method)
-    : Op(check_single_output_args({input, coords}))
+    : Op({input, coords})
     , m_output_size(output_size)
     , m_spatial_scale(spatial_scale)
     , m_method(method)

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@
                                               std::string & construct_string,                      \
                                               std::vector<size_t> & deps,                          \
                                               size_t & index,                                      \
+                                              size_t & scratchpad_size,                            \
                                               std::ofstream & desc_file)
 
 namespace mkldnn
@@ -55,6 +56,7 @@ namespace ngraph
                                        std::string&,
                                        std::vector<size_t>&,
                                        size_t&,
+                                       size_t&,
                                        std::ofstream&)>;
                 using PrimitiveBuildStringConstructOpMap =
                     std::unordered_map<std::type_index, PrimitiveBuildStringConstructFunction>;
@@ -69,20 +71,23 @@ namespace ngraph
                     ngraph::runtime::cpu::MKLDNNEmitter& m_mkldnn_emitter;
 
                     /// External map to store each node with mkldnn implementation and its mkldnn
-                    /// creation string, deps, and mkldnn primitive index.
-                    std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>&
-                        m_node_primitive_string_deps_index_map;
+                    /// creation string, deps, mkldnn primitive index, and mkldnn primitive
+                    /// scratchpad size.
+                    std::map<const Node*,
+                             std::tuple<std::string, std::vector<size_t>, size_t, size_t>>&
+                        m_node_primitive_string_deps_index_size_map;
 
                 public:
                     MKLDNNPrimitiveBuildPass(
                         std::string filename,
                         ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
-                        std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>&
-                            node_primitive_string_deps_index_map)
+                        std::map<const Node*,
+                                 std::tuple<std::string, std::vector<size_t>, size_t, size_t>>&
+                            node_primitive_string_deps_index_size_map)
                         : m_desc_filename(filename)
                         , m_mkldnn_emitter(mkldnn_emitter)
-                        , m_node_primitive_string_deps_index_map(
-                              node_primitive_string_deps_index_map)
+                        , m_node_primitive_string_deps_index_size_map(
+                              node_primitive_string_deps_index_size_map)
                     {
                     }
 
@@ -90,12 +95,13 @@ namespace ngraph
 
                     template <typename OP>
                     static void construct_primitive_build_string(
-                        ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                        ngraph::runtime::cpu::MKLDNNEmitter& /* mkldnn_emitter */,
                         ngraph::Node* node,
-                        std::string& construct_string,
-                        std::vector<size_t>& deps,
-                        size_t& index,
-                        std::ofstream& desc_file)
+                        std::string& /* construct_string */,
+                        std::vector<size_t>& /* deps */,
+                        size_t& /* index */,
+                        size_t& /* scratchpad size */,
+                        std::ofstream& /* desc_file */)
                     {
                         throw std::runtime_error("Unimplemented op '" + node->description() +
                                                  "' in MKLDNNPrimitiveBuildPass");

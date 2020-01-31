@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,9 +28,10 @@ namespace ngraph
         {
             namespace op
             {
-                // Implements NumPy-style broadcast semantics by passing its single argument through to its
-                // output and pretending that this changes the shape.  The creator of this node is responsible
-                // for ensuring that the downstream operation will perform a NumPy-style broadcast.
+                // Implements NumPy-style broadcast semantics by passing its single argument through
+                // to its output and pretending that this changes the shape.  The creator of this
+                // node is responsible for ensuring that the downstream operation will perform a
+                // NumPy-style broadcast.
                 class ImplicitBroadcast;
             }
         }
@@ -40,8 +41,8 @@ namespace ngraph
 class ngraph::runtime::plaidml::op::ImplicitBroadcast final : public ngraph::op::Op
 {
 public:
-    static const std::string type_name;
-    const std::string& description() const override { return type_name; }
+    static constexpr NodeTypeInfo type_info{"plaidmlImplicitBroadcast", 0};
+    const NodeTypeInfo& get_type_info() const override { return type_info; }
     ImplicitBroadcast(const Output<Node>& input, const Shape& shape);
 
     void validate_and_infer_types() final;

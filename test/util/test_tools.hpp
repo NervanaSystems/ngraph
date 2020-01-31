@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
@@ -87,7 +86,7 @@ std::vector<std::shared_ptr<T>> get_ops_of_type(std::shared_ptr<ngraph::Function
     std::vector<std::shared_ptr<T>> ops;
     for (auto op : f->get_ops())
     {
-        if (auto cop = std::dynamic_pointer_cast<T>(op))
+        if (auto cop = ngraph::as_type_ptr<T>(op))
         {
             ops.push_back(cop);
         }
@@ -102,7 +101,7 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
     size_t count = 0;
     for (auto op : f->get_ops())
     {
-        if (std::dynamic_pointer_cast<T>(op))
+        if (ngraph::as_type_ptr<T>(op))
         {
             count++;
         }

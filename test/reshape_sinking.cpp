@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ using namespace std;
 
 TEST(reshape_sinking, edge_splitting)
 {
-    //checks if Reshapes are pushed through op::Abs, but stopped by Sum
+    // checks if Reshapes are pushed through op::Abs, but stopped by Sum
     Shape shape_nhwc{16, 28, 28, 1};
     Shape shape_nchw{16, 1, 28, 28};
     auto a = make_shared<op::Parameter>(element::i32, shape_nhwc);
@@ -59,16 +59,13 @@ TEST(reshape_sinking, edge_splitting)
     auto sum = make_shared<op::Sum>(reshape, AxisSet{0, 1, 2, 3});
     auto func = make_shared<Function>(NodeVector{absn2, sum}, ParameterVector{a});
     pass::Manager pass_manager;
-    //size_t before_count = count_ops_of_type<op::Reshape>(func);
-    pass_manager.register_pass<pass::VisualizeTree>("before.png");
+    // size_t before_count = count_ops_of_type<op::Reshape>(func);
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(func);
     ASSERT_EQ(func->get_results().at(1)->get_argument(0), sum);
-    auto new_reshape =
-        std::dynamic_pointer_cast<op::Reshape>(func->get_results().at(0)->get_argument(0));
+    auto new_reshape = as_type_ptr<op::Reshape>(func->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_reshape);
     ASSERT_EQ(new_reshape->get_shape(), shape_nchw);
 }
@@ -119,13 +116,11 @@ TEST(reshape_sinking, mnist_conv)
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass::Manager pass_manager;
     size_t before_count = count_ops_of_type<op::Reshape>(func);
-    //pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
-    //pass_manager.register_pass<pass::CoreFusion>();
-    //pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    //pass_manager.register_pass<pass::VisualizeTree>("after.png");
+    // pass_manager.register_pass<pass::CoreFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.run_passes(func);
     size_t before_after = count_ops_of_type<op::Reshape>(func);
     ASSERT_LE(before_after, before_count);
@@ -155,11 +150,9 @@ TEST(reshape_sinking, nasnet_pooladd)
 
     pass::Manager pass_manager;
     size_t before_count = count_ops_of_type<op::Reshape>(func);
-    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(func);
     size_t before_after = count_ops_of_type<op::Reshape>(func);
     ASSERT_LE(before_after, before_count);
@@ -193,11 +186,9 @@ TEST(reshape_sinking, slice_pad)
 
     pass::Manager pass_manager;
     size_t before_count = count_ops_of_type<op::Reshape>(f);
-    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(f);
     size_t before_after = count_ops_of_type<op::Reshape>(f);
     ASSERT_LE(before_after, before_count);
@@ -266,11 +257,9 @@ TEST(reshape_sinking, concat)
     auto f = make_shared<Function>(reshape_conv2, ParameterVector{A_, A1_});
     pass::Manager pass_manager;
     size_t before_count = count_ops_of_type<op::Reshape>(f);
-    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(f);
     size_t before_after = count_ops_of_type<op::Reshape>(f);
     ASSERT_LE(before_after, before_count);
@@ -279,6 +268,6 @@ TEST(reshape_sinking, concat)
 TEST(reshape_sinking, pass_property)
 {
     auto pass = std::make_shared<ngraph::pass::ReshapeSinking>();
-    ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
-    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+    ASSERT_TRUE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::BatchMatMul::type_name{"BatchMatMul"};
+constexpr NodeTypeInfo op::BatchMatMul::type_info;
 
 op::BatchMatMul::BatchMatMul(const Output<Node>& arg0, const Output<Node>& arg1)
     : Op({arg0, arg1})
@@ -77,7 +77,7 @@ void op::BatchMatMul::validate_and_infer_types()
     set_output_type(0, output_et, output_shape);
 }
 
-void op::BatchMatMul::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::BatchMatMul::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0); // NxIxK
 

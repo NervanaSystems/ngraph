@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ namespace ngraph
     {
         namespace reference
         {
-            // NOTE: Execution throws `std::domain_error` if either a non-integral value or an out-of-bounds
-            // value is detected in the input tensor.
+            // NOTE: Execution throws `std::domain_error` if either a non-integral value or an
+            // out-of-bounds value is detected in the input tensor.
 
             // In English: return type is void and T must be an integral type.
             template <typename T>

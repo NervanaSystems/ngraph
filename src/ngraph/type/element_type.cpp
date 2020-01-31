@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,20 +24,23 @@
 using namespace ngraph;
 using namespace std;
 
-NGRAPH_API const element::Type element::dynamic(element::Type_t::dynamic);
-NGRAPH_API const element::Type element::boolean(element::Type_t::boolean);
-NGRAPH_API const element::Type element::bf16(element::Type_t::bf16);
-NGRAPH_API const element::Type element::f16(element::Type_t::f16);
-NGRAPH_API const element::Type element::f32(element::Type_t::f32);
-NGRAPH_API const element::Type element::f64(element::Type_t::f64);
-NGRAPH_API const element::Type element::i8(element::Type_t::i8);
-NGRAPH_API const element::Type element::i16(element::Type_t::i16);
-NGRAPH_API const element::Type element::i32(element::Type_t::i32);
-NGRAPH_API const element::Type element::i64(element::Type_t::i64);
-NGRAPH_API const element::Type element::u8(element::Type_t::u8);
-NGRAPH_API const element::Type element::u16(element::Type_t::u16);
-NGRAPH_API const element::Type element::u32(element::Type_t::u32);
-NGRAPH_API const element::Type element::u64(element::Type_t::u64);
+const element::Type element::dynamic(element::Type_t::dynamic);
+const element::Type element::boolean(element::Type_t::boolean);
+const element::Type element::bf16(element::Type_t::bf16);
+const element::Type element::f16(element::Type_t::f16);
+const element::Type element::f32(element::Type_t::f32);
+const element::Type element::f64(element::Type_t::f64);
+const element::Type element::i8(element::Type_t::i8);
+const element::Type element::i16(element::Type_t::i16);
+const element::Type element::i32(element::Type_t::i32);
+const element::Type element::i64(element::Type_t::i64);
+const element::Type element::u1(element::Type_t::u1);
+const element::Type element::u8(element::Type_t::u8);
+const element::Type element::u16(element::Type_t::u16);
+const element::Type element::u32(element::Type_t::u32);
+const element::Type element::u64(element::Type_t::u64);
+
+NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<element::Type>::type_info;
 
 class TypeInfo
 {
@@ -80,6 +83,7 @@ static const map<element::Type_t, const TypeInfo>& get_type_info_map()
         {element::Type_t::i16, TypeInfo(16, false, true, false, "int16_t", "i16")},
         {element::Type_t::i32, TypeInfo(32, false, true, true, "int32_t", "i32")},
         {element::Type_t::i64, TypeInfo(64, false, true, false, "int64_t", "i64")},
+        {element::Type_t::u1, TypeInfo(1, false, false, false, "uint1_t", "u1")},
         {element::Type_t::u8, TypeInfo(8, false, false, true, "uint8_t", "u8")},
         {element::Type_t::u16, TypeInfo(16, false, false, false, "uint16_t", "u16")},
         {element::Type_t::u32, TypeInfo(32, false, false, false, "uint32_t", "u32")},
@@ -100,6 +104,7 @@ std::vector<const element::Type*> element::Type::get_known_types()
                                             &element::i16,
                                             &element::i32,
                                             &element::i64,
+                                            &element::u1,
                                             &element::u8,
                                             &element::u16,
                                             &element::u32,
@@ -107,8 +112,11 @@ std::vector<const element::Type*> element::Type::get_known_types()
     return rc;
 }
 
-element::Type::Type(
-    size_t bitwidth, bool is_real, bool is_signed, bool is_quantized, const std::string& cname)
+element::Type::Type(size_t bitwidth,
+                    bool is_real,
+                    bool is_signed,
+                    bool is_quantized,
+                    const std::string& /* cname */)
 {
     for (auto& t : get_type_info_map())
     {
@@ -157,74 +165,74 @@ namespace ngraph
     namespace element
     {
         template <>
-        const Type& from<char>()
+        Type from<char>()
         {
-            return element::boolean;
+            return Type_t::boolean;
         }
         template <>
-        const Type& from<bool>()
+        Type from<bool>()
         {
-            return boolean;
+            return Type_t::boolean;
         }
         template <>
-        const Type& from<ngraph::float16>()
+        Type from<ngraph::float16>()
         {
-            return f16;
+            return Type_t::f16;
         }
         template <>
-        const Type& from<float>()
+        Type from<float>()
         {
-            return f32;
+            return Type_t::f32;
         }
         template <>
-        const Type& from<double>()
+        Type from<double>()
         {
-            return f64;
+            return Type_t::f64;
         }
         template <>
-        const Type& from<int8_t>()
+        Type from<int8_t>()
         {
-            return i8;
+            return Type_t::i8;
         }
         template <>
-        const Type& from<int16_t>()
+        Type from<int16_t>()
         {
-            return i16;
+            return Type_t::i16;
         }
         template <>
-        const Type& from<int32_t>()
+        Type from<int32_t>()
         {
-            return i32;
+            return Type_t::i32;
         }
         template <>
-        const Type& from<int64_t>()
+        Type from<int64_t>()
         {
-            return i64;
+            return Type_t::i64;
         }
         template <>
-        const Type& from<uint8_t>()
+        Type from<uint8_t>()
         {
-            return u8;
+            return Type_t::u8;
         }
         template <>
-        const Type& from<uint16_t>()
+        Type from<uint16_t>()
         {
-            return u16;
+            return Type_t::u16;
         }
         template <>
-        const Type& from<uint32_t>()
+        Type from<uint32_t>()
         {
-            return u32;
+            return Type_t::u32;
         }
         template <>
-        const Type& from<uint64_t>()
+        Type from<uint64_t>()
         {
-            return u64;
+            return Type_t::u64;
         }
         template <>
-        const Type& from<ngraph::bfloat16>()
+        Type from<ngraph::bfloat16>()
         {
-            return bf16;
+            return Type_t::bf16;
         }
     }
 }
@@ -272,6 +280,11 @@ bool element::Type::is_static() const
 bool element::Type::is_real() const
 {
     return get_type_info_map().at(m_type).m_is_real;
+}
+
+bool element::Type::is_integral_number() const
+{
+    return is_integral() && (m_type != element::boolean);
 }
 
 bool element::Type::is_signed() const

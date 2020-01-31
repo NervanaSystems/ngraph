@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -69,6 +69,7 @@ from _pyngraph.op import ConvolutionBackpropFilters
 from _pyngraph.op import Cos
 from _pyngraph.op import Cosh
 from _pyngraph.op import DepthToSpace
+from _pyngraph.op import Dequantize
 from _pyngraph.op import Divide
 from _pyngraph.op import Dot
 from _pyngraph.op import Elu
@@ -82,6 +83,7 @@ from _pyngraph.op import GetOutputElement
 from _pyngraph.op import Greater
 from _pyngraph.op import GreaterEq
 from _pyngraph.op import GRN
+from _pyngraph.op import GroupConvolution
 from _pyngraph.op import HardSigmoid
 from _pyngraph.op import Less
 from _pyngraph.op import LessEq
@@ -106,13 +108,18 @@ from _pyngraph.op import Parameter
 from _pyngraph.op import Power
 from _pyngraph.op import PRelu
 from _pyngraph.op import Product
+from _pyngraph.op import Quantize
+from _pyngraph.op import QuantizedConvolution
+from _pyngraph.op import QuantizedDot
 from _pyngraph.op import Relu
 from _pyngraph.op import ReluBackprop
 from _pyngraph.op import ReplaceSlice
 from _pyngraph.op import Reshape
 from _pyngraph.op import Reverse
+from _pyngraph.op import RNNCell
 from _pyngraph.op import ScaleShift
 from _pyngraph.op import Select
+from _pyngraph.op import ShuffleChannels
 from _pyngraph.op import Sign
 from _pyngraph.op import Sin
 from _pyngraph.op import Sinh
@@ -120,6 +127,8 @@ from _pyngraph.op import Slice
 from _pyngraph.op import Softmax
 from _pyngraph.op import SpaceToDepth
 from _pyngraph.op import Sqrt
+from _pyngraph.op import SquaredDifference
+from _pyngraph.op import Squeeze
 from _pyngraph.op import Subtract
 from _pyngraph.op import Sum
 from _pyngraph.op import Tan

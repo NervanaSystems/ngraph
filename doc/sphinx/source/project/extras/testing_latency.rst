@@ -1,14 +1,21 @@
 .. project/extras/testing_latency.rst:
 
 
+.. _testing_latency:
+
 Testing latency  
 ===============
+
+.. important:: This tutorial was tested using previous versions. While it is 
+   not currently or officially supported in the latest nGraph Compiler 
+   stack |version|, some configuration options may still work.
+
 
 Many open-source DL frameworks provide a layer where experts in data science 
 can make use of optimizations contributed by machine learning engineers. Having 
 a common API benefits both: it simplifies deployment and makes it easier for ML 
 engineers working on advanced deep learning hardware to bring highly-optimized 
-performance to a wide range of models, especially in inference.  
+performance to a wide range of models, especially in inference.
 
 One DL framework with advancing efforts on graph optimizations is Apache 
 MXNet\*, where `Intel has contributed efforts showing`_ how to work with our
@@ -17,7 +24,7 @@ nGraph Compiler stack as an `experimental backend`_. Our approach provides
 optimizations **than would be available to the MXNet framework alone**, for 
 reasons outlined in our `introduction`_ documentation.  Note that the 
 MXNet bridge requires trained models only; it does not support distributed 
-training.  
+training.
 
 
 
@@ -62,7 +69,7 @@ install MXNet to the virtual environment:
 Now we're ready to use nGraph to run any model on a CPU backend. Building MXNet 
 with nGraph automatically enabled nGraph on your model scripts, and you 
 shouldn't need to do anything special. If you run into trouble, you can disable 
-nGraph by setting 
+nGraph by setting
 
 .. code-block:: console
    
@@ -81,14 +88,14 @@ Note that the nGraph-MXNet bridge supports static graphs only (dynamic graphs
 are in the works); so for this example, we begin by converting the gluon model 
 into a static graph. Also note that any model with a saved checkpoint can be 
 considered a "static graph" in nGraph. For this example, we'll presume that the 
-model is pre-trained.   
+model is pre-trained.
 
 .. literalinclude:: ../../../../examples/subgraph_snippets/mxnet-gluon-example.py
    :language: python
    :lines: 17-32
 
 
-To load the model into nGraph, we simply bind the symbol into an Executor. 
+To load the model into nGraph, we simply bind the symbol into an Executor.
 
 .. literalinclude:: ../../../../examples/subgraph_snippets/mxnet-gluon-example.py
    :language: python

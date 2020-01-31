@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,5 +27,7 @@ void regclass_pyngraph_op_HardSigmoid(py::module m)
     py::class_<ngraph::op::HardSigmoid, std::shared_ptr<ngraph::op::HardSigmoid>, ngraph::op::Op>
         hardsigmoid(m, "HardSigmoid");
     hardsigmoid.doc() = "ngraph.impl.op.HardSigmoid wraps ngraph::op::HardSigmoid";
-    hardsigmoid.def(py::init<const std::shared_ptr<ngraph::Node>&, float&, float&>());
+    hardsigmoid.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                             const std::shared_ptr<ngraph::Node>&,
+                             const std::shared_ptr<ngraph::Node>&>());
 }

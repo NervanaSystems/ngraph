@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,26 +22,59 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise greater-than-or-equal operation.
-        class GreaterEq : public util::BinaryElementwiseComparison
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
-            /// \brief Constructs a greater-than-or-equal operation.
-            GreaterEq() = default;
-            /// \brief Constructs a greater-than-or-equal operation.
-            ///
-            /// \param arg0 Node that produces the first input tensor.
-            /// \param arg1 Node that produces the second input tensor.
-            /// \param autob Auto broadcast specification
-            GreaterEq(const Output<Node>& arg0,
-                      const Output<Node>& arg1,
-                      const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+            /// \brief Elementwise greater-than-or-equal operation.
+            class NGRAPH_API GreaterEq : public util::BinaryElementwiseComparison
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"GreaterEq", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a greater-than-or-equal operation.
+                GreaterEq() = default;
+                /// \brief Constructs a greater-than-or-equal operation.
+                ///
+                /// \param arg0 Node that produces the first input tensor.
+                /// \param arg1 Node that produces the second input tensor.
+                /// \param auto_broadcast Auto broadcast specification
+                GreaterEq(const Output<Node>& arg0,
+                          const Output<Node>& arg1,
+                          const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        } // namespace v0
+
+        namespace v1
+        {
+            /// \brief Elementwise greater-than-or-equal operation.
+            class NGRAPH_API GreaterEqual : public util::BinaryElementwiseComparison
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"GreaterEqual", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a greater-than-or-equal operation.
+                GreaterEqual() = default;
+                /// \brief Constructs a greater-than-or-equal operation.
+                ///
+                /// \param arg0 Node that produces the first input tensor.
+                /// \param arg1 Node that produces the second input tensor.
+                /// \param auto_broadcast Auto broadcast specification
+                GreaterEqual(const Output<Node>& arg0,
+                             const Output<Node>& arg1,
+                             const AutoBroadcastSpec& auto_broadcast =
+                                 AutoBroadcastSpec(AutoBroadcastType::NUMPY));
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+                size_t get_version() const override { return 1; }
+            };
+
+            // DO NOT USE. Will be removed once users switch to GreaterEqual
+            using GreaterEq = GreaterEqual;
+        } // namespace v1
+
+        using v0::GreaterEq;
     }
 }

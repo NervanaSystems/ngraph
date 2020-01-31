@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -440,7 +440,8 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
     copy_data(a, vector<float>{});
     auto result = backend->create_tensor(element::f32, shape_rt);
 
-    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the
+    // right value.
     copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
 
     auto handle = backend->compile(f);
@@ -462,7 +463,8 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim_int32)
     copy_data(a, vector<int32_t>{});
     auto result = backend->create_tensor(element::i32, shape_rt);
 
-    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the
+    // right value.
     copy_data(result, vector<int32_t>{2112, 2112, 2112, 2112, 2112, 2112});
 
     auto handle = backend->compile(f);

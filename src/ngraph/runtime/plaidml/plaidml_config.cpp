@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -153,7 +153,7 @@ ngraph::runtime::plaidml::Config
         // Readability definitions
         auto is_opt = [=](const char* opt) {
             auto len = strlen(opt);
-            return (oname_end - oname_begin == len) && !strncmp(oname_begin, opt, len);
+            return (oname_end == oname_begin + len) && !strncmp(oname_begin, opt, len);
         };
 
         std::size_t oval_len = oval_end - oval_begin;

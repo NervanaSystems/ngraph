@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ namespace ngraph
                 {
                     size_t size = args[0].get_element_type().size();
                     auto functor = [&, size, arg1_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         memcpy(ctx->buffer_data[out_buffer_index],
                                ctx->buffer_data[arg1_buffer_index],
                                size);
@@ -66,10 +66,10 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::strided_update_slice<float, 2>)>
                         kernel;
 
-                    SELECT_KERNEL_BY_RANK(kernel,
+                    SELECT_KERNEL_ET_RANK(kernel,
                                           args[0].get_element_type(),
                                           arg0_shape.size(),
-                                          runtime::cpu::kernel::strided_update_slice);
+                                          runtime::cpu::kernel::strided_update_slice)
 
                     auto functor = [&,
                                     kernel,
@@ -98,10 +98,10 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::update_slice<float, 2>)> kernel;
 
-                    SELECT_KERNEL_BY_RANK(kernel,
+                    SELECT_KERNEL_ET_RANK(kernel,
                                           args[0].get_element_type(),
                                           arg0_shape.size(),
-                                          runtime::cpu::kernel::update_slice);
+                                          runtime::cpu::kernel::update_slice)
 
                     auto functor = [&,
                                     kernel,
@@ -124,10 +124,7 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(UpdateSlice);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_update_slice_cpp() {}
-#endif
+            void register_builders_update_slice_cpp() { REGISTER_OP_BUILDER(UpdateSlice); }
         }
     }
 }

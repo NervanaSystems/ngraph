@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::argmin<float, int64_t, 1>)>
                             kernel;
 
-                        SELECT_RANK2(
+                        SELECT_KERNEL_RANK(
                             kernel, float, int64_t, in_shape.size(), runtime::cpu::kernel::argmin);
 
                         functor = [&,
@@ -80,7 +80,7 @@ namespace ngraph
                     {
                         std::function<decltype(runtime::cpu::kernel::argmin<float, int, 1>)> kernel;
 
-                        SELECT_RANK2(
+                        SELECT_KERNEL_RANK(
                             kernel, float, int, in_shape.size(), runtime::cpu::kernel::argmin);
 
                         functor = [&,
@@ -107,7 +107,7 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::argmin<double, int64_t, 1>)>
                             kernel;
 
-                        SELECT_RANK2(
+                        SELECT_KERNEL_RANK(
                             kernel, double, int64_t, in_shape.size(), runtime::cpu::kernel::argmin);
 
                         functor = [&,
@@ -131,7 +131,7 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::argmin<double, int, 1>)>
                             kernel;
 
-                        SELECT_RANK2(
+                        SELECT_KERNEL_RANK(
                             kernel, double, int, in_shape.size(), runtime::cpu::kernel::argmin);
 
                         functor = [&,
@@ -158,7 +158,7 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::argmin<int, int64_t, 1>)>
                             kernel;
 
-                        SELECT_RANK2(
+                        SELECT_KERNEL_RANK(
                             kernel, int, int64_t, in_shape.size(), runtime::cpu::kernel::argmin);
 
                         functor = [&,
@@ -181,7 +181,7 @@ namespace ngraph
                     {
                         std::function<decltype(runtime::cpu::kernel::argmin<int, int, 1>)> kernel;
 
-                        SELECT_RANK2(
+                        SELECT_KERNEL_RANK(
                             kernel, int, int, in_shape.size(), runtime::cpu::kernel::argmin);
 
                         functor = [&,
@@ -209,10 +209,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(ArgMin);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_argmin_cpp() {}
-#endif
+            void register_builders_argmin_cpp() { REGISTER_OP_BUILDER(ArgMin); }
         }
     }
 }

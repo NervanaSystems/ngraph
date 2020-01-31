@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 //*****************************************************************************
 #include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
 
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
 namespace ngraph
 {
     namespace runtime
@@ -37,12 +36,14 @@ namespace ngraph
                 register_builders_convert_cpp();
                 register_builders_convert_layout_cpp();
                 register_builders_convolution_cpp();
+                register_builders_cumsum_cpp();
                 register_builders_dot_cpp();
                 register_builders_dropout_cpp();
                 register_builders_embedding_lookup_cpp();
                 register_builders_erf_cpp();
                 register_builders_gather_cpp();
                 register_builders_gather_nd_cpp();
+                register_builders_gelu_cpp();
                 register_builders_get_output_element_cpp();
                 register_builders_leaky_relu_cpp();
                 register_builders_lrn_cpp();
@@ -55,10 +56,10 @@ namespace ngraph
                 register_builders_pad_cpp();
                 register_builders_product_cpp();
                 register_builders_quantization_cpp();
-                register_builders_quantized_avg_pool_cpp();
                 register_builders_quantized_conv_cpp();
                 register_builders_quantized_dot_cpp();
                 register_builders_quantized_matmul_cpp();
+                register_builders_random_uniform_cpp();
                 register_builders_reduce_function_cpp();
                 register_builders_relu_cpp();
                 register_builders_replace_slice_cpp();
@@ -77,10 +78,8 @@ namespace ngraph
                 register_builders_tile_cpp();
                 register_builders_topk_cpp();
                 register_builders_update_slice_cpp();
-                register_builders_quantized_concat_cpp();
-                register_builders_quantized_max_pool_cpp();
+                register_cpu_builders();
             }
         }
     }
 }
-#endif

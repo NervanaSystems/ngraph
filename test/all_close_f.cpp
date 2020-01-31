@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 
 #include "gtest/gtest.h"
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "util/all_close_f.hpp"
 #include "util/float_util.hpp"
@@ -104,7 +105,7 @@ protected:
 
 TEST_P(all_close_f_param_test, test_boundaries)
 {
-    if (std::getenv("NGRAPH_GTEST_INFO") != nullptr)
+    if (getenv_bool("NGRAPH_GTEST_INFO"))
     {
         // Print short string documenting which test is being run
         std::cout << "[   INFO   ] Test params: (" << expected << ", " << tolerance_bits << ")\n";
@@ -261,7 +262,7 @@ protected:
 
 TEST_P(all_close_f_double_param_test, test_boundaries)
 {
-    if (std::getenv("NGRAPH_GTEST_INFO") != nullptr)
+    if (getenv_bool("NGRAPH_GTEST_INFO"))
     {
         // Print short string documenting which test is being run
         std::cout << "[   INFO   ] Test params: (" << expected << ", " << tolerance_bits << ")\n";
@@ -905,7 +906,7 @@ TEST(all_close_f, inf_nan)
 
 TEST(all_close_f, double_inf_nan)
 {
-    double zero = 0.f;
+    double zero = 0;
     double infinity = numeric_limits<double>::infinity();
     double neg_infinity = -numeric_limits<double>::infinity();
     double quiet_nan = numeric_limits<double>::quiet_NaN();

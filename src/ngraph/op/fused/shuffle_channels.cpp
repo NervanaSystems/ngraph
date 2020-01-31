@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ShuffleChannels::type_name{"ShuffleChannels"};
+constexpr NodeTypeInfo op::ShuffleChannels::type_info;
 
 op::ShuffleChannels::ShuffleChannels(const Output<Node>& data, const int axis, const size_t groups)
     : FusedOp({data})
@@ -102,7 +102,8 @@ Shape op::ShuffleChannels::get_pre_shuffle_shape(const Shape& data_shape) const
     // [0]: ds[0] * ds[1] * ... * ds[m_axis-1] (or 1 if m_axis == 0)
     // [1]: m_groups
     // [2]: ds[axis] / m_groups
-    // [3]: ds[axis+1] * ds[axis+2] * ... * ds[ds.size()-1] (or 1 if m_axis points to the last elem of ds)
+    // [3]: ds[axis+1] * ds[axis+2] * ... * ds[ds.size()-1] (or 1 if m_axis points to the last elem
+    //                                                       of ds)
     Shape res(4, 1);
 
     size_t axis_zb = get_zero_based_axis();

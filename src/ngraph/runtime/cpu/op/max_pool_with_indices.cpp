@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::MaxPoolWithIndices::type_name{"MaxPoolWithIndices"};
+constexpr NodeTypeInfo op::MaxPoolWithIndices::type_info;
 
 op::MaxPoolWithIndices::MaxPoolWithIndices(const Output<Node>& arg,
                                            const Shape& window_shape,
@@ -135,7 +135,8 @@ op::MaxPoolWithIndices::MaxPoolWithIndices(const Output<Node>& arg,
     }
 
     //
-    // Compute output item shape Do, checking at the same time that all window movement strides are larger than 0.
+    // Compute output item shape Do, checking at the same time that all window movement strides are
+    // larger than 0.
     //
     Shape output_item_shape;
 
@@ -181,7 +182,7 @@ shared_ptr<Node> op::MaxPoolWithIndices::copy_with_new_args(const NodeVector& ne
                                                 m_padding_above);
 }
 
-const string op::MaxPoolWithIndicesBackprop::type_name{"MaxPoolWithIndicesBackprop"};
+constexpr NodeTypeInfo op::MaxPoolWithIndicesBackprop::type_info;
 
 op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const Output<Node>& arg_forward,
                                                            const Output<Node>& delta,
@@ -309,7 +310,8 @@ op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const Output<Node>& a
     }
 
     //
-    // Compute output item shape Do, checking at the same time that all window movement strides are larger than 0.
+    // Compute output item shape Do, checking at the same time that all window movement strides are
+    // larger than 0.
     //
     Shape output_item_shape;
 
@@ -356,8 +358,8 @@ shared_ptr<Node>
                                                        m_padding_above);
 }
 
-void op::MaxPoolWithIndices::generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas)
+void op::MaxPoolWithIndices::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                               const OutputVector& /* deltas */)
 {
     throw ngraph_error("Differentation of MaxPoolWithIndices isn't supported");
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/provenance.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -29,17 +30,32 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
 
-    if (auto fused_op = dynamic_pointer_cast<op::util::FusedOp>(node))
+    if (node->supports_decompose())
     {
         if (m_has_direct_support && m_has_direct_support(*node))
         {
             // Op supported by backend. Do not decompose
             return modified;
         }
+        auto subgraph_outputs = node->decompose_op();
 
-        auto subgraph_outputs = fused_op->decompose_op();
-        // Run recursively untill no more fused ops
-        auto subgraph = extract_subgraph(subgraph_outputs, fused_op->get_arguments());
+        if (ngraph::get_provenance_enabled())
+        {
+            // Capture the input values as an edge for provenance
+            auto base_input_values = node->input_values();
+            auto provenance_tags = node->get_provenance_tags();
+            const std::string tag = "<Decomposed from " + std::string(node->get_type_name()) + ">";
+            provenance_tags.insert(tag);
+
+            // Transfer the new provenance tags to the newly created ops
+            for (auto output_node : subgraph_outputs)
+            {
+                output_node->add_provenance_tags_above(base_input_values, provenance_tags);
+            }
+        }
+
+        // Run recursively until no more fused ops
+        auto subgraph = extract_subgraph(subgraph_outputs, node->get_arguments());
         for (auto subgraph_node : subgraph)
         {
             run_on_node(subgraph_node);
@@ -50,13 +66,11 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
         {
             for (size_t j = 0; j < output_node->get_outputs().size(); j++, i++)
             {
-                // TODO: Provenance
-                set<descriptor::Input*> fop_users{begin(fused_op->get_outputs().at(i).get_inputs()),
-                                                  end(fused_op->get_outputs().at(i).get_inputs())};
+                set<descriptor::Input*> fop_users{begin(node->get_outputs().at(i).get_inputs()),
+                                                  end(node->get_outputs().at(i).get_inputs())};
                 for (auto fop_user : fop_users)
                 {
-                    if (auto goe =
-                            dynamic_cast<op::GetOutputElement*>(fop_user->get_raw_pointer_node()))
+                    if (auto goe = as_type<op::GetOutputElement>(fop_user->get_raw_pointer_node()))
                     {
                         Output<Node> goe_output = goe->get_as_output();
                         if (goe_output.get_index() == i && !goe->get_output_inputs(0).empty())
@@ -78,12 +92,12 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
                 }
             }
         }
-        if (i != fused_op->get_output_size())
+        if (i != node->get_output_size())
         {
             throw ngraph_error("While replacing " + node->get_name() +
                                ", mismatch between op output count and outputs of the decomposed "
                                "subgraph. Expected: " +
-                               to_string(fused_op->get_output_size()) + " Got: " + to_string(i));
+                               to_string(node->get_output_size()) + " Got: " + to_string(i));
         }
         modified = true;
     }

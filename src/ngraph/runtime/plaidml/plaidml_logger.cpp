@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ namespace
             return;
         case VAI_LOG_SEVERITY_WARNING: NGRAPH_WARN << message; return;
         case VAI_LOG_SEVERITY_ERROR:
-        default: NGRAPH_ERR << message; return;
+        case VAI_LOG_SEVERITY_FATAL: NGRAPH_ERR << message; return;
         }
     }
 }

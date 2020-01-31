@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string op::ConvolutionRelu::type_name{"ConvolutionRelu"};
+constexpr NodeTypeInfo op::ConvolutionRelu::type_info;
 
 op::ConvolutionRelu::ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv)
     : Op({conv->input(0).get_source_output(), conv->input(1).get_source_output()})

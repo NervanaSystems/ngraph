@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ReorgYolo::type_name{"ReorgYolo"};
+constexpr NodeTypeInfo op::ReorgYolo::type_info;
 
-op::ReorgYolo::ReorgYolo(const shared_ptr<Node>& input, const Strides& strides)
-    : Op(check_single_output_args({input}))
+op::ReorgYolo::ReorgYolo(const Output<Node>& input, const Strides& strides)
+    : Op({input})
     , m_strides(strides)
 {
     constructor_validate_and_infer_types();

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Range::type_name = "Range";
+constexpr NodeTypeInfo op::Range::type_info;
 
 op::Range::Range(const Output<Node>& start, const Output<Node>& stop, const Output<Node>& step)
     : Op({start, stop, step})
@@ -32,14 +32,14 @@ op::Range::Range(const Output<Node>& start, const Output<Node>& stop, const Outp
 
 template <typename T>
 static typename std::enable_if<std::is_integral<T>::value, void>::type
-    check_start(const op::Range* node, T start)
+    check_start(const op::Range* /* node */, T /* start */)
 {
     // Nothing to check for integral types.
 }
 
 template <typename T>
 static typename std::enable_if<std::is_integral<T>::value, void>::type
-    check_stop(const op::Range* node, T stop)
+    check_stop(const op::Range* /* node */, T /* stop */)
 {
     // Nothing to check for integral types.
 }
@@ -121,14 +121,11 @@ static
 }
 
 template <typename T>
-static PartialShape infer_output_shape(const op::Range* node, const element::Type& et)
+static PartialShape infer_output_shape(const op::Range* node, const element::Type& /* et */)
 {
-    auto const_start =
-        dynamic_pointer_cast<op::Constant>(node->input_value(0).get_node_shared_ptr());
-    auto const_stop =
-        dynamic_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr());
-    auto const_step =
-        dynamic_pointer_cast<op::Constant>(node->input_value(2).get_node_shared_ptr());
+    auto const_start = as_type_ptr<op::Constant>(node->input_value(0).get_node_shared_ptr());
+    auto const_stop = as_type_ptr<op::Constant>(node->input_value(1).get_node_shared_ptr());
+    auto const_step = as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
 
     T start = static_cast<T>(0);
     T stop = static_cast<T>(0);
@@ -233,6 +230,7 @@ void op::Range::validate_and_infer_types()
     case element::Type_t::u32: result_shape = infer_output_shape<uint32_t>(this, result_et); break;
     case element::Type_t::u64: result_shape = infer_output_shape<uint64_t>(this, result_et); break;
     case element::Type_t::dynamic: result_shape = PartialShape::dynamic(1); break;
+    case element::Type_t::u1:
     case element::Type_t::undefined:
     case element::Type_t::boolean:
         NODE_VALIDATION_CHECK(

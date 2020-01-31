@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,8 @@ else()
 endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
-    add_library(interpreter_backend ${LIBRARY_TYPE} int_backend.cpp node_wrapper.cpp int_executable.cpp)
+    add_library(interpreter_backend ${LIBRARY_TYPE} int_backend.cpp int_executable.cpp)
+    target_compile_definitions(interpreter_backend PRIVATE INTERPRETER_BACKEND_EXPORTS)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(interpreter_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}

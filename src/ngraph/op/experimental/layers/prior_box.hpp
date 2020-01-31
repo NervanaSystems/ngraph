@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,9 @@ namespace ngraph
             std::vector<float> min_size;
             std::vector<float> max_size;
             std::vector<float> aspect_ratio;
+            std::vector<float> density;
+            std::vector<float> fixed_ratio;
+            std::vector<float> fixed_size;
             bool clip = false;
             bool flip = false;
             float step = 1.0f;
@@ -44,31 +47,40 @@ namespace ngraph
             bool scale_all_sizes = false;
         };
 
-        /// \brief Layer which generates prior boxes of specified sizes
-        /// normalized to input image size
-        class PriorBox : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
-            /// \brief Constructs a PriorBox operation
-            ///
-            /// \param layer_shape    Shape of layer for which prior boxes are computed
-            /// \param image_shape    Shape of image to which prior boxes are scaled
-            /// \param attrs          PriorBox attributes
-            PriorBox(const std::shared_ptr<Node>& layer_shape,
-                     const std::shared_ptr<Node>& image_shape,
-                     const PriorBoxAttrs& attrs);
+            /// \brief Layer which generates prior boxes of specified sizes
+            /// normalized to input image size
+            class NGRAPH_API PriorBox : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"PriorBox", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                PriorBox() = default;
+                /// \brief Constructs a PriorBox operation
+                ///
+                /// \param layer_shape    Shape of layer for which prior boxes are computed
+                /// \param image_shape    Shape of image to which prior boxes are scaled
+                /// \param attrs          PriorBox attributes
+                PriorBox(const Output<Node>& layer_shape,
+                         const Output<Node>& image_shape,
+                         const PriorBoxAttrs& attrs);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            const PriorBoxAttrs& get_attrs() const { return m_attrs; }
-        private:
-            PriorBoxAttrs m_attrs;
-        };
+                static size_t number_of_priors(const PriorBoxAttrs& attrs);
+
+                static std::vector<float>
+                    normalized_aspect_ratio(const std::vector<float>& aspect_ratio, bool flip);
+
+                const PriorBoxAttrs& get_attrs() const { return m_attrs; }
+            private:
+                PriorBoxAttrs m_attrs;
+            };
+        }
+        using v0::PriorBox;
     }
 }

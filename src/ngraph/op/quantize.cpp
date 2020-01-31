@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Quantize::type_name{"Quantize"};
+constexpr NodeTypeInfo op::Quantize::type_info;
 
 op::Quantize::Quantize(const Output<Node>& input,
                        const Output<Node>& scale,
@@ -160,7 +160,8 @@ shared_ptr<Node> op::Quantize::copy_with_new_args(const NodeVector& new_args) co
         new_args.at(0), new_args.at(1), new_args.at(2), m_type, m_axes, m_round_mode);
 }
 
-void op::Quantize::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Quantize::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                     const OutputVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

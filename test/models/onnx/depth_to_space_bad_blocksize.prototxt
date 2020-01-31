@@ -10,6 +10,11 @@ graph {
       i: 3
       type: INT
     }
+    attribute {
+      name: "mode"
+      s: "blocks_first"
+      type: STRING
+    }
   }
   name: "compute_graph"
   input {

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -196,6 +196,7 @@ namespace ngraph
                 case element::Type_t::u64: m_type = MPI_UNSIGNED_LONG; break;
                 case element::Type_t::bf16:
                 case element::Type_t::f16:
+                case element::Type_t::u1:
                 case element::Type_t::undefined:
                 case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
                 }

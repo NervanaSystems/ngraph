@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,8 @@ namespace ngraph
                          const AxisVector& in_axis_order,
                          const Shape& out_shape)
             {
-                // Unfortunately we don't yet have a constructor for CoordinateTransform that lets us pass only source_space_shape
+                // Unfortunately we don't yet have a constructor for CoordinateTransform that lets
+                // us pass only source_space_shape
                 // and source_axis_order so we have to construct the defaults here.
                 Shape in_start_corner(in_shape.size(), 0); // (0,...0)
                 Strides in_strides(in_shape.size(), 1);    // (1,...,1)

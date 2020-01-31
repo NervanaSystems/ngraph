@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
+
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
@@ -34,7 +36,6 @@ namespace ngraph
             class INTBackend;
             class INTExecutable;
             class INTBackendConstructor;
-            BackendConstructor* get_backend_constructor_pointer();
         }
     }
 }

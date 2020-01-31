@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,11 +68,12 @@ namespace ngraph
             ngraph::Shape m_final_shape;
         };
 
-        /// \brief Compute the details regarding what reshape and/or broadcast operations must be applied to
-        /// arg1 and/or arg2, as well as what the final resulting shape shall be.
+        /// \brief Compute the details regarding what reshape and/or broadcast operations must be
+        ///        applied to arg1 and/or arg2, as well as what the final resulting shape shall
+        ///        be.
         ///
-        /// If this algorithm cannot handle the particular combination of shapes supplied as inputs, throw
-        /// an ngraph::builder::autobroadcast_incompatible_shapes exception.
+        /// If this algorithm cannot handle the particular combination of shapes supplied as
+        /// inputs, throw an ngraph::builder::autobroadcast_incompatible_shapes exception.
         ///
         /// \exception ngraph::builder::autobroadcast_incompatible_shapes
         static Autobroadcast_plan
@@ -171,7 +172,7 @@ namespace ngraph
                     return_value, final_shape, broadcast_axes);
             }
 
-            return return_value.get_node_shared_ptr();
+            return return_value.get_node_shared_ptr()->add_provenance_group_members_above({value});
         }
 
         std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>

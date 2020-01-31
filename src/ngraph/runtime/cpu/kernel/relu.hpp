@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,7 +81,8 @@ namespace ngraph
                 }
 
                 template <typename ElementType>
-                void relu_backprop(void* arg, void* delta_arg, void* out, size_t count, int arena)
+                void relu_backprop(
+                    void* arg, void* delta_arg, void* out, size_t count, int /* arena */)
                 {
                     reference::relu_backprop<ElementType>(static_cast<ElementType*>(arg),
                                                           static_cast<ElementType*>(delta_arg),

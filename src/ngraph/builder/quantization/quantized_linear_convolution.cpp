@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/make_constant.hpp"
-#include "ngraph/builder/quantization.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
@@ -63,7 +62,6 @@ namespace ngraph
                     mybias = make_shared<op::Quantize>(
                         bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
                 }
-
                 return make_shared<op::QuantizedConvolutionBias>(input,
                                                                  filter,
                                                                  mybias,
@@ -73,7 +71,9 @@ namespace ngraph
                                                                  padding_above,
                                                                  data_dilation_strides,
                                                                  requantization_scale,
-                                                                 false);
+                                                                 false)
+                    ->add_provenance_group_members_above(
+                        {input, filter, bias, input_scale, filter_scale, output_scale});
             }
         }
     }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include <iterator>
 
+#include "default_opset.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "utils/convpool.hpp"
 #include "utils/pooling_factory.hpp"
@@ -41,18 +42,29 @@ namespace ngraph
                 m_padding_above = Shape{std::begin(padding_above), std::end(padding_above)};
             }
 
-            template <>
-            NodeVector PoolingFactory::make_pooling_op<ngraph::op::AvgPool>() const
+            NodeVector PoolingFactory::make_avg_pool() const
             {
                 bool count_include_pad =
                     m_onnx_node.get_attribute_value<std::int64_t>("count_include_pad", 0);
-                return {std::make_shared<ngraph::op::AvgPool>(m_inputs.at(0),
-                                                              m_kernel_shape,
-                                                              m_strides,
-                                                              m_padding_below,
-                                                              m_padding_above,
-                                                              count_include_pad,
-                                                              m_auto_pad)};
+                return {std::make_shared<default_opset::AvgPool>(m_inputs.at(0),
+                                                                 m_strides,
+                                                                 m_padding_below,
+                                                                 m_padding_above,
+                                                                 m_kernel_shape,
+                                                                 !count_include_pad,
+                                                                 op::RoundingType::FLOOR,
+                                                                 m_auto_pad)};
+            }
+
+            NodeVector PoolingFactory::make_max_pool() const
+            {
+                return {std::make_shared<default_opset::MaxPool>(m_inputs.at(0),
+                                                                 m_strides,
+                                                                 m_padding_below,
+                                                                 m_padding_above,
+                                                                 m_kernel_shape,
+                                                                 op::RoundingType::FLOOR,
+                                                                 m_auto_pad)};
             }
 
             GlobalPoolingFactory::GlobalPoolingFactory(const Node& node)

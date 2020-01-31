@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,42 +16,39 @@
 
 #pragma once
 
-#include "ngraph/axis_set.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/op/op.hpp"
 #include "ngraph/op/util/logical_reduction.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Logical "all" reduction operation.
-        class All : public util::LogicalReduction
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
-            /// \brief Constructs an "all" reduction operation.
-            All() = default;
-            /// \brief Constructs an "all" reduction operation.
-            ///
-            /// \param arg The tensor to be reduced.
-            /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            All(const Output<Node>& arg, const AxisSet& reduction_axes);
-            /// \brief Constructs an "all" reduction operation.
-            ///
-            /// \param arg The tensor to be reduced.
-            /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            All(const Output<Node>& arg, const Output<Node>& reduction_axes);
-
-            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
-
-            /// \return The default value for All.
-            virtual std::shared_ptr<Node> get_default_value() const override
+            /// \brief Logical "all" reduction operation.
+            class NGRAPH_API All : public util::LogicalReduction
             {
-                return ngraph::make_constant_from_string("1", get_element_type(), get_shape());
-            }
-        };
+            public:
+                static constexpr NodeTypeInfo type_info{"All", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs an "all" reduction operation.
+                All() = default;
+                /// \brief Constructs an "all" reduction operation.
+                ///
+                /// \param arg The tensor to be reduced.
+                /// \param reduction_axes The axis positions (0-based) to be eliminated.
+                All(const Output<Node>& arg, const AxisSet& reduction_axes);
+                /// \brief Constructs an "all" reduction operation.
+                ///
+                /// \param arg The tensor to be reduced.
+                /// \param reduction_axes The axis positions (0-based) to be eliminated.
+                All(const Output<Node>& arg, const Output<Node>& reduction_axes);
+                bool visit_attributes(AttributeVisitor& visitor) override { return true; }
+                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+
+                /// \return The default value for All.
+                virtual std::shared_ptr<Node> get_default_value() const override;
+            };
+        }
+        using v0::All;
     }
 }

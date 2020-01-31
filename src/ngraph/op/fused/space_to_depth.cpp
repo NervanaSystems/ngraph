@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <cmath>
 #include <cstddef>
 #include <memory>
 
@@ -23,59 +24,113 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::SpaceToDepth::type_name{"SpaceToDepth"};
+constexpr NodeTypeInfo op::SpaceToDepth::type_info;
 
-op::SpaceToDepth::SpaceToDepth(const Output<Node>& data, const size_t block_size)
+op::SpaceToDepth::SpaceToDepth(const Output<Node>& data,
+                               const SpaceToDepthMode& mode,
+                               size_t block_size)
     : FusedOp({data})
     , m_blocksize(block_size)
+    , m_mode(mode)
 {
     constructor_validate_and_infer_types();
+}
+
+op::SpaceToDepth::SpaceToDepth(const Output<Node>& data, const std::string& mode, size_t block_size)
+    : SpaceToDepth(data, mode_from_string(mode), block_size)
+{
 }
 
 NodeVector op::SpaceToDepth::decompose_op() const
 {
     auto data = input_value(0);
-    const Shape& data_shape = data.get_shape();
+    auto data_shape = data.get_shape();
 
-    // Set default values to each dimension to be able to work with both 3D or 4D data.
-    size_t n{1}, c{1}, h{1}, w{1};
+    NODE_VALIDATION_CHECK(this,
+                          (data_shape.size() >= 3),
+                          "The input tensor with rank lower than 3 is not supported (input rank: ",
+                          data_shape.size(),
+                          ")");
 
-    NGRAPH_CHECK((data_shape.size() == 3 || data_shape.size() == 4),
-                 "The provided tensor shape: ",
-                 data_shape,
-                 " is not supported.");
+    NODE_VALIDATION_CHECK(this, m_blocksize > 0, "m_blocksize must be greater than 0");
 
-    // Assume NCHW data layout
-    if (data_shape.size() == 4)
+    if (data_shape.size() == 3)
     {
-        n = data_shape.at(0);
-        c = data_shape.at(1);
-        h = data_shape.at(2);
-        w = data_shape.at(3);
-    }
-    // Without batch.
-    else if (data_shape.size() == 3)
-    {
-        c = data_shape.at(0);
-        h = data_shape.at(1);
-        w = data_shape.at(2);
+        // Insert batch axis
+        data_shape.insert(data_shape.begin(), 1);
+        data = builder::opset1::reshape(data, data_shape);
     }
 
-    NGRAPH_CHECK((h % m_blocksize == 0 && w % m_blocksize == 0 && m_blocksize > 0),
-                 "SpaceToDepth: The width and height axes size must be a multiple of ",
-                 "squared block_size attribute value");
+    const size_t n_dim = data_shape.at(0);
+    const size_t c_dim = data_shape.at(1);
+    const size_t spatial_dim_index = 2;
+    const size_t spatial_dims = data_shape.size() - spatial_dim_index;
 
-    size_t bs = static_cast<size_t>(m_blocksize);
-    size_t w_flat = w / bs;
-    size_t h_flat = h / bs;
-    size_t c_high = c * bs * bs;
+    for (int i = spatial_dim_index; i < data_shape.size(); ++i)
+    {
+        NODE_VALIDATION_CHECK(this,
+                              m_blocksize > 0 && data_shape.at(i) % m_blocksize == 0,
+                              "The dimension on position: ",
+                              i,
+                              " equal to: ",
+                              data_shape.at(i),
+                              " must be a multiple of m_blocksize: ",
+                              m_blocksize);
+    }
 
-    // First we have to disperse the data from height and width channels, then
+    // First we have to disperse the data from spatial dimensions, then
     // rearrange them so as appropriate chunks of data where close to their
     // destination place. Finally squeeze data from respective dimensions.
-    Output<Node> flat_node = builder::reshape(data, Shape{n, c, h_flat, bs, w_flat, bs});
-    flat_node = builder::reorder_axes(flat_node, {0, 3, 5, 1, 2, 4});
-    return NodeVector{builder::reshape(flat_node, Shape{n, c_high, h_flat, w_flat})};
+    Shape dispersed_shape{n_dim, c_dim};
+    for (int i = 0; i < spatial_dims; ++i)
+    {
+        dispersed_shape.push_back(data_shape.at(i + spatial_dim_index) / m_blocksize);
+        dispersed_shape.push_back(m_blocksize);
+    }
+    auto flat_node = builder::opset1::reshape(data, dispersed_shape);
+    // calculate axes to transpose
+    // [0, 3, 5, ..., spatial_dims + (spatial_dims + 1), 2, 4, ..., K + K])
+    vector<size_t> axes_order{0};
+    for (size_t i = 0, j = 3; i < spatial_dims; ++i, j += 2)
+    {
+        axes_order.push_back(j);
+    }
+    for (size_t i = 0, j = 2; i < spatial_dims; ++i, j += 2)
+    {
+        axes_order.push_back(j);
+    }
+
+    switch (m_mode)
+    {
+    // x' = reshape(data, [N, C, D1/block_size, block_size, D2/block_size, block_size, ...,
+    // DK/block_size, block_size])
+    // x'' = transpose(x', [0,  1, 3, 5, ..., K + (K + 1),  2, 4, ..., K + K])
+    // y = reshape(x'', [N, C * (block_size ^ K), D1 / block_size, D2 / block_size, ..., DK /
+    // block_size])
+    case SpaceToDepthMode::DEPTH_FIRST:
+    {
+        axes_order.insert(axes_order.begin() + 1, 1);
+        break;
+    }
+    // x' = reshape(data, [N, C, D1/block_size, block_size, D2/block_size, block_size, ... ,
+    // DK/block_size, block_size])
+    // x'' = transpose(x',  [0,  3, 5, ..., K + (K + 1), 1,  2, 4, ..., K + K])
+    // y = reshape(x'', [N, C * (block_size ^ K), D1 / block_size, D2 / block_size, ..., DK /
+    // block_size])
+    case SpaceToDepthMode::BLOCKS_FIRST:
+    default: { axes_order.insert(axes_order.begin() + spatial_dims + 1, 1);
+    }
+    }
+    flat_node = builder::opset1::reorder_axes(flat_node, axes_order);
+    Shape squeezed_shape{n_dim};
+    for (int i = 0; i < spatial_dims; ++i)
+    {
+        squeezed_shape.push_back(data_shape.at(spatial_dim_index + i) / m_blocksize);
+    }
+    squeezed_shape.insert(squeezed_shape.begin() + 1, c_dim * std::pow(m_blocksize, spatial_dims));
+    flat_node = builder::opset1::reshape(flat_node, squeezed_shape);
+
+    return NodeVector{flat_node};
 }
 
 shared_ptr<Node> op::SpaceToDepth::copy_with_new_args(const NodeVector& new_args) const
@@ -84,5 +139,17 @@ shared_ptr<Node> op::SpaceToDepth::copy_with_new_args(const NodeVector& new_args
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<SpaceToDepth>(new_args.at(0), m_blocksize);
+    return make_shared<SpaceToDepth>(new_args.at(0), m_mode, m_blocksize);
+}
+
+op::SpaceToDepth::SpaceToDepthMode op::SpaceToDepth::mode_from_string(const std::string& mode) const
+{
+    static const std::map<std::string, SpaceToDepthMode> allowed_values = {
+        {"blocks_first", SpaceToDepthMode::BLOCKS_FIRST},
+        {"depth_first", SpaceToDepthMode::DEPTH_FIRST}};
+
+    NODE_VALIDATION_CHECK(
+        this, allowed_values.count(mode) > 0, "Invalid 'depth_to_space_mode' value passed in.");
+
+    return allowed_values.at(mode);
 }

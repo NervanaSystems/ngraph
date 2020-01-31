@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -236,7 +236,7 @@ void ngraph::runtime::plaidml::ImplAvgPoolBackprop::Apply()
     ret.add(cpf.O_in_header(incoming_deriv))
         .add(builder::Input{one, "One"})
         .add(builder::Output{"DI"});
-    for (int i = 2; i < forward_arg_shape.size(); ++i)
+    for (size_t i = 2; i < forward_arg_shape.size(); ++i)
     {
         std::ostringstream s;
         s << "XI" << i - 2;

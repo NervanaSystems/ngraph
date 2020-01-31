@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ function(NGRAPH_GET_CURRENT_HASH)
         COMMAND ${GIT_EXECUTABLE} rev-parse --verify HEAD
         RESULT_VARIABLE result
         OUTPUT_VARIABLE HASH
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         ERROR_QUIET)
 
     if(NOT HASH)
@@ -36,17 +36,17 @@ function(NGRAPH_GET_TAG_OF_CURRENT_HASH)
         COMMAND ${GIT_EXECUTABLE} show-ref
         RESULT_VARIABLE RESULT
         OUTPUT_VARIABLE TAG_LIST
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         ERROR_QUIET)
 
     NGRAPH_GET_CURRENT_HASH()
 
     if (NOT ${TAG_LIST} STREQUAL "")
         # first look for vX.Y.Z release tag
-        string(REGEX MATCH "${NGRAPH_CURRENT_HASH}[\t ]+refs/tags/v([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)" TAG ${TAG_LIST})
+        string(REGEX MATCH "${NGRAPH_CURRENT_HASH}[\t ]+refs/tags/v([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)$" TAG ${TAG_LIST})
         if ("${TAG}" STREQUAL "")
             # release tag not found so now look for vX.Y.Z-rc.N tag
-            string(REGEX MATCH "${NGRAPH_CURRENT_HASH}[\t ]+refs/tags/v([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)-(rc\\.[0-9?]+)" TAG ${TAG_LIST})
+            string(REGEX MATCH "${NGRAPH_CURRENT_HASH}[\t ]+refs/tags/v([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)-(rc\\.[0-9?]+)$" TAG ${TAG_LIST})
         endif()
         set(STATUS ${TAG})
         if (NOT "${TAG}" STREQUAL "")
@@ -64,7 +64,7 @@ function(NGRAPH_GET_MOST_RECENT_TAG)
         COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0 --match v*.*.*
         RESULT_VARIABLE RESULT
         OUTPUT_VARIABLE TAG
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         ERROR_QUIET)
 
     if (NOT ${TAG} STREQUAL "")
@@ -79,6 +79,7 @@ function(NGRAPH_GET_VERSION_LABEL)
     if ("${NGRAPH_CURRENT_RELEASE_TAG}" STREQUAL "")
         NGRAPH_GET_CURRENT_HASH()
         NGRAPH_GET_MOST_RECENT_TAG()
+        message(STATUS "Current hash ${NGRAPH_CURRENT_HASH}")
         string(SUBSTRING "${NGRAPH_CURRENT_HASH}" 0 7 HASH)
         if (NOT ${NGRAPH_MOST_RECENT_RELEASE_TAG} STREQUAL "")
             set(NGRAPH_VERSION_LABEL "${NGRAPH_MOST_RECENT_RELEASE_TAG}+${HASH}" PARENT_SCOPE)
@@ -87,7 +88,7 @@ function(NGRAPH_GET_VERSION_LABEL)
                 set(NGRAPH_VERSION_LABEL "?.?.?+${HASH}" PARENT_SCOPE)
             else()
                 # Not in a git repo
-                file(READ ${CMAKE_SOURCE_DIR}/TAG NGRAPH_TAG)
+                file(READ ${CMAKE_CURRENT_SOURCE_DIR}/TAG NGRAPH_TAG)
                 string(STRIP ${NGRAPH_TAG} NGRAPH_TAG)
                 set(NGRAPH_VERSION_LABEL "${NGRAPH_TAG}" PARENT_SCOPE)
             endif()

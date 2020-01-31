@@ -1,6 +1,6 @@
 .. fusion/index.rst:
 
-Pattern matcher
+Pattern Matcher
 ###############
 
 .. toctree::

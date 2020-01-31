@@ -17,7 +17,7 @@ Description
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::AvgPoolBackprop
+.. doxygenclass:: ngraph::op::v0::AvgPoolBackprop
    :project: ngraph
    :members:
 

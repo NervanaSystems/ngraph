@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/attribute_adapter.hpp"
 #include "ngraph/deprecated.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/ngraph_visibility.hpp"
@@ -49,13 +50,14 @@ namespace ngraph
             i16,
             i32,
             i64,
+            u1,
             u8,
             u16,
             u32,
             u64
         };
 
-        class Type
+        class NGRAPH_API Type
         {
         public:
             Type()
@@ -87,6 +89,7 @@ namespace ngraph
             // TODO: We may want to revisit this definition when we do a more general cleanup of
             // element types:
             bool is_integral() const { return !is_real(); }
+            bool is_integral_number() const;
             bool is_signed() const;
             bool is_quantized() const;
             size_t bitwidth() const;
@@ -95,7 +98,7 @@ namespace ngraph
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
             bool operator<(const Type& other) const;
-            friend std::ostream& operator<<(std::ostream&, const Type&);
+            friend NGRAPH_API std::ostream& operator<<(std::ostream&, const Type&);
             static std::vector<const Type*> get_known_types();
 
             /// \brief Checks whether this element type is merge-compatible with `t`.
@@ -139,45 +142,60 @@ namespace ngraph
         extern NGRAPH_API const Type i16;
         extern NGRAPH_API const Type i32;
         extern NGRAPH_API const Type i64;
+        extern NGRAPH_API const Type u1;
         extern NGRAPH_API const Type u8;
         extern NGRAPH_API const Type u16;
         extern NGRAPH_API const Type u32;
         extern NGRAPH_API const Type u64;
 
         template <typename T>
-        const Type& from()
+        Type from()
         {
             throw std::invalid_argument("Unknown type");
         }
         template <>
-        const Type& from<char>();
+        NGRAPH_API Type from<char>();
         template <>
-        const Type& from<bool>();
+        NGRAPH_API Type from<bool>();
         template <>
-        const Type& from<float>();
+        NGRAPH_API Type from<float>();
         template <>
-        const Type& from<double>();
+        NGRAPH_API Type from<double>();
         template <>
-        const Type& from<int8_t>();
+        NGRAPH_API Type from<int8_t>();
         template <>
-        const Type& from<int16_t>();
+        NGRAPH_API Type from<int16_t>();
         template <>
-        const Type& from<int32_t>();
+        NGRAPH_API Type from<int32_t>();
         template <>
-        const Type& from<int64_t>();
+        NGRAPH_API Type from<int64_t>();
         template <>
-        const Type& from<uint8_t>();
+        NGRAPH_API Type from<uint8_t>();
         template <>
-        const Type& from<uint16_t>();
+        NGRAPH_API Type from<uint16_t>();
         template <>
-        const Type& from<uint32_t>();
+        NGRAPH_API Type from<uint32_t>();
         template <>
-        const Type& from<uint64_t>();
+        NGRAPH_API Type from<uint64_t>();
         template <>
-        const Type& from<ngraph::bfloat16>();
+        NGRAPH_API Type from<ngraph::bfloat16>();
         template <>
-        const Type& from<ngraph::float16>();
+        NGRAPH_API Type from<ngraph::float16>();
 
+        NGRAPH_API
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }
+    template <>
+    class AttributeAdapter<element::Type> : public ValueReference<element::Type>,
+                                            public ValueAccessor<void>
+    {
+    public:
+        AttributeAdapter(element::Type& value)
+            : ValueReference<element::Type>(value)
+        {
+        }
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<element::Type>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

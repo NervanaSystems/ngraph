@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ bool pass::Liveness::run_on_function(shared_ptr<Function> function)
     }
     for (const shared_ptr<Node>& node : ops)
     {
-        if (auto constant_node = dynamic_pointer_cast<op::Constant>(node))
+        if (auto constant_node = as_type_ptr<op::Constant>(node))
         {
             for (auto& output : constant_node->outputs())
             {

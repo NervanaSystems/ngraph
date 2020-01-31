@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,32 +35,35 @@ namespace ngraph
             {
                 std::printf("%s: %s\n", timestamp.c_str(), buf.data());
             }
-            void all_reduce(void* in,
-                            void* out,
-                            element::Type_t element_type,
-                            reduction::Type reduce_type,
-                            size_t count) override
+            void all_reduce(void* /* in */,
+                            void* /* out */,
+                            element::Type_t /* element_type */,
+                            reduction::Type /* reduce_type */,
+                            size_t /* count */) override
             {
                 throw ngraph_error("Distributed Library not supported/mentioned");
             }
 
-            void broadcast(void* in,
-                           element::Type_t element_type,
-                           size_t count,
-                           int root_id) override
+            void broadcast(void* /* in */,
+                           element::Type_t /* element_type */,
+                           size_t /* count */,
+                           int /* root_id */) override
             {
                 throw ngraph_error("Distributed Library not supported/mentioned");
             }
 
-            void recv(void* in, element::Type_t element_type, size_t count, int src_id) override
+            void recv(void* /* in */,
+                      element::Type_t /* element_type */,
+                      size_t /* count */,
+                      int /* src_id*/) override
             {
                 throw ngraph_error("Distributed Library not supported/mentioned");
             }
 
-            void send(const void* in,
-                      element::Type_t element_type,
-                      size_t count,
-                      int dest_id) override
+            void send(const void* /* in */,
+                      element::Type_t /* element_type */,
+                      size_t /* count */,
+                      int /* dest_id */) override
             {
                 throw ngraph_error("Distributed Library not supported/mentioned");
             }

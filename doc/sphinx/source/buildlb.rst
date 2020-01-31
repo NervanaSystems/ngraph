@@ -5,7 +5,7 @@ Build and Test
 ###############
 
 * :ref:`default_ngflags`
-.. :ref:`ngraph_plaidml_backend`
+* :ref:`ngraph_plaidml_backend`
 
 There are a few common paths to take when manually building the |project| 
 from source code. Today nGraph supports various developers working on all 
@@ -41,8 +41,8 @@ Prerequisites
    :escape: ~
 
    CentOS 7.4 64-bit, GCC 4.8, CMake 3.9.0, supported, ``wget zlib-devel ncurses-libs ncurses-devel patch diffutils gcc-c++ make git perl-Data-Dumper`` 
-   Ubuntu 16.04 or 18.04 (LTS) 64-bit, Clang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 clang-format-3.9 git curl zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool``
-   Clear Linux\* OS for Intel® Architecture version 28880, Clang 8.0, CMake 3.14.2, experimental, bundles ``machine-learning-basic c-basic python-basic python-basic-dev dev-utils``
+   Ubuntu 16.04 or 18.04 (LTS) 64-bit, Clang 6, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-format-6.0 clang-tidy-6.0 clang-6.0 git curl zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool``
+   Clear Linux\* OS for Intel® Architecture version 28880+, Clang 8.0, CMake 3.14.2, experimental, bundles ``machine-learning-basic c-basic python-basic python-basic-dev dev-utils``
 
 
 .. _default_ngflags:
@@ -106,7 +106,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu
    
    .. code-block:: console
 
-      $ cmake .. [-DNGRAPH_USE_PREBUILT_LLVM=OFF] [-DNGRAPH_TARGET_ARCH=skylake-avx512]   
+      $ cmake .. [-DNGRAPH_TARGET_ARCH=skylake-avx512]   
 
 #. Run ``$ make`` and ``make install`` to install ``libngraph.so`` and the 
    header files to ``~/ngraph_dist``:
@@ -161,17 +161,17 @@ The process documented here will work on CentOS 7.4.
       $ make && sudo make install 
 
 
-.. .. _ngraph_plaidml_backend:  hide this until announcement is official
+.. _ngraph_plaidml_backend:
 
-.. Building nGraph-PlaidML from source
-.. ===================================
+Building nGraph-PlaidML from source
+===================================
 
-.. The following instructions will create the ``~/ngraph_plaidml_dist`` 
-.. locally:
+The following instructions will create the ``~/ngraph_plaidml_dist`` 
+locally:
 
-.. #. Ensure you have installed the :ref:`prerequisites` for your OS.
+#. Ensure you have installed the :ref:`prerequisites` for your OS.
 
-.. #. Install the prerequisites for the backend. Our hybrid ``NGRAPH_PLAIDML``
+#. Install the prerequisites for the backend. Our hybrid ``NGRAPH_PLAIDML``
    backend works best with Python3 versions. We recommend that you use a 
    virtual environment, due to some of the difficulties that users have 
    seen when trying to install outside of a venv.
@@ -182,20 +182,20 @@ The process documented here will work on CentOS 7.4.
       $ pip install plaidml 
       $ plaidml-setup
 
-.. #. Clone the source code, create and enter your build directory:
+#. Clone the source code, create and enter your build directory:
 
    .. code-block:: console
 
       $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build && cd build
 
-.. #. Prepare the CMake files as follows: 
+#. Prepare the CMake files as follows: 
 
    .. code-block:: console
 
       $ cmake .. -DCMAKE_INSTALL_PREFIX=~/ngraph_plaidml_dist -DNGRAPH_CPU_ENABLE=OFF -DNGRAPH_PLAIDML_ENABLE=ON 
 
-.. #. Run :command:`make` and ``make install``. Note that if you are building 
+#. Run :command:`make` and ``make install``. Note that if you are building 
    outside a local or user path, you may need to run ``make install`` as the 
    root user.
 
@@ -210,8 +210,8 @@ The process documented here will work on CentOS 7.4.
    tests can be run when PlaidML devices are available at the machine 
    level.
 
-.. For more about working with the PlaidML backend from nGraph, see our 
-.. API documentation :doc:`backends/plaidml-ng-api/index`. 
+For more about working with the PlaidML backend from nGraph, see our 
+API documentation :doc:`backends/plaidml-ng-api/index`. 
 
 
 macOS\* development

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include <unordered_map>
 
 #include "activation_functions.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sigmoid.hpp"
@@ -28,24 +29,27 @@
 using namespace std;
 using namespace ngraph;
 
-static shared_ptr<Node> sigmoid(const shared_ptr<Node>& arg, float alpha, float beta)
+static shared_ptr<Node> sigmoid(const shared_ptr<Node>& arg, float /* alpha */, float /* beta */)
 {
     return make_shared<op::Sigmoid>(arg);
 }
 
-static shared_ptr<Node> tanh(const shared_ptr<Node>& arg, float alpha, float beta)
+static shared_ptr<Node> tanh(const shared_ptr<Node>& arg, float /* alpha */, float /* beta */)
 {
     return make_shared<op::Tanh>(arg);
 }
 
-static shared_ptr<Node> relu(const shared_ptr<Node>& arg, float alpha, float beta)
+static shared_ptr<Node> relu(const shared_ptr<Node>& arg, float /* alpha */, float /* beta */)
 {
     return make_shared<op::Relu>(arg);
 }
 
 static shared_ptr<Node> hardsigmoid(const shared_ptr<Node>& arg, float alpha, float beta)
 {
-    return make_shared<op::HardSigmoid>(arg, alpha, beta);
+    const auto alpha_node = op::Constant::create<float>(arg->get_element_type(), Shape{}, {alpha});
+    const auto beta_node = op::Constant::create<float>(arg->get_element_type(), Shape{}, {beta});
+
+    return make_shared<op::HardSigmoid>(arg, alpha_node, beta_node);
 }
 
 op::util::ActivationFunction::ActivationFunction(ActivationFunctionType f, float alpha, float beta)

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::EmbeddingLookup::type_name{"EmbeddingLookup"};
+constexpr NodeTypeInfo op::EmbeddingLookup::type_info;
 
 void op::EmbeddingLookup::validate_and_infer_types()
 {

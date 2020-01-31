@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ using namespace std;
 
 // start 23,749,645 in 1,912 files
 
-void skip_comment(istream& s)
+void skip_comment(istream& /* s */)
 {
 }
 

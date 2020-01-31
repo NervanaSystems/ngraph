@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ namespace ngraph
 /// \brief Interface to a generic backend.
 ///
 /// Backends are responsible for function execution and value allocation.
-class ngraph::runtime::Backend
+class NGRAPH_API ngraph::runtime::Backend
 {
 public:
     virtual ~Backend();
@@ -159,7 +159,7 @@ public:
     virtual Allocator* get_host_memory_allocator() { return nullptr; }
     /// \brief Set the host memory allocator to be used by the backend
     /// \param allocator is pointer to host memory allocator object
-    virtual void set_host_memory_allocator(Allocator* allocator) {}
+    virtual void set_host_memory_allocator(Allocator* allocator) { (void)allocator; }
     /// \brief Returns memory allocator used by backend for device allocations
     virtual Allocator* get_device_memory_allocator()
     {
@@ -168,12 +168,16 @@ public:
         return nullptr;
     }
 
-    /// \brief method for each supported backend to determine if the passed pointer is in device pinned memory or not
+    /// \brief method for each supported backend to determine if the passed pointer is in device
+    ///        pinned memory or not
     /// \param ptr pointer to the memory to determine if its in device memory or not
     virtual bool is_device_memory(void* ptr);
 
     virtual bool executable_can_create_tensors();
 
+    /// \brief Get the version of the backend
+    /// The default value of 0.0.0 is chosen to be a parsable version number
+    virtual std::string get_version() const { return "0.0.0"; }
 private:
     // mutex to modify s_backend_shared_library_search_directory thread safe
     static std::mutex m_mtx;

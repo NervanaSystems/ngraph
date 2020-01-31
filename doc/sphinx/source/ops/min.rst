@@ -44,6 +44,6 @@ Outputs
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Min
+.. doxygenclass:: ngraph::op::v0::Min
    :project: ngraph
    :members: m_axes

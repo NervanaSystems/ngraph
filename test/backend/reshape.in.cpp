@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -596,4 +596,4 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_shufflenet_5d)
     EXPECT_TRUE(test::all_close_f(ref_results.at(0), bk_results.at(0), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-#endif //NGRAPH_INTERPRETER_ENABLE
+#endif // NGRAPH_INTERPRETER_ENABLE

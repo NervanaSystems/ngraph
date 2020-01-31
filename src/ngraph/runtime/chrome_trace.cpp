@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include <string>
 
 #include "chrome_trace.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/log.hpp"
 
 using namespace std;
@@ -27,7 +28,7 @@ using namespace ngraph;
 
 static bool read_tracing_env_var()
 {
-    static const bool is_enabled = (getenv("NGRAPH_ENABLE_TRACING") != nullptr);
+    static const bool is_enabled = getenv_bool("NGRAPH_ENABLE_TRACING");
 
     return is_enabled;
 }

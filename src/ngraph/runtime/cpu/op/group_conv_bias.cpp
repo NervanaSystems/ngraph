@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -95,7 +95,7 @@ Shape op::GroupConvolutionBias::get_weights_dimensions()
     return weights_shape_groups;
 }
 
-const std::string op::GroupConvolutionBias::type_name{"GroupConvolutionBias"};
+constexpr NodeTypeInfo op::GroupConvolutionBias::type_info;
 
 op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolution>& conv,
                                                const Output<Node>& bias,
@@ -193,8 +193,8 @@ shared_ptr<Node> op::GroupConvolutionBias::copy_with_new_args(const NodeVector& 
                                                      get_alpha()));
 }
 
-void op::GroupConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                 const NodeVector& deltas)
+void op::GroupConvolutionBias::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                                 const OutputVector& /* deltas */)
 {
     throw ngraph_error("GroupConvolutionBias generate_adjoints not supported implemented");
 }

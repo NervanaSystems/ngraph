@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,12 @@ namespace ngraph
                 void set_mkldnn_md(const mkldnn::memory::desc& md);
                 bool is_mkldnn_layout() const
                 {
+#if MKLDNN_VERSION_MAJOR < 1
                     return m_mkldnn_md.data.format != mkldnn::memory::format::format_undef;
+#else
+                    return static_cast<mkldnn::memory::format_kind>(m_mkldnn_md.data.format_kind) !=
+                           mkldnn::memory::format_kind::undef;
+#endif
                 }
                 bool is_row_major_layout();
 

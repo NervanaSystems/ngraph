@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ TEST(check, check_with_explanation)
     catch (const CheckFailure& e)
     {
         check_failure_thrown = true;
-        EXPECT_PRED_FORMAT2(testing::IsSubstring, "Check '(false)' failed at", e.what());
+        EXPECT_PRED_FORMAT2(testing::IsSubstring, "Check 'false' failed at", e.what());
         EXPECT_PRED_FORMAT2(testing::IsSubstring, "xyzzyxyzzy123", e.what());
     }
 

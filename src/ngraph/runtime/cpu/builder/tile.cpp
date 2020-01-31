@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Tile)
             {
+                (void)node;
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
 
@@ -46,9 +47,9 @@ namespace ngraph
                     size_t repeats = shape_size(out_shape);
                     std::function<decltype(runtime::cpu::kernel::tile_rank_0<float>)> kernel;
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::tile_rank_0);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::tile_rank_0)
                     auto functor = [&, kernel, repeats, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         kernel(ctx->buffer_data[arg_buffer_index],
                                ctx->buffer_data[out_buffer_index],
                                repeats);
@@ -58,9 +59,11 @@ namespace ngraph
                 }
                 else
                 {
+                    auto out_rank = out_shape.size();
+                    arg_shape.insert(arg_shape.begin(), out_rank - arg_rank, 1);
                     std::function<decltype(runtime::cpu::kernel::tile<float, 2>)> kernel;
-                    SELECT_KERNEL_BY_RANK(
-                        kernel, out[0].get_element_type(), arg_rank, runtime::cpu::kernel::tile);
+                    SELECT_KERNEL_ET_RANK(
+                        kernel, out[0].get_element_type(), out_rank, runtime::cpu::kernel::tile);
                     auto functor =
                         [&, kernel, arg_shape, out_shape, arg_buffer_index, out_buffer_index](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
@@ -75,10 +78,7 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Tile);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_tile_cpp() {}
-#endif
+            void register_builders_tile_cpp() { REGISTER_OP_BUILDER(Tile); }
         }
     }
 }

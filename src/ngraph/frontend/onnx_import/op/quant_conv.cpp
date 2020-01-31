@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,15 +18,13 @@
 #include <memory>
 #include <vector>
 
+#include "default_opset.hpp"
+#include "exceptions.hpp"
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/op/conv.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
-#include "ngraph/op/concat.hpp"
-#include "ngraph/op/quantized_convolution.hpp"
-#include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "ngraph/strides.hpp"
 #include "quant_conv.hpp"
 
@@ -82,7 +80,8 @@ namespace ngraph
                         {
                             // Split one convolution op to N ops where N is the number of groups
                             // and concat results after computation.
-                            // reference: https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
+                            // reference:
+                            // https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
                             std::size_t n_data_channels{data->get_shape().at(1)};
                             std::size_t n_filters_channels{filters->get_shape().at(0)};
 
@@ -97,17 +96,17 @@ namespace ngraph
                                 filters->get_shape().size());
                             std::vector<std::size_t> filters_upper_bounds{filters->get_shape()};
 
-                            for (std::size_t group{0}; group < groups; ++group)
+                            for (int64_t group{0}; group < groups; ++group)
                             {
                                 // slice data
                                 data_lower_bounds[1] = group * data_group_size;
                                 data_upper_bounds[1] = (group + 1) * data_group_size;
-                                auto sliced_data = std::make_shared<ngraph::op::Slice>(
+                                auto sliced_data = std::make_shared<ngraph::opset0::Slice>(
                                     data, data_lower_bounds, data_upper_bounds);
                                 // slice filters
                                 filters_lower_bounds[0] = group * filters_group_size;
                                 filters_upper_bounds[0] = (group + 1) * filters_group_size;
-                                auto sliced_filters = std::make_shared<ngraph::op::Slice>(
+                                auto sliced_filters = std::make_shared<ngraph::opset0::Slice>(
                                     filters, filters_lower_bounds, filters_upper_bounds);
 
                                 if (bias)
@@ -119,7 +118,7 @@ namespace ngraph
                                 else
                                 {
                                     convolution_nodes.push_back(
-                                        std::make_shared<ngraph::op::QuantizedConvolution>(
+                                        std::make_shared<ngraph::opset0::QuantizedConvolution>(
                                             sliced_data,
                                             sliced_filters,
                                             strides,
@@ -140,8 +139,8 @@ namespace ngraph
                                 }
                             }
                             std::size_t concatenation_axis = 1;
-                            return std::make_shared<ngraph::op::Concat>(convolution_nodes,
-                                                                        concatenation_axis);
+                            return std::make_shared<default_opset::Concat>(convolution_nodes,
+                                                                           concatenation_axis);
                         }
                         else
                         {
@@ -162,7 +161,7 @@ namespace ngraph
                             }
                             else
                             {
-                                return std::make_shared<ngraph::op::QuantizedConvolution>(
+                                return std::make_shared<ngraph::opset0::QuantizedConvolution>(
                                     data,
                                     filters,
                                     strides,
@@ -201,9 +200,11 @@ namespace ngraph
                     auto output_scale = inputs.at(6);
                     auto output_zero_point = inputs.at(7);
 
-                    ASSERT_VALID_ARGUMENT(node,
-                                          ((groups >= 0) && (groups <= data->get_shape().at(1)) &&
-                                           (groups <= filters->get_shape().at(0))))
+                    ASSERT_VALID_ARGUMENT(
+                        node,
+                        ((groups >= 0) &&
+                         (groups <= static_cast<int64_t>(data->get_shape().at(1))) &&
+                         (groups <= static_cast<int64_t>(filters->get_shape().at(0)))))
                         << "incorrect value of 'group' attribute: " << groups;
 
                     std::size_t n_data_channels{data->get_shape().at(1)};
@@ -270,7 +271,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

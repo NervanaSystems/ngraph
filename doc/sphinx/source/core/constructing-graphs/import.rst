@@ -27,100 +27,25 @@ usually named ``<some_model>.onnx`` or ``<some_model>.onnx.pb``. These
    needing to dig into anything from the "Frameworks" sections. You will, however, 
    need to have completed the steps outlined in our :doc:`../../buildlb` guide.  
 
-
 To demonstrate functionality, we'll use an already-serialized CIFAR10 model 
 trained via ResNet20. Remember that this model has already been trained and 
 exported from a framework such as Caffe2, PyTorch or CNTK; we are simply going 
 to build an nGraph representation of the model, execute it, and produce some 
 outputs.
 
-
 Installing ``ngraph_onnx`` with nGraph from scratch
 ====================================================
 
-To use ONNX models with nGraph, you will also need the companion tool 
-``ngraph_onnx``, which requires Python 3.4 or higher. If nGraph has not 
-yet been installed to your system, you can follow these steps to install 
-everything at once; if an `ngraph_dist` is already installed on your system, 
-skip ahead to the next section, :ref:`install_ngonnx`.
-   
-
-#. Install prerequisites for the system and install nGraph as ``ngraph_dist``. 
-  
-   .. code-block:: console
-
-      $ apt update
-      $ apt install python3 python3-pip python3-dev python3-venv
-      $ apt install build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev
-      $ git clone https://github.com/NervanaSystems/ngraph.git
-      $ cd ngraph && mkdir build
-      $ cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist
-      $ make install
-
-#. Build the Python package (binary wheel) for ngraph and set up an env for ONNX;
-   be sure to export the ``NGRAPH_CPP_BUILD_PATH`` where the ``ngraph_dist`` was 
-   installed. 
-
-   .. code-block:: console
-
-      $ cd ngraph/python
-      $ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
-      $ export PYBIND_HEADERS_PATH=$PWD/pybind11
-      $ export NGRAPH_CPP_BUILD_PATH=~/ngraph_dist
-      $ python3 setup.py bdist_wheel
-      $ cd .. python3 -m venv onnx
-      $ cd onnx/
-      $ . bin/activate
-
-#. Check for the binary wheel file under ``ngraph/python/dist`` and install it 
-   with pip.
-
-   .. code-block:: console
-
-      (onnx)$ pip install -U python/dist/ngraph-[version]-cp36-cp36m-linux_x86_64.whl
-
-   Where ``[version]`` is the version number of the nGraph Python module 
-   you see in that directory.  
-
-#. Confirm ``ngraph`` is properly installed through a Python interpreter:
-
-   .. code-block:: console
-
-      (onnx)$ python3
-
-   .. code-block:: python
-      
-      import ngraph as ng
-      ng.abs([[1, 2, 3], [4, 5, 6]])
-      <Abs: 'Abs_1' ([2, 3])>
-
-   If you don't see any errors, ngraph should be installed correctly.
-
-
-.. _install_ngonnx:
-
-Installing ngraph-onnx
------------------------
-
-Add the dependencies for ONNX:  
-
-.. code-block:: console
-
-   $ apt install protobuf-compiler libprotobuf-dev
-
-
-Install the ``ngraph-onnx`` companion tool using pip:
-
-.. code-block:: console
-
-   (onnx) $ pip install git+https://github.com/NervanaSystems/ngraph-onnx/
+See the documentation on: `building nGraph and nGraph-ONNX`_ for the latest 
+instructions. 
  
 
+.. _import_model:
 
 Importing a serialized model
 =============================
 
-With the dependencies added, we can now import a model that has 
+After building and installing ``ngraph_onnx``, we can import a model that has 
 been serialized by ONNX, interact locally with the model by running 
 Python code, create and load objects, and run inference. 
 
@@ -229,23 +154,7 @@ demonstration purposes, the code will look something like:
       dtype=float32)
 
 
-
-.. Importing models from NNVM
-   ---------------------------
-
-.. if you work on NNVM you can add this instruction here. 
-
-
-
-.. Importing models serialized with XLA
-   -------------------------------------
-
-.. if you work on XLA you can add this instruction here.
-
-
-.. etc, eof 
-
-
+.. _building nGraph and nGraph-ONNX: https://github.com/NervanaSystems/ngraph-onnx/blob/master/BUILDING.md
 .. _ngraph-onnx: https://github.com/NervanaSystems/ngraph-onnx#ngraph
 .. _ONNX: http://onnx.ai
 .. _tutorials from ONNX: https://github.com/onnx/tutorials

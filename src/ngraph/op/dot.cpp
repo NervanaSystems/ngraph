@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -26,7 +27,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Dot::type_name{"Dot"};
+constexpr NodeTypeInfo op::Dot::type_info;
 
 op::Dot::Dot(const Output<Node>& arg0, const Output<Node>& arg1)
     : Dot(arg0, arg1, 0, false)
@@ -175,16 +176,16 @@ shared_ptr<op::Reshape> make_reshape_axes_to_front(const Output<Node>& n,
     return make_shared<op::Reshape>(n, input_order, output_shape);
 }
 
-void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
     auto x = input_value(0);
     auto y = input_value(1);
 
-    auto x_shape = x.get_shape();          // shape IJ
-    auto y_shape = y.get_shape();          // shape JK
-    auto delta_shape = delta->get_shape(); // shape IK
+    auto x_shape = x.get_shape();         // shape IJ
+    auto y_shape = y.get_shape();         // shape JK
+    auto delta_shape = delta.get_shape(); // shape IK
 
     Shape I_shape;
     Shape J_shape;
@@ -200,4 +201,9 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
     auto x_reshaped = make_reshape_axes_to_front(x, I_shape, J_shape);               // JI
     auto x_reshaped_dot_delta = make_shared<Dot>(x_reshaped, delta, I_shape.size()); // JI.IK->JK
     adjoints.add_delta(y, x_reshaped_dot_delta);
+}
+
+shared_ptr<Node> op::Dot::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }

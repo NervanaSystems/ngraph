@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,6 +40,8 @@ namespace ngraph
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto sum_pd = mkldnn_emitter->get_elementwise_add_desc(node);
+                    size_t scratchpad_size = QUERY_SCRATCHPAD(sum, sum_pd);
+
                     // Add needs 4 primitives: input0, input1, result, and sum.
                     size_t add_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(add_index);
@@ -53,14 +55,19 @@ namespace ngraph
                     auto functor = [&,
                                     sum_pd,
                                     add_index,
+                                    scratchpad_size,
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_elementwise_add(
-                                ctx->mkldnn_primitives, sum_pd, deps, add_index);
+                            mkldnn_emitter->build_elementwise_add(ctx->mkldnn_memories,
+                                                                  ctx->mkldnn_primitives,
+                                                                  ctx->mkldnn_scratchpad_mds,
+                                                                  sum_pd,
+                                                                  deps,
+                                                                  add_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -68,7 +75,9 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, add_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, add_index, deps, cpu::mkldnn_utils::OpType::ADD, scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -78,11 +87,7 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Add);
-
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_add_cpp() {}
-#endif
+            void register_builders_add_cpp() { REGISTER_OP_BUILDER(Add); }
         }
     }
 }

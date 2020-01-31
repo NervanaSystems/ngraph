@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::QuantizedDotBias::type_name{"QuantizedDotBias"};
+constexpr NodeTypeInfo op::QuantizedDotBias::type_info;
 
 op::QuantizedDotBias::QuantizedDotBias(const Output<Node>& data,
                                        const Output<Node>& weights,

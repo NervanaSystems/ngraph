@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,16 +15,23 @@
 //*****************************************************************************
 
 #include "ngraph/op/argmax.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-const string op::ArgMax::type_name{"ArgMax"};
+constexpr NodeTypeInfo op::ArgMax::type_info;
 
 op::ArgMax::ArgMax(const Output<Node>& arg, size_t axis, const element::Type& index_element_type)
     : op::util::IndexReduction(arg, axis, index_element_type)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::ArgMax::visit_attributes(AttributeVisitor& visitor)
+{
+    IndexReduction::visit_attributes(visitor);
+    return true;
 }
 
 shared_ptr<Node> op::ArgMax::copy_with_new_args(const NodeVector& new_args) const

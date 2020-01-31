@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ public:
 private:
     std::mutex m_mu;
 
-    // N.B. The key here is the original source function, *not* the copy that's been processed by the compilation passes.
+    // N.B. The key here is the original source function, *not* the copy that's been processed by
+    // the compilation passes.
     std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<PlaidML_Executable>> m_cache;
 };

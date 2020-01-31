@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,8 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto bounded_relu_desc = mkldnn_emitter->get_bounded_relu_desc(node);
+                    size_t scratchpad_size = QUERY_SCRATCHPAD(eltwise_forward, bounded_relu_desc);
+
                     // BoundedRelu needs 3 primitives: input, result, and eltwise_forward.
                     auto bounded_relu_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
@@ -51,12 +53,15 @@ namespace ngraph
                     auto functor = [&,
                                     bounded_relu_desc,
                                     bounded_relu_index,
+                                    scratchpad_size,
                                     input_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_bounded_relu(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_bounded_relu(ctx->mkldnn_memories,
+                                                               ctx->mkldnn_primitives,
+                                                               ctx->mkldnn_scratchpad_mds,
                                                                bounded_relu_desc,
                                                                deps,
                                                                bounded_relu_index);
@@ -65,7 +70,13 @@ namespace ngraph
                             ctx, deps[0], ctx->buffer_data[input_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, bounded_relu_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            bounded_relu_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::BOUNDEDRELU,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -74,7 +85,7 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::bounded_relu<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::bounded_relu);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::bounded_relu)
 
                     auto functor = [&, kernel, alpha, count, input_buffer_index, out_buffer_index](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
@@ -87,10 +98,8 @@ namespace ngraph
                     functors.emplace_back(functor);
                 }
             }
-            REGISTER_OP_BUILDER(BoundedRelu);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_bounded_relu_cpp() {}
-#endif
+
+            void register_builders_bounded_relu_cpp() { REGISTER_OP_BUILDER(BoundedRelu); }
         }
     }
 }

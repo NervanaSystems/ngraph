@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ namespace ngraph
         {
             class CPU_ExternalFunction;
             class CPU_CallFrame;
-            BackendConstructor* get_backend_constructor_pointer();
+            BackendConstructor CPU_BACKEND_API get_backend_constructor_pointer();
             class CPU_BACKEND_API CPU_Backend : public runtime::Backend
             {
             public:
@@ -94,7 +94,35 @@ namespace ngraph
 
                 std::vector<PerformanceCounter> get_performance_data() const override;
 
+                std::shared_ptr<runtime::Tensor> create_input_tensor(size_t input_index) override;
+
+                std::shared_ptr<runtime::Tensor> create_input_tensor(size_t input_index,
+                                                                     void* memory_pointer) override;
+
+                std::shared_ptr<runtime::Tensor> create_output_tensor(size_t output_index) override;
+
+                std::shared_ptr<runtime::Tensor>
+                    create_output_tensor(size_t output_index, void* memory_pointer) override;
+
+                std::vector<std::shared_ptr<runtime::Tensor>>
+                    create_input_tensor(size_t input_index,
+                                        size_t pipeline_depth,
+                                        std::vector<void*> memory_pointers) override;
+
+                std::vector<std::shared_ptr<runtime::Tensor>>
+                    create_input_tensor(size_t input_index, size_t pipeline_depth) override;
+
+                std::vector<std::shared_ptr<runtime::Tensor>>
+                    create_output_tensor(size_t output_index, size_t pipeline_depth) override;
+
+                std::vector<std::shared_ptr<runtime::Tensor>>
+                    create_output_tensor(size_t output_index,
+                                         size_t pipeline_depth,
+                                         std::vector<void*> memory_pointers) override;
+
             private:
+                std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
+                std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
                 class FunctionInstance
                 {
                 public:

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ namespace ngraph
                 ///
                 /// \param node   The ONNX node object representing this operation.
                 ///
-                /// \return The vector containing Ngraph nodes producing output of ONNX GlobalAveragePool
-                ///         operation.
+                /// \return The vector containing Ngraph nodes producing output of ONNX
+                ///         GlobalAveragePool operation.
                 NodeVector global_average_pool(const Node& node);
 
             } // namespace set_1

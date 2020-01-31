@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
 #include <cstdint>
 #include <random>
 #include <vector>
+
+#include "ngraph/op/pad.hpp"
 
 // CBLAS types and wrappers
 
@@ -90,6 +92,21 @@ namespace cblas
                      float* C,
                      const int64_t ldc);
 
+    void cblas_dgemm(const Layout layout,
+                     const Transpose TransA,
+                     const Transpose TransB,
+                     const int64_t M,
+                     const int64_t N,
+                     const int64_t K,
+                     const double alpha,
+                     const double* A,
+                     const int64_t lda,
+                     const double* B,
+                     const int64_t ldb,
+                     const double beta,
+                     double* C,
+                     const int64_t ldc);
+
     void cblas_sgemm_batch(const Layout Layout,
                            const Transpose* transa_array,
                            const Transpose* transb_array,
@@ -146,6 +163,7 @@ namespace ngraph
                                     const Shape& output_shape,
                                     const CoordinateDiff& padding_below,
                                     const CoordinateDiff& padding_above,
+                                    const ngraph::op::PadMode pad_mode,
                                     int arena);
 
                 void reduce_sum_all_1d_float32(float* input,
@@ -272,6 +290,14 @@ namespace ngraph
                                       const double value,
                                       const std::vector<std::minstd_rand>& vmsr,
                                       const bool use_seed);
+
+                template <typename InputElementType, typename AxisElementType>
+                void reference_cumsum(void* input_tensor,
+                                      void* axis_tensor,
+                                      void* out,
+                                      const Shape& tensor_shape,
+                                      const bool exclusive,
+                                      const bool reverse);
             }
         }
     }

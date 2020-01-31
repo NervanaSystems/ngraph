@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ void op::util::validate_conv_shapes(const Node* node,
         ").");
 }
 
-const std::string op::ConvolutionAdd::type_name{"ConvolutionAdd"};
+constexpr NodeTypeInfo op::ConvolutionAdd::type_info;
 
 op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
                                    const Output<Node>& sum_input,

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Floor::type_name{"Floor"};
+constexpr NodeTypeInfo op::Floor::type_info;
 
 op::Floor::Floor(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

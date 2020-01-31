@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,11 +33,12 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::GetOutputElement)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                auto functor = [&, arg_buffer_index, out_buffer_index](CPURuntimeContext* ctx,
-                                                                       CPUExecutionContext* ectx) {
+                auto functor = [&, arg_buffer_index, out_buffer_index](
+                    CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                     if (ctx->buffer_data[arg_buffer_index] != ctx->buffer_data[out_buffer_index])
                     {
                         throw ngraph_error("GOE's input and out must be equal");
@@ -47,10 +48,10 @@ namespace ngraph
                 return;
             }
 
-            REGISTER_OP_BUILDER(GetOutputElement);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_get_output_element_cpp() {}
-#endif
+            void register_builders_get_output_element_cpp()
+            {
+                REGISTER_OP_BUILDER(GetOutputElement);
+            }
         }
     }
 }

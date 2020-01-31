@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::UpdateSlice::type_name{"UpdateSlice"};
+constexpr NodeTypeInfo op::UpdateSlice::type_info;
 
 op::UpdateSlice::UpdateSlice(const Output<Node>& arg0,
                              const Output<Node>& arg1,

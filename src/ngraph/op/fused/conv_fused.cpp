@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,10 +27,9 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ConvolutionBias::type_name{"ConvolutionBias"};
-const string op::ConvolutionBiasBackpropFiltersBias::type_name{
-    "ConvolutionBiasBackpropFiltersBias"};
-const string op::ConvolutionBiasAdd::type_name{"ConvolutionBiasAdd"};
+constexpr NodeTypeInfo op::ConvolutionBias::type_info;
+constexpr NodeTypeInfo op::ConvolutionBiasBackpropFiltersBias::type_info;
+constexpr NodeTypeInfo op::ConvolutionBiasAdd::type_info;
 
 static void validate_convbias_shapes(const Node* node,
                                      element::Type et_filters,
@@ -227,7 +226,8 @@ NodeVector op::ConvolutionBias::decompose_op() const
     }
 }
 
-void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
     if (m_with_relu)
@@ -265,8 +265,8 @@ void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints, const 
                                                             m_padding_below,
                                                             m_padding_above,
                                                             m_data_dilation_strides);
-    auto filter_delta = make_shared<op::GetOutputElement>(filter_bias_backprop, 0);
-    auto bias_delta = make_shared<op::GetOutputElement>(filter_bias_backprop, 1);
+    auto filter_delta = Output<Node>(filter_bias_backprop, 0);
+    auto bias_delta = Output<Node>(filter_bias_backprop, 1);
 
     adjoints.add_delta(filter, filter_delta);
     adjoints.add_delta(bias, bias_delta);
@@ -297,7 +297,10 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     // Window movement strides      q                     p_f
     // Window dilation strides      p_f                   q
     // Padding below                a_x                   a_x
-    // Padding above                b_x                   b_x - (a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q
+    // Padding above                b_x                   b_x -
+    //                                                      (a_x + (S_x - 1)p_x + b_x -
+    //                                                        (S_f - 1)p_f)
+    //                                                       % q
     // Data dilation strides        p_x                   p_x
 
     for (size_t i = 0; i < filters_shape.size() - 2; i++)

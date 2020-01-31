@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -27,16 +28,19 @@ namespace ngraph
         class DeconvolutionBias : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            CPU_BACKEND_API
+            static constexpr NodeTypeInfo type_info{"DeconvolutionBias", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a batched-convolution data batch-backprop operation.
             ///
             /// \param data_batch_shape The shape of the data batch from forward-prop.
             /// \param filters The node producing the filters from forward-prop.
             /// \param output_delta The node producing output delta.
             /// \param bias The node producing bias
-            /// \param window_movement_strides_forward The window movement strides from forward-prop.
-            /// \param window_dilation_strides_forward The window dilation strides from forward-prop.
+            /// \param window_movement_strides_forward The window movement strides from
+            ///        forward-prop.
+            /// \param window_dilation_strides_forward The window dilation strides from
+            ///        forward-prop.
             /// \param padding_below_forward The padding-below sizes from forward-prop.
             /// \param padding_above_forward The padding-above sizes from forward-prop.
             /// \param data_dilation_strides_forward The data dilation strides from forward-prop.
@@ -54,7 +58,8 @@ namespace ngraph
 
             void validate_and_infer_types() override;
 
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
+            void generate_adjoints(autodiff::Adjoints& adjoints,
+                                   const OutputVector& deltas) override;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

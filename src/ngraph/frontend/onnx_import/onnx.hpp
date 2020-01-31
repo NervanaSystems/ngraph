@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@
 #include <string>
 
 #include "core/operator_set.hpp"
-#include "core/weight.hpp"
 #include "ngraph/function.hpp"
 
 namespace ngraph
@@ -37,6 +36,7 @@ namespace ngraph
         /// \param version  version of the operator (opset),
         /// \param domain  domain the operator belongs to,
         /// \param fn       function providing the implementation of the operator.
+        NGRAPH_API
         void register_operator(const std::string& name,
                                std::int64_t version,
                                const std::string& domain,
@@ -49,6 +49,7 @@ namespace ngraph
         ///
         /// \return     The set containing names of supported operators.
         ///
+        NGRAPH_API
         std::set<std::string> get_supported_operators(std::int64_t version,
                                                       const std::string& domain);
 
@@ -60,6 +61,7 @@ namespace ngraph
         ///
         /// \return     True if operator is supported, False otherwise.
         ///
+        NGRAPH_API
         bool is_operator_supported(const std::string& op_name,
                                    std::int64_t version,
                                    const std::string& domain = "ai.onnx");
@@ -67,26 +69,18 @@ namespace ngraph
         /// \brief Convert an ONNX model to nGraph function
         /// The function translated serialized ONNX model to nGraph function. The serialized
         /// ONNX model is read from input stream.
-        /// \param sin       input stream (e.g. file stream, memory stream, etc),
-        /// \param weights  weights associated with the model. If weights are embedded into
-        ///                   the model this parameter shall be empty. Having weights in a model
-        ///                   and providing through this parameters is invalid (the weights from
-        ///                   the model  will take precedence).
+        /// \param sin       input stream (e.g. file stream, memory stream, etc)
         /// \return The function returns a nGraph function representing single output from graph.
-        std::shared_ptr<Function> import_onnx_model(std::istream& sin,
-                                                    const Weights& weights = Weights{});
+        NGRAPH_API
+        std::shared_ptr<Function> import_onnx_model(std::istream& sin);
 
         /// \brief Convert an ONNX model to nGraph functions
         /// The function translated serialized ONNX model to nGraph functions. The ONNX model
         /// is read from ONNX file.
-        /// \param filename  file name (relative or absolute path name),
-        /// \param weights  weights associated with the model. If weights are embedded into
-        ///                   the model this parameter shall be empty. Having weights in a model
-        ///                   and providing through this parameters is invalid (the weights from
-        ///                   the model  will take precedence).
+        /// \param filename  file name (relative or absolute path name)
         /// \return The function returns a nGraph function representing single output from graph.
-        std::shared_ptr<Function> import_onnx_model(const std::string& filename,
-                                                    const Weights& weights = Weights{});
+        NGRAPH_API
+        std::shared_ptr<Function> import_onnx_model(const std::string& filename);
 
     } // namespace onnx_import
 

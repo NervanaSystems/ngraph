@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,9 @@ namespace ngraph
 {
     namespace op
     {
+        namespace v0
+        {
+            // clang-format off
         /// \brief Elementwise square root operation.
         ///
         /// ## Inputs
@@ -35,24 +38,26 @@ namespace ngraph
         /// | Type                   | Description                                                                           |
         /// | ---------------------- | ------------------------------------------------------------------------------------- |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \sqrt{\texttt{arg}[i_1,\dots,i_n]}\f$ |
-        class Sqrt : public util::UnaryElementwiseArithmetic
-        {
-        public:
-            NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
-            /// \brief Constructs a square operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Sqrt(const Output<Node>& arg);
-            Sqrt() = default;
+            // clang-format on
+            class NGRAPH_API Sqrt : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Sqrt", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a square operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                Sqrt(const Output<Node>& arg);
+                Sqrt() = default;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
+            };
+        }
+        using v0::Sqrt;
     }
 }

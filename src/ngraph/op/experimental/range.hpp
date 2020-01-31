@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,30 +23,35 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Range operation, analogous to `range()` in Python.
-        class Range : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
-            /// \brief Constructs an unitialized range operation.
-            Range() = default;
+            /// \brief Range operation, analogous to `range()` in Python.
+            class NGRAPH_API Range : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Range", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs an unitialized range operation.
+                Range() = default;
 
-            /// \brief Constructs a range operation.
-            ///
-            /// \param start The tensor producing the start value. Must be a scalar of integer
-            ///              element type, and same element type as `stop` and `step`.
-            /// \param stop The tensor producing the stop value. Must be a scalar of integer
-            ///             element type, and same element type as `start` and `step`.
-            /// \param step The tensor producing the step value. Must be a scalar of integer
-            ///             element type, and same element type as `start` and `stop`.
-            Range(const Output<Node>& start, const Output<Node>& stop, const Output<Node>& step);
+                /// \brief Constructs a range operation.
+                ///
+                /// \param start The tensor producing the start value. Must be a scalar of integer
+                ///              element type, and same element type as `stop` and `step`.
+                /// \param stop The tensor producing the stop value. Must be a scalar of integer
+                ///             element type, and same element type as `start` and `step`.
+                /// \param step The tensor producing the step value. Must be a scalar of integer
+                ///             element type, and same element type as `start` and `stop`.
+                Range(const Output<Node>& start,
+                      const Output<Node>& stop,
+                      const Output<Node>& step);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        using v0::Range;
     }
 }

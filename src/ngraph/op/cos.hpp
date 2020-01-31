@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,26 +22,29 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise cosine operation.
-        class Cos : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
-            /// \brief Constructs a cosine operation.
-            Cos() = default;
-            /// \brief Constructs a cosine operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Cos(const Output<Node>& arg);
+            /// \brief Elementwise cosine operation.
+            class NGRAPH_API Cos : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Cos", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a cosine operation.
+                Cos() = default;
+                /// \brief Constructs a cosine operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                Cos(const Output<Node>& arg);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
+            };
+        }
+        using v0::Cos;
     }
 }

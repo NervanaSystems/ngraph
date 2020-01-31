@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,10 +29,11 @@ namespace ngraph
 
         namespace layout
         {
-            /// \brief The standard strided layout, used for row-major and column-major, their permutations and slices.
+            /// \brief The standard strided layout, used for row-major and column-major, their
+            ///        permutations and slices.
             ///
             /// The linearized offset of an index I is dot(I, strides) + offset.
-            class DenseTensorLayout : public TensorLayout
+            class NGRAPH_API DenseTensorLayout : public TensorLayout
             {
             public:
                 ~DenseTensorLayout() override {}

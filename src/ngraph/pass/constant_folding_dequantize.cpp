@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,18 +27,19 @@ shared_ptr<op::Constant> fold_constant_dequantize(shared_ptr<op::Constant> const
                                                   shared_ptr<op::Constant> scale,
                                                   shared_ptr<op::Constant> offset)
 {
-    auto out_shape = constant->get_shape();
-    vector<REAL> out_vec(shape_size(out_shape));
+    const Shape& out_shape = constant->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(REAL));
+    REAL* data_ptr = buffer.get_ptr<REAL>();
 
     runtime::reference::dequantize<QUANT, REAL>(constant->get_vector<QUANT>().data(),
                                                 scale->get_vector<REAL>().data(),
                                                 offset->get_vector<QUANT>().data(),
-                                                out_vec.data(),
+                                                data_ptr,
                                                 constant->get_shape(),
                                                 scale->get_shape(),
                                                 dequant->get_axes());
 
-    return make_shared<op::Constant>(dequant->get_element_type(), out_shape, out_vec);
+    return make_shared<op::Constant>(dequant->get_element_type(), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_dequantize()
@@ -57,14 +58,13 @@ void pass::ConstantFolding::construct_constant_dequantize()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto constant_match = as_type_ptr<op::Constant>(pattern_map[constant_label]);
         auto dequant_match = pattern_map[dequant];
-        auto dequantize_op = dynamic_pointer_cast<op::Dequantize>(dequant_match);
+        auto dequantize_op = as_type_ptr<op::Dequantize>(dequant_match);
 
-        auto scale = dynamic_pointer_cast<op::Constant>(
-            dequant_match->input(1).get_source_output().get_node_shared_ptr());
-        auto offset = dynamic_pointer_cast<op::Constant>(
-            dequant_match->input(2).get_source_output().get_node_shared_ptr());
+        auto scale = as_type_ptr<op::Constant>(dequant_match->input_value(1).get_node_shared_ptr());
+        auto offset =
+            as_type_ptr<op::Constant>(dequant_match->input_value(2).get_node_shared_ptr());
 
         NGRAPH_CHECK(revalidate_and_ensure_static(dequantize_op));
         auto type = constant_match->get_element_type();

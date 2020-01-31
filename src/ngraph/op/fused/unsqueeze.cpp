@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Unsqueeze::type_name{"Unsqueeze"};
+constexpr NodeTypeInfo op::Unsqueeze::type_info;
 
 op::Unsqueeze::Unsqueeze(const Output<Node>& data, const Output<Node>& axes)
     : FusedOp({data, axes})
@@ -48,8 +48,8 @@ NodeVector op::Unsqueeze::decompose_op() const
     auto axes_node = input_value(1).get_node_shared_ptr();
 
     // Get value of axes from Constant
-    auto axes_constant = dynamic_pointer_cast<op::Constant>(axes_node);
-    auto axes = axes_constant->get_vector<size_t>();
+    auto axes_constant = as_type_ptr<op::Constant>(axes_node);
+    auto axes = axes_constant->cast_vector<size_t>();
 
     auto data_shape = data.get_shape();
 

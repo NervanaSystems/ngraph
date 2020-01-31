@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,8 +32,9 @@ namespace ngraph
         class MaxPoolWithIndices : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            CPU_BACKEND_API
+            static constexpr NodeTypeInfo type_info{"MaxPoolWithIndices", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             CPU_BACKEND_API MaxPoolWithIndices(const Output<Node>& arg,
                                                const Shape& window_shape,
                                                const Strides& window_movement_strides,
@@ -54,7 +55,7 @@ namespace ngraph
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                                           const OutputVector& deltas) override;
 
             Shape m_window_shape;
             Strides m_window_movement_strides;
@@ -67,8 +68,8 @@ namespace ngraph
         class MaxPoolWithIndicesBackprop : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"MaxPoolWithIndicesBackprop", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             CPU_BACKEND_API MaxPoolWithIndicesBackprop(const Output<Node>& arg_forward,
                                                        const Output<Node>& delta,
                                                        const Output<Node>& indices,

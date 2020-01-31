@@ -1,9 +1,13 @@
 .. backends/backend-api/index.rst:
 
 
-Backend
-=======
+.. _backend_api_macros:
 
-.. doxygenclass:: ngraph::runtime::Backend
-   :project: ngraph
-   :members:
+Backend APIs
+############
+
+Each backend ``BACKEND`` needs to define the macro ``${BACKEND}_API`` 
+appropriately to import symbols referenced from outside the library, 
+and to export them from within the library. See any of the
+``${backend}_backend_visibility`` header files for an example; see 
+also :ref:`what_is_backend`

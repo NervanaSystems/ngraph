@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,8 +30,9 @@ namespace ngraph
         class BatchNormTrainingRelu : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            CPU_BACKEND_API
+            static constexpr NodeTypeInfo type_info{"BatchNormTrainingRelu", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             CPU_BACKEND_API BatchNormTrainingRelu(double eps,
                                                   const Output<Node>& gamma,
                                                   const Output<Node>& beta,
@@ -59,8 +60,9 @@ namespace ngraph
         class BatchNormInferenceRelu : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            CPU_BACKEND_API
+            static constexpr NodeTypeInfo type_info{"BatchNormInferenceRelu", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             BatchNormInferenceRelu(double eps,
                                    const Output<ngraph::Node>& gamma,
                                    const Output<ngraph::Node>& beta,

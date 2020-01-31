@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,12 +65,13 @@ namespace ngraph
 
                         auto functor =
                             [&, arg_buffer_indices, nargs, out_size, arg_sizes, out_buffer_index](
-                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                                 auto offset = 0;
                                 for (size_t i = 0; i < nargs; i++)
                                 {
-                                    // if the argument pointer does not fall within the concat output buffer
-                                    // (caused by propagate_in_place_output or propagate_in_place_input), we need to copy the data;
+                                    // if the argument pointer does not fall within the concat
+                                    // output buffer (caused by propagate_in_place_output or
+                                    // propagate_in_place_input), we need to copy the data;
                                     // otherwise, we can skip the copy.
                                     if (ctx->buffer_data[arg_buffer_indices[i]] <
                                             ctx->buffer_data[out_buffer_index] ||
@@ -100,26 +101,32 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto concat_pd =
                         mkldnn_emitter->get_concat_desc<ngraph::op::Concat>(node, nargs);
+                    size_t scratchpad_size = QUERY_SCRATCHPAD(concat, concat_pd);
+
                     std::vector<mkldnn::memory::desc> inputs_data_desc;
                     for (size_t i = 0; i < nargs; i++)
                     {
                         inputs_data_desc.push_back(mkldnn_utils::get_input_mkldnn_md(node, i));
                     }
-                    // Concat needs number of inputs plus 2 primitives; those two are for result and concat.
+                    // Concat needs number of inputs plus 2 primitives; those two are for result and
+                    // concat.
                     auto concat_index = mkldnn_emitter->reserve_primitive_space(nargs + 2);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
                     auto functor = [&,
                                     concat_pd,
+                                    scratchpad_size,
                                     inputs_data_desc,
                                     arg_buffer_indices,
                                     nargs,
                                     concat_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_concat(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_concat(ctx->mkldnn_memories,
+                                                         ctx->mkldnn_primitives,
+                                                         ctx->mkldnn_scratchpad_mds,
                                                          concat_pd,
                                                          inputs_data_desc,
                                                          deps,
@@ -132,7 +139,13 @@ namespace ngraph
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[nargs], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, concat_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            concat_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONCAT,
+                            scratchpad_size);
                     };
 
                     functors.emplace_back(functor);
@@ -141,10 +154,10 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::concat<float, 1>)> kernel;
 
-                    SELECT_KERNEL_BY_RANK(kernel,
+                    SELECT_KERNEL_ET_RANK(kernel,
                                           out[0].get_element_type(),
                                           out[0].get_shape().size(),
-                                          runtime::cpu::kernel::concat);
+                                          runtime::cpu::kernel::concat)
 
                     auto functor = [&,
                                     kernel,
@@ -153,7 +166,7 @@ namespace ngraph
                                     out_shape,
                                     axis,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         std::vector<void*> arg_tensors;
                         for (auto& arg_buffer_index : arg_buffer_indices)
                         {
@@ -169,10 +182,7 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Concat);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_concat_cpp() {}
-#endif
+            void register_builders_concat_cpp() { REGISTER_OP_BUILDER(Concat); }
         }
     }
 }

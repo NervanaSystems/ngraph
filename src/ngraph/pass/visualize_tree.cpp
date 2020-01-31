@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,19 +16,21 @@
 
 #include <fstream>
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
-
-#define TI(x) type_index(typeid(x))
 
 //
 // As we are visualizing the graph, we will make some tweaks to the generated dot file to make
@@ -109,6 +111,9 @@ using namespace std;
 // be careful to avoid splitting the components. I have some rough ideas on how this could be
 // dealt with, but have not had time to implement them yet. --amprocte
 //
+
+const int ngraph::pass::VisualizeTree::max_jump_distance = 20;
+
 class HeightMap
 {
 public:
@@ -148,16 +153,16 @@ private:
     std::unordered_map<Node*, int64_t> m_heights;
 };
 
-static std::string label_edge(const std::shared_ptr<Node>& src,
+static std::string label_edge(const std::shared_ptr<Node>& /* src */,
                               const std::shared_ptr<Node>& dst,
                               size_t arg_index,
                               int64_t jump_distance)
 {
     std::stringstream ss;
-    if (getenv("NGRAPH_VISUALIZE_EDGE_LABELS") != nullptr)
+    if (getenv_bool("NGRAPH_VISUALIZE_EDGE_LABELS"))
     {
         size_t output = 0;
-        if (auto goe = dynamic_pointer_cast<op::GetOutputElement>(dst))
+        if (auto goe = as_type_ptr<op::GetOutputElement>(dst))
         {
             output = goe->get_as_output().get_index();
         }
@@ -166,7 +171,7 @@ static std::string label_edge(const std::shared_ptr<Node>& src,
         ss << label_edge.str();
     }
 
-    else if (getenv("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE") != nullptr)
+    else if (getenv_bool("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE"))
     {
         if (jump_distance > 1)
         {
@@ -212,56 +217,28 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
         }
 
         // TODO(amprocte): Maybe find a way to make this tunable.
-        const int max_jump_distance = 20;
 
         size_t fake_node_ctr = 0;
 
         traverse_nodes(f, [&](shared_ptr<Node> node) {
-            size_t arg_index = 0;
-            for (auto arg : node->get_arguments())
+
+            if (auto ck = as_type_ptr<ngraph::op::CompiledKernel>(node))
             {
-                size_t jump_distance = height_maps[arg.get()].max_jump_to(height_maps[node.get()]);
+                // print sub-graph
+                auto nodes_list = ck->get_node_list();
 
-                if (arg->description() == "Constant" || arg->description() == "Parameter")
+                // all nodes inside the CK sub-graph
+                for (auto& ck_node : nodes_list)
                 {
-                    auto clone_name = "CLONE_" + to_string(fake_node_ctr);
-                    auto color = (arg->description() == "Parameter" ? "blue" : "black");
-                    m_ss << "    " << clone_name
-                         << "[shape=\"box\" style=\"dashed,filled\" color=\"" << color
-                         << "\" fillcolor=\"white\" label=\"" << get_node_name(arg) << "\"]\n";
-                    m_ss << "    " << clone_name << " -> " << node->get_name()
-                         << label_edge(arg, node, arg_index, jump_distance) << "\n";
-                    fake_node_ctr++;
+                    m_ss << add_attributes(ck_node);
                 }
-                else if (jump_distance > max_jump_distance)
+                // all edges to each node in the sub-graph
+                for (auto& subgraph_node : nodes_list)
                 {
-                    m_ss << add_attributes(arg);
-                    m_ss << add_attributes(node);
-                    auto recv_node_name = "RECV_" + to_string(fake_node_ctr);
-                    auto send_node_name = "SEND_" + to_string(fake_node_ctr);
-
-                    m_ss << "    " << recv_node_name << "[shape=\"box\" style=\"solid,filled\" "
-                                                        "fillcolor=\"#ffcccc\" label=\"Receive["
-                         << arg->get_name() << "]\"]\n";
-                    m_ss << "    " << send_node_name << "[shape=\"box\" style=\"solid,filled\" "
-                                                        "fillcolor=\"#ccffcc\" label=\"Send["
-                         << node->get_name() << "]\"]\n";
-
-                    m_ss << "    " << arg->get_name() << " -> " << send_node_name
-                         << label_edge(arg, node, arg_index, jump_distance) << "\n";
-                    m_ss << "    " << recv_node_name << " -> " << node->get_name()
-                         << label_edge(arg, node, arg_index, jump_distance) << "\n";
-                    fake_node_ctr++;
+                    add_node_arguments(subgraph_node, height_maps, fake_node_ctr);
                 }
-                else
-                {
-                    m_ss << add_attributes(arg);
-                    m_ss << add_attributes(node);
-                    m_ss << "    " << arg->get_name() << " -> " << node->get_name()
-                         << label_edge(arg, node, arg_index, jump_distance) << "\n";
-                }
-                arg_index++;
             }
+            add_node_arguments(node, height_maps, fake_node_ctr);
         });
     }
 
@@ -275,6 +252,54 @@ pass::VisualizeTree::VisualizeTree(const string& file_name, node_modifiers_t nm,
     , m_node_modifiers{nm}
     , m_dot_only(dot_only)
 {
+}
+
+void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
+                                             unordered_map<Node*, HeightMap>& height_maps,
+                                             size_t& fake_node_ctr)
+{
+    size_t arg_index = 0;
+    for (auto input_value : node->input_values())
+    {
+        auto arg = input_value.get_node_shared_ptr();
+        size_t jump_distance = height_maps[arg.get()].max_jump_to(height_maps[node.get()]);
+        if (is_type<ngraph::op::Constant>(arg) || is_type<ngraph::op::Parameter>(arg))
+        {
+            auto clone_name = "CLONE_" + to_string(fake_node_ctr);
+            auto color = (arg->description() == "Parameter" ? "blue" : "black");
+            m_ss << "    " << clone_name << "[shape=\"box\" style=\"dashed,filled\" color=\""
+                 << color << "\" fillcolor=\"white\" label=\"" << get_node_name(arg) << "\"]\n";
+            m_ss << "    " << clone_name << " -> " << node->get_name()
+                 << label_edge(arg, node, arg_index, jump_distance) << "\n";
+            fake_node_ctr++;
+        }
+        else if (jump_distance > max_jump_distance)
+        {
+            m_ss << add_attributes(arg);
+            m_ss << add_attributes(node);
+            auto recv_node_name = "RECV_" + to_string(fake_node_ctr);
+            auto send_node_name = "SEND_" + to_string(fake_node_ctr);
+            m_ss << "    " << recv_node_name << "[shape=\"box\" style=\"solid,filled\" "
+                                                "fillcolor=\"#ffcccc\" label=\"Receive["
+                 << arg->get_name() << "]\"]\n";
+            m_ss << "    " << send_node_name << "[shape=\"box\" style=\"solid,filled\" "
+                                                "fillcolor=\"#ccffcc\" label=\"Send["
+                 << node->get_name() << "]\"]\n";
+            m_ss << "    " << arg->get_name() << " -> " << send_node_name
+                 << label_edge(arg, node, arg_index, jump_distance) << "\n";
+            m_ss << "    " << recv_node_name << " -> " << node->get_name()
+                 << label_edge(arg, node, arg_index, jump_distance) << "\n";
+            fake_node_ctr++;
+        }
+        else
+        {
+            m_ss << add_attributes(arg);
+            m_ss << add_attributes(node);
+            m_ss << "    " << arg->get_name() << " -> " << node->get_name()
+                 << label_edge(arg, node, arg_index, jump_distance) << "\n";
+        }
+        arg_index++;
+    }
 }
 
 string pass::VisualizeTree::add_attributes(shared_ptr<Node> node)
@@ -343,8 +368,8 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
         stringstream label;
         label << "label=\"" << get_node_name(node);
 
-        static const char* nvtos = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
-        if (nvtos != nullptr)
+        static const bool nvtos = getenv_bool("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
+        if (nvtos)
         {
             // The shapes of the Outputs of a multi-output op
             // will be printed for its corresponding `GetOutputElement`s
@@ -353,8 +378,8 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
                                  : pretty_partial_shape(node->get_output_partial_shape(0)));
         }
 
-        static const char* nvtot = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
-        if (nvtot != nullptr)
+        static const bool nvtot = getenv_bool("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
+        if (nvtot)
         {
             // The types of the Outputs of a multi-output op
             // will be printed for its corresponding `GetOutputElement`s
@@ -363,11 +388,10 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
                                                      : node->get_element_type().c_type_string());
         }
 
-        const Node& n = *node;
-        auto eh = m_ops_to_details.find(TI(n));
+        auto eh = m_ops_to_details.find(node->get_type_info());
         if (eh != m_ops_to_details.end())
         {
-            eh->second(n, label);
+            eh->second(*node, label);
         }
         label << "\"";
         attributes.push_back(label.str());
@@ -390,6 +414,17 @@ string pass::VisualizeTree::get_node_name(shared_ptr<Node> node)
     if (node->get_friendly_name() != node->get_name())
     {
         rc += "\\n" + node->get_name();
+    }
+    if (auto ck = as_type_ptr<ngraph::op::CompiledKernel>(node))
+    {
+        rc += "\\n{";
+        // add sub-graph node names
+        for (auto& ck_node : ck->get_node_list())
+        {
+            rc += ck_node->get_name();
+            rc += ", ";
+        }
+        rc += "}\\n";
     }
     return rc;
 }

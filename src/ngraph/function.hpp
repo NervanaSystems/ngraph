@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/lambda.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -30,9 +31,11 @@
 namespace ngraph
 {
     /// A user-defined function.
-    class Function
+    class NGRAPH_API Function : public Lambda
     {
     public:
+        static constexpr DiscreteTypeInfo type_info{"Function", 0};
+        const DiscreteTypeInfo& get_type_info() const { return type_info; }
         Function(const NodeVector& results,
                  const ParameterVector& parameters,
                  const std::string& name = "");
@@ -70,10 +73,6 @@ namespace ngraph
         /// Return the partial shape of element i
         const PartialShape& get_output_partial_shape(size_t i) const;
 
-        /// Return the function parameters
-        const ParameterVector& get_parameters() const { return m_parameters; }
-        /// Return a list of function's outputs
-        const ResultVector& get_results() const { return m_results; }
         /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
 
@@ -82,7 +81,8 @@ namespace ngraph
         const std::string& get_name() const;
 
         /// \brief Sets a friendly name for a function. This does not overwrite the unique name
-        ///        of the function and is retrieved via get_friendly_name(). Used mainly for debugging.
+        ///        of the function and is retrieved via get_friendly_name(). Used mainly for
+        ///        debugging.
         ///        The friendly name may be set exactly once.
         /// \param name is the friendly name to set
         void set_friendly_name(const std::string& name);
@@ -116,9 +116,17 @@ namespace ngraph
         /// \brief Returns true if any of the op's defined in the function contains partial shape
         bool is_dynamic() const;
 
+        /// \brief Replace the `parameter_index`th parameter of the function with `parameter`.
+        ///
+        /// All users of the `parameter_index`th parameter are redirected to `parameter`, and the
+        /// `parameter_index`th entry in the function parameter list is replaced with `parameter`.
+        ///
+        /// \param parameter_index The index of the parameter to replace.
+        /// \param parameter The parameter to substitute for the `parameter_index`th parameter.
+        void replace_parameter(size_t parameter_index,
+                               const std::shared_ptr<op::Parameter>& parameter);
+
     protected:
-        ResultVector m_results;
-        ParameterVector m_parameters;
         size_t m_temporary_pool_size;
 
     private:

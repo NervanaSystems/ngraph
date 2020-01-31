@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,8 @@ namespace ngraph
     template <>
     PartialShape reduce(const PartialShape& shape, const AxisSet& deleted_axes);
 
-    // TODO: check validity, i.e. that the new axis indices are all < axis_values.size()+num_new_axes.
+    // TODO: check validity, i.e. that the new axis indices are all less than
+    // axis_values.size()+num_new_axes.
     // Add new values at particular axis positions
     template <typename AXIS_VALUES, typename AXIS_VALUE>
     AXIS_VALUES inject_pairs(const AXIS_VALUES& axis_values,

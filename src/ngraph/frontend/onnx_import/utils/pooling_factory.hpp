@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/shape.hpp"
@@ -33,7 +34,8 @@ namespace ngraph
         namespace pooling
         {
             ///
-            /// \brief      Factory class which generates sub-graphs for ONNX 'regular' pooling operators.
+            /// \brief      Factory class which generates sub-graphs for ONNX 'regular' pooling
+            ///             operators.
             ///
             /// \note       This factory is intended for creating pooling operations like:
             ///             - AveragePool
@@ -50,22 +52,16 @@ namespace ngraph
                 virtual ~PoolingFactory() = default;
 
                 ///
-                /// \brief      Creates a sub-graph representing appropriate ONNX operation.
-                ///
-                /// \tparam     NgraphOperator  nGraph operator class type used to build ONNX operation.
-                ///
+                /// \brief      Creates average pooling ONNX operation.
                 /// \return     Vector of output nodes.
                 ///
-                template <typename NgraphOperator>
-                NodeVector make_pooling_op() const
-                {
-                    return {std::make_shared<NgraphOperator>(m_inputs.at(0),
-                                                             m_kernel_shape,
-                                                             m_strides,
-                                                             m_padding_below,
-                                                             m_padding_above,
-                                                             m_auto_pad)};
-                }
+                NodeVector make_avg_pool() const;
+
+                ///
+                /// \brief      Creates max pooling ONNX operation.
+                /// \return     Vector of output nodes.
+                ///
+                NodeVector make_max_pool() const;
 
             protected:
                 Node m_onnx_node;
@@ -78,12 +74,9 @@ namespace ngraph
                 ngraph::op::PadType m_auto_pad;
             };
 
-            // AvgPool accepts some additional parameters thus we have specialization for it.
-            template <>
-            NodeVector PoolingFactory::make_pooling_op<ngraph::op::AvgPool>() const;
-
             ///
-            /// \brief      Factory class which generates sub-graphs for ONNX 'global' pooling operators.
+            /// \brief      Factory class which generates sub-graphs for ONNX 'global' pooling
+            ///             operators.
             ///
             class GlobalPoolingFactory : public PoolingFactory
             {

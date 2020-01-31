@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Passthrough::type_name{"Passthrough"};
+constexpr NodeTypeInfo op::Passthrough::type_info;
 
 ngraph::op::Passthrough::Passthrough(const std::string& logical_type,
                                      const std::string& language,

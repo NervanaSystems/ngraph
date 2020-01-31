@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ void ngraph::runtime::plaidml::ImplBatchNormInference::Apply()
         .add(builder::Input{op_input(4), "Variance"}.add_dims({"C"}));
 
     std::string ones;
-    for (auto idx = 2; idx < input_shape.size(); ++idx)
+    for (size_t idx = 2; idx < input_shape.size(); ++idx)
     {
         ones += ", 1";
     }
@@ -113,7 +113,7 @@ void ngraph::runtime::plaidml::ImplBatchNormTraining::Apply()
         .add(builder::Output{"Variance"});
 
     std::string ones;
-    for (auto idx = 2; idx < input_shape.size(); ++idx)
+    for (size_t idx = 2; idx < input_shape.size(); ++idx)
     {
         ones += ", 1";
     }
@@ -135,7 +135,7 @@ void ngraph::runtime::plaidml::ImplBatchNormTraining::Apply()
     else
     {
         std::string elts{"B"};
-        for (auto idx = 2; idx < input_shape.size(); ++idx)
+        for (size_t idx = 2; idx < input_shape.size(); ++idx)
         {
             elts += " * DI" + std::to_string(idx + 1);
         }

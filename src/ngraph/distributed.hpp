@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
 #include <memory>
 #include <string>
 
+#include "ngraph/attribute_visitor.hpp"
+#include "ngraph/type.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -36,6 +38,20 @@ namespace ngraph
 
         std::ostream& operator<<(std::ostream& out, const Type& obj);
     }
+
+    template <>
+    class AttributeAdapter<reduction::Type> : public EnumAttributeAdapterBase<reduction::Type>
+    {
+    public:
+        AttributeAdapter(reduction::Type& value)
+            : EnumAttributeAdapterBase<reduction::Type>(value)
+        {
+        }
+
+        NGRAPH_API
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<reduction::Type>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 
     class DistributedInterface
     {

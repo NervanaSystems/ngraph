@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,8 +30,9 @@ namespace ngraph
         class SigmoidMultiply : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            CPU_BACKEND_API
+            static constexpr NodeTypeInfo type_info{"SigmoidMultiply", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// Defines valid function types
             enum class FunctionType
             {
@@ -46,11 +47,12 @@ namespace ngraph
                                             const Output<Node>& input_1,
                                             const FunctionType input_0_type,
                                             const FunctionType input_1_type);
-            /// WARNING: copy_with_new_args() implicitly expects new args must match the original input function types.
+            /// WARNING: copy_with_new_args() implicitly expects new args must match the original
+            /// input function types.
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                                           const OutputVector& deltas) override;
             FunctionType get_input_func_type(const unsigned int index) const
             {
                 return m_input_type[index];
@@ -68,8 +70,9 @@ namespace ngraph
         class SigmoidMultiplyBackprop : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            CPU_BACKEND_API
+            static constexpr NodeTypeInfo type_info{"SigmoidMultiplyBackprop", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             typedef SigmoidMultiply::FunctionType FunctionType;
             /// \brief Constructs a SigmoidMultiplyBackprop operation.
             ///

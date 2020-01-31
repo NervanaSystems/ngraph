@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 #include "ngraph/runtime/cpu/op/dropout.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/dropout.hpp"
-#include "ngraph/state/rng_state.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -76,7 +75,7 @@ namespace ngraph
                                out0_buffer_index,
                                out1_buffer_index,
                                vmsr,
-                               use_seed](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                               use_seed](CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<float*>(ctx->buffer_data[arg1_buffer_index])[0]);
                         double keep_prob =
@@ -102,7 +101,7 @@ namespace ngraph
                                out0_buffer_index,
                                out1_buffer_index,
                                vmsr,
-                               use_seed](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                               use_seed](CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<double*>(ctx->buffer_data[arg1_buffer_index])[0]);
                         double keep_prob =
@@ -126,10 +125,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(Dropout);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_dropout_cpp() {}
-#endif
+            void register_builders_dropout_cpp() { REGISTER_OP_BUILDER(Dropout); }
         }
     }
 }

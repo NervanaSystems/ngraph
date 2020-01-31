@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,30 +81,30 @@ namespace ngraph
                     return;
                 }
 
-                if (arg_rank == 1)
+                if (arg_rank == 1 && is_optimized_et(result_element_type))
                 {
-                    SELECT_KERNEL_BY_RANK(
+                    SELECT_ETS_AND_RANK7(
                         kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_1d);
                 }
-                else if (arg_rank == 2)
+                else if (arg_rank == 2 && is_optimized_et(result_element_type))
                 {
-                    SELECT_KERNEL_BY_RANK(
+                    SELECT_ETS_AND_RANK7(
                         kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_2d);
                 }
-                else if (arg_rank == 3)
+                else if (arg_rank == 3 && is_optimized_et(result_element_type))
                 {
-                    SELECT_KERNEL_BY_RANK(
+                    SELECT_ETS_AND_RANK7(
                         kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_3d);
                 }
-                else if (arg_rank == 4)
+                else if (arg_rank == 4 && is_optimized_et(result_element_type))
                 {
-                    SELECT_KERNEL_BY_RANK(
+                    SELECT_ETS_AND_RANK7(
                         kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_4d);
                 }
                 else
                 {
                     SELECT_KERNEL(
-                        ref_kernel, result_element_type, runtime::cpu::kernel::reshape_ref);
+                        ref_kernel, result_element_type, runtime::cpu::kernel::reshape_ref)
                 }
             }
 
@@ -160,7 +160,6 @@ namespace ngraph
                 }
                 return functor;
             }
-            REGISTER_CF_BUILDER(Reshape);
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Reshape)
@@ -225,7 +224,7 @@ namespace ngraph
                 else if (skip_reshape)
                 {
                     functor = [&, size, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         if (ctx->buffer_data[out_buffer_index] !=
                             ctx->buffer_data[arg_buffer_index])
                         {
@@ -238,7 +237,7 @@ namespace ngraph
                 else
                 {
                     functor = [&, size, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         memcpy(ctx->buffer_data[out_buffer_index],
                                ctx->buffer_data[arg_buffer_index],
                                size);
@@ -247,10 +246,11 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(Reshape);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_reshape_cpp() {}
-#endif
+            void register_builders_reshape_cpp()
+            {
+                REGISTER_CF_BUILDER(Reshape);
+                REGISTER_OP_BUILDER(Reshape);
+            }
         }
     }
 }

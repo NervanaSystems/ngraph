@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,8 @@
 
 #include <memory>
 
+#include "default_opset.hpp"
 #include "hard_sigmoid.hpp"
-#include "ngraph/op/fused/hard_sigmoid.hpp"
-
-using namespace ngraph::op;
 
 namespace ngraph
 {
@@ -31,17 +29,24 @@ namespace ngraph
             {
                 NodeVector hard_sigmoid(const Node& node)
                 {
-                    auto data = node.get_ng_inputs().at(0);
+                    const auto data = node.get_ng_inputs().at(0);
 
-                    double alpha = node.get_attribute_value<double>("alpha", 0.2);
-                    double beta = node.get_attribute_value<double>("beta", 0.5);
+                    const auto alpha = default_opset::Constant::create<double>(
+                        data->get_element_type(),
+                        Shape{},
+                        std::vector<double>{node.get_attribute_value<double>("alpha", 0.2)});
 
-                    return {std::make_shared<ngraph::op::HardSigmoid>(data, alpha, beta)};
+                    const auto beta = default_opset::Constant::create<double>(
+                        data->get_element_type(),
+                        Shape{},
+                        std::vector<double>{node.get_attribute_value<double>("beta", 0.5)});
+
+                    return {std::make_shared<default_opset::HardSigmoid>(data, alpha, beta)};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

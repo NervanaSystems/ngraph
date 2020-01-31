@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::DynBroadcast::type_name{"DynBroadcast"};
+constexpr NodeTypeInfo op::DynBroadcast::type_info;
 
 op::DynBroadcast::DynBroadcast(const Output<Node>& arg,
                                const Output<Node>& shape,
@@ -33,14 +33,14 @@ op::DynBroadcast::DynBroadcast(const Output<Node>& arg,
 void op::DynBroadcast::validate_and_infer_types()
 {
     // shape node should have integer data type. For now we only allow i64
-    //TODO: potenially make the type more flexible to include other integer types
+    // TODO: potenially make the type more flexible to include other integer types
     auto shape_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
                           shape_et.compatible(element::Type_t::i64),
                           "DynBroadcast shape must have element type i64, but has ",
                           shape_et);
 
-    //shape node should produce a one dimensional shape.
+    // shape node should produce a one dimensional shape.
     auto broadcast_shape_rank = get_input_partial_shape(1).rank();
     NODE_VALIDATION_CHECK(this,
                           broadcast_shape_rank.compatible(1),
@@ -48,14 +48,14 @@ void op::DynBroadcast::validate_and_infer_types()
                           broadcast_shape_rank);
 
     // axes node should have integer data type. For now we only allow i64
-    //TODO: potenially make the type more flexible to include other integer types
+    // TODO: potenially make the type more flexible to include other integer types
     auto axes_et = get_input_element_type(2);
     NODE_VALIDATION_CHECK(this,
                           axes_et.compatible(element::Type_t::i64),
                           "DynBroadcast axes must have element type i64, but has ",
                           axes_et);
 
-    //axes node should produce a one dimensional shape.
+    // axes node should produce a one dimensional shape.
     auto axes_shape_rank = get_input_partial_shape(2).rank();
     NODE_VALIDATION_CHECK(this,
                           axes_shape_rank.compatible(1),
@@ -130,7 +130,8 @@ shared_ptr<Node> op::DynBroadcast::copy_with_new_args(const NodeVector& new_args
 }
 
 // TODO: This function is not implemented!
-void op::DynBroadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::DynBroadcast::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                         const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynBroadcast");
 }

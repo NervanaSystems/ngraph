@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ void ngraph::runtime::plaidml::ImplGroupConvolution::Apply()
     const auto& image = op_input(0);
     const auto& filter = op_input(1);
 
-    auto rank = op().get_input_shape(0).size() - 2;
     const auto& groups = op().get_groups();
     const auto& padding_above = op().get_padding_above();
     const auto& padding_below = op().get_padding_below();

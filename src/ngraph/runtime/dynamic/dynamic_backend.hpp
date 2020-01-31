@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/cache.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
@@ -100,6 +101,8 @@ public:
 private:
     std::shared_ptr<ngraph::Function> m_wrapped_function;
     std::shared_ptr<ngraph::runtime::Backend> m_wrapped_backend;
+    std::shared_ptr<ngraph::runtime::LRUCache> m_lru =
+        std::make_shared<ngraph::runtime::LRUCache>();
     bool m_enable_performance_collection;
 };
 

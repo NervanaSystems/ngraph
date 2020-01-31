@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@
 
 #include <sstream>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/parameter.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-const string op::Parameter::type_name{"Parameter"};
+constexpr NodeTypeInfo op::Parameter::type_info;
 
 op::Parameter::Parameter(const element::Type& element_type,
                          const PartialShape& pshape,
@@ -32,6 +33,14 @@ op::Parameter::Parameter(const element::Type& element_type,
     , m_is_relevant_to_shapes(false)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::Parameter::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("cacheable", m_cacheable);
+    visitor.on_attribute("shape", m_partial_shape);
+    visitor.on_attribute("element_type", m_element_type);
+    return true;
 }
 
 void op::Parameter::validate_and_infer_types()
@@ -46,7 +55,8 @@ shared_ptr<Node> op::Parameter::copy_with_new_args(const NodeVector& new_args) c
     return make_shared<Parameter>(m_element_type, m_partial_shape);
 }
 
-void op::Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Parameter::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                      const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 }

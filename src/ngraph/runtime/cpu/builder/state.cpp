@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/reference/generate_mask.hpp"
-#include "ngraph/state/rng_state.hpp"
+#include "ngraph/state/bernoulli_rng_state.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -42,15 +42,15 @@ namespace ngraph
                 size_t element_count = out[0].get_size();
 
                 auto arg2_buffer_index =
-                    external_function->get_buffer_index(args[2].get_name()); //use_seed
+                    external_function->get_buffer_index(args[2].get_name()); // use_seed
                 auto arg3_buffer_index =
-                    external_function->get_buffer_index(args[3].get_name()); //seed
+                    external_function->get_buffer_index(args[3].get_name()); // seed
                 auto arg4_buffer_index =
-                    external_function->get_buffer_index(args[4].get_name()); //prob
+                    external_function->get_buffer_index(args[4].get_name()); // prob
 
                 auto seed_attr = gm->get_use_seed() ? gm->get_seed() : 0;
                 auto index = external_function->add_state(
-                    ngraph::RNGState::create_rng_state(seed_attr, gm->get_probability()));
+                    new ngraph::BernoulliRNGState(seed_attr, gm->get_probability()));
 
                 if (args[0].get_element_type() == element::f32)
                 {
@@ -62,7 +62,7 @@ namespace ngraph
                                arg2_buffer_index,
                                arg3_buffer_index,
                                arg4_buffer_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                                                  CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<float*>(ctx->buffer_data[arg_buffer_index])[0]);
                         // TODO: get shape when required
@@ -77,7 +77,7 @@ namespace ngraph
                             reference::generate_mask(
                                 static_cast<float*>(ctx->buffer_data[out_buffer_index]),
                                 element_count,
-                                static_cast<RNGState*>(ctx->states[index]),
+                                static_cast<BernoulliRNGState*>(ctx->states[index]),
                                 training);
                         }
                         else
@@ -101,7 +101,7 @@ namespace ngraph
                                arg2_buffer_index,
                                arg3_buffer_index,
                                arg4_buffer_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                                                  CPUExecutionContext* /* ectx */) {
                         bool training = static_cast<bool>(
                             static_cast<double*>(ctx->buffer_data[arg_buffer_index])[0]);
                         // TODO: get shape when required
@@ -116,7 +116,7 @@ namespace ngraph
                             reference::generate_mask(
                                 static_cast<double*>(ctx->buffer_data[out_buffer_index]),
                                 element_count,
-                                static_cast<RNGState*>(ctx->states[index]),
+                                static_cast<BernoulliRNGState*>(ctx->states[index]),
                                 training);
                         }
                         else
@@ -139,10 +139,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(GenerateMask);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_state_cpp() {}
-#endif
+            void register_builders_state_cpp() { REGISTER_OP_BUILDER(GenerateMask); }
         }
     }
 }

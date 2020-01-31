@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,27 +24,45 @@
 using namespace std;
 using namespace ngraph;
 
-template <typename optype>
-static bool broadcast_and_replace(std::shared_ptr<ngraph::Node>& node)
+bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<ngraph::Node> node)
 {
-    if (auto op = std::dynamic_pointer_cast<optype>(node))
+    if (node->supports_auto_broadcast())
     {
-        if (op->get_autob().m_type != op::AutoBroadcastType::NONE)
+        if (node->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            auto new_args = pass::explicit_broadcast<optype>(op);
+            auto new_args = pass::explicit_broadcast(node);
             for (size_t i = 0; i < new_args.size(); i++)
             {
-                op->input(i).replace_source_output(new_args[i]->output(0));
+                node->input(i).replace_source_output(new_args[i]->output(0));
             }
             return true;
-        };
+        }
     }
     return false;
 }
 
-bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<ngraph::Node> node)
+NodeVector ngraph::pass::explicit_broadcast(std::shared_ptr<Node>& node)
 {
-    return broadcast_and_replace<op::util::BinaryElementwiseArithmetic>(node) ||
-           broadcast_and_replace<op::util::BinaryElementwiseComparison>(node) ||
-           broadcast_and_replace<op::util::BinaryElementwiseLogical>(node);
+    NodeVector rc;
+    if (node->supports_auto_broadcast())
+    {
+        auto autob = node->get_autob();
+        if (autob.m_type == op::AutoBroadcastType::NONE)
+        {
+            rc = node->get_arguments();
+        }
+        else if (autob.m_type == op::AutoBroadcastType::NUMPY)
+        {
+            rc = op::numpy_style_broadcast(node->get_arguments());
+        }
+        else if (autob.m_type == op::AutoBroadcastType::PDPD)
+        {
+            rc = op::pdpd_style_broadcast(node->get_arguments(), autob.m_axis);
+        }
+        else
+        {
+            throw ngraph_error("Unsupported implicit broadcast type");
+        }
+    }
+    return rc;
 }

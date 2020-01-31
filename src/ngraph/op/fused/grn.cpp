@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::GRN::type_name{"GRN"};
+constexpr NodeTypeInfo op::GRN::type_info;
 
 op::GRN::GRN(const Output<Node>& data, float bias)
     : FusedOp({data})

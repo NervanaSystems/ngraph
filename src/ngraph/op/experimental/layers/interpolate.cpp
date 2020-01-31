@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,12 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Interpolate::type_name{"Interpolate"};
+constexpr NodeTypeInfo op::Interpolate::type_info;
 
-op::Interpolate::Interpolate(const std::shared_ptr<Node>& image,
-                             const std::shared_ptr<Node>& output_shape,
+op::Interpolate::Interpolate(const Output<Node>& image,
+                             const Output<Node>& output_shape,
                              const InterpolateAttrs& attrs)
-    : Op(check_single_output_args({image, output_shape}))
+    : Op({image, output_shape})
     , m_attrs(attrs)
 {
     constructor_validate_and_infer_types();
@@ -35,8 +35,8 @@ op::Interpolate::Interpolate(const std::shared_ptr<Node>& image,
 void op::Interpolate::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(1).compatible(element::Type_t::i64),
-                          "output shape must have element type i64.");
+                          get_input_element_type(1).is_integral_number(),
+                          "output shape must be an integral number.");
     set_input_is_relevant_to_shape(1);
 
     PartialShape output_shape = PartialShape(get_input_partial_shape(0));
@@ -49,9 +49,9 @@ void op::Interpolate::validate_and_infer_types()
         }
     }
 
-    if (auto const_shape = dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    if (auto const_shape = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
-        auto out_shape = static_cast<const int64_t*>(const_shape->get_data_ptr());
+        auto out_shape = const_shape->cast_vector<int64_t>();
         size_t i = 0;
         for (auto axis : m_attrs.axes)
         {

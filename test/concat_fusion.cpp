@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,10 +69,8 @@ TEST(concat_fusion, single_branch)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_single_branch.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_single_branch.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -116,10 +114,8 @@ TEST(concat_fusion, multiple_branches_1)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_multiple_branches_1.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_multiple_branches_1.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -159,10 +155,8 @@ TEST(concat_fusion, multiple_branches_2)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_multiple_branches_2.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_multiple_branches_2.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -177,10 +171,10 @@ TEST(concat_fusion, multiple_branches_2)
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 
     size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
-    size_t num_broadcast_optimzed = count_ops_of_type<op::Broadcast>(optimized_f);
+    size_t num_broadcast_optimized = count_ops_of_type<op::Broadcast>(optimized_f);
 
-    ASSERT_EQ(num_reshapes_optimized, 1);
-    ASSERT_EQ(num_broadcast_optimzed, 1);
+    ASSERT_EQ(num_reshapes_optimized, 2);
+    ASSERT_EQ(num_broadcast_optimized, 2);
 }
 
 TEST(concat_fusion, non_fusable_self_concat)
@@ -211,10 +205,8 @@ TEST(concat_fusion, non_fusable_self_concat)
     auto baseline_input_shape_2 = baseline_f->get_parameters().at(1)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_non_fusable_self_concat.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_non_fusable_self_concat.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -234,8 +226,8 @@ TEST(concat_fusion, non_fusable_self_concat)
     size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
     size_t num_broadcast_optimzed = count_ops_of_type<op::Broadcast>(optimized_f);
 
-    ASSERT_EQ(num_reshapes_optimized, 2);
-    ASSERT_EQ(num_broadcast_optimzed, 3);
+    ASSERT_EQ(num_reshapes_optimized, 3);
+    ASSERT_EQ(num_broadcast_optimzed, 4);
 }
 
 TEST(concat_fusion, self_concat_with_fan_out)
@@ -266,10 +258,8 @@ TEST(concat_fusion, self_concat_with_fan_out)
     auto baseline_input_shape_2 = baseline_f->get_parameters().at(1)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_self_concat_with_fan_out.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_self_concat_with_fan_out.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -289,21 +279,21 @@ TEST(concat_fusion, self_concat_with_fan_out)
     size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
     size_t num_broadcast_optimzed = count_ops_of_type<op::Broadcast>(optimized_f);
 
-    ASSERT_EQ(num_reshapes_optimized, 1);
-    ASSERT_EQ(num_broadcast_optimzed, 1);
+    ASSERT_EQ(num_reshapes_optimized, 3);
+    ASSERT_EQ(num_broadcast_optimzed, 3);
 }
 
 TEST(concat_fusion, pass_property)
 {
     {
         auto pass = std::make_shared<ngraph::pass::ConcatElimination>();
-        ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
-        ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+        ASSERT_FALSE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+        ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
     }
 
     {
         auto pass = std::make_shared<ngraph::pass::SelfConcatFusion>();
-        ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
-        ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+        ASSERT_TRUE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+        ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
     }
 }

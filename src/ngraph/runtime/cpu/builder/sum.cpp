@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,10 +37,7 @@ namespace ngraph
                 BUILD_REDUCTION_FUNCTOR(Sum, sum);
             }
 
-            REGISTER_OP_BUILDER(Sum);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_sum_cpp() {}
-#endif
+            void register_builders_sum_cpp() { REGISTER_OP_BUILDER(Sum); }
         }
     }
 }

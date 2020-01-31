@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,8 +37,11 @@
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/pattern/op/branch.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/pattern/op/or.hpp"
 #include "ngraph/pattern/op/skip.hpp"
+#include "ngraph/pattern/op/true.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
@@ -98,8 +101,8 @@ public:
 
             size_t const_node_index =
                 m.get_match_root()->get_arguments().at(0) == pattern_map[pattern];
-            auto const_node = dynamic_pointer_cast<op::Constant>(
-                m.get_match_root()->get_arguments().at(const_node_index));
+            auto const_node =
+                as_type_ptr<op::Constant>(m.get_match_root()->get_arguments().at(const_node_index));
             auto second_node = m.get_match_root()->get_arguments().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
@@ -144,8 +147,8 @@ public:
 
             size_t const_node_index =
                 m.get_match_root()->get_arguments().at(0) == pattern_map[pattern];
-            auto const_node = dynamic_pointer_cast<op::Constant>(
-                m.get_match_root()->get_arguments().at(const_node_index));
+            auto const_node =
+                as_type_ptr<op::Constant>(m.get_match_root()->get_arguments().at(const_node_index));
             auto second_node = m.get_match_root()->get_arguments().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
@@ -296,7 +299,7 @@ TEST(pattern, matcher)
 {
     Shape shape{};
     auto a = make_shared<op::Parameter>(element::i32, shape);
-    TestMatcher n(nullptr);
+    TestMatcher n;
     ASSERT_TRUE(n.match(a, a));
     ASSERT_EQ(n.get_matched_nodes(), (NodeVector{a}));
 
@@ -305,7 +308,7 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(any, abs));
     ASSERT_EQ(n.get_matched_nodes(), (NodeVector{abs, a}));
 
-    auto false_pred = [](std::shared_ptr<Node> no) { return false; };
+    auto false_pred = [](std::shared_ptr<Node> /* no */) { return false; };
     auto any_false = std::make_shared<pattern::op::Skip>(a, false_pred);
     ASSERT_TRUE(n.match(any_false, a));
     ASSERT_EQ(n.get_matched_nodes(), (NodeVector{a, a}));
@@ -321,7 +324,9 @@ TEST(pattern, matcher)
 
     auto b = make_shared<op::Parameter>(element::i32, shape);
 
-    auto is_bea = pattern::has_class<op::util::BinaryElementwiseArithmetic>();
+    auto is_bea = [](std::shared_ptr<Node> node) -> bool {
+        return node->is_binary_elementwise_arithmetic();
+    };
     auto bea = std::make_shared<pattern::op::Any>(a, is_bea, NodeVector{a, b});
     auto add_ab = a + b;
     ASSERT_TRUE(n.match(bea, add_ab));
@@ -433,9 +438,24 @@ TEST(pattern, matcher)
     ASSERT_EQ(n.get_pattern_map()[label1], a);
     ASSERT_EQ(n.get_pattern_map()[label2], add);
 
+    // Or
+    ASSERT_TRUE(n.match(std::make_shared<pattern::op::Or>(OutputVector{a + b, a - b}), a + b));
+    ASSERT_TRUE(n.match(std::make_shared<pattern::op::Or>(OutputVector{a + b, a - b}), a - b));
+
+    // Branch
+    {
+        auto branch = std::make_shared<pattern::op::Branch>();
+        auto star = std::make_shared<pattern::op::Or>(
+            OutputVector{branch, std::make_shared<pattern::op::True>()});
+        auto pattern = star + star;
+        branch->set_destination(pattern);
+        ASSERT_TRUE(n.match(pattern, ((a + b) + (b + a) + a)));
+        ASSERT_EQ(n.get_matched_nodes().size(), 4);
+    }
+
     // strict mode
     {
-        TestMatcher sm(nullptr, "TestMatcher", true);
+        TestMatcher sm(Output<Node>{}, "TestMatcher", true);
         // exact shape and type
         auto scalar_param = make_shared<op::Parameter>(element::i32, Shape{});
         auto label_dynamic_shape =
@@ -460,7 +480,7 @@ TEST(pattern, matcher)
 TEST(pattern, mean)
 {
     // construct mean
-    TestMatcher n(nullptr);
+    TestMatcher n;
 
     auto input = std::make_shared<op::Parameter>(element::f32, Shape{2, 3});
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
@@ -475,7 +495,7 @@ TEST(pattern, mean)
 TEST(pattern, variance)
 {
     // construct variance
-    TestMatcher n(nullptr);
+    TestMatcher n;
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
     auto input_sq = std::make_shared<op::Multiply>(input, input);
@@ -705,7 +725,7 @@ TEST(pattern, label_on_skip)
         std::make_shared<pattern::op::Label>(iconst, ngraph::is_zero, NodeVector{iconst});
 
     auto bcst_pred = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr;
+        return as_type_ptr<op::Broadcast>(n) != nullptr;
     };
 
     auto bcst = std::make_shared<pattern::op::Skip>(const_label, bcst_pred);
@@ -731,7 +751,7 @@ TEST(pattern, is_contained_match)
     Shape shape{};
     auto a = make_shared<op::Parameter>(element::i32, shape);
     auto absn = make_shared<op::Abs>(a);
-    TestMatcher n(nullptr);
+    TestMatcher n;
 
     auto label_a = std::make_shared<pattern::op::Label>(a);
     auto label_abs = make_shared<op::Abs>(a);

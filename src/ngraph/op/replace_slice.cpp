@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ReplaceSlice::type_name{"ReplaceSlice"};
+constexpr NodeTypeInfo op::ReplaceSlice::type_info;
 
 op::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
                                const Output<Node>& arg1,
@@ -174,7 +174,7 @@ shared_ptr<Node> op::ReplaceSlice::copy_with_new_args(const NodeVector& new_args
         new_args.at(0), new_args.at(1), m_lower_bounds, m_upper_bounds, m_strides);
 }
 
-void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

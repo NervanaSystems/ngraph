@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,6 +47,8 @@ using namespace std;
 class ControlDependencyOp : public ngraph::op::Op
 {
 public:
+    static constexpr NodeTypeInfo type_info{"ControlDependencyOp", 0};
+    const NodeTypeInfo& get_type_info() const override { return type_info; }
     virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
     {
         auto clone = make_shared<ControlDependencyOp>(new_args, std::set<std::shared_ptr<Node>>{});
@@ -77,6 +79,7 @@ public:
         }
     }
 };
+constexpr NodeTypeInfo ControlDependencyOp::type_info;
 
 TEST(control_dependencies, cdep_ops)
 {
@@ -134,7 +137,7 @@ TEST(control_dependencies, clone_function_cdop)
     auto cloned_deps = cdop_clone->get_control_dependencies();
     ASSERT_EQ(cloned_deps.size(), 1);
     auto cloned_abs = *begin(cloned_deps);
-    ASSERT_TRUE(std::dynamic_pointer_cast<op::Abs>(cloned_abs));
+    ASSERT_TRUE(is_type<op::Abs>(cloned_abs));
 }
 
 TEST(control_dependencies, clone_function_cdop_abs)
@@ -156,7 +159,7 @@ TEST(control_dependencies, clone_function_cdop_abs)
     ASSERT_EQ(cloned_deps.size(), 2);
     for (auto ccdep : cloned_deps)
     {
-        ASSERT_TRUE(std::dynamic_pointer_cast<op::Abs>(ccdep));
+        ASSERT_TRUE(is_type<op::Abs>(ccdep));
     }
 }
 
@@ -202,7 +205,7 @@ TEST(control_dependencies, serialize_cdop)
     auto cloned_deps = cdop_clone->get_control_dependencies();
     ASSERT_EQ(cloned_deps.size(), 1);
     auto cloned_abs = *begin(cloned_deps);
-    ASSERT_TRUE(std::dynamic_pointer_cast<op::Abs>(cloned_abs));
+    ASSERT_TRUE(is_type<op::Abs>(cloned_abs));
 }
 
 TEST(control_dependencies, serialize_cdop_abs)
@@ -227,7 +230,7 @@ TEST(control_dependencies, serialize_cdop_abs)
     ASSERT_EQ(cloned_deps.size(), 2);
     for (auto ccdep : cloned_deps)
     {
-        ASSERT_TRUE(std::dynamic_pointer_cast<op::Abs>(ccdep));
+        ASSERT_TRUE(is_type<op::Abs>(ccdep));
     }
 }
 #endif

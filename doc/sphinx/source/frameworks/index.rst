@@ -1,12 +1,15 @@
+:orphan:
+
 .. frameworks/index.rst
 
-Using Frameworks
-================
+Working with Frameworks
+#######################
 
 .. toctree::
    :maxdepth: 1
    
-   getting_started.rst
+   overview.rst
+   quickstart.rst
    onnx_integ.rst 
    paddle_integ.rst
    tensorflow_connect.rst

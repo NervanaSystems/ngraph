@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,9 @@
 #include <type_traits> // std::enable_if
 #include <vector>
 
-#include "ngraph/op/constant.hpp"
+#include "core/node.hpp"
+#include "default_opset.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -67,33 +69,17 @@ namespace ngraph
                 return range;
             }
 
-            /// \brief      Handle negative axis value.
+            /// \brief Return the outputs of the node as vector.
             ///
-            /// \param[in]  axis        The requested axis value.
-            /// \param[in]  tensor_dim  The corresponding tensor dimensionality.
+            /// \param[in] node            Node with multiple outputs.
             ///
-            /// \tparam     T           Provided axis value type.
-            ///
-            /// \return     If negative axis, then return sum of tensor dimension and axis.
-            ///
-            template <typename T,
-                      typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
-            std::int64_t convert_negative_axis(T axis, std::size_t tensor_dim)
-            {
-                if (axis >= 0)
-                {
-                    return std::min(axis, static_cast<T>(tensor_dim));
-                }
-                else
-                {
-                    return static_cast<std::int64_t>(tensor_dim) + axis;
-                }
-            }
+            /// \return                    Vector of outputs of input node.
+            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node);
 
             /// \brief Creates a shifted square identity matrix.
             /// \note Shifting in the context of this operator means that
-            ///       the matrix can be created with elements equal to 1 not only in the main diagonal.
-            ///       Shifting adds an offset and moves the diagonal up or down
+            ///       the matrix can be created with elements equal to 1 not only in the main
+            ///       diagonal. Shifting adds an offset and moves the diagonal up or down
             ///
             /// \param[in] output_shape Shape of the resulting matrix.
             /// \param[in] output_type Element type of the resulting matrix.
@@ -123,7 +109,7 @@ namespace ngraph
                     identity_matrix.at(diagonal_element_idx) = T{1};
                 }
 
-                return std::make_shared<ngraph::op::Constant>(
+                return std::make_shared<default_opset::Constant>(
                     output_type, output_shape, identity_matrix);
             }
 
@@ -133,8 +119,8 @@ namespace ngraph
             ///
             /// \return A Constant node representing identity matrix with shape (n, n).
             template <typename T = double>
-            std::shared_ptr<ngraph::op::Constant> square_identity(const size_t n,
-                                                                  const element::Type& type)
+            std::shared_ptr<default_opset::Constant> square_identity(const size_t n,
+                                                                     const element::Type& type)
             {
                 return shifted_square_identity(Shape{n, n}, type, 0);
             }

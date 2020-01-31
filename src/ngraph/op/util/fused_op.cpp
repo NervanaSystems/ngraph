@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,11 @@ void op::util::FusedOp::validate_and_infer_types()
 {
     pre_validate_and_infer_types();
 
+    if (!can_decompose_with_partial_shapes() && is_dynamic())
+    {
+        return;
+    }
+
     auto subgraph_outputs = decompose_op();
     auto subgraph = extract_subgraph(subgraph_outputs, get_arguments());
     validate_nodes_and_infer_types(subgraph);
@@ -65,7 +70,8 @@ void op::util::FusedOp::validate_and_infer_types()
     post_validate_and_infer_types();
 }
 
-void op::util::FusedOp::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::util::FusedOp::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                          const OutputVector& /* deltas */)
 {
     // TODO
     throw ngraph_error("Autodiff on fused ops not supported yet");

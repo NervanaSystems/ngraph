@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -241,27 +241,27 @@ bool runtime::cpu::pass::CPUCollapseDims::run_on_function(std::shared_ptr<ngraph
     bool replaced = false;
     for (auto n : f->get_ordered_ops())
     {
-        if (std::dynamic_pointer_cast<op::Broadcast>(n))
+        if (is_type<op::Broadcast>(n))
         {
             replaced |= collapse_broadcast(n);
         }
-        else if (std::dynamic_pointer_cast<op::Max>(n))
+        else if (is_type<op::Max>(n))
         {
             replaced |= collapse_reduction<op::Max>(n);
         }
-        else if (std::dynamic_pointer_cast<op::Min>(n))
+        else if (is_type<op::Min>(n))
         {
             replaced |= collapse_reduction<op::Min>(n);
         }
-        else if (std::dynamic_pointer_cast<op::Product>(n))
+        else if (is_type<op::Product>(n))
         {
             replaced |= collapse_reduction<op::Product>(n);
         }
-        else if (std::dynamic_pointer_cast<op::Sum>(n))
+        else if (is_type<op::Sum>(n))
         {
             replaced |= collapse_reduction<op::Sum>(n);
         }
-        else if (std::dynamic_pointer_cast<op::Dot>(n))
+        else if (is_type<op::Dot>(n))
         {
             replaced |= collapse_dot<op::Dot>(n);
         }

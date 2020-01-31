@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::DynPad::type_name{"DynPad"};
+constexpr NodeTypeInfo op::DynPad::type_info;
 
 op::DynPad::DynPad(const Output<Node>& arg,
                    const Output<Node>& padding_below,
@@ -40,7 +40,7 @@ void op::DynPad::validate_and_infer_types()
         this, arg_t.compatible(padding_value_t), "Padding value and arg type mismatch");
 
     // shape node should have integer data type. For now we only allow i64
-    //TODO: potenially make the type more flexible to include other integer types
+    // TODO: potenially make the type more flexible to include other integer types
     auto padding_below_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
                           padding_below_et.compatible(element::Type_t::i64),
@@ -111,7 +111,8 @@ shared_ptr<Node> op::DynPad::copy_with_new_args(const NodeVector& new_args) cons
 }
 
 // TODO: This function is not implemented!
-void op::DynPad::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::DynPad::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                   const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynPad");
 }

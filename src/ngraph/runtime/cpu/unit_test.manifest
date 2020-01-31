@@ -11,5 +11,8 @@ max_3d_to_scalar_int32
 send_recv
 send_recv_ring
 
-# param not supported in CPU backend
-group_conv_data_dilation
+# ONNX TopK with dynamic K
+top_k_opset_10
+
+# ONNX GatherND with int32
+model_gatherND_int32

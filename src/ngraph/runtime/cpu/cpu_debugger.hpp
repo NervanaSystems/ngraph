@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,8 @@ namespace ngraph
             class CPU_BACKEND_API CPU_CountTracepoint
             {
             public:
-                /// \brief A convenience class that wraps user's callback to run it every *count* iterations
+                /// \brief A convenience class that wraps user's callback to run it every *count*
+                /// iterations
                 CPU_CountTracepoint(const std::function<void(void**, const std::string&)>& callback,
                                     size_t count)
                     : m_callback(callback)

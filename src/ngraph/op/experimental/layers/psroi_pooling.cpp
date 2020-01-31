@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,17 +19,17 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::PSROIPooling::type_name{"PSROIPooling"};
+constexpr NodeTypeInfo op::PSROIPooling::type_info;
 
-op::PSROIPooling::PSROIPooling(const shared_ptr<Node>& input,
-                               const shared_ptr<Node>& coords,
+op::PSROIPooling::PSROIPooling(const Output<Node>& input,
+                               const Output<Node>& coords,
                                const size_t output_dim,
                                const size_t group_size,
                                const float spatial_scale,
                                int spatial_bins_x,
                                int spatial_bins_y,
                                const string& mode)
-    : Op(check_single_output_args({input, coords}))
+    : Op({input, coords})
     , m_output_dim(output_dim)
     , m_group_size(group_size)
     , m_spatial_scale(spatial_scale)

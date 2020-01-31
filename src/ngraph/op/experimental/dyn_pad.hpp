@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,12 +24,11 @@ namespace ngraph
     {
         /// \brief Generic padding operation which takes padding below and above as dynamic shapes.
         /// This is similar to existing Pad operation except padding values are dynamic.
-        class DynPad : public Op
+        class NGRAPH_API DynPad : public Op
         {
         public:
-            NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"DynPad", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             DynPad() = default;
             /// \brief Perform dynamic padding of a tensor
             ///
@@ -52,7 +51,7 @@ namespace ngraph
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                                           const OutputVector& deltas) override;
 
         private:
             PadMode m_pad_mode;

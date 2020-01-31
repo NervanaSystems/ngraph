@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,22 +19,24 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::RegionYolo::type_name{"RegionYolo"};
+constexpr NodeTypeInfo op::RegionYolo::type_info;
 
-op::RegionYolo::RegionYolo(const shared_ptr<Node>& input,
+op::RegionYolo::RegionYolo(const Output<Node>& input,
                            const size_t num_coords,
                            const size_t num_classes,
                            const size_t num_regions,
                            const bool do_softmax,
                            const vector<int64_t>& mask,
                            const int axis,
-                           const int end_axis)
-    : Op(check_single_output_args({input}))
+                           const int end_axis,
+                           const vector<float>& anchors)
+    : Op({input})
     , m_num_coords(num_coords)
     , m_num_classes(num_classes)
     , m_num_regions(num_regions)
     , m_do_softmax(do_softmax)
     , m_mask(mask)
+    , m_anchors(anchors)
     , m_axis(axis)
     , m_end_axis(end_axis)
 {
@@ -57,11 +59,11 @@ void op::RegionYolo::validate_and_infer_types()
         if (m_do_softmax)
         {
             size_t flat_dim = 1;
-            for (size_t i = 0; i < m_axis; i++)
+            for (int64_t i = 0; i < m_axis; i++)
             {
                 output_shape.push_back(input_shape[i]);
             }
-            for (size_t i = m_axis; i < end_axis + 1; i++)
+            for (int64_t i = m_axis; i < end_axis + 1; i++)
             {
                 flat_dim *= input_shape[i];
             }
@@ -96,5 +98,6 @@ shared_ptr<Node> op::RegionYolo::copy_with_new_args(const NodeVector& new_args) 
                                    m_do_softmax,
                                    m_mask,
                                    m_axis,
-                                   m_end_axis);
+                                   m_end_axis,
+                                   m_anchors);
 }

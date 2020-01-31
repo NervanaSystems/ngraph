@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -67,14 +67,14 @@ namespace ngraph
             // For a scalar, nothing to do.
             template <typename T, size_t N>
             typename std::enable_if<(N == 0), void>::type
-                fill_shape(Shape& shape, const NestedInitializerList<T, N>& inits)
+                fill_shape(Shape& /* shape */, const NestedInitializerList<T, N>& /* inits */)
             {
             }
 
             // Check that the inits match the shape
             template <typename T, size_t N>
             typename std::enable_if<(N == 0), void>::type
-                check_shape(const Shape& shape, const NestedInitializerList<T, N>& inits)
+                check_shape(const Shape& shape, const NestedInitializerList<T, N>& /* inits */)
             {
                 if (shape.size() != 0)
                 {

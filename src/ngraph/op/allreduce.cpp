@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,11 +15,13 @@
 //*****************************************************************************
 
 #include "ngraph/op/allreduce.hpp"
+#include "ngraph/attribute_visitor.hpp"
+#include "ngraph/type.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-const string op::AllReduce::type_name{"AllReduce"};
+constexpr NodeTypeInfo op::AllReduce::type_info;
 
 op::AllReduce::AllReduce(const Output<Node>& arg, reduction::Type reduce_type)
     : Op({arg})
@@ -45,6 +47,12 @@ shared_ptr<Node> op::AllReduce::copy_with_new_args(const NodeVector& new_args) c
 {
     check_new_args_count(this, new_args);
     return make_shared<AllReduce>(new_args.at(0), get_reduce_type());
+}
+
+bool op::AllReduce::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("reduce_type", m_reduce_type);
+    return true;
 }
 
 reduction::Type op::AllReduce::get_reduce_type() const

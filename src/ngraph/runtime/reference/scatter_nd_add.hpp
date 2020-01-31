@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,8 @@ namespace ngraph
                 using namespace std;
                 // Copy inputs to out
                 memcpy(out, inputs, sizeof(T) * shape_size(inputs_shape));
-                // Create a CoordinateTransform for "indices" that visits only the first element along inner most axis
+                // Create a CoordinateTransform for "indices" that visits only the first element
+                // along inner most axis
                 size_t indices_ndim = static_cast<size_t>(indices_shape.size());
                 Coordinate indices_outer_start_corner(indices_ndim, 0);
                 Coordinate indices_outer_end_corner(indices_shape);
@@ -55,7 +56,8 @@ namespace ngraph
                                                             indices_strides,
                                                             indices_axis_order);
 
-                // Create a matching CoordinateTransform for "updates" that visits the same outer coordinates
+                // Create a matching CoordinateTransform for "updates" that visits the same outer
+                // coordinates
                 size_t updates_ndim = static_cast<size_t>(updates_shape.size());
                 Strides updates_strides(updates_ndim, 1);
                 AxisVector updates_axis_order(updates_ndim);

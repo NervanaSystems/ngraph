@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::ScatterNDAdd)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
                 CPUKernelFunctor functor;
 
@@ -63,7 +64,7 @@ namespace ngraph
                                    indices_buffer_index,
                                    updates_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::scatter_nd_add<float, int64_t>(
                                 static_cast<float*>(ctx->buffer_data[inputs_buffer_index]),
                                 static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
@@ -86,7 +87,7 @@ namespace ngraph
                                    indices_buffer_index,
                                    updates_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::scatter_nd_add<float, int32_t>(
                                 static_cast<float*>(ctx->buffer_data[inputs_buffer_index]),
                                 static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),
@@ -112,7 +113,7 @@ namespace ngraph
                                    indices_buffer_index,
                                    updates_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::scatter_nd_add<double, int64_t>(
                                 static_cast<double*>(ctx->buffer_data[inputs_buffer_index]),
                                 static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
@@ -135,12 +136,61 @@ namespace ngraph
                                    indices_buffer_index,
                                    updates_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::scatter_nd_add<double, int32_t>(
                                 static_cast<double*>(ctx->buffer_data[inputs_buffer_index]),
                                 static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),
                                 static_cast<double*>(ctx->buffer_data[updates_buffer_index]),
                                 static_cast<double*>(ctx->buffer_data[out_buffer_index]),
+                                inputs_shape,
+                                indices_shape,
+                                updates_shape,
+                                out_shape);
+                        };
+                    }
+                }
+                else if (element_type == element::i64)
+                {
+                    if (is_int64)
+                    {
+                        functor = [&,
+                                   inputs_shape,
+                                   indices_shape,
+                                   updates_shape,
+                                   out_shape,
+                                   inputs_buffer_index,
+                                   indices_buffer_index,
+                                   updates_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* /* ectx */) {
+                            ngraph::runtime::reference::scatter_nd_add<int64_t, int64_t>(
+                                static_cast<int64_t*>(ctx->buffer_data[inputs_buffer_index]),
+                                static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
+                                static_cast<int64_t*>(ctx->buffer_data[updates_buffer_index]),
+                                static_cast<int64_t*>(ctx->buffer_data[out_buffer_index]),
+                                inputs_shape,
+                                indices_shape,
+                                updates_shape,
+                                out_shape);
+                        };
+                    }
+                    else
+                    {
+                        functor = [&,
+                                   inputs_shape,
+                                   indices_shape,
+                                   updates_shape,
+                                   out_shape,
+                                   inputs_buffer_index,
+                                   indices_buffer_index,
+                                   updates_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* /* ectx */) {
+                            ngraph::runtime::reference::scatter_nd_add<int64_t, int32_t>(
+                                static_cast<int64_t*>(ctx->buffer_data[inputs_buffer_index]),
+                                static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),
+                                static_cast<int64_t*>(ctx->buffer_data[updates_buffer_index]),
+                                static_cast<int64_t*>(ctx->buffer_data[out_buffer_index]),
                                 inputs_shape,
                                 indices_shape,
                                 updates_shape,
@@ -156,10 +206,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(ScatterNDAdd);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_scatter_nd_add_cpp() {}
-#endif
+            void register_builders_scatter_nd_add_cpp() { REGISTER_OP_BUILDER(ScatterNDAdd); }
         }
     }
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ namespace ngraph
                                     builder::ContractionOutput{"SelVal"}
                                         .add_indices([&](
                                             std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (auto idx = 0; idx < dim_limit; ++idx)
+                                            for (size_t idx = 0; idx < dim_limit; ++idx)
                                             {
                                                 out =
                                                     (idx == this->op().get_reduction_axis() ? "rd"
@@ -62,7 +62,7 @@ namespace ngraph
                                         })
                                         .add_dims([&](
                                             std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (auto idx = 0; idx < dim_limit; ++idx)
+                                            for (size_t idx = 0; idx < dim_limit; ++idx)
                                             {
                                                 if (idx == this->op().get_reduction_axis())
                                                 {
@@ -75,8 +75,8 @@ namespace ngraph
                                             }
                                         }))
                                 .set(builder::ContractionInput{"I"}.add_indices("d", 0, dim_limit)))
-                        .add( // Compare the input against the (broadcasted) max values, and select the indices
-                            // where the max val occurs
+                        .add( // Compare the input against the (broadcasted) max values, and select
+                              // the indices where the max val occurs
                             builder::Elementwise{"SelValIdxs",
                                                  "I == SelVal ? index(I, " + reduction_axis_str +
                                                      ") : D" + reduction_axis_str})
@@ -86,7 +86,7 @@ namespace ngraph
                                     builder::ContractionOutput{"SelIdx"}
                                         .add_indices([&](
                                             std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (auto idx = 0; idx < dim_limit; ++idx)
+                                            for (size_t idx = 0; idx < dim_limit; ++idx)
                                             {
                                                 if (idx != this->op().get_reduction_axis())
                                                 {
@@ -96,7 +96,7 @@ namespace ngraph
                                         })
                                         .add_dims([&](
                                             std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (auto idx = 0; idx < dim_limit; ++idx)
+                                            for (size_t idx = 0; idx < dim_limit; ++idx)
                                             {
                                                 if (idx != this->op().get_reduction_axis())
                                                 {

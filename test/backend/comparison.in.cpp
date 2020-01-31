@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -222,7 +222,8 @@ NGRAPH_TEST(${BACKEND_NAME}, lesseq_bool)
     copy_data(b, vector<char>{0, 0, 0, 0, 0, 0, 0, 0});
     auto result = backend->create_tensor(element::boolean, shape);
 
-    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the
+    // right value.
     copy_data(result, vector<char>{1, 1, 1, 1, 1, 1, 1, 1});
 
     auto handle = backend->compile(f);

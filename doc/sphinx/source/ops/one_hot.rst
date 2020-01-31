@@ -57,6 +57,6 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::OneHot
+.. doxygenclass:: ngraph::op::v0::OneHot
    :project: ngraph
    :members:

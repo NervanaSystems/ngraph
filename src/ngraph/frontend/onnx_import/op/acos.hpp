@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
 #include <memory>
 
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/acos.hpp"
 
 namespace ngraph
 {
@@ -32,11 +32,11 @@ namespace ngraph
             {
                 inline NodeVector acos(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::Acos>(node.get_ng_inputs().at(0))};
+                    return {std::make_shared<default_opset::Acos>(node.get_ng_inputs().at(0))};
                 }
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

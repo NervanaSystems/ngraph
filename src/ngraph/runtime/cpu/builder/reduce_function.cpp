@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ namespace ngraph
                 auto reduction_axes = reduce->get_reduction_axes();
                 auto functor =
                     [&, arg0_shape, out_shape, reduction_axes, arg0_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         runtime::reference::any(
                             static_cast<char*>(ctx->buffer_data[arg0_buffer_index]),
                             static_cast<char*>(ctx->buffer_data[out_buffer_index]),
@@ -71,7 +71,7 @@ namespace ngraph
                 auto reduction_axes = reduce->get_reduction_axes();
                 auto functor =
                     [&, arg0_shape, out_shape, reduction_axes, arg0_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         runtime::reference::all(
                             static_cast<char*>(ctx->buffer_data[arg0_buffer_index]),
                             static_cast<char*>(ctx->buffer_data[out_buffer_index]),
@@ -82,11 +82,11 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(Any);
-            REGISTER_OP_BUILDER(All);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_reduce_function_cpp() {}
-#endif
+            void register_builders_reduce_function_cpp()
+            {
+                REGISTER_OP_BUILDER(Any);
+                REGISTER_OP_BUILDER(All);
+            }
         }
     }
 }

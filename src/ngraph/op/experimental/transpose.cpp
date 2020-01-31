@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,15 +22,15 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Transpose::type_name{"Transpose"};
+constexpr NodeTypeInfo op::v1::Transpose::type_info;
 
-op::Transpose::Transpose(const Output<Node>& arg, const Output<Node>& input_order)
+op::v1::Transpose::Transpose(const Output<Node>& arg, const Output<Node>& input_order)
     : Op({arg, input_order})
 {
     constructor_validate_and_infer_types();
 }
 
-void op::Transpose::validate_and_infer_types()
+void op::v1::Transpose::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(1).compatible(element::i64),
@@ -47,8 +47,7 @@ void op::Transpose::validate_and_infer_types()
 
     set_input_is_relevant_to_shape(1);
 
-    if (auto input_const =
-            std::dynamic_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr()))
+    if (auto input_const = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
         auto permutation = input_const->get_axis_vector_val();
         NODE_VALIDATION_CHECK(this,
@@ -66,15 +65,16 @@ void op::Transpose::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::Transpose::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Transpose::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Transpose>(new_args.at(0), new_args.at(1));
+    return make_shared<v1::Transpose>(new_args.at(0), new_args.at(1));
 }
 
 // TODO(amprocte): This will require some way of inverting the permutation in-graph. (TensorFlow,
 // for example, has an InvertPermutation op, but that doesn't feel very nGraph-y somehow.)
-void op::Transpose::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::Transpose::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                          const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for Transpose");
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,5 +28,5 @@ std::vector<ngraph::runtime::PerformanceCounter> run_benchmark(std::shared_ptr<n
                                                                const std::string& backend_name,
                                                                size_t iterations,
                                                                bool timing_detail,
-                                                               int warmup_iterations,
+                                                               size_t warmup_iterations,
                                                                bool copy_data);

@@ -52,6 +52,6 @@ Backprop
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Sqrt
+.. doxygenclass:: ngraph::op::v0::Sqrt
    :project: ngraph
    :members:

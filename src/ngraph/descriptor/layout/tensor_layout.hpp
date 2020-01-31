@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ namespace ngraph
             /// \brief Interface for describing implementations of tensors.
             ///
             /// Kernel selection will need to pay attention to the layout.
-            class TensorLayout
+            class NGRAPH_API TensorLayout
             {
             protected:
                 TensorLayout(const ngraph::descriptor::Tensor& tensor);
@@ -46,7 +46,8 @@ namespace ngraph
                 virtual ~TensorLayout() {}
                 /// Extent of this tensor in buffer.
                 ///
-                /// When we support non-linear buffers, this will need to be something other than size_t.
+                /// When we support non-linear buffers, this will need to be something other than
+                /// size_t.
                 size_t get_size() const;
                 virtual size_t get_allocated_size();
                 /// Offset of an index; useful for slice implementation.

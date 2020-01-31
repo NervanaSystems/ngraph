@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,13 +24,17 @@ namespace ngraph
     {
         namespace util
         {
-            /// \brief Abstract base class for elementwise binary logical operations, i.e., operations where the same
-            ///        scalar binary logical operation is applied to each corresponding pair of elements in two
-            ///        boolean input tensors. Implicit broadcast of input tensors is supported through one of the AutoBroadcast modes
-            ///        boolean input tensors.
+            // clang-format off
+            /// \brief Abstract base class for elementwise binary logical operations, i.e.,
+            ///        operations where the same scalar binary logical operation is applied to
+            ///        each corresponding pair of elements in two boolean input tensors. Implicit
+            ///        broadcast of input tensors is supported through one of the AutoBroadcast
+            ///        modes.
             ///
-            /// For example, if the underlying operation (determined by the subclass) is \f$\mathit{op}(x,y)\f$, the input tensors
-            /// \f$[[x_0,y_0],[z_0,w_0]]\f$ and \f$[[x_1,y_1],[z_1,w_1]]\f$ will be mapped to \f$[[\mathit{op}(x_0,x_1),\mathit{op}(y_0,y_1)],[\mathit{op}(z_0,z_1),\mathit{op}(w_0,w_1)]]\f$.
+            /// For example, if the underlying operation (determined by the subclass) is
+            /// \f$\mathit{op}(x,y)\f$, the input tensors \f$[[x_0,y_0],[z_0,w_0]]\f$ and
+            /// \f$[[x_1,y_1],[z_1,w_1]]\f$ will be mapped to
+            /// \f$[[\mathit{op}(x_0,x_1),\mathit{op}(y_0,y_1)],[\mathit{op}(z_0,z_1),\mathit{op}(w_0,w_1)]]\f$.
             ///
             /// ## Inputs
             ///
@@ -45,7 +49,8 @@ namespace ngraph
             /// | Type                               | Description                                                                                                                                                                                                        |
             /// | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
             /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape as the input tensors, and the element type `bool`. |
-            class BinaryElementwiseLogical : public Op
+            // clang-format on
+            class NGRAPH_API BinaryElementwiseLogical : public Op
             {
             protected:
                 BinaryElementwiseLogical();
@@ -79,8 +84,12 @@ namespace ngraph
             public:
                 void validate_and_infer_types() override;
 
-                const AutoBroadcastSpec& get_autob() const { return m_autob; }
+                const AutoBroadcastSpec& get_autob() const override { return m_autob; }
                 void set_autob(const AutoBroadcastSpec& autob) { m_autob = autob; }
+                bool supports_auto_broadcast() const override { return true; }
+                bool is_binary_elementwise_logical() const override { return true; }
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
             private:
                 AutoBroadcastSpec m_autob;
             };

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include "exceptions.hpp"
 #include "flatten.hpp"
 #include "ngraph/builder/reshape.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -33,16 +34,17 @@ namespace ngraph
                     NodeVector inputs{node.get_ng_inputs()};
                     auto data = inputs.at(0);
                     auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
+                    auto data_rank = data->get_shape().size();
+                    // Accepted range is [-r, r] where r = rank(input).
+                    const auto normalized_axis = ngraph::normalize_axis(
+                        node.get_description(), axis, data_rank, -data_rank, data_rank);
 
-                    ASSERT_VALID_ARGUMENT(node, (axis >= 0) && (axis <= data->get_shape().size()))
-                        << "provided 'axis' attribute is not valid.";
-
-                    return {ngraph::builder::flatten(data, axis)};
+                    return {ngraph::builder::opset1::flatten(data, normalized_axis)};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace  onnx_import
 

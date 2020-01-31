@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 #pragma once
 
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/maximum.hpp"
 #include "utils/variadic.hpp"
 
 namespace ngraph
@@ -31,7 +31,8 @@ namespace ngraph
             {
                 inline NodeVector max(const Node& node)
                 {
-                    return variadic::make_ng_variadic_op<ngraph::op::Maximum>(node);
+                    return variadic::make_ng_variadic_op<default_opset::Maximum>(
+                        node, ngraph::op::AutoBroadcastSpec::NONE);
                 }
 
             } // namespace set_1
@@ -40,12 +41,12 @@ namespace ngraph
             {
                 inline NodeVector max(const Node& node)
                 {
-                    return variadic::make_ng_variadic_op_with_broadcast<ngraph::op::Maximum>(node);
+                    return variadic::make_ng_variadic_op<default_opset::Maximum>(node);
                 }
 
             } // namespace set_8
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

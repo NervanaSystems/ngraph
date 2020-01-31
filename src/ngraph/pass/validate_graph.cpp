@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ void pass::ValidateGraph::validate_parameters(const Function& function)
     auto parameters = function.get_parameters();
     for (auto node : function.get_ops())
     {
-        shared_ptr<op::Parameter> p = dynamic_pointer_cast<op::Parameter>(node);
+        shared_ptr<op::Parameter> p = as_type_ptr<op::Parameter>(node);
         if (nullptr != p)
         {
             auto it = find_if(parameters.begin(),

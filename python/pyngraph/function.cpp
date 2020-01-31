@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ void regclass_pyngraph_Function(py::module m)
         auto* capsule_ptr = PyCapsule_GetPointer(pybind_capsule_ptr, CAPSULE_NAME);
 
         auto* ngraph_function = static_cast<std::shared_ptr<ngraph::Function>*>(capsule_ptr);
-        if (ngraph_function)
+        if (ngraph_function && *ngraph_function)
         {
             return *ngraph_function;
         }

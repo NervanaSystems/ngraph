@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,22 +32,22 @@ namespace ngraph
                         T* out,
                         const std::vector<Shape>& in_shapes,
                         const Shape& out_shape,
-                        size_t concatenation_axis)
+                        int64_t concatenation_axis)
             {
-                // We will copy the inputs to the output one at a time. As we go, we will move out along the
-                // concatenation axis, starting at 0.
+                // We will copy the inputs to the output one at a time. As we go, we will move out
+                // along the concatenation axis, starting at 0.
                 size_t concatenation_pos = 0;
-
                 for (size_t i = 0; i < args.size(); i++)
                 {
-                    // CoordinateTransform gets confused when the last input has a zero-size dim, so we will
-                    // just skip for zero-element tensors.
+                    // CoordinateTransform gets confused when the last input has a zero-size dim, so
+                    // we will just skip for zero-element tensors.
                     if (shape_size(in_shapes[i]) == 0)
                     {
                         continue;
                     }
 
-                    // The start coordinate for the copy is (0,...,0) except at the concatenation axis.
+                    // The start coordinate for the copy is (0,...,0) except at the concatenation
+                    // axis.
                     Coordinate out_start_coord(out_shape.size(), 0);
                     out_start_coord[concatenation_axis] = concatenation_pos;
 

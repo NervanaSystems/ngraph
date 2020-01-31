@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 set (SRC
     assertion.hpp
+    attribute_adapter.cpp
+    attribute_adapter.hpp
+    attribute_visitor.hpp
     autodiff/adjoints.cpp
     autodiff/adjoints.hpp
     axis_set.cpp
@@ -24,20 +27,25 @@ set (SRC
     axis_vector.hpp
     builder/autobroadcast.cpp
     builder/autobroadcast.hpp
+    builder/dequantize_builder.cpp
+    builder/dequantize_builder.hpp
     builder/make_constant.hpp
+    builder/matmul_factory.cpp
+    builder/matmul_factory.hpp
     builder/norm.cpp
     builder/norm.hpp
     builder/numpy_transpose.cpp
     builder/numpy_transpose.hpp
-    builder/quantization.cpp
-    builder/quantization.hpp
+    builder/quantize_builder.cpp
+    builder/quantize_builder.hpp
+    builder/quantized_concat_builder.cpp
+    builder/quantized_concat_builder.hpp
     builder/quantized_conv_builder.cpp
     builder/quantized_conv_builder.hpp
+    builder/quantized_dot_builder.cpp
+    builder/quantized_dot_builder.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
-    builder/quantization/quantized_linear_matmul.cpp
-    builder/quantization/quantized_linear_matmul.hpp
-    builder/quantization_util.hpp
     builder/quantization_utils.hpp
     builder/quantization_utils.cpp
     builder/reduce_ops.cpp
@@ -49,6 +57,7 @@ set (SRC
     builder/tensor_mask.hpp
     check.hpp
     code_writer.hpp
+    component_manager.hpp
     coordinate.cpp
     coordinate.hpp
     coordinate_diff.cpp
@@ -71,12 +80,19 @@ set (SRC
     dimension.hpp
     distributed.cpp
     distributed.hpp
+    enum_names.hpp
+    env_util.cpp
+    env_util.hpp
     except.hpp
+    factory.cpp
+    factory.hpp
     file_util.cpp
     file_util.hpp
     function.cpp
     function.hpp
     graph_util.cpp
+    lambda.cpp
+    lambda.hpp
     log.cpp
     log.hpp
     ngraph.cpp
@@ -106,10 +122,14 @@ set (SRC
     op/asin.hpp
     op/atan.cpp
     op/atan.hpp
+    op/atan2.cpp
+    op/atan2.hpp
     op/avg_pool.cpp
     op/avg_pool.hpp
     op/batch_norm.cpp
     op/batch_norm.hpp
+    op/binary_convolution.cpp
+    op/binary_convolution.hpp
     op/broadcast.cpp
     op/broadcast_distributed.cpp
     op/ceiling.cpp
@@ -120,12 +140,22 @@ set (SRC
     op/constant.hpp
     op/convert.cpp
     op/convert.hpp
+    op/convert_like.cpp
+    op/convert_like.hpp
     op/convolution.cpp
     op/convolution.hpp
     op/cos.cpp
     op/cos.hpp
     op/cosh.cpp
     op/cosh.hpp
+    op/cum_sum.cpp
+    op/cum_sum.hpp
+    op/crop_and_resize.cpp
+    op/crop_and_resize.hpp
+    op/deformable_convolution.cpp
+    op/deformable_convolution.hpp
+    op/deformable_psroi_pooling.cpp
+    op/deformable_psroi_pooling.hpp
     op/dequantize.cpp
     op/dequantize.hpp
     op/divide.cpp
@@ -154,24 +184,16 @@ set (SRC
     op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
-    op/experimental/quantized_avg_pool.cpp
-    op/experimental/quantized_avg_pool.hpp
-    op/experimental/quantized_concat.cpp
-    op/experimental/quantized_concat.hpp
     op/experimental/quantized_conv_bias.cpp
     op/experimental/quantized_conv_bias.hpp
     op/experimental/quantized_conv_relu.cpp
     op/experimental/quantized_conv_relu.hpp
-    op/experimental/quantized_max_pool.cpp
-    op/experimental/quantized_max_pool.hpp
     op/experimental/range.cpp
     op/experimental/range.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
     op/experimental/tile.cpp
     op/experimental/tile.hpp
-    op/experimental/quantized_dot.cpp
-    op/experimental/quantized_dot.hpp
     op/experimental/quantized_dot_bias.cpp
     op/experimental/quantized_dot_bias.hpp
     op/experimental/compiled_kernel.cpp
@@ -198,12 +220,19 @@ set (SRC
     op/experimental/layers/reorg_yolo.cpp
     op/experimental/layers/roi_pooling.hpp
     op/experimental/layers/roi_pooling.cpp
+    op/experimental/random_uniform.hpp
+    op/experimental/random_uniform.cpp
+    op/strided_slice.hpp
     op/floor.cpp
     op/floor.hpp
+    op/floor_mod.cpp
+    op/floor_mod.hpp
     op/gather.cpp
     op/gather.hpp
     op/gather_nd.cpp
     op/gather_nd.hpp
+    op/gather_tree.cpp
+    op/gather_tree.hpp
     op/get_output_element.cpp
     op/get_output_element.hpp
     op/greater.cpp
@@ -232,6 +261,8 @@ set (SRC
     op/multiply.hpp
     op/negative.cpp
     op/negative.hpp
+    op/non_max_suppression.cpp
+    op/non_max_suppression.hpp
     op/not.cpp
     op/not.hpp
     op/not_equal.cpp
@@ -252,10 +283,24 @@ set (SRC
     op/power.hpp
     op/product.cpp
     op/product.hpp
+    op/reduce_logical_and.cpp
+    op/reduce_logical_and.hpp
+    op/reduce_logical_or.cpp
+    op/reduce_logical_or.hpp
+    op/reduce_prod.cpp
+    op/reduce_prod.hpp
+    op/reduce_mean.cpp
+    op/reduce_mean.hpp
+    op/reduce_sum.cpp
+    op/reduce_sum.hpp
+    op/round.cpp
+    op/round.hpp
     op/quantize.cpp
     op/quantize.hpp
     op/quantized_convolution.cpp
     op/quantized_convolution.hpp
+    op/quantized_dot.cpp
+    op/quantized_dot.hpp
     op/recv.cpp
     op/recv.hpp
     op/relu.cpp
@@ -290,6 +335,8 @@ set (SRC
     op/slice.hpp
     op/softmax.cpp
     op/softmax.hpp
+    op/strided_slice.cpp
+    op/strided_slice.hpp
     op/sqrt.cpp
     op/sqrt.hpp
     op/stop_gradient.cpp
@@ -298,18 +345,26 @@ set (SRC
     op/subtract.hpp
     op/sum.cpp
     op/sum.hpp
+    op/variadic_split.cpp
+    op/variadic_split.hpp
     op/tan.cpp
     op/tan.hpp
     op/tanh.cpp
     op/tanh.hpp
+    op/tensor_iterator.cpp
+    op/tensor_iterator.hpp
     op/topk.cpp
     op/topk.hpp
     op/xor.cpp
     op/xor.hpp
+    op/fused/batch_mat_mul_transpose.cpp
+    op/fused/batch_mat_mul_transpose.hpp
     op/fused/clamp.cpp
     op/fused/clamp.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
+    op/fused/crossentropy.cpp
+    op/fused/crossentropy.hpp
     op/fused/hard_sigmoid.cpp
     op/fused/hard_sigmoid.hpp
     op/fused/depth_to_space.cpp
@@ -330,20 +385,38 @@ set (SRC
     op/fused/group_conv_transpose.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
+    op/fused/layer_norm.cpp
+    op/fused/layer_norm.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
+    op/fused/lstm_sequence.cpp
+    op/fused/lstm_sequence.hpp
+    op/fused/matmul.cpp
+    op/fused/matmul.hpp
+    op/fused/mod.cpp
+    op/fused/mod.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
-    op/fused/normalize.cpp
-    op/fused/normalize.hpp
+    op/fused/normalize_l2.cpp
+    op/fused/normalize_l2.hpp
+    op/fused/partial_slice.cpp
+    op/fused/partial_slice.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/fused/rnn_cell.cpp
     op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/scatter_nd.cpp
+    op/fused/scatter_nd.hpp
+    op/fused/stack.cpp
+    op/fused/stack.hpp
+    op/fused/selu.cpp
+    op/fused/selu.hpp
     op/fused/shuffle_channels.cpp
     op/fused/shuffle_channels.hpp
+    op/fused/softmax_crossentropy.cpp
+    op/fused/softmax_crossentropy.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
     op/fused/split.cpp
@@ -354,10 +427,14 @@ set (SRC
     op/fused/squeeze.hpp
     op/fused/unsqueeze.cpp
     op/fused/unsqueeze.hpp
+    op/util/attr_types.cpp
+    op/util/attr_types.hpp
     op/util/activation_functions.cpp
     op/util/activation_functions.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
+    op/util/arithmetic_reductions_keep_dims.hpp
+    op/util/arithmetic_reductions_keep_dims.cpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_arithmetic.hpp
     op/util/binary_elementwise_comparison.cpp
@@ -370,12 +447,16 @@ set (SRC
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
     op/util/index_reduction.hpp
+    op/util/logical_reduction_keep_dims.hpp
+    op/util/logical_reduction_keep_dims.cpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
     op/util/rnn_cell_base.cpp
     op/util/rnn_cell_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
+    ops.hpp
+    opsets/opset.cpp
     partial_shape.cpp
     partial_shape.hpp
     pass/algebraic_simplification.cpp
@@ -398,19 +479,27 @@ set (SRC
     pass/constant_folding_dyn_slice.cpp
     pass/constant_folding_gather.cpp
     pass/constant_folding_logical_reduction.cpp
+    pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
     pass/constant_folding_range.cpp
     pass/constant_folding_reshape.cpp
     pass/constant_folding_reverse.cpp
     pass/constant_folding_select.cpp
+    pass/constant_folding_squeeze.cpp
+    pass/constant_folding_unsqueeze.cpp
     pass/constant_folding_shape_of.cpp
     pass/constant_folding_slice.cpp
+    pass/constant_folding_split.cpp
+    pass/constant_folding_variadic_split.cpp
+    pass/constant_folding_strided_slice.cpp
     pass/constant_folding_transpose.cpp
     pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
     pass/constant_folding.hpp
     pass/constant_to_broadcast.cpp
+    pass/convert_fp32_to_fp16.hpp
+    pass/convert_fp32_to_fp16.cpp
     pass/core_fusion.cpp
     pass/core_fusion.hpp
     pass/cse.cpp
@@ -440,6 +529,10 @@ set (SRC
     pass/nop_elimination.hpp
     pass/pass.cpp
     pass/pass.hpp
+    pass/opset0_downgrade.cpp
+    pass/opset0_downgrade.hpp
+    pass/opset1_upgrade.cpp
+    pass/opset1_upgrade.hpp
     pass/pass_config.cpp
     pass/pass_config.hpp
     pass/propagate_cacheability.cpp
@@ -468,11 +561,24 @@ set (SRC
     pass/pass_util.cpp
     pattern/matcher.cpp
     pattern/matcher.hpp
+    pattern/op/any.cpp
     pattern/op/any.hpp
+    pattern/op/any_of.cpp
     pattern/op/any_of.hpp
+    pattern/op/branch.cpp
+    pattern/op/branch.hpp
+    pattern/op/capture.cpp
+    pattern/op/capture.hpp
+    pattern/op/label.cpp
     pattern/op/label.hpp
+    pattern/op/or.cpp
+    pattern/op/or.hpp
+    pattern/op/pattern.cpp
     pattern/op/pattern.hpp
+    pattern/op/skip.cpp
     pattern/op/skip.hpp
+    pattern/op/true.cpp
+    pattern/op/true.hpp
     placement.cpp
     placement.hpp
     provenance.cpp
@@ -486,6 +592,8 @@ set (SRC
     runtime/backend.hpp
     runtime/backend_manager.cpp
     runtime/backend_manager.hpp
+    runtime/cache.cpp
+    runtime/cache.hpp
     runtime/chrome_trace.cpp
     runtime/chrome_trace.hpp
     runtime/executable.cpp
@@ -503,7 +611,10 @@ set (SRC
     slice_plan.hpp
     specialize_function.cpp
     specialize_function.hpp
-    state/rng_state.cpp
+    state/bernoulli_rng_state.cpp
+    state/bernoulli_rng_state.hpp
+    state/uniform_rng_state.cpp
+    state/uniform_rng_state.hpp
     strides.cpp
     strides.hpp
     type/bfloat16.cpp
@@ -511,10 +622,14 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
+    type.cpp
+    type.hpp
     util.cpp
     util.hpp
     validation_util.cpp
     validation_util.hpp
+    variant.cpp
+    variant.hpp
     )
 
 set(SRC ${SRC}
@@ -580,7 +695,6 @@ target_compile_definitions(ngraph
     PRIVATE
         SHARED_LIB_PREFIX="${CMAKE_SHARED_LIBRARY_PREFIX}"
         SHARED_LIB_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}"
-        NGRAPH_DLL_EXPORTS
 )
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph PROPERTIES
@@ -613,9 +727,14 @@ elseif(APPLE)
 endif()
 
 # Defines macro in C++ to load backend plugin
-target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
+target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH}> $<INSTALL_INTERFACE:include>)
+
+#Add an alias so that library can be used inside the build tree, e.g. when testing
+add_library(ngraph::ngraph ALIAS ngraph)
+
 if (NOT WIN32)
-    target_link_libraries(ngraph PUBLIC ${CMAKE_DL_LIBS} pthread)
+    find_package(Threads REQUIRED)
+    target_link_libraries(ngraph PUBLIC dl Threads::Threads)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
@@ -637,17 +756,21 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # nGraph
-install(FILES ${CMAKE_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
-install(DIRECTORY
-    ${CMAKE_CURRENT_SOURCE_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"
+install(TARGETS ngraph EXPORT ngraphTargets
+        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB}
+        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB}
+        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB}
+        COMPONENT ngraph)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+    DESTINATION ${NGRAPH_INSTALL_INCLUDE}/ngraph
+    COMPONENT ngraph
     FILES_MATCHING
         PATTERN "*.hpp"
         PATTERN "*.h"
 )
-install(FILES ${CMAKE_BINARY_DIR}/src/ngraph/version.hpp
-    DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph")
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/version.hpp
+    DESTINATION ${NGRAPH_INSTALL_INCLUDE}/ngraph
+    COMPONENT ngraph)
 
 set(CPACK_GENERATOR "DEB")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)

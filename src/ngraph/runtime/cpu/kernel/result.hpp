@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,9 +28,9 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType>
-                void result(const void* arg, void* out, size_t count, int arena)
+                void result(const void* arg, void* out, size_t count, int /* arena */)
                 {
-                    if (arg != out)
+                    if (arg != out && count != 0)
                     {
                         memcpy(out, arg, sizeof(ElementType) * count);
                     }

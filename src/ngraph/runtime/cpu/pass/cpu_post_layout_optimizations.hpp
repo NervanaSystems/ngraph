@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ namespace ngraph
             namespace pass
             {
                 class CPUPostLayoutOptimizations;
+                class CPUConvertLayoutConstantFolding;
             }
         }
     }
@@ -46,4 +47,12 @@ public:
     void construct_weight_fusion();
     void construct_slice_convertLayout_fusion();
     void construct_reshape_convertLayout_fusion();
+};
+
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding
+    : public ngraph::pass::FunctionPass
+{
+public:
+    CPUConvertLayoutConstantFolding() {}
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
 };

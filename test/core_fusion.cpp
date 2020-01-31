@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -59,7 +60,7 @@ TEST(core_fusion, core_fusion_pass_basic)
     pass_manager.register_pass<pass::CoreFusion>();
     auto func = make_shared<Function>(graph, ParameterVector{B});
     pass_manager.run_passes(func);
-    ASSERT_NE(std::dynamic_pointer_cast<op::Relu>(graph->get_argument(0)), nullptr);
+    ASSERT_NE(as_type_ptr<op::Relu>(graph->get_argument(0)), nullptr);
 }
 
 #ifndef NGRAPH_JSON_DISABLE
@@ -181,7 +182,7 @@ TEST(core_fusion, reshape_broadcast_graph_optimized)
     pass_manager.run_passes(optimized_f);
 
     auto new_broadcast =
-        std::dynamic_pointer_cast<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
+        as_type_ptr<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
     EXPECT_EQ(new_broadcast->get_argument(0), input);
     EXPECT_EQ(new_broadcast->get_broadcast_axes(), (AxisSet{0, 1, 3, 4, 5}));
 }
@@ -199,7 +200,7 @@ TEST(core_fusion, reshape_broadcast_adds_one)
     pass_manager.run_passes(optimized_f);
 
     auto new_broadcast =
-        std::dynamic_pointer_cast<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
+        as_type_ptr<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
     EXPECT_EQ(new_broadcast, broadcast);
     EXPECT_EQ(new_broadcast->get_argument(0), reshape1);
 }
@@ -217,7 +218,7 @@ TEST(core_fusion, reshape_broadcast_wrong_reshape)
     pass_manager.run_passes(optimized_f);
 
     auto new_broadcast =
-        std::dynamic_pointer_cast<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
+        as_type_ptr<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
     EXPECT_EQ(new_broadcast, broadcast);
     EXPECT_EQ(new_broadcast->get_argument(0), reshape1);
 }
@@ -268,10 +269,8 @@ TEST(core_fusion, sparsity_opt_56x56)
     auto func = make_shared<Function>(NodeVector{conv_s2_1, conv_s2_2}, params);
     pass_manager.run_passes(func);
     auto results = func->get_results();
-    auto t_eltwise_conv1 =
-        std::dynamic_pointer_cast<op::Convolution>(results.at(0)->get_argument(0));
-    auto t_eltwise_conv2 =
-        std::dynamic_pointer_cast<op::Convolution>(results.at(1)->get_argument(0));
+    auto t_eltwise_conv1 = as_type_ptr<op::Convolution>(results.at(0)->get_argument(0));
+    auto t_eltwise_conv2 = as_type_ptr<op::Convolution>(results.at(1)->get_argument(0));
     ASSERT_TRUE(t_eltwise_conv1);
     ASSERT_TRUE(t_eltwise_conv2);
     ASSERT_EQ(t_eltwise_conv1->get_window_movement_strides(), stride_1);
@@ -650,6 +649,21 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
     }
 }
 
+#ifndef NGRAPH_JSON_DISABLE
+TEST(batch_fusion, fuse_batch_mat_mul_transpose)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::BatchFusion>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/batch_dot_3.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::BatchMatMulTranspose>(func);
+    ASSERT_EQ(ccg, 1);
+}
+#endif
+
 TEST(batch_fusion, group_convolution_fusion)
 {
     Shape shape_a{1, 32, 2, 2};
@@ -687,21 +701,215 @@ TEST(batch_fusion, group_convolution_fusion)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::BatchFusion>();
     pass_manager.run_passes(f);
-    auto gc =
-        std::dynamic_pointer_cast<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
+    auto gc = as_type_ptr<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(gc);
 }
 
 TEST(core_fusion, pass_property)
 {
     auto pass = std::make_shared<ngraph::pass::CoreFusion>();
-    ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
-    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+    ASSERT_FALSE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }
 
 TEST(batch_fusion, pass_property)
 {
     auto pass = std::make_shared<ngraph::pass::BatchFusion>();
-    ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
-    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+    ASSERT_TRUE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+}
+
+#ifndef NGRAPH_JSON_DISABLE
+TEST(core_fusion, softmax_crossentropy_fprop_1)
+{
+    const std::string file_name("paddlepaddle/ngraph-paddlepaddle-function3.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+    // during this optimization for numeric stability we will reduce softmax operation to
+    // - summation (labels (input - max(input) - log (summation(exp ^ (input - max(input)))
+    // count_of(softmax) should be equal to zero if fusion is successful
+    size_t softmax = count_ops_of_type<op::Softmax>(cpu_f);
+    ASSERT_EQ(softmax, 0);
+}
+
+TEST(core_fusion, softmax_crossentropy_fprop_2)
+{
+    const std::string file_name("paddlepaddle/ngraph-paddlepaddle-function1.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+    // during this optimization for numeric stability we will reduce softmax operation to
+    // - summation (labels (input - max(input) - log (summation(exp ^ (input - max(input)))
+    // count_of(softmax) should be equal to zero if fusion is successful
+    size_t softmax = count_ops_of_type<op::Softmax>(cpu_f);
+    ASSERT_EQ(softmax, 0);
+}
+
+TEST(core_fusion, softmax_crossentropy_bprop_with_soft_labels)
+{
+    const std::string file_name("paddlepaddle/ngraph-paddlepaddle-bprop0.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+
+    // during this optimization for numeric stability we will eliminate (softmax / softmax)
+    // the number of div operator for cpu_f should be zero if the fusion is valid
+    size_t divide = count_ops_of_type<op::Divide>(cpu_f);
+    ASSERT_EQ(divide, 0);
+}
+
+TEST(core_fusion, softmax_crossentropy_bprop_with_ignore_mask)
+{
+    const std::string file_name("paddlepaddle/ngraph-paddlepaddle-bprop1.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+
+    // during this optimization for numeric stability we will eliminate (softmax / softmax)
+    // the number of div operator for cpu_f should be zero if the fusion is valid
+    size_t divide = count_ops_of_type<op::Divide>(cpu_f);
+    ASSERT_EQ(divide, 0);
+}
+#endif
+
+// TODO(pthoreho): MLIR currently does not support all the op's needed for CrossEntropy+Softmax
+// this results in multiple CompiledKernels and we cannot able to safely check for certain op's
+// from the function created by user.
+// Note: remove this guards once we have full support for CE and Softmax through MLIR
+
+void test_softmax_crossentropy(Shape input_shape,
+                               Shape label_shape,
+                               bool soft_label,
+                               int64_t ignore_index)
+{
+    auto input = std::make_shared<op::Parameter>(element::f64, input_shape);
+    auto labels = std::make_shared<op::Parameter>(element::i64, label_shape);
+    auto sm_ce = std::make_shared<op::SoftmaxCrossEntropy>(input, labels, soft_label, ignore_index);
+    auto cpu_f = make_shared<Function>(sm_ce, ParameterVector{input, labels});
+
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    // if softlabels = flase, we will have one one hot encoding for labels
+    if (!soft_label)
+    {
+        size_t onehot = count_ops_of_type<op::OneHot>(cpu_f);
+        ASSERT_EQ(onehot, 1);
+    }
+    if (ignore_index >= 0 && !soft_label)
+    // check for the mask
+    {
+        size_t not_equal = count_ops_of_type<op::NotEqual>(cpu_f);
+        ASSERT_EQ(not_equal, 1);
+    }
+}
+
+TEST(core_fusion, MLIR_DISABLE_TEST(softmax_crossentropy))
+{
+    test_softmax_crossentropy(Shape{41, 37}, Shape{41, 37}, true, -1);
+    test_softmax_crossentropy(Shape{41, 37}, Shape{41, 1}, false, 5);
+}
+
+void test_crossentropy(Shape input_shape, Shape label_shape, bool soft_label, int64_t ignore_index)
+{
+    auto input = std::make_shared<op::Parameter>(element::f64, input_shape);
+    auto labels = std::make_shared<op::Parameter>(element::i64, label_shape);
+    auto sm_ce = std::make_shared<op::CrossEntropy>(input, labels, soft_label, ignore_index);
+    auto cpu_f = make_shared<Function>(sm_ce, ParameterVector{input, labels});
+
+    test::Uniform<double> rng(-1.0, 1.0);
+    vector<vector<double>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<double> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    // if softlabels = flase, we will have one one hot encoding for labels
+    if (!soft_label)
+    {
+        size_t onehot = count_ops_of_type<op::OneHot>(cpu_f);
+        ASSERT_EQ(onehot, 1);
+    }
+    if (ignore_index >= 0 && !soft_label)
+    // check for the mask
+    {
+        size_t not_equal = count_ops_of_type<op::NotEqual>(cpu_f);
+        ASSERT_EQ(not_equal, 1);
+    }
+}
+
+TEST(core_fusion, MLIR_DISABLE_TEST(crossentropy))
+{
+    test_crossentropy(Shape{41, 37}, Shape{41, 37}, true, -1);
+    test_crossentropy(Shape{41, 37}, Shape{41, 1}, false, 5);
+    test_crossentropy(Shape{10, 2, 4, 10}, Shape{10, 2, 4, 1}, false, 5);
+    test_crossentropy(Shape{4, 3, 2, 4}, Shape{4, 3, 2, 4}, true, -1);
 }

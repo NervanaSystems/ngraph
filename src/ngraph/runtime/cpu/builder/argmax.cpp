@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::argmax<float, int64_t, 1>)>
                             kernel;
 
-                        SELECT_RANK2(
+                        SELECT_KERNEL_RANK(
                             kernel, float, int64_t, in_shape.size(), runtime::cpu::kernel::argmax);
 
                         functor = [&,
@@ -80,7 +80,7 @@ namespace ngraph
                     {
                         std::function<decltype(runtime::cpu::kernel::argmax<float, int, 1>)> kernel;
 
-                        SELECT_RANK2(
+                        SELECT_KERNEL_RANK(
                             kernel, float, int, in_shape.size(), runtime::cpu::kernel::argmax);
 
                         functor = [&,
@@ -107,7 +107,7 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::argmax<double, int64_t, 1>)>
                             kernel;
 
-                        SELECT_RANK2(
+                        SELECT_KERNEL_RANK(
                             kernel, double, int64_t, in_shape.size(), runtime::cpu::kernel::argmax);
 
                         functor = [&,
@@ -131,7 +131,7 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::argmax<double, int, 1>)>
                             kernel;
 
-                        SELECT_RANK2(
+                        SELECT_KERNEL_RANK(
                             kernel, double, int, in_shape.size(), runtime::cpu::kernel::argmax);
 
                         functor = [&,
@@ -158,7 +158,7 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::argmax<int, int64_t, 1>)>
                             kernel;
 
-                        SELECT_RANK2(
+                        SELECT_KERNEL_RANK(
                             kernel, int, int64_t, in_shape.size(), runtime::cpu::kernel::argmax);
 
                         functor = [&,
@@ -181,7 +181,7 @@ namespace ngraph
                     {
                         std::function<decltype(runtime::cpu::kernel::argmax<int, int, 1>)> kernel;
 
-                        SELECT_RANK2(
+                        SELECT_KERNEL_RANK(
                             kernel, int, int, in_shape.size(), runtime::cpu::kernel::argmax);
 
                         functor = [&,
@@ -209,11 +209,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(ArgMax);
-
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_argmax_cpp() {}
-#endif
+            void register_builders_argmax_cpp() { REGISTER_OP_BUILDER(ArgMax); }
         }
     }
 }

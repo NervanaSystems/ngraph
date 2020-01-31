@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment, Alloca
     }
     else
     {
-        m_allocated_buffer = static_cast<char*>(malloc(allocation_size));
+        m_allocated_buffer = static_cast<char*>(ngraph_malloc(allocation_size));
     }
     m_aligned_buffer = m_allocated_buffer;
     size_t mod = size_t(m_aligned_buffer) % alignment;

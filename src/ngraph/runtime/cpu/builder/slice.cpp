@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ namespace ngraph
                                         offset,
                                         arg_buffer_index,
                                         out_buffer_index](CPURuntimeContext* ctx,
-                                                          CPUExecutionContext* ectx) {
+                                                          CPUExecutionContext* /* ectx */) {
                             if (ctx->buffer_data[out_buffer_index] <
                                     ctx->buffer_data[arg_buffer_index] ||
                                 ctx->buffer_data[out_buffer_index] >=
@@ -93,6 +93,9 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    size_t scratchpad_size = QUERY_SCRATCHPAD_4ARGS(
+                        slice, input_desc, result_desc, lower_bounds, out_shape);
+
                     // Slice needs 3 primitives: input, result, and reorder.
                     auto slice_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(slice_index);
@@ -103,12 +106,15 @@ namespace ngraph
                                     lower_bounds,
                                     out_shape,
                                     slice_index,
+                                    scratchpad_size,
                                     arg_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_slice(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_slice(ctx->mkldnn_memories,
+                                                        ctx->mkldnn_primitives,
+                                                        ctx->mkldnn_scratchpad_mds,
                                                         input_desc,
                                                         result_desc,
                                                         lower_bounds,
@@ -120,22 +126,27 @@ namespace ngraph
                             ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, slice_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx,
+                                                                   slice_index,
+                                                                   deps,
+                                                                   cpu::mkldnn_utils::OpType::SLICE,
+                                                                   scratchpad_size);
                     };
 
                     functors.emplace_back(functor);
                 }
                 else
                 {
-                    if (is_strided(strides))
+                    if (is_strided(strides) && is_optimized_et(args[0].get_element_type()))
                     {
                         std::function<decltype(runtime::cpu::kernel::strided_slice<float, 2>)>
                             kernel;
 
-                        SELECT_KERNEL_BY_RANK(kernel,
-                                              args[0].get_element_type(),
-                                              arg_shape.size(),
-                                              runtime::cpu::kernel::strided_slice);
+                        SELECT_ETS_AND_RANK7(kernel,
+                                             args[0].get_element_type(),
+                                             arg_shape.size(),
+                                             runtime::cpu::kernel::strided_slice);
 
                         auto functor = [&,
                                         kernel,
@@ -158,14 +169,14 @@ namespace ngraph
                         };
                         functors.emplace_back(functor);
                     }
-                    else
+                    else if (is_optimized_et(args[0].get_element_type()))
                     {
                         std::function<decltype(runtime::cpu::kernel::slice<float, 2>)> kernel;
 
-                        SELECT_KERNEL_BY_RANK(kernel,
-                                              args[0].get_element_type(),
-                                              arg_shape.size(),
-                                              runtime::cpu::kernel::slice);
+                        SELECT_ETS_AND_RANK7(kernel,
+                                             args[0].get_element_type(),
+                                             arg_shape.size(),
+                                             runtime::cpu::kernel::slice);
 
                         auto functor = [&,
                                         kernel,
@@ -184,13 +195,35 @@ namespace ngraph
                         };
                         functors.emplace_back(functor);
                     }
+                    else
+                    {
+                        std::function<decltype(runtime::cpu::kernel::ref_slice<float>)> kernel;
+                        SELECT_KERNEL(
+                            kernel, args[0].get_element_type(), runtime::cpu::kernel::ref_slice);
+                        auto functor = [&,
+                                        kernel,
+                                        arg_shape,
+                                        out_shape,
+                                        lower_bounds,
+                                        upper_bounds,
+                                        strides,
+                                        arg_buffer_index,
+                                        out_buffer_index](CPURuntimeContext* ctx,
+                                                          CPUExecutionContext* /*ectx*/) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
+                                   arg_shape,
+                                   lower_bounds,
+                                   upper_bounds,
+                                   strides,
+                                   out_shape);
+                        };
+                        functors.emplace_back(functor);
+                    }
                 }
             }
 
-            REGISTER_OP_BUILDER(Slice);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_slice_cpp() {}
-#endif
+            void register_builders_slice_cpp() { REGISTER_OP_BUILDER(Slice); }
         }
     }
 }

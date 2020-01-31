@@ -1,5 +1,21 @@
 # API Changes
 
+## Op Definition
+* Every Op class must declare a `static constexpr NodeTypeInfo type_info{name, version}` in the class definition and define it in the .cpp file. See any op definition for an example.
+* The boolean function `is_type<T>` is for testing if a node is the op `T`.
+* `T as_type_ptr<T>()` and `T as_type<T>()` will upcast `Node` to an explicit op class if it is of class `T`, or `nullptr` if it is not.
+
+## Backend library interface
+* Each backend `BACKEND` needs to define the macro `${BACKEND}_API` appropriately to import symbols
+  referenced from outside the library and to export them from within the library. See any
+  of the `${backend}_backend_visibility.hpp` files for an example. 
+* The `CMakeLists.txt` file for a backend defines `${BACKEND}_BACKEND_DLL_EXPORTS`.
+  `target_compile_definitions(${backend}_backend PRIVATE ${BACKEND}_BACKEND_DLL_EXPORTS)`
+* Each backend must define a function `ngraph_register_${backend}_backend` that registers a
+  backend constructor function and ensures that initializations are performed.
+  `ngraph/src/runtime/cpu/cpu_backend.cpp` has an example that includes initializations.
+  Remove the old backend constructor code.
+
 ## Passes
 * `LikeReplacement` pass must be run by all transformers.
 * `ngraph::pass::FusionType` is now an enum class. Constant values defined by `FusionType` are created for backward compatibility and will be removed in future releases.
@@ -51,6 +67,11 @@
 arguments now take type `CoordinateDiff` instead of `Shape`. `CoordinateDiff` is an alias for
 `std::vector<std::ptrdiff_t>`, which "is like `size_t` but is allowed to be negative". Callers may
 need to be adapted.
+
+## Changes to Concat op	
+
+* `get_concatenation_axis` was renamed to `get_axis`. In order to provide backward compatibility `get_concatenation_axis` is now alis of `get_axis` method	
+* `set_concatenation_axis` was renamed to `set_axis`. In order to provide backward compatibility `set_concatenation_axis` is now alis of `set_axis` method
 
 ## `Parameter` and `Function` no longer take a type argument.
 

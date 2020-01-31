@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,15 @@ namespace ngraph
 {
     namespace builder
     {
+        /// \brief      Specifies method of bias application to avoid numerical problems
+        enum class BiasMode
+        {
+            // Add bias to intermediate result
+            ADD,
+            // Calculate max of intermediate result and bias
+            MAX
+        };
+
         /// \brief      Calculates L-0 norm of input tensor.
         ///
         /// \note       The L-0 norm represents the cardinality of elements different
@@ -57,12 +66,17 @@ namespace ngraph
         ///
         /// \param[in]  value           The input tensor.
         /// \param[in]  reduction_axes  The axes along which we calculate norm.
-        /// \param[in]  bias            The bias added to the calculated sum.
+        /// \param[in]  bias            The bias combined with calculated sum.
+        /// \param[in]  bias_mode       The method of bias application.
+        /// \param[in]  keep_dims       The flag indicates if axes will be removed or kept.
         ///
         /// \return     L-2 norm of value.
         ///
-        std::shared_ptr<Node>
-            l2_norm(const Output<Node>& value, const AxisSet& reduction_axes, float bias = 0.f);
+        std::shared_ptr<Node> l2_norm(const Output<Node>& value,
+                                      const AxisSet& reduction_axes,
+                                      float bias = 0.f,
+                                      BiasMode bias_mode = BiasMode::ADD,
+                                      bool keep_dims = false);
 
         /// \brief      Creates node which calculates L-p norm on input tensor.
         ///

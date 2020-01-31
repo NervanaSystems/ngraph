@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,9 +17,10 @@
 #include <cstddef> // std::size_t
 #include <vector>
 
+#include "default_opset.hpp"
 #include "exceptions.hpp"
+#include "ngraph/op/constant.hpp"
 #include "reduction.hpp"
-#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -32,13 +33,18 @@ namespace ngraph
                 AxisSet get_reduction_axes(const Node& node)
                 {
                     auto reduction_axes =
-                        node.get_attribute_value<std::vector<std::size_t>>("axes", {});
+                        node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
+                    std::vector<std::size_t> normalized_axes =
+                        ngraph::normalize_axes(node.get_description(),
+                                               reduction_axes,
+                                               node.get_ng_inputs().at(0)->get_shape().size());
+
                     if (reduction_axes.empty())
                     {
-                        reduction_axes = onnx_import::common::get_monotonic_range<std::size_t>(
+                        normalized_axes = onnx_import::common::get_monotonic_range<std::size_t>(
                             node.get_ng_inputs().at(0)->get_shape().size());
                     }
-                    return AxisSet{reduction_axes};
+                    return AxisSet{normalized_axes};
                 }
             } // namespace  detail
 
@@ -70,10 +76,32 @@ namespace ngraph
                 {
                     output_shape.at(idx) = 1;
                 }
-                return std::make_shared<ngraph::op::Reshape>(
-                    op_node,
-                    ngraph::get_default_order(op_node->get_shape().size()),
-                    Shape{output_shape});
+                return builder::opset1::reshape(op_node, output_shape);
+            }
+
+            std::shared_ptr<ngraph::Node>
+                make_ng_reduction_op(const Node& node,
+                                     const std::shared_ptr<ngraph::Node>& ng_input,
+                                     RuntimeReductionFunction reduction_function)
+            {
+                auto data_shape = ng_input->get_shape();
+
+                auto reduction_axes = detail::get_reduction_axes(node);
+
+                ASSERT_VALID_ARGUMENT(node, reduction_axes.size() <= data_shape.size())
+                    << "provided reduction axes count (" << reduction_axes.size()
+                    << ") is larger than input tensor rank (" << data_shape.size() << ")";
+
+                std::int64_t keepdims = node.get_attribute_value<std::int64_t>("keepdims", 1);
+
+                std::shared_ptr<ngraph::Node> op_node = reduction_function(
+                    ng_input,
+                    std::make_shared<ngraph::op::Constant>(element::i64,
+                                                           ngraph::Shape{reduction_axes.size()},
+                                                           reduction_axes.to_vector()),
+                    static_cast<bool>(keepdims));
+
+                return op_node;
             }
 
         } // namespace  reduction

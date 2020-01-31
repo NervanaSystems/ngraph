@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,11 @@
 
 #pragma once
 
+#include <memory>
+
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/or.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -31,13 +32,13 @@ namespace ngraph
             {
                 inline NodeVector logical_or(const Node& node)
                 {
-                    NodeVector ng_inputs{ngraph::op::numpy_style_broadcast(node.get_ng_inputs())};
-                    return {std::make_shared<ngraph::op::Or>(ng_inputs.at(0), ng_inputs.at(1))};
+                    return {std::make_shared<default_opset::LogicalOr>(node.get_ng_inputs().at(0),
+                                                                       node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

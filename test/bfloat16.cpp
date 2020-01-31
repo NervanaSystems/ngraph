@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -235,24 +235,24 @@ TEST(bfloat16, assigns)
     std::vector<float> f32vec{1.0, 2.0, 4.0};
     std::vector<bfloat16> bf16vec;
     std::copy(f32vec.begin(), f32vec.end(), std::back_inserter(bf16vec));
-    for (int i = 0; i < f32vec.size(); ++i)
+    for (size_t i = 0; i < f32vec.size(); ++i)
     {
         EXPECT_EQ(f32vec.at(i), bf16vec.at(i));
     }
 
     f32vec = {-1.0, -2.0, -3.0};
-    for (int i = 0; i < f32vec.size(); ++i)
+    for (size_t i = 0; i < f32vec.size(); ++i)
     {
         bf16vec[i] = f32vec[i];
     }
-    for (int i = 0; i < f32vec.size(); ++i)
+    for (size_t i = 0; i < f32vec.size(); ++i)
     {
         EXPECT_EQ(f32vec.at(i), bf16vec.at(i));
     }
 
     float f32arr[] = {1.0, 2.0, 4.0};
     bfloat16 bf16arr[sizeof(f32arr)];
-    for (int i = 0; i < sizeof(f32arr) / sizeof(f32arr[0]); ++i)
+    for (size_t i = 0; i < sizeof(f32arr) / sizeof(f32arr[0]); ++i)
     {
         bf16arr[i] = f32arr[i];
         EXPECT_EQ(f32arr[i], bf16arr[i]);

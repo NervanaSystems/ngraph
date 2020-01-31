@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/round.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
@@ -32,6 +33,7 @@
 #include "ngraph/runtime/reference/negate.hpp"
 #include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
+#include "ngraph/runtime/reference/round.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
 
@@ -40,10 +42,9 @@ using namespace ngraph;
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
-    return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Ceiling>(n) ||
-           std::dynamic_pointer_cast<op::Floor>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
-           std::dynamic_pointer_cast<op::Not>(n) || std::dynamic_pointer_cast<op::Relu>(n) ||
-           std::dynamic_pointer_cast<op::Sign>(n) || std::dynamic_pointer_cast<op::Sqrt>(n);
+    return is_type<op::Abs>(n) || is_type<op::Ceiling>(n) || is_type<op::Floor>(n) ||
+           is_type<op::Negative>(n) || is_type<op::Not>(n) || is_type<op::Relu>(n) ||
+           is_type<op::Round>(n) || is_type<op::Sign>(n) || is_type<op::Sqrt>(n);
 }
 
 template <class T>
@@ -51,8 +52,8 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
                                              shared_ptr<Node> unary,
                                              NodeExecutorTy func)
 {
-    //check sqrt arg
-    if (std::dynamic_pointer_cast<op::Sqrt>(unary))
+    // check sqrt arg
+    if (is_type<op::Sqrt>(unary))
     {
         std::vector<T> values{constant->get_vector<T>()};
         if (std::any_of(values.begin(), values.end(), [](T i) { return i < T(0); }))
@@ -61,59 +62,69 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         }
     }
 
-    auto out_shape = unary->get_shape();
-    vector<T> out_vec(shape_size(out_shape));
+    const Shape& out_shape = unary->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
 
     if (func != nullptr)
     {
         vector<void*> inputs;
         inputs.push_back(const_cast<void*>(constant->get_data_ptr()));
         vector<void*> outputs;
-        outputs.push_back(out_vec.data());
+        outputs.push_back(buffer.get_ptr<T>());
 
         func(inputs, outputs);
     }
     else
     {
-        if (std::dynamic_pointer_cast<op::Abs>(unary))
+        if (is_type<op::Abs>(unary))
         {
             runtime::reference::abs<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Ceiling>(unary))
+        else if (is_type<op::Ceiling>(unary))
         {
             runtime::reference::ceiling<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Floor>(unary))
+        else if (is_type<op::Floor>(unary))
         {
             runtime::reference::floor<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Negative>(unary))
-        {
-            runtime::reference::negate<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
-        }
-        else if (std::dynamic_pointer_cast<op::Not>(unary))
+        else if (is_type<op::v1::LogicalNot>(unary))
         {
             runtime::reference::logical_not<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Relu>(unary))
+        else if (is_type<op::Negative>(unary))
+        {
+            runtime::reference::negate<T>(
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
+        }
+        else if (is_type<op::v0::Not>(unary))
+        {
+            runtime::reference::logical_not<T>(
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
+        }
+        else if (is_type<op::Relu>(unary))
         {
             runtime::reference::relu<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Sign>(unary))
+        else if (is_type<op::Round>(unary))
+        {
+            runtime::reference::round<T>(
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
+        }
+        else if (is_type<op::Sign>(unary))
         {
             runtime::reference::sign<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Sqrt>(unary))
+        else if (is_type<op::Sqrt>(unary))
         {
             runtime::reference::sqrt<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else
         {
@@ -121,7 +132,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         }
     }
 
-    return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
+    return make_shared<op::Constant>(constant->get_element_type(), out_shape, buffer.get_ptr<T>());
 }
 
 void pass::ConstantFolding::construct_constant_unary()
@@ -129,8 +140,7 @@ void pass::ConstantFolding::construct_constant_unary()
     auto constant_label = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
     auto is_ue = [](std::shared_ptr<Node> n) {
-        return (pattern::has_class<op::util::UnaryElementwiseArithmetic>()(n) ||
-                pattern::has_class<op::Not>()(n));
+        return n->is_unary_elementwise_arithmetic() || pattern::has_class<op::Not>()(n);
     };
     auto ue = std::make_shared<pattern::op::Any>(constant_label, is_ue, NodeVector{constant_label});
 
@@ -140,7 +150,7 @@ void pass::ConstantFolding::construct_constant_unary()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto constant_match = as_type_ptr<op::Constant>(pattern_map[constant_label]);
         auto unary_match = m.get_match_root();
 
         if (!is_supported_unary_op(unary_match))
@@ -170,6 +180,9 @@ void pass::ConstantFolding::construct_constant_unary()
             break;
         case element::Type_t::dynamic:
             NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_unary_callback");
+            break;
+        case element::Type_t::u1:
+            NGRAPH_CHECK(false, "Encountered 'u1' element type in constant_unary_callback");
             break;
         case element::Type_t::boolean:
             replacement = fold_constant_unary<char>(constant_match, unary_match, func);

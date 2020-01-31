@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,14 +34,14 @@ ngraph::runtime::plaidml::pass::ReplicateElision::ReplicateElision()
         std::make_shared<pattern::op::Skip>(replicate_op, [](std::shared_ptr<Node> node) {
             return pattern::has_class<plaidml::op::Replicate>()(node);
         });
-    auto target_op = std::make_shared<pattern::op::AnyOf>(
-        element::i8,
-        Shape{},
-        [](std::shared_ptr<Node> node) {
-            return pattern::has_class<ngraph::op::util::UnaryElementwiseArithmetic>()(node) ||
-                   pattern::has_class<ngraph::op::util::BinaryElementwiseArithmetic>()(node);
-        },
-        NodeVector{skip_op});
+    auto target_op =
+        std::make_shared<pattern::op::AnyOf>(element::i8,
+                                             Shape{},
+                                             [](std::shared_ptr<Node> node) {
+                                                 return node->is_unary_elementwise_arithmetic() ||
+                                                        node->is_binary_elementwise_arithmetic();
+                                             },
+                                             NodeVector{skip_op});
 
     auto callback = [](pattern::Matcher& m) {
         bool replaced_any = false;

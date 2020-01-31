@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@
 #include <random>
 
 #include "ngraph/shape.hpp"
-#include "ngraph/state/rng_state.hpp"
 
 namespace ngraph
 {
@@ -30,10 +29,10 @@ namespace ngraph
             namespace kernel
             {
                 // Note: this kernel is for doing upscale in train
-                template <typename T>
+                template <typename T, typename M>
                 void generate_dropout(T* input,
                                       T* out0,
-                                      T* out1_mask,
+                                      M* out1_mask,
                                       const size_t nelems,
                                       const bool training,
                                       const double keep_prob,
@@ -44,7 +43,7 @@ namespace ngraph
 
                     {
                         int32_t rnd_seed = rand();
-                        double dropout_prob = 1 - keep_prob;
+                        M dropout_prob = 1 - static_cast<M>(keep_prob);
 #ifdef _OPENMP
                         size_t nthr =
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores();
@@ -78,7 +77,7 @@ namespace ngraph
                             size_t idx_end = std::min(idx_start + chunk_size, nelems);
                             for (size_t idx = idx_start; idx < idx_end; ++idx)
                             {
-                                if (static_cast<T>(gen(msr)) < dropout_prob)
+                                if (static_cast<M>(gen(msr)) < dropout_prob)
                                 {
                                     out1_mask[idx] = 0;
                                     out0[idx] = 0;

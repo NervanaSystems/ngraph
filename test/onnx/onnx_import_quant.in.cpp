@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -84,7 +84,9 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear_axis_zero)
     test_case.add_input(std::vector<float>{1.f, 2.f, 4.f});                    // y_scale
     test_case.add_input(std::vector<std::uint8_t>{0, 0, 0});                   // y_zero_point
 
-    //  std::vector<std::uint8_t>{0, 2, 3, 255, 0, 1, 2, 255, 0, 1, 1, 250}}; <- bad expected output given HALF_TO_EVEN round mode
+    //  std::vector<std::uint8_t>{0, 2, 3, 255, 0, 1, 2, 255, 0, 1, 1, 250}}; <- bad expected output
+    //                                                                           given HALF_TO_EVEN
+    //                                                                           round mode
     test_case.add_expected_output<std::uint8_t>(
         {3, 4}, std::vector<std::uint8_t>{0, 2, 3, 255, 0, 1, 2, 255, 0, 0, 1, 250});
     test_case.run();
@@ -101,7 +103,9 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear_axis_negative)
     test_case.add_input(std::vector<float>{1.f, 2.f, 4.f});                    // y_scale
     test_case.add_input(std::vector<std::uint8_t>{0, 0, 0});                   // y_zero_point
 
-    //  std::vector<std::uint8_t>{0, 2, 3, 255, 0, 1, 2, 255, 0, 1, 1, 250}}; <- bad expected output given HALF_TO_EVEN round mode
+    //  std::vector<std::uint8_t>{0, 2, 3, 255, 0, 1, 2, 255, 0, 1, 1, 250}}; <- bad expected output
+    //                                                                           given HALF_TO_EVEN
+    //                                                                           round mode
     test_case.add_expected_output<std::uint8_t>(
         {3, 4}, std::vector<std::uint8_t>{0, 2, 3, 255, 0, 1, 2, 255, 0, 0, 1, 250});
     test_case.run();

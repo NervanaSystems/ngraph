@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -117,7 +117,9 @@ std::string ngraph::runtime::plaidml::tile_converter(const std::string& tensor_n
     case PLAIDML_DATA_FLOAT16: return "as_float(" + tensor_name + ", 16)";
     case PLAIDML_DATA_FLOAT32: return "as_float(" + tensor_name + ", 32)";
     case PLAIDML_DATA_FLOAT64: return "as_float(" + tensor_name + ", 64)";
-    default: throw std::runtime_error{"Unsupported type conversion"};
+    case PLAIDML_DATA_INVALID:
+    case PLAIDML_DATA_INT128:
+    case PLAIDML_DATA_PRNG: throw std::runtime_error{"Unsupported type conversion"};
     }
 }
 

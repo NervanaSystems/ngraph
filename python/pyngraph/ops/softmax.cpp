@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,10 +24,8 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Softmax(py::module m)
 {
-    py::class_<ngraph::op::Softmax,
-               std::shared_ptr<ngraph::op::Softmax>,
-               ngraph::op::util::UnaryElementwiseArithmetic>
-        softmax(m, "Softmax");
+    py::class_<ngraph::op::Softmax, std::shared_ptr<ngraph::op::Softmax>, ngraph::op::Op> softmax(
+        m, "Softmax");
     softmax.doc() = "ngraph.impl.op.Softmax wraps ngraph::op::Softmax";
     softmax.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&>());
 }

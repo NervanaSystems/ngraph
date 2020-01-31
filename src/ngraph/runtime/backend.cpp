@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,9 +37,7 @@ std::string runtime::Backend::s_backend_shared_library_search_directory;
 // This finds the full path of the containing shared library
 static string find_my_pathname()
 {
-#ifdef NGRAPH_STATIC_LIB_ENABLE
-    return "";
-#else
+#ifdef NGRAPH_DYNAMIC_COMPONENTS_ENABLE
 #ifdef _WIN32
     HMODULE hModule = GetModuleHandleW(L"ngraph.dll");
     WCHAR wpath[MAX_PATH];
@@ -55,6 +53,8 @@ static string find_my_pathname()
     dladdr(reinterpret_cast<void*>(find_my_pathname), &dl_info);
     return dl_info.dli_fname;
 #endif
+#else
+    return "";
 #endif
 }
 
@@ -62,7 +62,8 @@ runtime::Backend::~Backend()
 {
 }
 
-std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string& op_name, ...)
+std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string& /* op_name */,
+                                                               ...)
 {
     std::shared_ptr<ngraph::Node> dummy_node(nullptr);
     return dummy_node;
@@ -89,42 +90,42 @@ vector<string> runtime::Backend::get_registered_devices()
 }
 
 std::shared_ptr<ngraph::runtime::Tensor>
-    runtime::Backend::create_dynamic_tensor(const ngraph::element::Type& element_type,
-                                            const PartialShape& shape)
+    runtime::Backend::create_dynamic_tensor(const ngraph::element::Type& /* element_type */,
+                                            const PartialShape& /* shape */)
 {
     throw std::invalid_argument("This backend does not support dynamic tensors");
 }
 
 std::shared_ptr<runtime::Executable>
     runtime::Backend::compile(std::shared_ptr<Function> func,
-                              ngraph::pass::PassConfig& pass_config,
+                              ngraph::pass::PassConfig& /* pass_config */,
                               bool enable_performance_data)
 {
     return compile(func, enable_performance_data);
 }
 
-bool runtime::Backend::is_supported(const Node& node) const
+bool runtime::Backend::is_supported(const Node& /* node */) const
 {
     // The default behavior is that a backend does not support any ops. If this is not the case
     // then override this method and enhance.
     return false;
 }
 
-bool runtime::Backend::is_supported_property(const Property prop) const
+bool runtime::Backend::is_supported_property(const Property /* prop */) const
 {
     return false;
 }
 
-void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> exec)
+void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> /* exec */)
 {
 }
 
-std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& input_stream)
+std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& /* input_stream */)
 {
     throw runtime_error("load operation unimplemented.");
 }
 
-bool runtime::Backend::is_device_memory(void* ptr)
+bool runtime::Backend::is_device_memory(void* /* ptr */)
 {
     // override this method for each supported backend to determine if the passed pointer is in
     // device pinned memory or not
@@ -146,7 +147,7 @@ const string& runtime::Backend::get_backend_shared_library_search_directory()
     return s_backend_shared_library_search_directory;
 }
 
-bool runtime::Backend::set_config(const map<string, string>& config, string& error)
+bool runtime::Backend::set_config(const map<string, string>& /* config */, string& error)
 {
     error = "set_config not supported";
     return false;
@@ -169,5 +170,6 @@ bool runtime::Backend::executable_can_create_tensors()
     catch (...)
     {
     }
+    remove_compiled_function(exec);
     return exec_can_create_tensors;
 }

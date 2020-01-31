@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,9 +66,9 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     }
     if (m_n_axes != source_axis_order.size())
     {
-        // Note: this check is NOT redundant with the is_permutation check below, though you might think it is.
-        // If the lengths don't match then is_permutation won't catch that; it'll either stop short or walk off
-        // the end of source_axis_order.
+        // Note: this check is NOT redundant with the is_permutation check below, though you might
+        // think it is. If the lengths don't match then is_permutation won't catch that; it'll
+        // either stop short or walk off the end of source_axis_order.
         throw std::domain_error(
             "Source axis order does not have the same number of axes as the source space shape");
     }
@@ -133,7 +133,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
 
     for (size_t i = 0; i < m_n_axes; i++)
     {
-        if (source_start_corner[i] >= padded_upper_bounds[i] &&
+        if (static_cast<int64_t>(source_start_corner[i]) >= padded_upper_bounds[i] &&
             source_start_corner[i] != source_shape[i])
         {
             std::stringstream ss;
@@ -142,7 +142,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
             throw std::domain_error(ss.str());
         }
 
-        if (source_end_corner[i] > padded_upper_bounds[i])
+        if (static_cast<int64_t>(source_end_corner[i]) > padded_upper_bounds[i])
         {
             std::stringstream ss;
 
@@ -321,8 +321,8 @@ Coordinate CoordinateTransform::to_source_coordinate(const Coordinate& c_target)
     return c_source;
 }
 
-// A point in the target space is considered not to have a source coordinate if it was inserted due to
-// padding or dilation, or if it is out of the bounds of the target space.
+// A point in the target space is considered not to have a source coordinate if it was inserted due
+// to padding or dilation, or if it is out of the bounds of the target space.
 bool CoordinateTransform::has_source_coordinate(const Coordinate& c_target) const
 {
     if (c_target.size() != m_n_axes)
@@ -356,8 +356,9 @@ bool CoordinateTransform::has_source_coordinate(const Coordinate& c_target) cons
 
         // If we are in the above-padding, we have no source coordinate.
         if (m_source_shape[source_axis] == 0 ||
-            (pos_depadded >=
-             ((m_source_shape[source_axis] - 1) * m_target_dilation_strides[target_axis]) + 1))
+            (pos_depadded >= ((static_cast<int64_t>(m_source_shape[source_axis]) - 1) *
+                              static_cast<int64_t>(m_target_dilation_strides[target_axis])) +
+                                 1))
         {
             return false;
         }
@@ -402,7 +403,8 @@ CoordinateTransform::Iterator::Iterator(const Shape& target_shape, bool is_end)
 
 void CoordinateTransform::Iterator::operator++()
 {
-    // If we are out of bounds, start over at (0,...0). (TODO: not sure if that's what we want. It might be best to stay put?)
+    // If we are out of bounds, start over at (0,...0). (TODO: not sure if that's what we want. It
+    // might be best to stay put?)
     if (m_oob)
     {
         std::fill(m_coordinate.begin(), m_coordinate.end(), 0);
@@ -426,7 +428,8 @@ void CoordinateTransform::Iterator::operator++()
         }
     }
 
-    // If we are still here there was carry-out from the most significant axis. We are now out of bounds.
+    // If we are still here there was carry-out from the most significant axis. We are now out of
+    // bounds.
     m_oob = true;
 }
 
