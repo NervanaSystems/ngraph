@@ -26,7 +26,6 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/opsets/opset0.hpp"
 #include "utils/convpool.hpp"
 
 namespace ngraph
@@ -127,10 +126,28 @@ namespace ngraph
                             const auto shape_of_conv =
                                 std::make_shared<default_opset::ShapeOf>(ng_conv);
 
+                            const auto rank_of_conv =
+                                static_cast<size_t>(ng_conv->get_output_partial_shape(0).rank());
+
+                            // reshape the bias node to {1, M, 1, 1, ..., 1} matching the rank of
+                            // ng_conv
+                            // this is required so that the following Broadcast can automatically
+                            // handle broadcasting the bias the numpy way
+                            std::vector<size_t> values(rank_of_conv, 1U);
+                            values[1] = static_cast<size_t>(bias->get_output_partial_shape(0)[0]);
+                            const auto reshape_pattern = default_opset::Constant::create(
+                                element::u64, Shape{values.size()}, values);
+
+                            const auto reshaped_bias = std::make_shared<default_opset::Reshape>(
+                                bias, reshape_pattern, true);
+
                             broadcasted_bias = std::make_shared<default_opset::Broadcast>(
-                                bias,
+                                reshaped_bias,
                                 shape_of_conv,
-                                default_opset::Constant::create(element::i64, Shape{1}, {1}));
+                                // the constant below will be ignored
+                                default_opset::Constant::create(element::i64, Shape{}, {1}),
+                                ngraph::op::AutoBroadcastSpec(
+                                    ngraph::op::AutoBroadcastType::NUMPY));
                         }
                         else
                         {

@@ -175,3 +175,15 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, dynamic_rank_input_inference)
         test_case.run();
     }
 }
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, model_conv_with_dynamic_batch)
+{
+    const auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/conv_with_dynamic_batch.prototxt"));
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+    auto executable = backend->compile(function);
+
+    // auto out_tensor = backend->create_dynamic_tensor(function->get_output_element_type(0),
+    //                                                  function->get_output_partial_shape(0));
+}
