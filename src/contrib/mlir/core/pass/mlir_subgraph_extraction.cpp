@@ -110,14 +110,14 @@ void MLIRSubgraphExtractionPass::process_supported_op(std::shared_ptr<ngraph::No
                                                       int current_subgraph_id)
 {
     NodeVector inputs;
-    for (auto pred : node->get_arguments())
+    for (auto pred : node->input_values())
     {
-        int pred_subgraph_id = get_subgraph_id(pred);
+        int pred_subgraph_id = get_subgraph_id(pred.get_node_shared_ptr());
         if (pred_subgraph_id != current_subgraph_id)
         {
             // predecessor doesn't belong to current sub-graph, it is an
             // input
-            inputs.push_back(pred);
+            inputs.push_back(pred.get_node_shared_ptr());
         }
     }
     // add inputs and op to current sub-graph
@@ -282,8 +282,34 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
         auto& outputs = sg.get_outputs();
         auto& nodes = sg.get_nodes();
 
-        OutputVector inputs_vector(inputs.begin(), inputs.end());
-        OutputVector outputs_vector(outputs.begin(), outputs.end());
+        OutputVector inputs_vector;
+        for (auto node : inputs)
+        {
+            Output<Node> value;
+            if (auto goe = as_type_ptr<GetOutputElement>(node))
+            {
+                value = goe->input_value(0);
+            }
+            else
+            {
+                value = node;
+            }
+            inputs_vector.push_back(value);
+        }
+        OutputVector outputs_vector;
+        for (auto node : outputs)
+        {
+            Output<Node> value;
+            if (auto goe = as_type_ptr<GetOutputElement>(node))
+            {
+                value = goe->input_value(0);
+            }
+            else
+            {
+                value = node;
+            }
+            outputs_vector.push_back(value);
+        }
         // must store nodes in topological order
         auto nodes_list = subgraph_topological_sort(nodes);
         NodeVector nodes_vector(nodes_list.begin(), nodes_list.end());
@@ -317,7 +343,7 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
     // Do this after all CK nodes are constructed since they add new edges in the graph (CK inputs)
     for (auto& node : ck_nodes)
     {
-        auto ck = std::static_pointer_cast<CompiledKernel>(node);
+        auto ck = as_type_ptr<CompiledKernel>(node);
 
         auto& outputs_vector = ck->get_kernel_outputs();
         auto& node_list = ck->get_node_list();
@@ -327,7 +353,8 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
         {
             auto output = outputs_vector[i];
             auto ck_output = ck->output(i);
-            for (auto input : output.get_target_inputs())
+            auto inputs = output.get_target_inputs();
+            for (auto input : inputs)
             {
                 input.replace_source_output(ck_output);
             }
@@ -335,7 +362,7 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
     }
     for (auto& node : ck_nodes)
     {
-        auto ck = std::static_pointer_cast<CompiledKernel>(node);
+        auto ck = as_type_ptr<CompiledKernel>(node);
         if (ck->get_output_size() > 1)
         {
             for (auto& old_output : ck->outputs())
@@ -343,7 +370,7 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
                 auto inputs = old_output.get_target_inputs();
                 auto goe_node = old_output.as_single_output_node(false);
                 auto new_output = goe_node->output(0);
-                for (auto& input : inputs)
+                for (auto input : inputs)
                 {
                     input.replace_source_output(new_output);
                 }
@@ -394,12 +421,12 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
         }
 
         // Any input to CK must not have any user in the sub-graph body
-        for (auto& arg : ck_node->get_arguments())
+        for (auto arg : ck_node->input_values())
         {
             bool found = false;
-            for (auto& user : arg->get_users())
+            for (auto& user : arg.get_target_inputs())
             {
-                found = (node_set.find(user) == node_set.end());
+                found = (node_set.find(user.get_node()->shared_from_this()) == node_set.end());
                 if (found)
                 {
                     break;
