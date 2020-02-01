@@ -13,31 +13,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/op/fused/reciprocal.hpp"
 
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/divide.hpp"
+#include <algorithm>
+#include <cinttypes>
+#include <cmath>
+#include <cstdlib>
+#include <random>
+#include <string>
+
+#undef IN_NGRAPH_LIBRARY
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
+#include "util/all_close.hpp"
+#include "util/all_close_f.hpp"
+#include "util/ndarray.hpp"
+#include "util/random.hpp"
+#include "util/test_control.hpp"
+#include "util/test_tools.hpp"
+
+static std::mt19937_64 random_generator;
 
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Reciprocal::type_info;
+static string s_manifest = "test.manifest";
 
-op::Reciprocal::Reciprocal(const Output<Node>& data)
-    : FusedOp({data})
+NGRAPH_TEST(CPU, dummy)
 {
-    constructor_validate_and_infer_types();
-}
-
-NodeVector op::Reciprocal::decompose_op() const
-{
-    auto data = input_value(0);
-    auto one_node = op::Constant::create(data.get_element_type(), data.get_shape(), {1});
-    return {make_shared<op::v1::Divide>(one_node, data)};
-}
-
-shared_ptr<Node> op::Reciprocal::copy_with_new_args(const NodeVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<Reciprocal>(new_args.at(0));
+    ASSERT_TRUE(true);
 }
