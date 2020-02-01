@@ -1490,13 +1490,10 @@ namespace
         if (imagesShape.size() == 3)
         {
             attrs.convAttrs1d.withRelu = convBias.withRelu();
-            for (auto i = 0; i < 1; i++)
-            {
-                attrs.convAttrs1d.windowStrides[i] = strides[i].cast<IntegerAttr>().getInt();
-                attrs.convAttrs1d.windowDilation[i] = dilation[i].cast<IntegerAttr>().getInt();
-                attrs.convAttrs1d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
-                attrs.convAttrs1d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
-            }
+            attrs.convAttrs1d.windowStrides[0] = strides[0].cast<IntegerAttr>().getInt();
+            attrs.convAttrs1d.windowDilation[0] = dilation[0].cast<IntegerAttr>().getInt();
+            attrs.convAttrs1d.padBelow[0] = padBelow[0].cast<IntegerAttr>().getInt();
+            attrs.convAttrs1d.padAbove[0] = padAbove[0].cast<IntegerAttr>().getInt();
         }
         else if (imagesShape.size() == 4)
         {
