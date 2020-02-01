@@ -133,10 +133,12 @@ namespace ngraph
                             // ng_conv
                             // this is required so that the following Broadcast can automatically
                             // handle broadcasting the bias the numpy way
-                            std::vector<size_t> values(rank_of_conv, 1U);
-                            values[1] = static_cast<size_t>(bias->get_output_partial_shape(0)[0]);
+                            std::vector<size_t> reshape_pattern_values(rank_of_conv, 1U);
+                            reshape_pattern_values[1] = bias->get_shape().front();
                             const auto reshape_pattern = default_opset::Constant::create(
-                                element::u64, Shape{values.size()}, values);
+                                element::u64,
+                                Shape{reshape_pattern_values.size()},
+                                reshape_pattern_values);
 
                             const auto reshaped_bias = std::make_shared<default_opset::Reshape>(
                                 bias, reshape_pattern, true);
@@ -201,7 +203,13 @@ namespace ngraph
                     }
                     else
                     {
-                        return {add_bias(conv_node, inputs.at(2))};
+                        const auto bias = inputs.at(2);
+                        const auto bias_ps = bias->get_output_partial_shape(0);
+
+                        NGRAPH_CHECK(bias_ps.is_static() && is_vector(bias_ps.to_shape()),
+                                     "The bias input needs to be a static 1D vector");
+
+                        return {add_bias(conv_node, bias)};
                     }
                 }
 
