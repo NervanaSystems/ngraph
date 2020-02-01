@@ -184,6 +184,28 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, model_conv_with_dynamic_batch)
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
     auto executable = backend->compile(function);
 
-    // auto out_tensor = backend->create_dynamic_tensor(function->get_output_element_type(0),
-    //                                                  function->get_output_partial_shape(0));
+    auto out_tensor = backend->create_dynamic_tensor(function->get_output_element_type(0),
+                                                     function->get_output_partial_shape(0));
+
+    const auto data_shape = Shape{1, 3, 7, 7};
+    const auto filters_shape = Shape{10, 3, 2, 2};
+    const auto data_elems = shape_size(data_shape);
+    const auto filters_elems = shape_size(filters_shape);
+    // conv with batch = 1
+    auto conv_data = backend->create_tensor(element::i64, data_shape);
+    auto conv_filters = backend->create_tensor(element::i64, filters_shape);
+    auto bias = backend->create_tensor(element::i64, Shape{10});
+
+    copy_data<int64_t>(conv_data, std::vector<int64_t>(data_elems, 1));
+    copy_data<int64_t>(conv_filters, std::vector<int64_t>(filters_elems, 1));
+    copy_data<int64_t>(bias, std::vector<int64_t>(10, 1));
+
+    executable->call_with_validate({out_tensor}, {conv_data, conv_filters, bias});
+    const auto results = read_vector<int64_t>(out_tensor);
+
+    const auto expected_out_shape = Shape{1, 10, 6, 6};
+    const std::vector<int64_t> expected_values(shape_size(expected_out_shape), 13);
+
+    EXPECT_EQ(out_tensor->get_shape(), expected_out_shape);
+    EXPECT_TRUE(results == expected_values);
 }
