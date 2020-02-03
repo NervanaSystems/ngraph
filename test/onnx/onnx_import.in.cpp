@@ -1968,23 +1968,3 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mvn_expanded)
          0.0721334f,   -0.38174f,   -1.7799333f});
     test_case.run();
 }
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mvn_model)
-{
-    const auto mvn_fn = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/mvn_model_replaced.prototxt"));
-    auto test_case = ngraph::test::NgraphTestCase(mvn_fn, "${BACKEND_NAME}");
-    test_case.add_input<float>(
-        {0.8439683f,  0.5665144f, 0.05836735f, 0.02916367f, 0.12964272f, 0.5060197f, 0.79538304f,
-         0.9411346f,  0.9546573f, 0.17730942f, 0.46192095f, 0.26480448f, 0.6746842f, 0.01665257f,
-         0.62473077f, 0.9240844f, 0.9722341f,  0.11965699f, 0.41356155f, 0.9129373f, 0.59330076f,
-         0.81929934f, 0.7862604f, 0.11799799f, 0.69248444f, 0.54119414f, 0.07513223f});
-    test_case.add_expected_output<float>(
-        Shape{3, 3, 3, 1},
-        {1.3546423f,   0.33053496f, -1.5450814f, -1.2106764f, -0.8925952f,  0.29888135f,
-         0.38083088f,  0.81808794f, 0.85865635f, -1.1060555f, -0.05552877f, -0.78310335f,
-         0.83281356f,  -1.250282f,  0.67467856f, 0.7669372f,  0.9113869f,   -1.6463585f,
-         -0.23402764f, 1.6092131f,  0.42940593f, 1.2906139f,  1.1860244f,   -0.92945826f,
-         0.0721334f,   -0.38174f,   -1.7799333f});
-    test_case.run();
-}
