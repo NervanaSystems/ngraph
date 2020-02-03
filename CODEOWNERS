@@ -53,6 +53,7 @@ project/doc-contributor-README.rst  @indie
 /src/contrib/mlir/                  @nmostafa @dcaballe
 /src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba
 /src/ngraph/runtime/dynamic/        @diyessi
+/src/ngraph/runtime/gpu/            @csullivan @rkimballn1
 /src/ngraph/runtime/interpreter/    @rkimballn1
 /src/ngraph/runtime/plaidml/        @earhart @dgkutnic
 /src/ngraph/runtime/reference/      @diyessi
