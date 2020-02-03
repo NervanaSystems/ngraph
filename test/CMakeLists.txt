@@ -451,7 +451,7 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
             backend/reverse.in.cpp
             backend/scatter.in.cpp
             backend/select.in.cpp
-            backend/shape_of.in.cpp # - error on GPU
+            backend/shape_of.in.cpp
             backend/sigmoid.in.cpp
             backend/sign.in.cpp
             backend/sin.in.cpp

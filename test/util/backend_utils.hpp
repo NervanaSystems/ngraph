@@ -19,10 +19,8 @@
 #ifdef NGRAPH_UNIT_TEST_OPENVINO_ENABLE
 #include <ie_core.hpp>
 #include <string>
-#include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/opsets/opset.hpp"
-#include "../../../inference-engine/thirdparty/clDNN/common/googletest-fused/gtest/gtest.h"
 
 using namespace std;
 using namespace ngraph;
@@ -78,17 +76,22 @@ public:
     {
         auto opset = ngraph::get_opset1();
         bool all_opset1(true);
-        for (auto &node : func->get_ops()) {
-            if (!opset.contains_op_type(node.get())) all_opset1 = false;
+        for (auto& node : func->get_ops())
+        {
+            if (!opset.contains_op_type(node.get()))
+                all_opset1 = false;
         }
 
-        if (!all_opset1) {
+        if (!all_opset1)
+        {
             std::cout << "UNSUPPORTED OPS DETECTED!" << endl;
             THROW_IE_EXCEPTION << "Exit from test";
         }
-        else {
+        else
+        {
             cout << "Nodes in test: ";
-            for (auto &node : func->get_ops()) {
+            for (auto& node : func->get_ops())
+            {
                 cout << node->get_type_info().name << " ";
             }
             cout << endl;
@@ -100,7 +103,8 @@ public:
     bool call_with_validate(const vector<shared_ptr<ov_runtime::Tensor>>& outputs,
                             const vector<shared_ptr<ov_runtime::Tensor>>& inputs)
     {
-        try {
+        try
+        {
             Core ie;
 
             //  Loading model to the plugin (BACKEND_NAME)
@@ -110,14 +114,16 @@ public:
             //  Prepare input and output blobs
             InputsDataMap inputInfo = network.getInputsInfo();
 
-            if (inputInfo.size() != inputs.size()) {
+            if (inputInfo.size() != inputs.size())
+            {
                 THROW_IE_EXCEPTION << "Function inputs number differ from number of given inputs";
             }
 
             size_t i = 0;
-            for (auto &it : inputInfo) {
+            for (auto& it : inputInfo)
+            {
                 inferRequest.SetBlob(
-                        it.first, fill_blob(it.second->getTensorDesc().getDims(), inputs[i++]->data));
+                    it.first, fill_blob(it.second->getTensorDesc().getDims(), inputs[i++]->data));
             }
 
             //  Prepare output blobs
@@ -126,17 +132,20 @@ public:
             inferRequest.Infer();
             Blob::Ptr output = inferRequest.GetBlob(output_name);
 
-            float *output_ptr = output->buffer().as<float *>();
+            float* output_ptr = output->buffer().as<float*>();
             // TODO: how to get size without explicit calculation?
             size_t size = 1;
-            for (const auto &dim : output->getTensorDesc().getDims()) {
+            for (const auto& dim : output->getTensorDesc().getDims())
+            {
                 size *= dim;
             }
             //  Vector initialization from pointer
             std::vector<float> result(output_ptr, output_ptr + size);
             outputs[0]->data = result;
             return true;
-        } catch(...) {
+        }
+        catch (...)
+        {
             THROW_IE_EXCEPTION << "FAILED";
         }
     }

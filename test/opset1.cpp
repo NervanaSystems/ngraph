@@ -194,8 +194,9 @@ TEST(opset, dump)
 {
     OpSet opset1_copy(get_opset1());
     cout << "All opset1 operations: ";
-    for (const auto & t:opset1_copy.get_types_info()){
-        std::cout<< t.name << " ";
+    for (const auto& t : opset1_copy.get_types_info())
+    {
+        std::cout << t.name << " ";
     }
     cout << endl;
 }
