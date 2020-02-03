@@ -53,7 +53,8 @@ void op::Squeeze::pre_validate_and_infer_types()
     }
     else
     {
-        set_output_type(0, get_input_element_type(0), PartialShape::dynamic(data_rank - axes.size()));
+        set_output_type(
+            0, get_input_element_type(0), PartialShape::dynamic(data_rank - axes.size()));
     }
 }
 
