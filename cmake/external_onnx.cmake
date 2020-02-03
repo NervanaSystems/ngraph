@@ -32,6 +32,7 @@ set(ONNX_GIT_BRANCH rel-${ONNX_VERSION})
 
 add_definitions(-DONNX_BUILD_SHARED_LIBS=ON)
 add_definitions(-DONNX_ML=ON)
+add_definitions(-DONNX_NAMESPACE=ngraph_onnx)
 
 ExternalProject_Add(
     ext_onnx
