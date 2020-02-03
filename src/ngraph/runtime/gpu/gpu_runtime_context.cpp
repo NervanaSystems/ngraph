@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2020 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,31 +13,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/op/fused/reciprocal.hpp"
 
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/divide.hpp"
+#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/gpu_util.hpp"
 
-using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Reciprocal::type_info;
-
-op::Reciprocal::Reciprocal(const Output<Node>& data)
-    : FusedOp({data})
+extern "C" void runtime::gpu::start_stopwatch(GPURuntimeContext* ctx, size_t idx)
 {
-    constructor_validate_and_infer_types();
+    ctx->stopwatch_pool->get(idx).start();
 }
 
-NodeVector op::Reciprocal::decompose_op() const
+extern "C" void runtime::gpu::stop_stopwatch(GPURuntimeContext* ctx, size_t idx)
 {
-    auto data = input_value(0);
-    auto one_node = op::Constant::create(data.get_element_type(), data.get_shape(), {1});
-    return {make_shared<op::v1::Divide>(one_node, data)};
+    ctx->stopwatch_pool->get(idx).stop();
 }
-
-shared_ptr<Node> op::Reciprocal::copy_with_new_args(const NodeVector& new_args) const
+extern "C" size_t runtime::gpu::count_stopwatch(GPURuntimeContext* ctx, size_t idx)
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Reciprocal>(new_args.at(0));
+    return ctx->stopwatch_pool->get(idx).get_call_count();
+}
+extern "C" size_t runtime::gpu::us_stopwatch(GPURuntimeContext* ctx, size_t idx)
+{
+    return ctx->stopwatch_pool->get(idx).get_total_microseconds();
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2020 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,31 +16,34 @@
 
 #pragma once
 
+#include <memory>
+
+#include "ngraph/op/batch_norm.hpp"
+
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/util/fused_op.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Reciprocal operation
-        /// f(x) = 1 / x
-        class NGRAPH_API Reciprocal : public ngraph::op::util::FusedOp
+        namespace gpu
         {
-        public:
-            static constexpr NodeTypeInfo type_info{"Reciprocal", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            Reciprocal() = default;
-            /// \brief Constructs a Reciprocal operation.
-            ///
-            /// \param data Input tensor
-            Reciprocal(const Output<Node>& data);
+            class BatchNormTrainingWithStats : public ngraph::op::BatchNormTraining
+            {
+            public:
+                BatchNormTrainingWithStats(double eps,
+                                           std::shared_ptr<Node> gamma,
+                                           std::shared_ptr<Node> beta,
+                                           std::shared_ptr<Node> input);
 
-            virtual NodeVector decompose_op() const override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
-    } // namespace op
-} // namespace ngraph
+            protected:
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+    }
+}
