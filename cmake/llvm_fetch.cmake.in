@@ -28,12 +28,11 @@ if(NGRAPH_USE_PREBUILT_LLVM)
     message(STATUS "LLVM: Using prebuilt LLVM")
     # Override default LLVM binaries
     if(NOT DEFINED LLVM_TARBALL_URL)
+        set(NGRAPH_LLVM_VERSION 8.0.0)
         if(APPLE)
-            set(NGRAPH_LLVM_VERSION 8.0.0)
             set(LLVM_TARBALL_URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-apple-darwin.tar.xz)
             set(LLVM_SHA1_HASH a5674f2ce5b9ed1b67d92689d319ed3b46d66e29)
         elseif(UNIX AND NOT APPLE)
-            set(NGRAPH_LLVM_VERSION 8.0.0)
             if(EXISTS /etc/lsb-release)
                 execute_process(COMMAND grep DISTRIB_RELEASE /etc/lsb-release OUTPUT_VARIABLE UBUNTU_VER_LINE)
                 string(REGEX MATCH "[0-9.]+" UBUNTU_VER ${UBUNTU_VER_LINE})
@@ -79,6 +78,9 @@ if(NGRAPH_USE_PREBUILT_LLVM)
 else()
     message(STATUS "LLVM: Building LLVM from source")
 
+    set(LLVM_GIT_REPOSITORY https://github.com/llvm/llvm-project.git)
+    set(LLVM_GIT_TAG llvmorg-8.0.0)
+
     # Revert prior changes to make incremental build work.
     set(LLVM_PATCH_REVERT_COMMAND cd @LLVM_PROJECT_ROOT@/llvm/src/ext_llvm && git reset HEAD --hard)
 
@@ -108,8 +110,8 @@ else()
         ExternalProject_Add(
             ext_llvm
             PREFIX llvm
-            GIT_REPOSITORY https://github.com/llvm/llvm-project.git
-            GIT_TAG llvmorg-8.0.0
+            GIT_REPOSITORY ${LLVM_GIT_REPOSITORY}
+            GIT_TAG ${LLVM_GIT_TAG}
             CMAKE_GENERATOR "${CMAKE_GENERATOR}"
             CMAKE_GENERATOR_PLATFORM "${CMAKE_GENERATOR_PLATFORM}"
             CMAKE_GENERATOR_TOOLSET "${CMAKE_GENERATOR_TOOLSET}"
@@ -123,8 +125,8 @@ else()
         ExternalProject_Add(
             ext_llvm
             PREFIX llvm
-            GIT_REPOSITORY https://github.com/llvm/llvm-project.git
-            GIT_TAG llvmorg-8.0.0
+            GIT_REPOSITORY ${LLVM_GIT_REPOSITORY}
+            GIT_TAG ${LLVM_GIT_TAG}
             GIT_SHALLOW 1
             CMAKE_GENERATOR "${CMAKE_GENERATOR}"
             CMAKE_GENERATOR_PLATFORM "${CMAKE_GENERATOR_PLATFORM}"
