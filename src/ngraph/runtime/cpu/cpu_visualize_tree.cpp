@@ -45,10 +45,6 @@ static void visualize_layout_format(const Node& node, ostream& ss)
         {
             return;
         }
-        if (auto reshape = dynamic_cast<const op::Reshape*>(&node))
-        {
-            ss << "\ninput_order=" << reshape->get_input_order();
-        }
 #if MKLDNN_VERSION_MAJOR >= 1
         auto in_md = in_tvl->get_mkldnn_md();
         auto out_md = out_tvl->get_mkldnn_md();

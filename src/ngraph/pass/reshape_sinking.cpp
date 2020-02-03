@@ -30,6 +30,8 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/min.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -106,9 +108,9 @@ static void insert_reshape(shared_ptr<Node> target, shared_ptr<Node> reshape, si
 
 static void delete_reshape(shared_ptr<Node> reshape)
 {
-    NGRAPH_DEBUG << "Removing reshape " << reshape->get_name();
     if (!reshape->get_users().empty())
     {
+        NGRAPH_DEBUG << "Removing reshape " << reshape->get_name();
         ngraph::replace_node(reshape, reshape->get_argument(0));
     }
 }
@@ -508,6 +510,44 @@ static void sink_dequantize(shared_ptr<op::Dequantize> dequantize,
     write_reshapemap(reorders, new_dequantize, arg_reshape);
 }
 
+template <typename T>
+static void sink_reduce(shared_ptr<T> reduce,
+                        ReshapeMap& reorders,
+                        set<shared_ptr<Node>>& reshapes_to_delete)
+{
+    if (reduce->get_reduction_axes().size() > 1)
+    {
+        materialize_shapes(reduce, reorders, reshapes_to_delete);
+    }
+    else
+    {
+        auto arg_reshape = reorders.at(reduce->get_argument(0));
+        auto order = arg_reshape->get_input_order();
+        AxisVector reduced_order(order);
+        reduced_order.erase(
+            std::remove(reduced_order.begin(), reduced_order.end(), order.size() - 1),
+            reduced_order.end());
+        auto def_order = ngraph::get_permutation_to_default_order(order);
+        auto input_shape = ngraph::apply_permutation(arg_reshape->get_shape(), def_order);
+        auto dummy_correct_shape =
+            make_shared<pattern::op::Label>(arg_reshape->get_element_type(), input_shape);
+        AxisSet new_axis_set;
+        for (auto& i : reduce->get_reduction_axes())
+        {
+            new_axis_set.emplace(order[i]);
+        }
+        auto new_reduce = make_shared<T>(dummy_correct_shape, new_axis_set);
+
+        ngraph::replace_node(dummy_correct_shape, reduce->get_argument(0));
+        NGRAPH_DEBUG << "Replacing " << reduce->get_name() << " with " << new_reduce->get_name();
+        ngraph::replace_node(reduce, new_reduce);
+        auto new_reshape = make_reshape(new_reduce, reduced_order, reduce->get_shape());
+        NGRAPH_DEBUG << "Propagating " << describe_reshape(new_reshape) << " for "
+                     << reduce->get_name();
+        write_reshapemap(reorders, new_reduce, new_reshape);
+    }
+}
+
 // The goal of ReshapeSinking is to remove
 // round-trip reshapes(i.e. nhwc->nchw(nchw-only-op)->nhwc)
 // around nchw-only-op (e.g.Convolution, Batchnorm, Avg/MaxPool)
@@ -585,6 +625,14 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
         else if (auto concat = as_type_ptr<op::Concat>(n))
         {
             sink_concat(concat, reorders, reshapes_to_delete);
+        }
+        else if (auto reduce = as_type_ptr<op::Max>(n))
+        {
+            sink_reduce(reduce, reorders, reshapes_to_delete);
+        }
+        else if (auto reduce = as_type_ptr<op::Min>(n))
+        {
+            sink_reduce(reduce, reorders, reshapes_to_delete);
         }
         else
         {

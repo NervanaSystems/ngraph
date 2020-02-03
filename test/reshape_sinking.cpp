@@ -271,3 +271,71 @@ TEST(reshape_sinking, pass_property)
     ASSERT_TRUE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
     ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }
+
+TEST(reshape_sinking, reduce)
+{
+    Shape shape_a{100, 8, 8, 1};
+
+    AxisVector to_nhwc{0, 2, 3, 1};
+    AxisVector to_nchw{0, 3, 1, 2};
+
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
+
+    CoordinateDiff padding_below{0, 0, 0, 0};
+    CoordinateDiff padding_above{0, 1, 1, 0};
+
+    auto reshape1 = make_shared<op::Reshape>(A, to_nchw, Shape{100, 1, 8, 8});
+    auto maxpool =
+        make_shared<op::MaxPool>(reshape1, Shape{1, 1}, Strides{2, 2}, Shape{0, 0}, Shape{0, 0});
+    auto reshape2 = make_shared<op::Reshape>(maxpool, to_nhwc, Shape{100, 4, 4, 1});
+    auto max = make_shared<op::Max>(reshape2, AxisSet{1});
+    auto f = make_shared<Function>(max, ParameterVector{A});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Validate>();
+    size_t before_count = count_ops_of_type<op::Reshape>(f);
+    pass_manager.register_pass<pass::ReshapeSinking>();
+    pass_manager.run_passes(f);
+    size_t before_after = count_ops_of_type<op::Reshape>(f);
+    ASSERT_LE(before_after, before_count);
+}
+
+TEST(reshape_sinking, slice_reduce)
+{
+    Shape shape_a{100, 8, 8, 1};
+
+    AxisVector to_nhwc{0, 2, 3, 1};
+    AxisVector to_nchw{0, 3, 1, 2};
+
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
+
+    CoordinateDiff padding_below{0, 0, 0, 0};
+    CoordinateDiff padding_above{0, 1, 1, 0};
+
+    auto reshape1 = make_shared<op::Reshape>(A, to_nchw, Shape{100, 1, 8, 8});
+    auto maxpool =
+        make_shared<op::MaxPool>(reshape1, Shape{1, 1}, Strides{2, 2}, Shape{0, 0}, Shape{0, 0});
+    auto reshape2 = make_shared<op::Reshape>(maxpool, to_nhwc, Shape{100, 4, 4, 1});
+    auto pad_max = make_shared<op::Max>(reshape2, AxisSet{3});
+    auto pad = make_shared<op::Reshape>(pad_max, AxisVector{0, 1, 2}, reshape2->get_shape());
+    std::cout << *pad;
+    auto slice = make_shared<op::Slice>(
+        pad, Coordinate{0, 1, 1, 0}, Coordinate{100, 4, 4, 1}, Strides{1, 1, 1, 1});
+
+    auto reshape3 = make_shared<op::Reshape>(slice, to_nchw, Shape{100, 1, 3, 3});
+    auto avgpool = make_shared<op::AvgPool>(reshape3, Shape{1, 1}, Strides{2, 2});
+    auto reshape4 = make_shared<op::Reshape>(avgpool, to_nhwc, Shape{100, 1, 2, 2});
+    auto f = make_shared<Function>(reshape4, ParameterVector{A});
+
+    pass::Manager pass_manager;
+    size_t before_count = count_ops_of_type<op::Reshape>(f);
+    pass_manager.register_pass<pass::Validate>();
+    pass_manager.register_pass<pass::ReshapeSinking>();
+    pass_manager.register_pass<pass::ReshapeElimination>();
+    pass_manager.register_pass<pass::CommonSubexpressionElimination>();
+    pass_manager.run_passes(f);
+    size_t before_after = count_ops_of_type<op::Reshape>(f);
+    ASSERT_LE(before_after, before_count);
+}
