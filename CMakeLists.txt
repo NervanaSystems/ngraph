@@ -421,7 +421,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$" AND NOT NGRAPH_BUILD_DI
     include( cmake/clang_4_0_flags.cmake )
 endif()
 
-if (${NGRAPH_WARNINGS_AS_ERRORS})
+if (NOT WIN32 AND ${NGRAPH_WARNINGS_AS_ERRORS})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
 endif()
 
