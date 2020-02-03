@@ -116,6 +116,7 @@ namespace ngraph
                 {
                     const onnx::FunctionProto* proto_func = node_op_schema->GetFunction();
 
+                    // Adding an attribute for the MVN function
                     onnx::NodeProto node_copy = node;
                     auto* node_ptr = m_graph_proto.mutable_node(0);
                     onnx::AttributeProto* axes = node_copy.add_attribute();
@@ -126,11 +127,11 @@ namespace ngraph
                     axes->add_ints(3);
                     *node_ptr = node_copy;
 
-                    onnx::FunctionExpandHelper(node_copy, *proto_func, m_graph_proto);
-                }
-                else
-                {
-                    std::cout << "has no function" << std::endl;
+                    onnx::FunctionExpandHelper(node_copy, *proto_func, gp);
+
+                    // Replacing the function with a subgraph
+                    auto nodes_ptr = m_graph_proto.mutable_node();
+                    *nodes_ptr = gp.node();
                 }
             }
 

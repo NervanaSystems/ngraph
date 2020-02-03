@@ -40,7 +40,7 @@ namespace ngraph
             Model& operator=(Model&&) = delete;
 
             const std::string& get_producer_name() const { return m_model_proto->producer_name(); }
-            // const onnx::GraphProto& get_graph() const { return m_model_proto->graph(); }
+            const onnx::GraphProto& get_graph() const { return m_model_proto->graph(); }
             std::int64_t get_model_version() const { return m_model_proto->model_version(); }
             const std::string& get_producer_version() const
             {
