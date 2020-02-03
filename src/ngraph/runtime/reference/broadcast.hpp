@@ -55,10 +55,14 @@ namespace ngraph
                 }
                 CoordinateTransform input_transform(adjusted_in_shape);
                 CoordinateTransform output_transform(out_shape);
-
+                auto v = adjusted_axes.to_vector();
+              //  std::sort(adjusted_axes.begin(),adjusted_axes.end());
+            //    std::cout << "Output-TransformSize " << output_transform.size() << std::end(); 
                 for (const Coordinate& output_coord : output_transform)
                 {
-                    Coordinate input_coord = reduce(output_coord, adjusted_axes);
+                   // Coordinate input_coord = reduce(output_coord, adjusted_axes);
+                    Coordinate input_coord = reduce_via_vector(output_coord, v);
+                   
                     out[output_transform.index(output_coord)] =
                         arg[input_transform.index(input_coord)];
                 }

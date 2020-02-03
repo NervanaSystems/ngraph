@@ -66,6 +66,10 @@ PartialShape ngraph::reduce(const PartialShape& shape, const AxisSet& deleted_ax
     }
 }
 
+
+
+
+
 template <>
 PartialShape
     ngraph::inject_pairs(const PartialShape& shape,

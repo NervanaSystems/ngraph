@@ -39,6 +39,7 @@ namespace ngraph
     template <>
     PartialShape project(const PartialShape& shape, const AxisSet& axes);
 
+    
     // Removes some values from a vector of axis values
     template <typename AXIS_VALUES>
     AXIS_VALUES reduce(const AXIS_VALUES& axis_values, const AxisSet& deleted_axes)
@@ -56,8 +57,49 @@ namespace ngraph
         return project(axis_values, axes);
     }
 
+    template<class I,class V>
+    I find_in_sorted_less(I b, I e, V v)
+    {
+        while(b!=e)
+        {
+             if( *b > v )
+             {
+                return e;
+             }
+             else if ( *b == v)
+             {
+               return b;
+             } else {    
+               ++b;
+             }
+        }
+        return e;
+    }
+
+
+    template <typename AXIS_VALUES,class V>
+    AXIS_VALUES reduce_via_vector(const AXIS_VALUES& axis_values, const std::vector<V>& deleted_axes)
+    {
+        AxisSet axes;
+
+        for (size_t i = 0; i < axis_values.size(); i++)
+        {
+            if(find_in_sorted_less(deleted_axes.begin(),deleted_axes.end(),i)==deleted_axes.end())
+            {
+                axes.insert(i);
+            }
+        }
+
+        return project(axis_values, axes);
+    }
+
     template <>
     PartialShape reduce(const PartialShape& shape, const AxisSet& deleted_axes);
+
+ 
+
+
+
 
     // TODO: check validity, i.e. that the new axis indices are all less than
     // axis_values.size()+num_new_axes.
