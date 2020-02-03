@@ -30,13 +30,6 @@ namespace ngraph
     ///    indent level specified.
     std::string serialize(std::shared_ptr<ngraph::Function> func, size_t indent = 0);
 
-    /// \brief Serialize given vector of shapes/types
-    /// \param types The vector of shape/types to serialize
-    std::string serialize_types(const std::vector<std::pair<PartialShape, element::Type>>& types);
-    /// \brief Deerialize a string into vector of shapes/types
-    /// \param str The serialized string to deseriailze
-    std::vector<std::pair<PartialShape, element::Type>> deserialize_types(const std::string& str);
-
     /// \brief Serialize a Function to a json file
     /// \param path The path to the output file
     /// \param func The Function to serialize
