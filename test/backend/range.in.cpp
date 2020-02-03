@@ -16,6 +16,7 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/min_max_propagation.hpp"
 #include "util/all_close_f.hpp"
@@ -109,9 +110,6 @@ NGRAPH_TEST(${BACKEND_NAME}, range_subgraph)
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 
     auto handle = backend->compile(f);
-    pass::Manager passes;
-    passes.register_pass<pass::MinMaxShapePropagation>();
-    passes.run_passes(f);
 
     auto t_start = backend->create_tensor(element::i32, Shape{});
     copy_data(t_start, vector<int32_t>{0});
@@ -121,7 +119,7 @@ NGRAPH_TEST(${BACKEND_NAME}, range_subgraph)
     copy_data(t_step, vector<int32_t>{1});
     auto t_start_2 = backend->create_tensor(element::i32, Shape{});
     copy_data(t_start_2, vector<int32_t>{40});
-    auto result = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+    auto result = backend->create_dynamic_tensor(element::i32, out_max_shape_2.to_shape());
 
     vector<int32_t> expected_result{-40, -41, -42, -43, -44};
 

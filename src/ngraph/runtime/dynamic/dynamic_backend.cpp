@@ -30,6 +30,7 @@
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/min_max_propagation.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/shape_relevance.hpp"
 #include "ngraph/specialize_function.hpp"
@@ -78,6 +79,7 @@ runtime::dynamic::DynamicExecutable::DynamicExecutable(shared_ptr<Function> wrap
     , m_enable_performance_collection(enable_performance_collection)
 {
     pass::Manager passes;
+    passes.register_pass<pass::MinMaxShapePropagation>();
     passes.register_pass<pass::ShapeRelevance>();
     passes.run_passes(m_wrapped_function);
 
@@ -241,6 +243,7 @@ bool runtime::dynamic::DynamicExecutable::call(
 
     // TODO: Put compiled executable in the cache.
     auto compiled_executable = m_wrapped_backend->compile(clone, m_enable_performance_collection);
+
     auto result = compiled_executable->call(wrapped_outputs, wrapped_inputs);
 
     return result;
@@ -336,11 +339,6 @@ void runtime::dynamic::DynamicTensor::make_storage(const element::Type& element_
                  element_type,
                  " which is incompatible with dynamic tensor element_type ",
                  get_element_type());
-    NGRAPH_CHECK(get_partial_shape().relaxes(shape),
-                 "tried to make storage with shape ",
-                 shape,
-                 " which is incompatible with dynamic tensor shape ",
-                 get_partial_shape());
     m_wrapped_tensor = m_wrapped_backend->create_tensor(element_type, shape);
 }
 
