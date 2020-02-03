@@ -34,12 +34,26 @@ op::Unsqueeze::Unsqueeze(const Output<Node>& data, const Output<Node>& axes)
 
 void op::Unsqueeze::pre_validate_and_infer_types()
 {
+    auto data = input_value(0);
+    auto data_rank = data.get_partial_shape().rank();
     auto axes_node = input_value(1).get_node_shared_ptr();
 
-    // Currently only support Constant node for axes.
+    // Get value of axes from Constant
+    auto axes_constant = as_type_ptr<op::Constant>(axes_node);
+    auto axes = axes_constant->cast_vector<size_t>();
+
+    NODE_VALIDATION_CHECK(this, !axes.empty(), "'axes' input is mandatory.");
     NODE_VALIDATION_CHECK(this,
-                          axes_node->is_constant(),
-                          "doesn't support 'axes' input of other type than a Constant.");
+                          axes.size() == set<int64_t>(begin(axes), end(axes)).size(),
+                          "'axes' input has a duplicate axis.");
+    if (data_rank.is_dynamic())
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+    }
+    else
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic(data_rank + axes.size()));
+    }
 }
 
 NodeVector op::Unsqueeze::decompose_op() const
