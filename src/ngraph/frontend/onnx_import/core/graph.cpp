@@ -19,11 +19,11 @@
 #include "onnx/proto_utils.h"
 #include "onnx/string_utils.h"
 
-#include <string>
+#include <fstream>
 #include <functional>
 #include <numeric>
 #include <sstream>
-#include <fstream>
+#include <string>
 #include "graph.hpp"
 #include "node.hpp"
 #include "utils/common.hpp"
@@ -98,23 +98,35 @@ namespace ngraph
             }
         } // namespace detail
 
+
         Graph::Graph(const onnx::GraphProto& graph_proto, Model& model)
-            : m_graph_proto{&graph_proto}
+            : m_graph_proto{&graph_proto)
             , m_model{&model}
         {
-             onnx::GraphProto gp;
-           const onnx::OpSchemaRegistry* schema_registry = onnx::OpSchemaRegistry::Instance();
-            for (const auto& node : m_graph_proto.node())
+            onnx::GraphProto gp;
+            const onnx::OpSchemaRegistry* schema_registry = onnx::OpSchemaRegistry::Instance();
+            auto node = m_graph_proto.node();
+
+            for (auto& node : m_graph_proto.node())
             {
-                const auto node_op_schema =
-                    schema_registry->GetSchema(node.op_type(), static_cast<int>(ONNX_OPSET_VERSION), node.domain());
+                const auto node_op_schema = schema_registry->GetSchema(
+                    node.op_type(), static_cast<int>(ONNX_OPSET_VERSION), node.domain());
 
                 if (node_op_schema && node_op_schema->HasFunction())
                 {
                     const onnx::FunctionProto* proto_func = node_op_schema->GetFunction();
 
-                    onnx::FunctionExpandHelper(node, *proto_func, gp);
+                    onnx::NodeProto node_copy = node;
+                    auto* node_ptr = m_graph_proto.mutable_node(0);
+                    onnx::AttributeProto* axes = node_copy.add_attribute();
+                    axes->set_name("axes");
+                    axes->set_type(onnx::AttributeProto::INTS);
+                    axes->add_ints(0);
+                    axes->add_ints(2);
+                    axes->add_ints(3);
+                    *node_ptr = node_copy;
 
+                    onnx::FunctionExpandHelper(node_copy, *proto_func, m_graph_proto);
                 }
                 else
                 {
