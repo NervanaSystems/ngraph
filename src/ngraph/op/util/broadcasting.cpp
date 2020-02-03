@@ -21,8 +21,10 @@
 
 #include "broadcasting.hpp"
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/util.hpp"
 
@@ -274,45 +276,8 @@ namespace ngraph
             return broadcast_node_numpy_style(value, bcast_shape.first, bcast_shape.second[0]);
         }
 
-        NodeVector
-            numpy_style_broadcast_for_matmul_operation(const std::shared_ptr<ngraph::Node>& left,
-                                                       const std::shared_ptr<ngraph::Node>& right)
-        {
-            const auto& left_shape = left->get_shape();
-            const auto& right_shape = right->get_shape();
-            // Broadcast only _stack of matrices_ axes.
-            const auto& numpy_shapes = get_numpy_broadcast_shapes(
-                {Shape{std::begin(left_shape), std::next(std::end(left_shape), -2)},
-                 Shape{std::begin(right_shape), std::next(std::end(right_shape), -2)}});
-
-            // Prepare tensors output shapes with broadcasted _stack of matrices_ axes.
-            auto left_output_shape = numpy_shapes.first;
-            auto right_output_shape = numpy_shapes.first;
-            // Append the last two axes original dimensions.
-            left_output_shape.insert(std::end(left_output_shape),
-                                     std::next(std::begin(left_shape), left_shape.size() - 2),
-                                     std::end(left_shape));
-            right_output_shape.insert(std::end(right_output_shape),
-                                      std::next(std::begin(right_shape), right_shape.size() - 2),
-                                      std::end(right_shape));
-
-            auto left_full_shape = numpy_shapes.second.at(0);
-            auto right_full_shape = numpy_shapes.second.at(1);
-            // Append the last two axes original dimensions.
-            left_full_shape.insert(std::end(left_full_shape),
-                                   std::next(std::begin(left_shape), left_shape.size() - 2),
-                                   std::end(left_shape));
-            right_full_shape.insert(std::end(right_full_shape),
-                                    std::next(std::begin(right_shape), right_shape.size() - 2),
-                                    std::end(right_shape));
-
-            return {broadcast_node_numpy_style(left, left_output_shape, left_full_shape),
-                    broadcast_node_numpy_style(right, right_output_shape, right_full_shape)};
-        }
-
-        OutputVector
-            numpy_style_broadcast_values_for_matmul_operation(const Output<ngraph::Node>& left,
-                                                              const Output<ngraph::Node>& right)
+        OutputVector numpy_style_broadcast_for_matmul_operation(const Output<ngraph::Node>& left,
+                                                                const Output<ngraph::Node>& right)
         {
             const auto& left_shape = left.get_shape();
             const auto& right_shape = right.get_shape();
@@ -346,71 +311,9 @@ namespace ngraph
                     broadcast_node_numpy_style(right, right_output_shape, right_full_shape)};
         }
 
-        NodeVector
-            legacy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
-                                                        const std::shared_ptr<ngraph::Node>& right,
-                                                        std::size_t start_match_axis)
-        {
-            const auto& left_shape = left->get_shape();
-            const auto& right_shape = right->get_shape();
-
-            bool dimensions_identical = (left_shape == right_shape);
-            if (dimensions_identical)
-            {
-                return {left, right};
-            }
-
-            // Prepare new shape of right operand for broadcasting
-            // Remove dimensions with length=1 from back
-            auto new_right_shape = right_shape;
-            for (int dimension = new_right_shape.size() - 1; dimension >= 0; --dimension)
-            {
-                if (new_right_shape[dimension] == 1)
-                {
-                    new_right_shape.pop_back();
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            // Find first dimensions at front with length different from 1
-            std::size_t num_ones = 0;
-            for (std::size_t dimension : new_right_shape)
-            {
-                if (dimension == 1)
-                {
-                    ++num_ones;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            // Remove dimensions with length=1 from front
-            new_right_shape.erase(std::begin(new_right_shape),
-                                  std::next(std::begin(new_right_shape), num_ones));
-
-            auto reshape_right = std::make_shared<ngraph::op::Reshape>(
-                right, ngraph::get_default_order(right_shape), new_right_shape);
-
-            // Move broadcast start axis parameter to right
-            start_match_axis += num_ones;
-
-            auto broadcast_right = std::make_shared<ngraph::op::Broadcast>(
-                reshape_right,
-                left_shape,
-                calculate_broadcast_axes(left_shape, new_right_shape, start_match_axis));
-
-            return {left, broadcast_right};
-        }
-
-        OutputVector
-            legacy_style_broadcast_values_for_binary_operation(const Output<ngraph::Node>& left,
-                                                               const Output<ngraph::Node>& right,
-                                                               size_t start_match_axis)
+        OutputVector legacy_style_broadcast_for_binary_operation(const Output<ngraph::Node>& left,
+                                                                 const Output<ngraph::Node>& right,
+                                                                 size_t start_match_axis)
         {
             const auto& left_shape = left.get_shape();
             const auto& right_shape = right.get_shape();
@@ -514,6 +417,121 @@ namespace ngraph
                       start_match_axis + input_shape.size());
             return result;
         }
+
+        namespace opset1
+        {
+            Output<Node> legacy_style_broadcast_for_binary_operation(const Output<Node>& left,
+                                                                     const Output<Node>& right,
+                                                                     size_t start_match_axis)
+            {
+                const auto& left_shape = left.get_shape();
+                const auto& right_shape = right.get_shape();
+
+                bool dimensions_identical = (left_shape == right_shape);
+                if (dimensions_identical)
+                {
+                    return right;
+                }
+
+                // Prepare new shape of right operand for broadcasting
+                // Remove dimensions with length=1 from back
+                auto new_right_shape = right_shape;
+                for (int dimension = new_right_shape.size() - 1; dimension >= 0; --dimension)
+                {
+                    if (new_right_shape.at(dimension) == 1)
+                    {
+                        new_right_shape.pop_back();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                // Find first dimensions at front with length different from 1
+                std::size_t num_ones = 0;
+                for (std::size_t dimension : new_right_shape)
+                {
+                    if (dimension == 1)
+                    {
+                        ++num_ones;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                // Remove dimensions with length=1 from front
+                new_right_shape.erase(std::begin(new_right_shape),
+                                      std::next(std::begin(new_right_shape), num_ones));
+
+                auto reshape_right = std::make_shared<Reshape>(
+                    right, ngraph::get_default_order(right_shape), new_right_shape);
+
+                // Move broadcast start axis parameter to right
+                start_match_axis += num_ones;
+
+                auto broadcasted_right = std::make_shared<v1::Broadcast>(
+                    reshape_right,
+                    Constant::create(element::i64, Shape{left_shape.size()}, left_shape),
+                    get_axes_mapping_output(left_shape, new_right_shape, start_match_axis));
+
+                return broadcasted_right;
+            }
+
+            std::vector<std::size_t> get_axes_mapping(const Shape& output_shape,
+                                                      const AxisSet& broadcast_axes)
+            {
+                NGRAPH_CHECK((broadcast_axes.size() <= output_shape.size()));
+                std::vector<size_t> axes_mapping(output_shape.size());
+                std::iota(axes_mapping.begin(), axes_mapping.end(), 0);
+                for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); ++i)
+                {
+                    axes_mapping.erase(axes_mapping.begin() + *i);
+                }
+                return axes_mapping;
+            }
+
+            Output<Node> get_axes_mapping_output(const Shape& output_shape,
+                                                 const Shape& input_shape,
+                                                 std::size_t start_match_axis)
+            {
+                NGRAPH_CHECK((input_shape.size() + start_match_axis <= output_shape.size()));
+                std::vector<std::size_t> mapping(input_shape.size());
+                std::iota(std::begin(mapping), std::end(mapping), start_match_axis);
+
+                return Constant::create(element::i64, Shape{mapping.size()}, mapping);
+            }
+
+            Output<Node> get_axes_mapping_output(const Shape& output_shape,
+                                                 const AxisSet& broadcast_axes)
+            {
+                std::vector<size_t> axes_mapping{get_axes_mapping(output_shape, broadcast_axes)};
+                return Constant::create(element::i64, Shape{axes_mapping.size()}, axes_mapping);
+            }
+
+            Output<Node> make_broadcast(const Output<Node>& node,
+                                        const Shape& target_shape,
+                                        const AxisSet& broadcast_axes)
+            {
+                return std::make_shared<v1::Broadcast>(
+                    node,
+                    Constant::create(element::i64, Shape{target_shape.size()}, target_shape),
+                    get_axes_mapping_output(target_shape, broadcast_axes));
+            }
+
+            Output<Node> make_broadcast(const Output<Node>& node,
+                                        const Shape& target_shape,
+                                        std::size_t start_match_axis)
+            {
+                return std::make_shared<v1::Broadcast>(
+                    node,
+                    Constant::create(element::i64, Shape{target_shape.size()}, target_shape),
+                    get_axes_mapping_output(target_shape, node.get_shape(), start_match_axis));
+            }
+
+        } // namespace opset1
 
     } // namespace  op
 
