@@ -29,7 +29,7 @@ constexpr NodeTypeInfo op::DepthToSpace::type_info;
 
 op::DepthToSpace::DepthToSpace(const Output<Node>& data,
                                const DepthToSpaceMode& mode,
-                               const size_t block_size)
+                               const uint64_t block_size)
     : FusedOp({data})
     , m_blocksize(block_size)
     , m_mode(mode)
@@ -39,9 +39,16 @@ op::DepthToSpace::DepthToSpace(const Output<Node>& data,
 
 op::DepthToSpace::DepthToSpace(const Output<Node>& data,
                                const std::string& mode,
-                               const size_t block_size)
+                               const uint64_t block_size)
     : DepthToSpace(data, mode_from_string(mode), block_size)
 {
+}
+
+bool op::DepthToSpace::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("blocksize", m_blocksize);
+    visitor.on_attribute("m_mode", m_mode);
+    return true;
 }
 
 NodeVector op::DepthToSpace::decompose_op() const
@@ -61,10 +68,10 @@ NodeVector op::DepthToSpace::decompose_op() const
         data_shape.insert(data_shape.begin(), 1);
         data = builder::opset1::reshape(data, data_shape);
     }
-    const size_t n_dim = data_shape.at(0);
-    const size_t c_dim = data_shape.at(1);
-    const size_t spatial_dim_index = 2;
-    const size_t spatial_dims = data_shape.size() - spatial_dim_index;
+    const uint64_t n_dim = data_shape.at(0);
+    const uint64_t c_dim = data_shape.at(1);
+    const uint64_t spatial_dim_index = 2;
+    const uint64_t spatial_dims = data_shape.size() - spatial_dim_index;
     const auto c_dim_divider = static_cast<int>(std::pow(m_blocksize, spatial_dims));
 
     NODE_VALIDATION_CHECK(this,
@@ -75,8 +82,8 @@ NodeVector op::DepthToSpace::decompose_op() const
                           "'block_size'^'spatial_dims': ",
                           c_dim_divider);
 
-    auto bs = static_cast<size_t>(m_blocksize);
-    size_t c_flat = c_dim / c_dim_divider;
+    auto bs = static_cast<uint64_t>(m_blocksize);
+    uint64_t c_flat = c_dim / c_dim_divider;
 
     // First we have to disperse the data from depth channel, then rearrange them
     // so as appropriate chunks of data where close to their destination place.
@@ -153,14 +160,28 @@ shared_ptr<Node> op::DepthToSpace::copy_with_new_args(const NodeVector& new_args
     return make_shared<DepthToSpace>(new_args.at(0), m_mode, m_blocksize);
 }
 
+namespace ngraph
+{
+    template <>
+    EnumNames<op::DepthToSpace::DepthToSpaceMode>&
+        EnumNames<op::DepthToSpace::DepthToSpaceMode>::get()
+    {
+        static auto enum_names = EnumNames<op::DepthToSpace::DepthToSpaceMode>(
+            "op::DepthToSpace::DepthToSpaceMode",
+            {{"blocks_first", op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST},
+             {"depth_first", op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::DepthToSpace::DepthToSpaceMode>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::DepthToSpace::DepthToSpaceMode& type)
+    {
+        return s << as_string(type);
+    }
+}
+
 op::DepthToSpace::DepthToSpaceMode op::DepthToSpace::mode_from_string(const std::string& mode) const
 {
-    static const std::map<std::string, DepthToSpaceMode> allowed_values = {
-        {"blocks_first", DepthToSpaceMode::BLOCKS_FIRST},
-        {"depth_first", DepthToSpaceMode::DEPTH_FIRST}};
-
-    NODE_VALIDATION_CHECK(
-        this, allowed_values.count(mode) > 0, "Invalid 'depth_to_space_mode' value passed in.");
-
-    return allowed_values.at(mode);
+    return as_enum<DepthToSpaceMode>(mode);
 }

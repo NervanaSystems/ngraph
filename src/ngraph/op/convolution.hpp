@@ -63,6 +63,7 @@ namespace ngraph
                             const PadType& auto_pad = PadType::EXPLICIT);
 
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -148,6 +149,7 @@ namespace ngraph
                                         const CoordinateDiff& output_padding = {});
 
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;
@@ -214,6 +216,7 @@ namespace ngraph
                                            const CoordinateDiff& pads_end);
 
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -364,6 +367,7 @@ namespace ngraph
                 Convolution(const Output<Node>& data_batch, const Output<Node>& filters);
 
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -452,6 +456,7 @@ namespace ngraph
                                         const Strides& data_dilation_strides_forward);
 
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;
@@ -554,6 +559,7 @@ namespace ngraph
                                            const Strides& data_dilation_strides_forward);
 
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
