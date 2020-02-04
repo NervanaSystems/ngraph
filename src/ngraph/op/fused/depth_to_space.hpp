@@ -18,6 +18,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
@@ -56,13 +57,14 @@ namespace ngraph
                 /// \param block_size The size of the block of values to be moved
                 DepthToSpace(const Output<Node>& data,
                              const DepthToSpaceMode& mode,
-                             std::size_t block_size = 1);
+                             uint64_t block_size = 1);
 
                 DepthToSpace(const Output<Node>& data,
                              const std::string& mode,
-                             std::size_t block_size = 1);
+                             uint64_t block_size = 1);
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
-                std::size_t get_block_size() const { return m_blocksize; }
+                uint64_t get_block_size() const { return m_blocksize; }
                 DepthToSpaceMode get_mode() const { return m_mode; }
                 virtual NodeVector decompose_op() const override;
 
@@ -70,11 +72,28 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
             protected:
-                std::size_t m_blocksize;
+                uint64_t m_blocksize;
                 DepthToSpaceMode m_mode;
                 DepthToSpaceMode mode_from_string(const std::string& mode) const;
             };
         }
+
         using v0::DepthToSpace;
     }
+    std::ostream& operator<<(std::ostream& s, const op::v0::DepthToSpace::DepthToSpaceMode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v0::DepthToSpace::DepthToSpaceMode>
+        : public EnumAttributeAdapterBase<op::v0::DepthToSpace::DepthToSpaceMode>
+    {
+    public:
+        AttributeAdapter(op::v0::DepthToSpace::DepthToSpaceMode& value)
+            : EnumAttributeAdapterBase<op::v0::DepthToSpace::DepthToSpaceMode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v0::DepthToSpace::DepthToSpaceMode>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

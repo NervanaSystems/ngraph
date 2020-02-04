@@ -29,6 +29,11 @@ op::Cosh::Cosh(const Output<Node>& arg)
     constructor_validate_and_infer_types();
 }
 
+bool op::Cosh::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 shared_ptr<Node> op::Cosh::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
