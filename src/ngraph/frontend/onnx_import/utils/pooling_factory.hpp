@@ -78,6 +78,17 @@ namespace ngraph
             /// \brief      Factory class which generates sub-graphs for ONNX 'global' pooling
             ///             operators.
             ///
+            class LocalPoolingFactory : public PoolingFactory
+            {
+            public:
+                explicit LocalPoolingFactory(const Node& node);
+                virtual ~LocalPoolingFactory() = default;
+            };
+
+            ///
+            /// \brief      Factory class which generates sub-graphs for ONNX 'global' pooling
+            ///             operators.
+            ///
             class GlobalPoolingFactory : public PoolingFactory
             {
             public:

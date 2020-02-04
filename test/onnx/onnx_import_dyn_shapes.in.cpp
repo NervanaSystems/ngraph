@@ -175,3 +175,44 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, dynamic_rank_input_inference)
         test_case.run();
     }
 }
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, avg_pool_dyn_shape)
+{
+    // the model contains a single Add operation that takes a fully dynamic input and a scalar
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/average_pool_2d_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const Shape shape{1, 1, 4, 4};
+    const auto elems_in_tensor = shape_size(shape);
+    std::vector<float> input_values(elems_in_tensor);
+    std::iota(input_values.begin(), input_values.end(), 0.f);
+
+    test_case.add_input<float>(shape, input_values);
+
+    std::vector<float> expected_values{2.5f, 4.5f, 10.5f, 12.5f};
+    test_case.add_expected_output<float>(Shape{1, 1, 2, 2}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, max_pool_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/max_pool_2d_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const Shape shape{1, 1, 4, 4};
+    const auto elems_in_tensor = shape_size(shape);
+    std::vector<float> input_values(elems_in_tensor);
+    std::iota(input_values.begin(), input_values.end(), 0.f);
+
+    test_case.add_input<float>(shape, input_values);
+
+    std::vector<float> expected_values{0.f, 2.f, 3.f, 8.f, 10.f, 11.f, 12.f, 14.f, 15.f};
+    test_case.add_expected_output<float>(Shape{1, 1, 3, 3}, expected_values);
+
+    test_case.run();
+}
