@@ -345,7 +345,7 @@ std::vector<std::shared_ptr<ngraph::Node>>
 }
 
 std::list<std::shared_ptr<ngraph::Node>>
-    ngraph::clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes,
+    ngraph::clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes,
                         RawNodeOutputMap& output_map)
 {
     // for each node in topological order

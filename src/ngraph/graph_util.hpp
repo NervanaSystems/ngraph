@@ -401,7 +401,7 @@ namespace ngraph
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
     // NodeMap output (by reference) fully maps input and cloned nodes
     std::list<std::shared_ptr<ngraph::Node>>
-        clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes,
+        clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes,
                     RawNodeOutputMap& node_map);
 
     // input function is cloned and returned
