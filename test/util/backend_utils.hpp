@@ -21,46 +21,53 @@
 #include <string>
 #include "ngraph/ngraph.hpp"
 #include "ngraph/opsets/opset.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
-using namespace std;
-using namespace ngraph;
-using namespace InferenceEngine;
-
-Blob::Ptr fill_blob(SizeVector shape, std::vector<float> data);
+InferenceEngine::Blob::Ptr fill_blob(InferenceEngine::SizeVector shape, std::vector<float> data);
 
 class Handle;
 
+namespace ngraph 
+{
 namespace ov_runtime
 {
     class Backend;
-    class Tensor
+    class Tensor: public ngraph::runtime::Tensor
     {
     public:
-        std::vector<float> data;
-        PartialShape shape;
-        ngraph::element::Type type;
+        std::vector<int8_t> data;
 
-        Shape get_shape() { return shape.to_shape(); }
-        PartialShape get_partial_shape() { return shape; }
-        explicit Tensor(ngraph::element::Type type, PartialShape ps)
-            : type(type)
-            , shape(ps)
+        explicit Tensor(ngraph::element::Type type, PartialShape ps): runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(type, ps, ""))
         {
         }
-        explicit Tensor(ngraph::element::Type type, Shape ps)
-            : type(type)
-            , shape(ps)
+        explicit Tensor(ngraph::element::Type type, Shape ps): runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(type, ps, ""))
         {
         }
 
-        const element::Type& get_element_type() const { return type; }
-        size_t get_element_count() { return shape_size(get_shape()); }
-        void set_stale(bool flag) {}
-        void copy_from(ov_runtime::Tensor t)
-        {
-            data = t.data;
-            shape = t.shape;
-            type = t.type;
+        /// \brief Write bytes directly into the tensor
+        /// \param p Pointer to source of data
+        /// \param n Number of bytes to write, must be integral number of elements.
+        void write(const void* p, size_t n) override {
+            const int8_t* v = (const int8_t*)p;
+            if (v == nullptr)
+                return;
+            data.resize(n);
+            for (size_t i = 0; i < n; ++i)
+            {
+                data[i] = v[i];
+            }
+        }
+        /// \brief Read bytes directly from the tensor
+        /// \param p Pointer to destination for data
+        /// \param n Number of bytes to read, must be integral number of elements.
+        void read(void* p, size_t n) const override {
+            int8_t* v = (int8_t*)p;
+            if (v == nullptr)
+                return;
+            for (size_t i = 0; i < n; ++i)
+            {
+                v[i] = data[i];
+            }
         }
     };
 }
@@ -68,7 +75,7 @@ namespace ov_runtime
 class Executable
 {
 private:
-    CNNNetwork network;
+    InferenceEngine::CNNNetwork network;
     std::string device;
 
 public:
@@ -84,35 +91,35 @@ public:
 
         if (!all_opset1)
         {
-            std::cout << "UNSUPPORTED OPS DETECTED!" << endl;
+            std::cout << "UNSUPPORTED OPS DETECTED!" << std::endl;
             THROW_IE_EXCEPTION << "Exit from test";
         }
         else
         {
-            cout << "Nodes in test: ";
+            std::cout << "Nodes in test: ";
             for (auto& node : func->get_ops())
             {
-                cout << node->get_type_info().name << " ";
+                std::cout << node->get_type_info().name << " ";
             }
-            cout << endl;
+            std::cout << std::endl;
         }
-        network = CNNNetwork(func);
+        network = InferenceEngine::CNNNetwork(func);
         device = _device;
     }
 
-    bool call_with_validate(const vector<shared_ptr<ov_runtime::Tensor>>& outputs,
-                            const vector<shared_ptr<ov_runtime::Tensor>>& inputs)
+    bool call_with_validate(const std::vector<std::shared_ptr<ov_runtime::Tensor>>& outputs,
+                            const std::vector<std::shared_ptr<ov_runtime::Tensor>>& inputs)
     {
         try
         {
-            Core ie;
+            InferenceEngine::Core ie;
 
             //  Loading model to the plugin (BACKEND_NAME)
-            ExecutableNetwork exeNetwork = ie.LoadNetwork(network, device);
+            InferenceEngine::ExecutableNetwork exeNetwork = ie.LoadNetwork(network, device);
             //  Create infer request
-            InferRequest inferRequest = exeNetwork.CreateInferRequest();
+            InferenceEngine::InferRequest inferRequest = exeNetwork.CreateInferRequest();
             //  Prepare input and output blobs
-            InputsDataMap inputInfo = network.getInputsInfo();
+            InferenceEngine::InputsDataMap inputInfo = network.getInputsInfo();
 
             if (inputInfo.size() != inputs.size())
             {
@@ -122,15 +129,18 @@ public:
             size_t i = 0;
             for (auto& it : inputInfo)
             {
-                inferRequest.SetBlob(
-                    it.first, fill_blob(it.second->getTensorDesc().getDims(), inputs[i++]->data));
+                size_t size = inputs[i]->data.size() / sizeof(float);
+                float* orig_data = (float *)inputs[i]->data.data();
+                std::vector<float>data(orig_data, orig_data + size);
+                inferRequest.SetBlob(it.first, fill_blob(it.second->getTensorDesc().getDims(), data));
+                i++;
             }
 
             //  Prepare output blobs
             std::string output_name = network.getOutputsInfo().begin()->first;
 
             inferRequest.Infer();
-            Blob::Ptr output = inferRequest.GetBlob(output_name);
+            InferenceEngine::Blob::Ptr output = inferRequest.GetBlob(output_name);
 
             float* output_ptr = output->buffer().as<float*>();
             // TODO: how to get size without explicit calculation?
@@ -141,7 +151,7 @@ public:
             }
             //  Vector initialization from pointer
             std::vector<float> result(output_ptr, output_ptr + size);
-            outputs[0]->data = result;
+            outputs[0]->write(result.data(), result.size()*sizeof(float));
             return true;
         }
         catch (...)
@@ -151,13 +161,10 @@ public:
     }
 };
 
-template <class T>
-void copy_data(std::shared_ptr<ov_runtime::Tensor> t, const std::vector<T>& data);
-
 class ov_runtime::Backend
 {
 private:
-    string device;
+    std::string device;
 
 public:
     static std::shared_ptr<ov_runtime::Backend> create(std::string device,
@@ -187,8 +194,8 @@ public:
         {
             size *= x;
         }
-        vector<T> v(data, data + size);
-        copy_data(tensor, v);
+        std::vector<T> v(data, data + size);
+        tensor->write(data, size*sizeof(T));
         return tensor;
     }
 
@@ -212,25 +219,6 @@ public:
     }
 };
 
-template <class T>
-std::vector<T> read_vector(std::shared_ptr<ov_runtime::Tensor> tv)
-{
-    std::vector<T> v(tv->data.size());
-    for (size_t i = 0; i < v.size(); ++i)
-    {
-        v[i] = tv->data[i];
-    }
-    return v;
-}
-
-template <class T>
-void copy_data(std::shared_ptr<ov_runtime::Tensor> t, const std::vector<T>& data)
-{
-    t->data.resize(data.size());
-    for (size_t i = 0; i < data.size(); ++i)
-    {
-        t->data[i] = data[i];
-    }
 }
 
 #endif
