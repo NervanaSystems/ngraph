@@ -1464,6 +1464,18 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, top_k_opset_11_const_k_smallest)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_asinh)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/asinh.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>(Shape{1, 3}, {-1.0f, 0.0f, 1.0f});
+    test_case.add_expected_output<float>(Shape{1, 3}, {-0.88137358f, 0.f, 0.88137358f});
+
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sinh)
 {
     auto function =
