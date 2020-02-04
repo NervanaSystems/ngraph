@@ -175,3 +175,15 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, dynamic_rank_input_inference)
         test_case.run();
     }
 }
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, model_asinh)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/asinh_dyn_shape.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+    test_case.add_input<float>(Shape{1, 3}, {-1.0f, 0.0f, 1.0f});
+    test_case.add_expected_output<float>(Shape{1, 3}, {-0.88137358f, 0.f, 0.88137358f});
+
+    test_case.run();
+}
