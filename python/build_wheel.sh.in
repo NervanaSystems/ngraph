@@ -36,7 +36,7 @@ if [ "${PYTHON2_DETECTED}" == 1 ]; then
     cd ${BUILD_DIR}
     virtualenv -p "$(command -v python)" build/venv2
     source build/venv2/bin/activate
-    pip install --upgrade setuptools pip wheel plaidml
+    pip install --upgrade setuptools pip wheel
     python ${SOURCE_DIR}/setup.py bdist_wheel
     deactivate
 fi
@@ -47,7 +47,7 @@ if [ "${PYTHON3_DETECTED}" == 1  ]; then
     cd ${BUILD_DIR}
     virtualenv -p "$(command -v python3)" build/venv3
     source build/venv3/bin/activate
-    pip install --upgrade setuptools pip wheel plaidml
+    pip install --upgrade setuptools pip wheel
     python ${SOURCE_DIR}/setup.py bdist_wheel
     python ${SOURCE_DIR}/setup.py sdist
     deactivate
