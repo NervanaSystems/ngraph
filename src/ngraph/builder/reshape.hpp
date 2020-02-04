@@ -148,6 +148,15 @@ namespace ngraph
             ///
             /// \return     Reshape:v1 op.
             std::shared_ptr<Node> expand_dims(const Output<Node>& value, std::size_t axis = 0);
+
+            /// \brief      Remove empty axes from input tensor.
+            ///
+            /// \param[in]  value  The value to be squeezed.
+            /// \param[in]  axes   The vector defining indexes of axes to be removed.
+            ///
+            /// \return     Reshape:v1 op.
+            std::shared_ptr<Node> squeeze(const Output<Node>& value,
+                                          std::vector<std::size_t> axes = {0});
         }
     } // namespace  builder
 } // namespace  ngraph

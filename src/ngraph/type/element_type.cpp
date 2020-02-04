@@ -40,7 +40,7 @@ const element::Type element::u16(element::Type_t::u16);
 const element::Type element::u32(element::Type_t::u32);
 const element::Type element::u64(element::Type_t::u64);
 
-NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<element::Type>::type_info;
+constexpr DiscreteTypeInfo AttributeAdapter<element::Type>::type_info;
 
 class TypeInfo
 {
@@ -239,9 +239,7 @@ namespace ngraph
 
 std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
 {
-    out << "element::Type{" << obj.bitwidth() << ", " << obj.is_real() << ", " << obj.is_signed()
-        << ", " << obj.is_quantized() << ", \"" << obj.c_type_string() << "\"}";
-    return out;
+    return out << obj.get_type_name();
 }
 
 bool element::Type::compatible(const element::Type& t) const
@@ -280,6 +278,11 @@ bool element::Type::is_static() const
 bool element::Type::is_real() const
 {
     return get_type_info_map().at(m_type).m_is_real;
+}
+
+bool element::Type::is_integral_number() const
+{
+    return is_integral() && (m_type != element::boolean);
 }
 
 bool element::Type::is_signed() const

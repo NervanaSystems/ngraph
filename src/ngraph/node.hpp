@@ -67,6 +67,11 @@ namespace ngraph
         }
     } // namespace op
 
+    namespace pattern
+    {
+        class Matcher;
+    }
+
     using ResultVector = std::vector<std::shared_ptr<op::v0::Result>>;
 
     namespace autodiff
@@ -260,13 +265,16 @@ namespace ngraph
         virtual bool is_constant() const;
         virtual bool is_null() const { return false; }
         virtual bool is_op() const { return false; }
+        virtual bool is_pattern() const { return false; }
         virtual bool is_commutative() const { return false; }
         virtual bool is_dynamic() const;
         virtual bool has_state() const { return false; }
         size_t get_instance_id() const { return m_instance_id; }
-        friend NGRAPH_API std::ostream& operator<<(std::ostream&, const Node&);
-        virtual std::ostream& write_short_description(std::ostream&) const;
-        virtual std::ostream& write_long_description(std::ostream&) const;
+        /// \brief Writes a description of a node to a stream
+        /// \param os The stream; should be returned
+        /// \param depth How many levels of inputs to describe
+        /// \returns The stream os
+        virtual std::ostream& write_description(std::ostream& os, uint32_t depth = 0) const;
 
         std::deque<descriptor::Input>& get_inputs() NGRAPH_DEPRECATED("use inputs() instead")
         {
@@ -304,6 +312,9 @@ namespace ngraph
 
         /// This node becomes a dependent of every node dependent on source_node
         void add_node_control_dependents(std::shared_ptr<Node> source_node);
+
+        /// This node's control dependencies are replaced by replacement
+        void transfer_control_dependents(std::shared_ptr<Node> replacement);
 
         /// Returns the number of outputs from the node.
         size_t get_output_size() const;
@@ -387,6 +398,9 @@ namespace ngraph
         // Will be deprecated
         std::shared_ptr<Node> get_argument(size_t index) const;
 
+        Node* get_input_node_ptr(size_t index) const;
+        std::shared_ptr<Node> get_input_node_shared_ptr(size_t index) const;
+
     protected:
         // Will be replaced with an OutputVector version
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
@@ -448,6 +462,9 @@ namespace ngraph
         // to be used when nodes are replaced
         void merge_provenance_tags_from(const std::shared_ptr<const Node>& source);
 
+        /// Transfer provenance tags to replacement
+        void transfer_provenance_tags(const std::shared_ptr<Node>& replacement);
+
         /// Get all the nodes that uses the current node
         NodeVector get_users(bool check_is_used = false) const;
 
@@ -502,6 +519,10 @@ namespace ngraph
             return m_op_annotations;
         }
 
+        virtual bool match_value(pattern::Matcher* matcher,
+                                 const Output<Node>& pattern_value,
+                                 const Output<Node>& graph_value);
+
     private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
@@ -525,6 +546,9 @@ namespace ngraph
     };
 
     using NodeTypeInfo = Node::type_info_t;
+
+    NGRAPH_API std::ostream& operator<<(std::ostream&, const Node&);
+    NGRAPH_API std::ostream& operator<<(std::ostream&, const Node*);
 
     template <typename NodeType>
     class Input
@@ -722,6 +746,12 @@ namespace ngraph
         /// A null output
         Output() = default;
 
+        void reset()
+        {
+            m_node.reset();
+            m_index = 0;
+        }
+
         /// This output position for a different node
         Output<Node> for_node(const std::shared_ptr<Node>& node) { return Output(node, m_index); }
         /// \return A pointer to the node referred to by this output handle.
@@ -772,6 +802,9 @@ namespace ngraph
         ///
         // TODO(amprocte): Investigate whether this really ought to be public.
         void remove_target_input(const Input<Node>& target_input) const;
+
+        /// \brief Replace all users of this value with replacement
+        void replace(const Output<Node>& replacement);
 
         bool operator==(const Output& other) const
         {
@@ -827,6 +860,12 @@ namespace ngraph
 
         /// A null output
         Output() = default;
+
+        void reset()
+        {
+            m_node.reset();
+            m_index = 0;
+        }
 
         /// This output position for a different node
         Output<const Node> for_node(const std::shared_ptr<const Node>& node)
@@ -889,6 +928,11 @@ namespace ngraph
         size_t m_index{0};
     };
 
+    NGRAPH_API std::ostream& operator<<(std::ostream& out, const Output<Node>& output);
+    NGRAPH_API std::ostream& operator<<(std::ostream& out, const Output<const Node>& output);
+    NGRAPH_API std::ostream& operator<<(std::ostream& out, const Input<Node>& input);
+    NGRAPH_API std::ostream& operator<<(std::ostream& out, const Input<const Node>& input);
+
     inline Output<Node> Input<Node>::get_source_output() const
     {
         auto& output_descriptor = m_node->m_inputs.at(m_index).get_output();
@@ -937,6 +981,40 @@ namespace ngraph
             &(target_input.get_node()->m_inputs.at(target_input.get_index())));
     }
 
+    // Like an Output but with a Node* instead of a shared_ptr<Node>
+    struct RawNodeOutput
+    {
+        RawNodeOutput(const Output<Node>& value)
+            : node(value.get_node())
+            , index(value.get_index())
+        {
+        }
+        RawNodeOutput(const RawNodeOutput&) = default;
+        RawNodeOutput() = default;
+
+        Node* node;
+        size_t index{0};
+
+        operator Output<Node>() { return Output<Node>(node->shared_from_this(), index); }
+        bool operator==(const RawNodeOutput& other) const
+        {
+            return node == other.node && index == other.index;
+        }
+        bool operator!=(const RawNodeOutput& other) const { return !(*this == other); }
+        bool operator<(const RawNodeOutput& other) const
+        {
+            return node < other.node || (node == other.node && index < other.index);
+        }
+        bool operator>(const RawNodeOutput& other) const
+        {
+            return node > other.node || (node == other.node && index > other.index);
+        }
+        bool operator<=(const RawNodeOutput& other) const { return !(*this > other); }
+        bool operator>=(const RawNodeOutput& other) const { return !(*this < other); }
+    };
+
+    using RawNodeOutputMap = std::map<RawNodeOutput, Output<Node>>;
+
     class NodeValidationFailure : public CheckFailure
     {
     public:
@@ -946,25 +1024,6 @@ namespace ngraph
             : CheckFailure(check_loc_info, node_validation_failure_loc_string(node), explanation)
         {
         }
-    };
-
-    class NodeDescription
-    {
-    public:
-        NodeDescription(const Node& node, bool is_short)
-            : m_node(node)
-            , m_is_short(is_short)
-        {
-        }
-
-        friend std::ostream& operator<<(std::ostream& out, const NodeDescription node_description)
-        {
-            return node_description.m_is_short
-                       ? node_description.m_node.write_short_description(out)
-                       : node_description.m_node.write_long_description(out);
-        }
-        const Node& m_node;
-        bool m_is_short;
     };
 }
 #define NODE_VALIDATION_CHECK(node, ...)                                                           \

@@ -49,9 +49,8 @@ namespace ngraph
                 Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
                     : m_element_type(type)
                     , m_shape(shape)
-                    , m_data(new runtime::AlignedBuffer(
-                          std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
-                          host_alignment()))
+                    , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
+                                                        host_alignment()))
                 {
                     NODE_VALIDATION_CHECK(
                         this,
@@ -87,14 +86,14 @@ namespace ngraph
                          Shape shape,
                          const std::vector<std::string>& values);
 
-                /// \brief Constructs a tensor constant with the same initialization value copied
-                ///        across the tensor. This constructor is to support deserialization of
-                ///        constants.
+                /// \brief Constructs a tensor constant with the supplied data
                 ///
                 /// \param type The element type of the tensor constant.
                 /// \param shape The shape of the tensor constant.
                 /// \param data A void* to constant data.
                 Constant(const element::Type& type, const Shape& shape, const void* data);
+
+                Constant(const Constant& other);
 
                 virtual ~Constant() override;
 
@@ -376,11 +375,9 @@ namespace ngraph
                 static constexpr size_t host_alignment() { return 64; }
                 element::Type m_element_type;
                 Shape m_shape{};
-                std::unique_ptr<runtime::AlignedBuffer> m_data;
+                std::shared_ptr<runtime::AlignedBuffer> m_data;
                 bool m_all_elements_bitwise_identical;
                 bool are_all_data_elements_bitwise_identical() const;
-                Constant(const Constant&) = delete;
-                Constant operator=(const Constant&) = delete;
             };
 
             /// \brief A scalar constant whose element type is the same as like.

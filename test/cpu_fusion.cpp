@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "misc.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -122,7 +123,7 @@ TEST(cpu_fusion, gemm_pattern)
     auto pbroadcast = make_shared<op::Broadcast>(b, dot->get_shape(), AxisSet{0});
     auto padd = pdot + pbroadcast;
 
-    TestMatcher n(nullptr);
+    TestMatcher n;
     ASSERT_TRUE(n.match(padd, add));
     ASSERT_EQ(n.get_pattern_map()[W], A);
     ASSERT_EQ(n.get_pattern_map()[x], B);
@@ -1210,7 +1211,7 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
 
 TEST(cpu_fusion, fuse_deconv)
 {
-    bool use_deconv_fuse = (getenv("NGRAPH_DECONV_FUSE") != nullptr);
+    bool use_deconv_fuse = (getenv_bool("NGRAPH_DECONV_FUSE"));
     if (!use_deconv_fuse)
     {
         set_environment("NGRAPH_DECONV_FUSE", "1", 1);

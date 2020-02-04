@@ -20,7 +20,6 @@ add_library(onnx_import_interface OBJECT
         core/node.cpp
         core/node.hpp
         core/operator_set.hpp
-        core/weight.hpp
         onnx.cpp
         onnx.hpp)
 
@@ -214,6 +213,8 @@ add_library(onnx_import STATIC
         op/xor.hpp
         ops_bridge.cpp
         ops_bridge.hpp
+        utils/arg_min_max_factory.cpp
+        utils/arg_min_max_factory.hpp
         utils/common.cpp
         utils/common.hpp
         utils/convpool.cpp

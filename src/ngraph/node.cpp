@@ -27,6 +27,7 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/pattern/matcher.hpp"
 #include "ngraph/placement.hpp"
 
 using namespace std;
@@ -483,7 +484,44 @@ void Node::merge_provenance_tags_from(const std::shared_ptr<const Node>& source)
     }
 }
 
+void Node::transfer_provenance_tags(const shared_ptr<Node>& replacement)
+{
+    auto common_args = ngraph::find_common_args(shared_from_this(), replacement);
+
+    std::set<string> removed_subgraph_tags;
+
+    auto set_replacement_prov = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
+        for (auto tag : node->get_provenance_tags())
+        {
+            removed_subgraph_tags.insert(tag);
+        }
+    };
+
+    traverse_nodes({shared_from_this()}, set_replacement_prov, false, common_args);
+    replacement->add_provenance_tags(removed_subgraph_tags);
+
+    auto set_prov_new_nodes = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
+        node->add_provenance_tags(removed_subgraph_tags);
+    };
+
+    traverse_nodes({replacement}, set_prov_new_nodes, false, common_args);
+}
+
 std::shared_ptr<Node> Node::get_argument(size_t index) const
+{
+    NGRAPH_CHECK(
+        index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
+    return m_inputs[index].get_output().get_node();
+}
+
+Node* Node::get_input_node_ptr(size_t index) const
+{
+    NGRAPH_CHECK(
+        index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
+    return m_inputs[index].get_output().get_node().get();
+}
+
+std::shared_ptr<Node> Node::get_input_node_shared_ptr(size_t index) const
 {
     NGRAPH_CHECK(
         index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
@@ -542,6 +580,12 @@ void Node::add_node_control_dependents(std::shared_ptr<Node> source_node)
     }
 }
 
+void Node::transfer_control_dependents(std::shared_ptr<Node> replacement)
+{
+    replacement->add_node_control_dependents(shared_from_this());
+    clear_control_dependents();
+}
+
 void Node::remove_control_dependency(std::shared_ptr<Node> node)
 {
     {
@@ -589,50 +633,35 @@ const op::AutoBroadcastSpec& Node::get_autob() const
 
 namespace ngraph
 {
-    ostream& operator<<(ostream& out, const Node& node)
-    {
-        return out << NodeDescription(node, false);
-    }
+    ostream& operator<<(ostream& out, const Node& node) { return node.write_description(out, 1); }
+    ostream& operator<<(ostream& out, const Node* node) { return node->write_description(out, 1); }
 }
 
-std::ostream& Node::write_short_description(std::ostream& out) const
+std::ostream& Node::write_description(std::ostream& out, uint32_t depth) const
 {
-    return out << get_name();
-}
-
-static std::string pretty_element_type(const element::Type& et)
-{
-    if (et.is_dynamic())
+    if (depth == 0)
     {
-        return "?";
+        out << get_name();
     }
     else
     {
-        return et.c_type_string();
+        out << "v" << get_type_info().version << "::" << get_type_info().name << " " << get_name()
+            << "(";
+        string sep = "";
+        for (auto arg : input_values())
+        {
+            out << sep << arg;
+            sep = ", ";
+        }
+        out << ") -> (";
+        sep = "";
+        for (size_t i = 0; i < get_output_size(); i++)
+        {
+            out << sep << get_output_element_type(i) << get_output_partial_shape(i);
+            sep = ", ";
+        }
+        out << ")";
     }
-}
-
-std::ostream& Node::write_long_description(std::ostream& out) const
-{
-    out << description() << '[' << get_name() << "](";
-    string sep = "";
-    for (auto arg : get_arguments())
-    {
-        out << sep << NodeDescription(*arg, true) << ": "
-            << pretty_element_type(arg->get_output_element_type(0))
-            << arg->get_output_partial_shape(0);
-        sep = ", ";
-    }
-    out << ") -> (";
-    sep = "";
-    for (size_t i = 0; i < get_output_size(); i++)
-    {
-        out << sep << pretty_element_type(get_output_element_type(i))
-            << get_output_partial_shape(i);
-        sep = ", ";
-    }
-    out << ")";
-
     return out;
 }
 
@@ -930,6 +959,23 @@ void Node::validate_and_infer_elementwise_logical(const op::AutoBroadcastSpec& a
     set_output_type(0, element::boolean, args_pshape);
 }
 
+bool Node::match_value(pattern::Matcher* matcher,
+                       const Output<Node>& pattern_value,
+                       const Output<Node>& graph_value)
+{
+    if (pattern_value.get_index() != graph_value.get_index() ||
+        (matcher->is_strict_mode() &&
+         (!pattern_value.get_element_type().compatible(graph_value.get_element_type()) ||
+          !pattern_value.get_partial_shape().compatible(graph_value.get_partial_shape()))))
+    {
+        return false;
+    }
+
+    matcher->add_node(graph_value);
+    return graph_value.get_node_shared_ptr()->get_type_info() == get_type_info() &&
+           matcher->match_arguments(pattern_value, graph_value);
+}
+
 // default implementation for the node to check if it contains partial shape
 // we will override this method, for the Op's which depends on additional shape
 // attribute to determine if node contains partial shape or not
@@ -943,6 +989,49 @@ bool Node::is_dynamic() const
         }
     }
     return false;
+}
+
+namespace ngraph
+{
+    std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
+    {
+        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
+                                                            << "]:" << output.get_element_type()
+                                                            << output.get_partial_shape();
+    }
+
+    std::ostream& operator<<(std::ostream& out, const Output<const Node>& output)
+    {
+        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
+                                                            << "]:" << output.get_element_type()
+                                                            << output.get_partial_shape();
+    }
+
+    std::ostream& operator<<(std::ostream& out, const Input<Node>& input)
+    {
+        return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
+                                                           << "):" << input.get_element_type()
+                                                           << input.get_partial_shape();
+    }
+
+    std::ostream& operator<<(std::ostream& out, const Input<const Node>& input)
+    {
+        return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
+                                                           << "):" << input.get_element_type()
+                                                           << input.get_partial_shape();
+    }
+
+    void Output<Node>::replace(const Output<Node>& replacement)
+    {
+        for (auto& input : get_target_inputs())
+        {
+            // GOEs are used as handles in passes
+            if (!is_type<op::GetOutputElement>(input.get_node()))
+            {
+                input.replace_source_output(replacement);
+            }
+        }
+    }
 }
 
 Input<Node> Node::input(size_t input_index)

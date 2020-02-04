@@ -16,9 +16,6 @@
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     add_subdirectory(onnx_import)
-    if (NGRAPH_ONNXIFI_ENABLE)
-        add_subdirectory(onnxifi)
-    endif()
 endif()
 
 option(NGRAPH_FLUID_ENABLE "Enable build for PaddlePaddle Fluid support" ON)
@@ -30,4 +27,15 @@ if (NGRAPH_FLUID_ENABLE)
     NORMALIZE_BOOL(NGRAPH_FLUID_TEST_ENABLE)
     message(STATUS "NGRAPH_FLUID_TEST_ENABLE:             ${NGRAPH_FLUID_TEST_ENABLE}")
     add_subdirectory(fluid)
+endif()
+
+option(NGRAPH_ATEN_ENABLE "Enable build for PyTorch ATen support" OFF)
+NORMALIZE_BOOL(NGRAPH_ATEN_ENABLE)
+message(STATUS "NGRAPH_ATEN_ENABLE:                   ${NGRAPH_ATEN_ENABLE}")
+
+if (NGRAPH_ATEN_ENABLE)
+    option(NGRAPH_ATEN_TEST_ENABLE "Enable PaddlePaddle Fluid operator tests" OFF)
+    NORMALIZE_BOOL(NGRAPH_ATEN_TEST_ENABLE)
+    message(STATUS "NGRAPH_ATEN_TEST_ENABLE:              ${NGRAPH_ATEN_TEST_ENABLE}")
+    add_subdirectory(ATen)
 endif()
