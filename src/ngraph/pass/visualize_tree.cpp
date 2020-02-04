@@ -377,7 +377,7 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
             label << " " << (node->get_output_size() != 1
                                  ? string("[skipped]")
                                  : pretty_partial_shape(node->get_output_partial_shape(0)));
-            if (auto reshape = dynamic_cast<const op::Reshape*>(&(*node)))
+            if (auto reshape = as_type_ptr<op::Reshape>(node))
             {
                 label << "\ninput_order=" << reshape->get_input_order();
             }

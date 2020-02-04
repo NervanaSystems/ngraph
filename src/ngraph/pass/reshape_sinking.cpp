@@ -539,11 +539,10 @@ static void sink_reduce(shared_ptr<T> reduce,
         auto new_reduce = make_shared<T>(dummy_correct_shape, new_axis_set);
 
         ngraph::replace_node(dummy_correct_shape, reduce->get_argument(0));
-        NGRAPH_DEBUG << "Replacing " << reduce->get_name() << " with " << new_reduce->get_name();
+        NGRAPH_DEBUG << "Replacing " << reduce << " with " << new_reduce;
         ngraph::replace_node(reduce, new_reduce);
         auto new_reshape = make_reshape(new_reduce, reduced_order, reduce->get_shape());
-        NGRAPH_DEBUG << "Propagating " << describe_reshape(new_reshape) << " for "
-                     << reduce->get_name();
+        NGRAPH_DEBUG << "Propagating " << describe_reshape(new_reshape) << " for " << reduce;
         write_reshapemap(reorders, new_reduce, new_reshape);
     }
 }
