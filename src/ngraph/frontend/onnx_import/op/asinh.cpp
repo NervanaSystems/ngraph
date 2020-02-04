@@ -39,40 +39,15 @@ namespace ngraph
                     // asinh(x) = ln(x + sqrt(x^2 + 1))
                     //
 
-                    if (data->get_output_partial_shape(0).is_static())
-
-                    {
-                        std::shared_ptr<ngraph::Node> one_node{default_opset::Constant::create(
-                        data->get_element_type(),
-                        data->get_shape(),
-                        std::vector<float>(ngraph::shape_size(data->get_shape()), 1.f))};
-
-                        std::shared_ptr<ngraph::Node> sqrt_node{
-                        std::make_shared<default_opset::Sqrt>(data * data + one_node)};
-
-                        return {std::make_shared<default_opset::Log>(data + sqrt_node)};
-                    }
-                    else
-                    {
-                        const auto one_node = default_opset::Constant::create(
+                        const auto one = default_opset::Constant::create(
                             data->get_element_type(), {}, {1.f});
-                        
-                        // const auto shape_of_data =
-                        //         std::make_shared<default_opset::ShapeOf>(data->get_output_partial_shape(0));
-                                
 
-                        // const auto broadcasted_ones = std::make_shared<default_opset::Broadcast>(
-                        //         one_node, shape_of_data);
-                                                        
-                        const auto data_power = std::make_shared<default_opset::Multiply>(data, data);
-                        const auto sqrt_args = std::make_shared<default_opset::Add>(data_power, one_node);
+                        const auto data_square = std::make_shared<default_opset::Multiply>(data, data);
+                        const auto sqrt_args = std::make_shared<default_opset::Add>(data_square, one);
                         const auto sqrt_node = std::make_shared<default_opset::Sqrt>(sqrt_args);
                         const auto log_args = std::make_shared<default_opset::Add>(data, sqrt_node);
 
                         return {std::make_shared<default_opset::Log>(log_args)};
-                    }
-
-
                 }
 
             } // namespace set_1
