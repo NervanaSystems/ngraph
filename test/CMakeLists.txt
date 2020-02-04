@@ -599,10 +599,6 @@ if (NGRAPH_NOP_ENABLE)
     target_link_libraries(unit-test PRIVATE nop_backend)
 endif()
 
-if (NGRAPH_GPUH_ENABLE)
-    target_link_libraries(unit-test PRIVATE gpuh_backend)
-endif()
-
 if (NGRAPH_MLIR_ENABLE)
     target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
 endif()
