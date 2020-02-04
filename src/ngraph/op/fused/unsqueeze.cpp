@@ -38,6 +38,7 @@ void op::Unsqueeze::pre_validate_and_infer_types()
     auto data_rank = data.get_partial_shape().rank();
     auto axes_node = input_value(1).get_node_shared_ptr();
 
+    // Currently only support Constant node for axes.
     NODE_VALIDATION_CHECK(this,
                           axes_node->is_constant(),
                           "doesn't support 'axes' input of other type than a Constant.");
