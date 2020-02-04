@@ -44,8 +44,7 @@ using namespace mlir;
 using namespace mlir::edsc;
 using namespace mlir::edsc::op;
 
-#define PASS_NAME "fuse-ngraph-dialect"
-#define DEBUG_TYPE "mlir-compiler"
+#define DEBUG_TYPE "fuse-ngraph-dialect"
 
 namespace mlir
 {
@@ -79,15 +78,9 @@ namespace
     {
     public:
         NgDialectFusedOpsPass() {}
-        NgDialectFusedOpsPass(const NgDialectFusedOpsPass& obj);
-
     private:
         void runOnModule() override;
     };
-}
-
-NgDialectFusedOpsPass::NgDialectFusedOpsPass(const NgDialectFusedOpsPass& obj)
-{
 }
 
 void NgDialectFusedOpsPass::runOnModule()
@@ -111,4 +104,4 @@ std::unique_ptr<Pass> ngraph::pass::createNgDialectFusedOpsPass()
 }
 
 static PassRegistration<NgDialectFusedOpsPass>
-    pass(PASS_NAME, "Fuse ngraph dialct based on the pattern match");
+    pass(DEBUG_TYPE, "Fuse ngraph dialct based on the pattern match");

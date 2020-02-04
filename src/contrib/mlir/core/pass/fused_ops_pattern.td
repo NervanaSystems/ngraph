@@ -13,24 +13,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-//
-// This is the nGraph Dialect operation definition file.
-//
 //===----------------------------------------------------------------------===//
-
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
-
-include "mlir/IR/OpBase.td"
-include "core/ngraph_dialect/ops.td"
-
-// nGraph Dialect pattern match definitions for fused Op's
 //
-// This files declares nGraph fused operations that table-gen uses to create C++ code
-// For more information about tablegen. See https://llvm.org/docs/TableGen/index.html
+// nGraph Dialect pattern match definitions for fused Op's using DRR
+//
+// This files declares nGraph fused operations that table-gen uses to create 
+// C++ code. For more information about tablegen, 
+// See https://llvm.org/docs/TableGen/index.html
 //
 // The output file fused_ops_pattern.h.inc is generated at build time
 // Each def will corresponding to a C++ class
+
+// NOTE: This file follows nGraph format style and MLIR naming convention since 
+// it does not expose public API to the rest of nGraph codebase and heavily 
+// depends on MLIR API.
+//
+//===----------------------------------------------------------------------===//
+
+include "mlir/IR/OpBase.td"
+include "core/ngraph_dialect/ops.td"
 
 // Native code call to c++ helper funnction to create SGEMM Op
 def createSgemmOp :  NativeCodeCall<"createSgemmOp($_builder, $0.getDefiningOp(), $1, $2, $3)">;
