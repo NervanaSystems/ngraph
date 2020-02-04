@@ -34,28 +34,13 @@ op::Squeeze::Squeeze(const Output<Node>& data, const Output<Node>& axes)
 
 void op::Squeeze::pre_validate_and_infer_types()
 {
-    auto data = input_value(0);
-    auto data_rank = data.get_partial_shape().rank();
     auto axes_node = input_value(1).get_node_shared_ptr();
-
     // Currently only support Constant node for axes.
     NODE_VALIDATION_CHECK(this,
                           axes_node->is_constant(),
                           "doesn't support 'axes' input of other type than a Constant.");
 
-    // Get value of axes from Constant
-    auto axes_constant = as_type_ptr<op::Constant>(axes_node);
-    auto axes = axes_constant->cast_vector<size_t>();
-
-    if (data_rank.is_dynamic() or axes.empty())
-    {
-        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
-    }
-    else
-    {
-        set_output_type(
-            0, get_input_element_type(0), PartialShape::dynamic(data_rank - axes.size()));
-    }
+    set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 }
 
 NodeVector op::Squeeze::decompose_op() const
