@@ -156,7 +156,7 @@ namespace ngraph
             ///
             /// \return     Reshape:v1 op.
             std::shared_ptr<Node> squeeze(const Output<Node>& value,
-                                          std::vector<std::int64_t> axes = {0});
+                                          std::vector<std::size_t> axes = {0});
         }
     } // namespace  builder
 } // namespace  ngraph

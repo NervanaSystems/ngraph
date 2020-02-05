@@ -20,6 +20,7 @@
 
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/provenance.hpp"
@@ -106,25 +107,10 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Broadcast> node)
     {
-        auto result_shape = node->get_broadcast_shape();
-        auto result_shape_node =
-            op::Constant::create(element::i64, Shape{result_shape.size()}, result_shape);
-        auto broadcast_axes = node->get_broadcast_axes();
-
-        // Flip broadcast_axes to get axes_mapping
-        std::vector<size_t> axes_mapping(result_shape.size());
-        std::iota(axes_mapping.begin(), axes_mapping.end(), 0);
-        for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); i++)
-        {
-            axes_mapping.erase(axes_mapping.begin() + *i);
-        }
-        auto axes_mapping_node =
-            op::Constant::create(element::i64, Shape{axes_mapping.size()}, axes_mapping);
-
-        auto replacement_node = make_shared<op::v1::Broadcast>(
-            node->input_value(0), result_shape_node->output(0), axes_mapping_node->output(0));
-        replace_node(node, replacement_node);
-        return replacement_node;
+        auto replacement_node = ngraph::op::opset1::make_broadcast(
+            node->input_value(0), node->get_broadcast_shape(), node->get_broadcast_axes());
+        replace_node(node, replacement_node.get_node_shared_ptr());
+        return replacement_node.get_node_shared_ptr();
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::BroadcastLike> node) { return nullptr; }
@@ -423,7 +409,7 @@ namespace
         auto kernel = node->get_window_shape();
 
         shared_ptr<Node> replacement_node;
-        if (node->get_inputs().size() == 3)
+        if (node->get_input_size() == 3)
         {
             replacement_node = make_shared<op::v1::MaxPoolBackprop>(node->input_value(0),
                                                                     node->input_value(1),
@@ -656,7 +642,7 @@ namespace
         {
         case op::TopK::SortType::SORT_INDICES: sort = "index"; break;
         case op::TopK::SortType::SORT_VALUES: sort = "value"; break;
-        default: sort = "none"; break;
+        case op::TopK::SortType::NONE: sort = "none"; break;
         }
 
         std::string mode;
