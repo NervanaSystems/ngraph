@@ -306,6 +306,9 @@ namespace ngraph
         /// This node becomes a dependent of every node dependent on source_node
         void add_node_control_dependents(std::shared_ptr<Node> source_node);
 
+        /// This node's control dependencies are replaced by replacement
+        void transfer_control_dependents(std::shared_ptr<Node> replacement);
+
         /// Returns the number of outputs from the node.
         size_t get_output_size() const;
 
@@ -441,6 +444,9 @@ namespace ngraph
 
         // to be used when nodes are replaced
         void merge_provenance_tags_from(const std::shared_ptr<const Node>& source);
+
+        /// Transfer provenance tags to replacement
+        void transfer_provenance_tags(const std::shared_ptr<Node>& replacement);
 
         /// Get all the nodes that uses the current node
         NodeVector get_users(bool check_is_used = false) const;
@@ -776,6 +782,9 @@ namespace ngraph
         // TODO(amprocte): Investigate whether this really ought to be public.
         void remove_target_input(const Input<Node>& target_input) const;
 
+        /// \brief Replace all users of this value with replacement
+        void replace(const Output<Node>& replacement);
+
         bool operator==(const Output& other) const
         {
             return m_node == other.m_node && m_index == other.m_index;
@@ -946,6 +955,40 @@ namespace ngraph
         m_node->m_outputs.at(m_index).remove_input(
             &(target_input.get_node()->m_inputs.at(target_input.get_index())));
     }
+
+    // Like an Output but with a Node* instead of a shared_ptr<Node>
+    struct RawNodeOutput
+    {
+        RawNodeOutput(const Output<Node>& value)
+            : node(value.get_node())
+            , index(value.get_index())
+        {
+        }
+        RawNodeOutput(const RawNodeOutput&) = default;
+        RawNodeOutput() = default;
+
+        Node* node;
+        size_t index{0};
+
+        operator Output<Node>() { return Output<Node>(node->shared_from_this(), index); }
+        bool operator==(const RawNodeOutput& other) const
+        {
+            return node == other.node && index == other.index;
+        }
+        bool operator!=(const RawNodeOutput& other) const { return !(*this == other); }
+        bool operator<(const RawNodeOutput& other) const
+        {
+            return node < other.node || (node == other.node && index < other.index);
+        }
+        bool operator>(const RawNodeOutput& other) const
+        {
+            return node > other.node || (node == other.node && index > other.index);
+        }
+        bool operator<=(const RawNodeOutput& other) const { return !(*this > other); }
+        bool operator>=(const RawNodeOutput& other) const { return !(*this < other); }
+    };
+
+    using RawNodeOutputMap = std::map<RawNodeOutput, Output<Node>>;
 
     class NodeValidationFailure : public CheckFailure
     {

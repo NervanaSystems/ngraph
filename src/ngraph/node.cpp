@@ -470,6 +470,29 @@ void Node::merge_provenance_tags_from(const std::shared_ptr<const Node>& source)
     }
 }
 
+void Node::transfer_provenance_tags(const shared_ptr<Node>& replacement)
+{
+    auto common_args = ngraph::find_common_args(shared_from_this(), replacement);
+
+    std::set<string> removed_subgraph_tags;
+
+    auto set_replacement_prov = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
+        for (auto tag : node->get_provenance_tags())
+        {
+            removed_subgraph_tags.insert(tag);
+        }
+    };
+
+    traverse_nodes({shared_from_this()}, set_replacement_prov, false, common_args);
+    replacement->add_provenance_tags(removed_subgraph_tags);
+
+    auto set_prov_new_nodes = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
+        node->add_provenance_tags(removed_subgraph_tags);
+    };
+
+    traverse_nodes({replacement}, set_prov_new_nodes, false, common_args);
+}
+
 std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     NGRAPH_CHECK(
@@ -541,6 +564,12 @@ void Node::add_node_control_dependents(std::shared_ptr<Node> source_node)
     {
         node->add_control_dependency(shared_from_this());
     }
+}
+
+void Node::transfer_control_dependents(std::shared_ptr<Node> replacement)
+{
+    replacement->add_node_control_dependents(shared_from_this());
+    clear_control_dependents();
 }
 
 void Node::remove_control_dependency(std::shared_ptr<Node> node)
@@ -976,6 +1005,18 @@ namespace ngraph
         return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
                                                            << "):" << input.get_element_type()
                                                            << input.get_partial_shape();
+    }
+
+    void Output<Node>::replace(const Output<Node>& replacement)
+    {
+        for (auto& input : get_target_inputs())
+        {
+            // GOEs are used as handles in passes
+            if (!is_type<op::GetOutputElement>(input.get_node()))
+            {
+                input.replace_source_output(replacement);
+            }
+        }
     }
 }
 
