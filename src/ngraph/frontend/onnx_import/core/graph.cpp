@@ -103,8 +103,10 @@ namespace ngraph
             : m_graph_proto{&graph_proto)
             , m_model{&model}
         {
-            for (auto& node : m_graph_proto.node())
+            for (int i = 0; i < m_graph_proto.node().size(); ++i)
             {
+                auto node = m_graph_proto.node()[i];
+
                 const onnx::OpSchemaRegistry* schema_registry = onnx::OpSchemaRegistry::Instance();
                 const auto node_op_schema = schema_registry->GetSchema(
                     node.op_type(), static_cast<int>(ONNX_OPSET_VERSION), node.domain());
@@ -114,11 +116,10 @@ namespace ngraph
                     onnx::GraphProto gp;
 
                     const onnx::FunctionProto* proto_func = node_op_schema->GetFunction();
-                    onnx::FunctionExpandHelper(node, *proto_func, gp);
+                    onnx::FunctionExpandHelper(node, *proto_func, m_graph_proto);
 
-                    // Replacing the function with a subgraph
-                   auto nodes_ptr = m_graph_proto.mutable_node();
-                    *nodes_ptr = gp.node();
+                    // Removing node with function.
+                    m_graph_proto.mutable_node()->erase(m_graph_proto.node().begin() + i);
                 }
             }
 
