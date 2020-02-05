@@ -29,7 +29,7 @@ constexpr NodeTypeInfo op::DepthToSpace::type_info;
 
 op::DepthToSpace::DepthToSpace(const Output<Node>& data,
                                const DepthToSpaceMode& mode,
-                               const uint64_t block_size)
+                               const size_t block_size)
     : FusedOp({data})
     , m_blocksize(block_size)
     , m_mode(mode)
@@ -39,7 +39,7 @@ op::DepthToSpace::DepthToSpace(const Output<Node>& data,
 
 op::DepthToSpace::DepthToSpace(const Output<Node>& data,
                                const std::string& mode,
-                               const uint64_t block_size)
+                               const size_t block_size)
     : DepthToSpace(data, mode_from_string(mode), block_size)
 {
 }

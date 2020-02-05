@@ -57,14 +57,14 @@ namespace ngraph
                 /// \param block_size The size of the block of values to be moved
                 DepthToSpace(const Output<Node>& data,
                              const DepthToSpaceMode& mode,
-                             uint64_t block_size = 1);
+                             size_t block_size = 1);
 
                 DepthToSpace(const Output<Node>& data,
                              const std::string& mode,
-                             uint64_t block_size = 1);
+                             size_t block_size = 1);
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
-                uint64_t get_block_size() const { return m_blocksize; }
+                size_t get_block_size() const { return m_blocksize; }
                 DepthToSpaceMode get_mode() const { return m_mode; }
                 virtual NodeVector decompose_op() const override;
 
@@ -72,7 +72,7 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
             protected:
-                uint64_t m_blocksize;
+                size_t m_blocksize;
                 DepthToSpaceMode m_mode;
                 DepthToSpaceMode mode_from_string(const std::string& mode) const;
             };

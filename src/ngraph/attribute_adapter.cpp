@@ -201,6 +201,26 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
+#ifndef _WIN32
+    // size_t is a uint type on WIN32
+    constexpr DiscreteTypeInfo AttributeAdapter<size_t>::type_info;
+    const int64_t& AttributeAdapter<size_t>::get()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = m_value;
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+#endif
+
+    void AttributeAdapter<size_t>::set(const int64_t& value)
+    {
+        m_value = value;
+        m_buffer_valid = false;
+    }
+
     constexpr DiscreteTypeInfo AttributeAdapter<vector<int64_t>>::type_info;
 
     const vector<int64_t>& AttributeAdapter<vector<int64_t>>::get() { return m_value; }
