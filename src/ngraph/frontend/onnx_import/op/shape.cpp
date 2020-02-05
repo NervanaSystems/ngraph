@@ -32,11 +32,20 @@ namespace ngraph
             {
                 NodeVector shape(const Node& node)
                 {
-                    auto data = node.get_ng_inputs().at(0);
-                    auto data_shape = data->get_shape();
+                    const auto data = node.get_ng_inputs().at(0);
+                    const auto data_ps = data->get_input_partial_shape(0);
 
-                    return {std::make_shared<default_opset::Constant>(
-                        ngraph::element::i64, Shape{data_shape.size()}, data_shape)};
+                    if (data_ps.is_static())
+                    {
+                        const auto data_shape = data_ps.to_shape();
+
+                        return {default_opset::Constant::create(
+                            ngraph::element::i64, Shape{data_shape.size()}, data_shape)};
+                    }
+                    else
+                    {
+                        return {std::make_shared<default_opset::ShapeOf>(data)};
+                    }
                 }
 
             } // namespace set_1
