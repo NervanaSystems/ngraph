@@ -102,34 +102,21 @@ namespace ngraph
             : m_graph_proto{graph_proto}
             , m_model{&model}
         {
-            onnx::GraphProto gp;
-            const onnx::OpSchemaRegistry* schema_registry = onnx::OpSchemaRegistry::Instance();
-            auto node = m_graph_proto.node();
-
             for (auto& node : m_graph_proto.node())
             {
+                const onnx::OpSchemaRegistry* schema_registry = onnx::OpSchemaRegistry::Instance();
                 const auto node_op_schema = schema_registry->GetSchema(
                     node.op_type(), static_cast<int>(ONNX_OPSET_VERSION), node.domain());
 
                 if (node_op_schema && node_op_schema->HasFunction())
                 {
+                    onnx::GraphProto gp;
+
                     const onnx::FunctionProto* proto_func = node_op_schema->GetFunction();
-
-                    // Adding an attribute for the MVN function
-                    onnx::NodeProto node_copy = node;
-                    auto* node_ptr = m_graph_proto.mutable_node(0);
-                    onnx::AttributeProto* axes = node_copy.add_attribute();
-                    axes->set_name("axes");
-                    axes->set_type(onnx::AttributeProto::INTS);
-                    axes->add_ints(0);
-                    axes->add_ints(2);
-                    axes->add_ints(3);
-                    *node_ptr = node_copy;
-
-                    onnx::FunctionExpandHelper(node_copy, *proto_func, gp);
+                    onnx::FunctionExpandHelper(node, *proto_func, gp);
 
                     // Replacing the function with a subgraph
-                    auto nodes_ptr = m_graph_proto.mutable_node();
+                   auto nodes_ptr = m_graph_proto.mutable_node();
                     *nodes_ptr = gp.node();
                 }
             }
