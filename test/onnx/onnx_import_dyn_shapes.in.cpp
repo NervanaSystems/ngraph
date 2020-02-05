@@ -175,3 +175,45 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, dynamic_rank_input_inference)
         test_case.run();
     }
 }
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, arg_max_dyn_shape)
+{
+    // the model contains a single Add operation that takes a fully dynamic input and a scalar
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/argmax_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const Shape shape{3, 2, 2};
+    const auto elems_in_tensor = shape_size(shape);
+    std::vector<int32_t> input_values(elems_in_tensor);
+    std::iota(input_values.begin(), input_values.end(), 1);
+
+    test_case.add_input<int32_t>(shape, input_values);
+
+    std::vector<int64_t> expected_values{1, 1, 1, 1, 1, 1};
+    test_case.add_expected_output<int64_t>(Shape{3, 1, 2}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, arg_min_dyn_shape)
+{
+    // the model contains a single Add operation that takes a fully dynamic input and a scalar
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/argmin_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const Shape shape{3, 2, 2};
+    const auto elems_in_tensor = shape_size(shape);
+    std::vector<int32_t> input_values(elems_in_tensor);
+    std::iota(input_values.begin(), input_values.end(), 1);
+
+    test_case.add_input<int32_t>(shape, input_values);
+
+    std::vector<int64_t> expected_values{0, 0, 0, 0};
+    test_case.add_expected_output<int64_t>(Shape{2, 2}, expected_values);
+
+    test_case.run();
+}

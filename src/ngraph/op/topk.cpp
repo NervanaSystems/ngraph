@@ -20,6 +20,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -235,6 +236,7 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const element::Type& index_element_type)
     : Op{{data, k}}
     , m_axis{axis}
+    , m_normalized_axis{0}
     , m_mode{mode_from_string(mode)}
     , m_sort{sort_type_from_string(sort)}
     , m_index_element_type{index_element_type}
@@ -250,6 +252,7 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const element::Type& index_element_type)
     : Op{{data, k}}
     , m_axis{axis}
+    , m_normalized_axis{0}
     , m_mode{mode}
     , m_sort{sort}
     , m_index_element_type{index_element_type}
@@ -277,20 +280,26 @@ void op::v1::TopK::validate_and_infer_types()
                                       get_input_element_type(1));
     }
 
+    if (m_axis >= 0)
+    {
+        m_normalized_axis = m_axis;
+    }
+    else
+    {
+        NODE_VALIDATION_CHECK(this,
+                              input_partial_shape.rank().is_static(),
+                              "Rank must be static in order to normalize negative axis");
+        m_normalized_axis =
+            ngraph::normalize_axis(this, m_axis, static_cast<int64_t>(input_partial_shape.rank()));
+    }
+
     PartialShape output_shape{input_partial_shape};
 
     if (output_shape.rank().is_static())
     {
-        NODE_VALIDATION_CHECK(
-            this,
-            m_axis >= 0 && static_cast<size_t>(m_axis) < static_cast<size_t>(output_shape.rank()),
-            "TopK axis (",
-            m_axis,
-            ") is out of bounds.");
-
         if (k != 0)
         {
-            output_shape[m_axis] = k;
+            output_shape[m_normalized_axis] = k;
         }
     }
 
@@ -403,7 +412,7 @@ size_t op::v1::TopK::get_k() const
 
     if (k == 0 && get_input_partial_shape(0).is_static())
     {
-        k = get_input_partial_shape(0).to_shape()[m_axis];
+        k = get_input_partial_shape(0).to_shape()[m_normalized_axis];
     }
     return k;
 }

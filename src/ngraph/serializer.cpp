@@ -4672,7 +4672,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::TopK_v1:
     {
         const auto tmp = static_cast<const op::v1::TopK*>(&n);
-        node["axis"] = tmp->get_axis();
+        node["axis"] = tmp->get_origin_axis();
         node["mode"] = tmp->get_mode();
         node["sort_type"] = tmp->get_sort_type();
         node["index_element_type"] = write_element_type(tmp->get_index_element_type());

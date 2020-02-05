@@ -29,12 +29,9 @@ namespace ngraph
         {
             ArgMinMaxFactory::ArgMinMaxFactory(const Node& node)
                 : m_keep_dims{node.get_attribute_value<std::int64_t>("keepdims", 1)}
+                , m_axis{node.get_attribute_value<std::int64_t>("axis", 0)}
             {
                 m_input_node = node.get_ng_inputs().at(0);
-
-                const auto axis = node.get_attribute_value<std::int64_t>("axis", 0);
-                m_normalized_axis = ngraph::normalize_axis(
-                    node.get_description(), axis, m_input_node->get_shape().size());
             }
 
             std::shared_ptr<ngraph::Node> ArgMinMaxFactory::make_arg_max() const
@@ -52,19 +49,15 @@ namespace ngraph
             {
                 const auto k_node =
                     default_opset::Constant::create(ngraph::element::i64, Shape{}, {1});
-                const auto topk =
-                    std::make_shared<default_opset::TopK>(m_input_node,
-                                                          k_node,
-                                                          m_normalized_axis,
-                                                          mode,
-                                                          default_opset::TopK::SortType::NONE);
+                const auto topk = std::make_shared<default_opset::TopK>(
+                    m_input_node, k_node, m_axis, mode, default_opset::TopK::SortType::NONE);
 
                 const auto indices = std::make_shared<ngraph::opset0::GetOutputElement>(topk, 1);
 
                 if (m_keep_dims == 0)
                 {
-                    const auto reshaped_indices = ngraph::builder::opset1::squeeze(
-                        indices, {static_cast<std::size_t>(m_normalized_axis)});
+                    const auto reshaped_indices =
+                        ngraph::builder::opset1::squeeze(indices, {topk->get_axis()});
                     return std::make_shared<default_opset::Convert>(reshaped_indices, element::i64);
                 }
                 return std::make_shared<default_opset::Convert>(indices, element::i64);
