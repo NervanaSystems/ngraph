@@ -34,7 +34,7 @@ namespace ngraph
             class NGRAPH_API StridedSlice : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"Slice", 1};
+                static constexpr NodeTypeInfo type_info{"StridedSlice", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 StridedSlice() = default;
 
