@@ -201,7 +201,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-#ifndef __APPLE__
+#ifdef __APPLE__
     // size_t is not uint_64t on OSX
     constexpr DiscreteTypeInfo AttributeAdapter<size_t>::type_info;
     const int64_t& AttributeAdapter<size_t>::get()
