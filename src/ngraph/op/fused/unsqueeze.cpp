@@ -47,6 +47,11 @@ void op::Unsqueeze::pre_validate_and_infer_types()
     auto axes_constant = as_type_ptr<op::Constant>(axes_node);
     auto axes = axes_constant->cast_vector<size_t>();
 
+    NODE_VALIDATION_CHECK(this, !axes.empty(), "'axes' input is mandatory.");
+    NODE_VALIDATION_CHECK(this,
+                          axes.size() == set<int64_t>(begin(axes), end(axes)).size(),
+                          "'axes' input has a duplicate axis.");
+
     if (data.get_partial_shape().is_dynamic())
     {
         set_output_type(0,
@@ -56,12 +61,7 @@ void op::Unsqueeze::pre_validate_and_infer_types()
     }
 
     auto data_shape = data.get_shape();
-
-    NODE_VALIDATION_CHECK(this, !axes.empty(), "'axes' input is mandatory.");
-    NODE_VALIDATION_CHECK(this,
-                          axes.size() == set<int64_t>(begin(axes), end(axes)).size(),
-                          "'axes' input has a duplicate axis.");
-
+    
     sort(begin(axes), end(axes), less<int64_t>());
 
     AxisVector input_order{ngraph::get_default_order(data_shape.size())};
