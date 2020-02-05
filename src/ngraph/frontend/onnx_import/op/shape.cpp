@@ -33,7 +33,7 @@ namespace ngraph
                 NodeVector shape(const Node& node)
                 {
                     const auto data = node.get_ng_inputs().at(0);
-                    const auto data_ps = data->get_input_partial_shape(0);
+                    const auto data_ps = data->get_output_partial_shape(0);
 
                     if (data_ps.is_static())
                     {
