@@ -61,7 +61,7 @@ void op::Unsqueeze::pre_validate_and_infer_types()
     }
 
     auto data_shape = data.get_shape();
-    
+
     sort(begin(axes), end(axes), less<int64_t>());
 
     AxisVector input_order{ngraph::get_default_order(data_shape.size())};
