@@ -16,6 +16,7 @@
 
 #include <fstream>
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -158,7 +159,7 @@ static std::string label_edge(const std::shared_ptr<Node>& /* src */,
                               int64_t jump_distance)
 {
     std::stringstream ss;
-    if (getenv("NGRAPH_VISUALIZE_EDGE_LABELS") != nullptr)
+    if (getenv_bool("NGRAPH_VISUALIZE_EDGE_LABELS"))
     {
         size_t output = 0;
         if (auto goe = as_type_ptr<op::GetOutputElement>(dst))
@@ -170,7 +171,7 @@ static std::string label_edge(const std::shared_ptr<Node>& /* src */,
         ss << label_edge.str();
     }
 
-    else if (getenv("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE") != nullptr)
+    else if (getenv_bool("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE"))
     {
         if (jump_distance > 1)
         {
@@ -201,10 +202,10 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
         }
 
         auto nodes = topological_sort(f->get_ops());
-        nodes.reverse();
 
-        for (auto& node : nodes)
+        for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
         {
+            auto& node = *it;
             for (auto& output : node->outputs())
             {
                 for (auto& input : output.get_target_inputs())
@@ -367,8 +368,8 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
         stringstream label;
         label << "label=\"" << get_node_name(node);
 
-        static const char* nvtos = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
-        if (nvtos != nullptr)
+        static const bool nvtos = getenv_bool("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
+        if (nvtos)
         {
             // The shapes of the Outputs of a multi-output op
             // will be printed for its corresponding `GetOutputElement`s
@@ -377,8 +378,8 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
                                  : pretty_partial_shape(node->get_output_partial_shape(0)));
         }
 
-        static const char* nvtot = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
-        if (nvtot != nullptr)
+        static const bool nvtot = getenv_bool("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
+        if (nvtot)
         {
             // The types of the Outputs of a multi-output op
             // will be printed for its corresponding `GetOutputElement`s

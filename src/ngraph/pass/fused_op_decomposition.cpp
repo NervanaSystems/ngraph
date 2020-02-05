@@ -16,6 +16,7 @@
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/provenance.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -36,20 +37,24 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
             // Op supported by backend. Do not decompose
             return modified;
         }
-        // Capture the input values as a base for provenance
-        OutputVector base_input_values;
-        for (auto value : node->input_values())
-        {
-            base_input_values.push_back(value);
-        }
         auto subgraph_outputs = node->decompose_op();
-        // Transfer the new provenance tags to the newly created ops
-        auto provenance_tags = node->get_provenance_tags();
-        for (auto subgraph : subgraph_outputs)
+
+        if (ngraph::get_provenance_enabled())
         {
-            subgraph->add_provenance_tags_above(base_input_values, provenance_tags);
+            // Capture the input values as an edge for provenance
+            auto base_input_values = node->input_values();
+            auto provenance_tags = node->get_provenance_tags();
+            const std::string tag = "<Decomposed from " + std::string(node->get_type_name()) + ">";
+            provenance_tags.insert(tag);
+
+            // Transfer the new provenance tags to the newly created ops
+            for (auto output_node : subgraph_outputs)
+            {
+                output_node->add_provenance_tags_above(base_input_values, provenance_tags);
+            }
         }
-        // Run recursively untill no more fused ops
+
+        // Run recursively until no more fused ops
         auto subgraph = extract_subgraph(subgraph_outputs, node->get_arguments());
         for (auto subgraph_node : subgraph)
         {
@@ -61,7 +66,6 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
         {
             for (size_t j = 0; j < output_node->get_outputs().size(); j++, i++)
             {
-                // TODO: Provenance
                 set<descriptor::Input*> fop_users{begin(node->get_outputs().at(i).get_inputs()),
                                                   end(node->get_outputs().at(i).get_inputs())};
                 for (auto fop_user : fop_users)
