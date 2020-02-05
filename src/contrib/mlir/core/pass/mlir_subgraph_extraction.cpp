@@ -325,27 +325,16 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
 
         for (size_t i = 0, end = outputs_vector.size(); i < end; ++i)
         {
-            outputs_vector.at(i).replace(node->output(i));
-        }
-    }
-    for (auto& node : ck_nodes)
-    {
-        auto ck = std::static_pointer_cast<CompiledKernel>(node);
-        if (ck->get_output_size() > 1)
-        {
-            for (auto& old_output : ck->outputs())
+            auto inputs = outputs_vector.at(i).get_target_inputs();
+            for (auto input : inputs)
             {
-                auto inputs = old_output.get_target_inputs();
-                auto goe_node = old_output.as_single_output_node(false);
-                auto new_output = goe_node->output(0);
-                for (auto& input : inputs)
+                if (node_set.find(input.get_node()->shared_from_this()) == node_set.end())
                 {
-                    input.replace_source_output(new_output);
+                    input.replace_source_output(node->output(i));
                 }
             }
         }
     }
-
     return ck_nodes;
 }
 
