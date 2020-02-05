@@ -22,7 +22,11 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 SET(JSON_GIT_REPO_URL https://github.com/nlohmann/json)
-SET(JSON_GIT_LABEL v3.5.0)
+if(WIN32)
+    SET(JSON_GIT_LABEL v3.5.0)
+else()
+    SET(JSON_GIT_LABEL v3.7.3)
+endif()
 
 ExternalProject_Add(
     ext_json

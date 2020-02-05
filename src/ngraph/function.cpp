@@ -96,7 +96,7 @@ void Function::init()
                    true /*include control dependencies*/);
 }
 
-std::list<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps) const
+std::vector<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps) const
 {
     NodeVector nodes;
     for (auto& r : get_results())
@@ -132,7 +132,7 @@ void Function::map_unordered_ops(std::function<void(Node*)> f) const
             f(op);
             for (size_t i = 0; i < op->get_input_size(); ++i)
             {
-                remaining_ops.push(op->input(i).get_source_output().get_node());
+                remaining_ops.push(op->get_input_node_ptr(i));
             }
             for (auto& cdep : op->get_control_dependencies())
             {
@@ -223,9 +223,9 @@ shared_ptr<Node> Function::get_result() const
     return m_results.at(0);
 }
 
-std::list<shared_ptr<Node>> Function::get_ops(bool include_control_deps) const
+std::vector<shared_ptr<Node>> Function::get_ops(bool include_control_deps) const
 {
-    std::list<std::shared_ptr<Node>> ops;
+    std::vector<std::shared_ptr<Node>> ops;
     traverse_nodes(this, [&](shared_ptr<Node> node) { ops.push_back(node); }, include_control_deps);
     return ops;
 }

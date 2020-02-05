@@ -107,7 +107,7 @@ bool pass::ShapeRelevance::run_on_function(std::shared_ptr<Function> f)
                 {
                     continue;
                 }
-                auto source_node = node->input(i).get_source_output().get_node();
+                auto source_node = node->get_input_node_ptr(i);
                 if (already_visited.count(source_node) == 0)
                 {
                     to_visit.push_front(source_node);
