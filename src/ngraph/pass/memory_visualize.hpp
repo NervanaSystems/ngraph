@@ -38,15 +38,15 @@ public:
 
 private:
     std::unordered_set<const descriptor::Tensor*>
-        find_largest_op(const std::list<std::shared_ptr<Node>>& nodes);
-    void draw_tensor_weight(std::ostream& file, const std::list<std::shared_ptr<Node>>& nodes);
-    void draw_histogram(std::ostream& file, const std::list<std::shared_ptr<Node>>& nodes);
-    void draw_op_influence(std::ostream& file, const std::list<std::shared_ptr<Node>>& nodes);
+        find_largest_op(const std::vector<std::shared_ptr<Node>>& nodes);
+    void draw_tensor_weight(std::ostream& file, const std::vector<std::shared_ptr<Node>>& nodes);
+    void draw_histogram(std::ostream& file, const std::vector<std::shared_ptr<Node>>& nodes);
+    void draw_op_influence(std::ostream& file, const std::vector<std::shared_ptr<Node>>& nodes);
     int compute_op_weight(std::shared_ptr<Node> exop);
 
     static size_t memory_usage(std::shared_ptr<Node>);
     static size_t memory_footprint(std::shared_ptr<Node>);
-    static size_t memory_footprint(const std::list<std::shared_ptr<Node>>&);
+    static size_t memory_footprint(const std::vector<std::shared_ptr<Node>>&);
 
     const std::string m_filename;
 };
