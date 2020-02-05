@@ -49,9 +49,9 @@ void op::Unsqueeze::pre_validate_and_infer_types()
 
     if (data.get_partial_shape().is_dynamic())
     {
-        set_output_type(
-                0, get_input_element_type(0),
-                PartialShape::dynamic(data.get_partial_shape().rank() + axes.size()));
+        set_output_type(0,
+                        get_input_element_type(0),
+                        PartialShape::dynamic(data.get_partial_shape().rank() + axes.size()));
         return;
     }
 
@@ -69,7 +69,7 @@ void op::Unsqueeze::pre_validate_and_infer_types()
     for (auto axis : axes)
     {
         NODE_VALIDATION_CHECK(
-                this, axis <= data_shape.size(), "provided 'axes' value ", axis, " is not valid.");
+            this, axis <= data_shape.size(), "provided 'axes' value ", axis, " is not valid.");
 
         data_shape.insert(next(begin(data_shape), axis), 1);
     }
