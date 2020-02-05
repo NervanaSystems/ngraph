@@ -109,6 +109,8 @@ namespace ngraph
         bool operator>(const Output& other) const;
         bool operator<=(const Output& other) const;
         bool operator>=(const Output& other) const;
+        void eliminate_goe();
+        void eliminate_goe(size_t index);
 
     private:
         std::shared_ptr<Node> m_node;
@@ -176,6 +178,8 @@ namespace ngraph
         bool operator>(const Output& other) const;
         bool operator<=(const Output& other) const;
         bool operator>=(const Output& other) const;
+        void eliminate_goe();
+        void eliminate_goe(size_t index);
 
     private:
         std::shared_ptr<const Node> m_node;
