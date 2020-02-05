@@ -55,10 +55,7 @@ namespace ngraph
                 if (v == nullptr)
                     return;
                 data.resize(n);
-                for (size_t i = 0; i < n; ++i)
-                {
-                    data[i] = v[i];
-                }
+                std::copy(v, v + n, data.begin());
             }
             /// \brief Read bytes directly from the tensor
             /// \param p Pointer to destination for data
@@ -68,10 +65,9 @@ namespace ngraph
                 int8_t* v = (int8_t*)p;
                 if (v == nullptr)
                     return;
-                for (size_t i = 0; i < n; ++i)
-                {
-                    v[i] = data[i];
-                }
+                if (n > data.size())
+                    n = data.size();
+                std::copy(data.begin(), data.begin() + n, v);
             }
         };
     }
@@ -90,10 +86,10 @@ namespace ngraph
             for (auto& node : func->get_ops())
             {
                 if (!opset.contains_op_type(node.get()))
-                    {
-                        all_opset1 = false;
-                        break;
-                    }
+                {
+                    all_opset1 = false;
+                    break;
+                }
             }
 
             if (!all_opset1)
@@ -101,15 +97,12 @@ namespace ngraph
                 std::cout << "UNSUPPORTED OPS DETECTED!" << std::endl;
                 THROW_IE_EXCEPTION << "Exit from test";
             }
-            else
+            std::cout << "Nodes in test: ";
+            for (auto& node : func->get_ops())
             {
-                std::cout << "Nodes in test: ";
-                for (auto& node : func->get_ops())
-                {
-                    std::cout << node->get_type_info().name << " ";
-                }
-                std::cout << std::endl;
+                std::cout << node->get_type_info().name << " ";
             }
+            std::cout << std::endl;
             network = InferenceEngine::CNNNetwork(func);
             device = _device;
         }
@@ -211,8 +204,7 @@ namespace ngraph
         template <class T>
         std::shared_ptr<ov_runtime::Tensor> create_tensor(ngraph::Shape shape)
         {
-            return std::make_shared<ov_runtime::Tensor>(
-     	                ngraph::element::from<T>(), shape);
+            return std::make_shared<ov_runtime::Tensor>(ngraph::element::from<T>(), shape);
         }
 
         std::shared_ptr<ov_runtime::Tensor> create_dynamic_tensor(ngraph::element::Type type,
