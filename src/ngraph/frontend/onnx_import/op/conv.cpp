@@ -121,7 +121,7 @@ namespace ngraph
                     {
                         std::shared_ptr<ngraph::Node> broadcasted_bias;
 
-                        if (ng_conv->is_dynamic())
+                        if (ng_conv->get_output_partial_shape(0).is_dynamic())
                         {
                             const auto shape_of_conv =
                                 std::make_shared<default_opset::ShapeOf>(ng_conv);
@@ -144,12 +144,7 @@ namespace ngraph
                                 bias, reshape_pattern, true);
 
                             broadcasted_bias = std::make_shared<default_opset::Broadcast>(
-                                reshaped_bias,
-                                shape_of_conv,
-                                // the constant below will be ignored
-                                default_opset::Constant::create(element::i64, Shape{}, {1}),
-                                ngraph::op::AutoBroadcastSpec(
-                                    ngraph::op::AutoBroadcastType::NUMPY));
+                                reshaped_bias, shape_of_conv);
                         }
                         else
                         {
