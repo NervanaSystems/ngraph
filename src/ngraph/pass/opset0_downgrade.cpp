@@ -154,7 +154,8 @@ namespace
 
         shared_ptr<Node> replacement_node;
 
-        if (arg_rank.is_static() && static_cast<size_t>(arg_rank) == 0)
+        if (arg_rank.is_static() && static_cast<size_t>(arg_rank) == 0 &&
+            !target_shape_input.get_node_shared_ptr()->is_constant())
         {
             replacement_node = make_shared<op::DynBroadcast>(
                 arg,
