@@ -68,10 +68,10 @@ NodeVector op::DepthToSpace::decompose_op() const
         data_shape.insert(data_shape.begin(), 1);
         data = builder::opset1::reshape(data, data_shape);
     }
-    const uint64_t n_dim = data_shape.at(0);
-    const uint64_t c_dim = data_shape.at(1);
-    const uint64_t spatial_dim_index = 2;
-    const uint64_t spatial_dims = data_shape.size() - spatial_dim_index;
+    const size_t n_dim = data_shape.at(0);
+    const size_t c_dim = data_shape.at(1);
+    const size_t spatial_dim_index = 2;
+    const size_t spatial_dims = data_shape.size() - spatial_dim_index;
     const auto c_dim_divider = static_cast<int>(std::pow(m_blocksize, spatial_dims));
 
     NODE_VALIDATION_CHECK(this,
@@ -82,8 +82,8 @@ NodeVector op::DepthToSpace::decompose_op() const
                           "'block_size'^'spatial_dims': ",
                           c_dim_divider);
 
-    auto bs = static_cast<uint64_t>(m_blocksize);
-    uint64_t c_flat = c_dim / c_dim_divider;
+    auto bs = static_cast<size_t>(m_blocksize);
+    size_t c_flat = c_dim / c_dim_divider;
 
     // First we have to disperse the data from depth channel, then rearrange them
     // so as appropriate chunks of data where close to their destination place.
