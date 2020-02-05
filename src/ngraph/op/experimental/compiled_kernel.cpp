@@ -60,13 +60,14 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
         new_node_list.push_back(new_n);
     }
 
-    NodeVector new_outputs;
+    OutputVector new_outputs;
     for (auto o : m_output_nodes)
     {
-        new_outputs.push_back(nm.at(o.get()));
+        new_outputs.push_back(nm.at(o.get_node())->output(o.get_index()));
     }
 
-    auto ck = std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
+    auto ck =
+        std::make_shared<CompiledKernel>(new_node_list, new_outputs, as_output_vector(new_args));
     for (auto it : m_input_map)
     {
         ck->insert_to_input_map(it.first, it.second);
@@ -74,17 +75,10 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
     return std::move(ck);
 }
 
-ngraph::op::CompiledKernel::CompiledKernel(const OutputVector& node_list,
+ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
                                            const OutputVector& outputs,
                                            const OutputVector& args)
-    : CompiledKernel(as_node_vector(node_list), as_node_vector(outputs), as_node_vector(args))
-{
-}
-
-ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
-                                           const NodeVector& outputs,
-                                           const NodeVector& args)
-    : Op(check_single_output_args({args}))
+    : Op(args)
     , m_node_list(node_list)
     , m_output_nodes(outputs)
 {
@@ -95,12 +89,12 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     for (size_t i = 0; i < outputs.size(); ++i)
     {
         auto& o = outputs.at(i);
-
-        if (std::find(node_list.begin(), node_list.end(), o) == node_list.end())
+        if (std::find(node_list.begin(), node_list.end(), o.get_node_shared_ptr()) ==
+            node_list.end())
         {
-            throw ngraph_error(o->get_name() + " isn't in node_list");
+            NODE_VALIDATION_CHECK(this, false, *o.get_node(), " isn't in node_list");
         }
-        set_output_type(i, o->get_element_type(), o->get_shape());
+        set_output_type(i, o.get_element_type(), o.get_shape());
     }
 }
 

@@ -282,8 +282,8 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
         auto& outputs = sg.get_outputs();
         auto& nodes = sg.get_nodes();
 
-        NodeVector inputs_vector(inputs.begin(), inputs.end());
-        NodeVector outputs_vector(outputs.begin(), outputs.end());
+        OutputVector inputs_vector(inputs.begin(), inputs.end());
+        OutputVector outputs_vector(outputs.begin(), outputs.end());
         // must store nodes in topological order
         auto nodes_list = subgraph_topological_sort(nodes);
         NodeVector nodes_vector(nodes_list.begin(), nodes_list.end());
@@ -319,26 +319,13 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
     {
         auto ck = std::static_pointer_cast<CompiledKernel>(node);
 
-        auto& outputs_vector = ck->get_kernel_outputs();
-        auto& node_list = ck->get_node_list();
+        auto outputs_vector = ck->get_kernel_outputs();
+        auto node_list = ck->get_node_list();
         std::unordered_set<std::shared_ptr<Node>> node_set(node_list.begin(), node_list.end());
 
         for (size_t i = 0, end = outputs_vector.size(); i < end; ++i)
         {
-            auto& output_descs = outputs_vector[i]->get_outputs();
-            NGRAPH_CHECK(output_descs.size() == 1, "Unexpected multiple output descriptors");
-            auto& out_desc = output_descs[0];
-
-            // 'replace_output' invalidates iterator of the original container. Use a copy instead.
-            const std::vector<descriptor::Input*> input_descs = out_desc.get_inputs();
-
-            for (descriptor::Input* in_desc : input_descs)
-            {
-                if (node_set.find(in_desc->get_node()) == node_set.end())
-                {
-                    in_desc->replace_output(ck, i);
-                }
-            }
+            outputs_vector.at(i).replace(node->output(i));
         }
     }
     for (auto& node : ck_nodes)
@@ -394,9 +381,9 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
         // they are all moved to the CK node instead
         for (auto& ck_output : ck_node->get_kernel_outputs())
         {
-            for (auto& user : ck_output->get_users())
+            for (auto& user : ck_output.get_target_inputs())
             {
-                NGRAPH_CHECK(node_set.find(user) != node_set.end(),
+                NGRAPH_CHECK(node_set.find(user.get_node()->shared_from_this()) != node_set.end(),
                              "CK output nodes users should be in the sub-graph");
             }
         }

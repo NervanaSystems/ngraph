@@ -80,6 +80,7 @@ namespace
         void optimizeNgDialect() { /*TODO: Add Core NG dialect optimizations */}
 
         mlir::Type getMlirType(const descriptor::Tensor* tensor);
+        mlir::Type getMlirType(const Output<Node>& value);
         mlir::Type getMlirType(const element::Type& type);
         mlir::Type getMlirType(const ngraph::Node* node);
 
@@ -165,7 +166,7 @@ void NgDialectConversionPass::runOnModule()
 
     for (auto output : kernelOutput)
     {
-        resultTypeList.push_back(getMlirType(output.get()));
+        resultTypeList.push_back(getMlirType(output));
     }
 
     auto funcType = mlir::FunctionType::get(argsTypeList, resultTypeList, m_context);
@@ -219,6 +220,15 @@ mlir::Type NgDialectConversionPass::getMlirType(const descriptor::Tensor* tensor
     llvm::SmallVector<int64_t, 4> mlirShape;
     getMlirShape(tensor->get_shape(), mlirShape);
     return mlir::NGTensorType::get(m_context, getMlirType(tensor->get_element_type()), mlirShape);
+}
+
+// Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
+// element type.
+mlir::Type NgDialectConversionPass::getMlirType(const Output<Node>& value)
+{
+    llvm::SmallVector<int64_t, 4> mlirShape;
+    getMlirShape(value.get_shape(), mlirShape);
+    return mlir::NGTensorType::get(m_context, getMlirType(value.get_element_type()), mlirShape);
 }
 
 // Converts an nGraph element type into an MLIR type.
@@ -670,7 +680,7 @@ void NgDialectConversionPass::createReturn()
     std::vector<mlir::Value> valueList;
     for (auto output : m_compiledKernel->get_kernel_outputs())
     {
-        valueList.push_back(getTensorValue(output->get_output_tensor_ptr().get()).m_value);
+        valueList.push_back(getTensorValue(&output.get_tensor()).m_value);
     }
     m_builder.create<mlir::NGReturnOp>(mlir::UnknownLoc::get(m_context), valueList);
 }
