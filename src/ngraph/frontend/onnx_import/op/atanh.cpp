@@ -41,18 +41,18 @@ namespace ngraph
                     //          = 0.5 * (ln(1 + x) - ln(1 - x))
                     //
 
-                    std::shared_ptr<ngraph::Node> one_node{default_opset::Constant::create(
-                        data->get_element_type(),
-                        data->get_shape(),
-                        std::vector<float>(ngraph::shape_size(data->get_shape()), 1.f))};
+                    const auto one = default_opset::Constant::create(
+                        data->get_element_type(), {}, {1.f});
 
-                    std::shared_ptr<ngraph::Node> half_node{default_opset::Constant::create(
-                        data->get_element_type(),
-                        data->get_shape(),
-                        std::vector<float>(ngraph::shape_size(data->get_shape()), 0.5f))};
+                    const auto half = default_opset::Constant::create(
+                        data->get_element_type(), {}, {0.5f});;
 
-                    return {half_node * (std::make_shared<default_opset::Log>(one_node + data) -
-                                         std::make_shared<default_opset::Log>(one_node - data))};
+                    const auto one_plus_x = std::make_shared<default_opset::Add>(data, one);
+                    const auto one_minus_x = std::make_shared<default_opset::Subtract>(data, one);
+                    const auto log_args = std::make_shared<default_opset::Divide>(one_plus_x, one_minus_x);
+                    const auto log_node = std::make_shared<default_opset::Log>(log_args);
+
+                    return {std::make_shared<default_opset::Multiply>(half, log_node)};
                 }
 
             } // namespace set_1
