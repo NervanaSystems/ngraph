@@ -86,11 +86,14 @@ namespace ngraph
         Executable(std::shared_ptr<Function> func, std::string _device)
         {
             auto opset = ngraph::get_opset1();
-            bool all_opset1(true);
+            bool all_opset1 = true;
             for (auto& node : func->get_ops())
             {
                 if (!opset.contains_op_type(node.get()))
-                    all_opset1 = false;
+                    {
+                        all_opset1 = false;
+                        break;
+                    }
             }
 
             if (!all_opset1)
@@ -187,14 +190,14 @@ namespace ngraph
         std::shared_ptr<ov_runtime::Tensor> create_tensor(ngraph::element::Type type,
                                                           ngraph::Shape shape)
         {
-            return std::shared_ptr<ov_runtime::Tensor>(new ov_runtime::Tensor(type, shape));
+            return std::make_shared<ov_runtime::Tensor>(type, shape);
         }
 
         template <typename T>
         std::shared_ptr<ov_runtime::Tensor>
             create_tensor(ngraph::element::Type type, ngraph::Shape shape, T* data)
         {
-            auto tensor = std::shared_ptr<ov_runtime::Tensor>(new ov_runtime::Tensor(type, shape));
+            auto tensor = std::make_shared<ov_runtime::Tensor>(type, shape);
             size_t size = 1;
             for (auto x : shape)
             {
@@ -208,20 +211,20 @@ namespace ngraph
         template <class T>
         std::shared_ptr<ov_runtime::Tensor> create_tensor(ngraph::Shape shape)
         {
-            return std::shared_ptr<ov_runtime::Tensor>(
-                new ov_runtime::Tensor(ngraph::element::from<T>(), shape));
+            return std::make_shared<ov_runtime::Tensor>(
+     	                ngraph::element::from<T>(), shape);
         }
 
         std::shared_ptr<ov_runtime::Tensor> create_dynamic_tensor(ngraph::element::Type type,
                                                                   ngraph::PartialShape shape)
         {
-            return std::shared_ptr<ov_runtime::Tensor>(new ov_runtime::Tensor(type, shape));
+            return std::make_shared<ov_runtime::Tensor>(type, shape);
         }
 
         bool supports_dynamic_tensors() { return true; }
         std::shared_ptr<Executable> compile(std::shared_ptr<Function> func)
         {
-            return std::shared_ptr<Executable>(new Executable(func, device));
+            return std::make_shared<Executable>(func, device);
         }
     };
 }
