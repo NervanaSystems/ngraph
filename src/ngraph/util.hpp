@@ -223,8 +223,8 @@ namespace ngraph
     {
         std::shared_ptr<Function> fprop;
         std::shared_ptr<Function> bprop;
-        std::vector<Node*> fprop_output_nodes;
-        NodeMap node_param_map;
+        std::vector<RawNodeOutput> fprop_output_nodes;
+        RawNodeOutputMap node_param_map;
     };
 
     //
