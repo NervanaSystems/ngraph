@@ -201,8 +201,8 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
-#ifndef _WIN32
-    // size_t is a uint type on WIN32
+#ifndef __APPLE__
+    // size_t is not uint_64t on OSX
     constexpr DiscreteTypeInfo AttributeAdapter<size_t>::type_info;
     const int64_t& AttributeAdapter<size_t>::get()
     {
@@ -213,13 +213,13 @@ namespace ngraph
         }
         return m_buffer;
     }
-#endif
 
     void AttributeAdapter<size_t>::set(const int64_t& value)
     {
         m_value = value;
         m_buffer_valid = false;
     }
+#endif
 
     constexpr DiscreteTypeInfo AttributeAdapter<vector<int64_t>>::type_info;
 

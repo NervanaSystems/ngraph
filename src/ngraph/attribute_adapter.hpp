@@ -246,7 +246,7 @@ namespace ngraph
         void set(const int64_t& value) override;
     };
 
-#ifndef _WIN32
+#ifdef __APPLE__
     // size_t is one of the uint types on _WIN32
     template <>
     class NGRAPH_API AttributeAdapter<size_t> : public ValueReference<size_t>,
