@@ -36,6 +36,7 @@ void op::Clamp::pre_validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(
         this, m_min < m_max, "The 'min' parameter needs to be less than 'max' for Clamp");
+    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
 NodeVector op::Clamp::decompose_op() const
