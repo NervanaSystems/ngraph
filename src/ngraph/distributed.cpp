@@ -17,6 +17,7 @@
 #include "ngraph/distributed.hpp"
 #include "ngraph/distributed/mlsl.hpp"
 #include "ngraph/distributed/null.hpp"
+#include "ngraph/distributed/oneccl.hpp"
 #include "ngraph/distributed/open_mpi.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/type.hpp"
@@ -62,6 +63,9 @@ DistributedInterface* ngraph::get_distributed_interface()
 #elif defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
         set_distributed_interface(std::unique_ptr<DistributedInterface>(
             new ngraph::distributed::MLSLDistributedInterface()));
+#elif defined(NGRAPH_DISTRIBUTED_ONECCL_ENABLE)
+        set_distributed_interface(std::unique_ptr<DistributedInterface>(
+            new ngraph::distributed::CCLDistributedInterface()));
 #else
         set_distributed_interface(std::unique_ptr<DistributedInterface>(
             new ngraph::distributed::NullDistributedInterface()));
