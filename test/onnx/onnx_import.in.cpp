@@ -1907,8 +1907,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reciprocal)
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_constant_of_shape_float_zeros)
 {
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/constant_of_shape_float_zeros.prototxt"));
+    auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/constant_of_shape_float_zeros.prototxt"));
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
     auto ex = backend->compile(function);
@@ -1935,8 +1935,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_constant_of_shape_float_zeros)
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_constant_of_shape_int_ones)
 {
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/constant_of_shape_int_ones.prototxt"));
+    auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/constant_of_shape_int_ones.prototxt"));
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
     auto ex = backend->compile(function);
