@@ -17,8 +17,8 @@
 #include "constant.hpp"
 #include "core/tensor.hpp"
 #include "default_opset.hpp"
-#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/constant.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -35,7 +35,7 @@ namespace ngraph
                     {
                         auto value_tensor = node.get_attribute_value<Tensor>("value");
                         constant_value = value_tensor.get_ng_constant();
-                        constant_value = builder::opset1::squeeze(constant_value);
+                        constant_value = reshape::interpret_as_scalar(constant_value);
                     }
                     else
                     {
