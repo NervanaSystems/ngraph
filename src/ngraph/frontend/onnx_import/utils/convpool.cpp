@@ -37,23 +37,23 @@ namespace ngraph
 
             namespace detail
             {
-                Strides get_strides_helper(const Node& node, const std::string& name)
+                Strides get_strides_helper(const Node& node, const std::string& attr_name)
                 {
-                    if (!node.has_attribute(name))
+                    if (node.has_attribute(attr_name))
                     {
-                        const auto data_rank =
-                            node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
-                        CHECK_VALID_NODE(node,
-                                         data_rank.is_static(),
-                                         "If '",
-                                         name,
-                                         "' is not provided data rank must be static");
-                        const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
-                        const std::vector<std::size_t> default_strides(data_spatial_dims, 1UL);
-                        return node.get_attribute_value<std::vector<std::size_t>>(name,
-                                                                                  default_strides);
+                        return node.get_attribute_value<std::vector<std::size_t>>(attr_name);
                     }
-                    return node.get_attribute_value<std::vector<std::size_t>>(name);
+                    const auto data_rank =
+                        node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
+                    CHECK_VALID_NODE(node,
+                                     data_rank.is_static(),
+                                     "If '",
+                                     attr_name,
+                                     "' is not provided data rank must be static");
+                    const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
+                    const std::vector<std::size_t> default_strides(data_spatial_dims, 1UL);
+                    return node.get_attribute_value<std::vector<std::size_t>>(attr_name,
+                                                                              default_strides);
                 }
             } // namespace detail
 
@@ -94,22 +94,16 @@ namespace ngraph
                 return pad_type;
             }
 
-            std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node)
+            std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node, size_t kernel_rank)
             {
-                const auto data_rank =
-                    node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
-                CHECK_VALID_NODE(node,
-                                 data_rank.is_static(),
-                                 "If `pads` is not provided data rank must be static");
-                const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
-                CoordinateDiff pads(data_spatial_dims, 0);
+                CoordinateDiff pads(kernel_rank, 0);
                 if (node.has_attribute("pads"))
                 {
                     auto pads_int64 = node.get_attribute_value<std::vector<int64_t>>("pads");
                     pads = CoordinateDiff{std::begin(pads_int64), std::end(pads_int64)};
                 }
 
-                if (pads.size() == data_spatial_dims * 2)
+                if (pads.size() == kernel_rank * 2)
                 {
                     return {{std::begin(pads), std::begin(pads) + pads.size() / 2},
                             {std::begin(pads) + pads.size() / 2, std::end(pads)}};
@@ -120,6 +114,18 @@ namespace ngraph
                     // padding at both begin and end of axis.
                     return {pads, pads};
                 }
+            }
+
+            std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node)
+            {
+                const auto data_rank =
+                    node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
+                CHECK_VALID_NODE(node,
+                                 data_rank.is_static(),
+                                 "If `pads` is not provided data rank must be static");
+                const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
+
+                return get_pads(node, data_spatial_dims);
             }
 
             void calculate_auto_pads(const Shape& data_shape,

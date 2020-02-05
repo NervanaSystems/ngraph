@@ -52,6 +52,19 @@ namespace ngraph
             ///          `pads` value should follow [x1_begin, x2_begin..., x1_end, x2_end,...].
             ///
             /// \param node The Node ptr representing ONNX operation.
+            /// \param kernel_rank The rank of the kernel which we retrieve pads for.
+            ///
+            /// \return A pair of (padding_above, padding_below), which elements contains number of
+            ///         pixels to pad in respective dimensions (height, width, depth).
+            std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node,
+                                                               size_t kernel_rank);
+
+            /// \brief Get padding values for the operation described by an ONNX node.
+            /// \details Values are taken from the `pads` attribute.
+            ///
+            ///          `pads` value should follow [x1_begin, x2_begin..., x1_end, x2_end,...].
+            ///
+            /// \param node The Node ptr representing ONNX operation.
             ///
             /// \return A pair of (padding_above, padding_below), which elements contains number of
             ///         pixels to pad in respective dimensions (height, width, depth).
