@@ -32,17 +32,23 @@ namespace ngraph
             {
                 AxisSet get_reduction_axes(const Node& node)
                 {
-                    auto reduction_axes =
-                        node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
-                    std::vector<std::size_t> normalized_axes =
+                    const auto data_ps = node.get_ng_inputs().at(0)->get_output_partial_shape(0);
+                    NGRAPH_CHECK(
+                        data_ps.rank().is_static(),
+                        "Input's rank is required to be static to be able to normalize the axes");
+
+                    const auto reduction_axes =
+                        node.get_attribute_value<std::vector<int64_t>>("axes", {});
+
+                    std::vector<size_t> normalized_axes =
                         ngraph::normalize_axes(node.get_description(),
                                                reduction_axes,
-                                               node.get_ng_inputs().at(0)->get_shape().size());
+                                               static_cast<int64_t>(data_ps.rank()));
 
                     if (reduction_axes.empty())
                     {
-                        normalized_axes = onnx_import::common::get_monotonic_range<std::size_t>(
-                            node.get_ng_inputs().at(0)->get_shape().size());
+                        normalized_axes = onnx_import::common::get_monotonic_range<size_t>(
+                            static_cast<size_t>(data_ps.rank()));
                     }
                     return AxisSet{normalized_axes};
                 }
@@ -84,17 +90,21 @@ namespace ngraph
                                      const std::shared_ptr<ngraph::Node>& ng_input,
                                      RuntimeReductionFunction reduction_function)
             {
-                auto data_shape = ng_input->get_shape();
+                const auto data_ps = node.get_ng_inputs().at(0)->get_output_partial_shape(0);
+                NGRAPH_CHECK(data_ps.rank().is_static(),
+                             "Reduction operations input rank is required to be static");
 
-                auto reduction_axes = detail::get_reduction_axes(node);
+                const auto data_rank = static_cast<size_t>(data_ps.rank());
 
-                ASSERT_VALID_ARGUMENT(node, reduction_axes.size() <= data_shape.size())
+                const auto reduction_axes = detail::get_reduction_axes(node);
+
+                ASSERT_VALID_ARGUMENT(node, reduction_axes.size() <= data_rank)
                     << "provided reduction axes count (" << reduction_axes.size()
-                    << ") is larger than input tensor rank (" << data_shape.size() << ")";
+                    << ") is larger than input tensor rank (" << data_rank << ")";
 
                 std::int64_t keepdims = node.get_attribute_value<std::int64_t>("keepdims", 1);
 
-                std::shared_ptr<ngraph::Node> op_node = reduction_function(
+                const auto op_node = reduction_function(
                     ng_input,
                     std::make_shared<ngraph::op::Constant>(element::i64,
                                                            ngraph::Shape{reduction_axes.size()},
