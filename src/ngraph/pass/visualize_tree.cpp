@@ -202,10 +202,10 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
         }
 
         auto nodes = topological_sort(f->get_ops());
-        nodes.reverse();
 
-        for (auto& node : nodes)
+        for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
         {
+            auto& node = *it;
             for (auto& output : node->outputs())
             {
                 for (auto& input : output.get_target_inputs())

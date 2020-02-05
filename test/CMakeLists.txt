@@ -240,8 +240,9 @@ else()
         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
     endif()
 
-    if (NGRAPH_GPUH_ENABLE)
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPUH)
+    if(NGRAPH_GPU_ENABLE)
+        list(APPEND SRC gpu_test.cpp gpu_fusion.cpp)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
     endif()
 
     if (NGRAPH_PLAIDML_ENABLE)
@@ -590,12 +591,12 @@ if (NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
 endif()
 
-if (NGRAPH_NOP_ENABLE)
-    target_link_libraries(unit-test PRIVATE nop_backend)
+if (NGRAPH_GPU_ENABLE)
+    target_link_libraries(unit-test PRIVATE gpu_backend)
 endif()
 
-if (NGRAPH_GPUH_ENABLE)
-    target_link_libraries(unit-test PRIVATE gpuh_backend)
+if (NGRAPH_NOP_ENABLE)
+    target_link_libraries(unit-test PRIVATE nop_backend)
 endif()
 
 if (NGRAPH_MLIR_ENABLE)
