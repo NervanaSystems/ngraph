@@ -35,7 +35,7 @@ using namespace ngraph;
 
 bool pass::Liveness::run_on_function(shared_ptr<Function> function)
 {
-    list<shared_ptr<Node>> ops = function->get_ordered_ops();
+    auto ops = function->get_ordered_ops();
 
     unordered_set<descriptor::Tensor*> persistent_tensors;
     unordered_set<descriptor::Tensor*> output_tensors;
