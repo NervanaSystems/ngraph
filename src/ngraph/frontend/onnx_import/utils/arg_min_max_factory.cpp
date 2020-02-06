@@ -16,7 +16,6 @@
 
 #include "utils/arg_min_max_factory.hpp"
 #include "default_opset.hpp"
-#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/opsets/opset0.hpp"
 #include "ngraph/validation_util.hpp"
@@ -56,8 +55,11 @@ namespace ngraph
 
                 if (m_keep_dims == 0)
                 {
+                    const auto axis_to_remove =
+                        default_opset::Constant::create(element::u64, Shape{}, {topk->get_axis()});
                     const auto reshaped_indices =
-                        ngraph::builder::opset1::squeeze(indices, {topk->get_axis()});
+                        std::make_shared<default_opset::Squeeze>(indices, axis_to_remove);
+
                     return std::make_shared<default_opset::Convert>(reshaped_indices, element::i64);
                 }
                 return std::make_shared<default_opset::Convert>(indices, element::i64);
