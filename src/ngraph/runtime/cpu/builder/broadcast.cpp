@@ -39,7 +39,7 @@ namespace ngraph
                 auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
                 auto broadcast_axes = broadcast->get_broadcast_axes();
 
-                auto arg_shape = broadcast->get_argument(0)->get_shape();
+                auto arg_shape = broadcast->input_value(0).get_shape();
                 out_shape = broadcast->get_shape();
 
                 // TODO(jmenon): Shape transformations, rank reduction etc. needs to be general
