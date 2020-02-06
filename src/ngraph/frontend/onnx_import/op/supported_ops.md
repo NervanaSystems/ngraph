@@ -22,8 +22,8 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Acosh | 9- | 0, | Have to change to only v1 ops (NGONNX-1015)
 | Add | 1-6-7- | 0,1 |
 | And | 1-7- | 0,1 |
-| ArgMax | 1- | 0 |
-| ArgMin | 1- | 0 |
+| ArgMax | 1- | 0,1 |
+| ArgMin | 1- | 0,1 |
 | Asin | 7- | 0,1 |
 | Asinh | 9- | 0, | Have to change to only v1 ops (NGONNX-1015)
 | Atan | 7 - | 0,1 |
@@ -61,7 +61,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | GlobalMaxPool | 1- | 0,1 |
 | Greater | 1-7-9 | 0,1 |
 | HardSigmoid | 1-6- | 0,1 |
-| Hardmax | 11- | 0, | Have to change to only v1 ops (NGONNX-1015)
+| Hardmax | 11- | 0, (1) | GOE
 | Identity | 1- | 0,1 | 
 | InstanceNormalization | 1- | 0, (1) | Have to change to only v1 ops (NGONNX-1015)
 | LRN | 1- | 0,1 |
@@ -84,7 +84,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Not | 1- | 0,1 | (aka `v1::LogicalNot`)
 | OneHot | (9) | 0, (1) | (NGONNX-1015)
 | Or | 1-7- | 0,1 | (aka `v1::LogicalOr`)
-| PRelu | 1-6-7-9 | 0, | fused op uses arithmetic and broadcasting from v0
+| PRelu | 1-6-7-9 | 0, 1 |  fused op uses arithmetic and broadcasting from v0
 | Pad | 1-2-11- | 0, (1) | (NGONNX-1015)
 | Pow | 1-7- | 0,1 |
 | QLinearConv | 10- | 0 | `opset0::QuantizedConvolution`
@@ -168,9 +168,9 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | IsNaN | (9) | | 440 | Hacky way is to generate constant nodes with representations of NaN and compare with them. |
 | Loop | - | | 432 | Static loops with some preconditions may be possible, however no idea how to pass graph (proto?) as a _body_ attribute. (what about graph contains `Loop`?) |
 | Scan | - |  | 433 | Further analysis needed. - determine whether it is possible to import graph passed by op attribute. |
-| Einsum | (12) | | | |
+| Einsum | (12) | | | User can define in a language the operation to perform |
 | NonZero | (9) | | 472 | Maybe we can leverage TopK here? First count NonZero elements with logic ops and reduction and then TopK. 
-| Resize | (10-11)- | | 782 | Look like Interpolation over ROIs
+| Resize | (10-11)- | | 782 | Look like Interpolation over ROIs. Very specialized types of interpolation.
 | ScatterElements | (11) |  | 977 | 
 | ScatterND | (11) |  | 1020 | 
 | Unique | (11) | | 761 |
