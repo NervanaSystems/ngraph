@@ -57,7 +57,7 @@ namespace ngraph
             /// \return A pair of (padding_above, padding_below), which elements contains number of
             ///         pixels to pad in respective dimensions (height, width, depth).
             std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node,
-                                                               size_t kernel_rank);
+                                                               const size_t kernel_rank);
 
             /// \brief Get padding values for the operation described by an ONNX node.
             /// \details Values are taken from the `pads` attribute.

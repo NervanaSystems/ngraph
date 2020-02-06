@@ -219,7 +219,6 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, max_pool_dyn_shape)
 
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, global_avg_pool_dyn_shape)
 {
-    // the model contains a single Add operation that takes a fully dynamic input and a scalar
     const auto function = onnx_import::import_onnx_model(file_util::path_join(
         SERIALIZED_ZOO, "onnx/dynamic_shapes/global_average_pool_dyn.prototxt"));
 
@@ -240,7 +239,6 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, global_avg_pool_dyn_shape)
 
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, global_max_pool_dyn_shape)
 {
-    // the model contains a single Add operation that takes a fully dynamic input and a scalar
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/global_max_pool_dyn.prototxt"));
 

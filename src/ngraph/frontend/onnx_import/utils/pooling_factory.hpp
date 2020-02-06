@@ -77,7 +77,7 @@ namespace ngraph
             ///
             /// \brief      Factory class which generates sub-graphs for ONNX 'local' pooling
             ///             operators.
-            ///
+            /// \note       Kernel shape attribute is required
             class LocalPoolingFactory : public PoolingFactory
             {
             public:
@@ -88,7 +88,7 @@ namespace ngraph
             ///
             /// \brief      Factory class which generates sub-graphs for ONNX 'global' pooling
             ///             operators.
-            ///
+            /// \note       Kernel shape is calculated based on spatial dims
             class GlobalPoolingFactory : public PoolingFactory
             {
             public:

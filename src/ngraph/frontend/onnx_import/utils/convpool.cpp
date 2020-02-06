@@ -37,7 +37,15 @@ namespace ngraph
 
             namespace detail
             {
-                Strides get_strides_helper(const Node& node, const std::string& attr_name)
+                /// \brief              Helper method used to read vector attribute
+                /// \note               Default value is vector of size spatial dims filled with
+                /// zeros
+                ///
+                /// \param   node       Node from which attribute is read
+                /// \param   attr_name  Attribute name (such as `strides`, `dilations`)
+                ///
+                /// \return             Read vector attribute if available or default value
+                Strides get_attribute_value(const Node& node, const std::string& attr_name)
                 {
                     if (node.has_attribute(attr_name))
                     {
@@ -52,19 +60,18 @@ namespace ngraph
                                      "' is not provided data rank must be static");
                     const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
                     const std::vector<std::size_t> default_strides(data_spatial_dims, 1UL);
-                    return node.get_attribute_value<std::vector<std::size_t>>(attr_name,
-                                                                              default_strides);
+                    return default_strides;
                 }
             } // namespace detail
 
             Strides get_strides(const Node& node)
             {
-                return detail::get_strides_helper(node, "strides");
+                return detail::get_attribute_value(node, "strides");
             }
 
             Strides get_dilations(const Node& node)
             {
-                return detail::get_strides_helper(node, "dilations");
+                return detail::get_attribute_value(node, "dilations");
             }
 
             ngraph::op::PadType get_auto_pad(const Node& node)
@@ -94,7 +101,8 @@ namespace ngraph
                 return pad_type;
             }
 
-            std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node, size_t kernel_rank)
+            std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node,
+                                                               const size_t kernel_rank)
             {
                 CoordinateDiff pads(kernel_rank, 0);
                 if (node.has_attribute("pads"))
@@ -122,7 +130,7 @@ namespace ngraph
                     node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
                 CHECK_VALID_NODE(node,
                                  data_rank.is_static(),
-                                 "If `pads` is not provided data rank must be static");
+                                 "The rank of node must be static in order to calculate pads");
                 const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
 
                 return get_pads(node, data_spatial_dims);
