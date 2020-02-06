@@ -175,3 +175,59 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, dynamic_rank_input_inference)
         test_case.run();
     }
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_constant_of_shape_float_zeros)
+{
+    auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/constant_of_shape_float_zeros.prototxt"));
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+    auto ex = backend->compile(function);
+
+    auto t_r = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+
+    // Create static tensors for the inputs and copy data.
+    auto t_a = backend->create_tensor(element::i64, Shape{3});
+    copy_data(t_a, std::vector<int64_t>{2, 3, 4});
+
+    // Call ex, writing result into t_r
+    ex->call_with_validate({t_r}, {t_a});
+
+    // After call, t_r should have a shape of {2,3,4}.
+    ASSERT_EQ(t_r->get_shape(), (Shape{2, 3, 4}));
+
+    // Read out the results, and compare them against expected values.
+    auto results = read_vector<float>(t_r);
+
+    std::vector<float> expected_values(24, 0);
+
+    EXPECT_TRUE(test::all_close_f(results, expected_values));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_constant_of_shape_int_ones)
+{
+    auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/constant_of_shape_int_ones.prototxt"));
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+    auto ex = backend->compile(function);
+
+    auto t_r = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+    // Create static tensors for the inputs and copy data.
+    auto t_a = backend->create_tensor(element::i64, Shape{2});
+    copy_data(t_a, std::vector<int64_t>{2, 3});
+
+    // Call ex, writing result into t_r
+    ex->call_with_validate({t_r}, {t_a});
+
+    // After call, t_r should have a shape of {2, 3}.
+    ASSERT_EQ(t_r->get_shape(), (Shape{2, 3}));
+
+    // Read out the results, and compare them against expected values.
+    auto results = read_vector<int32_t>(t_r);
+
+    std::vector<int32_t> expected_values(6, 1);
+
+    EXPECT_TRUE(test::all_close(results, expected_values));
+}
