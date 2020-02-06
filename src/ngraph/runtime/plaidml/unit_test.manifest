@@ -281,6 +281,8 @@ model_argmax_int32
 model_argmin_int32
 model_lp_norm_default
 model_instance_normalization
+arg_max_dyn_shape               # unsupported op `TopK`
+arg_min_no_keep_dims_dyn_shape  # unsupported op `TopK`
 
 # passing locally, fails closeness checks in CI which may be too strict
 elu
