@@ -47,6 +47,20 @@ namespace ngraph
                 return m_model_proto->producer_version();
             }
 
+            std::int64_t get_operator_set_id(const std::string& domain) const
+            {
+                for (const auto& opset_import : m_model_proto->opset_import())
+                {
+                    if (domain == opset_import.domain())
+                    {
+                        return opset_import.version();
+                    }
+                }
+
+                throw ngraph_error("Couldn't find operator set's version for domain: " + domain +
+                                   ".");
+            }
+
             /// \brief Access an operator object by its type name and domain name
             /// The function will return the operator object if it exists, or report an error
             /// in case of domain or operator absence.
