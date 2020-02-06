@@ -99,7 +99,7 @@ void Function::init()
                    true /*include control dependencies*/);
 }
 
-std::list<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps) const
+std::vector<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps) const
 {
     vector<shared_ptr<Node>> nodes;
     for (auto& r : get_results())
@@ -226,9 +226,9 @@ shared_ptr<Node> Function::get_result() const
     return m_results.at(0);
 }
 
-std::list<shared_ptr<Node>> Function::get_ops(bool include_control_deps) const
+std::vector<shared_ptr<Node>> Function::get_ops(bool include_control_deps) const
 {
-    std::list<std::shared_ptr<Node>> ops;
+    std::vector<std::shared_ptr<Node>> ops;
     traverse_nodes(this, [&](shared_ptr<Node> node) { ops.push_back(node); }, include_control_deps);
     return ops;
 }

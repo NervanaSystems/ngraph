@@ -40,7 +40,7 @@ bool pass::MemoryVisualize::run_on_module(vector<shared_ptr<Function>>& function
     {
         for (shared_ptr<Function> f : functions)
         {
-            list<shared_ptr<Node>> nodes = f->get_ordered_ops();
+            vector<shared_ptr<Node>> nodes = f->get_ordered_ops();
             file << "<!DOCTYPE html>\n<html>\n";
             file << "<head>\n";
             file << "    <style>\n";
@@ -96,7 +96,7 @@ bool pass::MemoryVisualize::run_on_module(vector<shared_ptr<Function>>& function
 }
 
 unordered_set<const descriptor::Tensor*>
-    pass::MemoryVisualize::find_largest_op(const list<shared_ptr<Node>>& nodes)
+    pass::MemoryVisualize::find_largest_op(const vector<shared_ptr<Node>>& nodes)
 {
     size_t largest_size = 0;
     unordered_set<const descriptor::Tensor*> liveness_list;
@@ -122,7 +122,7 @@ unordered_set<const descriptor::Tensor*>
     return largest_live_list;
 }
 
-void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<shared_ptr<Node>>& nodes)
+void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const vector<shared_ptr<Node>>& nodes)
 {
     unordered_set<const descriptor::Tensor*> largest_live_list = find_largest_op(nodes);
 
@@ -178,7 +178,7 @@ void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<shared_
     file << "</table>\n";
 }
 
-void pass::MemoryVisualize::draw_histogram(ostream& file, const list<shared_ptr<Node>>& nodes)
+void pass::MemoryVisualize::draw_histogram(ostream& file, const vector<shared_ptr<Node>>& nodes)
 {
     size_t stroke_width = 14;
     size_t text_offset = 4;
@@ -219,7 +219,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<shared_ptr<
     file << "</svg>\n";
 }
 
-void pass::MemoryVisualize::draw_op_influence(ostream& file, const list<shared_ptr<Node>>& nodes)
+void pass::MemoryVisualize::draw_op_influence(ostream& file, const vector<shared_ptr<Node>>& nodes)
 {
     file << "<table>\n";
     file << "    <tr>";
@@ -260,7 +260,7 @@ size_t pass::MemoryVisualize::memory_footprint(shared_ptr<Node> /* node */)
     return 0;
 }
 
-size_t pass::MemoryVisualize::memory_footprint(const std::list<shared_ptr<Node>>& /* nodes */)
+size_t pass::MemoryVisualize::memory_footprint(const std::vector<shared_ptr<Node>>& /* nodes */)
 {
     return 0;
 }

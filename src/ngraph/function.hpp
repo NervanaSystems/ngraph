@@ -92,8 +92,8 @@ namespace ngraph
         /// \returns A const reference to the function's friendly name.
         const std::string& get_friendly_name() const;
 
-        std::list<std::shared_ptr<Node>> get_ops(bool include_control_deps = true) const;
-        std::list<std::shared_ptr<Node>> get_ordered_ops(bool include_control_deps = true) const;
+        std::vector<std::shared_ptr<Node>> get_ops(bool include_control_deps = true) const;
+        std::vector<std::shared_ptr<Node>> get_ordered_ops(bool include_control_deps = true) const;
         void map_unordered_ops(std::function<void(Node*)> f) const;
 
         friend std::ostream& operator<<(std::ostream&, const Function&);

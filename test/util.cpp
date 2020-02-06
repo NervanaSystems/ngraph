@@ -192,7 +192,7 @@ public:
     std::shared_ptr<Node> AplusBtimesC = AplusB * C;
 
     NodeMap node_map;
-    std::list<std::shared_ptr<ngraph::Node>> nodes;
+    std::vector<std::shared_ptr<ngraph::Node>> nodes;
     std::shared_ptr<Function> func =
         make_shared<Function>(AplusBtimesC, ParameterVector{A, B, C}, "f");
 
@@ -205,8 +205,8 @@ public:
         nodes.push_back(C);
     }
 
-    bool CompareNodeVector(const std::list<std::shared_ptr<ngraph::Node>>& orig,
-                           const std::list<std::shared_ptr<ngraph::Node>>& clone,
+    bool CompareNodeVector(const std::vector<std::shared_ptr<ngraph::Node>>& orig,
+                           const std::vector<std::shared_ptr<ngraph::Node>>& clone,
                            const NodeMap& nm)
     {
         if (orig.size() != clone.size())
@@ -373,7 +373,7 @@ TEST(graph_util, test_subgraph_topological_sort)
     auto mul = C * add;
     auto result = make_shared<op::Result>(mul);
     auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A});
-    std::list<std::shared_ptr<Node>> expected{A, add, mul};
+    std::vector<std::shared_ptr<Node>> expected{A, add, mul};
     ASSERT_EQ(expected, sorted);
 }
 
@@ -391,7 +391,7 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     auto mul = C * add;
     auto result = make_shared<op::Result>(mul);
     auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D}, true);
-    std::list<std::shared_ptr<Node>> expected{A, D, add, mul};
+    std::vector<std::shared_ptr<Node>> expected{A, D, add, mul};
     ASSERT_EQ(expected, sorted);
 }
 
