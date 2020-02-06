@@ -85,6 +85,7 @@ shared_ptr<op::Constant> fold_constant_one_hot(const shared_ptr<op::Constant>& i
     case element::Type_t::u64:
         return fold_constant_one_hot_ref<uint64_t, OUTPUT_TYPE>(
             indices, on_value, off_value, output_shape, axis);
+    default: throw std::runtime_error("unsupported type");
     }
 }
 
