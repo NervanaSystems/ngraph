@@ -195,6 +195,36 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
     target->clear_control_dependents();
 }
 
+void ngraph::replace_node(const std::shared_ptr<Node>& target,
+                          const OutputVector& replacement_values)
+{
+    if (target->is_output())
+    {
+        throw ngraph_error("Result nodes cannot be replaced.");
+    }
+
+    NGRAPH_CHECK(!target->get_users().empty(), "Attempted to replace unreachable node '", *target);
+    NGRAPH_CHECK(target->get_output_size() == replacement_values.size());
+
+    unordered_set<shared_ptr<Node>> replacement_nodes;
+    // For each of target's output O with replacement output O_rep:
+    //     For each O's connected downstream input I:
+    //         Change I's connected upstream output to O_rep
+    for (size_t i = 0; i < target->get_output_size(); i++)
+    {
+        auto& replacement_value = replacement_values.at(i);
+        auto replacement_node = replacement_value.get_node_shared_ptr();
+        if (replacement_nodes.find(replacement_node) == replacement_nodes.end())
+        {
+            replacement_node->add_node_control_dependents(target);
+            target->transfer_provenance_tags(replacement_node);
+            replacement_nodes.insert(replacement_node);
+        }
+        target->output(i).replace(replacement_values.at(i));
+    }
+    target->clear_control_dependents();
+}
+
 void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
 {
     auto default_output_order = vector<int64_t>(target->get_output_size());
@@ -261,8 +291,8 @@ bool ngraph::is_post_dominated(Node* X, Node* Y)
     return true;
 }
 
-std::list<std::shared_ptr<ngraph::Node>>
-    ngraph::clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map)
+std::vector<std::shared_ptr<ngraph::Node>>
+    ngraph::clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map)
 {
     // for each node in topological order
     auto sorted_nodes = topological_sort(nodes, true);
@@ -304,12 +334,76 @@ std::list<std::shared_ptr<ngraph::Node>>
         }
     }
 
-    // create and return list of cloned nodes
-    // order matches input list (not necessarily topological)
-    std::list<std::shared_ptr<ngraph::Node>> cloned_nodes;
+    // create and return vector of cloned nodes
+    // order matches input vector (not necessarily topological)
+    std::vector<std::shared_ptr<ngraph::Node>> cloned_nodes;
     for (auto node : nodes)
     {
         cloned_nodes.push_back(node_map.at(node.get()));
+    }
+    return cloned_nodes;
+}
+
+std::list<std::shared_ptr<ngraph::Node>>
+    ngraph::clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes,
+                        RawNodeOutputMap& output_map)
+{
+    // for each node in topological order
+    auto sorted_nodes = topological_sort(nodes, true);
+    std::list<shared_ptr<Node>> cloned_nodes;
+    for (auto node : sorted_nodes)
+    {
+        auto node_outputs = node->outputs();
+        for (auto value : node_outputs)
+        {
+            if (output_map.count(value) == 0)
+            {
+                // We need this node cloned
+                // get (already) cloned arguments and clone the node
+                OutputVector cloned_args;
+                for (auto value : node->input_values())
+                {
+                    cloned_args.push_back(output_map.at(value));
+                }
+                NodeVector cloned_dependencies;
+                for (auto& dependency : node->get_control_dependencies())
+                {
+                    for (auto dependency_value : dependency->outputs())
+                    {
+                        shared_ptr<Node> dependent =
+                            output_map.at(dependency_value).get_node_shared_ptr();
+                        if (find(cloned_dependencies.begin(),
+                                 cloned_dependencies.end(),
+                                 dependent) == cloned_dependencies.end())
+                        {
+                            cloned_dependencies.push_back(dependent);
+                        }
+                    }
+                }
+                auto cloned_node = node->copy_with_new_inputs(cloned_args, cloned_dependencies);
+                cloned_nodes.push_back(cloned_node);
+                if (node->get_friendly_name() != node->get_name())
+                {
+                    // There is a friendly name for this node so copy it
+                    cloned_node->set_friendly_name(node->get_friendly_name());
+                }
+
+                for (auto tag : node->get_provenance_tags())
+                {
+                    cloned_node->add_provenance_tag(tag);
+                }
+                cloned_node->set_op_annotations(node->get_op_annotations());
+                for (auto cloned_value : cloned_node->outputs())
+                {
+                    auto original_value = node_outputs.at(cloned_value.get_index());
+                    if (output_map.count(original_value) == 0)
+                    {
+                        output_map[original_value] = cloned_value;
+                    }
+                }
+                break;
+            }
+        }
     }
     return cloned_nodes;
 }
@@ -505,7 +599,7 @@ bool ngraph::is_zero(const Output<Node>& reduce_constant)
     return result_bool;
 }
 
-bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
+bool ngraph::is_one(const Output<Node>& reduce_constant)
 {
     auto result_bool = is_equal_to_const_value("1", reduce_constant);
     return result_bool;
