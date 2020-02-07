@@ -48,22 +48,28 @@ op::MVN::MVN(const Output<Node>& data, AxisSet reduction_axes, bool normalize_va
     constructor_validate_and_infer_types();
 }
 
-void op::MVN::pre_validate_and_infer_types()
+// decompose_op() relies on knowing the data type of input data which might
+// not be available at shape inference time. So do direct shape inference
+// instead of relying on op decomposition.
+void op::MVN::validate_and_infer_types()
 {
     // if m_across_channels is true we should calculate mean and variance per batch
     // else we calculate these per channel
-    if (m_reduction_axes.empty())
+    if (m_reduction_axes.empty() && input_value(0).get_partial_shape().rank().is_static())
     {
-        auto data = input_value(0);
         AxisSet reduction_axes;
         reduction_axes.insert(0);
         size_t start_axis = m_across_channels ? 1 : 2;
-        for (size_t i = start_axis; i < data.get_shape().size(); ++i)
+        for (size_t i = start_axis;
+             i < static_cast<size_t>(input_value(0).get_partial_shape().rank());
+             ++i)
         {
             reduction_axes.insert(i);
         }
         set_reduction_axes(reduction_axes);
     }
+
+    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
 NodeVector op::MVN::decompose_op() const

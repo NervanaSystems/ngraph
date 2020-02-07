@@ -144,7 +144,7 @@ set(SRC
     type_prop/get_output_element.cpp
     type_prop/grn.cpp
     type_prop/group_convolution.cpp
-    type_prop/group_convolution_transpose.cpp
+    type_prop/group_convolution_backprop_data.cpp
     type_prop/gru_cell.cpp
     type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
@@ -240,8 +240,9 @@ else()
         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
     endif()
 
-    if (NGRAPH_GPUH_ENABLE)
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPUH)
+    if(NGRAPH_GPU_ENABLE)
+        list(APPEND SRC gpu_test.cpp gpu_fusion.cpp)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
     endif()
 
     if (NGRAPH_PLAIDML_ENABLE)
@@ -377,12 +378,18 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
             backend/abs.in.cpp
             backend/acos.in.cpp
             backend/add.in.cpp
+            backend/aliased_output.in.cpp
+            backend/all.in.cpp
+            backend/any.in.cpp
             backend/arg_reduce.in.cpp
             backend/asin.in.cpp
             backend/atan.in.cpp
+            backend/atan2.in.cpp
             backend/auto_broadcast.in.cpp
             backend/batch_mat_mul.in.cpp
+            backend/broadcast.in.cpp
             backend/builder_flatten.in.cpp
+            backend/ceiling.in.cpp
             backend/comparison.in.cpp
             backend/computation_reuse.in.cpp
             backend/concat.in.cpp
@@ -390,11 +397,14 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
             backend/convolution.in.cpp
             backend/cos.in.cpp
             backend/cosh.in.cpp
+            backend/cum_sum.in.cpp
             backend/divide.in.cpp
+            backend/dot.in.cpp
             backend/dyn_broadcast.in.cpp
             backend/dyn_replace_slice_reference.in.cpp
             backend/dyn_reshape.in.cpp
             backend/dyn_slice_reference.in.cpp
+            backend/strided_slice.in.cpp
             backend/dynamic.in.cpp
             backend/embedding_lookup.in.cpp
             backend/erf.in.cpp
@@ -403,13 +413,17 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
             backend/function_name.in.cpp
             backend/fused_op.in.cpp
             backend/gather.in.cpp
+            backend/generate_mask.in.cpp
+            backend/group_convolution.in.cpp
             backend/layer_norm.in.cpp
             backend/log.in.cpp
             backend/logical_and.in.cpp
             backend/logical_or.in.cpp
             backend/logical_xor.in.cpp
             backend/lrn.in.cpp
+            backend/max.in.cpp
             backend/maximum.in.cpp
+            backend/min.in.cpp
             backend/minimum.in.cpp
             backend/multiple_backends.in.cpp
             backend/multiple_result.in.cpp
@@ -420,14 +434,18 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
             backend/numeric.in.cpp
             backend/one_hot.in.cpp
             backend/pad.in.cpp
+            backend/parameter_as_output.in.cpp
+            backend/partial_slice.in.cpp
             backend/pool.in.cpp
             backend/power.in.cpp
+            backend/product.in.cpp
             backend/quantize_dequantize.in.cpp
             backend/quantized_convolution.in.cpp
             backend/quantized_dot.in.cpp
             backend/random_uniform.in.cpp
             backend/range.in.cpp
             backend/relu.in.cpp
+            backend/replace_slice.in.cpp
             backend/reshape.in.cpp
             backend/reverse_sequence.in.cpp
             backend/reverse.in.cpp
@@ -442,27 +460,16 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
             backend/softmax.in.cpp
             backend/sqrt.in.cpp
             backend/subtract.in.cpp
+            backend/sum.in.cpp
             backend/tan.in.cpp
             backend/tanh.in.cpp
+            backend/tile.in.cpp
             backend/transpose.in.cpp
+            backend/unhandled_op.in.cpp
             backend/validate_call.in.cpp
             backend/zero_sized.in.cpp
 
 #            This files should be commented,because they are not working for a while.
-#            Not v1 op:
-#            backend/all.in.cpp
-#            backend/any.in.cpp
-#            backend/broadcast.in.cpp
-#            backend/ceiling.in.cpp
-#            backend/dot.in.cpp
-#            backend/generate_mask.in.cpp
-#            backend/max.in.cpp
-#            backend/min.in.cpp
-#            backend/product.in.cpp
-#            backend/replace_slice.in.cpp
-#            backend/sum.in.cpp
-#            backend/unhandled_op.in.cpp
-
 #            Need to fix for IE plugin:
 #            backend/api.in.cpp
 #            backend/batch_norm.in.cpp
@@ -473,10 +480,6 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
 #            backend/autodiff.in.cpp
 #            backend/constant.in.cpp
 #            backend/convolution_reference.in.cpp
-
-#            Segmentation fault. Need to fix on IE side:
-#            backend/parameter_as_output.in.cpp
-#            backend/aliased_output.in.cpp
             )
 endif()
 
@@ -497,6 +500,7 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND MULTI_TEST_SRC
             onnx/onnx_import.in.cpp
             onnx/onnx_import_convpool.in.cpp
+            onnx/onnx_import_dyn_shapes.in.cpp
             onnx/onnx_import_provenance.in.cpp
             onnx/onnx_import_reshape.in.cpp
             onnx/onnx_import_rnn.in.cpp
@@ -589,12 +593,12 @@ if (NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
 endif()
 
-if (NGRAPH_NOP_ENABLE)
-    target_link_libraries(unit-test PRIVATE nop_backend)
+if (NGRAPH_GPU_ENABLE)
+    target_link_libraries(unit-test PRIVATE gpu_backend)
 endif()
 
-if (NGRAPH_GPUH_ENABLE)
-    target_link_libraries(unit-test PRIVATE gpuh_backend)
+if (NGRAPH_NOP_ENABLE)
+    target_link_libraries(unit-test PRIVATE nop_backend)
 endif()
 
 if (NGRAPH_MLIR_ENABLE)

@@ -160,5 +160,6 @@ shared_ptr<Node> op::FakeQuantize::copy_with_new_args(const NodeVector& new_args
                                      new_args.at(2), // input_high
                                      new_args.at(3), // output_low
                                      new_args.at(4), // output_high
-                                     m_levels);
+                                     m_levels,
+                                     m_auto_broadcast);
 }

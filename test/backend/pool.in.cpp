@@ -1409,6 +1409,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_bprop_2d_2channel_2image_dyn_shape)
     float denom = 2 * 2;
 
     ex->call_with_validate({t_r}, {deltas, forward_shape});
+    ex->call_with_validate({t_r}, {deltas, forward_shape});
+    ex->call_with_validate({t_r}, {deltas, forward_shape});
 
     ASSERT_EQ(t_r->get_shape(), (Shape{2, 2, 3, 3}));
     EXPECT_TRUE(test::all_close_f(

@@ -141,3 +141,10 @@ in the unit test for this feature.
 .. _pass config: https://github.com/NervanaSystems/ngraph/blob/a4a3031bb40f19ec28704f76de39762e1f27e031/src/ngraph/pass/pass_config.cpp#L54
 .. _OpenMPI Runtime Library Documentation: https://www.openmprtl.org/documentation
 .. _precompiled MLIR: https://github.com/IntelAI/mlir
+
+Looking at graph objects
+------------------------
+
+A number of nGraph objects can print themselves on streams. For example,``cerr << a + b`` produces
+``v0::Add Add_2(Parameter_0[0]:f32{2,3}, Parameter_1[0]:f32{2,3}):(f32{2,3})`` indicating the
+specific version of the op, its name, arguments, and outputs.

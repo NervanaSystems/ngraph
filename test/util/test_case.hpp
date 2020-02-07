@@ -28,41 +28,72 @@ namespace ngraph
 {
     namespace test
     {
+        /// \brief Indicates which version of backend (dynamic or static) should be using in
+        /// NgraphTestCase
+        enum class BackendMode
+        {
+            // Use static version of backend
+            STATIC,
+            // Use dynamic version of backend
+            DYNAMIC
+        };
+
         class NgraphTestCase
         {
         public:
             NgraphTestCase(const std::shared_ptr<Function>& function,
-                           const std::string& backend_name)
-                : m_function(function)
-                , m_backend(ngraph::runtime::Backend::create(backend_name))
-            {
-            }
+                           const std::string& backend_name,
+                           BackendMode mode = BackendMode::STATIC);
 
             /// \brief Makes the test case print the expected and computed values to the console.
             ///        This should only be used for debugging purposes.
             ///
             /// Just before the assertion is done, the current test case will gather expected and
             /// computed values, format them as 2 columns and print out to the console along with
-            //  a corresponding index in the vector.
+            /// a corresponding index in the vector.
             ///
             /// \param dump - Indicates if the test case should perform the console printout
             NgraphTestCase& dump_results(bool dump = true);
 
             template <typename T>
-            void add_input(const std::vector<T>& values)
+            void add_input(const Shape& shape, const std::vector<T>& values)
             {
-                auto params = m_function->get_parameters();
-
+                const auto params = m_function->get_parameters();
                 NGRAPH_CHECK(m_input_index < params.size(),
                              "All function parameters already have inputs.");
 
-                auto tensor = m_backend->create_tensor(params.at(m_input_index)->get_element_type(),
-                                                       params.at(m_input_index)->get_shape());
+                const auto& input_pshape = params.at(m_input_index)->get_partial_shape();
+                NGRAPH_CHECK(input_pshape.compatible(shape),
+                             "Passed input shape is not compatible with nGraph function.");
+
+                auto tensor =
+                    m_backend->create_tensor(params.at(m_input_index)->get_element_type(), shape);
                 copy_data(tensor, values);
 
                 m_input_tensors.push_back(tensor);
 
                 ++m_input_index;
+            }
+
+            template <typename T>
+            void add_input(const std::vector<T>& values)
+            {
+                const auto& input_pshape =
+                    m_function->get_parameters().at(m_input_index)->get_partial_shape();
+                NGRAPH_CHECK(input_pshape.is_static(),
+                             "Input data shape must be provided, if shape defined in Functions is "
+                             "not fully known.");
+
+                return add_input<T>(input_pshape.to_shape(), values);
+            }
+
+            template <typename T>
+            void add_input_from_file(const Shape& shape,
+                                     const std::string& basepath,
+                                     const std::string& filename)
+            {
+                auto filepath = ngraph::file_util::path_join(basepath, filename);
+                add_input_from_file<T>(shape, filepath);
             }
 
             template <typename T>
@@ -73,10 +104,30 @@ namespace ngraph
             }
 
             template <typename T>
+            void add_input_from_file(const Shape& shape, const std::string& filepath)
+            {
+                auto value = read_binary_file<T>(filepath);
+                add_input<T>(shape, value);
+            }
+
+            template <typename T>
             void add_input_from_file(const std::string& filepath)
             {
                 auto value = read_binary_file<T>(filepath);
-                add_input(value);
+                add_input<T>(value);
+            }
+
+            template <typename T>
+            void add_multiple_inputs(const std::vector<Shape> shapes,
+                                     const std::vector<std::vector<T>>& vector_of_values)
+            {
+                NGRAPH_CHECK(shapes.size() == vector_of_values.size(),
+                             "Size of shapes and vector_of_values vectors must be the same.");
+
+                for (auto i = 0; i < vector_of_values.size(); ++i)
+                {
+                    add_input<T>(shapes[i], vector_of_values[i]);
+                }
             }
 
             template <typename T>
@@ -84,7 +135,7 @@ namespace ngraph
             {
                 for (const auto& value : vector_of_values)
                 {
-                    add_input(value);
+                    add_input<T>(value);
                 }
             }
 
@@ -97,8 +148,10 @@ namespace ngraph
                              "All function results already have expected outputs.");
 
                 auto function_output_type = results.at(m_output_index)->get_element_type();
-                m_result_tensors.emplace_back(
-                    m_backend->create_tensor(function_output_type, expected_shape));
+
+                const auto& output_pshape = results.at(m_output_index)->get_output_partial_shape(0);
+                NGRAPH_CHECK(output_pshape.compatible(expected_shape),
+                             "Passed output shape is not compatible with nGraph function.");
 
                 m_expected_outputs.emplace_back(std::make_shared<ngraph::op::Constant>(
                     function_output_type, expected_shape, values));
@@ -110,7 +163,7 @@ namespace ngraph
             void add_expected_output(const std::vector<T>& values)
             {
                 auto shape = m_function->get_results().at(m_output_index)->get_shape();
-                add_expected_output(shape, values);
+                add_expected_output<T>(shape, values);
             }
 
             template <typename T>
@@ -127,7 +180,7 @@ namespace ngraph
                                                const std::string& filepath)
             {
                 auto value = read_binary_file<T>(filepath);
-                add_expected_output(expected_shape, value);
+                add_expected_output<T>(expected_shape, value);
             }
 
             void run(size_t tolerance_bits = DEFAULT_FLOAT_TOLERANCE_BITS);
@@ -195,6 +248,7 @@ namespace ngraph
         protected:
             std::shared_ptr<Function> m_function;
             std::shared_ptr<runtime::Backend> m_backend;
+            std::shared_ptr<ngraph::runtime::Executable> m_executable;
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_input_tensors;
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_result_tensors;
             std::vector<std::shared_ptr<ngraph::op::Constant>> m_expected_outputs;

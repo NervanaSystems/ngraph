@@ -186,15 +186,15 @@ namespace ngraph
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }
     template <>
-    class AttributeAdapter<element::Type> : public ValueReference<element::Type>,
-                                            public ValueAccessor<void>
+    class NGRAPH_API AttributeAdapter<element::Type> : public ValueReference<element::Type>,
+                                                       public ValueAccessor<void>
     {
     public:
         AttributeAdapter(element::Type& value)
             : ValueReference<element::Type>(value)
         {
         }
-        NGRAPH_API
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<element::Type>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
