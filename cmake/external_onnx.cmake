@@ -29,10 +29,10 @@ set(ONNX_VERSION 1.6.0)
 
 set(ONNX_GIT_REPO_URL https://github.com/onnx/onnx.git)
 set(ONNX_GIT_BRANCH rel-${ONNX_VERSION})
-
+set(NGRAPH_ONNX_NAMESPACE ngraph_onnx)
 add_definitions(-DONNX_BUILD_SHARED_LIBS=ON)
 add_definitions(-DONNX_ML=ON)
-add_definitions(-DONNX_NAMESPACE=ngraph_onnx)
+add_definitions(-DONNX_NAMESPACE=${NGRAPH_ONNX_NAMESPACE})
 
 ExternalProject_Add(
     ext_onnx
@@ -49,6 +49,7 @@ ExternalProject_Add(
                -DONNX_GEN_PB_TYPE_STUBS=OFF
                -DCMAKE_PREFIX_PATH=${Protobuf_INSTALL_PREFIX}
                -DONNX_ML=TRUE
+               -DONNX_NAMESPACE=${NGRAPH_ONNX_NAMESPACE}
     TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/tmp"
     STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/stamp"
     DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/download"

@@ -54,7 +54,7 @@ namespace ngraph
 
         std::shared_ptr<Function> import_onnx_model(std::istream& sin)
         {
-            onnx::ModelProto model_proto;
+            ONNX_NAMESPACE::ModelProto model_proto;
             // Try parsing input as a binary protobuf message
             if (!model_proto.ParseFromIstream(&sin))
             {
