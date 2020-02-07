@@ -377,3 +377,100 @@ TEST(autobroadcast, legacy_broadcast_identical)
     EXPECT_EQ(result.at(0).get_shape(), lhs);
     EXPECT_EQ(result.at(1).get_shape(), lhs);
 }
+
+TEST(autobroadcast, opset1_legacy_broadcast_scalar)
+{
+    const Shape lhs{2,3,4,5};
+    const Shape rhs{};
+    size_t start_match_axis{3};
+    const auto lhs_node = make_shared<op::Parameter>(element::f32, lhs);
+    const auto rhs_node = make_shared<op::Parameter>(element::f32, rhs);
+
+    const Output<Node> result = builder::opset1::legacy_broadcast_for_binary_operation(
+        lhs_node, rhs_node, start_match_axis);
+
+    EXPECT_EQ(result.get_shape(), lhs);
+}
+
+TEST(autobroadcast, opset1_legacy_broadcast_1elem_tensor)
+{
+    const Shape lhs{2,3,4,5};
+    const Shape rhs{1,1,1};
+    size_t start_match_axis{1};
+    const auto lhs_node = make_shared<op::Parameter>(element::f32, lhs);
+    const auto rhs_node = make_shared<op::Parameter>(element::f32, rhs);
+
+    const Output<Node> result = builder::opset1::legacy_broadcast_for_binary_operation(
+        lhs_node, rhs_node, start_match_axis);
+
+    EXPECT_EQ(result.get_shape(), lhs);
+}
+
+TEST(autobroadcast, opset1_legacy_broadcast_1d)
+{
+    const Shape lhs{2,3,4,5};
+    const Shape rhs{5};
+    size_t start_match_axis{3};
+    const auto lhs_node = make_shared<op::Parameter>(element::f32, lhs);
+    const auto rhs_node = make_shared<op::Parameter>(element::f32, rhs);
+
+    const Output<Node> result = builder::opset1::legacy_broadcast_for_binary_operation(
+        lhs_node, rhs_node, start_match_axis);
+
+    EXPECT_EQ(result.get_shape(), lhs);
+}
+
+TEST(autobroadcast, opset1_legacy_broadcast_2d)
+{
+    const Shape lhs{2,3,4,5};
+    const Shape rhs{4,5};
+    size_t start_match_axis{2};
+    const auto lhs_node = make_shared<op::Parameter>(element::f32, lhs);
+    const auto rhs_node = make_shared<op::Parameter>(element::f32, rhs);
+
+    const Output<Node> result = builder::opset1::legacy_broadcast_for_binary_operation(
+        lhs_node, rhs_node, start_match_axis);
+
+    EXPECT_EQ(result.get_shape(), lhs);
+}
+
+TEST(autobroadcast, opset1_legacy_broadcast_2d_inside)
+{
+    const Shape lhs{2,3,4,5};
+    const Shape rhs{3,4};
+    size_t start_match_axis{1};
+    const auto lhs_node = make_shared<op::Parameter>(element::f32, lhs);
+    const auto rhs_node = make_shared<op::Parameter>(element::f32, rhs);
+
+    const Output<Node> result = builder::opset1::legacy_broadcast_for_binary_operation(
+        lhs_node, rhs_node, start_match_axis);
+
+    EXPECT_EQ(result.get_shape(), lhs);
+}
+
+TEST(autobroadcast, opset1_legacy_broadcast_1d_left)
+{
+    const Shape lhs{2,3,4,5};
+    const Shape rhs{2};
+    size_t start_match_axis{0};
+    const auto lhs_node = make_shared<op::Parameter>(element::f32, lhs);
+    const auto rhs_node = make_shared<op::Parameter>(element::f32, rhs);
+
+    const Output<Node> result = builder::opset1::legacy_broadcast_for_binary_operation(
+        lhs_node, rhs_node, start_match_axis);
+
+    EXPECT_EQ(result.get_shape(), lhs);
+}
+
+TEST(autobroadcast, opset1_legacy_broadcast_identical)
+{
+    const Shape lhs{2,3,4,5};
+    size_t start_match_axis{0};
+    const auto lhs_node = make_shared<op::Parameter>(element::f32, lhs);
+    const auto rhs_node = make_shared<op::Parameter>(element::f32, lhs);
+
+    const Output<Node> result = builder::opset1::legacy_broadcast_for_binary_operation(
+        lhs_node, rhs_node, start_match_axis);
+
+    EXPECT_EQ(result.get_shape(), lhs);
+}
