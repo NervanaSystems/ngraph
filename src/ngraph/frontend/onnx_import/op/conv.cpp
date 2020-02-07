@@ -119,46 +119,23 @@ namespace ngraph
                         add_bias(const std::shared_ptr<ngraph::Node>& ng_conv,
                                  const std::shared_ptr<ngraph::Node>& bias)
                     {
-                        std::shared_ptr<ngraph::Node> broadcasted_bias;
+                        const auto rank_of_conv =
+                            static_cast<size_t>(ng_conv->get_output_partial_shape(0).rank());
 
-                        if (ng_conv->get_output_partial_shape(0).is_dynamic())
-                        {
-                            const auto shape_of_conv =
-                                std::make_shared<default_opset::ShapeOf>(ng_conv);
+                        // reshape the bias node {M} to {1, M, 1, 1, ..., 1}
+                        // this is required by the addition operation that needs to be able
+                        // to broadcast the bias to match the shape of the convolution node
+                        std::vector<size_t> reshape_pattern_values(rank_of_conv, 1U);
+                        reshape_pattern_values[1] = bias->get_shape().front();
+                        const auto reshape_pattern =
+                            default_opset::Constant::create(element::u64,
+                                                            Shape{reshape_pattern_values.size()},
+                                                            reshape_pattern_values);
 
-                            const auto rank_of_conv =
-                                static_cast<size_t>(ng_conv->get_output_partial_shape(0).rank());
+                        std::shared_ptr<ngraph::Node> reshaped_bias =
+                            std::make_shared<default_opset::Reshape>(bias, reshape_pattern, false);
 
-                            // reshape the bias node to {1, M, 1, 1, ..., 1} matching the rank of
-                            // ng_conv
-                            // this is required so that the following Broadcast can automatically
-                            // handle broadcasting the bias the numpy way
-                            std::vector<size_t> reshape_pattern_values(rank_of_conv, 1U);
-                            reshape_pattern_values[1] = bias->get_shape().front();
-                            const auto reshape_pattern = default_opset::Constant::create(
-                                element::u64,
-                                Shape{reshape_pattern_values.size()},
-                                reshape_pattern_values);
-
-                            const auto reshaped_bias = std::make_shared<default_opset::Reshape>(
-                                bias, reshape_pattern, true);
-
-                            broadcasted_bias = std::make_shared<default_opset::Broadcast>(
-                                reshaped_bias, shape_of_conv);
-                        }
-                        else
-                        {
-                            const Shape& conv_shape = ng_conv->get_shape();
-                            const auto target_shape = default_opset::Constant::create(
-                                element::i64, Shape{conv_shape.size()}, conv_shape);
-
-                            broadcasted_bias = std::make_shared<default_opset::Broadcast>(
-                                bias,
-                                target_shape,
-                                default_opset::Constant::create(element::i64, Shape{1}, {1}));
-                        }
-
-                        return {std::make_shared<default_opset::Add>(ng_conv, broadcasted_bias)};
+                        return {std::make_shared<default_opset::Add>(ng_conv, reshaped_bias)};
                     }
                 } // namespace
 
