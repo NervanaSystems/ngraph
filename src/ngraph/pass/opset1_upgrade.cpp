@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <functional>
+#include <iterator>
 #include <limits>
 #include <numeric>
 
@@ -312,30 +313,32 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v0::GroupConvolutionBackpropData> node)
     {
-        auto strides = node->get_window_movement_strides();
-        auto dilations = node->get_window_dilation_strides();
-        auto pads_begin = node->get_padding_below();
-        auto pads_end = node->get_padding_above();
-        auto data_batch_pshape = node->get_input_partial_shape(0);
+        const auto strides = node->get_window_movement_strides();
+        const auto dilations = node->get_window_dilation_strides();
+        const auto pads_begin = node->get_padding_below();
+        const auto pads_end = node->get_padding_above();
+
+        const auto data_batch_pshape = node->input(0).get_partial_shape();
+        const auto filters_pshape = node->input(1).get_partial_shape();
 
         NGRAPH_CHECK(data_batch_pshape.is_static(),
-                     "Unable to convert GroupConvolution:0 to GroupConvolution:1"
-                     "with dynamic data_batch shape. Node: ",
+                     "Unable to convert GroupConvolutionBackpropData:0 to "
+                     "GroupConvolutionBackpropData:1 with dynamic data_batch shape. Node: ",
+                     *node);
+        NGRAPH_CHECK(filters_pshape.is_static(),
+                     "Unable to convert GroupConvolutionBackpropData:0 to "
+                     "GroupConvolutionBackpropData:1 with dynamic filters shape. Node: ",
                      *node);
 
         auto data_batch_shape = data_batch_pshape.to_shape();
-        data_batch_shape.erase(data_batch_shape.begin(), data_batch_shape.end());
-
-        NGRAPH_CHECK(node->get_input_partial_shape(1).is_static(),
-                     "Unable to convert GroupConvolution:0 to GroupConvolution:1"
-                     "with dynamic filters shape. Node: ",
-                     *node);
-
-        auto filters_shape = node->get_input_shape(1);
+        // Remove N, C from output shape to preserve only spatial dimentions.
+        data_batch_shape.erase(std::begin(data_batch_shape),
+                               std::next(std::begin(data_batch_shape), 2));
+        auto filters_shape = filters_pshape.to_shape();
         auto groups = node->get_groups();
+
         filters_shape[0] /= groups;
         filters_shape.insert(filters_shape.begin(), groups);
-
         auto reshaped_filters = builder::reshape(node->input_value(1), filters_shape);
 
         auto replacement_node = make_shared<op::v1::GroupConvolutionBackpropData>(
@@ -409,7 +412,7 @@ namespace
         auto kernel = node->get_window_shape();
 
         shared_ptr<Node> replacement_node;
-        if (node->get_inputs().size() == 3)
+        if (node->get_input_size() == 3)
         {
             replacement_node = make_shared<op::v1::MaxPoolBackprop>(node->input_value(0),
                                                                     node->input_value(1),
