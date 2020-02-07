@@ -260,8 +260,11 @@ namespace ngraph
                         auto vector = get_vector<uint64_t>();
                         return std::vector<T>(vector.begin(), vector.end());
                     }
-                    default: throw std::runtime_error("unsupported type");
+                    case element::Type_t::u1:
+                    case element::Type_t::undefined:
+                    case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
                     }
+                    throw std::runtime_error("unsupported type");
                 }
 
                 const void* get_data_ptr() const { return (m_data ? m_data->get_ptr() : nullptr); }
