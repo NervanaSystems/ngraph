@@ -4,9 +4,9 @@ graph {
   node {
     input: "x"
     output: "y"
-    op_type: "Asinh"
+    op_type: "Acosh"
   }
-  name: "asinh_graph"
+  name: "acosh_hraph"
   input {
     name: "x"
     type {

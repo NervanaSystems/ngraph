@@ -38,17 +38,16 @@ namespace ngraph
                     // Define inverse hyperbolic tangent in terms of natural logarithm:
                     //
                     // atanh(x) = 0.5 * ln((1 + x) / (1 - x))
-                    //          = 0.5 * (ln(1 + x) - ln(1 - x))
                     //
 
                     const auto one = default_opset::Constant::create(
                         data->get_element_type(), {}, {1.f});
 
                     const auto half = default_opset::Constant::create(
-                        data->get_element_type(), {}, {0.5f});;
+                        data->get_element_type(), {}, {0.5f});
 
-                    const auto one_plus_x = std::make_shared<default_opset::Add>(data, one);
-                    const auto one_minus_x = std::make_shared<default_opset::Subtract>(data, one);
+                    const auto one_plus_x = std::make_shared<default_opset::Add>(one, data);
+                    const auto one_minus_x = std::make_shared<default_opset::Subtract>(one, data);
                     const auto log_args = std::make_shared<default_opset::Divide>(one_plus_x, one_minus_x);
                     const auto log_node = std::make_shared<default_opset::Log>(log_args);
 
