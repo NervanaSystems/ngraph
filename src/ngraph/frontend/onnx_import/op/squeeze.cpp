@@ -14,10 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/op/fused/squeeze.hpp"
 #include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/validation_util.hpp"
 #include "squeeze.hpp"
 
@@ -38,8 +38,7 @@ namespace ngraph
                         data_rank.is_static(),
                         "The input data tensor's rank of the Squeeze op must be known(static).");
 
-                    const auto axes =
-                        node.get_attribute_value<std::vector<int64_t>>("axes", {});
+                    const auto axes = node.get_attribute_value<std::vector<int64_t>>("axes", {});
 
                     const auto normalized_axes = ngraph::normalize_axes(
                         node.get_description(), axes, static_cast<size_t>(data_rank));
