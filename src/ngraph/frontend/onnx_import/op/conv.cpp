@@ -78,43 +78,6 @@ namespace ngraph
                         }
                     }
 
-                    void validate_conv_attributes(const PartialShape& data_ps,
-                                                  const PartialShape& filters_ps,
-                                                  const int64_t groups)
-                    {
-                        NGRAPH_CHECK(
-                            groups >= 1,
-                            "The 'groups' attribute of a Conv node must be greater or equal "
-                            "to 1. Got: ",
-                            groups);
-
-                        NGRAPH_CHECK(data_ps.rank().is_static(),
-                                     "The input data tensor's rank has to be known (static)");
-
-                        NGRAPH_CHECK(filters_ps.rank().is_static(),
-                                     "The filters(weights) tensor's rank has to be known (static)");
-
-                        NGRAPH_CHECK(data_ps[1].is_static(),
-                                     "The input data channel dimension has to be known (static)");
-
-                        NGRAPH_CHECK(filters_ps[0].is_static(),
-                                     "The number of feature maps has to be known (static)");
-
-                        const auto n_data_channels = static_cast<size_t>(data_ps[1]);
-                        const auto n_feature_maps = static_cast<size_t>(filters_ps[0]);
-                        NGRAPH_CHECK(groups <= n_data_channels && groups <= n_feature_maps,
-                                     "Incorrect value of 'group' attribute: ",
-                                     groups);
-
-                        NGRAPH_CHECK(n_data_channels % groups == 0,
-                                     "Provided group attribute value must be a multiple of data "
-                                     "channels count.");
-
-                        NGRAPH_CHECK(n_feature_maps % groups == 0,
-                                     "Provided group attribute value must be a multiple of filter "
-                                     "channels count.");
-                    }
-
                     std::shared_ptr<ngraph::Node>
                         add_bias(const std::shared_ptr<ngraph::Node>& ng_conv,
                                  const std::shared_ptr<ngraph::Node>& bias)
@@ -148,9 +111,8 @@ namespace ngraph
                     const auto filters = inputs.at(1);
                     const auto groups = node.get_attribute_value<int64_t>("group", 1);
 
-                    validate_conv_attributes(data->get_output_partial_shape(0),
-                                             filters->get_output_partial_shape(0),
-                                             groups);
+                    NGRAPH_CHECK(data->get_output_partial_shape(0).rank().is_static(),
+                                 "The input data tensor's rank has to be known (static)");
 
                     const auto strides = convpool::get_strides(node);
                     const auto dilations = convpool::get_dilations(node);
