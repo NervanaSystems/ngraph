@@ -797,7 +797,7 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
 
 std::vector<size_t> ngraph::normalize_axes(const std::string& node_description,
                                            const std::vector<int64_t>& axes,
-                                           std::int64_t tensor_rank)
+                                           const Rank& tensor_rank)
 {
     std::vector<size_t> new_axes;
 
@@ -809,16 +809,31 @@ std::vector<size_t> ngraph::normalize_axes(const std::string& node_description,
     return new_axes;
 }
 
-int64_t ngraph::normalize_axis(const Node* node, std::int64_t axis, std::int64_t tensor_rank)
+int64_t ngraph::normalize_axis(const Node* node, std::int64_t axis, const Rank& tensor_rank)
 {
     return normalize_axis(node->description(), axis, tensor_rank);
 }
 
 int64_t ngraph::normalize_axis(const std::string& node_description,
                                std::int64_t axis,
-                               std::int64_t tensor_rank)
+                               const Rank& tensor_rank)
 {
-    return normalize_axis(node_description, axis, tensor_rank, -tensor_rank, tensor_rank - 1);
+    if (axis < 0)
+    {
+        // Handling negative axis requires static tensor rank
+        NGRAPH_CHECK(tensor_rank.is_static(),
+                     node_description,
+                     " Rank must be static in order to normalize negative axis=",
+                     axis);
+    }
+    if (tensor_rank.is_dynamic())
+    {
+        return axis;
+    }
+
+    const auto tensor_rank_value = static_cast<int64_t>(tensor_rank);
+    return normalize_axis(
+        node_description, axis, tensor_rank_value, -tensor_rank_value, tensor_rank_value - 1);
 }
 
 int64_t ngraph::normalize_axis(const Node* node,

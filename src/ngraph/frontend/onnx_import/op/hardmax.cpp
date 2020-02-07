@@ -34,11 +34,11 @@ namespace ngraph
                 NodeVector hardmax(const Node& node)
                 {
                     const auto input = node.get_ng_inputs().at(0);
-                    const auto& input_shape = input->get_shape();
+                    const auto& input_shape = input->get_output_partial_shape(0);
                     const auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
 
                     const auto normalized_axis =
-                        ngraph::normalize_axis(node.get_description(), axis, input_shape.size());
+                        ngraph::normalize_axis(node.get_description(), axis, input_shape.rank());
 
                     // reshape to 2D - "batch size" x "input feature dimensions" (NxD)
                     const auto coerced_tensor =
@@ -68,7 +68,17 @@ namespace ngraph
                     const auto converted_results = std::make_shared<default_opset::Convert>(
                         results, input->get_element_type());
 
-                    return {ngraph::builder::opset1::reshape(converted_results, input_shape)};
+                    if (input_shape.is_static())
+                    {
+                        return {ngraph::builder::opset1::reshape(converted_results,
+                                                                 input_shape.to_shape())};
+                    }
+                    else
+                    {
+                        const auto output_shape = std::make_shared<default_opset::ShapeOf>(input);
+                        return {
+                            std::make_shared<default_opset::Reshape>(input, output_shape, false)};
+                    }
                 }
 
             } // namespace set_1
