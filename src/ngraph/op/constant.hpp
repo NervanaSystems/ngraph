@@ -260,10 +260,7 @@ namespace ngraph
                         auto vector = get_vector<uint64_t>();
                         return std::vector<T>(vector.begin(), vector.end());
                     }
-                    default:
-                    {
-                        throw std::runtime_error("unsupported type");
-                    }
+                    default: throw std::runtime_error("unsupported type");
                     }
                 }
 
