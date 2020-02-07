@@ -40,8 +40,8 @@ namespace ngraph
                     // arccosh(x) = ln(x + sqrt(x^2 - 1))
                     //
 
-                    const auto one = default_opset::Constant::create(
-                        data->get_element_type(), {}, {1.f});
+                    const auto one =
+                        default_opset::Constant::create(data->get_element_type(), {}, {1.f});
 
                     const auto x_square = std::make_shared<default_opset::Multiply>(data, data);
                     const auto sqrt_args = std::make_shared<default_opset::Subtract>(x_square, one);

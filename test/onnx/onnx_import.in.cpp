@@ -1495,7 +1495,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_atanh)
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input<float>(Shape{1, 3}, {-0.9f, 0.0f, 0.9f});
-    test_case.add_expected_output<float>(Shape{1, 3}, {-1.4722194895832204f, 0.0f, 1.4722194895832204f});
+    test_case.add_expected_output<float>(Shape{1, 3},
+                                         {-1.4722194895832204f, 0.0f, 1.4722194895832204f});
 
     test_case.run();
 }

@@ -40,15 +40,16 @@ namespace ngraph
                     // atanh(x) = 0.5 * ln((1 + x) / (1 - x))
                     //
 
-                    const auto one = default_opset::Constant::create(
-                        data->get_element_type(), {}, {1.f});
+                    const auto one =
+                        default_opset::Constant::create(data->get_element_type(), {}, {1.f});
 
-                    const auto half = default_opset::Constant::create(
-                        data->get_element_type(), {}, {0.5f});
+                    const auto half =
+                        default_opset::Constant::create(data->get_element_type(), {}, {0.5f});
 
                     const auto one_plus_x = std::make_shared<default_opset::Add>(one, data);
                     const auto one_minus_x = std::make_shared<default_opset::Subtract>(one, data);
-                    const auto log_args = std::make_shared<default_opset::Divide>(one_plus_x, one_minus_x);
+                    const auto log_args =
+                        std::make_shared<default_opset::Divide>(one_plus_x, one_minus_x);
                     const auto log_node = std::make_shared<default_opset::Log>(log_args);
 
                     return {std::make_shared<default_opset::Multiply>(half, log_node)};
