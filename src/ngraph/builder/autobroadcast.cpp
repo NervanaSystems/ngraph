@@ -427,9 +427,9 @@ namespace ngraph
 
         namespace opset1
         {
-            Output<Node> legacy_style_broadcast_for_binary_operation(const Output<Node>& left,
-                                                                     const Output<Node>& right,
-                                                                     size_t start_match_axis)
+            Output<Node> legacy_broadcast_for_binary_operation(const Output<Node>& left,
+                                                               const Output<Node>& right,
+                                                               size_t start_match_axis)
             {
                 const auto& left_shape = left.get_shape();
                 const auto& right_shape = right.get_shape();

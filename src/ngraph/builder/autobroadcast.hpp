@@ -268,9 +268,9 @@ namespace ngraph
             ///
             /// \return     The Output object connected to node producing broadcasted right node.
             ///
-            Output<Node> legacy_style_broadcast_for_binary_operation(const Output<Node>& left,
-                                                                     const Output<Node>& right,
-                                                                     size_t start_match_axis);
+            Output<Node> legacy_broadcast_for_binary_operation(const Output<Node>& left,
+                                                               const Output<Node>& right,
+                                                               size_t start_match_axis);
 
             ///
             /// \brief      Reconstructs axes mapping vector for Broadcast:v1 operation.

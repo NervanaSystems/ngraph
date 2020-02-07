@@ -35,7 +35,7 @@ namespace ngraph
                     auto rhs_rank = rhs_node.get_shape().size();
                     auto axis = node.get_attribute_value<std::int64_t>("axis", lhs_rank - rhs_rank);
                     // Unidirectional broadcast right node to left shape.
-                    rhs_node = ngraph::builder::opset1::legacy_style_broadcast_for_binary_operation(
+                    rhs_node = ngraph::builder::opset1::legacy_broadcast_for_binary_operation(
                         lhs_node, rhs_node, axis);
                     return {std::make_shared<default_opset::Add>(
                         lhs_node, rhs_node, ngraph::op::AutoBroadcastSpec::NONE)};
