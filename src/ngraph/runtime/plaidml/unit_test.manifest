@@ -57,6 +57,17 @@ top_k_opset_11_const_k_smallest         # No plans to implement TopK
 atan2
 backwards_atan2
 
+#unsupported ops: `Acosh`, `Asinh`, `Atanh`
+model_acosh
+model_asinh
+model_atanh
+model_acosh_1_3
+model_acosh_3_2
+model_asinh_1_3
+model_asinh_3_2
+model_atanh_1_3
+model_atanh_3_2 
+
 # unsupported op: `Erf`
 erf
 gelu_f32
