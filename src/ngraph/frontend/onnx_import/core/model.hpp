@@ -47,7 +47,7 @@ namespace ngraph
                 return m_model_proto->producer_version();
             }
 
-            std::int64_t get_operator_set_id(const std::string& domain) const
+            std::int64_t get_opset_version(const std::string& domain) const
             {
                 for (const auto& opset_import : m_model_proto->opset_import())
                 {
