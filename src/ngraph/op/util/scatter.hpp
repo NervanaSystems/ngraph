@@ -35,8 +35,9 @@ namespace ngraph
                 /// \param updates Tensor: Must have same type as inputs
                 Scatter(const Output <Node> &inputs,
                         const Output <Node> &indices,
-                        const Output <Node> &updates)
-                        : Op({inputs, indices, updates})
+                        const Output <Node> &updates,
+                        const int32_t axis = 0)
+                        : Op({inputs, indices, updates}), m_axis(axis)
                 {
                     constructor_validate_and_infer_types();
                 }
@@ -48,6 +49,9 @@ namespace ngraph
                 {
                     throw ngraph_error("Not yet implemented");
                 }
+                int32_t get_axis() const;
+            protected:
+                int32_t m_axis;
             };
         }
     }

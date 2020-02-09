@@ -71,3 +71,8 @@ void op::util::Scatter::validate_and_infer_types()
 
     set_output_type(0, inputs_et, inputs_shape);
 }
+
+int32_t op::util::Scatter::get_axis() const
+{
+    return m_axis;
+}

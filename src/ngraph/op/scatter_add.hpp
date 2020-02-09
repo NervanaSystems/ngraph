@@ -26,6 +26,38 @@ namespace ngraph
         namespace v0
         {
             /// \brief Add updates to slices from inputs addressed by indices
+            class NGRAPH_API ScatterAdd : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"ScatterAdd", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ScatterAdd() = default;
+                /// \param inputs Tensor
+                /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
+                /// \param updates Tensor: Must have same type as inputs
+                ScatterAdd(const Output<Node>& inputs,
+                           const Output<Node>& indices,
+                           const Output<Node>& updates)
+                        : Op({inputs, indices, updates})
+                {
+                    constructor_validate_and_infer_types();
+                }
+
+                void validate_and_infer_types() override;
+
+                void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                       const OutputVector& /* deltas */) override
+                {
+                    throw ngraph_error("Not yet implemented");
+                }
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        namespace v2
+        {
+            /// \brief Add updates to slices from inputs addressed by indices
             class NGRAPH_API ScatterAdd : public util::Scatter
             {
             public:
@@ -40,7 +72,8 @@ namespace ngraph
                 /// \param updates Tensor: Must have same type as inputs
                 ScatterAdd(const Output<Node> &inputs,
                            const Output<Node> &indices,
-                           const Output<Node> &updates);
+                           const Output<Node> &updates,
+                           const int32_t axis = 0);
 
                 void generate_adjoints(autodiff::Adjoints & /* adjoints */,
                                        const OutputVector & /* deltas */) override
@@ -49,7 +82,7 @@ namespace ngraph
                 }
 
                 virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector &new_args) const override;
+                    copy_with_new_args(const NodeVector &new_args) const override;
             };
         }
         using v0::ScatterAdd;
