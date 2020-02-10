@@ -247,8 +247,9 @@ void MLIRCPUBackend::optimizeAffineDialect()
         pm.addPass(mlir::createLoopTilingPass(cacheLevelSize));
     }
 
-    // Populate pass manager with affine dialect to Std dialect conversion.
+    // Populate pass manager with affine-to-loop and loop-to-std dialect conversions.
     pm.addPass(mlir::createLowerAffinePass());
+    pm.addPass(mlir::createLowerToCFGPass());
 
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
