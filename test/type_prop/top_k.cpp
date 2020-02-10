@@ -344,25 +344,3 @@ TEST(type_prop, topk_v1_negative_axis_support)
     ASSERT_EQ(topk->get_raw_axis(), axis);
     ASSERT_EQ(topk->get_axis(), data_shape.at(1));
 }
-
-TEST(type_prop, topk_v1_negative_axis_dynamic_rank)
-{
-    const auto data_shape = PartialShape::dynamic();
-    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto k = op::Constant::create(element::i64, Shape{}, {2});
-    const int64_t axis = -2;
-
-    try
-    {
-        const auto topk = make_shared<op::v1::TopK>(data, k, axis, "max", "value");
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(
-            error.what(), std::string("Rank must be static in order to normalize negative axis"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}

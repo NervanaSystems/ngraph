@@ -252,7 +252,7 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const element::Type& index_element_type)
     : Op{{data, k}}
     , m_axis{axis}
-    , m_normalized_axis{0}
+    , m_normalized_axis{std::numeric_limits<size_t>::max()}
     , m_mode{mode}
     , m_sort{sort}
     , m_index_element_type{index_element_type}
@@ -280,12 +280,11 @@ void op::v1::TopK::validate_and_infer_types()
                                       get_input_element_type(1));
     }
 
-    set_axis(m_axis);
-
     PartialShape output_shape{input_partial_shape};
 
     if (output_shape.rank().is_static())
     {
+        m_normalized_axis = ngraph::normalize_axis(this, m_axis, static_cast<int64_t>(output_shape.rank()));
         if (k != 0)
         {
             output_shape[m_normalized_axis] = k;
@@ -299,19 +298,15 @@ void op::v1::TopK::validate_and_infer_types()
 
 void op::v1::TopK::set_axis(const int64_t axis)
 {
-    if (axis >= 0)
+    const auto input_rank = get_input_partial_shape(0).rank();
+    if (input_rank.is_static())
     {
-        m_normalized_axis = axis;
+        m_normalized_axis = ngraph::normalize_axis(this, axis, static_cast<int64_t>(input_rank));
     }
     else
     {
-        const auto input_rank = get_input_partial_shape(0).rank();
-        NODE_VALIDATION_CHECK(this,
-                              input_rank.is_static(),
-                              "Rank must be static in order to normalize negative axis");
-        m_normalized_axis = ngraph::normalize_axis(this, axis, static_cast<int64_t>(input_rank));
+        m_normalized_axis = std::numeric_limits<size_t>::max();
     }
-
     m_axis = axis;
 }
 
