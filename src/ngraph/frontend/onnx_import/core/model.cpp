@@ -13,9 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <onnx/onnx_pb.h>
 
 #include "model.hpp"
-#include <onnx/onnx_pb.h>
 #include "ngraph/log.hpp"
 #include "ops_bridge.hpp"
 

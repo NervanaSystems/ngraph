@@ -19,11 +19,9 @@
 #include "onnx/proto_utils.h"
 #include "onnx/string_utils.h"
 
-#include <fstream>
 #include <functional>
 #include <numeric>
 #include <sstream>
-#include <string>
 #include "graph.hpp"
 #include "node.hpp"
 #include "utils/common.hpp"
@@ -246,12 +244,11 @@ namespace ngraph
 
         void Graph::expand_function()
         {
-            std::string function_to_expand_whitelist = "DynamicQuantizeLinear";
             for (int i = 0; i < m_graph_proto.node().size(); ++i)
             {
                 auto node = m_graph_proto.node()[i];
 
-                if (node.op_type() == function_to_expand_whitelist)
+                if (function_to_expand_whitelist.count(node.op_type()))
                 {
                     const auto operator_set_id = m_model->get_opset_version(node.domain());
                     const onnx::OpSchemaRegistry* schema_registry =

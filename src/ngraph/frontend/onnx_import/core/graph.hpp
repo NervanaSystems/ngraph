@@ -64,6 +64,7 @@ namespace ngraph
             std::map<std::string, std::shared_ptr<ngraph::Node>> m_ng_node_cache;
             std::map<std::string, Tensor> m_initializers;
             Model* m_model;
+            const std::set<std::string> function_to_expand_whitelist = {"DynamicQuantizeLinear"};
 
             void expand_function();
         };

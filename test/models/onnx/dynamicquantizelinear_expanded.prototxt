@@ -1,0 +1,173 @@
+ir_version: 5
+producer_name: "backend-test"
+graph {
+  node {
+    output: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionQ_Min"
+    op_type: "Constant"
+    attribute {
+      name: "value"
+      t {
+        data_type: 1
+        float_data: 0
+      }
+      type: TENSOR
+    }
+  }
+  node {
+    output: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionQ_Max"
+    op_type: "Constant"
+    attribute {
+      name: "value"
+      t {
+        data_type: 1
+        float_data: 255
+      }
+      type: TENSOR
+    }
+  }
+  node {
+    input: "x"
+    output: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionX_Min"
+    op_type: "ReduceMin"
+    attribute {
+      name: "keepdims"
+      i: 0
+      type: INT
+    }
+  }
+  node {
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionX_Min"
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionQ_Min"
+    output: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionX_Min_Adjusted"
+    op_type: "Min"
+  }
+  node {
+    input: "x"
+    output: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionX_Max"
+    op_type: "ReduceMax"
+    attribute {
+      name: "keepdims"
+      i: 0
+      type: INT
+    }
+  }
+  node {
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionX_Max"
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionQ_Min"
+    output: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionX_Max_Adjusted"
+    op_type: "Max"
+  }
+  node {
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionX_Max_Adjusted"
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionX_Min_Adjusted"
+    output: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionX_Range"
+    op_type: "Sub"
+  }
+  node {
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionX_Range"
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionQ_Max"
+    output: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionScale"
+    op_type: "Div"
+  }
+  node {
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionX_Min_Adjusted"
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionScale"
+    output: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionMin_Scaled"
+    op_type: "Div"
+  }
+  node {
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionQ_Min"
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionMin_Scaled"
+    output: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionInitial_ZeroPoint_FP"
+    op_type: "Sub"
+  }
+  node {
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionInitial_ZeroPoint_FP"
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionQ_Min"
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionQ_Max"
+    output: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionClipped_ZeroPoint_FP"
+    op_type: "Clip"
+  }
+  node {
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionClipped_ZeroPoint_FP"
+    output: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionRounded_ZeroPoint_FP"
+    op_type: "Round"
+  }
+  node {
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionRounded_ZeroPoint_FP"
+    output: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionZeropoint"
+    op_type: "Cast"
+    attribute {
+      name: "to"
+      i: 2
+      type: INT
+    }
+  }
+  node {
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionScale"
+    output: "y_scale"
+    op_type: "Identity"
+  }
+  node {
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionZeropoint"
+    output: "y_zero_point"
+    op_type: "Identity"
+  }
+  node {
+    input: "x"
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionScale"
+    input: "DynamicQuantizeLinear_test_dynamicquantizelinear_expanded_functionZeropoint"
+    output: "y"
+    op_type: "QuantizeLinear"
+  }
+  name: "test_dynamicquantizelinear_expanded"
+  input {
+    name: "x"
+    type {
+      tensor_type {
+        elem_type: 1
+        shape {
+          dim {
+            dim_value: 6
+          }
+        }
+      }
+    }
+  }
+  output {
+    name: "y"
+    type {
+      tensor_type {
+        elem_type: 2
+        shape {
+          dim {
+            dim_value: 6
+          }
+        }
+      }
+    }
+  }
+  output {
+    name: "y_scale"
+    type {
+      tensor_type {
+        elem_type: 1
+        shape {
+        }
+      }
+    }
+  }
+  output {
+    name: "y_zero_point"
+    type {
+      tensor_type {
+        elem_type: 2
+        shape {
+        }
+      }
+    }
+  }
+}
+opset_import {
+  version: 11
+}
