@@ -196,8 +196,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, model_acosh_3_2)
     auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
     test_case.add_input<float>(Shape{3, 2}, {1.0f, 2.5f, 4.3f, 1.0f, 2.5f, 4.3f});
     test_case.add_expected_output<float>(
-        Shape{3, 2},
-        {0.0f, 1.5667993f, 2.1379586f, 0.0f, 1.5667993f, 2.1379586f});
+        Shape{3, 2}, {0.0f, 1.5667993f, 2.1379586f, 0.0f, 1.5667993f, 2.1379586f});
 
     test_case.run();
 }
@@ -209,8 +208,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, model_asinh_1_3)
 
     auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
     test_case.add_input<float>(Shape{1, 3}, {-1.5f, 0.0f, 1.5f});
-    test_case.add_expected_output<float>(Shape{1, 3},
-                                         {-1.1947632f, 0.0f, 1.1947632f});
+    test_case.add_expected_output<float>(Shape{1, 3}, {-1.1947632f, 0.0f, 1.1947632f});
 
     test_case.run();
 }
@@ -222,13 +220,8 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, model_asinh_3_2)
 
     auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
     test_case.add_input<float>(Shape{3, 2}, {-1.5f, 0.0f, 1.5f, -1.5f, 0.0f, 1.5f});
-    test_case.add_expected_output<float>(Shape{3, 2},
-                                         {-1.1947632f,
-                                          0.0f,
-                                          1.1947632f,
-                                          -1.1947632,
-                                          0.0f,
-                                          1.1947632f});
+    test_case.add_expected_output<float>(
+        Shape{3, 2}, {-1.1947632f, 0.0f, 1.1947632f, -1.1947632, 0.0f, 1.1947632f});
 
     test_case.run();
 }
@@ -240,8 +233,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, model_atanh_1_3)
 
     auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
     test_case.add_input<float>(Shape{1, 3}, {-0.9f, 0.0f, 0.9f});
-    test_case.add_expected_output<float>(Shape{1, 3},
-                                         {-1.47221948f, 0.0f, 1.47221948f});
+    test_case.add_expected_output<float>(Shape{1, 3}, {-1.47221948f, 0.0f, 1.47221948f});
 
     test_case.run();
 }
@@ -253,13 +245,8 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, model_atanh_3_2)
 
     auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
     test_case.add_input<float>(Shape{3, 2}, {-0.9f, 0.0f, 0.9f, -0.9f, 0.0f, 0.9f});
-    test_case.add_expected_output<float>(Shape{3, 2},
-                                         {-1.47221948f,
-                                          0.0f,
-                                          1.47221948f,
-                                          -1.47221948f,
-                                          0.0f,
-                                          1.47221948f});
+    test_case.add_expected_output<float>(
+        Shape{3, 2}, {-1.47221948f, 0.0f, 1.47221948f, -1.47221948f, 0.0f, 1.47221948f});
 
     test_case.run();
 }
