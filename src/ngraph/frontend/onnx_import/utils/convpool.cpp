@@ -59,8 +59,7 @@ namespace ngraph
                                      attr_name,
                                      "' is not provided data rank must be static");
                     const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
-                    const Strides default_strides(data_spatial_dims, 1UL);
-                    return default_strides;
+                    return Strides(data_spatial_dims, 1UL);
                 }
             } // namespace detail
 
