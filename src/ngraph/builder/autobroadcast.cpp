@@ -70,9 +70,9 @@ namespace ngraph
             auto rhs_rank = rhs_shape.size();
             auto max_rank = max(lhs_rank, rhs_rank);
 
-            // left-pad the lhs_shape with zeros
+            // left-pad the lhs_shape with ones
             lhs_shape.insert(begin(lhs_shape), max_rank - lhs_rank, 1);
-            // left-pad the rhs_shape with zeros
+            // left-pad the rhs_shape with ones
             rhs_shape.insert(begin(rhs_shape), max_rank - rhs_rank, 1);
 
             for (size_t index = 0; index < max_rank; ++index)
