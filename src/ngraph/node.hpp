@@ -552,11 +552,6 @@ namespace ngraph
     NGRAPH_API std::ostream& operator<<(std::ostream&, const Node&);
     NGRAPH_API std::ostream& operator<<(std::ostream&, const Node*);
 
-    NGRAPH_API std::ostream& operator<<(std::ostream& out, const Output<Node>& output);
-    NGRAPH_API std::ostream& operator<<(std::ostream& out, const Output<const Node>& output);
-    NGRAPH_API std::ostream& operator<<(std::ostream& out, const Input<Node>& input);
-    NGRAPH_API std::ostream& operator<<(std::ostream& out, const Input<const Node>& input);
-
     // Like an Output but with a Node* instead of a shared_ptr<Node>
     struct RawNodeOutput
     {

@@ -184,4 +184,17 @@ namespace ngraph
     }
     bool Output<const Node>::operator<=(const Output& other) const { return !(*this > other); }
     bool Output<const Node>::operator>=(const Output& other) const { return !(*this < other); }
+    std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
+    {
+        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
+                                                            << "]:" << output.get_element_type()
+                                                            << output.get_partial_shape();
+    }
+
+    std::ostream& operator<<(std::ostream& out, const Output<const Node>& output)
+    {
+        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
+                                                            << "]:" << output.get_element_type()
+                                                            << output.get_partial_shape();
+    }
 }

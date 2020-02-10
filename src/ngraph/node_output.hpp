@@ -181,4 +181,7 @@ namespace ngraph
         std::shared_ptr<const Node> m_node;
         size_t m_index{0};
     };
+
+    NGRAPH_API std::ostream& operator<<(std::ostream& out, const Output<Node>& output);
+    NGRAPH_API std::ostream& operator<<(std::ostream& out, const Output<const Node>& output);
 }

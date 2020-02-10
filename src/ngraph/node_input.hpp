@@ -124,4 +124,7 @@ namespace ngraph
         const Node* const m_node;
         const size_t m_index;
     };
+
+    NGRAPH_API std::ostream& operator<<(std::ostream& out, const Input<Node>& input);
+    NGRAPH_API std::ostream& operator<<(std::ostream& out, const Input<const Node>& input);
 }
