@@ -61,6 +61,10 @@ if(NGRAPH_TBB_ENABLE)
     set_source_files_properties(compiler.cpp PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
 endif()
 
+if(APPLE)
+    list(APPEND HEADER_SEARCH_DEFINES CMAKE_OSX_SYSROOT="${CMAKE_OSX_SYSROOT}")
+endif()
+
 set_source_files_properties(compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
 
 # Generate the resource file containing all headers used by the codegen compiler
