@@ -98,30 +98,12 @@ namespace ngraph
             }
         } // namespace detail
 
-
         Graph::Graph(const onnx::GraphProto& graph_proto, Model& model)
-            : m_graph_proto{&graph_proto)
+            : m_graph_proto{graph_proto}
             , m_model{&model}
         {
-            for (int i = 0; i < m_graph_proto.node().size(); ++i)
-            {
-                auto node = m_graph_proto.node()[i];
-                const auto operator_set_id = model.get_operator_set_id(node.domain());
-                const onnx::OpSchemaRegistry* schema_registry = onnx::OpSchemaRegistry::Instance();
-
-                const auto node_op_schema = schema_registry->GetSchema(
-                    node.op_type(), static_cast<int>(operator_set_id), node.domain());
-
-                if (node_op_schema && node_op_schema->HasFunction())
-                {
-                    onnx::GraphProto gp;
-                    const onnx::FunctionProto* proto_func = node_op_schema->GetFunction();
-                    onnx::FunctionExpandHelper(node, *proto_func, m_graph_proto);
-
-                    // Remove node with function.
-                    m_graph_proto.mutable_node()->erase(m_graph_proto.node().begin() + i);
-                }
-            }
+            // Expand function into subgraph.
+            expand_function();
 
             // Process all initializers in the graph
             for (const auto& initializer_tensor : m_graph_proto.initializer())
@@ -260,6 +242,35 @@ namespace ngraph
                 [&tag](std::shared_ptr<ngraph::Node> ng_node) { ng_node->add_provenance_tag(tag); },
                 false,
                 ng_inputs);
+        }
+
+        void Graph::expand_function()
+        {
+            std::string function_to_expand_whitelist = "DynamicQuantizeLinear";
+            for (int i = 0; i < m_graph_proto.node().size(); ++i)
+            {
+                auto node = m_graph_proto.node()[i];
+
+                if (node.op_type() == function_to_expand_whitelist)
+                {
+                    const auto operator_set_id = m_model->get_opset_version(node.domain());
+                    const onnx::OpSchemaRegistry* schema_registry =
+                        onnx::OpSchemaRegistry::Instance();
+
+                    const auto node_op_schema = schema_registry->GetSchema(
+                        node.op_type(), static_cast<int>(operator_set_id), node.domain());
+
+                    if (node_op_schema && node_op_schema->HasFunction())
+                    {
+                        onnx::GraphProto gp;
+                        const onnx::FunctionProto* proto_func = node_op_schema->GetFunction();
+                        onnx::FunctionExpandHelper(node, *proto_func, m_graph_proto);
+
+                        // Remove node with function.
+                        m_graph_proto.mutable_node()->erase(m_graph_proto.node().begin() + i);
+                    }
+                }
+            }
         }
     } // namespace onnx_import
 

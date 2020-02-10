@@ -64,6 +64,8 @@ namespace ngraph
             std::map<std::string, std::shared_ptr<ngraph::Node>> m_ng_node_cache;
             std::map<std::string, Tensor> m_initializers;
             Model* m_model;
+
+            void expand_function();
         };
 
         inline std::ostream& operator<<(std::ostream& outs, const Graph& graph)
