@@ -161,7 +161,7 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual size_t get_version() const override { return 1; }
-                size_t get_axis() const { return m_normalized_axis; }
+                size_t get_axis() const;
                 int64_t get_raw_axis() const { return m_axis; }
                 void set_axis(const int64_t axis);
                 Mode get_mode() const { return m_mode; }

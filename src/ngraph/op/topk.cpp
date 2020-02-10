@@ -244,6 +244,8 @@ op::v1::TopK::TopK(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+static const std::size_t UNKNOWN_NORMALIZED_AXIS = std::numeric_limits<size_t>::max();
+
 op::v1::TopK::TopK(const Output<Node>& data,
                    const Output<Node>& k,
                    const int64_t axis,
@@ -252,7 +254,7 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const element::Type& index_element_type)
     : Op{{data, k}}
     , m_axis{axis}
-    , m_normalized_axis{std::numeric_limits<size_t>::max()}
+    , m_normalized_axis{UNKNOWN_NORMALIZED_AXIS}
     , m_mode{mode}
     , m_sort{sort}
     , m_index_element_type{index_element_type}
@@ -284,7 +286,8 @@ void op::v1::TopK::validate_and_infer_types()
 
     if (output_shape.rank().is_static())
     {
-        m_normalized_axis = ngraph::normalize_axis(this, m_axis, static_cast<int64_t>(output_shape.rank()));
+        m_normalized_axis =
+            ngraph::normalize_axis(this, m_axis, static_cast<int64_t>(output_shape.rank()));
         if (k != 0)
         {
             output_shape[m_normalized_axis] = k;
@@ -305,9 +308,17 @@ void op::v1::TopK::set_axis(const int64_t axis)
     }
     else
     {
-        m_normalized_axis = std::numeric_limits<size_t>::max();
+        m_normalized_axis = UNKNOWN_NORMALIZED_AXIS;
     }
     m_axis = axis;
+}
+
+size_t op::v1::TopK::get_axis() const
+{
+    NODE_VALIDATION_CHECK(
+        this, m_normalized_axis != UNKNOWN_NORMALIZED_AXIS, "Normalized axis of TopK is unknown");
+
+    return m_normalized_axis;
 }
 
 size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
