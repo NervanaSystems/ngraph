@@ -34,7 +34,7 @@ op::v2::ROIAlign::ROIAlign(const Output<Node>& data,
                            const Output<Node>& batch_indices,
                            const size_t pooled_h,
                            const size_t pooled_w,
-                           const int32_t sampling_ratio,
+                           const size_t sampling_ratio,
                            const float spatial_scale,
                            const std::string& mode)
         : Op({data, rois, batch_indices}), m_pooled_h(pooled_h), m_pooled_w(pooled_w), m_sampling_ratio(sampling_ratio),
@@ -57,7 +57,7 @@ void op::v2::ROIAlign::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(
                 this,
-                static_cast<size_t>(data_shape.rank()) == 2,
+                static_cast<size_t>(data_shape.rank()) == 4,
                 "The feature map tensor rank is expected to be 4, got: ",
                 data_shape.rank());
         NODE_VALIDATION_CHECK(

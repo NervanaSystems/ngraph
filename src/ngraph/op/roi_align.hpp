@@ -43,10 +43,10 @@ namespace ngraph
                 ROIAlign(const Output<Node>& data,
                          const Output<Node>& rois,
                          const Output<Node>& batch_indices,
-                         const size_t pooled_h,
-                         const size_t pooled_w,
-                         const int32_t sampling_ratio,
-                         const float spatial_scale,
+                         size_t pooled_h,
+                         size_t pooled_w,
+                         size_t sampling_ratio,
+                         float spatial_scale,
                          const std::string& mode);
 
                 virtual std::shared_ptr<Node>
@@ -55,7 +55,7 @@ namespace ngraph
             protected:
                 size_t m_pooled_h;
                 size_t m_pooled_w;
-                int32_t m_sampling_ratio;
+                size_t m_sampling_ratio;
                 float m_spatial_scale;
                 std::string m_mode;
             };
