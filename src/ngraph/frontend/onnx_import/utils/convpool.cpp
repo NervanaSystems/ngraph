@@ -39,7 +39,7 @@ namespace ngraph
             {
                 /// \brief              Helper method used to read vector attribute
                 /// \note               Default value is vector of size spatial dims filled with
-                /// zeros
+                ///                     ones
                 ///
                 /// \param   node       Node from which attribute is read
                 /// \param   attr_name  Attribute name (such as `strides`, `dilations`)
@@ -59,7 +59,7 @@ namespace ngraph
                                      attr_name,
                                      "' is not provided data rank must be static");
                     const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
-                    const std::vector<std::size_t> default_strides(data_spatial_dims, 1UL);
+                    const Strides default_strides(data_spatial_dims, 1UL);
                     return default_strides;
                 }
             } // namespace detail

@@ -77,17 +77,17 @@ namespace ngraph
             GlobalPoolingFactory::GlobalPoolingFactory(const Node& node)
                 : PoolingFactory(node)
             {
-                const auto data_pshape = node.get_ng_inputs().at(0)->get_output_partial_shape(0);
-                const auto data_rank = data_pshape.rank();
+                const auto data_shape = node.get_ng_inputs().at(0)->get_output_partial_shape(0);
+                const auto data_rank = data_shape.rank();
                 CHECK_VALID_NODE(
                     node, data_rank.is_static(), "Data rank must be static for global pooling ops");
                 Shape kernel_shape;
                 for (auto i = 2; i < static_cast<size_t>(data_rank); ++i)
                 {
                     CHECK_VALID_NODE(node,
-                                     data_pshape[i].is_static(),
+                                     data_shape[i].is_static(),
                                      "All spatial dimensions must be known for global pooling ops");
-                    kernel_shape.emplace_back(static_cast<size_t>(data_pshape[i]));
+                    kernel_shape.emplace_back(static_cast<size_t>(data_shape[i]));
                 }
 
                 // Set shape to all but {N,C} axes.

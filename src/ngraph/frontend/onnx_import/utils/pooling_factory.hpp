@@ -48,7 +48,6 @@ namespace ngraph
             class PoolingFactory
             {
             public:
-                explicit PoolingFactory(const Node& node);
                 virtual ~PoolingFactory() = default;
 
                 ///
@@ -64,6 +63,8 @@ namespace ngraph
                 NodeVector make_max_pool() const;
 
             protected:
+                explicit PoolingFactory(const Node& node);
+
                 Node m_onnx_node;
                 const NodeVector m_inputs;
                 Shape m_kernel_shape;
