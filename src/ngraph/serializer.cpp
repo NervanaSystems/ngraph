@@ -1799,29 +1799,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                                     groups);
             break;
         }
-        case OP_TYPEID::GroupConvolutionTranspose:
-        {
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            auto dilations = node_js.at("dilations").get<vector<size_t>>();
-            auto padding_begin = node_js.at("padding_begin").get<vector<ptrdiff_t>>();
-            auto padding_end = node_js.at("padding_end").get<vector<ptrdiff_t>>();
-            auto output_padding = node_js.at("output_padding").get<vector<ptrdiff_t>>();
-            auto groups = node_js.at("groups").get<size_t>();
-            op::PadType pad_type = read_pad_type(node_js);
-            auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
-
-            node = make_shared<op::GroupConvolutionTranspose>(args[0],
-                                                              args[1],
-                                                              strides,
-                                                              dilations,
-                                                              padding_begin,
-                                                              padding_end,
-                                                              output_padding,
-                                                              groups,
-                                                              pad_type,
-                                                              output_shape);
-            break;
-        }
         case OP_TYPEID::GRUCell:
         {
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
@@ -3884,19 +3861,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["groups"] = tmp->get_groups();
-        break;
-    }
-    case OP_TYPEID::GroupConvolutionTranspose:
-    {
-        auto tmp = static_cast<const op::GroupConvolutionTranspose*>(&n);
-        node["strides"] = tmp->get_strides();
-        node["dilations"] = tmp->get_dilations();
-        node["padding_begin"] = tmp->get_padding_begin();
-        node["padding_end"] = tmp->get_padding_end();
-        node["output_padding"] = tmp->get_output_padding();
-        node["groups"] = tmp->get_groups();
-        node["pad_type"] = tmp->get_pad_type();
-        node["output_shape"] = tmp->get_output_shape();
         break;
     }
     case OP_TYPEID::HardSigmoid: { break;

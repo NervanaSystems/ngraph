@@ -233,26 +233,8 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ConvolutionBackpropData> node)
     {
-        auto output_shape_node =
-            as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
         const auto data_arg = node->input(0).get_source_output();
         const auto filters_arg = node->input(1).get_source_output();
-        const auto strides = node->get_strides();
-        NGRAPH_CHECK(output_shape_node,
-                     "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
-                     "if output_shape is not constant. Node: ",
-                     *node);
-        const size_t num_spatial_dims = strides.size();
-
-        auto output_padding = node->get_output_padding();
-
-        bool is_op_valid = all_of(
-            output_padding.begin(), output_padding.end(), [](size_t value) { return value == 0; });
-
-        NGRAPH_CHECK(is_op_valid,
-                     "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
-                     "with output padding other than `0`. Node: ",
-                     *node);
 
         auto data_pshape = data_arg.get_partial_shape();
         auto filters_pshape = filters_arg.get_partial_shape();
@@ -263,10 +245,14 @@ namespace
                      "if data shape N and filters shape C dimensions are not static. Node: ",
                      *node);
 
-        // Add N and C dimenstions to output_shape
-        auto output_shape = output_shape_node->get_shape_val();
-        output_shape.insert(output_shape.begin(), static_cast<size_t>(filters_pshape[1]));
-        output_shape.insert(output_shape.begin(), static_cast<size_t>(data_pshape[0]));
+        const size_t num_spatial_dims = static_cast<size_t>(data_pshape.rank()) - 2;
+
+        const PartialShape output_pshape{node->output(0).get_partial_shape()};
+        NGRAPH_CHECK(output_pshape.is_static(),
+                     "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
+                     "if output shape is dynamic. Node: ",
+                     *node);
+        Shape output_shape = output_pshape.to_shape();
 
         auto replacement_node =
             make_shared<op::v0::ConvolutionBackpropData>(output_shape,
@@ -414,76 +400,45 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::GroupConvolutionBackpropData> node)
     {
-        auto output_shape_input =
-            as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
         const auto data_arg = node->input_value(0);
         const auto filters_arg = node->input_value(1);
-        const auto strides = node->get_strides();
-        const auto dilations = node->get_dilations();
-
-        NGRAPH_CHECK(
-            output_shape_input,
-            "Unable to convert GroupConvolutionBackpropData:v1 to GroupConvolutionBackpropData:v0 "
-            "if output_shape is not constant. Node: ",
-            *node);
-
-        auto output_padding = node->get_output_padding();
-
-        bool is_op_valid = all_of(
-            output_padding.begin(), output_padding.end(), [](size_t value) { return value == 0; });
-
-        NGRAPH_CHECK(
-            is_op_valid,
-            "Unable to convert GroupConvolutionBackpropData:v1 to GroupConvolutionBackpropData:v0 "
-            "with output padding other than `0`. Node: ",
-            *node);
 
         NGRAPH_CHECK(data_arg.get_partial_shape().is_static(),
-                     "Unable to convert GroupConvolution:1 to GroupConvolution:0"
-                     "with dynamic data shape. Node: ",
+                     "Unable to convert GroupConvolutionBackpropData:1 to "
+                     "GroupConvolutionBackpropData:0 with dynamic data shape. Node: ",
                      *node);
 
         NGRAPH_CHECK(filters_arg.get_partial_shape().is_static(),
-                     "Unable to convert GroupConvolution:1 to GroupConvolution:0"
-                     "with dynamic filters shape. Node: ",
+                     "Unable to convert GroupConvolutionBackpropData:1 to "
+                     "GroupConvolutionBackpropData:0 with dynamic filters shape. Node: ",
                      *node);
 
         auto filters_shape = filters_arg.get_shape();
-        auto data_shape = data_arg.get_shape();
-        auto groups = filters_shape.at(0);
-        filters_shape[1] *= groups;
+        const size_t groups = filters_shape.at(0);
+
+        const PartialShape output_pshape{node->output(0).get_partial_shape()};
+        NGRAPH_CHECK(output_pshape.is_static(),
+                     "Unable to convert GroupConvolutionBackpropData:v1 to "
+                     "GroupConvolutionBackpropData:v0 "
+                     "if output_shape is dynamic. Node: ",
+                     *node);
+        Shape output_shape = output_pshape.to_shape();
+
+        // Convert filters data layout from [GROUPS, C_INPUT, C_OUTPUT, K_D, ..., K_1]
+        // into [C x M/group x k1 x k2 x ... x kn]
         filters_shape.erase(filters_shape.begin());
+        filters_shape[0] *= groups;
 
-        auto reshaped_filters = make_shared<op::v0::Reshape>(
-            filters_arg, get_default_order(filters_arg.get_shape().size()), filters_shape);
+        auto reshaped_filters = builder::opset1::reshape(node->input_value(1), filters_shape);
 
-        auto pads_begin = node->get_pads_begin();
-        auto pads_end = node->get_pads_end();
-
-        auto auto_pad = node->get_auto_pad();
-
-        auto output_shape = output_shape_input->get_shape_val();
-        if (auto_pad == op::PadType::SAME_UPPER || auto_pad == op::PadType::SAME_LOWER)
-        {
-            infer_auto_padding(output_shape,
-                               Shape(filters_shape.begin() + 2, filters_shape.end()),
-                               strides,
-                               dilations,
-                               auto_pad,
-                               pads_begin,
-                               pads_end);
-        }
-
-        output_shape.insert(output_shape.begin(), filters_shape[1]);
-        output_shape.insert(output_shape.begin(), data_shape[0]);
         auto replacement_node = make_shared<op::v0::GroupConvolutionBackpropData>(
             op::Constant::create(data_arg.get_element_type(), output_shape, {0}),
             reshaped_filters,
             data_arg,
             node->get_strides(),
             node->get_dilations(),
-            pads_begin,
-            pads_end,
+            node->get_pads_begin(),
+            node->get_pads_end(),
             groups);
         replace_node(node, replacement_node);
         return replacement_node;
