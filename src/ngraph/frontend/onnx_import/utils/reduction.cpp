@@ -32,9 +32,9 @@ namespace ngraph
             {
                 AxisSet get_reduction_axes(const Node& node)
                 {
-                    const auto data_ps = node.get_ng_inputs().at(0)->get_output_partial_shape(0);
+                    const auto data_shape = node.get_ng_inputs().at(0)->get_output_partial_shape(0);
                     NGRAPH_CHECK(
-                        data_ps.rank().is_static(),
+                        data_shape.rank().is_static(),
                         "Input's rank is required to be static to be able to normalize the axes");
 
                     const auto reduction_axes =
@@ -43,12 +43,12 @@ namespace ngraph
                     std::vector<size_t> normalized_axes =
                         ngraph::normalize_axes(node.get_description(),
                                                reduction_axes,
-                                               static_cast<int64_t>(data_ps.rank()));
+                                               static_cast<int64_t>(data_shape.rank()));
 
                     if (reduction_axes.empty())
                     {
                         normalized_axes = onnx_import::common::get_monotonic_range<size_t>(
-                            static_cast<size_t>(data_ps.rank()));
+                            static_cast<size_t>(data_shape.rank()));
                     }
                     return AxisSet{normalized_axes};
                 }
