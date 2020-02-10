@@ -37,11 +37,11 @@ void op::Squeeze::pre_validate_and_infer_types()
     auto data = input_value(0);
     auto axes_node = input_value(1).get_node_shared_ptr();
 
-     if (data.get_partial_shape().is_dynamic() || !axes_node->is_constant())
+    if (data.get_partial_shape().is_dynamic() || !axes_node->is_constant())
     {
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
         return;
-     }
+    }
 
     // Get value of axes from Constant
     auto axes_constant = as_type_ptr<op::Constant>(axes_node);
