@@ -371,7 +371,7 @@ TEST(type_prop, broadcast_v1_fully_dynamic_target_shape)
     ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
 
     bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
-    auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
+    bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
     ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
 }
 
