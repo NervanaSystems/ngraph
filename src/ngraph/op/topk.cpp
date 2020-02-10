@@ -280,18 +280,7 @@ void op::v1::TopK::validate_and_infer_types()
                                       get_input_element_type(1));
     }
 
-    if (m_axis >= 0)
-    {
-        m_normalized_axis = m_axis;
-    }
-    else
-    {
-        NODE_VALIDATION_CHECK(this,
-                              input_partial_shape.rank().is_static(),
-                              "Rank must be static in order to normalize negative axis");
-        m_normalized_axis =
-            ngraph::normalize_axis(this, m_axis, static_cast<int64_t>(input_partial_shape.rank()));
-    }
+    set_axis(m_axis);
 
     PartialShape output_shape{input_partial_shape};
 
@@ -306,6 +295,24 @@ void op::v1::TopK::validate_and_infer_types()
     set_output_size(2);
     set_output_type(0, get_input_element_type(0), output_shape);
     set_output_type(1, m_index_element_type, output_shape);
+}
+
+void op::v1::TopK::set_axis(const int64_t axis)
+{
+    if (axis >= 0)
+    {
+        m_normalized_axis = axis;
+    }
+    else
+    {
+        const auto input_rank = get_input_partial_shape(0).rank();
+        NODE_VALIDATION_CHECK(this,
+                              input_rank.is_static(),
+                              "Rank must be static in order to normalize negative axis");
+        m_normalized_axis = ngraph::normalize_axis(this, axis, static_cast<int64_t>(input_rank));
+    }
+
+    m_axis = axis;
 }
 
 size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,

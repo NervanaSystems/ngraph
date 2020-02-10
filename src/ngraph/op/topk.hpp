@@ -162,12 +162,8 @@ namespace ngraph
 
                 virtual size_t get_version() const override { return 1; }
                 size_t get_axis() const { return m_normalized_axis; }
-                int64_t get_origin_axis() const { return m_axis; }
-                void set_axis(const size_t axis)
-                {
-                    m_normalized_axis = axis;
-                    m_axis = axis;
-                }
+                int64_t get_raw_axis() const { return m_axis; }
+                void set_axis(const int64_t axis);
                 Mode get_mode() const { return m_mode; }
                 void set_mode(const Mode mode) { m_mode = mode; }
                 SortType get_sort_type() const { return m_sort; }

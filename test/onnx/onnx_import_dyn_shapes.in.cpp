@@ -178,7 +178,6 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, dynamic_rank_input_inference)
 
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, arg_max_dyn_shape)
 {
-    // the model contains a single Add operation that takes a fully dynamic input and a scalar
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/argmax_dyn.prototxt"));
 
@@ -199,7 +198,6 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, arg_max_dyn_shape)
 
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, arg_min_no_keep_dims_dyn_shape)
 {
-    // the model contains a single Add operation that takes a fully dynamic input and a scalar
     const auto function = onnx_import::import_onnx_model(file_util::path_join(
         SERIALIZED_ZOO, "onnx/dynamic_shapes/argmin_no_keep_dims_dyn.prototxt"));
 

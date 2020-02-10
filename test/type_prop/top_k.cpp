@@ -341,7 +341,7 @@ TEST(type_prop, topk_v1_negative_axis_support)
 
     const auto topk = make_shared<op::v1::TopK>(data, k, axis, "max", "value");
 
-    ASSERT_EQ(topk->get_origin_axis(), axis);
+    ASSERT_EQ(topk->get_raw_axis(), axis);
     ASSERT_EQ(topk->get_axis(), data_shape.at(1));
 }
 
