@@ -144,7 +144,7 @@ set(SRC
     type_prop/get_output_element.cpp
     type_prop/grn.cpp
     type_prop/group_convolution.cpp
-    type_prop/group_convolution_transpose.cpp
+    type_prop/group_convolution_backprop_data.cpp
     type_prop/gru_cell.cpp
     type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
