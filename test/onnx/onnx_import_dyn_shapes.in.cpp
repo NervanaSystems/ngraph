@@ -14,6 +14,15 @@
 // limitations under the License.
 //*****************************************************************************
 
+// clang-format off
+#ifdef ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
+#define DEFAULT_FLOAT_TOLERANCE_BITS ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
+#endif
+#ifdef ${BACKEND_NAME}_DOUBLE_TOLERANCE_BITS
+#define DEFAULT_DOUBLE_TOLERANCE_BITS ${BACKEND_NAME}_DOUBLE_TOLERANCE_BITS
+#endif
+// clang-format on
+
 #include "gtest/gtest.h"
 #include "ngraph/file_util.hpp"
 #include "ngraph/frontend/onnx_import/default_opset.hpp"
