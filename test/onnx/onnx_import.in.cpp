@@ -25,6 +25,15 @@
 #include <stdexcept>
 #include <vector>
 
+// clang-format off
+#ifdef ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
+#define DEFAULT_FLOAT_TOLERANCE_BITS ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
+#endif
+#ifdef ${BACKEND_NAME}_DOUBLE_TOLERANCE_BITS
+#define DEFAULT_DOUBLE_TOLERANCE_BITS ${BACKEND_NAME}_DOUBLE_TOLERANCE_BITS
+#endif
+// clang-format on
+
 #include "gtest/gtest.h"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/ngraph.hpp"
@@ -1471,7 +1480,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_acosh)
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input<float>(Shape{1, 3}, {1.0f, 2.5f, 4.3f});
-    test_case.add_expected_output<float>(Shape{1, 3}, {0.0f, 1.5667993f, 2.1379586186848787f});
+    test_case.add_expected_output<float>(Shape{1, 3}, {0.0f, 1.5667993f, 2.13795861f});
 
     test_case.run();
 }
@@ -1496,7 +1505,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_atanh)
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input<float>(Shape{1, 3}, {-0.9f, 0.0f, 0.9f});
     test_case.add_expected_output<float>(Shape{1, 3},
-                                         {-1.4722194895832204f, 0.0f, 1.4722194895832204f});
+                                         {-1.4722194f, 0.0f, 1.4722194f});
 
     test_case.run();
 }
