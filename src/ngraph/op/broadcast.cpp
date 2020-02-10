@@ -138,7 +138,7 @@ void op::v1::Broadcast::validate_and_infer_types()
                               axes_shape_rank);
     }
 
-    PartialShape result_shape{broadcast_shape_rank};
+    PartialShape result_shape{PartialShape::dynamic()};
 
     if (input_value(1).get_node_shared_ptr()->is_constant())
     {
