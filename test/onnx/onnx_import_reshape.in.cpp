@@ -217,10 +217,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_depth_to_space)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/depth_to_space.prototxt"));
 
-    auto input = std::vector<float>{
+    std::vector<float> input{
         0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f};
 
-    auto expected_output = std::vector<float>{
+    std::vector<float> expected_output{
         0.f, 4.f, 1.f, 5.f, 8.f, 12.f, 9.f, 13.f, 2.f, 6.f, 3.f, 7.f, 10.f, 14.f, 11.f, 15.f};
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -234,10 +234,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_depth_to_space_chw)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/depth_to_space_chw.prototxt"));
 
-    auto input = std::vector<float>{
+    std::vector<float> input{
         0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f};
 
-    auto expected_output = std::vector<float>{
+    std::vector<float> expected_output{
         0.f, 4.f, 1.f, 5.f, 8.f, 12.f, 9.f, 13.f, 2.f, 6.f, 3.f, 7.f, 10.f, 14.f, 11.f, 15.f};
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -268,12 +268,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_space_to_depth)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/space_to_depth.prototxt"));
 
-    auto input = std::vector<float>{0.f,  1.f,  2.f,  3.f,  4.f,  5.f,  6.f,  7.f,
+    std::vector<float> input{0.f,  1.f,  2.f,  3.f,  4.f,  5.f,  6.f,  7.f,
                                            8.f,  9.f,  10.f, 11.f, 12.f, 13.f, 14.f, 15.f,
                                            16.f, 17.f, 18.f, 19.f, 20.f, 21.f, 22.f, 23.f,
                                            24.f, 25.f, 26.f, 27.f, 28.f, 29.f, 30.f, 31.f};
 
-    auto expected_output = std::vector<float>{
+    std::vector<float> expected_output{
         0.f, 2.f, 8.f,  10.f, 16.f, 18.f, 24.f, 26.f, 1.f, 3.f, 9.f,  11.f, 17.f, 19.f, 25.f, 27.f,
         4.f, 6.f, 12.f, 14.f, 20.f, 22.f, 28.f, 30.f, 5.f, 7.f, 13.f, 15.f, 21.f, 23.f, 29.f, 31.f,
     };
@@ -289,12 +289,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_space_to_depth_chw)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/space_to_depth_chw.prototxt"));
 
-    auto input = std::vector<float>{0.f,  1.f,  2.f,  3.f,  4.f,  5.f,  6.f,  7.f,
+    std::vector<float> input{0.f,  1.f,  2.f,  3.f,  4.f,  5.f,  6.f,  7.f,
                                            8.f,  9.f,  10.f, 11.f, 12.f, 13.f, 14.f, 15.f,
                                            16.f, 17.f, 18.f, 19.f, 20.f, 21.f, 22.f, 23.f,
                                            24.f, 25.f, 26.f, 27.f, 28.f, 29.f, 30.f, 31.f};
 
-    auto expected_output = std::vector<float>{
+    std::vector<float> expected_output{
         0.f, 2.f, 8.f,  10.f, 16.f, 18.f, 24.f, 26.f, 1.f, 3.f, 9.f,  11.f, 17.f, 19.f, 25.f, 27.f,
         4.f, 6.f, 12.f, 14.f, 20.f, 22.f, 28.f, 30.f, 5.f, 7.f, 13.f, 15.f, 21.f, 23.f, 29.f, 31.f,
     };
@@ -302,6 +302,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_space_to_depth_chw)
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input(input);
     test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_space_to_depth_bad_blocksize)
@@ -422,17 +423,22 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_split_equal_parts_2d)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_2d.prototxt"));
 
-    Inputs inputs{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
-    Outputs expected_outputs{{0, 1, 2, 6, 7, 8}, {3, 4, 5, 9, 10, 11}};
+    // Inputs inputs{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
+    // Outputs expected_outputs{{0, 1, 2, 6, 7, 8}, {3, 4, 5, 9, 10, 11}};
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_EQ(outputs.size(), expected_outputs.size());
+    // Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    // EXPECT_EQ(outputs.size(), expected_outputs.size());
 
-    for (std::size_t i = 0; i < expected_outputs.size(); ++i)
-    {
-        EXPECT_EQ(outputs[i].size(), expected_outputs[i].size());
-        EXPECT_TRUE(test::all_close_f(outputs[i], expected_outputs[i]));
-    }
+    // for (std::size_t i = 0; i < expected_outputs.size(); ++i)
+    // {
+    //     EXPECT_EQ(outputs[i].size(), expected_outputs[i].size());
+    //     EXPECT_TRUE(test::all_close_f(outputs[i], expected_outputs[i]));
+    // }
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+    test_case.add_expected_output<float>({0, 1, 2, 6, 7, 8});
+    test_case.add_expected_output<float>({3, 4, 5, 9, 10, 11});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_split_variable_parts_2d)
@@ -441,17 +447,22 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_split_variable_parts_2d)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/split_variable_parts_2d.prototxt"));
 
-    Inputs inputs{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
-    Outputs expected_outputs{{0, 1, 6, 7}, {2, 3, 4, 5, 8, 9, 10, 11}};
+    // Inputs inputs{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
+    // Outputs expected_outputs{{0, 1, 6, 7}, {2, 3, 4, 5, 8, 9, 10, 11}};
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_EQ(outputs.size(), expected_outputs.size());
+    // Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    // EXPECT_EQ(outputs.size(), expected_outputs.size());
 
-    for (std::size_t i = 0; i < expected_outputs.size(); ++i)
-    {
-        EXPECT_EQ(outputs[i].size(), expected_outputs[i].size());
-        EXPECT_TRUE(test::all_close_f(outputs[i], expected_outputs[i]));
-    }
+    // for (std::size_t i = 0; i < expected_outputs.size(); ++i)
+    // {
+    //     EXPECT_EQ(outputs[i].size(), expected_outputs[i].size());
+    //     EXPECT_TRUE(test::all_close_f(outputs[i], expected_outputs[i]));
+    // }
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+    test_case.add_expected_output<float>({0, 1, 6, 7});
+    test_case.add_expected_output<float>({2, 3, 4, 5, 8, 9, 10, 11});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_expand_static_shape)
