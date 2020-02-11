@@ -1377,11 +1377,29 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_softplus_infinity)
                                      std::numeric_limits<float>::infinity(),
                                      std::numeric_limits<float>::infinity()}};
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    for (float v : outputs.front())
-    {
-        EXPECT_TRUE(std::isinf(v));
-    }
+    std::vector<float> expected_output{std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity()};
+
+    // Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    // for (float v : outputs.front())
+    // {
+    //     EXPECT_TRUE(std::isinf(v));
+    // }
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiple_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum_opset8)
