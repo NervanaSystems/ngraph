@@ -346,6 +346,7 @@ static void sink_reshape(shared_ptr<op::Reshape> reshape,
         new_reshape = combine_reshapes(orig_reshape, reshape);
         new_reshape_in_map = new_reshape;
         // remove original reshape now it's combined with a new one
+        replace_reshape();
     }
 }
 
