@@ -36,7 +36,11 @@ namespace ngraph
                 m_comm = ccl::environment::instance().create_communicator();
             }
 
-            ~CCLDistributedInterface() override = default;
+            ~CCLDistributedInterface() override
+            {
+                m_comm.reset();
+                m_stream.reset();
+            };
 
             const std::string& get_name() const override { return m_name; }
             int get_size() override
@@ -131,7 +135,6 @@ namespace ngraph
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
-
             }
 
         protected:
