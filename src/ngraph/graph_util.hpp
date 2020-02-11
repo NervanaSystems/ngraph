@@ -68,6 +68,12 @@ namespace ngraph
                         std::function<void(std::shared_ptr<Node>)> f,
                         const NodeVector& subgraph_params = {});
 
+    void traverse_nodes(const NodeVector& subgraph_results,
+                        std::function<void(std::shared_ptr<Node>)> f,
+                        bool,
+                        const NodeVector& subgraph_params = {})
+        NGRAPH_DEPRECATED("Use traverse_nodes without control-deps option");
+
     void traverse_functions(std::shared_ptr<Function> p,
                             std::function<void(std::shared_ptr<Function>)> f)
         NGRAPH_DEPRECATED("Replace with f(p)");
