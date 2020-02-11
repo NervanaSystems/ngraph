@@ -86,6 +86,9 @@ shared_ptr<op::Constant> fold_constant_one_hot(const shared_ptr<op::Constant>& i
         return fold_constant_one_hot_ref<uint64_t, OUTPUT_TYPE>(
             indices, on_value, off_value, output_shape, axis);
     }
+#ifdef __GNUC__
+    __builtin_unreachable();
+#endif
 }
 
 void pass::ConstantFolding::construct_constant_one_hot()
