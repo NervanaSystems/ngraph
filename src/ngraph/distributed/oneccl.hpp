@@ -19,8 +19,8 @@
 #include "ngraph/distributed.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED_ONECCL_ENABLE
-#include <string>
 #include <ccl.hpp>
+#include <string>
 
 namespace ngraph
 {
@@ -43,16 +43,8 @@ namespace ngraph
             };
 
             const std::string& get_name() const override { return m_name; }
-            int get_size() override
-            {
-                return static_cast<int>(m_comm->size());
-            }
-
-            int get_rank() override
-            {
-                return static_cast<int>(m_comm->rank());
-            }
-
+            int get_size() override { return static_cast<int>(m_comm->size()); }
+            int get_rank() override { return static_cast<int>(m_comm->rank()); }
             void log_print(const std::string& timestamp, const std::vector<char>& buf) override
             {
                 std::printf("%s [CCL RANK: %d]: %s\n", timestamp.c_str(), get_rank(), buf.data());
@@ -75,7 +67,8 @@ namespace ngraph
                            int root_id) override
             {
                 auto data_type = toCCLDataType(element_type);
-                m_comm->bcast(in, count, data_type, static_cast<size_t>(root_id), nullptr, m_stream)->wait();
+                m_comm->bcast(in, count, data_type, static_cast<size_t>(root_id), nullptr, m_stream)
+                    ->wait();
             }
 
             void recv(void* /* in */,
@@ -109,9 +102,7 @@ namespace ngraph
                 case element::Type_t::f64: return ccl::data_type::dt_double;
                 case element::Type_t::i64: return ccl::data_type::dt_int64;
                 case element::Type_t::u64: return ccl::data_type::dt_uint64;
-                default:
-                    throw std::runtime_error(
-                        "data type not supported in CCL");
+                default: throw std::runtime_error("data type not supported in CCL");
                 }
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
@@ -120,7 +111,7 @@ namespace ngraph
 
             ccl::reduction toCCLReduceType(reduction::Type reduce_type)
             {
-                #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
