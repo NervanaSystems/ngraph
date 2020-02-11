@@ -22,6 +22,7 @@
 
 #include "ngraph/component_manager.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
@@ -231,6 +232,14 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_input_tensor(si
                                                     parameter->get_shape());
 }
 
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_input_tensor(size_t input_index,
+                                                                              void* memory_pointer)
+{
+    shared_ptr<op::Parameter> parameter = get_parameter(input_index);
+    return make_shared<runtime::cpu::CPUTensorView>(
+        parameter->get_element_type(), parameter->get_shape(), memory_pointer);
+}
+
 shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_output_tensor(size_t output_index)
 {
     shared_ptr<op::Result> result = get_result(output_index);
@@ -238,16 +247,37 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_output_tensor(s
                                                     result->get_shape());
 }
 
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_output_tensor(size_t output_index,
+                                                                               void* memory_pointer)
+{
+    shared_ptr<op::Result> result = get_result(output_index);
+    return make_shared<runtime::cpu::CPUTensorView>(
+        result->get_element_type(), result->get_shape(), memory_pointer);
+}
+
 vector<shared_ptr<runtime::Tensor>>
     runtime::cpu::CPU_Executable::create_input_tensor(size_t input_index, size_t pipeline_depth)
 {
+    return create_input_tensor(input_index, pipeline_depth, std::vector<void*>{});
+}
+vector<shared_ptr<runtime::Tensor>> runtime::cpu::CPU_Executable::create_input_tensor(
+    size_t input_index, size_t pipeline_depth, std::vector<void*> memory_pointers)
+{
+    bool mem_ptr_size = memory_pointers.size();
+    if (mem_ptr_size > 0)
+    {
+        NGRAPH_CHECK(pipeline_depth == mem_ptr_size,
+                     "create_input_tensor mismatch in pipeline_depth and memory_pointers");
+    }
     vector<shared_ptr<runtime::cpu::CPUTensorView>> tensors;
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         shared_ptr<runtime::cpu::CPUTensorView> tensor;
         auto t = make_shared<runtime::cpu::CPUTensorView>(parameter->get_element_type(),
-                                                          parameter->get_shape());
+                                                          parameter->get_shape(),
+                                                          mem_ptr_size > 0 ? memory_pointers[i]
+                                                                           : nullptr);
         tensor = static_pointer_cast<runtime::cpu::CPUTensorView>(t);
         tensors.push_back(tensor);
     }
@@ -262,13 +292,26 @@ vector<shared_ptr<runtime::Tensor>>
 vector<shared_ptr<runtime::Tensor>>
     runtime::cpu::CPU_Executable::create_output_tensor(size_t output_index, size_t pipeline_depth)
 {
+    return create_output_tensor(output_index, pipeline_depth, std::vector<void*>{});
+}
+vector<shared_ptr<runtime::Tensor>> runtime::cpu::CPU_Executable::create_output_tensor(
+    size_t output_index, size_t pipeline_depth, std::vector<void*> memory_pointers)
+{
+    bool mem_ptr_size = memory_pointers.size();
+    if (mem_ptr_size > 0)
+    {
+        NGRAPH_CHECK(pipeline_depth == mem_ptr_size,
+                     "create_output_tensor mismatch in pipeline_depth and memory_pointers");
+    }
     vector<shared_ptr<runtime::cpu::CPUTensorView>> tensors;
     shared_ptr<op::Result> result = get_result(output_index);
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         shared_ptr<runtime::cpu::CPUTensorView> tensor;
         auto t = make_shared<runtime::cpu::CPUTensorView>(result->get_element_type(),
-                                                          result->get_shape());
+                                                          result->get_shape(),
+                                                          mem_ptr_size > 0 ? memory_pointers[i]
+                                                                           : nullptr);
         tensor = static_pointer_cast<runtime::cpu::CPUTensorView>(t);
         tensors.push_back(tensor);
     }

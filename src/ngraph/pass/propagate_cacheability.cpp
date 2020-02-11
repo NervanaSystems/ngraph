@@ -17,6 +17,7 @@
 #include "ngraph/pass/propagate_cacheability.hpp"
 
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/util/op_annotations.hpp"

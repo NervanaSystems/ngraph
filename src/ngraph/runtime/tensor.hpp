@@ -103,6 +103,12 @@ namespace ngraph
             /// \param n Number of bytes to read, must be integral number of elements.
             virtual void read(void* p, size_t n) const = 0;
 
+            /// \brief check tensor for new data, call may block.
+            ///    backends may use this to ensure tensor is updated (eg: lazy eval).
+            virtual void wait_for_read_ready() {}
+            /// \brief notify tensor of new data, call may block.
+            ///    backends may use this as indication of new data in tensor.
+            virtual void wait_for_write_ready() {}
             /// \brief copy bytes directly from source to this tensor
             /// \param source The source tensor
             virtual void copy_from(const ngraph::runtime::Tensor& source) NGRAPH_DEPRECATED(
@@ -113,7 +119,5 @@ namespace ngraph
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
         };
-
-        using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;
     }
 }

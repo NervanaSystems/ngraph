@@ -19,8 +19,8 @@
 
 /doc/                               @indie
 /doc/examples/mnist_mlp/dist_*      @wenzhe-nrv @indie
-/doc/*/*/frameworks/tensorflow_connect.rst      @shresthamalik @avijit-nervana @sayantan-nervana
-/doc/*/*/backends/plaidml-ng-api/   @flaub @brianretford @dgkutnic
+/doc/*/*/frameworks/tensorflow_connect.rst      @shresthamalik @sayantan-nervana
+/doc/*/*/backends/plaidml-ng-api/   @diyessi
 /doc/*/*/inspection/                @diyessi
 /doc/examples/onnx/                 @arogowie-intel @tsocha
 /README.md                          @indie
@@ -37,9 +37,10 @@ project/doc-contributor-README.rst  @indie
 /src/resource/                      @rkimballn1
 /src/tools/                         @rkimballn1
 /src/ngraph/autodiff/               @diyessi
-/src/ngraph/builder/                @mbrookhart
+/src/ngraph/builder/                @sfvaroglu
 /src/ngraph/codegen/                @rkimballn1
 /src/ngraph/distributed.*           @wenzhe-nrv @diyessi
+/src/ngraph/frontend/ATen/          @silee2
 /src/ngraph/frontend/fluid/         @silee2
 /src/ngraph/frontend/onnx_import/   @postrational
 /src/ngraph/op/                     @diyessi
@@ -52,9 +53,9 @@ project/doc-contributor-README.rst  @indie
 /src/contrib/mlir/                  @nmostafa @dcaballe
 /src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba
 /src/ngraph/runtime/dynamic/        @diyessi
-/src/ngraph/runtime/intelgpu/       @dmyershov
+/src/ngraph/runtime/gpu/            @csullivan @rkimballn1
 /src/ngraph/runtime/interpreter/    @rkimballn1
-/src/ngraph/runtime/plaidml/        @earhart @dgkutnic
+/src/ngraph/runtime/plaidml/        @diyessi
 /src/ngraph/runtime/reference/      @diyessi
 /src/ngraph/runtime/reference/allreduce.*pp      @wenzhe-nrv @diyessi
 /src/ngraph/type/                   @diyessi

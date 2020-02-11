@@ -81,6 +81,8 @@ set (SRC
     distributed.cpp
     distributed.hpp
     enum_names.hpp
+    env_util.cpp
+    env_util.hpp
     except.hpp
     factory.cpp
     factory.hpp
@@ -379,8 +381,6 @@ set (SRC
     op/fused/grn.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
-    op/fused/group_conv_transpose.hpp
-    op/fused/group_conv_transpose.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
     op/fused/layer_norm.cpp
@@ -590,6 +590,8 @@ set (SRC
     runtime/backend.hpp
     runtime/backend_manager.cpp
     runtime/backend_manager.hpp
+    runtime/cache.cpp
+    runtime/cache.hpp
     runtime/chrome_trace.cpp
     runtime/chrome_trace.hpp
     runtime/executable.cpp
