@@ -6,4 +6,4 @@ flake8-commas
 flake8-comprehensions
 flake8-docstrings
 flake8-quotes
-
+zipp==0.5.0

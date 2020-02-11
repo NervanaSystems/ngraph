@@ -119,7 +119,5 @@ namespace ngraph
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
         };
-
-        using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;
     }
 }
