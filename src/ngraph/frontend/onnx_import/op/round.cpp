@@ -14,8 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "round.hpp"
+#include <memory>
+
 #include "ngraph/opsets/opset0.hpp"
+#include "round.hpp"
 
 namespace ngraph
 {
