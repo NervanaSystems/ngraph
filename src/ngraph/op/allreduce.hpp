@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include "ngraph/distributed.hpp"
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
