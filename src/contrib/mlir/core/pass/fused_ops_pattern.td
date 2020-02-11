@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,4 +37,5 @@ include "core/ngraph_dialect/ops.td"
 def createSgemmOp :  NativeCodeCall<"createSgemmOp($_builder, $0.getDefiningOp(), $1, $2, $3)">;
 
 // class for defining the pattern to fuse MatMul + Bias
-def MatMulBiasPattern : Pat<(NGAddOp:$old_op ( NGDotOp $input1, $input2), $add_input), (createSgemmOp $old_op, $input1, $input2, $add_input)>;
+def MatMulBiasPattern : Pat<(NGAddOp:$old_op ( NGDotOp $input1, $input2), $add_input), 
+			    (createSgemmOp $old_op, $input1, $input2, $add_input)>;
