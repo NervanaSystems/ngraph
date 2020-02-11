@@ -20,12 +20,17 @@
 #include <vector>
 
 #include "ngraph/log.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/min.hpp"
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
 
