@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/broadcast_distributed.hpp"
+#include "ngraph/attribute_visitor.hpp"
 
 using namespace std;
 using namespace ngraph;
