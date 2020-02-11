@@ -86,11 +86,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_add_abc)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.prototxt"));
 
-    Inputs inputs{{1}, {2}, {3}};
-    Outputs expected_outputs{{6}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiple_inputs(Inputs{{1}, {2}, {3}});
+    test_case.add_expected_output(Shape{1}, std::vector<float>{6});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_binary_add_abc)
@@ -98,11 +97,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_binary_add_abc)
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"));
 
-    Inputs inputs{{1}, {2}, {3}};
-    Outputs expected_outputs{{6}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiple_inputs(Inputs{{1}, {2}, {3}});
+    test_case.add_expected_output(Shape{1}, std::vector<float>{6});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_add_abc_initializers)
@@ -110,11 +108,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_add_abc_initializers)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc_initializers.prototxt"));
 
-    Inputs inputs{{1, 2, 3, 4}};
-    Outputs expected_outputs{{3, 6, 9, 12}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({1, 2, 3, 4});
+    test_case.add_expected_output(Shape{1}, std::vector<float>{3, 6, 9, 12});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_override_op)
@@ -138,10 +135,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_override_op)
     inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
     inputs.emplace_back(std::vector<float>{3.f, 2.f, 1.f, 0.f});
 
-    Outputs expected_output{std::vector<float>{-3.f, -1.f, 1.f, 3.f}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiple_inputs(inputs);
+    test_case.add_expected_output<float>({-3.f, -1.f, 1.f, 3.f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, import_non_existing_file)
@@ -190,11 +187,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_custom_op)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/custom_operator.prototxt"));
 
-    Inputs inputs{{1, 2, 3, 4}};
-    Outputs expected_outputs{{3, 6, 9, 12}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({1.f, 2.f, 3.f, 4.f});
+    test_case.add_expected_output<float>({3.f, 6.f, 9.f, 12.f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_custom_op_default_domain)
@@ -208,11 +204,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_custom_op_default_domain)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/custom_operator_default_domain.prototxt"));
 
-    Inputs inputs{{1, 2, 3, 4}};
-    Outputs expected_outputs{{3, 6, 9, 12}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({1.f, 2.f, 3.f, 4.f});
+    test_case.add_expected_output<float>({3.f, 6.f, 9.f, 12.f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, is_op_supported)
@@ -262,11 +257,11 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_op_domain)
     Inputs inputs;
     inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
     inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
-
-    Outputs expected_output{std::vector<float>{0.f, 2.f, 4.f, 6.f}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiple_inputs(inputs);
+    test_case.add_expected_output<float>({0.f, 2.f, 4.f, 6.f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_unknown_domain)
@@ -334,11 +329,11 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_input)
         file_util::path_join(SERIALIZED_ZOO, "onnx/missing_input.prototxt"));
 
     Inputs inputs{{1, 2, 3, 4}, {5, 6, 7, 8}};
-    Outputs expected_outputs{{50, 144, 294, 512}};
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiple_inputs(inputs);
+    test_case.add_expected_output<float>({50, 144, 294, 512});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
@@ -347,13 +342,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/initializer_wo_input.prototxt"));
 
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{0, 1, 2, 3, 4, 5});
-
-    std::vector<float> expected_output{0, 2, 6, 12, 20, 30};
-
-    Outputs output{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output, output.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({0, 1, 2, 3, 4, 5});
+    test_case.add_expected_output<float>({0, 2, 6, 12, 20, 30});
+    test_case.run();
 }
 
 // ############################################################################ OPERATOR TESTS
@@ -404,11 +396,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_relu)
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/relu.prototxt"));
 
-    Inputs inputs{{-1, -2, 0, 1, 2, 3}};
-    Outputs expected_outputs{{0, 0, 0, 1, 2, 3}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({-1, -2, 0, 1, 2, 3});
+    test_case.add_expected_output<float>({0, 0, 0, 1, 2, 3});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum_opset1)
@@ -445,10 +436,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum_one_input)
         file_util::path_join(SERIALIZED_ZOO, "onnx/sum_one_input.prototxt"));
 
     // input data shape (3, )
-    Inputs inputs{{3.f, 0.f, 2.f}};
-    Outputs expected_outputs{{3.f, 0.f, 2.f}};
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({3.f, 0.f, 2.f});
+    test_case.add_expected_output<float>({3.f, 0.f, 2.f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_cum_sum_1d)
@@ -506,14 +497,11 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_min_two_inputs_opset1)
         file_util::path_join(SERIALIZED_ZOO, "onnx/min_two_inputs_opset1.prototxt"));
 
     // input data shape (3, )
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{1.f, 2.f, 1.f});
-    inputs.emplace_back(std::vector<float>{1.f, 4.f, 4.f});
-
-    Outputs expected_outputs{{1.f, 2.f, 1.f}};
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
-}
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({1.f, 2.f, 1.f});
+    test_case.add_input<float>({1.f, 4.f, 4.f});
+    test_case.add_expected_output<float>({1.f, 2.f, 1.f});
+    test_case.run();
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_min_two_inputs)
 {
@@ -521,13 +509,11 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_min_two_inputs)
         file_util::path_join(SERIALIZED_ZOO, "onnx/min_two_inputs.prototxt"));
 
     // input data shape (3, )
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{2.f});
-    inputs.emplace_back(std::vector<float>{1.f, 4.f, 4.f});
-
-    Outputs expected_outputs{{1.f, 2.f, 2.f}};
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({2.f});
+    test_case.add_input<float>({1.f, 4.f, 4.f});
+    test_case.add_expected_output<float>({1.f, 2.f, 2.f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_max_opset1)
@@ -536,14 +522,13 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_max_opset1)
         file_util::path_join(SERIALIZED_ZOO, "onnx/max_opset1.prototxt"));
 
     // input data shape (3, )
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{3.f, 2.f, 1.f});
-    inputs.emplace_back(std::vector<float>{1.f, 4.f, 4.f});
-    inputs.emplace_back(std::vector<float>{2.f, 5.f, 3.f});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({3.f, 2.f, 1.f});
+    test_case.add_input<float>({1.f, 4.f, 4.f});
+    test_case.add_input<float>({2.f, 5.f, 3.f});
 
-    Outputs expected_outputs{{3.f, 5.f, 4.f}};
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    test_case.add_expected_output<float>({3.f, 5.f, 4.f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_max)
@@ -552,15 +537,13 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_max)
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/max.prototxt"));
 
     // input data shape (3, )
-    Inputs inputs;
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({1.f, 4.f, 4.f});
+    test_case.add_input<float>({3.f});
+    test_case.add_input<float>({2.f, 5.f, 3.f});
 
-    inputs.emplace_back(std::vector<float>{1.f, 4.f, 4.f});
-    inputs.emplace_back(std::vector<float>{3.f});
-    inputs.emplace_back(std::vector<float>{2.f, 5.f, 3.f});
-
-    Outputs expected_outputs{{3.f, 5.f, 4.f}};
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    test_case.add_expected_output<float>({3.f, 5.f, 4.f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mean_opset1)
@@ -569,14 +552,13 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mean_opset1)
         file_util::path_join(SERIALIZED_ZOO, "onnx/mean_opset1.prototxt"));
 
     // input data shape (3, )
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{3.f, 0.f, 2.f});
-    inputs.emplace_back(std::vector<float>{1.f, 3.f, 4.f});
-    inputs.emplace_back(std::vector<float>{2.f, 6.f, 6.f});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({3.f, 0.f, 2.f});
+    test_case.add_input<float>({1.f, 3.f, 4.f});
+    test_case.add_input<float>({2.f, 6.f, 6.f});
 
-    Outputs expected_outputs{{2.f, 3.f, 4.f}};
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    test_case.add_expected_output<float>({2.f, 3.f, 4.f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mean)
@@ -585,14 +567,13 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mean)
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/mean.prototxt"));
 
     // input data shape (3, )
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{3.f});
-    inputs.emplace_back(std::vector<float>{1.f, 2.f, 5.f});
-    inputs.emplace_back(std::vector<float>{2.f, 7.f, 7.f});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({3.f});
+    test_case.add_input<float>({1.f, 2.f, 5.f});
+    test_case.add_input<float>({2.f, 7.f, 7.f});
 
-    Outputs expected_outputs{{2.f, 4.f, 5.f}};
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    test_case.add_expected_output<float>({2.f, 4.f, 5.f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_gemm_abc)
@@ -616,13 +597,15 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_gemm_abc)
     inputs.emplace_back(
         test::NDArray<float, 2>({{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}).get_vector());
 
-    Outputs expected_outputs{
+    auto expected_output =
         test::NDArray<float, 2>(
             {{340, 350.5, 361, 371.5}, {862, 890.5, 919, 947.5}, {1384, 1430.5, 1477, 1523.5}})
-            .get_vector()};
+            .get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul)
@@ -639,11 +622,13 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul)
         test::NDArray<float, 2>({{13, 14, 15}, {16, 17, 18}, {19, 20, 21}, {22, 23, 24}})
             .get_vector());
 
-    Outputs expected_outputs{
-        test::NDArray<float, 2>({{190, 200, 210}, {470, 496, 522}, {750, 792, 834}}).get_vector()};
+    auto expected_output =
+        test::NDArray<float, 2>({{190, 200, 210}, {470, 496, 522}, {750, 792, 834}}).get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_softmax)
@@ -697,8 +682,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_softmax)
                6.32120559e-01f}}})
             .get_vector();
 
-    auto result_vectors = execute(function, inputs, "${BACKEND_NAME}");
-    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sub)
@@ -713,8 +700,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sub)
 
     auto expected_output = test::NDArray<float, 3>({{{-3, -3, -4}}}).get_vector();
 
-    auto result_vectors = execute(function, inputs, "${BACKEND_NAME}");
-    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_div)
@@ -724,13 +713,14 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_div)
 
     Inputs inputs;
     inputs.emplace_back(test::NDArray<float, 3>({{{1, 2, 3}}}).get_vector());
-
     inputs.emplace_back(test::NDArray<float, 3>({{{1, 4, 12}}}).get_vector());
 
     auto expected_output = test::NDArray<float, 3>({{{1, 0.5, 0.25}}}).get_vector();
 
-    auto result_vectors = execute(function, inputs, "${BACKEND_NAME}");
-    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_add_bcast)
@@ -747,15 +737,17 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_add_bcast)
 
     inputs.emplace_back(test::NDArray<float, 1>({1, 2, 3, 4, 5}).get_vector());
 
-    Outputs expected_output{
+    auto expected_output =
         test::NDArray<float, 4>(
             {{{{2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}},
               {{2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}},
               {{2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}, {2, 3, 4, 5, 6}}}})
-            .get_vector()};
+            .get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_log_sum)
@@ -769,10 +761,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_log_sum)
             .get_vector()};
 
     // output data shape (1,)
-    Outputs expected_outputs{test::NDArray<float, 4>({{{{2.77258872f}}}}).get_vector()};
+    auto expected_output = test::NDArray<float, 4>({{{{2.77258872f}}}}).get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_log_sum_exp)
@@ -786,10 +780,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_log_sum_exp)
             .get_vector()};
 
     // output data shape (1,)
-    Outputs expected_outputs{test::NDArray<float, 4>({{{{3.77258872f}}}}).get_vector()};
+    auto expected_output = test::NDArray<float, 4>({{{{3.77258872f}}}}).get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_l1)
@@ -803,10 +799,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_l1)
             .get_vector()};
 
     // output data shape (1,)
-    Outputs expected_outputs{test::NDArray<float, 4>({{{{16}}}}).get_vector()};
+    auto expected_output = test::NDArray<float, 4>({{{{16}}}}).get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_l2)
@@ -820,10 +818,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_l2)
             .get_vector()};
 
     // output data shape (1,)
-    Outputs expected_outputs{test::NDArray<float, 4>({{{{4}}}}).get_vector()};
+    auto expected_output = test::NDArray<float, 4>({{{{4}}}}).get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_max)
@@ -837,10 +837,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_max)
             .get_vector()};
 
     // output data shape (1,)
-    Outputs expected_outputs{test::NDArray<float, 4>({{{{16}}}}).get_vector()};
+    auto expected_output = test::NDArray<float, 4>({{{{16}}}}).get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_mean)
@@ -854,10 +856,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_mean)
             .get_vector()};
 
     // output data shape (1,)
-    Outputs expected_outputs{test::NDArray<float, 4>({{{{1}}}}).get_vector()};
+    auto expected_output = test::NDArray<float, 4>({{{{1}}}}).get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_min)
@@ -871,10 +875,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_min)
             .get_vector()};
 
     // output data shape (1,)
-    Outputs expected_outputs{test::NDArray<float, 4>({{{{1}}}}).get_vector()};
+    auto expected_output = test::NDArray<float, 4>({{{{1}}}}).get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_prod)
@@ -888,10 +894,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_prod)
             .get_vector()};
 
     // output data shape (1,)
-    Outputs expected_outputs{test::NDArray<float, 4>({{{{1}}}}).get_vector()};
+    auto expected_output = test::NDArray<float, 4>({{{{1}}}}).get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_sum)
@@ -905,10 +913,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_sum)
             .get_vector()};
 
     // output data shape (1,)
-    Outputs expected_outputs{test::NDArray<float, 4>({{{{16}}}}).get_vector()};
+    auto expected_output = test::NDArray<float, 4>({{{{16}}}}).get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_sum_square)
@@ -922,10 +932,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_sum_square)
             .get_vector()};
 
     // output data shape (1,)
-    Outputs expected_outputs{test::NDArray<float, 4>({{{{16}}}}).get_vector()};
+    auto expected_output = test::NDArray<float, 4>({{{{16}}}}).get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_shape)
@@ -940,11 +952,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_shape)
                              {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}})
                             .get_vector());
 
-    std::vector<std::vector<int64_t>> expected_output{{3, 4, 5}};
-
-    std::vector<std::vector<int64_t>> outputs =
-        execute<float, int64_t>(function, inputs, "${BACKEND_NAME}");
-    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output<int64_t>{3, 4, 5});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_elu)
@@ -960,7 +971,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_elu)
              {{1, 1, 1, 1, 1}, {-1, -1, -1, -1, -1}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
             .get_vector());
 
-    Outputs expected_output{test::NDArray<float, 3>({{{-1.999753180391830f,
+    auto expected_output = test::NDArray<float, 3>({{{-1.999753180391830f,
                                                        -1.999329074744190f,
                                                        -1.998176236068890f,
                                                        -1.995042495646670f,
@@ -988,10 +999,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_elu)
                                                        -1.264241117657120f},
                                                       {0, 0, 0, 0, 0},
                                                       {2, 2, 2, 2, 2}}})
-                                .get_vector()};
+                                .get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_leaky_relu)
@@ -1007,7 +1020,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_leaky_relu)
              {{1, 1, 1, 1, 1}, {-1, -1, -1, -1, -1}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
             .get_vector());
 
-    Outputs expected_output{test::NDArray<float, 3>({{{-0.9f, -0.8f, -0.7f, -0.6f, -0.5f},
+    auto expected_output = test::NDArray<float, 3>({{{-0.9f, -0.8f, -0.7f, -0.6f, -0.5f},
                                                       {-0.4f, -0.3f, -0.2f, -0.1f, 0},
                                                       {1, 2, 3, 4, 5},
                                                       {6, 7, 8, 9, 10}},
@@ -1019,10 +1032,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_leaky_relu)
                                                       {-0.1f, -0.1f, -0.1f, -0.1f, -0.1f},
                                                       {0, 0, 0, 0, 0},
                                                       {2, 2, 2, 2, 2}}})
-                                .get_vector()};
+                                .get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_prelu)
@@ -1044,15 +1059,17 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_prelu)
                              {{1, 0, 1, 0, 1}, {0, 1, 0, 1, 0}, {1, 0, 1, 0, 1}, {0, 1, 0, 1, 0}}})
                             .get_vector());
 
-    Outputs expected_output{
+    auto expected_output =
         test::NDArray<float, 3>(
             {{{-9, 0, -7, 0, -5}, {0, -3, 0, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}},
              {{0, -3, 0, -1, 0}, {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}},
              {{1, 1, 1, 1, 1}, {0, -1, 0, -1, 0}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
-            .get_vector()};
+            .get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_selu)
@@ -1068,7 +1085,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_selu)
              {{1, 1, 1, 1, 1}, {-1, -1, -1, -1, -1}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
             .get_vector());
 
-    Outputs expected_output{
+    auto expected_output =
         test::NDArray<float, 3>(
             {{{-5.99925954117548f,
                -5.99798722423258f,
@@ -1090,10 +1107,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_selu)
                -3.79272335297135f},
               {0, 0, 0, 0, 0},
               {6, 6, 6, 6, 6}}})
-            .get_vector()};
+            .get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sigmoid)
@@ -1109,7 +1128,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sigmoid)
              {{1, 1, 1, 1, 1}, {-1, -1, -1, -1, -1}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
             .get_vector());
 
-    Outputs expected_output{test::NDArray<float, 3>({{{0.00012339457598623f,
+    auto expected_output = test::NDArray<float, 3>({{{0.00012339457598623f,
                                                        0.00033535013046648f,
                                                        0.00091105119440065f,
                                                        0.00247262315663477f,
@@ -1165,10 +1184,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sigmoid)
                                                        0.880797077977882f,
                                                        0.880797077977882f,
                                                        0.880797077977882f}}})
-                                .get_vector()};
+                                .get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_tanh)
@@ -1184,7 +1205,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_tanh)
              {{1, 1, 1, 1, 1}, {-1, -1, -1, -1, -1}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
             .get_vector());
 
-    Outputs expected_output{test::NDArray<float, 3>({{{-0.999999969540041f,
+    auto expected_output = test::NDArray<float, 3>({{{-0.999999969540041f,
                                                        -0.999999774929676f,
                                                        -0.999998336943945f,
                                                        -0.999987711650796f,
@@ -1240,10 +1261,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_tanh)
                                                        0.964027580075817f,
                                                        0.964027580075817f,
                                                        0.964027580075817f}}})
-                                .get_vector()};
+                                .get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_thresholded_relu)
@@ -1259,15 +1282,17 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_thresholded_relu)
              {{1, 1, 1, 1, 1}, {-1, -1, -1, -1, -1}, {0, 0, 0, 0, 0}, {2, 2, 2, 2, 2}}})
             .get_vector());
 
-    Outputs expected_output{
+    auto expected_output =
         test::NDArray<float, 3>(
             {{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 3, 4, 5}, {6, 7, 8, 9, 10}},
              {{0, 0, 0, 0, 0}, {0, 0, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}},
              {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}}})
-            .get_vector()};
+            .get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_vec_ten3d)
@@ -1280,10 +1305,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_vec_ten3d)
     inputs.emplace_back(
         test::NDArray<float, 3>{{{0.f}, {1.f}}, {{2.f}, {3.f}}, {{4.f}, {5.f}}}.get_vector());
 
-    Outputs expected_output{test::NDArray<float, 2>{{1.f}, {3.f}, {5.f}}};
+    auto expected_output = test::NDArray<float, 2>{{1.f}, {3.f}, {5.f}}}.get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_softplus)
@@ -1324,9 +1351,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_softplus)
 
     std::transform(std::begin(input), std::end(input), std::back_inserter(output), softplus_impl);
 
-    Outputs expected_output{output};
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_softplus_infinity)
@@ -1365,16 +1393,18 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum_opset8)
     inputs.emplace_back(test::NDArray<float, 2>{{10.0f}, {20.0f}, {30.0f}}.get_vector());
     inputs.emplace_back(test::NDArray<float, 3>{{{100.0f}}, {{200.0f}}, {{300.0f}}}.get_vector());
 
-    Outputs expected_output{test::NDArray<float, 3>{
+    auto expected_output = test::NDArray<float, 3>{
         {{111.0f, 112.0f, 113.0f}, {121.0f, 122.0f, 123.0f}, {131.0f, 132.0f, 133.0f}},
 
         {{211.0f, 212.0f, 213.0f}, {221.0f, 222.0f, 223.0f}, {231.0f, 232.0f, 233.0f}},
 
         {{311.0f, 312.0f, 313.0f}, {321.0f, 322.0f, 323.0f}, {331.0f, 332.0f, 333.0f}}}
-                                .get_vector()};
+                                .get_vector();
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmax_int32)
@@ -1382,15 +1412,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmax_int32)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/argmax_int32.prototxt"));
 
-    std::vector<std::vector<std::int32_t>> inputs{
-        std::vector<std::int32_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
-
-    std::vector<std::vector<std::int64_t>> expected_output{
-        std::vector<std::int64_t>{1, 1, 1, 1, 1, 1}};
-
-    std::vector<std::vector<std::int64_t>> outputs{
-        execute<std::int32_t, std::int64_t>(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<std::int32_t>({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
+    test_case.add_expected_output<std::int32_t>({1, 1, 1, 1, 1, 1});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmin_int32)
@@ -1398,14 +1423,11 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmin_int32)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/argmin_int32.prototxt"));
 
-    std::vector<std::vector<std::int32_t>> inputs{
-        std::vector<std::int32_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
 
-    std::vector<std::vector<std::int64_t>> expected_output{std::vector<std::int64_t>{0, 0, 0, 0}};
-
-    std::vector<std::vector<std::int64_t>> outputs{
-        execute<std::int32_t, std::int64_t>(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<std::int32_t>({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
+    test_case.add_expected_output<std::int32_t>({0, 0, 0, 0});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_top_k)
@@ -1469,12 +1491,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sinh)
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sinh.prototxt"));
 
-    Inputs inputs{std::vector<float>{-1.0f, 0.0f, 1.0f}};
-    Outputs expected_outputs{std::vector<float>{-1.1752012f, 0.f, 1.1752012f}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({-1.0f, 0.0f, 1.0f});
+    test_case.add_expected_output<float>({-1.1752012f, 0.f, 1.1752012f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_cosh)
@@ -1482,12 +1502,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_cosh)
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/cosh.prototxt"));
 
-    Inputs inputs{std::vector<float>{-1.0f, 0.0f, 1.0f}};
-    Outputs expected_outputs{std::vector<float>{1.54308069f, 1.f, 1.54308069f}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({-1.0f, 0.0f, 1.0f});
+    test_case.add_expected_output<float>({1.54308069f, 1.f, 1.54308069f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sign)
@@ -1503,9 +1521,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sign)
 
     Outputs expected_outputs{std::vector<float>{-1.0f, -1.0f, 0.0f, 1.0f, 1.0f}};
 
-    Outputs outputs{execute<float>(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output<float>({-1.0f, -1.0f, 0.0f, 1.0f, 1.0f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_one_hot_with_axis)
@@ -1518,9 +1537,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_one_hot_with_axis)
                               1.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0,
                               1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0}};
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_one_hot_without_axis)
@@ -1529,13 +1549,14 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_one_hot_without_axis)
         file_util::path_join(SERIALIZED_ZOO, "onnx/one_hot_no_axis.prototxt"));
 
     std::vector<std::vector<std::int64_t>> inputs{{0, 7, 8}, {2, 5}};
-    std::vector<std::vector<std::int64_t>> expected_outputs{{5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    std::vector<std::int64_t> expected_output{5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
                                                              2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2, 2,
-                                                             2, 2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2}};
+                                                             2, 2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2};
 
-    std::vector<std::vector<std::int64_t>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_where)
@@ -1558,12 +1579,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_where)
     inputs.push_back(std::move(x2));
 
     // y = 3x3x3
-    std::vector<std::vector<int>> expected_outputs{
-        {2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2}};
+    std::vector<int> expected_output{2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2};
 
-    std::vector<std::vector<int>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_EQ(expected_outputs.front(), outputs.front());
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_erf)
@@ -1577,14 +1598,15 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_erf)
         {-3.141592f, 0.0f},
         {0.5f, 1.0f}}.get_vector());
 
-    const std::vector<float> expected_outputs = test::NDArray<float, 2>{
+    const std::vector<float> expected_output = test::NDArray<float, 2>{
         {-1.0f, 1.0f},
         {-0.99999112f, 0.0f},
         {0.52049988f, 0.84270079f}}.get_vector();
 
-    const Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close_f(expected_outputs, outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_erf_int32)
@@ -1595,11 +1617,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_erf_int32)
     const std::vector<std::vector<int32_t>> inputs{
         {-std::numeric_limits<int32_t>::max(), -1, 0, 1, std::numeric_limits<int32_t>::max()}};
 
-    const std::vector<int32_t> expected_outputs{-1, 0, 0, 0, 1};
+    const std::vector<int32_t> expected_output {-1, 0, 0, 0, 1};
 
-    const std::vector<std::vector<int32_t>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close(expected_outputs, outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiply_inputs(inputs);
+    test_case.add_expected_output(expected_output);
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_hardmax)
