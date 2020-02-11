@@ -69,13 +69,6 @@ namespace ngraph
                 return range;
             }
 
-            /// \brief Return the outputs of the node as vector.
-            ///
-            /// \param[in] node            Node with multiple outputs.
-            ///
-            /// \return                    Vector of outputs of input node.
-            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node);
-
             /// \brief Creates a shifted square identity matrix.
             /// \note Shifting in the context of this operator means that
             ///       the matrix can be created with elements equal to 1 not only in the main
