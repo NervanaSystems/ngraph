@@ -263,6 +263,7 @@ model_quant_conv_linear_3d
 model_conv_integer
 model_conv_integer_zero_point_zero
 model_conv_integer_pads
+model_convtranspose_groups_pads_bias
 model_lstm_fwd_hardsigmoid_activation
 model_lstm_fwd_with_clip
 model_lstm_fwd_mixed_seq
