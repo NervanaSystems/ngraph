@@ -257,7 +257,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_op_domain)
     Inputs inputs;
     inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
     inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
-    
+
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(inputs);
     test_case.add_expected_output<float>({0.f, 2.f, 4.f, 6.f});
@@ -973,34 +973,34 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_elu)
             .get_vector());
 
     auto expected_output = test::NDArray<float, 3>({{{-1.999753180391830f,
-                                                       -1.999329074744190f,
-                                                       -1.998176236068890f,
-                                                       -1.995042495646670f,
-                                                       -1.986524106001830f},
-                                                      {-1.963368722222530f,
-                                                       -1.900425863264270f,
-                                                       -1.729329433526770f,
-                                                       -1.264241117657120f,
-                                                       0},
-                                                      {1, 2, 3, 4, 5},
-                                                      {6, 7, 8, 9, 10}},
-                                                     {{-1.963368722222530f,
-                                                       -1.900425863264270f,
-                                                       -1.729329433526770f,
-                                                       -1.264241117657120f,
-                                                       0},
-                                                      {1, 2, 3, 4, 5},
-                                                      {6, 7, 8, 9, 10},
-                                                      {11, 12, 13, 14, 15}},
-                                                     {{1, 1, 1, 1, 1},
-                                                      {-1.264241117657120f,
-                                                       -1.264241117657120f,
-                                                       -1.264241117657120f,
-                                                       -1.264241117657120f,
-                                                       -1.264241117657120f},
-                                                      {0, 0, 0, 0, 0},
-                                                      {2, 2, 2, 2, 2}}})
-                                .get_vector();
+                                                      -1.999329074744190f,
+                                                      -1.998176236068890f,
+                                                      -1.995042495646670f,
+                                                      -1.986524106001830f},
+                                                     {-1.963368722222530f,
+                                                      -1.900425863264270f,
+                                                      -1.729329433526770f,
+                                                      -1.264241117657120f,
+                                                      0},
+                                                     {1, 2, 3, 4, 5},
+                                                     {6, 7, 8, 9, 10}},
+                                                    {{-1.963368722222530f,
+                                                      -1.900425863264270f,
+                                                      -1.729329433526770f,
+                                                      -1.264241117657120f,
+                                                      0},
+                                                     {1, 2, 3, 4, 5},
+                                                     {6, 7, 8, 9, 10},
+                                                     {11, 12, 13, 14, 15}},
+                                                    {{1, 1, 1, 1, 1},
+                                                     {-1.264241117657120f,
+                                                      -1.264241117657120f,
+                                                      -1.264241117657120f,
+                                                      -1.264241117657120f,
+                                                      -1.264241117657120f},
+                                                     {0, 0, 0, 0, 0},
+                                                     {2, 2, 2, 2, 2}}})
+                               .get_vector();
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(inputs);
@@ -1022,18 +1022,18 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_leaky_relu)
             .get_vector());
 
     auto expected_output = test::NDArray<float, 3>({{{-0.9f, -0.8f, -0.7f, -0.6f, -0.5f},
-                                                      {-0.4f, -0.3f, -0.2f, -0.1f, 0},
-                                                      {1, 2, 3, 4, 5},
-                                                      {6, 7, 8, 9, 10}},
-                                                     {{-0.4f, -0.3f, -0.2f, -0.1f, 0},
-                                                      {1, 2, 3, 4, 5},
-                                                      {6, 7, 8, 9, 10},
-                                                      {11, 12, 13, 14, 15}},
-                                                     {{1, 1, 1, 1, 1},
-                                                      {-0.1f, -0.1f, -0.1f, -0.1f, -0.1f},
-                                                      {0, 0, 0, 0, 0},
-                                                      {2, 2, 2, 2, 2}}})
-                                .get_vector();
+                                                     {-0.4f, -0.3f, -0.2f, -0.1f, 0},
+                                                     {1, 2, 3, 4, 5},
+                                                     {6, 7, 8, 9, 10}},
+                                                    {{-0.4f, -0.3f, -0.2f, -0.1f, 0},
+                                                     {1, 2, 3, 4, 5},
+                                                     {6, 7, 8, 9, 10},
+                                                     {11, 12, 13, 14, 15}},
+                                                    {{1, 1, 1, 1, 1},
+                                                     {-0.1f, -0.1f, -0.1f, -0.1f, -0.1f},
+                                                     {0, 0, 0, 0, 0},
+                                                     {2, 2, 2, 2, 2}}})
+                               .get_vector();
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(inputs);
@@ -1130,62 +1130,62 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sigmoid)
             .get_vector());
 
     auto expected_output = test::NDArray<float, 3>({{{0.00012339457598623f,
-                                                       0.00033535013046648f,
-                                                       0.00091105119440065f,
-                                                       0.00247262315663477f,
-                                                       0.00669285092428486f},
-                                                      {0.01798620996209160f,
-                                                       0.04742587317756680f,
-                                                       0.119202922022118f,
-                                                       0.268941421369995f,
-                                                       0.5f},
-                                                      {0.731058578630005f,
-                                                       0.880797077977882f,
-                                                       0.952574126822433f,
-                                                       0.982013790037908f,
-                                                       0.993307149075715f},
-                                                      {0.997527376843365f,
-                                                       0.999088948805599f,
-                                                       0.999664649869534f,
-                                                       0.999876605424014f,
-                                                       0.999954602131298f}},
-                                                     {{0.01798620996209160f,
-                                                       0.04742587317756680f,
-                                                       0.119202922022118f,
-                                                       0.268941421369995f,
-                                                       0.5f},
-                                                      {0.731058578630005f,
-                                                       0.880797077977882f,
-                                                       0.952574126822433f,
-                                                       0.982013790037908f,
-                                                       0.993307149075715f},
-                                                      {0.997527376843365f,
-                                                       0.999088948805599f,
-                                                       0.999664649869534f,
-                                                       0.999876605424014f,
-                                                       0.999954602131298f},
-                                                      {0.999983298578152f,
-                                                       0.999993855825398f,
-                                                       0.999997739675702f,
-                                                       0.999999168471972f,
-                                                       0.999999694097773f}},
-                                                     {{0.731058578630005f,
-                                                       0.731058578630005f,
-                                                       0.731058578630005f,
-                                                       0.731058578630005f,
-                                                       0.731058578630005f},
-                                                      {0.268941421369995f,
-                                                       0.268941421369995f,
-                                                       0.268941421369995f,
-                                                       0.268941421369995f,
-                                                       0.268941421369995f},
-                                                      {0.5f, 0.5f, 0.5f, 0.5f, 0.5f},
-                                                      {0.880797077977882f,
-                                                       0.880797077977882f,
-                                                       0.880797077977882f,
-                                                       0.880797077977882f,
-                                                       0.880797077977882f}}})
-                                .get_vector();
+                                                      0.00033535013046648f,
+                                                      0.00091105119440065f,
+                                                      0.00247262315663477f,
+                                                      0.00669285092428486f},
+                                                     {0.01798620996209160f,
+                                                      0.04742587317756680f,
+                                                      0.119202922022118f,
+                                                      0.268941421369995f,
+                                                      0.5f},
+                                                     {0.731058578630005f,
+                                                      0.880797077977882f,
+                                                      0.952574126822433f,
+                                                      0.982013790037908f,
+                                                      0.993307149075715f},
+                                                     {0.997527376843365f,
+                                                      0.999088948805599f,
+                                                      0.999664649869534f,
+                                                      0.999876605424014f,
+                                                      0.999954602131298f}},
+                                                    {{0.01798620996209160f,
+                                                      0.04742587317756680f,
+                                                      0.119202922022118f,
+                                                      0.268941421369995f,
+                                                      0.5f},
+                                                     {0.731058578630005f,
+                                                      0.880797077977882f,
+                                                      0.952574126822433f,
+                                                      0.982013790037908f,
+                                                      0.993307149075715f},
+                                                     {0.997527376843365f,
+                                                      0.999088948805599f,
+                                                      0.999664649869534f,
+                                                      0.999876605424014f,
+                                                      0.999954602131298f},
+                                                     {0.999983298578152f,
+                                                      0.999993855825398f,
+                                                      0.999997739675702f,
+                                                      0.999999168471972f,
+                                                      0.999999694097773f}},
+                                                    {{0.731058578630005f,
+                                                      0.731058578630005f,
+                                                      0.731058578630005f,
+                                                      0.731058578630005f,
+                                                      0.731058578630005f},
+                                                     {0.268941421369995f,
+                                                      0.268941421369995f,
+                                                      0.268941421369995f,
+                                                      0.268941421369995f,
+                                                      0.268941421369995f},
+                                                     {0.5f, 0.5f, 0.5f, 0.5f, 0.5f},
+                                                     {0.880797077977882f,
+                                                      0.880797077977882f,
+                                                      0.880797077977882f,
+                                                      0.880797077977882f,
+                                                      0.880797077977882f}}})
+                               .get_vector();
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(inputs);
@@ -1207,62 +1207,62 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_tanh)
             .get_vector());
 
     auto expected_output = test::NDArray<float, 3>({{{-0.999999969540041f,
-                                                       -0.999999774929676f,
-                                                       -0.999998336943945f,
-                                                       -0.999987711650796f,
-                                                       -0.999909204262595f},
-                                                      {-0.999329299739067f,
-                                                       -0.995054753686731f,
-                                                       -0.964027580075817f,
-                                                       -0.761594155955765f,
-                                                       0},
-                                                      {0.761594155955765f,
-                                                       0.964027580075817f,
-                                                       0.995054753686731f,
-                                                       0.999329299739067f,
-                                                       0.999909204262595f},
-                                                      {0.999987711650796f,
-                                                       0.999998336943945f,
-                                                       0.999999774929676f,
-                                                       0.999999969540041f,
-                                                       0.999999995877693f}},
-                                                     {{-0.999329299739067f,
-                                                       -0.995054753686731f,
-                                                       -0.964027580075817f,
-                                                       -0.761594155955765f,
-                                                       0},
-                                                      {0.761594155955765f,
-                                                       0.964027580075817f,
-                                                       0.995054753686731f,
-                                                       0.999329299739067f,
-                                                       0.999909204262595f},
-                                                      {0.999987711650796f,
-                                                       0.999998336943945f,
-                                                       0.999999774929676f,
-                                                       0.999999969540041f,
-                                                       0.999999995877693f},
-                                                      {0.999999999442106f,
-                                                       0.999999999924497f,
-                                                       0.999999999989782f,
-                                                       0.999999999998617f,
-                                                       0.999999999999813f}},
-                                                     {{0.761594155955765f,
-                                                       0.761594155955765f,
-                                                       0.761594155955765f,
-                                                       0.761594155955765f,
-                                                       0.761594155955765f},
-                                                      {-0.761594155955765f,
-                                                       -0.761594155955765f,
-                                                       -0.761594155955765f,
-                                                       -0.761594155955765f,
-                                                       -0.761594155955765f},
-                                                      {0, 0, 0, 0, 0},
-                                                      {0.964027580075817f,
-                                                       0.964027580075817f,
-                                                       0.964027580075817f,
-                                                       0.964027580075817f,
-                                                       0.964027580075817f}}})
-                                .get_vector();
+                                                      -0.999999774929676f,
+                                                      -0.999998336943945f,
+                                                      -0.999987711650796f,
+                                                      -0.999909204262595f},
+                                                     {-0.999329299739067f,
+                                                      -0.995054753686731f,
+                                                      -0.964027580075817f,
+                                                      -0.761594155955765f,
+                                                      0},
+                                                     {0.761594155955765f,
+                                                      0.964027580075817f,
+                                                      0.995054753686731f,
+                                                      0.999329299739067f,
+                                                      0.999909204262595f},
+                                                     {0.999987711650796f,
+                                                      0.999998336943945f,
+                                                      0.999999774929676f,
+                                                      0.999999969540041f,
+                                                      0.999999995877693f}},
+                                                    {{-0.999329299739067f,
+                                                      -0.995054753686731f,
+                                                      -0.964027580075817f,
+                                                      -0.761594155955765f,
+                                                      0},
+                                                     {0.761594155955765f,
+                                                      0.964027580075817f,
+                                                      0.995054753686731f,
+                                                      0.999329299739067f,
+                                                      0.999909204262595f},
+                                                     {0.999987711650796f,
+                                                      0.999998336943945f,
+                                                      0.999999774929676f,
+                                                      0.999999969540041f,
+                                                      0.999999995877693f},
+                                                     {0.999999999442106f,
+                                                      0.999999999924497f,
+                                                      0.999999999989782f,
+                                                      0.999999999998617f,
+                                                      0.999999999999813f}},
+                                                    {{0.761594155955765f,
+                                                      0.761594155955765f,
+                                                      0.761594155955765f,
+                                                      0.761594155955765f,
+                                                      0.761594155955765f},
+                                                     {-0.761594155955765f,
+                                                      -0.761594155955765f,
+                                                      -0.761594155955765f,
+                                                      -0.761594155955765f,
+                                                      -0.761594155955765f},
+                                                     {0, 0, 0, 0, 0},
+                                                     {0.964027580075817f,
+                                                      0.964027580075817f,
+                                                      0.964027580075817f,
+                                                      0.964027580075817f,
+                                                      0.964027580075817f}}})
+                               .get_vector();
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(inputs);
@@ -1378,18 +1378,18 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_softplus_infinity)
                                      std::numeric_limits<float>::infinity()}};
 
     std::vector<float> expected_output{std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity()};
+                                       std::numeric_limits<float>::infinity(),
+                                       std::numeric_limits<float>::infinity(),
+                                       std::numeric_limits<float>::infinity(),
+                                       std::numeric_limits<float>::infinity(),
+                                       std::numeric_limits<float>::infinity(),
+                                       std::numeric_limits<float>::infinity(),
+                                       std::numeric_limits<float>::infinity(),
+                                       std::numeric_limits<float>::infinity(),
+                                       std::numeric_limits<float>::infinity(),
+                                       std::numeric_limits<float>::infinity(),
+                                       std::numeric_limits<float>::infinity(),
+                                       std::numeric_limits<float>::infinity()};
 
     // Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
     // for (float v : outputs.front())
@@ -1412,13 +1412,14 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum_opset8)
     inputs.emplace_back(test::NDArray<float, 2>{{10.0f}, {20.0f}, {30.0f}}.get_vector());
     inputs.emplace_back(test::NDArray<float, 3>{{{100.0f}}, {{200.0f}}, {{300.0f}}}.get_vector());
 
-    auto expected_output = test::NDArray<float, 3>{
-        {{111.0f, 112.0f, 113.0f}, {121.0f, 122.0f, 123.0f}, {131.0f, 132.0f, 133.0f}},
+    auto expected_output =
+        test::NDArray<float, 3>{
+            {{111.0f, 112.0f, 113.0f}, {121.0f, 122.0f, 123.0f}, {131.0f, 132.0f, 133.0f}},
 
-        {{211.0f, 212.0f, 213.0f}, {221.0f, 222.0f, 223.0f}, {231.0f, 232.0f, 233.0f}},
+            {{211.0f, 212.0f, 213.0f}, {221.0f, 222.0f, 223.0f}, {231.0f, 232.0f, 233.0f}},
 
-        {{311.0f, 312.0f, 313.0f}, {321.0f, 322.0f, 323.0f}, {331.0f, 332.0f, 333.0f}}}
-                                .get_vector();
+            {{311.0f, 312.0f, 313.0f}, {321.0f, 322.0f, 323.0f}, {331.0f, 332.0f, 333.0f}}}
+            .get_vector();
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(inputs);
@@ -1441,7 +1442,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmin_int32)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/argmin_int32.prototxt"));
-
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input<std::int32_t>({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
@@ -1550,9 +1550,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_one_hot_with_axis)
         file_util::path_join(SERIALIZED_ZOO, "onnx/one_hot_axis.prototxt"));
 
     Inputs inputs{{1.0, 9.0, 2.0, 4.0}, {1.0, 3.0}};
-    std::vector<float> expected_output {{1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                              1.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0,
-                              1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0}};
+    std::vector<float> expected_output{{1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                                        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 3.0,
+                                        1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 3.0,
+                                        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0}};
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(inputs);
@@ -1566,9 +1567,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_one_hot_without_axis)
         file_util::path_join(SERIALIZED_ZOO, "onnx/one_hot_no_axis.prototxt"));
 
     std::vector<std::vector<std::int64_t>> inputs{{0, 7, 8}, {2, 5}};
-    std::vector<std::int64_t> expected_output{5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-                                                             2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2, 2,
-                                                             2, 2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2};
+    std::vector<std::int64_t> expected_output{5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                                              2, 5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2};
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(inputs);
@@ -1596,7 +1596,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_where)
     inputs.push_back(std::move(x2));
 
     // y = 3x3x3
-    std::vector<int> expected_output{2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2};
+    std::vector<int> expected_output{2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2,
+                                     1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2};
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(inputs);
@@ -1634,7 +1635,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_erf_int32)
     const std::vector<std::vector<int32_t>> inputs{
         {-std::numeric_limits<int32_t>::max(), -1, 0, 1, std::numeric_limits<int32_t>::max()}};
 
-    const std::vector<int32_t> expected_output {-1, 0, 0, 0, 1};
+    const std::vector<int32_t> expected_output{-1, 0, 0, 0, 1};
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(inputs);

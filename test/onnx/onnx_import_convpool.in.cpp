@@ -47,17 +47,17 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_padding)
     // Convolution with strides=2 and padding=1
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_padding.prototxt"));
-    
+
     Inputs inputs;
     // data (1, 1, 7, 5) input tensor
     inputs.emplace_back(test::NDArray<float, 4>{{{{{0.f, 1.f, 2.f, 3.f, 4.f},
-                                                 {5.f, 6.f, 7.f, 8.f, 9.f},
-                                                 {10.f, 11.f, 12.f, 13.f, 14.f},
-                                                 {15.f, 16.f, 17.f, 18.f, 19.f},
-                                                 {20.f, 21.f, 22.f, 23.f, 24.f},
-                                                 {25.f, 26.f, 27.f, 28.f, 29.f},
-                                                 {30.f, 31.f, 32.f, 33.f, 34.f}}}}}
-                          .get_vector());
+                                                   {5.f, 6.f, 7.f, 8.f, 9.f},
+                                                   {10.f, 11.f, 12.f, 13.f, 14.f},
+                                                   {15.f, 16.f, 17.f, 18.f, 19.f},
+                                                   {20.f, 21.f, 22.f, 23.f, 24.f},
+                                                   {25.f, 26.f, 27.f, 28.f, 29.f},
+                                                   {30.f, 31.f, 32.f, 33.f, 34.f}}}}}
+                            .get_vector());
 
     // filters (1, 1, 3, 3) aka convolution weights
     inputs.emplace_back(
@@ -86,13 +86,13 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_no_padding)
     Inputs inputs;
     // data (1, 1, 7, 5) input tensor
     inputs.emplace_back(test::NDArray<float, 4>{{{{{0.f, 1.f, 2.f, 3.f, 4.f},
-                                                 {5.f, 6.f, 7.f, 8.f, 9.f},
-                                                 {10.f, 11.f, 12.f, 13.f, 14.f},
-                                                 {15.f, 16.f, 17.f, 18.f, 19.f},
-                                                 {20.f, 21.f, 22.f, 23.f, 24.f},
-                                                 {25.f, 26.f, 27.f, 28.f, 29.f},
-                                                 {30.f, 31.f, 32.f, 33.f, 34.f}}}}}
-                          .get_vector());
+                                                   {5.f, 6.f, 7.f, 8.f, 9.f},
+                                                   {10.f, 11.f, 12.f, 13.f, 14.f},
+                                                   {15.f, 16.f, 17.f, 18.f, 19.f},
+                                                   {20.f, 21.f, 22.f, 23.f, 24.f},
+                                                   {25.f, 26.f, 27.f, 28.f, 29.f},
+                                                   {30.f, 31.f, 32.f, 33.f, 34.f}}}}}
+                            .get_vector());
 
     // filters (1, 1, 3, 3) aka convolution weights
     inputs.emplace_back(
@@ -118,13 +118,13 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_assymetric_padding)
     Inputs inputs;
     // data (1, 1, 7, 5) input tensor
     inputs.emplace_back(test::NDArray<float, 4>{{{{{0.f, 1.f, 2.f, 3.f, 4.f},
-                                                 {5.f, 6.f, 7.f, 8.f, 9.f},
-                                                 {10.f, 11.f, 12.f, 13.f, 14.f},
-                                                 {15.f, 16.f, 17.f, 18.f, 19.f},
-                                                 {20.f, 21.f, 22.f, 23.f, 24.f},
-                                                 {25.f, 26.f, 27.f, 28.f, 29.f},
-                                                 {30.f, 31.f, 32.f, 33.f, 34.f}}}}}
-                          .get_vector());
+                                                   {5.f, 6.f, 7.f, 8.f, 9.f},
+                                                   {10.f, 11.f, 12.f, 13.f, 14.f},
+                                                   {15.f, 16.f, 17.f, 18.f, 19.f},
+                                                   {20.f, 21.f, 22.f, 23.f, 24.f},
+                                                   {25.f, 26.f, 27.f, 28.f, 29.f},
+                                                   {30.f, 31.f, 32.f, 33.f, 34.f}}}}}
+                            .get_vector());
 
     // filters (1, 1, 3, 3) aka convolution weights
     inputs.emplace_back(
@@ -399,8 +399,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p0)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p0.prototxt"));
 
-    std::vector<std::int64_t> input{
-        1, 0, -4, 0, 2, 1, -6, 1, 0, 0, 0, 0, -7, 1, -1, 0, -1, 8, 0, 10, 9, 0, 0, 5};
+    std::vector<std::int64_t> input{1,  0, -4, 0, 2,  1, -6, 1,  0, 0, 0, 0,
+                                    -7, 1, -1, 0, -1, 8, 0,  10, 9, 0, 0, 5};
 
     std::vector<std::int64_t> expected_output{6, 8};
 
