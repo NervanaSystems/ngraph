@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 set(ONECCL_GIT_URL https://github.com/intel/oneccl)
-set(ONECCL_GIT_TAG 4ecffc589f09609d860710d5b8ada376f942bc35)
+set(ONECCL_GIT_TAG d2b9499ace634e230ed7b30ebd9e47a7555a8cee)
 set(ONECCL_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/oneccl/install)
 
 ExternalProject_Add(
@@ -35,8 +35,11 @@ ExternalProject_Add(
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
     CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
     CMAKE_ARGS
-        -DCMAKE_CXX_FLAGS=${CMAKE_ORIGINAL_CXX_FLAGS}
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=${CMAKE_EXPORT_COMPILE_COMMANDS}
+        -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=${CMAKE_POSITION_INDEPENDENT_CODE}
         -DCMAKE_INSTALL_PREFIX=${ONECCL_INSTALL_PREFIX}
     INSTALL_DIR "${ONECCL_INSTALL_PREFIX}"
     EXCLUDE_FROM_ALL TRUE
@@ -46,9 +49,6 @@ add_library(libccl INTERFACE)
 ExternalProject_Get_Property(ext_oneccl SOURCE_DIR INSTALL_DIR)
 set(ONECCL_LIB_DIR ${INSTALL_DIR}/lib)
 set(ONECCL_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}ccl${CMAKE_SHARED_LIBRARY_SUFFIX})
-set(MPI_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mpi${CMAKE_SHARED_LIBRARY_SUFFIX})
-set(PMI_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}pmi${CMAKE_SHARED_LIBRARY_SUFFIX})
-set(FABRIC_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}fabric${CMAKE_SHARED_LIBRARY_SUFFIX})
 ExternalProject_Add_Step(
     ext_oneccl
     CopyONECCL
@@ -59,18 +59,15 @@ ExternalProject_Add_Step(
 target_include_directories(libccl SYSTEM INTERFACE ${SOURCE_DIR}/include)
 
 set(ONECCL_LINK_LIBRARIES
-    ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${ONECCL_LIB}
-    ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MPI_LIB}
-    ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${PMI_LIB}
-    ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${FABRIC_LIB})
+    ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${ONECCL_LIB})
 
 target_link_libraries(libccl PRIVATE INTERFACE ${ONECCL_LINK_LIBRARIES})
 add_dependencies(libccl ext_oneccl)
 
 # installation
 # oneccl & mpi & pmi & fabric libraries
-install(DIRECTORY "${INSTALL_DIR}/lib/"
-        DESTINATION ${NGRAPH_INSTALL_LIB})
+install(DIRECTORY "${INSTALL_DIR}/lib"
+        DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 #install mpi binaries
 install(DIRECTORY "${INSTALL_DIR}/bin/"
@@ -80,6 +77,10 @@ install(DIRECTORY "${INSTALL_DIR}/bin/"
 #install mpi tunning data
 install(DIRECTORY "${INSTALL_DIR}/etc/"
         DESTINATION ${CMAKE_INSTALL_PREFIX}/etc)
+
+#install env scripts
+install(DIRECTORY "${INSTALL_DIR}/env"
+        DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 #install headers
 install(DIRECTORY "${INSTALL_DIR}/include/"

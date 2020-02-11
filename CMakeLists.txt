@@ -173,9 +173,9 @@ if (NGRAPH_DISTRIBUTED_ENABLE)
                     "-DNGRAPH_DISTRIBUTED_ENABLE=MLSL to be used, if Intel CPU is the only backend enabled.\n"
                     "Use -DNGRAPH_DISTRIBUTED_ENABLE=OMPI for all other situations.\n")
         endif()
-    elseif("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL  "ONECCL")
+    elseif("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL "ONECCL")
         set(NGRAPH_DISTRIBUTED_ONECCL_ENABLE TRUE)
-    elseif("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL  "OMPI")
+    elseif("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL "OMPI")
         set(NGRAPH_DISTRIBUTED_OMPI_ENABLE TRUE)
     else()
         message(FATAL_ERROR
@@ -363,7 +363,9 @@ endif()
 # Compile Flags to pass to external projects...
 #-----------------------------------------------------------------------------------------------
 
-include(cmake/sdl.cmake)
+if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    include(cmake/sdl.cmake)
+endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
