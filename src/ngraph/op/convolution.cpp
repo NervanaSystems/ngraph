@@ -343,6 +343,10 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
             output_shape.insert(output_shape.begin(), data_shape.at(0));
             output_pshape = output_shape;
         }
+        else
+        {
+            output_pshape = PartialShape::dynamic();
+        }
         set_input_is_relevant_to_shape(2);
     }
     // Deduce output shape from input spatial shape, strides, dilations, output padding
