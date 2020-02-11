@@ -20,6 +20,7 @@
 #include "mlir_subgraph_extraction.hpp"
 #include "ngraph/assertion.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops.hpp"
 
