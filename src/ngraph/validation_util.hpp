@@ -154,8 +154,8 @@ namespace ngraph
     int64_t normalize_axis(const Node* node,
                            std::int64_t axis,
                            std::uint64_t tensor_rank,
-                           std::uint64_t axis_range_min,
-                           std::uint64_t axis_range_max);
+                           std::int64_t axis_range_min,
+                           std::int64_t axis_range_max);
 
     /// \brief      Handle out of range axis.
     ///
@@ -171,8 +171,8 @@ namespace ngraph
     int64_t normalize_axis(const std::string& node_description,
                            std::int64_t axis,
                            std::uint64_t tensor_rank,
-                           std::uint64_t axis_range_min,
-                           std::uint64_t axis_range_max);
+                           std::int64_t axis_range_min,
+                           std::int64_t axis_range_max);
 
     namespace opset1
     {
