@@ -62,6 +62,7 @@ namespace ngraph
             insert<OP_TYPE>(OP_TYPE::type_info.name);
         }
 
+        const std::set<NodeTypeInfo>& get_types_info() const { return m_op_types; }
         /// \brief Create the op named name using it's factory
         ngraph::Node* create(const std::string& name) const;
 

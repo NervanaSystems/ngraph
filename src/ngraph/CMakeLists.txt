@@ -388,8 +388,6 @@ set (SRC
     op/fused/grn.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
-    op/fused/group_conv_transpose.hpp
-    op/fused/group_conv_transpose.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
     op/fused/layer_norm.cpp

@@ -34,29 +34,33 @@ op::Unsqueeze::Unsqueeze(const Output<Node>& data, const Output<Node>& axes)
 
 void op::Unsqueeze::pre_validate_and_infer_types()
 {
-    auto axes_node = input_value(1).get_node_shared_ptr();
-
-    // Currently only support Constant node for axes.
-    NODE_VALIDATION_CHECK(this,
-                          axes_node->is_constant(),
-                          "doesn't support 'axes' input of other type than a Constant.");
-}
-
-NodeVector op::Unsqueeze::decompose_op() const
-{
     auto data = input_value(0);
     auto axes_node = input_value(1).get_node_shared_ptr();
+
+    if (data.get_partial_shape().rank().is_dynamic() || !axes_node->is_constant())
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+        return;
+    }
 
     // Get value of axes from Constant
     auto axes_constant = as_type_ptr<op::Constant>(axes_node);
     auto axes = axes_constant->cast_vector<size_t>();
 
-    auto data_shape = data.get_shape();
-
     NODE_VALIDATION_CHECK(this, !axes.empty(), "'axes' input is mandatory.");
     NODE_VALIDATION_CHECK(this,
                           axes.size() == set<int64_t>(begin(axes), end(axes)).size(),
                           "'axes' input has a duplicate axis.");
+
+    if (data.get_partial_shape().is_dynamic())
+    {
+        set_output_type(0,
+                        get_input_element_type(0),
+                        PartialShape::dynamic(data.get_partial_shape().rank() + axes.size()));
+        return;
+    }
+
+    auto data_shape = data.get_shape();
 
     sort(begin(axes), end(axes), less<int64_t>());
 
@@ -69,8 +73,16 @@ NodeVector op::Unsqueeze::decompose_op() const
 
         data_shape.insert(next(begin(data_shape), axis), 1);
     }
+    set_output_type(0, get_input_element_type(0), data_shape);
+}
 
-    return {make_shared<ngraph::op::Reshape>(data, input_order, data_shape)};
+NodeVector op::Unsqueeze::decompose_op() const
+{
+    auto data = input_value(0);
+    auto data_shape = data.get_shape();
+    auto output_shape = get_output_shape(0);
+    AxisVector input_order{ngraph::get_default_order(data_shape.size())};
+    return {make_shared<ngraph::op::Reshape>(data, input_order, output_shape)};
 }
 
 shared_ptr<Node> op::Unsqueeze::copy_with_new_args(const NodeVector& new_args) const
