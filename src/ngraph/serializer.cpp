@@ -23,6 +23,7 @@
 #include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
