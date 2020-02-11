@@ -92,6 +92,10 @@ void op::Squeeze::pre_validate_and_infer_types()
 
 NodeVector op::Squeeze::decompose_op() const
 {
+    NODE_VALIDATION_CHECK(
+            this,
+            (get_output_partial_shape(0).is_static()),
+            "output shape was not calculated during pre_validate_and_infer_types. Can not decompose.");
     auto data = input_value(0);
     auto data_shape = data.get_shape();
     auto output_data_shape = get_output_shape(0);
