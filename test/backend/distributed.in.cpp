@@ -143,8 +143,8 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcastdistributed)
     }
 }
 
-// MLSL does not support send recv
-#if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+// MLSL and OneCCL do not support send recv
+#if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE) && !defined(NGRAPH_DISTRIBUTED_ONECCL_ENABLE)
 NGRAPH_TEST(${BACKEND_NAME}, send_recv)
 {
     auto shape = Shape{2, 2};
@@ -179,10 +179,7 @@ NGRAPH_TEST(${BACKEND_NAME}, send_recv)
     handle->call_with_validate({result}, {result});
     EXPECT_EQ(v, read_vector<float>(result));
 }
-#endif
 
-// MLSL does not support send recv
-#if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
 NGRAPH_TEST(${BACKEND_NAME}, send_recv_ring)
 {
     auto shape = Shape{2, 2};
