@@ -497,14 +497,14 @@ void Node::transfer_provenance_tags(const shared_ptr<Node>& replacement)
         }
     };
 
-    traverse_nodes({shared_from_this()}, set_replacement_prov, false, common_args);
+    traverse_nodes({shared_from_this()}, set_replacement_prov, common_args);
     replacement->add_provenance_tags(removed_subgraph_tags);
 
     auto set_prov_new_nodes = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
         node->add_provenance_tags(removed_subgraph_tags);
     };
 
-    traverse_nodes({replacement}, set_prov_new_nodes, false, common_args);
+    traverse_nodes({replacement}, set_prov_new_nodes, common_args);
 }
 
 std::shared_ptr<Node> Node::get_argument(size_t index) const
