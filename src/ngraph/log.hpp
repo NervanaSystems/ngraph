@@ -30,8 +30,6 @@
 #endif
 #include <vector>
 
-#include "ngraph/distributed.hpp"
-
 namespace ngraph
 {
     class ConstString
