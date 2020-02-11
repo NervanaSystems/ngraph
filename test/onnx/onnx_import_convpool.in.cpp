@@ -41,7 +41,6 @@ static std::string s_manifest = "${MANIFEST}";
 using Inputs = std::vector<std::vector<float>>;
 using Outputs = std::vector<std::vector<float>>;
 
-
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_padding)
 {
     // Convolution with strides=2 and padding=1
