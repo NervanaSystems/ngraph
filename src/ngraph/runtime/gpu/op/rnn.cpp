@@ -16,10 +16,13 @@
 
 #include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+constexpr NodeTypeInfo op::gpu::Rnn::type_info;
 
 shared_ptr<Node> op::gpu::Rnn::copy_with_new_args(const NodeVector& new_args) const
 {
