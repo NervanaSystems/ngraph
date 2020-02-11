@@ -58,9 +58,13 @@ namespace ngraph
             /// \param[in]  value         The value to be split.
             /// \param[in]  length_parts  The vector defining the lengths of each split part.
             /// \param[in]  axis          The axis we split input node on. Default value is zero
-            /// axis.
+            ///                           axis.
+            /// \note       This implementation supports negative `axis` values (similar to NumPy
+            ///             indexing). This means that the axis to split on will be counted from
+            ///             the back of the tensor (negative values are subtracted from its rank).
             ///
             /// \return     The vector containing multiple nodes we split input node into.
+            ///             The vector is output of Split:v1 op
             ///
             NodeVector split(const Output<Node>& value,
                              const std::vector<size_t>& length_parts,
@@ -73,13 +77,14 @@ namespace ngraph
             ///                           axis. The length of the axis to split must be divisible by
             ///                           this value.
             /// \param[in]  axis          The axis we split input node on. Default value is zero
-            /// axis.
+            ///                           axis.
             ///
             /// \note       This implementation supports negative `axis` values (similar to NumPy
             ///             indexing). This means that the axis to split on will be counted from
             ///             the back of the tensor (negative values are subtracted from its rank).
             ///
             /// \return     The vector containing multiple nodes we split input node into.
+            ///             The vector is output of VariadicSplit:v1 op
             ///
             NodeVector split(const Output<Node>& value, size_t split_parts, int64_t axis = 0);
         }
