@@ -40,6 +40,8 @@ namespace ngraph
 
                 void validate_and_infer_types() override;
 
+                static constexpr NodeTypeInfo type_info{"BatchNormTrainingWithStats", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
             protected:
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
