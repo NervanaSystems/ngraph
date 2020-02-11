@@ -142,6 +142,14 @@ std::shared_ptr<Node>
             }
         }
         clone = copy_with_new_args(args);
+        // Remove the inserted GOEs
+        for (size_t i = 0; i < inputs.size(); ++i)
+        {
+            if (clone->input_value(i) != inputs.at(i))
+            {
+                clone->set_argument(i, inputs.at(i));
+            }
+        }
     }
     for (auto& cdep : control_dependencies)
     {
