@@ -207,14 +207,12 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
 
     // Traverse bprop to find all of the nodes in the bprop graph
     std::set<Output<Node>> in_bprop;
-    ngraph::traverse_nodes(bprop,
-                           [&in_bprop](std::shared_ptr<Node> node) {
-                               for (auto value : node->outputs())
-                               {
-                                   in_bprop.insert(value);
-                               }
-                           },
-                           false /* no control dependencies */);
+    ngraph::traverse_nodes(bprop, [&in_bprop](std::shared_ptr<Node> node) {
+        for (auto value : node->outputs())
+        {
+            in_bprop.insert(value);
+        }
+    });
 
     // Traverse fprop to make a map that stores parameters with the same
     // shape and element type as the nodes in fprop iff they are in bprop
@@ -299,8 +297,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
             {
                 fprop_cache.fprop_output_nodes.push_back(inverted_node_map.at(Output<Node>(node)));
             }
-        },
-        false /* no control dependencies */);
+        });
 
     // create the new outputs for fprop and the new fprop function
     ResultVector fprop_outputs = fprop->get_results();

@@ -38,7 +38,7 @@ namespace ngraph
                     auto indices = ng_inputs.at(1);
                     auto axis = node.get_attribute_value<int64_t>("axis", 0);
                     const auto valid_axis = ngraph::normalize_axis(
-                        node.get_description(), axis, data->get_shape().size());
+                        node.get_description(), axis, data->get_output_partial_shape(0).rank());
 
                     return {std::make_shared<default_opset::Gather>(
                         data,
