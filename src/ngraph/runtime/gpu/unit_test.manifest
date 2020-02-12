@@ -499,3 +499,6 @@ atan
 dyn_replace_slice
 atan2
 model_lstm_fwd_hardsigmoid_activation
+model_acosh
+model_asinh
+model_atanh
