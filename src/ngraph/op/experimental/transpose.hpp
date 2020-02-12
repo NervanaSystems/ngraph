@@ -42,6 +42,7 @@ namespace ngraph
                 ///                    value must contain every integer in the range [0,n-1].
                 Transpose(const Output<Node>& arg, const Output<Node>& input_order);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
