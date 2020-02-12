@@ -100,7 +100,7 @@ namespace ngraph
                                                        const std::string& output_name) = 0;
                 std::shared_ptr<ngraph::Function> m_function;
 
-                std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>
+                std::unordered_map<std::shared_ptr<Function>, std::vector<std::shared_ptr<Node>>>
                     m_function_ordered_ops;
 
                 bool m_emit_timing;

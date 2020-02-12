@@ -25,6 +25,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/opsets/opset0.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -57,20 +58,13 @@ namespace ngraph
                     int64_t axis_0{node.get_attribute_value<int64_t>("axis", 0)};
                     int64_t axis_1{node.get_attribute_value<int64_t>("axis", 1)};
 
+                    const auto data_rank = x->get_output_partial_shape(0).rank();
                     AxisSet axes;
                     // if axis attribute is set
                     if (axis_0 == axis_1)
                     {
-                        // positive axis
-                        if (axis_0 >= 0)
-                        {
-                            axes.insert(axis_0);
-                        }
-                        // negative axis
-                        else if (axis_0 < 0)
-                        {
-                            axes.insert(x->get_shape().size() + axis_0);
-                        }
+                        axes.insert(
+                            ngraph::normalize_axis(node.get_description(), axis_0, data_rank));
                     }
 
                     if (x->get_element_type() != zero_point->get_element_type())
