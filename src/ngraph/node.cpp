@@ -991,49 +991,6 @@ bool Node::is_dynamic() const
     return false;
 }
 
-namespace ngraph
-{
-    std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
-    {
-        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
-                                                            << "]:" << output.get_element_type()
-                                                            << output.get_partial_shape();
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Output<const Node>& output)
-    {
-        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
-                                                            << "]:" << output.get_element_type()
-                                                            << output.get_partial_shape();
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Input<Node>& input)
-    {
-        return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
-                                                           << "):" << input.get_element_type()
-                                                           << input.get_partial_shape();
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Input<const Node>& input)
-    {
-        return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
-                                                           << "):" << input.get_element_type()
-                                                           << input.get_partial_shape();
-    }
-
-    void Output<Node>::replace(const Output<Node>& replacement)
-    {
-        for (auto& input : get_target_inputs())
-        {
-            // GOEs are used as handles in passes
-            if (!is_type<op::GetOutputElement>(input.get_node()))
-            {
-                input.replace_source_output(replacement);
-            }
-        }
-    }
-}
-
 Input<Node> Node::input(size_t input_index)
 {
     if (input_index >= m_inputs.size())
