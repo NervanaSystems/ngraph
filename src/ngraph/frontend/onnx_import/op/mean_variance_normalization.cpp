@@ -50,8 +50,8 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
                     auto axes = node.get_attribute_value<std::vector<int64_t>>("axes", {0, 2, 3});
-                    std::vector<std::size_t> normalized_axes = ngraph::normalize_axes(
-                        node.get_description(), axes, data->get_shape().size());
+                    const std::vector<std::size_t> normalized_axes = ngraph::normalize_axes(
+                        node.get_description(), axes, data->get_output_partial_shape(0).rank());
 
                     return {std::make_shared<ngraph::opset0::MVN>(data, AxisSet(normalized_axes))};
                 }
