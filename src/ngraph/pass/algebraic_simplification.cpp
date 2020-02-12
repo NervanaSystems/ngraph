@@ -327,20 +327,27 @@ shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
     return as_type_ptr<op::Constant>(op);
 }
 
-shared_ptr<Node> is_input_uniform_constant(shared_ptr<Node> op, int value)
+bool is_input_uniform_constant(shared_ptr<Node> op,
+                               int constant_value,
+                               shared_ptr<Node>& constant,
+                               shared_ptr<Node>& value)
 {
-    shared_ptr<Node> rc;
-    auto constant = get_constant(op->input(0).get_source_output().get_node_shared_ptr());
-    if (is_uniform_constant(constant.get(), value))
+    bool rc = false;
+    auto c = get_constant(op->input(0).get_source_output().get_node_shared_ptr());
+    if (is_uniform_constant(c.get(), constant_value))
     {
-        rc = op->input(1).get_source_output().get_node_shared_ptr();
+        constant = op->input(0).get_source_output().get_node_shared_ptr();
+        value = op->input(1).get_source_output().get_node_shared_ptr();
+        rc = true;
     }
     else
     {
-        constant = get_constant(op->input(1).get_source_output().get_node_shared_ptr());
-        if (is_uniform_constant(constant.get(), value))
+        c = get_constant(op->input(1).get_source_output().get_node_shared_ptr());
+        if (is_uniform_constant(c.get(), constant_value))
         {
-            rc = op->input(0).get_source_output().get_node_shared_ptr();
+            constant = op->input(1).get_source_output().get_node_shared_ptr();
+            value = op->input(0).get_source_output().get_node_shared_ptr();
+            rc = true;
         }
     }
     return rc;
@@ -358,102 +365,66 @@ static bool simplify_multiply(shared_ptr<Node> n)
     auto multiply = as_type_ptr<op::Multiply>(n);
     bool will_replace_zero = false;
     bool will_replace_one = false;
-    const op::Constant* constant = nullptr;
     if (multiply)
     {
-        auto other = is_input_uniform_constant(multiply, 0);
-        if (other)
+        shared_ptr<Node> constant;
+        shared_ptr<Node> value;
+        if (is_input_uniform_constant(multiply, 0, constant, value))
         {
+            NGRAPH_INFO << multiply->get_name() << " -> " << constant->get_name();
+            will_replace_zero = true;
+            replace_node(multiply, constant);
         }
         else
         {
-            auto other = is_input_uniform_constant(multiply, 1);
-            if (other)
+            if (is_input_uniform_constant(multiply, 1, constant, value))
             {
+                NGRAPH_INFO << multiply->get_name() << " -> " << value->get_name();
+                will_replace_one = true;
+                replace_node(multiply, value);
             }
         }
-        // {
-        //     constant = as_type<op::Constant>(multiply->input(1).get_source_output().get_node());
-        //     if (is_uniform_constant(constant, 0))
-        //     {
-
-        //     }
-        // }
-        // if (constant && constant->get_all_data_elements_bitwise_identical())
-        // {
-        //     if (is_value(constant, 0))
-        //     {
-        //         will_replace_zero = true;
-        //     }
-        //     else if(is_value(constant, 1))
-        //     {
-        //         will_replace_one = true;
-        //     }
-        //     else
-        //     {
-        //         constant = nullptr;
-        //     }
-        // }
-        // if (constant)
-        // {
-        //     constant = as_type<op::Constant>(multiply->input(1).get_source_output().get_node());
-        //     if (constant && constant->get_all_data_elements_bitwise_identical())
-        //     {
-        //         if (is_value(constant, 0))
-        //         {
-        //             will_replace_zero = true;
-        //         }
-        //         else if(is_value(constant, 1))
-        //         {
-        //             will_replace_one = true;
-        //         }
-        //         else
-        //         {
-        //             constant = nullptr;
-        //         }
-        //     }
-        // }
     }
 
-    NGRAPH_DEBUG << "In simplify_multiply for " << n->get_name();
-    auto iconst = make_zero(element::i32, Shape{});
-    auto label = make_shared<pattern::op::Label>(iconst);
-    auto const_label_zero = make_shared<pattern::op::Label>(iconst, is_zero, NodeVector{iconst});
-    auto const_label_one = make_shared<pattern::op::Label>(iconst, is_one, NodeVector{iconst});
+    // NGRAPH_DEBUG << "In simplify_multiply for " << n->get_name();
+    // auto iconst = make_zero(element::i32, Shape{});
+    // auto label = make_shared<pattern::op::Label>(iconst);
+    // auto const_label_zero = make_shared<pattern::op::Label>(iconst, is_zero, NodeVector{iconst});
+    // auto const_label_one = make_shared<pattern::op::Label>(iconst, is_one, NodeVector{iconst});
 
-    auto matcher_const_zero = create_binary_matcher<op::Multiply>(label, const_label_zero);
-    auto matcher_const_one = create_binary_matcher<op::Multiply>(label, const_label_one);
+    // auto matcher_const_zero = create_binary_matcher<op::Multiply>(label, const_label_zero);
+    // auto matcher_const_one = create_binary_matcher<op::Multiply>(label, const_label_one);
 
-    if (matcher_const_zero->match(n))
-    {
-        if (!will_replace_zero)
-        {
-            NGRAPH_INFO << "******************* zero";
-            NGRAPH_INFO << *n;
-            // NGRAPH_INFO << constant->get_all_data_elements_bitwise_identical();
-            // NGRAPH_INFO << constant->convert_value_to_string(0);
-        }
-        auto bcst_label = get_broadcast_label(matcher_const_zero);
-        auto bcst_or_cnst = matcher_const_zero->get_pattern_map()[bcst_label];
-        NGRAPH_INFO << "Replacing " << n->get_name() << " with " << bcst_or_cnst->get_name();
-        replace_node(n, bcst_or_cnst);
-        return true;
-    }
+    // if (matcher_const_zero->match(n))
+    // {
+    //     if (!will_replace_zero)
+    //     {
+    //         NGRAPH_INFO << "******************* zero";
+    //         NGRAPH_INFO << *n;
+    //         // NGRAPH_INFO << constant->get_all_data_elements_bitwise_identical();
+    //         // NGRAPH_INFO << constant->convert_value_to_string(0);
+    //     }
+    //     auto bcst_label = get_broadcast_label(matcher_const_zero);
+    //     auto bcst_or_cnst = matcher_const_zero->get_pattern_map()[bcst_label];
+    //     NGRAPH_INFO << "Replacing " << n->get_name() << " with " << bcst_or_cnst->get_name();
+    //     replace_node(n, bcst_or_cnst);
+    //     return true;
+    // }
 
-    if (matcher_const_one->match(n))
-    {
-        if (!will_replace_one)
-        {
-            NGRAPH_INFO << "******************* one";
-            NGRAPH_INFO << *n;
-            // NGRAPH_INFO << constant->get_all_data_elements_bitwise_identical();
-            // NGRAPH_INFO << constant->convert_value_to_string(0);
-        }
-        auto x = matcher_const_one->get_pattern_map()[label];
-        NGRAPH_INFO << "Replacing " << n->get_name() << " with " << x->get_name();
-        replace_node(n, x);
-        return true;
-    }
+    // if (matcher_const_one->match(n))
+    // {
+    //     if (!will_replace_one)
+    //     {
+    //         NGRAPH_INFO << "******************* one";
+    //         NGRAPH_INFO << *n;
+    //         // NGRAPH_INFO << constant->get_all_data_elements_bitwise_identical();
+    //         // NGRAPH_INFO << constant->convert_value_to_string(0);
+    //     }
+    //     auto x = matcher_const_one->get_pattern_map()[label];
+    //     NGRAPH_INFO << "Replacing " << n->get_name() << " with " << x->get_name();
+    //     replace_node(n, x);
+    //     return true;
+    // }
 
     return false;
 }
