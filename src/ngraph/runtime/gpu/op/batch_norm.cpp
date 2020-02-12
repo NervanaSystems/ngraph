@@ -15,7 +15,10 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/gpu/op/batch_norm.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/validation_util.hpp"
+
+constexpr ngraph::NodeTypeInfo ngraph::op::gpu::BatchNormTrainingWithStats::type_info;
 
 ngraph::op::gpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(
     double eps,

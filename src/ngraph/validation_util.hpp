@@ -112,7 +112,7 @@ namespace ngraph
     /// \return    Checking if axis is in range [-tensor_rank, tensor_rank-1], otherwise
     ///            returns error. If negative axis, it counts from the last to the first axis,
     ///            by adding tensor_rank to axis.
-    int64_t normalize_axis(const Node* node, std::int64_t axis, std::int64_t tensor_rank);
+    int64_t normalize_axis(const Node* node, std::int64_t axis, const Rank& tensor_rank);
 
     /// \brief      Handle out of range axes in vector.
     ///
@@ -125,7 +125,7 @@ namespace ngraph
     ///
     std::vector<size_t> normalize_axes(const std::string& node_description,
                                        const std::vector<int64_t>& axes,
-                                       std::int64_t tensor_rank);
+                                       const Rank& tensor_rank);
 
     /// \brief      Handle out of range axis.
     ///
@@ -138,7 +138,7 @@ namespace ngraph
     ///            by adding tensor_rank to axis.
     int64_t normalize_axis(const std::string& node_description,
                            std::int64_t axis,
-                           std::int64_t tensor_rank);
+                           const Rank& tensor_rank);
 
     /// \brief      Handle out of range axis.
     ///
@@ -153,7 +153,7 @@ namespace ngraph
     ///             by adding tensor_rank to axis.
     int64_t normalize_axis(const Node* node,
                            std::int64_t axis,
-                           std::int64_t tensor_rank,
+                           std::uint64_t tensor_rank,
                            std::int64_t axis_range_min,
                            std::int64_t axis_range_max);
 
@@ -170,7 +170,7 @@ namespace ngraph
     ///             by adding tensor_rank to axis.
     int64_t normalize_axis(const std::string& node_description,
                            std::int64_t axis,
-                           std::int64_t tensor_rank,
+                           std::uint64_t tensor_rank,
                            std::int64_t axis_range_min,
                            std::int64_t axis_range_max);
 
