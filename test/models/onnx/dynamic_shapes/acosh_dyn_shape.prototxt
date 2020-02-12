@@ -6,7 +6,7 @@ graph {
     output: "y"
     op_type: "Acosh"
   }
-  name: "acosh_hraph"
+  name: "acosh_graph"
   input {
     name: "x"
     type {
