@@ -78,7 +78,7 @@ void op::util::LogicalReduction::validate_and_infer_types()
         {
             try
             {
-                axis = normalize_axis(this, axis, size_t(input_rank));
+                axis = normalize_axis(this, axis, input_rank);
             }
             catch (const ngraph_error&)
             {
