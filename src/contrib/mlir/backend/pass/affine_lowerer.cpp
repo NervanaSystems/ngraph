@@ -799,7 +799,7 @@ namespace
         // For each operand, generate a separate loop to copy into the target slice of "result".
         // We'll keep track of the slice offsets via concatenation_axis_pos.
         auto concatenationAxis = concat.concatenation_axis().getSExtValue();
-        ValueHandle concatenationAxisPos(std_constant_index(0));
+        Value concatenationAxisPos(std_constant_index(0));
 
         for (auto& operand : operands)
         {
@@ -845,7 +845,7 @@ namespace
                 for (int i = 0; i < rank; i++)
                 {
                     resIndexHandles.push_back(i == concatenationAxis
-                                                  ? indexVars[i] + concatenationAxisPos
+                                                  ? indexVars[i] + ValueHandle(concatenationAxisPos)
                                                   : indexVars[i]);
                 }
 
@@ -853,7 +853,8 @@ namespace
             });
 
             // Move up concatenation_axis_pos for the next operand.
-            concatenationAxisPos = concatenationAxisPos + vOperand.ub(concatenationAxis);
+            concatenationAxisPos =
+                ValueHandle(concatenationAxisPos) + vOperand.ub(concatenationAxis);
         }
 
         rewriter.replaceOp(op, {result});
