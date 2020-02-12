@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 
 using namespace std;

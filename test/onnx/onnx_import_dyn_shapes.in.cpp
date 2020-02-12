@@ -113,7 +113,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, scalar_initializers_shape_check)
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/scalar_initializers.prototxt"));
 
-    for (const auto ng_node : function->get_ordered_ops())
+    for (auto ng_node : function->get_ordered_ops())
     {
         if (as_type_ptr<default_opset::Constant>(ng_node))
         {

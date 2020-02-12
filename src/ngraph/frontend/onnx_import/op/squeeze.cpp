@@ -31,19 +31,14 @@ namespace ngraph
             {
                 NodeVector squeeze(const Node& node)
                 {
-                    const auto data = node.get_ng_inputs().at(0);
+                    auto data = node.get_ng_inputs().at(0);
+                    std::vector<std::int64_t> axes =
+                        node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
                     const auto data_rank = data->get_output_partial_shape(0).rank();
 
-                    NGRAPH_CHECK(
-                        data_rank.is_static(),
-                        "The input data tensor's rank of the Squeeze op must be known(static).");
-
-                    const auto axes = node.get_attribute_value<std::vector<int64_t>>("axes", {});
-
-                    const auto normalized_axes = ngraph::normalize_axes(
-                        node.get_description(), axes, static_cast<size_t>(data_rank));
-
-                    const auto axes_node = std::make_shared<default_opset::Constant>(
+                    std::vector<std::size_t> normalized_axes =
+                        ngraph::normalize_axes(node.get_description(), axes, data_rank);
+                    auto axes_node = std::make_shared<default_opset::Constant>(
                         element::u64, Shape{normalized_axes.size()}, normalized_axes);
 
                     return {std::make_shared<default_opset::Squeeze>(data, axes_node)};

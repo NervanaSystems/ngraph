@@ -32,23 +32,24 @@ namespace ngraph
             {
                 AxisSet get_reduction_axes(const Node& node)
                 {
-                    const auto data_shape = node.get_ng_inputs().at(0)->get_output_partial_shape(0);
-                    NGRAPH_CHECK(
-                        data_shape.rank().is_static(),
-                        "Input's rank is required to be static to be able to normalize the axes");
+                    auto reduction_axes =
+                        node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
 
-                    const auto reduction_axes =
-                        node.get_attribute_value<std::vector<int64_t>>("axes", {});
+                    const auto input_rank =
+                        node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
 
-                    std::vector<size_t> normalized_axes =
-                        ngraph::normalize_axes(node.get_description(),
-                                               reduction_axes,
-                                               static_cast<int64_t>(data_shape.rank()));
+                    std::vector<std::size_t> normalized_axes =
+                        ngraph::normalize_axes(node.get_description(), reduction_axes, input_rank);
 
                     if (reduction_axes.empty())
                     {
+                        NGRAPH_CHECK(input_rank.is_static(),
+                                     "The input tensor's rank needs to be known(static) when the "
+                                     "'axes' attribute is not specified. Node: ",
+                                     node.get_description());
+
                         normalized_axes = onnx_import::common::get_monotonic_range<size_t>(
-                            static_cast<size_t>(data_shape.rank()));
+                            static_cast<size_t>(input_rank));
                     }
                     return AxisSet{normalized_axes};
                 }

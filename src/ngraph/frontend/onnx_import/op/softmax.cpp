@@ -30,16 +30,12 @@ namespace ngraph
             {
                 NodeVector softmax(const Node& node)
                 {
-                    const auto data = node.get_ng_inputs().at(0);
+                    NodeVector inputs{node.get_ng_inputs()};
+                    auto data = inputs.at(0);
                     const auto data_rank = data->get_output_partial_shape(0).rank();
-
-                    NGRAPH_CHECK(
-                        data_rank.is_static(),
-                        "The input data tensor's rank of the Softmax op must be known(static).");
-
                     const auto axis = node.get_attribute_value<int64_t>("axis", 1);
-                    const auto normalized_axis = ngraph::normalize_axis(
-                        node.get_description(), axis, static_cast<size_t>(data_rank));
+                    const auto normalized_axis =
+                        ngraph::normalize_axis(node.get_description(), axis, data_rank);
 
                     return {std::make_shared<default_opset::Softmax>(data, normalized_axis)};
                 }
