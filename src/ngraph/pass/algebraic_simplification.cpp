@@ -40,7 +40,17 @@
 using namespace std;
 using namespace ngraph;
 
-#define TI(x) type_index(typeid(x))
+bool is_uniform_constant(const Input<Node>& input)
+{
+    bool rc = false;
+    auto node = input.get_source_output().get_node();
+    if (node->get_type_info() == op::Constant::type_info)
+    {
+        auto constant = as_type<op::Constant>(node);
+        rc = constant->get_all_data_elements_bitwise_identical();
+    }
+    return rc;
+}
 
 extern template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
 template <typename T>
@@ -240,6 +250,102 @@ static bool simplify_concat(shared_ptr<Node> n)
     return true;
 }
 
+bool is_uniform_constant(const op::Constant* constant, int value)
+{
+    bool rc;
+    if (constant)
+    {
+        switch (constant->get_element_type())
+        {
+        case ngraph::element::Type_t::undefined:
+        {
+            throw runtime_error("is_value type not supported");
+        }
+        case ngraph::element::Type_t::dynamic: { throw runtime_error("is_value type not supported");
+        }
+        case ngraph::element::Type_t::boolean: break;
+        case ngraph::element::Type_t::bf16:
+            rc = *static_cast<const bfloat16*>(constant->get_data_ptr()) ==
+                 bfloat16(static_cast<float>(value));
+            break;
+        case ngraph::element::Type_t::f16:
+            rc = *static_cast<const float16*>(constant->get_data_ptr()) ==
+                 float16(static_cast<float>(value));
+            break;
+        case ngraph::element::Type_t::f32:
+            rc = *static_cast<const float*>(constant->get_data_ptr()) == static_cast<float>(value);
+            break;
+        case ngraph::element::Type_t::f64:
+            rc =
+                *static_cast<const double*>(constant->get_data_ptr()) == static_cast<double>(value);
+            break;
+        case ngraph::element::Type_t::i8:
+            rc =
+                *static_cast<const int8_t*>(constant->get_data_ptr()) == static_cast<int8_t>(value);
+            break;
+        case ngraph::element::Type_t::i16:
+            rc = *static_cast<const int16_t*>(constant->get_data_ptr()) ==
+                 static_cast<int16_t>(value);
+            break;
+        case ngraph::element::Type_t::i32:
+            rc = *static_cast<const int32_t*>(constant->get_data_ptr()) ==
+                 static_cast<int32_t>(value);
+            break;
+        case ngraph::element::Type_t::i64:
+            rc = *static_cast<const int64_t*>(constant->get_data_ptr()) ==
+                 static_cast<int64_t>(value);
+            break;
+        case ngraph::element::Type_t::u1: throw runtime_error("is_value type not supported");
+        case ngraph::element::Type_t::u8:
+            rc = *static_cast<const uint8_t*>(constant->get_data_ptr()) ==
+                 static_cast<uint8_t>(value);
+            break;
+        case ngraph::element::Type_t::u16:
+            rc = *static_cast<const uint16_t*>(constant->get_data_ptr()) ==
+                 static_cast<uint16_t>(value);
+            break;
+        case ngraph::element::Type_t::u32:
+            rc = *static_cast<const uint32_t*>(constant->get_data_ptr()) ==
+                 static_cast<uint32_t>(value);
+            break;
+        case ngraph::element::Type_t::u64:
+            rc = *static_cast<const uint64_t*>(constant->get_data_ptr()) ==
+                 static_cast<uint64_t>(value);
+            break;
+        }
+    }
+    return rc;
+}
+
+shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
+{
+    set<Node::type_info_t> nomath = {op::Broadcast::type_info, op::Reshape::type_info};
+    while (nomath.find(op->get_type_info()) != nomath.end())
+    {
+        op = op->input(0).get_source_output().get_node_shared_ptr();
+    }
+    return as_type_ptr<op::Constant>(op);
+}
+
+shared_ptr<Node> is_input_uniform_constant(shared_ptr<Node> op, int value)
+{
+    shared_ptr<Node> rc;
+    auto constant = get_constant(op->input(0).get_source_output().get_node_shared_ptr());
+    if (is_uniform_constant(constant.get(), value))
+    {
+        rc = op->input(1).get_source_output().get_node_shared_ptr();
+    }
+    else
+    {
+        constant = get_constant(op->input(1).get_source_output().get_node_shared_ptr());
+        if (is_uniform_constant(constant.get(), value))
+        {
+            rc = op->input(0).get_source_output().get_node_shared_ptr();
+        }
+    }
+    return rc;
+}
+
 //`simplify_multiply` optimizes the following 4 *base* cases
 //(8 cases in total including variants due to commutativity)
 //
@@ -249,6 +355,66 @@ static bool simplify_concat(shared_ptr<Node> n)
 // a * broadcast(1) -> a
 static bool simplify_multiply(shared_ptr<Node> n)
 {
+    auto multiply = as_type_ptr<op::Multiply>(n);
+    bool will_replace_zero = false;
+    bool will_replace_one = false;
+    const op::Constant* constant = nullptr;
+    if (multiply)
+    {
+        auto other = is_input_uniform_constant(multiply, 0);
+        if (other)
+        {
+        }
+        else
+        {
+            auto other = is_input_uniform_constant(multiply, 1);
+            if (other)
+            {
+            }
+        }
+        // {
+        //     constant = as_type<op::Constant>(multiply->input(1).get_source_output().get_node());
+        //     if (is_uniform_constant(constant, 0))
+        //     {
+
+        //     }
+        // }
+        // if (constant && constant->get_all_data_elements_bitwise_identical())
+        // {
+        //     if (is_value(constant, 0))
+        //     {
+        //         will_replace_zero = true;
+        //     }
+        //     else if(is_value(constant, 1))
+        //     {
+        //         will_replace_one = true;
+        //     }
+        //     else
+        //     {
+        //         constant = nullptr;
+        //     }
+        // }
+        // if (constant)
+        // {
+        //     constant = as_type<op::Constant>(multiply->input(1).get_source_output().get_node());
+        //     if (constant && constant->get_all_data_elements_bitwise_identical())
+        //     {
+        //         if (is_value(constant, 0))
+        //         {
+        //             will_replace_zero = true;
+        //         }
+        //         else if(is_value(constant, 1))
+        //         {
+        //             will_replace_one = true;
+        //         }
+        //         else
+        //         {
+        //             constant = nullptr;
+        //         }
+        //     }
+        // }
+    }
+
     NGRAPH_DEBUG << "In simplify_multiply for " << n->get_name();
     auto iconst = make_zero(element::i32, Shape{});
     auto label = make_shared<pattern::op::Label>(iconst);
@@ -260,17 +426,31 @@ static bool simplify_multiply(shared_ptr<Node> n)
 
     if (matcher_const_zero->match(n))
     {
+        if (!will_replace_zero)
+        {
+            NGRAPH_INFO << "******************* zero";
+            NGRAPH_INFO << *n;
+            // NGRAPH_INFO << constant->get_all_data_elements_bitwise_identical();
+            // NGRAPH_INFO << constant->convert_value_to_string(0);
+        }
         auto bcst_label = get_broadcast_label(matcher_const_zero);
         auto bcst_or_cnst = matcher_const_zero->get_pattern_map()[bcst_label];
-        NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << bcst_or_cnst->get_name();
+        NGRAPH_INFO << "Replacing " << n->get_name() << " with " << bcst_or_cnst->get_name();
         replace_node(n, bcst_or_cnst);
         return true;
     }
 
     if (matcher_const_one->match(n))
     {
+        if (!will_replace_one)
+        {
+            NGRAPH_INFO << "******************* one";
+            NGRAPH_INFO << *n;
+            // NGRAPH_INFO << constant->get_all_data_elements_bitwise_identical();
+            // NGRAPH_INFO << constant->convert_value_to_string(0);
+        }
         auto x = matcher_const_one->get_pattern_map()[label];
-        NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
+        NGRAPH_INFO << "Replacing " << n->get_name() << " with " << x->get_name();
         replace_node(n, x);
         return true;
     }
@@ -455,24 +635,26 @@ static bool simplify_reduction(shared_ptr<Node> n)
     return true;
 }
 
-static unordered_map<type_index, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
+static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
 {
-    return unordered_map<type_index, function<bool(shared_ptr<Node>)>>(
-        {{TI(op::Add), simplify_add},
-         {TI(op::Multiply), simplify_multiply},
-         {TI(op::Concat), simplify_concat},
-         {TI(op::Sum),
+    return unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>>(
+        {{op::Add::type_info, simplify_add},
+         {op::Multiply::type_info, simplify_multiply},
+         {op::Concat::type_info, simplify_concat},
+         {op::Sum::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::Sum, get_sum_constant>}},
-         {TI(op::Product),
+         {op::Product::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::Product, get_prod_constant>}},
-         {TI(op::Log), simplify_log}});
+         {op::Log::type_info, simplify_log}});
 }
 
-static unordered_map<type_index, function<bool(shared_ptr<Node>)>> ops_to_simplifiers =
+static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> ops_to_simplifiers =
     initialize_ops_to_simplifiers();
 
 bool pass::AlgebraicSimplification::run_on_function(shared_ptr<Function> f)
 {
+    stopwatch timer;
+    timer.start();
     bool replaced = false;
     for (auto n : f->get_ordered_ops())
     {
@@ -481,14 +663,15 @@ bool pass::AlgebraicSimplification::run_on_function(shared_ptr<Function> f)
             continue;
         }
 
-        const Node& node = *n;
-        auto eh = ops_to_simplifiers.find(TI(node));
-        if (eh == ops_to_simplifiers.end())
+        auto eh = ops_to_simplifiers.find(n->get_type_info());
+        if (eh != ops_to_simplifiers.end())
         {
-            continue;
+            stopwatch t2;
+            t2.start();
+            replaced |= eh->second(n);
+            // NGRAPH_INFO << n->description() << " " << t2.get_milliseconds() << "ms total";
         }
-
-        replaced = eh->second(n) || replaced;
     }
+    NGRAPH_INFO << timer.get_milliseconds() << "ms total";
     return replaced;
 }

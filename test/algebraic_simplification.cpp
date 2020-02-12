@@ -139,7 +139,7 @@ TEST(algebraic_simplification, multiply_broadcast)
                                         ParameterVector{a, b, c});
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Add>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Multiply>(f), 0);
     auto expected = ngraph::NodeVector{a, b, const_broadcast, c, const_broadcast};
     auto results = f->get_results();
     for (size_t i = 0; i < results.size(); i++)
