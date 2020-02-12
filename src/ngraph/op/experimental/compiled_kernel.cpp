@@ -24,7 +24,8 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::CompiledKernel::type_info;
 
-shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    ngraph::op::CompiledKernel::clone_with_new_inputs(const OutputVector& new_args) const
 {
     auto args = input_values();
     if (new_args.size() != args.size())
@@ -33,10 +34,10 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
     }
 
     // map inputs
-    NodeMap nm;
+    map<Output<Node>, Output<Node>> nm;
     for (size_t i = 0; i < args.size(); i++)
     {
-        nm[args.at(i).get_node()] = new_args.at(i);
+        nm[args.at(i)] = new_args.at(i);
     }
 
     NodeVector new_node_list;
@@ -52,22 +53,24 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
             }
             else
             {
-                cur_args.push_back(a.for_node(nm.at(a.get_node())));
+                cur_args.push_back(nm.at(a));
             }
         }
         auto new_n = n->copy_with_new_inputs(cur_args);
-        nm[n.get()] = new_n;
+        for (size_t i = 0; i < new_n->get_output_size(); ++i)
+        {
+            nm[n->output(i)] = new_n->output(i);
+        }
         new_node_list.push_back(new_n);
     }
 
     OutputVector new_outputs;
     for (auto o : m_output_nodes)
     {
-        new_outputs.push_back(nm.at(o.get_node())->output(o.get_index()));
+        new_outputs.push_back(nm.at(o));
     }
 
-    auto ck =
-        std::make_shared<CompiledKernel>(new_node_list, new_outputs, as_output_vector(new_args));
+    auto ck = std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
     for (auto it : m_input_map)
     {
         ck->insert_to_input_map(it.first, it.second);
