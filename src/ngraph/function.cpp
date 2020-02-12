@@ -78,7 +78,10 @@ Function::Function(const std::shared_ptr<Node>& result,
 
 void Function::validate_nodes_and_infer_types()
 {
-    ngraph::validate_nodes_and_infer_types(get_ops());
+    for (auto& node : get_ordered_ops())
+    {
+        node->revalidate_and_infer_types();
+    }
 }
 
 void Function::init()
