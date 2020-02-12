@@ -23,6 +23,7 @@
 #include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
@@ -452,7 +453,7 @@ json JSONSerializer::serialize_function(const Function& f)
     }
 
     json nodes;
-    for (shared_ptr<Node> node : f.get_ordered_ops(true))
+    for (shared_ptr<Node> node : f.get_ordered_ops())
     {
         nodes.push_back(serialize_node(*node));
     }

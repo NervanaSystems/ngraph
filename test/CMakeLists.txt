@@ -199,7 +199,7 @@ set(SRC
 )
 
 if(NGRAPH_JSON_ENABLE)
-    list(APPEND SRC core.cpp event_tracing.cpp serialize.cpp)
+    list(APPEND SRC core.cpp serialize.cpp)
 endif()
 
 if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)

@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
+#include "ngraph/attribute_visitor.hpp"
 
 using namespace std;
 using namespace ngraph;

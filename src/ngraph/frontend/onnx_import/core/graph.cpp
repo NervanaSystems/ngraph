@@ -231,7 +231,6 @@ namespace ngraph
             ngraph::traverse_nodes(
                 ng_node_vector,
                 [&tag](std::shared_ptr<ngraph::Node> ng_node) { ng_node->add_provenance_tag(tag); },
-                false,
                 ng_inputs);
         }
     } // namespace onnx_import
