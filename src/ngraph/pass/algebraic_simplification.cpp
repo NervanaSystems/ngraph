@@ -250,10 +250,10 @@ static bool simplify_concat(shared_ptr<Node> n)
     return true;
 }
 
-bool is_uniform_constant(const op::Constant* constant, int value)
+static bool is_uniform_constant(const op::Constant* constant, int value)
 {
-    bool rc;
-    if (constant)
+    bool rc = false;
+    if (constant && constant->get_all_data_elements_bitwise_identical())
     {
         switch (constant->get_element_type())
         {
@@ -317,7 +317,7 @@ bool is_uniform_constant(const op::Constant* constant, int value)
     return rc;
 }
 
-shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
+static shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
 {
     set<Node::type_info_t> nomath = {op::Broadcast::type_info, op::Reshape::type_info};
     while (nomath.find(op->get_type_info()) != nomath.end())
@@ -327,10 +327,10 @@ shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
     return as_type_ptr<op::Constant>(op);
 }
 
-bool is_input_uniform_constant(shared_ptr<Node> op,
-                               int constant_value,
-                               shared_ptr<Node>& constant,
-                               shared_ptr<Node>& value)
+static bool is_input_uniform_constant(shared_ptr<Node> op,
+                                      int constant_value,
+                                      shared_ptr<Node>& constant,
+                                      shared_ptr<Node>& value)
 {
     bool rc = false;
     auto c = get_constant(op->input(0).get_source_output().get_node_shared_ptr());
@@ -363,68 +363,22 @@ bool is_input_uniform_constant(shared_ptr<Node> op,
 static bool simplify_multiply(shared_ptr<Node> n)
 {
     auto multiply = as_type_ptr<op::Multiply>(n);
-    bool will_replace_zero = false;
-    bool will_replace_one = false;
     if (multiply)
     {
         shared_ptr<Node> constant;
         shared_ptr<Node> value;
         if (is_input_uniform_constant(multiply, 0, constant, value))
         {
-            NGRAPH_INFO << multiply->get_name() << " -> " << constant->get_name();
-            will_replace_zero = true;
             replace_node(multiply, constant);
         }
         else
         {
             if (is_input_uniform_constant(multiply, 1, constant, value))
             {
-                NGRAPH_INFO << multiply->get_name() << " -> " << value->get_name();
-                will_replace_one = true;
                 replace_node(multiply, value);
             }
         }
     }
-
-    // NGRAPH_DEBUG << "In simplify_multiply for " << n->get_name();
-    // auto iconst = make_zero(element::i32, Shape{});
-    // auto label = make_shared<pattern::op::Label>(iconst);
-    // auto const_label_zero = make_shared<pattern::op::Label>(iconst, is_zero, NodeVector{iconst});
-    // auto const_label_one = make_shared<pattern::op::Label>(iconst, is_one, NodeVector{iconst});
-
-    // auto matcher_const_zero = create_binary_matcher<op::Multiply>(label, const_label_zero);
-    // auto matcher_const_one = create_binary_matcher<op::Multiply>(label, const_label_one);
-
-    // if (matcher_const_zero->match(n))
-    // {
-    //     if (!will_replace_zero)
-    //     {
-    //         NGRAPH_INFO << "******************* zero";
-    //         NGRAPH_INFO << *n;
-    //         // NGRAPH_INFO << constant->get_all_data_elements_bitwise_identical();
-    //         // NGRAPH_INFO << constant->convert_value_to_string(0);
-    //     }
-    //     auto bcst_label = get_broadcast_label(matcher_const_zero);
-    //     auto bcst_or_cnst = matcher_const_zero->get_pattern_map()[bcst_label];
-    //     NGRAPH_INFO << "Replacing " << n->get_name() << " with " << bcst_or_cnst->get_name();
-    //     replace_node(n, bcst_or_cnst);
-    //     return true;
-    // }
-
-    // if (matcher_const_one->match(n))
-    // {
-    //     if (!will_replace_one)
-    //     {
-    //         NGRAPH_INFO << "******************* one";
-    //         NGRAPH_INFO << *n;
-    //         // NGRAPH_INFO << constant->get_all_data_elements_bitwise_identical();
-    //         // NGRAPH_INFO << constant->convert_value_to_string(0);
-    //     }
-    //     auto x = matcher_const_one->get_pattern_map()[label];
-    //     NGRAPH_INFO << "Replacing " << n->get_name() << " with " << x->get_name();
-    //     replace_node(n, x);
-    //     return true;
-    // }
 
     return false;
 }
@@ -624,8 +578,6 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> ops_to_simp
 
 bool pass::AlgebraicSimplification::run_on_function(shared_ptr<Function> f)
 {
-    stopwatch timer;
-    timer.start();
     bool replaced = false;
     for (auto n : f->get_ordered_ops())
     {
@@ -637,12 +589,8 @@ bool pass::AlgebraicSimplification::run_on_function(shared_ptr<Function> f)
         auto eh = ops_to_simplifiers.find(n->get_type_info());
         if (eh != ops_to_simplifiers.end())
         {
-            stopwatch t2;
-            t2.start();
             replaced |= eh->second(n);
-            // NGRAPH_INFO << n->description() << " " << t2.get_milliseconds() << "ms total";
         }
     }
-    NGRAPH_INFO << timer.get_milliseconds() << "ms total";
     return replaced;
 }
