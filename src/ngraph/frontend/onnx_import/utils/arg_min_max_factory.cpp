@@ -33,8 +33,8 @@ namespace ngraph
                 m_input_node = node.get_ng_inputs().at(0);
 
                 const auto axis = node.get_attribute_value<std::int64_t>("axis", 0);
-                m_normalized_axis = ngraph::normalize_axis(
-                    node.get_description(), axis, m_input_node->get_shape().size());
+                const auto data_rank = m_input_node->get_output_partial_shape(0).rank();
+                m_normalized_axis = ngraph::normalize_axis(node.get_description(), axis, data_rank);
             }
 
             std::shared_ptr<ngraph::Node> ArgMinMaxFactory::make_arg_max() const

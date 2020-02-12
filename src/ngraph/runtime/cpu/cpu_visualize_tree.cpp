@@ -16,6 +16,7 @@
 
 #include <string>
 
+#include "ngraph/log.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
