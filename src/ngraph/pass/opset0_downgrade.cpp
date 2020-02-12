@@ -166,6 +166,10 @@ namespace
         }
         else
         {
+            NGRAPH_CHECK(arg_pshape.is_static(),
+                         "Unable to convert Broadcast:v1 to Broadcast:v0 "
+                         "if argument shape is not static. Node: ",
+                         *node);
             const auto& arg_shape = arg_pshape.to_shape();
 
             NGRAPH_CHECK(target_shape_input.get_node_shared_ptr()->is_constant());
