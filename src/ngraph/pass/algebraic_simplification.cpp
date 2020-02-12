@@ -362,6 +362,7 @@ static bool is_input_uniform_constant(shared_ptr<Node> op,
 // a * broadcast(1) -> a
 static bool simplify_multiply(shared_ptr<Node> n)
 {
+    bool rc = false;
     auto multiply = as_type_ptr<op::Multiply>(n);
     if (multiply)
     {
@@ -370,17 +371,19 @@ static bool simplify_multiply(shared_ptr<Node> n)
         if (is_input_uniform_constant(multiply, 0, constant, value))
         {
             replace_node(multiply, constant);
+            rc = true;
         }
         else
         {
             if (is_input_uniform_constant(multiply, 1, constant, value))
             {
                 replace_node(multiply, value);
+                rc = true;
             }
         }
     }
 
-    return false;
+    return rc;
 }
 
 //`simplify_add` optimizes the following 2 *base* cases
@@ -390,32 +393,20 @@ static bool simplify_multiply(shared_ptr<Node> n)
 // a + broadcast(0) -> a
 static bool simplify_add(shared_ptr<Node> n)
 {
-    NGRAPH_DEBUG << "In simplify_add for " << n->get_name();
-    auto iconst = make_zero(element::i32, Shape{});
-    auto label = make_shared<pattern::op::Label>(iconst);
-    auto const_label = make_shared<pattern::op::Label>(iconst, nullptr, NodeVector{iconst});
-    auto matcher = create_binary_matcher<op::Add>(label, const_label);
-
-    if (matcher->match(n))
+    bool rc = false;
+    auto add = as_type_ptr<op::Add>(n);
+    if (add)
     {
-        auto pattern_map = matcher->get_pattern_map();
-        auto x = pattern_map[label];
-        auto cnst = pattern_map[const_label];
-        NGRAPH_DEBUG << "Node " << n->get_name() << " matched \" arg + 0 \" \n"
-                     << " arg : " << x->get_name() << " , const : " << cnst->get_name();
-
-        if (is_zero(cnst))
+        shared_ptr<Node> constant;
+        shared_ptr<Node> value;
+        if (is_input_uniform_constant(add, 0, constant, value))
         {
-            NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
-            replace_node(n, x);
-            return true;
-        }
-        else
-        {
-            NGRAPH_DEBUG << cnst->get_name() << " not equal to 0 ";
+            replace_node(add, value);
+            rc = true;
         }
     }
-    return false;
+
+    return rc;
 }
 
 //`simplify_log` optimizes `log(exp(x)/y)` into `x - log(y)`
