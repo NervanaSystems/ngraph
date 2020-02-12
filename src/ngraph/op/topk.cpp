@@ -431,8 +431,7 @@ namespace ngraph
     {
         static auto enum_names = EnumNames<op::v1::TopK::Mode>(
             "op::v1::TopK::Mode",
-            {{"max", op::v1::TopK::Mode::MAX},
-             {"min", op::v1::TopK::Mode::MIN}});
+            {{"max", op::v1::TopK::Mode::MAX}, {"min", op::v1::TopK::Mode::MIN}});
         return enum_names;
     }
 

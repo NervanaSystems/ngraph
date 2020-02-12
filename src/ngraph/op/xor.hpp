@@ -53,7 +53,6 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual bool is_commutative() const override { return true; }
-
                 bool visit_attributes(AttributeVisitor& visitor) override;
             };
         } // namespace v1
