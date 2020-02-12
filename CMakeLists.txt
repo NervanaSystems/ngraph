@@ -143,7 +143,7 @@ option(NGRAPH_PLAIDML_STATIC_LIB_ENABLE "Enable build PlaidML backend as a stati
 option(NGRAPH_DYNAMIC_COMPONENTS_ENABLE "Enable dynamic loading of components" TRUE)
 option(NGRAPH_NATIVE_ARCH_ENABLE "Enable build for native archtecture" TRUE)
 option(NGRAPH_EXPORT_TARGETS_ENABLE "Enable exporting nGraph cmake export targets" TRUE)
-option(NGRAPH_WARNINGS_AS_ERRORS "Make all nGraph compile-time warnings into errors" TRUE)
+option(NGRAPH_WARNINGS_AS_ERRORS "Make all nGraph compile-time warnings into errors" FALSE)
 if (NGRAPH_CPU_ENABLE)
     option(NGRAPH_TBB_ENABLE "Control usage of TBB for CPU backend" TRUE)
 endif()
