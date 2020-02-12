@@ -20,6 +20,8 @@
 
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/opsets/opset2.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "utils/common.hpp"
 
 namespace
@@ -85,10 +87,89 @@ namespace ngraph
                         end,
                         strides,
                         std::vector<int64_t>(data_rank, 0),
-                        std::vector<int64_t>(data_rank, 0))};
+                        std::vector<int64_t>(data_rank, 0),
+                        axes)};
                 }
 
             } // namespace set_1
+
+            namespace set_10
+            {
+                NodeVector slice(const Node& node)
+                {
+                    auto get_rank_from_shape = [&](std::shared_ptr<ngraph::Node> shapeof) {
+                        auto shapeof_shape = std::make_shared<ngraph::op::ShapeOf>(shapeof);
+                        return std::make_shared<ngraph::op::Reshape>(
+                            shapeof_shape, ngraph::AxisVector{0}, ngraph::Shape{});
+                    };
+
+                    auto ng_range = [&](std::shared_ptr<ngraph::Node> rank_scalar) {
+                        return std::make_shared<ngraph::op::Range>(
+                            ngraph::op::Constant::create(
+                                ngraph::element::i64, ngraph::Shape{}, {0}),
+                            rank_scalar,
+                            ngraph::op::Constant::create(
+                                ngraph::element::i64, ngraph::Shape{}, {1}));
+                    };
+
+                    auto get_range_from_shape = [&](std::shared_ptr<ngraph::Node> shapeof) {
+                        return ng_range(get_rank_from_shape(shapeof));
+                    };
+
+                    auto get_range_from_node = [&](std::shared_ptr<ngraph::Node> node) {
+                        auto shapeof = std::make_shared<ngraph::op::ShapeOf>(node);
+                        return get_range_from_shape(shapeof);
+                    };
+
+                    const NodeVector inputs{node.get_ng_inputs()};
+
+                    std::shared_ptr<ngraph::Node> data = inputs.at(0);
+                    std::shared_ptr<ngraph::Node> start = inputs.at(1);
+                    std::shared_ptr<ngraph::Node> end = inputs.at(2);
+
+                    std::shared_ptr<ngraph::Node> axes;
+                    std::shared_ptr<ngraph::Node> step;
+
+                    auto data_shapeof = std::make_shared<ngraph::op::ShapeOf>(data);
+                    auto data_rank = std::make_shared<ngraph::op::ShapeOf>(data_shapeof);
+                    if (inputs.size() > 2 && !inputs.at(3)->is_null())
+                    {
+                        axes = inputs.at(3);
+                    }
+                    else
+                    {
+                        auto axes_create = ngraph::op::Constant::create(element::i64, Shape{}, {1});
+                        axes = std::make_shared<ngraph::op::DynBroadcast>(
+                            axes_create, data_shapeof, get_range_from_node(data_shapeof));
+                    }
+
+                    if (inputs.size() > 2 && !inputs.at(4)->is_null())
+                    {
+                        axes = inputs.at(4);
+                    }
+                    else
+                    {
+                        auto step_create = ngraph::op::Constant::create(element::i64, Shape{}, {1});
+                        step = std::make_shared<ngraph::op::DynBroadcast>(
+                            step_create, data_shapeof, get_range_from_node(data_shapeof));
+                    }
+
+                    auto begin_mask_create =
+                        ngraph::op::Constant::create(element::i64, Shape{}, {0});
+
+                    auto end_mask_create = ngraph::op::Constant::create(element::i64, Shape{}, {0});
+
+                    auto begin_mask = std::make_shared<ngraph::op::DynBroadcast>(
+                        begin_mask_create, data_shapeof, get_range_from_node(data_shapeof));
+
+                    auto end_mask = std::make_shared<ngraph::op::DynBroadcast>(
+                        end_mask_create, data_shapeof, get_range_from_node(data_shapeof));
+
+                    return {std::make_shared<ngraph::opset2::StridedSlice>(
+                        data, start, end, axes, step, begin_mask, end_mask)};
+                }
+
+            } // namespace set_10
 
         } // namespace op
 
