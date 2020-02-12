@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/multiply.hpp"
