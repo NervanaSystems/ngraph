@@ -19,7 +19,9 @@
 #include <map>
 #include <memory>
 
+#include "gpu_backend_visibility.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 
 namespace ngraph
 {
@@ -37,6 +39,7 @@ namespace ngraph
             using EntryPoint_t = void(void** inputs, void** outputs, GPURuntimeContext* ctx);
             using EntryPoint = std::function<EntryPoint_t>;
 
+            BackendConstructor GPU_BACKEND_API get_backend_constructor_pointer();
             class GPU_Backend : public Backend
             {
             public:
