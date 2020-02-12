@@ -29,6 +29,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/coordinate.hpp"

@@ -246,6 +246,25 @@ namespace ngraph
         void set(const int64_t& value) override;
     };
 
+#ifdef __APPLE__
+    // size_t is one of the uint types on _WIN32
+    template <>
+    class NGRAPH_API AttributeAdapter<size_t> : public ValueReference<size_t>,
+                                                public ValueAccessor<int64_t>
+    {
+    public:
+        AttributeAdapter(size_t& value)
+            : ValueReference<size_t>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<size_t>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const int64_t& get() override;
+        void set(const int64_t& value) override;
+    };
+#endif
+
     /// Note: These class bodies cannot be defined with templates because of interactions
     /// between dllexport and templates on Windows.
     template <>
