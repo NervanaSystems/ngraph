@@ -22,6 +22,7 @@
 #include <mutex>
 #include <thread>
 
+#include "ngraph/distributed.hpp"
 #include "ngraph/env_util.hpp"
 #include "ngraph/log.hpp"
 
