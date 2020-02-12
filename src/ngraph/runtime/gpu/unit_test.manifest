@@ -497,3 +497,5 @@ convert_bf16_float32
 backwards_atan2
 atan
 dyn_replace_slice
+atan2
+model_lstm_fwd_hardsigmoid_activation
