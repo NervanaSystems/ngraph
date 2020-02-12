@@ -420,17 +420,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_split_equal_parts_2d)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_2d.prototxt"));
 
-    // Inputs inputs{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
-    // Outputs expected_outputs{{0, 1, 2, 6, 7, 8}, {3, 4, 5, 9, 10, 11}};
-
-    // Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    // EXPECT_EQ(outputs.size(), expected_outputs.size());
-
-    // for (std::size_t i = 0; i < expected_outputs.size(); ++i)
-    // {
-    //     EXPECT_EQ(outputs[i].size(), expected_outputs[i].size());
-    //     EXPECT_TRUE(test::all_close_f(outputs[i], expected_outputs[i]));
-    // }
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input<float>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
     test_case.add_expected_output<float>({0, 1, 2, 6, 7, 8});
@@ -444,17 +433,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_split_variable_parts_2d)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/split_variable_parts_2d.prototxt"));
 
-    // Inputs inputs{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
-    // Outputs expected_outputs{{0, 1, 6, 7}, {2, 3, 4, 5, 8, 9, 10, 11}};
-
-    // Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    // EXPECT_EQ(outputs.size(), expected_outputs.size());
-
-    // for (std::size_t i = 0; i < expected_outputs.size(); ++i)
-    // {
-    //     EXPECT_EQ(outputs[i].size(), expected_outputs[i].size());
-    //     EXPECT_TRUE(test::all_close_f(outputs[i], expected_outputs[i]));
-    // }
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input<float>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
     test_case.add_expected_output<float>({0, 1, 6, 7});
