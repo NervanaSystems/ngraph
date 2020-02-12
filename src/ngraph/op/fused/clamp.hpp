@@ -51,6 +51,8 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
                 double get_min() const { return m_min; }
                 double get_max() const { return m_max; }
             private:
