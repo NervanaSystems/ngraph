@@ -390,7 +390,7 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     add->add_control_dependency(E);
     auto mul = C * add;
     auto result = make_shared<op::Result>(mul);
-    auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D}, true);
+    auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D});
     std::vector<std::shared_ptr<Node>> expected{A, D, add, mul};
     ASSERT_EQ(expected, sorted);
 }
@@ -701,11 +701,11 @@ TEST(util, topological_sort_replace)
     auto f = make_shared<Function>(A + B + C, ParameterVector{A, B, C});
     bool custom_sorter_used = false;
 
-    f->set_topological_sort([&custom_sorter_used](
-        const std::vector<std::shared_ptr<Node>>& root_nodes, bool include_control_deps) {
-        custom_sorter_used = true;
-        return topological_sort(root_nodes, include_control_deps);
-    });
+    f->set_topological_sort(
+        [&custom_sorter_used](const std::vector<std::shared_ptr<Node>>& root_nodes) {
+            custom_sorter_used = true;
+            return topological_sort(root_nodes);
+        });
 
     // Need to now call topological sort but don't care about the results
     f->get_ordered_ops();
