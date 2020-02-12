@@ -89,6 +89,11 @@ NodeVector op::Unsqueeze::decompose_op() const
     return {make_shared<ngraph::op::Reshape>(data, input_order, output_shape)};
 }
 
+bool ngraph::op::v0::Unsqueeze::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 shared_ptr<Node> op::Unsqueeze::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
