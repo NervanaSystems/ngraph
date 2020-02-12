@@ -36,9 +36,9 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_text)
         file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_tag_add.prototxt"));
 
     const auto ng_nodes = function->get_ordered_ops();
-    for (const auto ng_node : ng_nodes)
+    for (auto ng_node : ng_nodes)
     {
-        for (const auto tag : ng_node->get_provenance_tags())
+        for (auto tag : ng_node->get_provenance_tags())
         {
             EXPECT_HAS_SUBSTRING(tag, "ONNX");
         }
@@ -52,7 +52,7 @@ void test_provenance_tags(const std::shared_ptr<Function> function,
                           const std::string& expected_provenance_tag)
 {
     int node_count = 0;
-    for (const auto ng_node : function->get_ordered_ops())
+    for (auto ng_node : function->get_ordered_ops())
     {
         if (as_type_ptr<NodeToCheck>(ng_node))
         {
