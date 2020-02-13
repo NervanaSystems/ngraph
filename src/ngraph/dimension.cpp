@@ -133,3 +133,29 @@ bool Dimension::broadcast_merge(Dimension& dst, const Dimension d1, const Dimens
         }
     }
 }
+
+uint64_t Dimension::get_length() const
+{
+    if (is_dynamic())
+    {
+        throw std::invalid_argument("Cannot get length of dynamic dimension");
+    }
+    if (m_dimension < 0)
+    {
+        throw std::invalid_argument("Cannot get_length of negative dimension");
+    }
+    return m_dimension;
+}
+
+Dimension::operator size_t() const
+{
+    if (is_dynamic())
+    {
+        throw std::invalid_argument("Cannot convert dynamic dimension to size_t");
+    }
+    if (m_dimension < 0)
+    {
+        throw std::invalid_argument("Cannot convert negative dimension to size_t");
+    }
+    return m_dimension;
+}
