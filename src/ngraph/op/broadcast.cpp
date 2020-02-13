@@ -140,7 +140,6 @@ void op::v1::Broadcast::validate_and_infer_types()
     }
 
     PartialShape result_shape{PartialShape::dynamic()};
-
     if (input_value(1).get_node_shared_ptr()->is_constant())
     {
         result_shape = static_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr())

@@ -279,6 +279,6 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, model_conv_with_dynamic_batch)
     const auto expected_out_shape = Shape{1, 10, 6, 6};
     const std::vector<int64_t> expected_values(shape_size(expected_out_shape), 13);
     test_case.add_expected_output<int64_t>(expected_out_shape, expected_values);
-  
+
     test_case.run();
 }
