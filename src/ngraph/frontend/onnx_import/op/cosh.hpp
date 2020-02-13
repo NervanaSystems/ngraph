@@ -19,8 +19,8 @@
 #include <memory>
 
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/cosh.hpp"
 
 namespace ngraph
 {
@@ -30,14 +30,9 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector cosh(const Node& node)
-                {
-                    return {std::make_shared<ngraph::op::Cosh>(node.get_ng_inputs().at(0))};
-                }
-            } // namespace set_1
-
-        } // namespace op
-
+                NodeVector cosh(const Node& node);
+            }
+        }
     } // namespace onnx_import
 
 } // namespace ngraph

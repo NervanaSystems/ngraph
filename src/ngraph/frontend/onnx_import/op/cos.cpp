@@ -14,9 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <memory>
 
 #include "core/node.hpp"
+#include "cos.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
 
 namespace ngraph
@@ -27,9 +29,13 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector cos(const Node& node);
-            }
-        }
+                NodeVector cos(const Node& node)
+                {
+                    return {std::make_shared<default_opset::Cos>(node.get_ng_inputs().at(0))};
+                }
+            } // namespace set_1
+
+        } // namespace op
 
     } // namespace onnx_import
 

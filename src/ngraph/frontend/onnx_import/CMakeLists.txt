@@ -64,7 +64,9 @@ add_library(onnx_import STATIC
         op/ceil.hpp
         op/clip.cpp
         op/clip.hpp
+        op/cos.cpp
         op/cos.hpp
+        op/cosh.cpp
         op/cosh.hpp
         op/concat.cpp
         op/concat.hpp
