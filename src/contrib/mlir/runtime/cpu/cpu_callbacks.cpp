@@ -28,12 +28,6 @@
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
-extern std::vector<opAttrs> opAttrsVec;
-static inline opAttrs getAttrs(size_t index)
-{
-    return opAttrsVec[index];
-}
-
 static bool inline compareMkldnnDims(mkldnn_dims_t& arr1, mkldnn_dims_t& arr2, size_t size)
 {
     for (auto i = 0; i < size; i++)
@@ -170,7 +164,7 @@ static void __mlir_mkldnn_convbias(size_t rank,
                                    StaticMemRef* memRefWeights,
                                    StaticMemRef* memRefBias,
                                    StaticMemRef* memRefOutput,
-                                   size_t index)
+                                   opAttrs* attrsPtr)
 {
     mkldnn::memory::dims dataDims(rank);
     mkldnn::memory::dims dataStrides(rank);
@@ -213,7 +207,7 @@ static void __mlir_mkldnn_convbias(size_t rank,
     ops.append_eltwise(opsScale, mkldnn::algorithm::eltwise_relu, opsAlpha, opsBeta);
     if (rank == 3)
     {
-        auto convAttrs = getAttrs(index).convAttrs1d;
+        auto convAttrs = (*attrsPtr).convAttrs1d;
         try
         {
             auto convDesc = mkldnn::convolution_forward::desc(
@@ -240,7 +234,7 @@ static void __mlir_mkldnn_convbias(size_t rank,
     }
     else if (rank == 4)
     {
-        auto convAttrs = getAttrs(index).convAttrs2d;
+        auto convAttrs = (*attrsPtr).convAttrs2d;
         try
         {
             auto convDesc = mkldnn::convolution_forward::desc(
@@ -268,7 +262,7 @@ static void __mlir_mkldnn_convbias(size_t rank,
     }
     else if (rank == 5)
     {
-        auto convAttrs = getAttrs(index).convAttrs3d;
+        auto convAttrs = (*attrsPtr).convAttrs3d;
         try
         {
             auto convDesc = mkldnn::convolution_forward::desc(
@@ -345,7 +339,7 @@ static void __mlir_mkldnn_maxpoolbackprop(size_t rank,
                                           StaticMemRef* memRefSrc,
                                           StaticMemRef* memRefDelta,
                                           StaticMemRef* memRefOutput,
-                                          size_t index)
+                                          opAttrs* attrsPtr)
 {
     mkldnn::memory::dims srcDims(rank);
     mkldnn::memory::dims srcStrides(rank);
@@ -378,7 +372,7 @@ static void __mlir_mkldnn_maxpoolbackprop(size_t rank,
     mkldnn::pooling_backward::primitive_desc maxpoolPdB;
     if (rank == 4)
     {
-        poolAttrs<2> pAttrs = getAttrs(index).poolAttrs2d;
+        poolAttrs<2> pAttrs = (*attrsPtr).poolAttrs2d;
         try
         {
             auto maxpoolDescF = mkldnn::pooling_forward::desc(
@@ -410,7 +404,7 @@ static void __mlir_mkldnn_maxpoolbackprop(size_t rank,
     }
     else if (rank == 5)
     {
-        poolAttrs<3> pAttrs = getAttrs(index).poolAttrs3d;
+        poolAttrs<3> pAttrs = (*attrsPtr).poolAttrs3d;
         try
         {
             auto maxpoolDescF = mkldnn::pooling_forward::desc(
@@ -495,7 +489,7 @@ static void __mlir_mkldnn_maxpoolbackprop(size_t rank,
 static void __mlir_mkldnn_avgpoolbackprop(size_t rank,
                                           StaticMemRef* memRefInput,
                                           StaticMemRef* memRefOutput,
-                                          size_t index)
+                                          opAttrs* attrsPtr)
 {
     mkldnn::memory::dims dims(rank);
     mkldnn::memory::dims strides(rank);
@@ -521,7 +515,7 @@ static void __mlir_mkldnn_avgpoolbackprop(size_t rank,
     mkldnn::pooling_backward::primitive_desc avgpoolPdB;
     if (rank == 4)
     {
-        poolAttrs<2> pAttrs = getAttrs(index).poolAttrs2d;
+        poolAttrs<2> pAttrs = (*attrsPtr).poolAttrs2d;
         try
         {
             auto avgpoolDescF = mkldnn::pooling_forward::desc(
@@ -558,7 +552,7 @@ static void __mlir_mkldnn_avgpoolbackprop(size_t rank,
     }
     else if (rank == 5)
     {
-        poolAttrs<3> pAttrs = getAttrs(index).poolAttrs3d;
+        poolAttrs<3> pAttrs = (*attrsPtr).poolAttrs3d;
         try
         {
             auto avgpoolDescF = mkldnn::pooling_forward::desc(
@@ -633,8 +627,11 @@ static void __mlir_mkldnn_avgpoolbackprop(size_t rank,
 }
 
 /// Callback for AvgPool and MaxPool
-static void __mlir_mkldnn_pooling(
-    size_t rank, StaticMemRef* memRefInput, StaticMemRef* memRefOutput, size_t index, OpType type)
+static void __mlir_mkldnn_pooling(size_t rank,
+                                  StaticMemRef* memRefInput,
+                                  StaticMemRef* memRefOutput,
+                                  opAttrs* attrsPtr,
+                                  OpType type)
 {
     mkldnn::memory::dims dims(rank);
     mkldnn::memory::dims strides(rank);
@@ -660,7 +657,7 @@ static void __mlir_mkldnn_pooling(
     mkldnn::pooling_forward::primitive_desc poolPd;
     if (rank == 4)
     {
-        poolAttrs<2> pAttrs = getAttrs(index).poolAttrs2d;
+        poolAttrs<2> pAttrs = (*attrsPtr).poolAttrs2d;
         mkldnn::algorithm alg = type == OpType::MAXPOOL
                                     ? mkldnn::algorithm::pooling_max
                                     : (pAttrs.includePaddingInAvgComputation
@@ -687,7 +684,7 @@ static void __mlir_mkldnn_pooling(
     }
     else if (rank == 5)
     {
-        poolAttrs<3> pAttrs = getAttrs(index).poolAttrs3d;
+        poolAttrs<3> pAttrs = (*attrsPtr).poolAttrs3d;
         mkldnn::algorithm alg = type == OpType::MAXPOOL
                                     ? mkldnn::algorithm::pooling_max
                                     : (pAttrs.includePaddingInAvgComputation
@@ -753,7 +750,7 @@ static void __mlir_mkldnn_pooling(
 static void __mlir_mkldnn_softmax(size_t rank,
                                   StaticMemRef* memRefInput,
                                   StaticMemRef* memRefOutput,
-                                  int index)
+                                  opAttrs* attrsPtr)
 {
     mkldnn::memory::dims dims(rank);
     mkldnn::memory::dims strides(rank);
@@ -762,7 +759,7 @@ static void __mlir_mkldnn_softmax(size_t rank,
         dims[i] = memRefInput->shapeAndStrides[i];
         strides[i] = memRefInput->shapeAndStrides[rank + i];
     }
-    auto softmaxAxis = getAttrs(index).intAttr;
+    auto softmaxAxis = (*attrsPtr).intAttr;
 
     // build mkldnn primitive and execute
     mkldnn::memory::data_type dtype = mkldnn::memory::data_type::f32;
@@ -804,9 +801,9 @@ static void __mlir_mkldnn_softmax(size_t rank,
 static void __mlir_cblas_sgemm(StaticMemRef* memRefmatA,
                                StaticMemRef* memRefmatB,
                                StaticMemRef* memRefmatC,
-                               size_t index)
+                               opAttrs* attrsPtr)
 {
-    gemmAttrs gAttrs = getAttrs(index).gemmAttrs2d;
+    gemmAttrs gAttrs = (*attrsPtr).gemmAttrs2d;
     ;
     cblas::cblas_sgemm(cblas::Layout::RowMajor,
                        gAttrs.transposeA ? cblas::Transpose::Transpose : cblas::Transpose::None,
@@ -829,9 +826,9 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
                                          StaticMemRef* memRefmatB,
                                          StaticMemRef* memRefmatC,
                                          StaticMemRef* memRefmatOut,
-                                         size_t index)
+                                         opAttrs* attrsPtr)
 {
-    gemmAttrs gAttrs = getAttrs(index).gemmAttrs2d;
+    gemmAttrs gAttrs = (*attrsPtr).gemmAttrs2d;
     auto transposeA = gAttrs.transposeA;
     auto transposeB = gAttrs.transposeB;
     auto m = gAttrs.m;
@@ -947,7 +944,7 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
     }
 }
 
-extern "C" void __mlir_callback_1_input(void* input, void* output, size_t index, OpType type)
+extern "C" void __mlir_callback_1_input(void* input, void* output, void* attrsPtr, OpType type)
 {
     auto unrankedMemRefInput = reinterpret_cast<UnrankedMemRef*>(input);
     auto unrankedMemRefOutput = reinterpret_cast<UnrankedMemRef*>(output);
@@ -957,14 +954,14 @@ extern "C" void __mlir_callback_1_input(void* input, void* output, size_t index,
         __mlir_mkldnn_softmax(unrankedMemRefInput->rank,
                               unrankedMemRefInput->memRefDescPtr,
                               unrankedMemRefOutput->memRefDescPtr,
-                              index);
+                              static_cast<opAttrs*>(attrsPtr));
     }
     else if (type == OpType::AVGPOOL || type == OpType::MAXPOOL)
     {
         __mlir_mkldnn_pooling(unrankedMemRefInput->rank,
                               unrankedMemRefInput->memRefDescPtr,
                               unrankedMemRefOutput->memRefDescPtr,
-                              index,
+                              static_cast<opAttrs*>(attrsPtr),
                               type);
     }
     else if (type == OpType::AVGPOOLBACKPROP)
@@ -972,7 +969,7 @@ extern "C" void __mlir_callback_1_input(void* input, void* output, size_t index,
         __mlir_mkldnn_avgpoolbackprop(unrankedMemRefInput->rank,
                                       unrankedMemRefInput->memRefDescPtr,
                                       unrankedMemRefOutput->memRefDescPtr,
-                                      index);
+                                      static_cast<opAttrs*>(attrsPtr));
     }
     else
     {
@@ -981,26 +978,26 @@ extern "C" void __mlir_callback_1_input(void* input, void* output, size_t index,
 }
 
 extern "C" void
-    __mlir_callback_2_inputs(void* input0, void* input1, void* output, size_t index, OpType type)
+    __mlir_callback_2_inputs(void* input0, void* input1, void* output, void* attrsPtr, OpType type)
 {
     auto unrankedMemRefInput0 = reinterpret_cast<UnrankedMemRef*>(input0);
     auto unrankedMemRefInput1 = reinterpret_cast<UnrankedMemRef*>(input1);
     auto unrankedMemRefOutput = reinterpret_cast<UnrankedMemRef*>(output);
 
-    if (type == OpType::MAXPOOLBACKPROP)
+    if (type == OpType::MATMUL)
+    {
+        __mlir_cblas_sgemm(unrankedMemRefInput0->memRefDescPtr,
+                           unrankedMemRefInput1->memRefDescPtr,
+                           unrankedMemRefOutput->memRefDescPtr,
+                           static_cast<opAttrs*>(attrsPtr));
+    }
+    else if (type == OpType::MAXPOOLBACKPROP)
     {
         __mlir_mkldnn_maxpoolbackprop(unrankedMemRefInput0->rank,
                                       unrankedMemRefInput0->memRefDescPtr,
                                       unrankedMemRefInput1->memRefDescPtr,
                                       unrankedMemRefOutput->memRefDescPtr,
-                                      index);
-    }
-    else if (type == OpType::MATMUL)
-    {
-        __mlir_cblas_sgemm(unrankedMemRefInput0->memRefDescPtr,
-                           unrankedMemRefInput1->memRefDescPtr,
-                           unrankedMemRefOutput->memRefDescPtr,
-                           index);
+                                      static_cast<opAttrs*>(attrsPtr));
     }
     else
     {
@@ -1009,7 +1006,7 @@ extern "C" void
 }
 
 extern "C" void __mlir_callback_3_inputs(
-    void* input0, void* input1, void* input2, void* output, size_t index, OpType type)
+    void* input0, void* input1, void* input2, void* output, void* attrsPtr, OpType type)
 {
     auto unrankedMemRefInput0 = reinterpret_cast<UnrankedMemRef*>(input0);
     auto unrankedMemRefInput1 = reinterpret_cast<UnrankedMemRef*>(input1);
@@ -1022,7 +1019,7 @@ extern "C" void __mlir_callback_3_inputs(
                                      unrankedMemRefInput1->memRefDescPtr,
                                      unrankedMemRefInput2->memRefDescPtr,
                                      unrankedMemRefOutput->memRefDescPtr,
-                                     index);
+                                     static_cast<opAttrs*>(attrsPtr));
     }
     else if (type == OpType::CONVOLUTIONBIAS)
     {
@@ -1031,7 +1028,7 @@ extern "C" void __mlir_callback_3_inputs(
                                unrankedMemRefInput1->memRefDescPtr,
                                unrankedMemRefInput2->memRefDescPtr,
                                unrankedMemRefOutput->memRefDescPtr,
-                               index);
+                               static_cast<opAttrs*>(attrsPtr));
     }
     else
     {

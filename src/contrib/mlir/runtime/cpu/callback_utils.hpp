@@ -129,8 +129,19 @@ namespace ngraph
                 BroadcastType broadcastHint;
             };
 
+            enum class AttrsType
+            {
+                INT = 0,
+                CONV1D,
+                CONV2D,
+                CONV3D,
+                POOL2D,
+                POOL3D,
+                GEMM
+            };
+
             union opAttrs {
-                int intAttr;
+                int64_t intAttr;
                 convAttrs<1> convAttrs1d;
                 convAttrs<2> convAttrs2d;
                 convAttrs<3> convAttrs3d;

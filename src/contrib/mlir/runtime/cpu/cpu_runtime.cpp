@@ -53,27 +53,30 @@ static llvm::cl::opt<std::string>
     clObjectFilename("ngraph-mlir-object-filename",
                      llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
-void MLIRCPURuntime::run(const std::vector<MemRefArg>& args)
+void MLIRCPURuntime::run(const std::vector<MemRefArg>& args, bool firstIteration)
 {
     // run_internal(*reinterpret_cast<std::vector<void*>*>(args), shapeVec, stridesVec);
-    run_internal(args);
+    run_internal(args, firstIteration);
 }
 
-void MLIRCPURuntime::run_internal(const std::vector<MemRefArg>& args)
+void MLIRCPURuntime::run_internal(const std::vector<MemRefArg>& args, bool firstIteration)
 {
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
     // don't run MLIR passes that were already run. We also pass a default transformer created with
     // the default or user-provided optimization level.
 
-    auto llvmTransformer = mlir::makeOptimizingTransformer(
-        MLIRCPUBackend::mlirOptLevel, /*sizeLevel=*/0, MLIRCPUBackend::targetMachine.get());
-    auto maybeEngine = mlir::ExecutionEngine::create(
-        m_module.get(), llvmTransformer, MLIRCPUBackend::mlirOptLevel);
-    NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
-    m_engine = std::move(maybeEngine.get());
+    if (!m_engine)
+    {
+        auto llvmTransformer = mlir::makeOptimizingTransformer(
+            MLIRCPUBackend::mlirOptLevel, /*sizeLevel=*/0, MLIRCPUBackend::targetMachine.get());
+        auto maybeEngine = mlir::ExecutionEngine::create(
+            m_module.get(), llvmTransformer, MLIRCPUBackend::mlirOptLevel);
+        NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
+        m_engine = std::move(maybeEngine.get());
+    }
 
     bindArguments(args);
-    execute();
+    execute(firstIteration);
     cleanup();
 }
 
@@ -121,14 +124,24 @@ void MLIRCPURuntime::bindArguments(const std::vector<MemRefArg>& args)
 }
 
 // Lowers standard dialect to LLVM dialect and uses the MLIR execution engine to execute the code.
-void MLIRCPURuntime::execute()
+void MLIRCPURuntime::execute(bool firstIteration)
 {
     // Invoke the JIT-compiled function with the arguments. Note that, for API
     // uniformity reasons, it takes a list of type-erased pointers to arguments.
     // Please, note that 'invoke' method is overloaded with a parameter pack version.
     // Make sure the MutableArrayRef version is invoked.
-    auto invocationResult = m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invokeArgs));
+    if (firstIteration)
+    {
+        auto invocationResult = m_engine->invoke("callback_init");
+        if (clDumpObjectFile)
+        {
+            m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
+                                                                : clObjectFilename.getValue());
+        }
+        NGRAPH_CHECK(!invocationResult, "JIT invocation of 'callback_init' failed\n");
+    }
 
+    auto invocationResult = m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invokeArgs));
     if (clDumpObjectFile)
     {
         m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
