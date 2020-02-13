@@ -5,12 +5,9 @@
 // -----
 
 // matmul+bias
-// CHECK-LABEL: module {
 // CHECK-LABEL:   func @matmul_bias_fusion(%arg0: !ng.tensor<2x4xf32>, %arg1: !ng.tensor<4x1xf32>, %arg2: !ng.tensor<2x1xf32>) -> !ng.tensor<2x1xf32> {
-//       CHECK:   %0 = "ng.gemm"(%arg0, %arg1, %arg2) {alpha = 1.000000e+00 : f32, beta = 1.000000e+00 : f32, transA = false, transB = false} : (!ng.tensor<2x4xf32>, !ng.tensor<4x1xf32>, !ng.tensor<2x1xf32>) -> !ng.tensor<2x1xf32>
+//       CHECK:   %0 = "ng.gemm"(%arg0, %arg1, %arg2) {alpha = {{.*}}: f32, beta = {{.*}} : f32, transA = {{.*}}, transB = {{.*}}} : (!ng.tensor<2x4xf32>, !ng.tensor<4x1xf32>, !ng.tensor<2x1xf32>) -> !ng.tensor<2x1xf32>
 //       CHECK:   "ng.return"(%0) : (!ng.tensor<2x1xf32>) -> ()
-// 	 CHECK:   }
-// 	 CHECK: }
 func @matmul_bias_fusion(%arg0: !ng.tensor<2x4xf32>, %arg1: !ng.tensor<4x1xf32>, %arg2: !ng.tensor<2x1xf32>) -> !ng.tensor<2x1xf32> {
     %0 = "ng.dot"(%arg0, %arg1) : (!ng.tensor<2x4xf32>, !ng.tensor<4x1xf32>) -> !ng.tensor<2x1xf32>
     %1 = "ng.add"(%0, %arg2) : (!ng.tensor<2x1xf32>, !ng.tensor<2x1xf32>) -> !ng.tensor<2x1xf32>
