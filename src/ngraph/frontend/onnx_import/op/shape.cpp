@@ -33,14 +33,14 @@ namespace ngraph
                 NodeVector shape(const Node& node)
                 {
                     const auto data = node.get_ng_inputs().at(0);
-                    const auto data_partial_shape = data->get_output_partial_shape(0);
+                    const auto data_shape = data->get_output_partial_shape(0);
 
-                    if (data_partial_shape.is_static())
+                    if (data_shape.is_static())
                     {
-                        const auto data_shape = data_partial_shape.to_shape();
+                        const auto static_data_shape = data_shape.to_shape();
 
                         return {default_opset::Constant::create(
-                            ngraph::element::i64, Shape{data_shape.size()}, data_shape)};
+                            ngraph::element::i64, Shape{static_data_shape.size()}, static_data_shape)};
                     }
                     else
                     {
