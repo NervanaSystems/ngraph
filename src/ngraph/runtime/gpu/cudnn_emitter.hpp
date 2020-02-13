@@ -31,14 +31,21 @@
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/shape.hpp"
 
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/op/max.hpp"
-#include "ngraph/op/max_pool.hpp"
-#include "ngraph/op/min.hpp"
-#include "ngraph/runtime/gpu/op/rnn.hpp"
-
 namespace ngraph
 {
+    namespace op
+    {
+        class Convolution;
+        class ConvolutionBackpropData;
+        class ConvolutionBackpropFilters;
+        class MaxPool;
+        class Max;
+        class Min;
+        namespace gpu
+        {
+            class Rnn;
+        }
+    }
     namespace runtime
     {
         namespace gpu

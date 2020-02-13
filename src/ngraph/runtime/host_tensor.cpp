@@ -17,8 +17,8 @@
 #include <cstring>
 #include <memory>
 
+#include "ngraph/chrome_trace.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
-#include "ngraph/runtime/chrome_trace.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
 
