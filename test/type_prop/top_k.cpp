@@ -70,9 +70,7 @@ TEST(type_prop, topk_invalid_index_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument element type must be i64 or i32 (got f32)");
     }
     catch (...)
     {
@@ -164,9 +162,7 @@ TEST(type_prop, topk_rank_dynamic_result_et_invalid)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument element type must be i64 or i32 (got f32)");
     }
     catch (...)
     {
@@ -234,9 +230,7 @@ TEST(type_prop, topk_rank_static_dynamic_axis_oob)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument element type must be i64 or i32 (got f32)");
     }
     catch (...)
     {
@@ -262,9 +256,7 @@ TEST(type_prop, topk_rank_static_dynamic_k_unknown_axis_oob)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument element type must be i64 or i32 (got f32)");
     }
     catch (...)
     {
@@ -290,9 +282,7 @@ TEST(type_prop, topk_rank_static_dynamic_k_known_too_big)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument element type must be i64 or i32 (got f32)");
     }
     catch (...)
     {

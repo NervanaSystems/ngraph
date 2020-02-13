@@ -34,10 +34,10 @@ namespace ngraph
                 {
                     auto reduction_axes =
                         node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
-                    std::vector<std::size_t> normalized_axes =
-                        ngraph::normalize_axes(node.get_description(),
-                                               reduction_axes,
-                                               node.get_ng_inputs().at(0)->get_shape().size());
+                    std::vector<std::size_t> normalized_axes = ngraph::normalize_axes(
+                        node.get_description(),
+                        reduction_axes,
+                        node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank());
 
                     if (reduction_axes.empty())
                     {

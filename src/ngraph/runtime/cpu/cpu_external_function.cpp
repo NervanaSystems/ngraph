@@ -511,7 +511,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
         femitter, node_function_map, common_function_string);
     pass_manager.run_passes(m_function);
 
-    list<shared_ptr<Node>> ordered_ops = m_function->get_ordered_ops();
+    auto ordered_ops = m_function->get_ordered_ops();
 
     CodeWriter writer;
 
