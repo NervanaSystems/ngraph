@@ -65,6 +65,7 @@ namespace ngraph
                                       const PadType& auto_pad = PadType::EXPLICIT,
                                       const size_t group = 1,
                                       const size_t deformable_group = 1);
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 void validate_and_infer_types() override;
 
