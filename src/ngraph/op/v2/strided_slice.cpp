@@ -23,13 +23,13 @@
 using namespace std;
 using namespace ngraph;
 constexpr NodeTypeInfo op::v2::StridedSlice::type_info;
-op::v2::StridedSlice::StridedSlice(const Output<Node>& data,       // data
-                                   const Output<Node>& begin,      // starts
-                                   const Output<Node>& end,        // ends
-                                   const Output<Node>& axes,       // axes
-                                   const Output<Node>& strides,    // steps
-                                   const Output<Node>& begin_mask, // steps
-                                   const Output<Node>& end_mask,   // steps
+op::v2::StridedSlice::StridedSlice(const Output<Node>& data,
+                                   const Output<Node>& begin,
+                                   const Output<Node>& end,
+                                   const Output<Node>& axes,
+                                   const Output<Node>& strides,
+                                   const Output<Node>& begin_mask,
+                                   const Output<Node>& end_mask,
                                    const std::vector<int64_t>& new_axis_mask,
                                    const std::vector<int64_t>& shrink_axis_mask,
                                    const std::vector<int64_t>& ellipsis_mask)
@@ -45,13 +45,29 @@ void op::v2::StridedSlice::validate_and_infer_types()
 {
     auto are_mask_elem_in_range = [this](size_t e) { return e == 0 || e == 1; };
 
+    auto get_valid_array_idx = [&](int64_t idx, int64_t last_idx) {
+        return (idx >= 0) ? std::min(idx, last_idx) : std::max<int64_t>(0, last_idx + idx);
+    };
+
+    auto negative_axis_converter = [&](const std::vector<int64_t>& vec,
+                                       const std::vector<int64_t>& axis_vec,
+                                       ngraph::Shape shape) {
+        std::vector<int64_t> bounds = vec;
+        for (size_t idx = 0; idx < axis_vec.size(); ++idx)
+        {
+            size_t axis = axis_vec.at(idx);
+            bounds.at(axis) = get_valid_array_idx(vec.at(idx), shape.at(axis));
+        }
+        return bounds;
+    };
+
     const auto& begin_mask_et = get_input_element_type(1);
     const auto& end_mask_et = get_input_element_type(2);
 
-    const auto& mm_begin_mask_et = input_value(5).get_node_shared_ptr();
-    const auto& mm_end_mask_et = input_value(6).get_node_shared_ptr();
-    auto m_begin_mask_et = as_type_ptr<op::Constant>(mm_begin_mask_et)->cast_vector<int64_t>();
-    auto m_end_mask_et = as_type_ptr<op::Constant>(mm_end_mask_et)->cast_vector<int64_t>();
+    const auto& begin_mask_et_ptr = input_value(5).get_node_shared_ptr();
+    const auto& end_mask_et_ptr = input_value(6).get_node_shared_ptr();
+    auto m_begin_mask_et = as_type_ptr<op::Constant>(begin_mask_et_ptr)->cast_vector<int64_t>();
+    auto m_end_mask_et = as_type_ptr<op::Constant>(end_mask_et_ptr)->cast_vector<int64_t>();
 
     NODE_VALIDATION_CHECK(this,
                           begin_mask_et.is_integral_number(),
@@ -117,27 +133,11 @@ void op::v2::StridedSlice::validate_and_infer_types()
 
     if (begin_const && end_const && strides && axes)
     {
-        auto get_valid_array_idx = [&](int64_t idx, int64_t last_idx) {
-            return (idx >= 0) ? std::min(idx, last_idx) : std::max<int64_t>(0, last_idx + idx);
-        };
-
-        auto begin_const_converter = [&](const std::vector<int64_t>& vec,
-                                         const std::vector<int64_t>& axis_vec,
-                                         ngraph::Shape shape) {
-            std::vector<int64_t> bounds = vec;
-            for (size_t idx = 0; idx < axis_vec.size(); ++idx)
-            {
-                size_t axis = axis_vec.at(idx);
-                bounds.at(axis) = get_valid_array_idx(vec.at(idx), shape.at(axis));
-            }
-            return bounds;
-        };
-
         auto shapes = input_value(0);
 
-        auto lower_bounds = begin_const_converter(
+        auto lower_bounds = negative_axis_converter(
             begin_const->cast_vector<int64_t>(), axes->cast_vector<int64_t>(), shapes.get_shape());
-        auto upper_bounds = begin_const_converter(
+        auto upper_bounds = negative_axis_converter(
             end_const->cast_vector<int64_t>(), axes->cast_vector<int64_t>(), shapes.get_shape());
 
         for (size_t idx = 0; idx < lower_bounds.size(); ++idx)
