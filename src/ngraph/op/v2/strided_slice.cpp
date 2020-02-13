@@ -49,14 +49,14 @@ void op::v2::StridedSlice::validate_and_infer_types()
         return (idx >= 0) ? std::min(idx, last_idx) : std::max<int64_t>(0, last_idx + idx);
     };
 
-    auto negative_axis_converter = [&](const std::vector<int64_t>& vec,
+    auto negative_axis_converter = [&](const std::vector<int64_t>& data_vec,
                                        const std::vector<int64_t>& axis_vec,
                                        ngraph::Shape shape) {
-        std::vector<int64_t> bounds = vec;
+        std::vector<int64_t> bounds = data_vec;
         for (size_t idx = 0; idx < axis_vec.size(); ++idx)
         {
             size_t axis = axis_vec.at(idx);
-            bounds.at(axis) = get_valid_array_idx(vec.at(idx), shape.at(axis));
+            bounds.at(axis) = get_valid_array_idx(data_vec.at(idx), shape.at(axis));
         }
         return bounds;
     };
