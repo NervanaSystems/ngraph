@@ -1363,41 +1363,11 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_softplus_infinity)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/softplus.prototxt"));
 
-    Inputs inputs{std::vector<float>{std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity(),
-                                     std::numeric_limits<float>::infinity()}};
+    std::vector<float> input(13, std::numeric_limits<float>::infinity());
+    std::vector<float> expected_output(13, std::numeric_limits<float>::infinity());
 
-    std::vector<float> expected_output{std::numeric_limits<float>::infinity(),
-                                       std::numeric_limits<float>::infinity(),
-                                       std::numeric_limits<float>::infinity(),
-                                       std::numeric_limits<float>::infinity(),
-                                       std::numeric_limits<float>::infinity(),
-                                       std::numeric_limits<float>::infinity(),
-                                       std::numeric_limits<float>::infinity(),
-                                       std::numeric_limits<float>::infinity(),
-                                       std::numeric_limits<float>::infinity(),
-                                       std::numeric_limits<float>::infinity(),
-                                       std::numeric_limits<float>::infinity(),
-                                       std::numeric_limits<float>::infinity(),
-                                       std::numeric_limits<float>::infinity()};
-
-    // Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    // for (float v : outputs.front())
-    // {
-    //     EXPECT_TRUE(std::isinf(v));
-    // }
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
-    test_case.add_multiple_inputs(inputs);
+    test_case.add_input(input);
     test_case.add_expected_output(expected_output);
     test_case.run();
 }
