@@ -255,6 +255,10 @@ const PartialShape op::v1::ConvolutionBackpropData::get_output_shape() const
         {
             shape = const_op->get_shape_val();
         }
+        else
+        {
+            shape = PartialShape::dynamic();
+        }
     }
     return shape;
 }

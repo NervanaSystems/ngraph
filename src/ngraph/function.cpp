@@ -88,21 +88,19 @@ void Function::init()
 {
     validate_nodes_and_infer_types();
 
-    traverse_nodes(this,
-                   [&](shared_ptr<Node> node) {
-                       if (node->is_parameter())
-                       {
-                           auto it = std::find(m_parameters.begin(), m_parameters.end(), node);
-                           if (it == m_parameters.end())
-                           {
-                               throw ngraph_error("Function references undeclared parameter");
-                           }
-                       }
-                   },
-                   true /*include control dependencies*/);
+    traverse_nodes(this, [&](shared_ptr<Node> node) {
+        if (node->is_parameter())
+        {
+            auto it = std::find(m_parameters.begin(), m_parameters.end(), node);
+            if (it == m_parameters.end())
+            {
+                throw ngraph_error("Function references undeclared parameter");
+            }
+        }
+    });
 }
 
-std::vector<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps) const
+std::vector<shared_ptr<Node>> Function::get_ordered_ops() const
 {
     vector<shared_ptr<Node>> nodes;
     for (auto& r : get_results())
@@ -114,7 +112,7 @@ std::vector<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_dep
         nodes.push_back(param);
     }
 
-    return m_topological_sorter(nodes, include_control_deps);
+    return m_topological_sorter(nodes);
 }
 
 void Function::map_unordered_ops(std::function<void(Node*)> f) const
@@ -229,10 +227,10 @@ shared_ptr<Node> Function::get_result() const
     return m_results.at(0);
 }
 
-std::vector<shared_ptr<Node>> Function::get_ops(bool include_control_deps) const
+std::vector<shared_ptr<Node>> Function::get_ops() const
 {
     std::vector<std::shared_ptr<Node>> ops;
-    traverse_nodes(this, [&](shared_ptr<Node> node) { ops.push_back(node); }, include_control_deps);
+    traverse_nodes(this, [&](shared_ptr<Node> node) { ops.push_back(node); });
     return ops;
 }
 

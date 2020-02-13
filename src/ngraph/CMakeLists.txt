@@ -56,6 +56,8 @@ set (SRC
     builder/split.hpp
     builder/tensor_mask.hpp
     check.hpp
+    chrome_trace.cpp
+    chrome_trace.hpp
     code_writer.hpp
     component_manager.hpp
     coordinate.cpp
@@ -596,8 +598,6 @@ set (SRC
     runtime/backend_manager.hpp
     runtime/cache.cpp
     runtime/cache.hpp
-    runtime/chrome_trace.cpp
-    runtime/chrome_trace.hpp
     runtime/executable.cpp
     runtime/executable.hpp
     runtime/host_tensor.cpp
@@ -640,7 +640,7 @@ set(SRC ${SRC}
     )
 
 if(NGRAPH_JSON_ENABLE)
-    list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
+    list(APPEND SRC serializer.cpp serializer.hpp)
 else()
     list(APPEND SRC serializer_stub.cpp)
 endif()

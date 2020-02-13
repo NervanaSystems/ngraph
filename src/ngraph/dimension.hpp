@@ -20,6 +20,7 @@
 #include <stddef.h>
 #include <stdexcept>
 
+#include "ngraph/deprecated.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
@@ -61,18 +62,12 @@ namespace ngraph
         /// \brief Convert this dimension to `size_t`. This dimension must be static and
         ///        non-negative.
         /// \throws std::invalid_argument If this dimension is dynamic or negative.
-        explicit operator size_t() const
-        {
-            if (is_dynamic())
-            {
-                throw std::invalid_argument("Cannot convert dynamic dimension to size_t");
-            }
-            if (m_dimension < 0)
-            {
-                throw std::invalid_argument("Cannot convert negative dimension to size_t");
-            }
-            return m_dimension;
-        }
+        explicit operator size_t() const NGRAPH_DEPRECATED("use get_length() instead");
+
+        /// \brief Convert this dimension to `uint64_t`. This dimension must be static and
+        ///        non-negative.
+        /// \throws std::invalid_argument If this dimension is dynamic or negative.
+        uint64_t get_length() const;
 
         /// \brief Check whether this dimension represents the same scheme as the argument (both
         ///        dynamic, or equal).
