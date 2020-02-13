@@ -22,6 +22,7 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/builder/reshape.hpp"
+#include "ngraph/check.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -162,11 +163,11 @@ namespace ngraph
                 return broadcasted_node;
             }
 
-            if (source_shape.size() != output_shape.size())
-            {
-                NGRAPH_WARN << "Ranks of source_shape and output_shape dont match: "
-                            << source_shape.size() << " vs " << output_shape.size();
-            }
+            NGRAPH_CHECK(source_shape.size() == output_shape.size(),
+                         "Ranks of source_shape and output_shape dont match: ",
+                         source_shape.size(),
+                         " vs ",
+                         output_shape.size());
 
             AxisVector broadcast_axes;
             Shape squeezed_shape;
