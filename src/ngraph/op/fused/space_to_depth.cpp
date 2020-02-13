@@ -44,7 +44,7 @@ op::SpaceToDepth::SpaceToDepth(const Output<Node>& data, const std::string& mode
 
 bool ngraph::op::v0::SpaceToDepth::visit_attributes(AttributeVisitor& visitor)
 {
-    visitor.on_attribute("blocksize", m_blocksize);
+    visitor.on_attribute("block_size", m_blocksize);
     visitor.on_attribute("mode", m_mode);
     return true;
 }

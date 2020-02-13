@@ -263,7 +263,6 @@ bool ngraph::op::v1::TopK::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("axis", m_axis);
     visitor.on_attribute("mode", m_mode);
     visitor.on_attribute("sort", m_sort);
-    visitor.on_attribute("index_element_type", m_index_element_type);
     return true;
 }
 

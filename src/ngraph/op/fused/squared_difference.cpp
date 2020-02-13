@@ -38,7 +38,7 @@ op::SquaredDifference::SquaredDifference(const Output<Node>& x1,
 
 bool ngraph::op::v0::SquaredDifference::visit_attributes(AttributeVisitor& visitor)
 {
-    visitor.on_attribute("autobroadcast", m_autobroadcast);
+    visitor.on_attribute("auto_broadcast", m_autobroadcast);
     return true;
 }
 

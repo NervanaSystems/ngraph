@@ -37,6 +37,7 @@ shared_ptr<Node> op::v1::LogicalXor::copy_with_new_args(const NodeVector& new_ar
 
 bool ngraph::op::v1::LogicalXor::visit_attributes(AttributeVisitor& visitor)
 {
+    BinaryElementwiseLogical::visit_attributes(visitor);
     return true;
 }
 
