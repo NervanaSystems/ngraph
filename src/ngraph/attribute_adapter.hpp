@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -297,6 +298,39 @@ namespace ngraph
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
         void set(const std::vector<int64_t>& value) override;
+    };
+
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<float>>
+        : public ValueReference<std::vector<float>>, public ValueAccessor<std::vector<float>>
+    {
+    public:
+        AttributeAdapter(std::vector<float>& value)
+            : ValueReference<std::vector<float>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<float>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<float>& get() override;
+        void set(const std::vector<float>& value) override;
+    };
+
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<std::string>>
+        : public ValueReference<std::vector<std::string>>,
+          public ValueAccessor<std::vector<std::string>>
+    {
+    public:
+        AttributeAdapter(std::vector<std::string>& value)
+            : ValueReference<std::vector<std::string>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<string>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<std::string>& get() override;
+        void set(const std::vector<std::string>& value) override;
     };
 
     template <typename A, typename B>
