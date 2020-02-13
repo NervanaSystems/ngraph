@@ -60,8 +60,8 @@ namespace ngraph
 
             void generate_adjoints(autodiff::Adjoints& adjoints,
                                    const OutputVector& deltas) override;
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            std::shared_ptr<Node>
+                clone_with_new_inputs(const OutputVector& new_args) const override;
 
             /// \return The data batch shape.
             const Shape& get_data_batch_shape() const { return m_data_batch_shape; }
