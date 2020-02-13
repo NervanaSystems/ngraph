@@ -20,8 +20,8 @@
 
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/opsets/opset2.hpp"
 #include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opsets/opset2.hpp"
 #include "utils/common.hpp"
 
 namespace
@@ -87,8 +87,7 @@ namespace ngraph
                         end,
                         strides,
                         std::vector<int64_t>(data_rank, 0),
-                        std::vector<int64_t>(data_rank, 0),
-                        axes)};
+                        std::vector<int64_t>(data_rank, 0))};
                 }
 
             } // namespace set_1

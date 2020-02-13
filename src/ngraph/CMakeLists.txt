@@ -229,6 +229,7 @@ set (SRC
     op/experimental/random_uniform.hpp
     op/experimental/random_uniform.cpp
     op/strided_slice.hpp
+    op/v2/strided_slice.hpp
     op/floor.cpp
     op/floor.hpp
     op/floor_mod.cpp
@@ -342,7 +343,7 @@ set (SRC
     op/softmax.cpp
     op/softmax.hpp
     op/strided_slice.cpp
-    op/strided_slice.hpp
+    op/v2/strided_slice.hpp
     op/sqrt.cpp
     op/sqrt.hpp
     op/stop_gradient.cpp
