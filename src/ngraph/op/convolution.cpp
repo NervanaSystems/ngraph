@@ -404,6 +404,10 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
             output_shape.insert(output_shape.begin(), data_shape.at(0));
             output_pshape = output_shape;
         }
+        else
+        {
+            output_pshape = PartialShape::dynamic(data_pshape.rank());
+        }
     }
 
     set_input_is_relevant_to_shape(0);
