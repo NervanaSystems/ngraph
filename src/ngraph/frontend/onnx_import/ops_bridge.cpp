@@ -346,7 +346,6 @@ namespace ngraph
             REGISTER_OPERATOR("Slice", 1, slice);
             REGISTER_OPERATOR("Slice", 10, slice);
             REGISTER_OPERATOR("Softmax", 1, softmax);
-            REGISTER_OPERATOR("Softmax", 1, softmax);
             REGISTER_OPERATOR("Softplus", 1, softplus);
             REGISTER_OPERATOR("Softsign", 1, softsign);
             REGISTER_OPERATOR("SpaceToDepth", 1, space_to_depth);
