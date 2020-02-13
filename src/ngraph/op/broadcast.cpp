@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/partial_shape.hpp"

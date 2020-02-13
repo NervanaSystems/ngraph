@@ -65,6 +65,8 @@ namespace ngraph
                     const int src_iter_feature_size,
                     const int direction,
                     const int num_fused_layers);
+                static constexpr NodeTypeInfo type_info{"Rnn", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
                 int get_num_timesteps() const { return m_num_timesteps; }

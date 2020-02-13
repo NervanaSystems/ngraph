@@ -17,6 +17,7 @@
 #include <typeindex>
 
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/op/and.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/greater.hpp"
