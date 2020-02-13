@@ -43,6 +43,13 @@ op::v0::Divide::Divide(const Output<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
+bool op::v0::Divide::visit_attributes(AttributeVisitor& visitor)
+{
+    BinaryElementwiseArithmetic::visit_attributes(visitor);
+    visitor.on_attribute("m_pythondiv", m_pythondiv);
+    return true;
+}
+
 shared_ptr<Node> op::v0::Divide::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
@@ -91,6 +98,13 @@ op::v1::Divide::Divide(const Output<Node>& arg0,
     , m_pythondiv(pythondiv)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::v1::Divide::visit_attributes(AttributeVisitor& visitor)
+{
+    BinaryElementwiseArithmetic::visit_attributes(visitor);
+    visitor.on_attribute("m_pythondiv", m_pythondiv);
+    return true;
 }
 
 shared_ptr<Node> op::v1::Divide::copy_with_new_args(const NodeVector& new_args) const
