@@ -249,6 +249,10 @@ const PartialShape op::v1::GroupConvolutionBackpropData::get_output_shape() cons
         {
             shape = const_op->get_shape_val();
         }
+        else
+        {
+            shape = PartialShape::dynamic();
+        }
     }
     return shape;
 }
