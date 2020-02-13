@@ -54,7 +54,7 @@ namespace ngraph
                 Divide(const Output<Node>& arg0,
                        const Output<Node>& arg1,
                        const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 bool is_pythondiv() const { return m_pythondiv; }
                 void set_is_pythondiv(bool pythondiv) { m_pythondiv = pythondiv; }
                 virtual std::shared_ptr<Node>
@@ -103,7 +103,7 @@ namespace ngraph
                        const Output<Node>& arg1,
                        const AutoBroadcastSpec& auto_broadcast =
                            AutoBroadcastSpec(AutoBroadcastType::NUMPY));
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 bool is_pythondiv() const { return m_pythondiv; }
                 void set_is_pythondiv(bool pythondiv) { m_pythondiv = pythondiv; }
                 virtual std::shared_ptr<Node>
