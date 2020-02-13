@@ -2696,45 +2696,6 @@ NGRAPH_TEST(${BACKEND_NAME}, cross_entropy_with_one_hot)
     EXPECT_TRUE(test::all_close_f(result, expected, 23));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, cross_entropy2_with_one_hot)
-{
-    Shape tensor_shape{2, 4};
-    auto input = make_shared<op::Parameter>(element::f32, tensor_shape);
-    auto labels = make_shared<op::Parameter>(element::i32, Shape{2, 1});
-    auto cross_entropy = make_shared<op::CrossEntropy2>(input, labels, false);
-    auto f0 = make_shared<Function>(cross_entropy->outputs(), ParameterVector{input, labels});
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, tensor_shape);
-    copy_data(a, vector<float>{0.25f, 0.25f, 0.25f, 0.25f, 0.01f, 0.01f, 0.01f, 0.96f});
-    auto b = backend->create_tensor(element::i32, Shape{2, 1});
-    copy_data(b, vector<int32_t>{1, 1});
-    auto result0 = backend->create_tensor(element::f32, Shape{2, 1});
-    auto result1 = backend->create_tensor(element::f32, Shape{2, 4});
-    auto result2 = backend->create_tensor(element::f32, Shape{2, 1});
-    auto handle = backend->compile(f0);
-    handle->call_with_validate({result0, result1, result2}, {a, b});
-    vector<float> expected0{0.25f, 0.009999999776482582092f};
-    vector<float> expected1{
-        0.25f,
-        0.25f,
-        0.25f,
-        0.25f,
-        0.009999999776482582092f,
-        0.009999999776482582092f,
-        0.009999999776482582092f,
-        0.9599999785423278809f,
-    };
-    vector<float> expected2{1.38629f, 4.60517f};
-    auto result_0 = read_vector<float>(result0);
-    auto result_1 = read_vector<float>(result1);
-    auto result_2 = read_vector<float>(result2);
-    EXPECT_TRUE(test::all_close_f(result_0, expected0, 23));
-    EXPECT_TRUE(test::all_close_f(result_1, expected1, 23));
-    EXPECT_TRUE(test::all_close_f(result_2, expected2, 23));
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_space_to_depth_block_first)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

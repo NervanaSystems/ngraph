@@ -104,7 +104,6 @@ void op::v1::StridedSlice::validate_and_infer_types()
 
     const auto& data_rank = get_input_partial_shape(0).rank();
     const auto& begin_shape = get_input_partial_shape(1);
-
     if (begin_shape.rank().is_static())
     {
         NODE_VALIDATION_CHECK(this,
@@ -131,43 +130,14 @@ void op::v1::StridedSlice::validate_and_infer_types()
     auto end_const = as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
     auto strides = as_type_ptr<op::Constant>(input_value(3).get_node_shared_ptr());
 
-    auto get_valid_array_idx = [&](int64_t idx, int64_t last_idx) {
-        return (idx >= 0) ? std::min(idx, last_idx) : std::max<int64_t>(0, last_idx + idx);
-    };
-
-    auto begin_const_converter = [&](const std::vector<int64_t>& vec, ngraph::Shape shape) {
-        std::vector<int64_t> bounds = vec;
-        for (size_t idx = 0; idx < m_new_axis_mask.size(); ++idx)
-        {
-            size_t axis = m_new_axis_mask.at(idx);
-            bounds.at(axis) = get_valid_array_idx(vec.at(idx), shape.at(axis));
-        }
-        return bounds;
-    };
-
     if (begin_const && end_const && strides)
     {
-        auto shapes = input_value(0);
-
-        auto lower_bounds =
-            begin_const_converter(begin_const->cast_vector<int64_t>(), shapes.get_shape());
-        auto upper_bounds =
-            begin_const_converter(end_const->cast_vector<int64_t>(), shapes.get_shape());
-
-        for (size_t idx = 0; idx < lower_bounds.size(); ++idx)
-        {
-            if (lower_bounds.at(idx) > upper_bounds.at(idx))
-            {
-                upper_bounds.at(idx) = lower_bounds.at(idx);
-            }
-        }
-
         set_output_type(0,
                         get_input_element_type(0),
                         infer_slice_shape(this,
                                           get_input_partial_shape(0),
-                                          lower_bounds,
-                                          upper_bounds,
+                                          begin_const->cast_vector<int64_t>(),
+                                          end_const->cast_vector<int64_t>(),
                                           strides->cast_vector<int64_t>(),
                                           convert_mask_to_axis_set(get_begin_mask()),
                                           convert_mask_to_axis_set(get_end_mask()),
