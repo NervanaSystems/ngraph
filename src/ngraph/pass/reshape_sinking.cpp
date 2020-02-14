@@ -310,15 +310,6 @@ static void materialize_shapes(shared_ptr<Node> n,
     write_reshapemap(reorders, n, create_default_reshape(n));
 }
 
-static bool is_shape_diff_one(const Shape& s1, const Shape& s2)
-{
-    Shape ss, ss1(s1), ss2(s2);
-    sort(ss1.begin(), ss1.end());
-    sort(ss2.begin(), ss2.end());
-    set_symmetric_difference(ss1.begin(), ss1.end(), ss2.begin(), ss2.end(), back_inserter(ss));
-    return ss.size() == 1 && ss[0] == 1;
-}
-
 static void sink_reshape(shared_ptr<op::Reshape> reshape,
                          ReshapeMap& reorders,
                          set<shared_ptr<Node>>& reshapes_to_delete)
@@ -337,7 +328,7 @@ static void sink_reshape(shared_ptr<op::Reshape> reshape,
             mark_reshape_for_deletion(new_reshape, reshapes_to_delete);
         write_reshapemap(reorders, new_reshape, new_reshape_in_map);
     };
-    if (is_shape_diff_one(reshape->get_output_shape(), orig_reshape->get_output_shape()))
+    if (is_expands(reshape->get_output_shape(), orig_reshape->get_output_shape()))
     {
         // combine both reshapes
         new_reshape = make_reshape(

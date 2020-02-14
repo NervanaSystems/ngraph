@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstdio>
 #include <vector>
 
@@ -104,6 +105,16 @@ namespace ngraph
     inline bool is_vector(const SHAPE_TYPE& shape)
     {
         return 1 == shape.size();
+    }
+
+    template <typename SHAPE_TYPE>
+    inline bool is_expands(const SHAPE_TYPE& shape1, const SHAPE_TYPE& shape2)
+    {
+        Shape s, s1(shape1), s2(shape2);
+        std::sort(s1.begin(), s1.end());
+        std::sort(s2.begin(), s2.end());
+        set_symmetric_difference(s1.begin(), s1.end(), s2.begin(), s2.end(), back_inserter(s));
+        return s.size() == 1 && s[0] == 1;
     }
 
     NGRAPH_API

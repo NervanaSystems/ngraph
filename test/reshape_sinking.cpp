@@ -271,3 +271,35 @@ TEST(reshape_sinking, pass_property)
     ASSERT_TRUE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
     ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }
+
+TEST(reshape_sinking, reshape_squeeze_dim)
+{
+    Shape shape_a{100, 8, 8, 1};
+
+    AxisVector to_nhwc{0, 2, 3, 1};
+    AxisVector to_nchw{0, 3, 1, 2};
+
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
+
+    CoordinateDiff padding_below{0, 0, 0, 0};
+    CoordinateDiff padding_above{0, 1, 1, 0};
+
+    auto reshape1 = make_shared<op::Reshape>(A, to_nchw, Shape{100, 1, 8, 8});
+    auto maxpool =
+        make_shared<op::MaxPool>(reshape1, Shape{1, 1}, Strides{2, 2}, Shape{0, 0}, Shape{0, 0});
+    auto reshape2 = make_shared<op::Reshape>(maxpool, to_nhwc, Shape{100, 4, 4, 1});
+    auto reshape_squeeze =
+        make_shared<op::Reshape>(reshape2, AxisVector{0, 1, 2, 3}, Shape{100, 4, 4});
+    auto broadcast = make_shared<op::Broadcast>(reshape_squeeze, Shape{100, 4, 4, 5}, AxisSet{3});
+    auto f = make_shared<Function>(broadcast, ParameterVector{A});
+
+    pass::Manager pass_manager;
+    size_t before_count = count_ops_of_type<op::Reshape>(f);
+    pass_manager.register_pass<pass::Validate>();
+    pass_manager.register_pass<pass::ReshapeSinking>();
+    pass_manager.run_passes(f);
+    size_t before_after = count_ops_of_type<op::Reshape>(f);
+    // check if ReshapeSinking merged/eliminated extra reshape before reshape_squeeze
+    ASSERT_LT(before_after, before_count);
+}
