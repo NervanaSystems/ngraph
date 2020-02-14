@@ -4025,4 +4025,39 @@ TEST(cpu_fusion, validate_fuse_gru_inputs)
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
+
+TEST(cpu_fusion, mlir_matmul_bias)
+{
+    Shape shape{};
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    Shape shape_b{1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_w);
+    auto B = make_shared<op::Parameter>(element::f32, shape_x);
+    auto C = make_shared<op::Parameter>(element::f32, shape_b);
+
+    auto dot = make_shared<op::Dot>(A, B);
+    auto broadcast = make_shared<op::Broadcast>(C, dot->get_shape(), AxisSet{0});
+    auto add = dot + broadcast;
+
+    auto int_func = make_shared<Function>(NodeVector{add}, ParameterVector{A, B, C});
+    auto cpu_func = make_shared<Function>(NodeVector{add}, ParameterVector{A, B, C});
+
+    test::Uniform<float> rng(-10.0f, 10.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : int_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(cpu_func, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_func, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
 #endif

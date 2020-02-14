@@ -23,6 +23,7 @@
 #include "ngraph_dialect/ops.hpp"
 #include "ngraph_dialect/type.hpp"
 #include "pass/ng_dialect_builder.hpp"
+#include "pass/ng_dialect_fused_ops.hpp"
 
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
@@ -117,4 +118,27 @@ void MLIRCompiler::buildNgDialectModule()
     }
 
     dumpMlirModule("nGraph Dialect Construction", m_module.get());
+
+    optimizeNgDialect();
+}
+
+void MLIRCompiler::optimizeNgDialect()
+{
+    mlir::PassManager pm(&m_context);
+    pm.addPass(ngraph::pass::createNgDialectFusedOpsPass());
+
+    // Apply any generic pass manager command line options.
+    mlir::applyPassManagerCLOptions(pm);
+
+    if (failed(pm.run(m_module.get())))
+    {
+        NGRAPH_CHECK(false, "MLIR pass manager failed");
+    }
+
+    if (failed(m_module->verify()))
+    {
+        NGRAPH_CHECK(false, "Invalid module after NG dialect optimization");
+    }
+
+    dumpMlirModule("nGraph Dialect optimization", m_module.get());
 }
