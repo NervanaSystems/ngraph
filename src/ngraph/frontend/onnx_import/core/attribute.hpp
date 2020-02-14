@@ -77,6 +77,8 @@ namespace ngraph
         {
             namespace attribute
             {
+                Graph get_graph(const onnx::GraphProto& graph);
+
                 template <typename T>
                 inline T get_value(const onnx::AttributeProto& attribute)
                 {
@@ -226,6 +228,16 @@ namespace ngraph
                         return {std::begin(attribute.tensors()), std::end(attribute.tensors())};
                     default: throw error::attribute::InvalidData{attribute.type()};
                     }
+                }
+
+                template <>
+                inline Graph get_value(const onnx::AttributeProto& attribute)
+                {
+                    if (attribute.type() != onnx::AttributeProto_AttributeType_GRAPH)
+                    {
+                        throw error::attribute::InvalidData{attribute.type()};
+                    }
+                    return get_graph(attribute.g());
                 }
 
             } // namespace attribute
