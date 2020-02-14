@@ -35,8 +35,8 @@ op::v1::DeformableConvolution::DeformableConvolution(const Output<Node>& arg,
                                                      const CoordinateDiff& pads_end,
                                                      const Strides& dilations,
                                                      const PadType& auto_pad,
-                                                     const size_t group,
-                                                     const size_t deformable_group)
+                                                     const int64_t group,
+                                                     const int64_t deformable_group)
     : Op({arg, deformable_values, filters})
     , m_strides(strides)
     , m_dilations(dilations)
