@@ -144,13 +144,15 @@ namespace ngraph
                 inferRequest.Infer();
                 InferenceEngine::Blob::Ptr output = inferRequest.GetBlob(output_name);
 
-                InferenceEngine::MemoryBlob::Ptr moutput = InferenceEngine::as<InferenceEngine::MemoryBlob>(output);
-                if (!moutput) {
+                InferenceEngine::MemoryBlob::Ptr moutput =
+                    InferenceEngine::as<InferenceEngine::MemoryBlob>(output);
+                if (!moutput)
+                {
                     THROW_IE_EXCEPTION << "Cannot get output MemoryBlob in call_with_validate()";
                 }
 
                 auto lm = moutput->rmap();
-                float* output_ptr = lm.as<float *>();
+                float* output_ptr = lm.as<float*>();
                 // TODO: how to get size without explicit calculation?
                 size_t size = 1;
                 for (const auto& dim : output->getTensorDesc().getDims())
