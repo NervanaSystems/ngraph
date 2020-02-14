@@ -122,6 +122,8 @@ add_library(onnx_import STATIC
         op/log.hpp
         op/log_softmax.cpp
         op/log_softmax.hpp
+        op/loop.cpp
+        op/loop.hpp
         op/lp_norm.cpp
         op/lp_norm.hpp
         op/lp_pool.cpp
