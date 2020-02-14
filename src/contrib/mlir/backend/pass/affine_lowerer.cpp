@@ -659,7 +659,7 @@ namespace
         auto llvmF32Ty = LLVM::LLVMType::getFloatTy(llvmDialect);
 
         auto globalType =
-            LLVM::LLVMType::getVectorTy(getLLVMType(AttrsType::CONV3D, llvmDialect), 10);
+            LLVM::LLVMType::getVectorTy(getLLVMType(AttrsType::CONV3D, llvmDialect), 20);
         LLVM::GlobalOp globalVal = getGlobal("globalAttrsVec",
                                              globalType,
                                              false,
@@ -1711,7 +1711,7 @@ namespace
         auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
         auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(llvmDialect);
         auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
-        auto globalTy = LLVM::LLVMType::getVectorTy(unionTy, 10);
+        auto globalTy = LLVM::LLVMType::getVectorTy(unionTy, 20);
         LLVM::GlobalOp globalVal = pass.getGlobal("globalAttrsVec",
                                                   globalTy,
                                                   false,
@@ -2174,24 +2174,8 @@ namespace
         SmallVector<mlir::Value, 4> inputs = {images, filters, bias, result};
         SmallVector<mlir::Value, 4> outputs;
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
-#if 0
-        auto imagesCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), images, unrankedMemrefTy);
-        auto filtersCast = rewriter.create<mlir::MemRefCastOp>(
-            rewriter.getUnknownLoc(), filters, unrankedMemrefTy);
-        auto biasCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), bias, unrankedMemrefTy);
-        auto resultCast =
-            rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), result, unrankedMemrefTy);
-#endif
         SmallVector<mlir::Value, 6> args = {
-            // imagesCast, filtersCast, biasCast, resultCast, gepOp, opTypeArg};
-            outputs[0],
-            outputs[1],
-            outputs[2],
-            outputs[3],
-            gepOp,
-            opTypeArg};
+            outputs[0], outputs[1], outputs[2], outputs[3], gepOp, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 
