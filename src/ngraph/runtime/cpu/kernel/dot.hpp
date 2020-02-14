@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -180,12 +180,12 @@ namespace ngraph
                              const Shape& arg1_shape,
                              const Shape& out_shape,
                              size_t reduction_axes_count,
-                             void* input0_scale = nullptr,
-                             void* input0_zero_point = nullptr,
-                             void* input1_scale = nullptr,
-                             void* input1_zero_point = nullptr,
-                             void* output_scale = nullptr,
-                             void* output_zero_point = nullptr)
+                             void* input0_scale,
+                             void* input0_zero_point,
+                             void* input1_scale,
+                             void* input1_zero_point,
+                             void* output_scale,
+                             void* output_zero_point)
                 {
                     reference::dot<INPUT0, INPUT1, OUTPUT, ACCUMULATION>(
                         static_cast<const INPUT0*>(arg0),

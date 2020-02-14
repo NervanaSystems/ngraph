@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 /// small sequence of passes without running the whole compiler pipeline. Please, refer to
 /// ngraph_repo_path/tests/mlir/ for examples.
 
-#include "contrib/mlir/compiler/tools.hpp"
+#include "contrib/mlir/utils.hpp"
 #include "ngraph/check.hpp"
 
 #include <llvm/Support/CommandLine.h>

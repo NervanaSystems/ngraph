@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -793,4 +793,142 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
     }
 
     return dim;
+}
+
+std::vector<size_t> ngraph::normalize_axes(const std::string& node_description,
+                                           const std::vector<int64_t>& axes,
+                                           const Rank& tensor_rank)
+{
+    std::vector<size_t> new_axes;
+
+    for (const auto& axis : axes)
+    {
+        new_axes.push_back(normalize_axis(node_description, axis, tensor_rank));
+    }
+
+    return new_axes;
+}
+
+int64_t ngraph::normalize_axis(const Node* node, std::int64_t axis, const Rank& tensor_rank)
+{
+    return normalize_axis(node->description(), axis, tensor_rank);
+}
+
+int64_t ngraph::normalize_axis(const std::string& node_description,
+                               std::int64_t axis,
+                               const Rank& tensor_rank)
+{
+    if (axis < 0)
+    {
+        // Handling negative axis requires static tensor rank
+        NGRAPH_CHECK(tensor_rank.is_static(),
+                     node_description,
+                     " Rank must be static in order to normalize negative axis=",
+                     axis);
+    }
+    if (tensor_rank.is_dynamic())
+    {
+        return axis;
+    }
+
+    const auto tensor_rank_value = static_cast<int64_t>(tensor_rank);
+    return normalize_axis(
+        node_description, axis, tensor_rank_value, -tensor_rank_value, tensor_rank_value - 1);
+}
+
+int64_t ngraph::normalize_axis(const Node* node,
+                               std::int64_t axis,
+                               std::uint64_t tensor_rank,
+                               std::int64_t axis_range_min,
+                               std::int64_t axis_range_max)
+{
+    return ngraph::normalize_axis(
+        node->description(), axis, tensor_rank, axis_range_min, axis_range_max);
+}
+
+int64_t ngraph::normalize_axis(const std::string& node_description,
+                               std::int64_t axis,
+                               std::uint64_t tensor_rank,
+                               std::int64_t axis_range_min,
+                               std::int64_t axis_range_max)
+{
+    // Accepted range of value for axis is [axis_range_min, axis_range_max].
+    NGRAPH_CHECK(((axis >= axis_range_min) && (axis <= axis_range_max)),
+                 node_description,
+                 " Parameter axis ",
+                 axis,
+                 " out of the tensor rank range [",
+                 axis_range_min,
+                 ", ",
+                 axis_range_max,
+                 "].");
+
+    if (axis < 0)
+    {
+        axis = axis + tensor_rank;
+    }
+
+    return static_cast<int64_t>(axis);
+}
+
+void ngraph::opset1::infer_conv_backprop_output_spatial_shape(const Shape& input_data_shape,
+                                                              const Shape& filters_shape,
+                                                              const Strides& strides,
+                                                              const Strides& dilations,
+                                                              const CoordinateDiff& pads_begin,
+                                                              const CoordinateDiff& pads_end,
+                                                              const CoordinateDiff& output_padding,
+                                                              Shape& output_spatial_shape)
+{
+    size_t num_spatial_dims = input_data_shape.size();
+    NGRAPH_CHECK(filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
+                 dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
+                 pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
+
+    for (size_t i = 0; i < num_spatial_dims; ++i)
+    {
+        size_t val = strides[i] * (input_data_shape[i] - 1) +
+                     dilations[i] * (filters_shape[i] - 1) + 1 - pads_begin[i] - pads_end[i] +
+                     output_padding[i];
+        output_spatial_shape.push_back(val);
+    }
+}
+
+void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_shape,
+                                                      const Shape& filters_shape,
+                                                      const Shape& output_shape,
+                                                      const Strides& strides,
+                                                      const Strides& dilations,
+                                                      const op::PadType auto_pad_type,
+                                                      const CoordinateDiff& output_padding,
+                                                      CoordinateDiff& pads_begin,
+                                                      CoordinateDiff& pads_end)
+{
+    NGRAPH_CHECK(auto_pad_type == op::PadType::SAME_UPPER ||
+                 auto_pad_type == op::PadType::SAME_LOWER);
+
+    size_t num_spatial_dims = input_data_shape.size();
+    NGRAPH_CHECK(filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
+                 dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
+                 pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
+
+    pads_begin = CoordinateDiff(num_spatial_dims);
+    pads_end = CoordinateDiff(num_spatial_dims);
+
+    for (uint64_t i = 0; i < num_spatial_dims; ++i)
+    {
+        int total_padding = strides[i] * (input_data_shape[i] - 1) +
+                            dilations[i] * (filters_shape[i] - 1) + 1 - output_shape[i] +
+                            output_padding[i];
+        if (auto_pad_type == op::PadType::SAME_UPPER)
+        {
+            pads_begin[i] = total_padding / 2;
+            pads_end[i] = total_padding - pads_begin[i];
+        }
+        else
+        {
+            pads_end[i] = total_padding / 2;
+            pads_begin[i] = total_padding - pads_end[i];
+        }
+    }
 }

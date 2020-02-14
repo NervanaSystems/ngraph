@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,6 +77,11 @@ TEST(copy, asin)
 TEST(copy, atan)
 {
     ASSERT_TRUE(check_unary<op::Atan>());
+}
+
+TEST(copy, atan2)
+{
+    ASSERT_TRUE(check_binary<op::Atan2>());
 }
 
 TEST(copy, broadcast)

@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,4 +23,5 @@ add_subdirectory(ngraph-to-plaidml)
 add_subdirectory(reserialize)
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     add_subdirectory(serialize_onnx)
+    add_subdirectory(run_onnx_model)
 endif()

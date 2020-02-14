@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -162,7 +162,7 @@ shared_ptr<Node> op::v0::Pad::copy_with_new_args(const NodeVector& new_args) con
    and push that back.
 */
 void op::v0::Pad::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                    const NodeVector& /* deltas */)
+                                    const OutputVector& /* deltas */)
 {
     throw invalid_argument("Autodiff is not yet implemented for Pad");
 }
@@ -206,7 +206,7 @@ CoordinateDiff op::v1::Pad::get_pads_begin() const
     CoordinateDiff pads_begin_coord{};
     if (auto pads_begin_const = as_type_ptr<op::Constant>(pads_begin_node))
     {
-        pads_begin_coord = pads_begin_const->get_vector<ptrdiff_t>();
+        pads_begin_coord = pads_begin_const->cast_vector<ptrdiff_t>();
     }
     return pads_begin_coord;
 }
@@ -217,7 +217,7 @@ CoordinateDiff op::v1::Pad::get_pads_end() const
     CoordinateDiff pads_end_coord{};
     if (auto pads_end_const = as_type_ptr<op::Constant>(pads_end_node))
     {
-        pads_end_coord = pads_end_const->get_vector<ptrdiff_t>();
+        pads_end_coord = pads_end_const->cast_vector<ptrdiff_t>();
     }
     return pads_end_coord;
 }
@@ -252,14 +252,14 @@ void op::v1::Pad::validate_and_infer_types()
     }
 
     NODE_VALIDATION_CHECK(this,
-                          pads_begin_element_type.compatible(element::Type_t::i64),
-                          "pads_begin must be type i64 (axes type: ",
+                          pads_begin_element_type.is_integral_number(),
+                          "pads_begin must be an integral number, but is: ",
                           pads_begin_element_type,
                           ").");
 
     NODE_VALIDATION_CHECK(this,
-                          pads_end_element_type.compatible(element::Type_t::i64),
-                          "pads_end must be type i64 (axes type: ",
+                          pads_end_element_type.is_integral_number(),
+                          "pads_end must be an integral number, but is: ",
                           pads_end_element_type,
                           ").");
 
@@ -286,8 +286,7 @@ void op::v1::Pad::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(
             this,
-            static_cast<size_t>(pads_begin_shape[0]) >= 0 &&
-                static_cast<size_t>(pads_begin_shape[0]) <= static_cast<size_t>(arg_shape_rank),
+            static_cast<size_t>(pads_begin_shape[0]) <= static_cast<size_t>(arg_shape_rank),
             "Number of elements of pads_begin must be >= 0 and <= arg rank (pads_begin_shape[0]: ",
             pads_begin_shape[0],
             ").");
@@ -296,8 +295,7 @@ void op::v1::Pad::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(
             this,
-            static_cast<size_t>(pads_end_shape[0]) >= 0 &&
-                static_cast<size_t>(pads_end_shape[0]) <= static_cast<size_t>(arg_shape_rank),
+            static_cast<size_t>(pads_end_shape[0]) <= static_cast<size_t>(arg_shape_rank),
             "Number of elements of pads_end must be >= 0 and <= arg rank (pads_end_shape[0]: ",
             pads_end_shape[0],
             ").");
@@ -359,7 +357,7 @@ shared_ptr<Node> op::v1::Pad::copy_with_new_args(const NodeVector& new_args) con
 }
 
 void op::v1::Pad::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                    const NodeVector& /* deltas */)
+                                    const OutputVector& /* deltas */)
 {
     throw invalid_argument("Autodiff is not yet implemented for Pad:v1");
 }

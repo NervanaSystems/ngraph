@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,10 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/argmax.hpp"
 #include "core/node.hpp"
-#include "ngraph/node.hpp"
-#include "utils/reduction.hpp"
+#include "utils/arg_min_max_factory.hpp"
 
 namespace ngraph
 {
@@ -29,7 +27,8 @@ namespace ngraph
             {
                 NodeVector argmax(const Node& node)
                 {
-                    return {reduction::make_ng_index_reduction_op<ngraph::op::ArgMax>(node)};
+                    const utils::ArgMinMaxFactory arg_factory(node);
+                    return {arg_factory.make_arg_max()};
                 }
 
             } // namespace set_1

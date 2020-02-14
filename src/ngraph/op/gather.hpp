@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,10 +25,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Gather slices from axis of params according to indices
-            class Gather : public Op
+            class NGRAPH_API Gather : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Gather", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Gather() = default;
@@ -40,7 +39,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const NodeVector& deltas) override;
+                                       const OutputVector& deltas) override;
 
                 size_t get_axis() const { return m_axis; }
                 void set_axis(size_t axis) { m_axis = axis; }
@@ -55,10 +54,9 @@ namespace ngraph
         namespace v1
         {
             /// \brief Gather slices from axis of params according to indices
-            class Gather : public Op
+            class NGRAPH_API Gather : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Gather", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Gather() = default;
@@ -69,13 +67,12 @@ namespace ngraph
                        const Output<Node>& indices,
                        const Output<Node>& axis);
 
-                size_t get_version() const override { return 1; }
-                size_t get_axis() const;
+                int64_t get_axis() const;
 
                 void validate_and_infer_types() override;
 
                 void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const NodeVector& deltas) override;
+                                       const OutputVector& deltas) override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;

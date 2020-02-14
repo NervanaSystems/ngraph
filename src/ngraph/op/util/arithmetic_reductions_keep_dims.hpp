@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ namespace ngraph
     {
         namespace util
         {
-            class ArithmeticReductionKeepDims : public util::ArithmeticReduction
+            class NGRAPH_API ArithmeticReductionKeepDims : public util::ArithmeticReduction
             {
             protected:
                 ArithmeticReductionKeepDims() = default;

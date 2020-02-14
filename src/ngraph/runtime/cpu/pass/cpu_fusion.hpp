@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,6 +96,9 @@ public:
             }
             construct_dropout();
             construct_batch_norm_infer_relu_with_multiply_add();
+#if MKLDNN_VERSION_MAJOR < 1
+            construct_gelubackprop();
+#endif
         }
     }
 
@@ -128,6 +131,9 @@ private:
     void construct_deconvolution_affine_folding();
     void construct_deconvolution_affine_folding_relu();
     void construct_dropout();
+#if MKLDNN_VERSION_MAJOR < 1
+    void construct_gelubackprop();
+#endif
 };
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUQuantFusion : public ngraph::pass::GraphRewrite

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ bool pass::ConstantToBroadcast::run_on_node(shared_ptr<Node> node)
         size_t size = shape_size(constant->get_shape());
         if (size > minimum_size_of_interest)
         {
-            if (constant->are_all_data_elements_bitwise_identical())
+            if (constant->get_all_data_elements_bitwise_identical())
             {
                 auto scalar_constant = make_shared<op::Constant>(
                     constant->get_element_type(), Shape{}, constant->get_data_ptr());

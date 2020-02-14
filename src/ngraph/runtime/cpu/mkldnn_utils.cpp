@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -271,6 +271,7 @@ std::map<element::Type, const mkldnn::memory::data_type>&
     // Mapping from POD types to MKLDNN data types
     static std::map<element::Type, const mkldnn::memory::data_type> s_mkldnn_data_type_map = {
         {element::boolean, mkldnn::memory::data_type::s8},
+        {element::bf16, mkldnn::memory::data_type::bf16},
         {element::f32, mkldnn::memory::data_type::f32},
         {element::f64, mkldnn::memory::data_type::data_undef},
         {element::i8, mkldnn::memory::data_type::s8},
@@ -290,6 +291,7 @@ std::map<element::Type, const std::string>&
 {
     static std::map<element::Type, const std::string> s_mkldnn_data_type_string_map{
         {element::boolean, "mkldnn::memory::data_type::s8"},
+        {element::bf16, "mkldnn::memory::data_type::bf16"},
         {element::f32, "mkldnn::memory::data_type::f32"},
         {element::f64, "mkldnn::memory::data_type::data_undef"},
         {element::i8, "mkldnn::memory::data_type::s8"},
@@ -778,6 +780,26 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md_helper
 
     return memory::desc(md);
 }
+
+bool runtime::cpu::mkldnn_utils::is_bf16_supported()
+{
+    try
+    {
+        mkldnn::memory::dims dims{2, 3, 4, 5};
+        auto input_desc =
+            mkldnn::memory::desc(dims, mkldnn::memory::data_type::f32, memory::format::nchw);
+        auto result_desc =
+            mkldnn::memory::desc(dims, mkldnn::memory::data_type::bf16, memory::format::nchw);
+        auto reorder_prim_desc = mkldnn::reorder::primitive_desc(
+            {input_desc, executor::global_cpu_engine}, {result_desc, executor::global_cpu_engine});
+    }
+    catch (const mkldnn::error& e)
+    {
+        return false;
+    }
+    return true;
+}
+
 #else
 std::map<element::Type, const mkldnn::memory::data_type>&
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type_map()
@@ -1718,5 +1740,38 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_desc_blocked_data_format(
 	return true;
 #endif
     return blk.inner_nblks != 0;
+}
+
+bool runtime::cpu::mkldnn_utils::is_bf16_supported()
+{
+    try
+    {
+        mkldnn::memory::dims input_dims{1, 1, 3, 5};
+        mkldnn::memory::dims input_strides{15, 15, 5, 1};
+        mkldnn::memory::dims window_shape{2, 3};
+        mkldnn::memory::dims window_movement_strides{1, 1};
+        mkldnn::memory::dims padding_below{0, 0};
+        mkldnn::memory::dims padding_above{0, 0};
+        mkldnn::memory::dims result_dims{1, 1, 2, 3};
+        auto input_desc =
+            mkldnn::memory::desc(input_dims, mkldnn::memory::data_type::bf16, input_strides);
+        auto result_desc = mkldnn::memory::desc(
+            result_dims, mkldnn::memory::data_type::bf16, mkldnn::memory::format_tag::any);
+        auto maxpool_desc = mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_inference,
+                                                          mkldnn::algorithm::pooling_max,
+                                                          input_desc,
+                                                          result_desc,
+                                                          window_movement_strides,
+                                                          window_shape,
+                                                          padding_below,
+                                                          padding_above);
+        mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
+        auto maxpool_prim_desc = mkldnn::pooling_forward::primitive_desc(maxpool_desc, cpu_engine);
+    }
+    catch (const mkldnn::error& e)
+    {
+        return false;
+    }
+    return true;
 }
 #endif

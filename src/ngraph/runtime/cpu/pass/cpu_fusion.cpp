@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -75,6 +76,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -164,6 +166,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
         auto m_bias = m_broadcast->get_argument(0);
         auto pattern_map = m.get_pattern_map();
 
+        NGRAPH_CHECK(mpattern->get_element_type() != element::f64 || m_bias == nullptr,
+                     "Bias in DP MatMulBias is not supported yet");
+
         auto mmb = std::make_shared<ngraph::op::MatmulBias>(pattern_map[W],
                                                             pattern_map[x],
                                                             m_bias,
@@ -205,10 +210,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
 
         auto mpattern = m.get_match_root();
         auto dot = m.get_match_root();
+        auto element_type = mpattern->get_element_type();
 
-        if (mpattern->get_element_type() != element::f32)
+        if (element_type != element::f32 && element_type != element::f64)
         {
-            NGRAPH_DEBUG << "mpattern = " << mpattern->get_name() << " type is not float!";
+            NGRAPH_DEBUG << "mpattern = " << mpattern->get_name()
+                         << " type is not float or double!";
             return false;
         }
 
@@ -598,12 +605,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        auto m_bn =
-            std::static_pointer_cast<ngraph::op::BatchNormTraining>(m.get_match_root()
-                                                                        ->get_argument(0)
-                                                                        ->input(0)
-                                                                        .get_source_output()
-                                                                        .get_node_shared_ptr());
+        auto m_bn = std::static_pointer_cast<ngraph::op::BatchNormTraining>(
+            m.get_match_root()->get_input_node_shared_ptr(0)->get_input_node_shared_ptr(0));
 
         if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(m_bn.get()))
         {
@@ -664,7 +667,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
 
         auto pattern_map = m.get_pattern_map();
 
-        auto bn_match = m.get_match_root()->input(0).get_source_output().get_node_shared_ptr();
+        auto bn_match = m.get_match_root()->get_input_node_shared_ptr(0);
         if (bn_match->get_users().size() > 1)
         {
             NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";
@@ -1183,6 +1186,76 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     this->add_matcher(m, callback);
 }
 
+#if MKLDNN_VERSION_MAJOR < 1
+void ngraph::runtime::cpu::pass::CPUFusion::construct_gelubackprop()
+{
+    Shape shape{2, 2, 1, 1};
+    auto input = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto gbpfactor = std::make_shared<ngraph::op::GeluBackpropFactor>(input);
+    auto gbpfactor_label =
+        std::make_shared<pattern::op::Label>(gbpfactor, nullptr, NodeVector{gbpfactor});
+
+    auto delta = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto mult = std::make_shared<ngraph::op::Multiply>(gbpfactor, delta);
+    auto mult_label = std::make_shared<pattern::op::Label>(mult, nullptr, NodeVector{mult});
+
+    auto callback = [input, delta, gbpfactor_label, mult_label](pattern::Matcher& m) {
+
+        NGRAPH_DEBUG << "In callback for construct_gelubackprop against "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        if (m.get_match_root()->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << " type is not float!";
+            return false;
+        }
+
+        auto m_mult = std::static_pointer_cast<ngraph::op::Multiply>(m.get_match_root());
+
+        auto m_gbpfactor = std::static_pointer_cast<ngraph::op::GeluBackpropFactor>(
+            m.get_match_root()->get_argument(0));
+        if (m_gbpfactor->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "GeluBackpropFactor has more than one user";
+            return false;
+        }
+
+        const PartialShape& mult1_shape = m_mult->get_input_partial_shape(0);
+        const PartialShape& mult2_shape = m_mult->get_input_partial_shape(1);
+        if (mult1_shape.rank().is_dynamic() || mult2_shape.rank().is_dynamic())
+        {
+            NGRAPH_DEBUG << "In construct_gelubackprop: some shapes are dynamic.";
+            return false;
+        }
+
+        if (pattern_map[input]->get_element_type() != pattern_map[delta]->get_element_type())
+        {
+            NGRAPH_DEBUG << "In construct_gelubackprop: types mismatch\n";
+            return false;
+        }
+
+        if (m_mult->get_argument(0)->get_shape() != m_mult->get_argument(1)->get_shape())
+        {
+            NGRAPH_DEBUG << "Input shapes for mult are different. shape1: "
+                         << m_mult->get_argument(1)->get_shape()
+                         << ", shape2: " << m_mult->get_argument(1)->get_shape() << "\n";
+            return false;
+        }
+
+        // No further checks needed.
+        auto gbp_n =
+            std::make_shared<ngraph::op::GeluBackprop>(pattern_map[input], pattern_map[delta]);
+        ngraph::replace_node(m.get_match_root(), gbp_n);
+        return true;
+    };
+    auto m = std::make_shared<pattern::Matcher>(mult, "CPUFusion.GeluBackprop");
+    this->add_matcher(m, callback);
+}
+#endif
+
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
 {
     Shape shape{2, 2, 1, 1};
@@ -1690,6 +1763,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
         }
 
         if (conv_m->get_groups() == 0)
+        {
+            return false;
+        }
+
+        if (conv_m->has_groups_in_filters())
         {
             return false;
         }

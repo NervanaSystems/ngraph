@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,14 +23,13 @@ endif()
 set(SDL_cmake_included true)
 
 if(UNIX)
-    set(SDL_CXX_FLAGS "-O2 -Wformat -Wformat-security")
-    set(SDL_CXX_FLAGS "${SDL_CXX_FLAGS} -D_FORTIFY_SOURCE=2")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_FORTIFY_SOURCE=2")
+    list(APPEND NGRAPH_COMMON_FLAGS -Wformat -Wformat-security)
+    list(APPEND NGRAPH_COMMON_FLAGS -O2 -D_FORTIFY_SOURCE=2)
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
-            set(SDL_CXX_FLAGS "${SDL_CXX_FLAGS} -fstack-protector-all")
+            list(APPEND NGRAPH_COMMON_FLAGS -fstack-protector-all)
         else()
-            set(SDL_CXX_FLAGS "${SDL_CXX_FLAGS} -fstack-protector-strong")
+            list(APPEND NGRAPH_COMMON_FLAGS -fstack-protector-strong)
         endif()
 
         # GCC might be very paranoid for partial structure initialization, e.g.
@@ -42,12 +41,10 @@ if(UNIX)
         # set(CMAKE_SRC_CCXX_FLAGS "${CMAKE_SRC_CCXX_FLAGS} -Wmissing-field-initializers")
         # set(CMAKE_EXAMPLE_CCXX_FLAGS "${CMAKE_EXAMPLE_CCXX_FLAGS} -Wmissing-field-initializers")
     elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        set(SDL_CXX_FLAGS "${SDL_CXX_FLAGS} -fstack-protector-all")
+        list(APPEND NGRAPH_COMMON_FLAGS -fstack-protector-all)
     elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector")
+        list(APPEND NGRAPH_COMMON_FLAGS -fstack-protector)
     endif()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${SDL_CXX_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SDL_CXX_FLAGS}")
     if(APPLE)
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-bind_at_load")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-bind_at_load")

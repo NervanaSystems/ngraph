@@ -1,5 +1,5 @@
 #*****************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,15 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #*****************************************************************************
+"""Lit runner site configuration."""
 
 import lit.llvm
 
-config.llvm_tools_dir = "@MLIR_TOOLS_DIR@"
-config.mlir_obj_root = "@MLIR_BUILD_DIR@"
-config.mlir_tools_dir = "@MLIR_TOOLS_DIR@"
+config.llvm_tools_dir = "@MLIR_LLVM_TOOLS_DIR@"
+config.mlir_obj_root = "@MLIR_LLVM_BUILD_DIR@"
+config.mlir_tools_dir = "@MLIR_LLVM_TOOLS_DIR@"
 config.suffixes = ['.mlir']
 
-config.ngraph_mlir_tools_dir = "@NGRAPH_INSTALL_BIN@"
+config.ngraph_mlir_tools_dir = "@NGRAPH_BUILD_BIN@"
 config.ngraph_mlir_test_src_dir = "@NGRAPH_LIT_TEST_SRC_DIR@"
 config.ngraph_mlir_test_build_dir = "@NGRAPH_LIT_TEST_BUILD_DIR@"
 

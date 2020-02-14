@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ namespace ngraph
             } // namespace error
         }     // namespace detail
 
-        std::shared_ptr<Function> import_onnx_model(std::istream& sin, const Weights& weights)
+        std::shared_ptr<Function> import_onnx_model(std::istream& sin)
         {
             onnx::ModelProto model_proto;
             // Try parsing input as a binary protobuf message
@@ -70,7 +70,7 @@ namespace ngraph
             }
 
             Model model{model_proto};
-            Graph graph{model_proto.graph(), model, weights};
+            Graph graph{model_proto.graph(), model};
             auto function = std::make_shared<Function>(
                 graph.get_ng_outputs(), graph.get_ng_parameters(), graph.get_name());
             for (std::size_t i{0}; i < function->get_output_size(); ++i)
@@ -80,14 +80,14 @@ namespace ngraph
             return function;
         }
 
-        std::shared_ptr<Function> import_onnx_model(const std::string& path, const Weights& weights)
+        std::shared_ptr<Function> import_onnx_model(const std::string& path)
         {
             std::ifstream ifs{path, std::ios::in | std::ios::binary};
             if (!ifs.is_open())
             {
                 throw detail::error::file_open{path};
             }
-            return import_onnx_model(ifs, weights);
+            return import_onnx_model(ifs);
         }
 
         void register_operator(const std::string& name,

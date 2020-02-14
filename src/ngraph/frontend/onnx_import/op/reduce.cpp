@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,7 @@
 #include <iterator> // std::begin, std::end
 #include <numeric>  // std::accumulate
 
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/divide.hpp"
+#include "default_opset.hpp"
 #include "ngraph/shape.hpp"
 #include "reduce.hpp"
 
@@ -46,17 +45,18 @@ namespace ngraph
                     auto sum_node = std::shared_ptr<ngraph::Node>{reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        std::make_shared<ngraph::op::Sum,
+                        std::make_shared<default_opset::ReduceSum,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         const ngraph::AxisSet&>)};
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
 
-                    auto const_node = ngraph::op::Constant::create(
+                    auto const_node = default_opset::Constant::create(
                         sum_node->get_element_type(),
                         sum_node->get_shape(),
                         std::vector<std::size_t>(shape_size(sum_node->get_shape()),
                                                  elem_count_product));
 
-                    return {std::make_shared<ngraph::op::Divide>(sum_node, const_node)};
+                    return {std::make_shared<default_opset::Divide>(sum_node, const_node)};
                 }
 
             } // namespace set_1

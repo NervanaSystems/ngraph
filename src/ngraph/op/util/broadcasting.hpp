@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
 
 #pragma once
 
+#include <cstddef>
 #include <memory>
+#include <vector>
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/node.hpp"
@@ -69,50 +71,9 @@ namespace ngraph
         /// \param start_match_axis position in shape denoting start of the mutually equal shape
         ///
         /// \return Left and right node after broadcasting.
-        NodeVector legacy_style_broadcast_for_binary_operation(const std::shared_ptr<Node>& left,
-                                                               const std::shared_ptr<Node>& right,
-                                                               size_t start_match_axis)
-            NGRAPH_DEPRECATED("Replace with legacy_style_broadcast_values_for_binary_operation");
-
-        /// \brief Cast shape of two outputs to make them compatible for an element-wise binary
-        ///        operation.
-        ///
-        /// If necessary the right-hand-side argument will be broadcast to match the shape
-        /// of left-hand-side argument. The starting of the mutually equal shape is
-        /// specified by the argument "start_match_axis", and if it is not set,
-        /// suffix matching is assumed.
-        ///
-        /// This style of broadcast was used in ONNX Op sets prior to version 7, where it was
-        /// replaced by numpy-style broadcasting.
-        ///
-        /// \param left Node which contain input of binary op.
-        /// \param right Node which contain input of binary op.
-        /// \param start_match_axis position in shape denoting start of the mutually equal shape
-        ///
-        /// \return Left and right node after broadcasting.
-        OutputVector legacy_style_broadcast_values_for_binary_operation(const Output<Node>& left,
-                                                                        const Output<Node>& right,
-                                                                        size_t start_match_axis);
-
-        /// \brief      Broadcast shape of two nodes to make them compatible for a matrix
-        ///             multiplication.
-        ///
-        /// \note       This function is reflecting broadcasting behaviour of NumPy's `matmul`
-        ///             operation.
-        ///             (https://docs.scipy.org/doc/numpy/reference/generated/numpy.matmul.html).
-        ///             This mean that only \"stack of matrices\" axes are bidirectionally
-        ///             broadcasted. The last two dimension are left untouched.
-        ///
-        /// \param[in]  left   The Node providing data for the left-hand side of matrix
-        ///                    multiplication.
-        /// \param[in]  right  The Node providing data for the right-hand side of matrix
-        ///                    multiplication.
-        ///
-        /// \return     The vector containing both nodes broadcasted.
-        ///
-        NodeVector numpy_style_broadcast_for_matmul_operation(const std::shared_ptr<Node>& left,
-                                                              const std::shared_ptr<Node>& right)
-            NGRAPH_DEPRECATED("Replace with numpy_style_broadcast_values_for_matmul_operation.");
+        OutputVector legacy_style_broadcast_for_binary_operation(const Output<Node>& left,
+                                                                 const Output<Node>& right,
+                                                                 size_t start_match_axis);
 
         /// \brief      Broadcast shape of two nodes to make them compatible for a matrix
         ///             multiplication.
@@ -130,8 +91,8 @@ namespace ngraph
         ///
         /// \return     The vector containing both outputs broadcasted.
         ///
-        OutputVector numpy_style_broadcast_values_for_matmul_operation(const Output<Node>& left,
-                                                                       const Output<Node>& right);
+        OutputVector numpy_style_broadcast_for_matmul_operation(const Output<Node>& left,
+                                                                const Output<Node>& right);
 
         /// \brief Cast shape of all input nodes for an element-wise operation that requires
         ///        shape-compatibility
@@ -197,5 +158,68 @@ namespace ngraph
                 new_shape,
                 calculate_broadcast_axes(new_shape, value.get_shape(), start_match_axis));
         }
-    } // namespace  op
+
+        namespace opset1
+        {
+            ///
+            /// \brief      Broadcast right node to left node's shape using legacy scheme.
+            ///
+            /// \param[in]  left              The left hand side node of binary operation.
+            /// \param[in]  right             The right hand side node of binary operation. The one
+            ///                               to be broadcasted.
+            /// \param[in]  start_match_axis  The axis index starting mutually equal shapes
+            ///                               of both nodes.
+            ///
+            /// \return     The Output object connected to node producing broadcasted right node.
+            ///
+            Output<Node> legacy_style_broadcast_for_binary_operation(const Output<Node>& left,
+                                                                     const Output<Node>& right,
+                                                                     size_t start_match_axis);
+
+            ///
+            /// \brief      Reconstructs axes mapping vector for Broadcast:v1 operation.
+            ///
+            /// \param[in]  output_shape    The output shape of Broadcast operation.
+            /// \param[in]  broadcast_axes  The broadcast axes used for Broadcast:v0 operator.
+            ///
+            /// \return     The vector with axes indexes mapping .
+            ///
+            std::vector<std::size_t> get_axes_mapping(const Shape& output_shape,
+                                                      const AxisSet& broadcast_axes);
+
+            ///
+            /// \brief      Creates Node returning the axes mapping for Broadcast:v1 operation.
+            ///
+            /// \param[in]  output_shape      The output shape of Broadcast operation.
+            /// \param[in]  input_shape       The input shape.
+            /// \param[in]  start_match_axis  The axis index at which input shape starts to be
+            ///                               identical as the output shape.
+            ///
+            /// \return     Returns the Output object pointing to node with the axes mapping.
+            ///
+            Output<Node> get_axes_mapping_output(const Shape& output_shape,
+                                                 const Shape& input_shape,
+                                                 std::size_t start_match_axis);
+
+            ///
+            /// \brief      Creates Node returning the axes mapping for Broadcast:v1 operation.
+            ///
+            /// \param[in]  output_shape    The output shape of Broadcast operation.
+            /// \param[in]  broadcast_axes  The broadcast axes used for Broadcast:v0 operator.
+            ///
+            /// \return     The Output object with Node returning axes mapping.
+            ///
+            Output<Node> get_axes_mapping_output(const Shape& output_shape,
+                                                 const AxisSet& broadcast_axes);
+
+            Output<Node> make_broadcast(const Output<Node>& node,
+                                        const Shape& target_shape,
+                                        const AxisSet& broadcast_axes);
+
+            Output<Node> make_broadcast(const Output<Node>& node,
+                                        const Shape& target_shape,
+                                        std::size_t start_match_axis);
+
+        } // namespace opset1
+    }     // namespace  op
 } // namespace  ngraph

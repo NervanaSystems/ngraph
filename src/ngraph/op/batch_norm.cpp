@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include <sstream>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/validation_util.hpp"
@@ -44,6 +45,12 @@ op::BatchNormTraining::BatchNormTraining(double eps,
     , m_epsilon(eps)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::BatchNormTraining::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("epsilon", m_epsilon);
+    return true;
 }
 
 void op::BatchNormTraining::validate_and_infer_types()
@@ -75,7 +82,7 @@ std::shared_ptr<Node> op::BatchNormTraining::copy_with_new_args(const NodeVector
 }
 
 void op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoints,
-                                              const NodeVector& deltas)
+                                              const OutputVector& deltas)
 {
     auto gamma = input_value(0);
     auto beta = input_value(1);
@@ -93,9 +100,9 @@ void op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoints,
 
     auto bbn = std::make_shared<op::BatchNormTrainingBackprop>(
         data, gamma, beta, mean, var, deltas.at(0), get_eps_value());
-    auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);
-    auto dgamma = std::make_shared<op::GetOutputElement>(bbn, 1);
-    auto dbeta = std::make_shared<op::GetOutputElement>(bbn, 2);
+    auto dinput = Output<Node>(bbn, 0);
+    auto dgamma = Output<Node>(bbn, 1);
+    auto dbeta = Output<Node>(bbn, 2);
 
     adjoints.add_delta(data, dinput);
     adjoints.add_delta(gamma, dgamma);
@@ -127,6 +134,12 @@ op::BatchNormInference::BatchNormInference(double eps,
     , m_epsilon(eps)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::BatchNormInference::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("epsilon", m_epsilon);
+    return true;
 }
 
 void op::BatchNormInference::validate_and_infer_types()
@@ -189,6 +202,12 @@ op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(double epsilon,
 {
     set_output_size(3);
     constructor_validate_and_infer_types();
+}
+
+bool op::BatchNormTrainingBackprop::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("epsilon", m_epsilon);
+    return true;
 }
 
 void op::BatchNormTrainingBackprop::validate_and_infer_types()

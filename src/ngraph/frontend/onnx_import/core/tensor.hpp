@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -365,6 +365,13 @@ namespace ngraph
                 : m_tensor_proto{&tensor}
                 , m_shape{std::begin(tensor.dims()), std::end(tensor.dims())}
             {
+                if (m_shape == Shape{0})
+                {
+                    // It's possible to construct a tensor in ONNX with "dims: 0" property
+                    // Such tensor contains a scalar. This results in a Shape{0} stored in m_shape.
+                    // In nGraph a scalar is represented with Shape{} and thus this replacement.
+                    m_shape = Shape{};
+                }
             }
 
             Tensor(const Tensor&) = default;

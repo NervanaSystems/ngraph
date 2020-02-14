@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ op::FakeQuantize::FakeQuantize(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-void op::FakeQuantize::pre_validate_and_infer_types()
+void op::FakeQuantize::validate_and_infer_types()
 {
     PartialShape data_pshape = get_input_partial_shape(0);
 
@@ -77,6 +77,7 @@ void op::FakeQuantize::pre_validate_and_infer_types()
             NODE_VALIDATION_CHECK(this, false, "Unsupported auto broadcast specification");
         }
     }
+    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
 NodeVector op::FakeQuantize::decompose_op() const
@@ -159,5 +160,6 @@ shared_ptr<Node> op::FakeQuantize::copy_with_new_args(const NodeVector& new_args
                                      new_args.at(2), // input_high
                                      new_args.at(3), // output_low
                                      new_args.at(4), // output_high
-                                     m_levels);
+                                     m_levels,
+                                     m_auto_broadcast);
 }

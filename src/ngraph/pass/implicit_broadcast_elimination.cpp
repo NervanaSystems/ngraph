@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,4 +39,30 @@ bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<ngr
         }
     }
     return false;
+}
+
+NodeVector ngraph::pass::explicit_broadcast(std::shared_ptr<Node>& node)
+{
+    NodeVector rc;
+    if (node->supports_auto_broadcast())
+    {
+        auto autob = node->get_autob();
+        if (autob.m_type == op::AutoBroadcastType::NONE)
+        {
+            rc = node->get_arguments();
+        }
+        else if (autob.m_type == op::AutoBroadcastType::NUMPY)
+        {
+            rc = op::numpy_style_broadcast(node->get_arguments());
+        }
+        else if (autob.m_type == op::AutoBroadcastType::PDPD)
+        {
+            rc = op::pdpd_style_broadcast(node->get_arguments(), autob.m_axis);
+        }
+        else
+        {
+            throw ngraph_error("Unsupported implicit broadcast type");
+        }
+    }
+    return rc;
 }

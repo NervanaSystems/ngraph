@@ -91,6 +91,6 @@ Backprop
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Broadcast
+.. doxygenclass:: ngraph::op::v0::Broadcast
    :project: ngraph
    :members:

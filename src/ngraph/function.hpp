@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/lambda.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -30,9 +31,11 @@
 namespace ngraph
 {
     /// A user-defined function.
-    class Function
+    class NGRAPH_API Function : public Lambda
     {
     public:
+        static constexpr DiscreteTypeInfo type_info{"Function", 0};
+        const DiscreteTypeInfo& get_type_info() const { return type_info; }
         Function(const NodeVector& results,
                  const ParameterVector& parameters,
                  const std::string& name = "");
@@ -70,10 +73,6 @@ namespace ngraph
         /// Return the partial shape of element i
         const PartialShape& get_output_partial_shape(size_t i) const;
 
-        /// Return the function parameters
-        const ParameterVector& get_parameters() const { return m_parameters; }
-        /// Return a list of function's outputs
-        const ResultVector& get_results() const { return m_results; }
         /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
 
@@ -93,8 +92,8 @@ namespace ngraph
         /// \returns A const reference to the function's friendly name.
         const std::string& get_friendly_name() const;
 
-        std::list<std::shared_ptr<Node>> get_ops(bool include_control_deps = true) const;
-        std::list<std::shared_ptr<Node>> get_ordered_ops(bool include_control_deps = true) const;
+        std::vector<std::shared_ptr<Node>> get_ops() const;
+        std::vector<std::shared_ptr<Node>> get_ordered_ops() const;
         void map_unordered_ops(std::function<void(Node*)> f) const;
 
         friend std::ostream& operator<<(std::ostream&, const Function&);
@@ -127,9 +126,11 @@ namespace ngraph
         void replace_parameter(size_t parameter_index,
                                const std::shared_ptr<op::Parameter>& parameter);
 
+        using topological_sort_t = std::function<std::vector<std::shared_ptr<Node>>(
+            const std::vector<std::shared_ptr<Node>>& root_nodes)>;
+        void set_topological_sort(topological_sort_t);
+
     protected:
-        ResultVector m_results;
-        ParameterVector m_parameters;
         size_t m_temporary_pool_size;
 
     private:
@@ -142,5 +143,6 @@ namespace ngraph
         std::string m_name;
         const std::string m_unique_name;
         size_t m_placement{0};
+        topological_sort_t m_topological_sorter;
     };
 }

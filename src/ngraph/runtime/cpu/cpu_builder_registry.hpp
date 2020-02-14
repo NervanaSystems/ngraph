@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,12 +35,14 @@ namespace ngraph
             void register_builders_convert_cpp();
             void register_builders_convert_layout_cpp();
             void register_builders_convolution_cpp();
+            void register_builders_cumsum_cpp();
             void register_builders_dot_cpp();
             void register_builders_dropout_cpp();
             void register_builders_embedding_lookup_cpp();
             void register_builders_erf_cpp();
             void register_builders_gather_cpp();
             void register_builders_gather_nd_cpp();
+            void register_builders_gelu_cpp();
             void register_builders_get_output_element_cpp();
             void register_builders_leaky_relu_cpp();
             void register_builders_lrn_cpp();

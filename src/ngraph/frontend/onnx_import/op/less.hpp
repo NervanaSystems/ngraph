@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,10 @@
 
 #pragma once
 
+#include <memory>
+
 #include "core/node.hpp"
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
@@ -31,10 +34,8 @@ namespace ngraph
             {
                 inline NodeVector less(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::Less>(
-                        node.get_ng_inputs().at(0),
-                        node.get_ng_inputs().at(1),
-                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
+                    return {std::make_shared<default_opset::Less>(node.get_ng_inputs().at(0),
+                                                                  node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_1

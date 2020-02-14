@@ -49,6 +49,6 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::NotEqual
+.. doxygenclass:: ngraph::op::v0::NotEqual
    :project: ngraph
    :members:

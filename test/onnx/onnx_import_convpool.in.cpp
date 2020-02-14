@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -408,7 +408,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p3)
 
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front(), 18));
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_convtranspose_output_shape)
@@ -423,5 +423,164 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_convtranspose_output_shape)
     test_case.add_expected_output_from_file<float>(
         {1, 2, 10, 8}, TEST_FILES, "onnx/convtranspose_output_shape/y.bin");
 
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_convtranspose_output_shape_auto_pads_same_upper)
+{
+    auto conv_transpose_fn = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/convtranspose_output_shape_auto_pads_same_upper.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(conv_transpose_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>(
+        {0.f, 0.25f, 0.5f, 0.75f, 1.f, 1.25f, 1.5f, 1.75f, 2.f, 2.25f, 2.5f, 2.75f});
+    test_case.add_input<float>(
+        {0.f, 0.25f, 0.5f, 0.75f, 1.f, 1.25f, 1.5f, 1.75f, 2.f, 2.25f, 2.5f, 2.75f,
+
+         3.f, 3.25f, 3.5f, 3.75f, 4.f, 4.25f, 4.5f, 4.75f, 5.f, 5.25f, 5.5f, 5.75f});
+    test_case.add_expected_output<float>(
+        Shape{1, 2, 6, 6},
+        {0.f,     0.f,      0.0625f,  0.25f,  0.4375f,  0.375f,  0.f,     0.4375f,  1.4375f,
+         2.375f,  2.5625f,  1.8125f,  0.75f,  2.8125f,  6.375f,  8.625f,  7.875f,   5.0625f,
+         3.f,     7.875f,   14.8125f, 18.75f, 15.1875f, 9.f,     5.25f,   12.1875f, 20.9375f,
+         24.125f, 18.3125f, 10.3125f, 4.5f,   10.0625f, 16.75f,  18.625f, 13.75f,   7.5625f,
+
+         0.f,     0.75f,    2.3125f,  4.75f,  4.1875f,  2.625f,  3.f,     7.9375f,  14.9375f,
+         20.375f, 16.0625f, 9.3125f,  9.75f,  23.0625f, 40.125f, 49.125f, 37.125f,  20.8125f,
+         12.f,    28.125f,  48.5625f, 59.25f, 44.4375f, 24.75f,  14.25f,  31.6875f, 52.4375f,
+         60.125f, 43.8125f, 23.8125f, 10.5f,  22.8125f, 37.f,    41.125f, 29.5f,    15.8125f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_convtranspose_output_shape_auto_pads_same_lower)
+{
+    auto conv_transpose_fn = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/convtranspose_output_shape_auto_pads_same_lower.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(conv_transpose_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>(
+        {0.f, 0.25f, 0.5f, 0.75f, 1.f, 1.25f, 1.5f, 1.75f, 2.f, 2.25f, 2.5f, 2.75f});
+    test_case.add_input<float>(
+        {0.f, 0.25f, 0.5f, 0.75f, 1.f, 1.25f, 1.5f, 1.75f, 2.f, 2.25f, 2.5f, 2.75f,
+
+         3.f, 3.25f, 3.5f, 3.75f, 4.f, 4.25f, 4.5f, 4.75f, 5.f, 5.25f, 5.5f, 5.75f});
+    test_case.add_expected_output<float>(
+        Shape{1, 2, 6, 6},
+        {0.f,     0.f,      0.0625f,  0.25f,  0.4375f,  0.375f,  0.f,     0.4375f,  1.4375f,
+         2.375f,  2.5625f,  1.8125f,  0.75f,  2.8125f,  6.375f,  8.625f,  7.875f,   5.0625f,
+         3.f,     7.875f,   14.8125f, 18.75f, 15.1875f, 9.f,     5.25f,   12.1875f, 20.9375f,
+         24.125f, 18.3125f, 10.3125f, 4.5f,   10.0625f, 16.75f,  18.625f, 13.75f,   7.5625f,
+
+         0.f,     0.75f,    2.3125f,  4.75f,  4.1875f,  2.625f,  3.f,     7.9375f,  14.9375f,
+         20.375f, 16.0625f, 9.3125f,  9.75f,  23.0625f, 40.125f, 49.125f, 37.125f,  20.8125f,
+         12.f,    28.125f,  48.5625f, 59.25f, 44.4375f, 24.75f,  14.25f,  31.6875f, 52.4375f,
+         60.125f, 43.8125f, 23.8125f, 10.5f,  22.8125f, 37.f,    41.125f, 29.5f,    15.8125f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_convtranspose_groups_w_pads)
+{
+    auto conv_transpose_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/convtranspose_groups_w_pads.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(conv_transpose_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({
+        0.f,
+        0.25f,
+        0.5f,
+        0.75f,
+        1.f,
+        1.25f,
+        1.5f,
+        1.75f,
+        2.f,
+        2.25f,
+        2.5f,
+        2.75f,
+        3.f,
+        3.25f,
+        3.5f,
+        3.75f,
+        4.f,
+        4.25f,
+    });
+    test_case.add_input<float>({
+        0.f, 0.25f, 0.5f, 0.75f, 1.f, 1.25f, 1.5f, 1.75f, 2.f, 2.25f, 2.5f, 2.75f,
+        3.f, 3.25f, 3.5f, 3.75f, 4.f, 4.25f, 4.5f, 4.75f, 5.f, 5.25f, 5.5f, 5.75f,
+        6.f, 6.25f, 6.5f, 6.75f, 7.f, 7.25f, 7.5f, 7.75f, 8.f, 8.25f, 8.5f, 8.75f,
+    });
+    test_case.add_expected_output<float>(Shape{1, 4, 2, 2},
+                                         {1.25f,
+                                          1.625f,
+                                          5.25f,
+                                          5.25f,
+                                          9.6875f,
+                                          8.375f,
+                                          25.5f,
+                                          20.4375f,
+                                          87.3125f,
+                                          62.375f,
+                                          157.125f,
+                                          111.5625f,
+                                          126.125f,
+                                          89.375f,
+                                          222.9375f,
+                                          157.125f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_convtranspose_groups_pads_bias)
+{
+    auto conv_transpose_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/convtranspose_groups_pads_bias.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(conv_transpose_fn, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({0.f,
+                                0.25f,
+                                0.5f,
+                                0.75f,
+                                1.f,
+                                1.25f,
+                                1.5f,
+                                1.75f,
+                                2.f,
+                                2.25f,
+                                2.5f,
+                                2.75f,
+                                3.f,
+                                3.25f,
+                                3.5f,
+                                3.75f,
+                                4.f,
+                                4.25f});
+    test_case.add_input<float>({0.f,   0.25f, 0.5f,  0.75f, 1.f,   1.25f, 1.5f,  1.75f, 2.f,
+                                2.25f, 2.5f,  2.75f, 3.f,   3.25f, 3.5f,  3.75f, 4.f,   4.25f,
+                                4.5f,  4.75f, 5.f,   5.25f, 5.5f,  5.75f, 6.f,   6.25f, 6.5f,
+                                6.75f, 7.f,   7.25f, 7.5f,  7.75f, 8.f,   8.25f, 8.5f,  8.75f});
+    test_case.add_input<float>({0.f, 0.25f, 0.5f, 0.75f});
+    test_case.add_expected_output<float>(Shape{1, 4, 2, 2},
+                                         {1.25f,
+                                          1.625f,
+                                          5.25f,
+                                          5.25f,
+                                          9.9375f,
+                                          8.625f,
+                                          25.75f,
+                                          20.6875f,
+                                          87.8125f,
+                                          62.875f,
+                                          157.625f,
+                                          112.0625f,
+                                          126.875f,
+                                          90.125f,
+                                          223.6875f,
+                                          157.875f});
     test_case.run();
 }

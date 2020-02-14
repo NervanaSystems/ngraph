@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,15 +66,21 @@ shared_ptr<Node> op::Gelu::copy_with_new_args(const NodeVector& new_args) const
 void op::Gelu::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
+    PartialShape input_pshape = get_input_partial_shape(0);
 
     NODE_VALIDATION_CHECK(this,
                           input_element_type.is_dynamic() || input_element_type.is_real(),
                           "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
                           input_element_type,
                           ").");
+
+    if (input_pshape.is_dynamic())
+    {
+        set_output_type(0, input_element_type, input_pshape);
+    }
 }
 
-void op::Gelu::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Gelu::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -94,12 +100,18 @@ op::GeluBackpropFactor::GeluBackpropFactor(const Output<Node>& x)
 void op::GeluBackpropFactor::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
+    PartialShape input_pshape = get_input_partial_shape(0);
 
     NODE_VALIDATION_CHECK(this,
                           input_element_type.is_dynamic() || input_element_type.is_real(),
                           "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
                           input_element_type,
                           ").");
+
+    if (input_pshape.is_dynamic())
+    {
+        set_output_type(0, input_element_type, input_pshape);
+    }
 }
 
 shared_ptr<Node> op::GeluBackpropFactor::copy_with_new_args(const NodeVector& new_args) const
