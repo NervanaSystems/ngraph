@@ -90,6 +90,7 @@ namespace ngraph
                           const Output<Node>& reduction_axes,
                           bool keep_dims = false);
 
+                using util::ArithmeticReductionKeepDims::visit_attributes;
                 size_t get_version() const override { return 1; }
 
                 virtual std::shared_ptr<Node>

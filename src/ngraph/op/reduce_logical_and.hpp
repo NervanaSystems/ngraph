@@ -44,6 +44,7 @@ namespace ngraph
                                  const Output<Node>& reduction_axes,
                                  const bool keep_dims = false);
 
+                using util::LogicalReductionKeepDims::visit_attributes;
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
             };

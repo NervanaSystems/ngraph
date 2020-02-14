@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/util/arithmetic_reductions_keep_dims.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
 
 using namespace std;
@@ -27,6 +28,12 @@ op::util::ArithmeticReductionKeepDims::ArithmeticReductionKeepDims(
     : ArithmeticReduction(arg, reduction_axes)
     , m_keep_dims{keep_dims}
 {
+}
+
+bool ngraph::op::util::ArithmeticReductionKeepDims::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("keep_dims", m_keep_dims);
+    return true;
 }
 
 void op::util::ArithmeticReductionKeepDims::validate_and_infer_types()
