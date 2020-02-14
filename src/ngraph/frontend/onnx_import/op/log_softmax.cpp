@@ -32,11 +32,11 @@ namespace ngraph
                 {
                     NodeVector inputs{node.get_ng_inputs()};
                     const auto data = inputs.at(0);
-                    const auto data_shape = data->get_shape();
+                    const auto data_rank = data->get_output_partial_shape(0).rank();
 
                     const auto axis = node.get_attribute_value<int64_t>("axis", 1);
                     const auto normalized_axis =
-                        ngraph::normalize_axis(node.get_description(), axis, data_shape.size());
+                        ngraph::normalize_axis(node.get_description(), axis, data_rank);
 
                     const auto softmax =
                         std::make_shared<default_opset::Softmax>(data, normalized_axis);

@@ -120,31 +120,7 @@ std::shared_ptr<runtime::gpu::GPUCompiledFunction> runtime::gpu::GPUCompiledFunc
     const std::shared_ptr<ngraph::Function>& function,
     const std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
 {
-#if defined(NGRAPH_DEX_ONLY)
     return std::make_shared<runtime::gpu::GPUInternalFunction>(function, shared_context);
-#else
-    // For now codegen is default unless explicitly disabled
-    bool use_codegen = true;
-    if (auto env = std::getenv("NGRAPH_CODEGEN"))
-    {
-        std::string env_codegen(env);
-        for (auto& opt : get_case_variants({"0", "false"}))
-        {
-            if (env_codegen == opt)
-            {
-                use_codegen = false;
-            }
-        }
-    }
-    if (use_codegen)
-    {
-        return std::make_shared<runtime::gpu::GPUExternalFunction>(function, shared_context);
-    }
-    else
-    {
-        return std::make_shared<runtime::gpu::GPUInternalFunction>(function, shared_context);
-    }
-#endif
 }
 
 void runtime::gpu::GPUCompiledFunction::compile()

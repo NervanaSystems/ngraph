@@ -1786,11 +1786,6 @@ std::string runtime::gpu::GPU_Emitter::emit_v0_Atan2(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_v0_GroupConvolutionTranspose(EMIT_ARGS)
-{
-    throw unsupported_op("Unsupported op '" + node->description() + "'");
-}
-
 std::string runtime::gpu::GPU_Emitter::emit_v1_Broadcast(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
