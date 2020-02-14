@@ -18,7 +18,7 @@
 /VERSION.in                         @rkimballn1 @silee2
 
 /doc/                               @indie
-/doc/examples/mnist_mlp/dist_*      @wenzhe-nrv @indie
+/doc/examples/mnist_mlp/dist_*      @jianyinglang @indie
 /doc/*/*/frameworks/tensorflow_connect.rst      @shresthamalik @sayantan-nervana
 /doc/*/*/backends/plaidml-ng-api/   @diyessi
 /doc/*/*/inspection/                @diyessi
@@ -39,29 +39,29 @@ project/doc-contributor-README.rst  @indie
 /src/ngraph/autodiff/               @diyessi
 /src/ngraph/builder/                @sfvaroglu
 /src/ngraph/codegen/                @rkimballn1
-/src/ngraph/distributed.*           @wenzhe-nrv @diyessi
+/src/ngraph/distributed.*           @jianyinglang @diyessi
 /src/ngraph/frontend/ATen/          @silee2
 /src/ngraph/frontend/fluid/         @silee2
 /src/ngraph/frontend/onnx_import/   @postrational
 /src/ngraph/op/                     @diyessi
-/src/ngraph/op/allreduce.*pp        @wenzhe-nrv @diyessi
+/src/ngraph/op/allreduce.*pp        @jianyinglang @diyessi
 /src/ngraph/op/experimental/layers  @ilyachur
 /src/ngraph/pass/                   @diyessi
 /src/ngraph/pattern/                @diyessi
 /src/ngraph/runtime/                @rkimballn1
 /src/ngraph/runtime/cpu/            @jbobba
 /src/contrib/mlir/                  @nmostafa @dcaballe
-/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba
+/src/ngraph/runtime/cpu/builder/allreduce.*pp    @jianyinglang @jbobba
 /src/ngraph/runtime/dynamic/        @diyessi
 /src/ngraph/runtime/gpu/            @csullivan @rkimballn1
 /src/ngraph/runtime/interpreter/    @rkimballn1
 /src/ngraph/runtime/plaidml/        @diyessi
 /src/ngraph/runtime/reference/      @diyessi
-/src/ngraph/runtime/reference/allreduce.*pp      @wenzhe-nrv @diyessi
+/src/ngraph/runtime/reference/allreduce.*pp      @jianyinglang @diyessi
 /src/ngraph/type/                   @diyessi
 /src/ngraph/serializer.*pp          @rkimballn1
 
-/test/backend/distributed.in.cpp    @wenzhe-nrv @diyessi @jianyinglang
+/test/backend/distributed.in.cpp    @diyessi @jianyinglang
 /test/mlir/                         @nmostafa @dcaballe
 
 # Putting this last so it's not overridden by directory rules
