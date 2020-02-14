@@ -248,7 +248,6 @@ namespace
         inline size_t insertAttrs(opAttrs attrs);
 
         MemoryAnalysis* getMemAnalysis() const { return m_memAnalysis; }
-
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
@@ -1153,7 +1152,7 @@ namespace
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
 
         FuncOp callBackFunc = pass.getCallDecl(
-            "__mlir_callback_2_inputs",
+            "callback_2_inputs",
             {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
             {},
             rewriter);
@@ -1246,7 +1245,7 @@ namespace
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         auto callBackFunc = pass.getCallDecl(
-            "__mlir_callback_2_inputs",
+            "callback_2_inputs",
             {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
             {},
             rewriter);
@@ -1362,7 +1361,7 @@ namespace
 
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-        auto callBackFunc = pass.getCallDecl("__mlir_callback_3_inputs",
+        auto callBackFunc = pass.getCallDecl("callback_3_inputs",
                                              {unrankedMemrefTy,
                                               unrankedMemrefTy,
                                               unrankedMemrefTy,
@@ -1426,7 +1425,7 @@ namespace
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::SOFTMAX), 64);
 
         FuncOp callBackFunc =
-            pass.getCallDecl("__mlir_callback_1_input",
+            pass.getCallDecl("callback_1_input",
                              {unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
                              {},
                              rewriter);
@@ -2107,7 +2106,7 @@ namespace
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
 
         FuncOp callBackFunc =
-            pass.getCallDecl("__mlir_callback_1_input",
+            pass.getCallDecl("callback_1_input",
                              {unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
                              {},
                              rewriter);

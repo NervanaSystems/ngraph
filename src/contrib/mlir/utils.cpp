@@ -54,8 +54,8 @@ void ngraph::runtime::ngmlir::initializeNGraphMLIR()
         registerDialect<loop::LoopOpsDialect>();
         registerDialect<StandardOpsDialect>();
         registerDialect<vector::VectorOpsDialect>();
-        
-        // nGraph dialects. 
+
+        // nGraph dialects.
         registerDialect<mlir::NGraphOpsDialect>();
 
         // In-tree passes.
