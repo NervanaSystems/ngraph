@@ -38,6 +38,7 @@ namespace ngraph
                                 int64_t batch_axis,
                                 int64_t seq_axis);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
