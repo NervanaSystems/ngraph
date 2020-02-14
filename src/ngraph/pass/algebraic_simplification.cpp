@@ -64,11 +64,6 @@ static shared_ptr<pattern::Matcher>
     return matcher;
 }
 
-static shared_ptr<pattern::op::Label> get_broadcast_label(shared_ptr<pattern::Matcher> matcher)
-{
-    return static_pointer_cast<pattern::op::Label>(matcher->get_pattern()->get_argument(1));
-}
-
 //`simplify_concat` identifies slices-concat sequences
 // that cancel each other. Namely it replaces subgraphs
 // similar to the one below with `arg`
