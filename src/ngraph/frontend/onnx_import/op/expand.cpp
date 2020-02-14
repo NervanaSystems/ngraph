@@ -28,6 +28,7 @@
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -50,7 +51,10 @@ namespace ngraph
                             ->get_vector<std::size_t>();
 
                     const ngraph::Shape shape_shape{shape_vector};
-                    return {ngraph::op::numpy_style_broadcast(data, shape_shape)};
+                    return {std::make_shared<default_opset::Broadcast>(
+                        data,
+                        default_opset::Constant::create(
+                            element::i64, Shape{shape_shape.size()}, shape_shape))};
                 }
 
             } // namespace set_1

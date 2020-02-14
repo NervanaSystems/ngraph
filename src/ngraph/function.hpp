@@ -92,8 +92,8 @@ namespace ngraph
         /// \returns A const reference to the function's friendly name.
         const std::string& get_friendly_name() const;
 
-        std::list<std::shared_ptr<Node>> get_ops(bool include_control_deps = true) const;
-        std::list<std::shared_ptr<Node>> get_ordered_ops(bool include_control_deps = true) const;
+        std::vector<std::shared_ptr<Node>> get_ops() const;
+        std::vector<std::shared_ptr<Node>> get_ordered_ops() const;
         void map_unordered_ops(std::function<void(Node*)> f) const;
 
         friend std::ostream& operator<<(std::ostream&, const Function&);
@@ -126,6 +126,10 @@ namespace ngraph
         void replace_parameter(size_t parameter_index,
                                const std::shared_ptr<op::Parameter>& parameter);
 
+        using topological_sort_t = std::function<std::vector<std::shared_ptr<Node>>(
+            const std::vector<std::shared_ptr<Node>>& root_nodes)>;
+        void set_topological_sort(topological_sort_t);
+
     protected:
         size_t m_temporary_pool_size;
 
@@ -139,5 +143,6 @@ namespace ngraph
         std::string m_name;
         const std::string m_unique_name;
         size_t m_placement{0};
+        topological_sort_t m_topological_sorter;
     };
 }

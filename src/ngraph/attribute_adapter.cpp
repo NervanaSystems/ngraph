@@ -201,6 +201,26 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
+#ifdef __APPLE__
+    // size_t is not uint_64t on OSX
+    constexpr DiscreteTypeInfo AttributeAdapter<size_t>::type_info;
+    const int64_t& AttributeAdapter<size_t>::get()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = m_value;
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+
+    void AttributeAdapter<size_t>::set(const int64_t& value)
+    {
+        m_value = value;
+        m_buffer_valid = false;
+    }
+#endif
+
     constexpr DiscreteTypeInfo AttributeAdapter<vector<int64_t>>::type_info;
 
     const vector<int64_t>& AttributeAdapter<vector<int64_t>>::get() { return m_value; }

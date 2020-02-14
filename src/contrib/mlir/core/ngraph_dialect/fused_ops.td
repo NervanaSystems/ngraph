@@ -21,7 +21,7 @@
 #ifdef NG_FUSED_OPS
 #else
 #define NG_FUSED_OPS
-
+ 
 // Squeeze Op
 def NGSqueezeOp : 
     NG_OneResult_Op<"squeeze", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
@@ -1010,6 +1010,4 @@ def NGConvBiasAddOp :
     void setWithRelu(const Attribute& attr)  {this->setAttr("withRelu", attr); }
   }];
 }
-
-
 #endif //NG_FUSED_OPS

@@ -22,8 +22,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "ngraph/log.hpp"
-
 namespace ngraph
 {
     enum class Placement

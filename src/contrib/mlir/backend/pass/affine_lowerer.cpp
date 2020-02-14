@@ -331,7 +331,7 @@ namespace
         IdToMemRefMap m_id_to_memref;
         MemoryAnalysis* m_memAnalysis;
         // TODO: Workaround for findOutputValues and buildOutputDefs. See NGCPU-470.
-        std::string funcName;
+        StringRef funcName;
 
         // Store the attributes needed by callback
         std::vector<opAttrs> m_attrsVec;
@@ -405,7 +405,7 @@ namespace
     void DialectLoweringPass::findOutputValues()
     {
         FuncOp f = getModule().lookupSymbol<mlir::FuncOp>(funcName);
-        NGRAPH_CHECK(f, "FuncOp '" + funcName + "' not found");
+        NGRAPH_CHECK(f, "FuncOp '" + funcName.str() + "' not found");
 
         SmallVector<Value, 4> outputList;
         unsigned outputCount = 0;
@@ -432,7 +432,7 @@ namespace
                                                                PatternRewriter& rewriter)
     {
         FuncOp f = getModule().lookupSymbol<mlir::FuncOp>(funcName);
-        NGRAPH_CHECK(f, "FuncOp '" + funcName + "' not found");
+        NGRAPH_CHECK(f, "FuncOp '" + funcName.str() + "' not found");
 
         SmallVector<Value, 4> newResults;
         for (auto origResult : op->getResults())
@@ -561,7 +561,7 @@ namespace
     void DialectLoweringPass::insertNoAliasArgAttrs()
     {
         FuncOp func = getModule().lookupSymbol<mlir::FuncOp>(funcName);
-        NGRAPH_CHECK(func, "FuncOp '" + funcName + "' not found");
+        NGRAPH_CHECK(func, "FuncOp '" + funcName.str() + "' not found");
 
         unsigned int argIdx = 0;
         for (auto arg : func.getArguments())
@@ -1409,7 +1409,7 @@ namespace
         // For each operand, generate a separate loop to copy into the target slice of "result".
         // We'll keep track of the slice offsets via concatenation_axis_pos.
         auto concatenationAxis = concat.concatenation_axis().getSExtValue();
-        IndexHandle concatenationAxisPos(index_t(0));
+        IndexHandle concatenationAxisPos(index_type(0));
 
         for (auto& operand : operands)
         {
