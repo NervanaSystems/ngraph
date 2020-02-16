@@ -502,3 +502,4 @@ model_lstm_fwd_hardsigmoid_activation
 model_acosh
 model_asinh
 model_atanh
+model_conv_with_dynamic_batch
