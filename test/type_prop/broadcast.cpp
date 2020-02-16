@@ -361,13 +361,17 @@ TEST(type_prop, broadcast_v1_axes_wrong_rank)
     }
 }
 
-TEST(type_prop, broadcast_v1_output_partial_shape_dynamic)
+TEST(type_prop, broadcast_v1_fully_dynamic_target_shape)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
     auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
 
     auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
+    ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
+
+    bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
     ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
 }
 
