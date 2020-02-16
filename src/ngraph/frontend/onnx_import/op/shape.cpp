@@ -39,8 +39,9 @@ namespace ngraph
                     {
                         const auto static_data_shape = data_shape.to_shape();
 
-                        return {default_opset::Constant::create(
-                            ngraph::element::i64, Shape{static_data_shape.size()}, static_data_shape)};
+                        return {default_opset::Constant::create(ngraph::element::i64,
+                                                                Shape{static_data_shape.size()},
+                                                                static_data_shape)};
                     }
                     else
                     {
