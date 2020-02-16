@@ -377,8 +377,6 @@ class BuildExt(build_ext):
 
     def build_extensions(self):
         """Build extension providing extra compiler flags."""
-        if sys.platform == 'win32':
-            raise RuntimeError('Unsupported platform: win32!')
         # -Wstrict-prototypes is not a valid option for c++
         try:
             self.compiler.compiler_so.remove('-Wstrict-prototypes')

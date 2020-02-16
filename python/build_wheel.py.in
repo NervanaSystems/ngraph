@@ -1,0 +1,72 @@
+
+PYBIND_HEADERS_PATH="@CMAKE_CURRENT_BINARY_DIR@/pybind11"
+NGRAPH_CPP_BUILD_PATH="@CMAKE_INSTALL_PREFIX@/"
+NGRAPH_ONNX_IMPORT_ENABLE="@NGRAPH_ONNX_IMPORT_ENABLE@"
+NGRAPH_VERSION="@NGRAPH_WHEEL_VERSION@"
+
+PYTHON_API_SOURCE_DIR="@CMAKE_CURRENT_SOURCE_DIR@"
+BUILD_DIR="@CMAKE_CURRENT_BINARY_DIR@"
+
+print("===============")
+print("PYBIND_HEADERS_PATH: ", PYBIND_HEADERS_PATH)
+print("NGRAPH_CPP_BUILD_PATH: ", NGRAPH_CPP_BUILD_PATH)
+print("NGRAPH_ONNX_IMPORT_ENABLE: ", NGRAPH_ONNX_IMPORT_ENABLE)
+print("NGRAPH_VERSION: ", NGRAPH_VERSION)
+print("PYTHON_API_SOURCE_DIR: ", PYTHON_API_SOURCE_DIR)
+print("BUILD_DIR: ", BUILD_DIR)
+print("===============")
+
+from sys import version_info
+import os
+import subprocess
+import sys
+
+print('Building ngraph wheel for Python {}'.format(version_info.major))
+
+BUILD_DEPS = ['setuptools', 'wheel']
+
+try:
+    venv_dir = os.path.join(os.path.curdir, 'whl_build_venv')
+    print("Creating a virtualenv to build the wheel in: ", os.path.abspath(venv_dir))
+    subprocess.check_call(['virtualenv', venv_dir])
+
+    venv_activator = os.path.abspath(os.path.join(venv_dir, "Scripts", "activate.bat"))
+    print("Activating the virtualenv...")
+    os.startfile(venv_activator)
+
+    print("Installing build dependencies...")
+    pip_install_cmd = ['pip', 'install', '-U']
+    pip_install_cmd.extend(BUILD_DEPS)
+    subprocess.check_call(pip_install_cmd)
+
+    build_env_variables = {"PYBIND_HEADERS_PATH": PYBIND_HEADERS_PATH,
+                           "NGRAPH_CPP_BUILD_PATH": NGRAPH_CPP_BUILD_PATH,
+                           "NGRAPH_ONNX_IMPORT_ENABLE": NGRAPH_ONNX_IMPORT_ENABLE,
+                           "NGRAPH_VERSION": NGRAPH_VERSION}
+    env = os.environ
+    env.update(build_env_variables)
+
+    build_log = subprocess.run(['python', os.path.join(PYTHON_API_SOURCE_DIR, 'setup.py'), 'bdist_wheel'],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                check=True, env=env)
+
+    print(build_log.stdout)
+    print(build_log.stderr)
+    # subprocess.check_call(['python', os.path.join(PYTHON_API_SOURCE_DIR, 'setup.py'), 'sdist'])
+
+    print("Deactivating the temporary build virtualenv")
+    venv_deactivator = os.path.abspath(os.path.join(venv_dir, "Scripts", "deactivate.bat"))
+    os.startfile(venv_deactivator)
+except subprocess.CalledProcessError as err:
+    print("Could not complete the wheel building process")
+    print("Command that failed: ", err.cmd)
+    print("Command std output: ", err.stdout.decode('utf-8'))
+    print("Command err output: ", err.stderr.decode('utf-8'))
+    sys.exit(1)
+
+# virtualenv build_venv
+# call build_venv/Scripts/activate.bat
+# pip install --upgrade setuptools pip wheel
+# python %SOURCE_DIR%/setup.py bdist_wheel
+# python %SOURCE_DIR%/setup.py sdist
+# deactivate
