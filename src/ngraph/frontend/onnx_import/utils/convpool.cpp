@@ -30,9 +30,10 @@ namespace ngraph
         {
             Shape get_kernel_shape(const Node& node)
             {
-                std::size_t input_spatial_dims = node.get_ng_inputs().at(0)->get_shape().size() - 2;
-                return node.get_attribute_value<std::vector<std::size_t>>(
-                    "kernel_shape", std::vector<std::size_t>(input_spatial_dims, 1UL));
+                const auto& data_shape = node.get_ng_inputs().at(0)->get_output_partial_shape(0);
+                const size_t input_spatial_dims = static_cast<size_t>(data_shape.rank()) - 2;
+                return node.get_attribute_value<std::vector<size_t>>(
+                    "kernel_shape", std::vector<size_t>(input_spatial_dims, 1UL));
             }
 
             namespace detail
