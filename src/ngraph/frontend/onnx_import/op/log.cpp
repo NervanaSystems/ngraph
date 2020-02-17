@@ -16,10 +16,8 @@
 
 #include <memory>
 
-#include "core/node.hpp"
-#include "default_opset.hpp"
 #include "log.hpp"
-#include "ngraph/node.hpp"
+#include "default_opset.hpp"
 
 namespace ngraph
 {

@@ -17,7 +17,7 @@
 #pragma once
 
 #include "core/node.hpp"
-#include "ngraph/node.hpp"
+#include "ngraph/output_vector.hpp"
 
 namespace ngraph
 {
