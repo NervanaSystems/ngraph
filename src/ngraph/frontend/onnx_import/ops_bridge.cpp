@@ -50,6 +50,7 @@
 #include "op/dequantize_linear.hpp"
 #include "op/div.hpp"
 #include "op/dropout.hpp"
+#include "op/dynamic_quantize_linear.hpp"
 #include "op/elu.hpp"
 #include "op/equal.hpp"
 #include "op/erf.hpp"
@@ -101,6 +102,7 @@
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
 #include "op/reverse_sequence.hpp"
+#include "op/round.hpp"
 #include "op/scatter_nd.hpp"
 #include "op/selu.hpp"
 #include "op/shape.hpp"
@@ -268,6 +270,7 @@ namespace ngraph
             REGISTER_OPERATOR("Div", 1, div);
             REGISTER_OPERATOR("Div", 7, div);
             REGISTER_OPERATOR("Dropout", 1, dropout);
+            REGISTER_OPERATOR("DynamicQuantizeLinear", 1, dynamic_quantize_linear);
             REGISTER_OPERATOR("Elu", 1, elu);
             REGISTER_OPERATOR("Equal", 1, equal);
             REGISTER_OPERATOR("Erf", 1, erf);
@@ -334,6 +337,7 @@ namespace ngraph
             REGISTER_OPERATOR("Relu", 1, relu);
             REGISTER_OPERATOR("Reshape", 1, reshape);
             REGISTER_OPERATOR("ReverseSequence", 1, reverse_sequence);
+            REGISTER_OPERATOR("Round", 1, round);
             REGISTER_OPERATOR("ScatterND", 1, scatter_nd);
             REGISTER_OPERATOR("Selu", 1, selu);
             REGISTER_OPERATOR("Shape", 1, shape);

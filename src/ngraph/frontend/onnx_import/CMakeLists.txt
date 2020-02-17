@@ -84,6 +84,8 @@ add_library(onnx_import STATIC
         op/dequantize_linear.hpp
         op/div.hpp
         op/dropout.hpp
+        op/dynamic_quantize_linear.cpp
+        op/dynamic_quantize_linear.hpp
         op/elu.cpp
         op/elu.hpp
         op/equal.hpp
@@ -168,6 +170,8 @@ add_library(onnx_import STATIC
         op/reshape.hpp
         op/reverse_sequence.cpp
         op/reverse_sequence.hpp
+        op/round.cpp
+        op/round.hpp
         op/scatter_nd.cpp
         op/scatter_nd.hpp
         op/selu.cpp
@@ -232,12 +236,18 @@ set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 add_dependencies(onnx_import_interface onnx::libonnx onnx::libonnx_proto)
 add_dependencies(onnx_import onnx_import_interface)
 
+message("ONNX_PROTO_INCLUDE_DIR")
+message(${ONNX_PROTO_INCLUDE_DIR})
+message("ONNX_INCLUDE_DIR")
+message(${ONNX_INCLUDE_DIR})
+message("Protobuf_INCLUDE_DIR")
+message(${Protobuf_INCLUDE_DIR})
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(onnx_import
     SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
-target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} ${ONNX_PROTO_LIBRARY})
-
+target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} ${ONNX_LIBRARIES})
+target_link_libraries(onnx_import_interface PRIVATE ${Protobuf_LIBRARIES} ${ONNX_LIBRARIES})
 target_compile_definitions(onnx_import PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
 
 set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)

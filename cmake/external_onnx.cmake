@@ -21,17 +21,18 @@ include(ExternalProject)
 # ONNX.proto definition version
 #------------------------------------------------------------------------------
 
-set(ONNX_VERSION 1.6.0)
+set(ONNX_BRANCH etusien/attribute_in_function)
 
 #------------------------------------------------------------------------------
 # Download and install libonnx ...
 #------------------------------------------------------------------------------
 
-set(ONNX_GIT_REPO_URL https://github.com/onnx/onnx.git)
-set(ONNX_GIT_BRANCH rel-${ONNX_VERSION})
+set(ONNX_GIT_REPO_URL https://github.com/NervanaSystems/onnx.git)
+set(ONNX_GIT_BRANCH ${ONNX_BRANCH})
 
 add_definitions(-DONNX_BUILD_SHARED_LIBS=ON)
 add_definitions(-DONNX_ML=ON)
+add_definitions(-DONNX_NAMESPACE=onnx)
 
 ExternalProject_Add(
     ext_onnx
