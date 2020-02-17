@@ -14,12 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <vector>
-
+#include "ngraph/op/fused/squeeze.hpp"
 #include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/validation_util.hpp"
 #include "squeeze.hpp"
 
@@ -42,6 +40,7 @@ namespace ngraph
                         ngraph::normalize_axes(node.get_description(), axes, data_rank);
                     auto axes_node = std::make_shared<default_opset::Constant>(
                         element::u64, Shape{normalized_axes.size()}, normalized_axes);
+
                     return {std::make_shared<default_opset::Squeeze>(data, axes_node)};
                 }
 
