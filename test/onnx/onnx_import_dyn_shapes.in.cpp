@@ -259,3 +259,26 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, model_atanh_3_2)
 
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, model_conv_with_dynamic_batch)
+{
+    const auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/conv_with_dynamic_batch.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const auto data_shape = Shape{1, 3, 7, 7};
+    const auto filters_shape = Shape{10, 3, 2, 2};
+    const auto data_elems = shape_size(data_shape);
+    const auto filters_elems = shape_size(filters_shape);
+
+    test_case.add_input<int64_t>(data_shape, std::vector<int64_t>(data_elems, 1));
+    test_case.add_input<int64_t>(filters_shape, std::vector<int64_t>(filters_elems, 1));
+    test_case.add_input<int64_t>(Shape{10}, std::vector<int64_t>(10, 1));
+
+    const auto expected_out_shape = Shape{1, 10, 6, 6};
+    const std::vector<int64_t> expected_values(shape_size(expected_out_shape), 13);
+    test_case.add_expected_output<int64_t>(expected_out_shape, expected_values);
+
+    test_case.run();
+}
