@@ -38,11 +38,6 @@ op::TensorIterator::TensorIterator(const OutputVector& values)
 {
 }
 
-bool ngraph::op::TensorIterator::visit_attributes(AttributeVisitor& visitor)
-{
-    return true;
-}
-
 op::TensorIterator::InputDescription::InputDescription(uint64_t input_index,
                                                        uint64_t body_parameter_index)
     : m_input_index(input_index)

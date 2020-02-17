@@ -42,8 +42,6 @@ namespace ngraph
                 TensorIterator() = default;
                 TensorIterator(const OutputVector& values);
 
-                bool visit_attributes(AttributeVisitor& visitor) override;
-
                 class NGRAPH_API BodyLambda : public Lambda
                 {
                 public:
