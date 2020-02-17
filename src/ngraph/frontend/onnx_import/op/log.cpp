@@ -16,8 +16,8 @@
 
 #include <memory>
 
-#include "log.hpp"
 #include "default_opset.hpp"
+#include "log.hpp"
 
 namespace ngraph
 {
