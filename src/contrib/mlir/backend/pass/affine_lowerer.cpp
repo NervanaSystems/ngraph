@@ -317,7 +317,7 @@ namespace
             // TODO: Encode no alias attribute as part of the function signature conversion or as a
             // separate rewrite pattern. Retrieve new function after signature conversion.
             // TODO: To be enabled in follow-up commit.
-            //insertNoAliasArgAttrs();
+            // insertNoAliasArgAttrs();
         }
 
         opAttrsVec = m_attrsVec;
@@ -492,7 +492,7 @@ namespace
 
     /// Add llvm.noalias attribute to all the memref function arguments. We know that this is safe
     /// by nGraph op semantics.
-    //void DialectLoweringPass::insertNoAliasArgAttrs()
+    // void DialectLoweringPass::insertNoAliasArgAttrs()
     //{
     //    FuncOp func = getModule().lookupSymbol<mlir::FuncOp>(funcName);
     //    NGRAPH_CHECK(func, "FuncOp '" + funcName.str() + "' not found");
