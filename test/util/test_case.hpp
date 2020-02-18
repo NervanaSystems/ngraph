@@ -186,34 +186,6 @@ namespace ngraph
             void run(size_t tolerance_bits = DEFAULT_FLOAT_TOLERANCE_BITS);
 
         private:
-            // template <>
-            // typename std::enable_if<true, ::testing::AssertionResult>::type
-            //     compare_values(const std::shared_ptr<ngraph::op::Constant>& expected_results,
-            //                    const std::shared_ptr<ngraph::runtime::Tensor>& results)
-            // {
-            //     const auto expected = expected_results->get_vector<char>();
-            //     const auto result = read_vector<char>(results);
-
-            //     if (true)
-            //     {
-            //         std::cout << get_results_str<char>(expected, result, expected.size());
-            //     }
-
-            //     return ngraph::test::all_close(expected, result);
-            // }
-
-            template <typename T>
-            typename std::enable_if<std::is_same<T, char>::value,
-                                    ::testing::AssertionResult>::type
-                compare_values(const std::shared_ptr<ngraph::op::Constant>& expected_results,
-                               const std::shared_ptr<ngraph::runtime::Tensor>& results)
-            {
-                const auto expected = expected_results->get_vector<T>();
-                const auto result = read_vector<T>(results);
-                std::cout << get_results_str<T>(expected, result, expected.size());
-                return ngraph::test::all_close(expected, result);
-            }
-
             template <typename T>
             typename std::enable_if<std::is_floating_point<T>::value,
                                     ::testing::AssertionResult>::type
@@ -232,7 +204,7 @@ namespace ngraph
             }
 
             template <typename T>
-            typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, char>::value, ::testing::AssertionResult>::type
+            typename std::enable_if<std::is_integral<T>::value, ::testing::AssertionResult>::type
                 compare_values(const std::shared_ptr<ngraph::op::Constant>& expected_results,
                                const std::shared_ptr<ngraph::runtime::Tensor>& results)
             {
@@ -243,24 +215,9 @@ namespace ngraph
                 {
                     std::cout << get_results_str<T>(expected, result, expected.size());
                 }
+
                 return ngraph::test::all_close(expected, result);
             }
-
-            // template <typename T>
-            // typename std::enable_if<std::is_same<T, char>::value,
-            // ::testing::AssertionResult>::type
-            //     compare_values(const std::shared_ptr<ngraph::op::Constant>& expected_results,
-            //                    const std::shared_ptr<ngraph::runtime::Tensor>& results)
-            // {
-            //     const auto expected = expected_results->get_vector<T>();
-            //     const auto result = read_vector<T>(results);
-
-            //     if (m_dump_results)
-            //     {
-            //         std::cout << get_results_str<T>(expected, result, expected.size());
-            //     }
-            //     return ngraph::test::all_close(expected, result, T(0), T(0));
-            // }
 
             using value_comparator_function = std::function<::testing::AssertionResult(
                 const std::shared_ptr<ngraph::op::Constant>&,
@@ -285,7 +242,8 @@ namespace ngraph
                 REGISTER_COMPARATOR(u16, uint16_t),
                 REGISTER_COMPARATOR(u32, uint32_t),
                 REGISTER_COMPARATOR(u64, uint64_t),
-                REGISTER_COMPARATOR(boolean, char)};
+                REGISTER_COMPARATOR(boolean, char)
+            };
 #undef REGISTER_COMPARATOR
 
         protected:
@@ -300,5 +258,5 @@ namespace ngraph
             bool m_dump_results = false;
             int m_tolerance_bits = DEFAULT_DOUBLE_TOLERANCE_BITS;
         };
-    } // namespace test
-} // namespace ngraph
+    }
+}
