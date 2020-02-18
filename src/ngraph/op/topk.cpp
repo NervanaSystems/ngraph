@@ -287,7 +287,7 @@ void op::v1::TopK::validate_and_infer_types()
     if (output_shape.rank().is_static())
     {
         m_normalized_axis =
-            ngraph::normalize_axis(this, m_axis, static_cast<int64_t>(output_shape.rank()));
+            ngraph::normalize_axis(this, m_axis, output_shape.rank());
         if (k != 0)
         {
             output_shape[m_normalized_axis] = k;
@@ -304,7 +304,7 @@ void op::v1::TopK::set_axis(const int64_t axis)
     const auto input_rank = get_input_partial_shape(0).rank();
     if (input_rank.is_static())
     {
-        m_normalized_axis = ngraph::normalize_axis(this, axis, static_cast<int64_t>(input_rank));
+        m_normalized_axis = ngraph::normalize_axis(this, axis, input_rank);
     }
     else
     {
