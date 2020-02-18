@@ -1,6 +1,6 @@
 
 PYBIND_HEADERS_PATH="@CMAKE_CURRENT_BINARY_DIR@/pybind11"
-NGRAPH_CPP_BUILD_PATH="@CMAKE_INSTALL_PREFIX@/"
+NGRAPH_CPP_BUILD_PATH="@CMAKE_INSTALL_PREFIX@"
 NGRAPH_ONNX_IMPORT_ENABLE="@NGRAPH_ONNX_IMPORT_ENABLE@"
 NGRAPH_VERSION="@NGRAPH_WHEEL_VERSION@"
 
@@ -46,13 +46,15 @@ try:
     env = os.environ
     env.update(build_env_variables)
 
-    build_log = subprocess.run(['python', os.path.join(PYTHON_API_SOURCE_DIR, 'setup.py'), 'bdist_wheel'],
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                check=True, env=env)
+    print("Running setup.py bdist_wheel")
+    build_log = subprocess.Popen(['python', os.path.join(PYTHON_API_SOURCE_DIR, 'setup.py'), 'bdist_wheel'],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, universal_newlines=True)
 
-    print(build_log.stdout)
-    print(build_log.stderr)
-    # subprocess.check_call(['python', os.path.join(PYTHON_API_SOURCE_DIR, 'setup.py'), 'sdist'])
+    for line in build_log.stdout:
+        sys.stdout.write(line)
+
+    print("Running setup.py sdist")
+    subprocess.check_call(['python', os.path.join(PYTHON_API_SOURCE_DIR, 'setup.py'), 'sdist'])
 
     print("Deactivating the temporary build virtualenv")
     venv_deactivator = os.path.abspath(os.path.join(venv_dir, "Scripts", "deactivate.bat"))
