@@ -119,7 +119,7 @@ TEST(algebraic_simplification, add_broadcast)
     }
 }
 
-TEST(algebraic_simplification, multiply_broadcast)
+TEST(algebraic_simplification, multiply_broadcast_0)
 {
     Shape shape{2, 2};
     pass::Manager pass_manager;
@@ -139,12 +139,40 @@ TEST(algebraic_simplification, multiply_broadcast)
                                         ParameterVector{a, b, c});
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Add>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Multiply>(f), 0);
     auto expected = ngraph::NodeVector{a, b, const_broadcast, c, const_broadcast};
     auto results = f->get_results();
     for (size_t i = 0; i < results.size(); i++)
     {
         ASSERT_EQ(expected.at(i), results.at(i)->get_argument(0));
+    }
+}
+
+TEST(algebraic_simplification, multiply_broadcast_1)
+{
+    Shape shape{2, 2};
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto c = make_shared<op::Parameter>(element::i32, shape);
+    auto const_broadcast = ngraph::builder::make_constant<int32_t>(element::i32, shape, 1);
+    auto mul_a_0 = a * const_broadcast;
+    auto mul_a_0_0 = mul_a_0 * const_broadcast;
+    auto mul_b_0 = b * const_broadcast;
+    auto mul_b_0_0 = mul_b_0 * const_broadcast;
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, mul_a_0_0, c, mul_b_0_0},
+                                        ParameterVector{a, b, c});
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Multiply>(f), 0);
+    auto expected = ngraph::NodeVector{a, b, a, c, b};
+    auto results = f->get_results();
+    for (size_t i = 0; i < results.size(); i++)
+    {
+        ASSERT_EQ(expected[i], results[i]->get_argument(0));
     }
 }
 
