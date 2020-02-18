@@ -264,26 +264,6 @@ shared_ptr<Node> op::LSTMSequence::prepare_input(Output<Node> node, bool is_reve
 namespace ngraph
 {
     template <>
-    EnumNames<op::LSTMWeightsFormat>& EnumNames<op::LSTMWeightsFormat>::get()
-    {
-        static auto enum_names =
-            EnumNames<op::LSTMWeightsFormat>("op::LSTMWeightsFormat",
-                                             {{"fico", op::LSTMWeightsFormat::FICO},
-                                              {"icof", op::LSTMWeightsFormat::ICOF},
-                                              {"ifco", op::LSTMWeightsFormat::IFCO},
-                                              {"ifoc", op::LSTMWeightsFormat::IFOC},
-                                              {"iofc", op::LSTMWeightsFormat::IOFC}});
-        return enum_names;
-    }
-
-    constexpr DiscreteTypeInfo AttributeAdapter<op::LSTMWeightsFormat>::type_info;
-
-    std::ostream& operator<<(std::ostream& s, const op::LSTMWeightsFormat& type)
-    {
-        return s << as_string(type);
-    }
-
-    template <>
     EnumNames<op::v0::LSTMSequence::direction>& EnumNames<op::v0::LSTMSequence::direction>::get()
     {
         static auto enum_names = EnumNames<op::v0::LSTMSequence::direction>(
