@@ -32,7 +32,7 @@ namespace ngraph
                     auto count = default_opset::Constant::create(
                         sum->get_element_type(),
                         Shape{},
-                        std::vector<int>{node.get_ng_inputs().size()});
+                        std::vector<int>{static_cast<int>(node.get_ng_inputs().size())});
 
                     return {std::make_shared<default_opset::Divide>(sum, count)};
                 }
