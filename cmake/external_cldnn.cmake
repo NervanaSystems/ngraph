@@ -21,8 +21,8 @@ include(ExternalProject)
 # Download and install GoogleTest ...
 #------------------------------------------------------------------------------
 
-set(CLDNN_GIT_REPO_URL https://github.com/intel/clDNN.git)
-set(CLDNN_GIT_LABEL v0.1.0)
+set(CLDNN_GIT_REPO_URL https://github.com/opencv/dldt.git)
+set(CLDNN_GIT_LABEL 2020.1)
 set(OUT_DIR ${EXTERNAL_PROJECTS_ROOT}/cldnn/out)
 
 ExternalProject_Add(
