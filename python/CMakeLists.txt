@@ -36,6 +36,7 @@ if (WIN32)
         configure_file(${BUILD_PY_IN} ${BUILD_PY} @ONLY)
 
         add_custom_command(
+                DEPENDS pybind11
                 OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dist/
                 POST_BUILD
                 WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
@@ -47,6 +48,7 @@ else()
         configure_file(${BUILD_SH_IN} ${BUILD_SH} @ONLY)
 
         add_custom_command(
+                DEPENDS pybind11
                 OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dist/
                 POST_BUILD
                 WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
