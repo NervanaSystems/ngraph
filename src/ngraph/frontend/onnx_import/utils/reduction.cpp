@@ -107,9 +107,9 @@ namespace ngraph
 
                 const auto op_node = reduction_function(
                     ng_input,
-                    std::make_shared<ngraph::op::Constant>(element::i64,
-                                                           ngraph::Shape{reduction_axes.size()},
-                                                           reduction_axes.to_vector()),
+                    std::make_shared<default_opset::Constant>(element::i64,
+                                                              ngraph::Shape{reduction_axes.size()},
+                                                              reduction_axes.to_vector()),
                     static_cast<bool>(keepdims));
 
                 return op_node;

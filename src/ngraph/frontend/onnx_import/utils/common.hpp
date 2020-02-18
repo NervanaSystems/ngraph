@@ -87,7 +87,7 @@ namespace ngraph
             ///
             /// \return A Constant node representing shifted identity matrix.
             template <typename T = double>
-            std::shared_ptr<ngraph::op::Constant>
+            std::shared_ptr<default_opset::Constant>
                 shifted_square_identity(const Shape output_shape,
                                         const element::Type& output_type,
                                         const std::int64_t shift)
