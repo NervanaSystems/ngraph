@@ -40,7 +40,9 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> one_node =
                         std::make_shared<default_opset::Constant>(
                             data->get_element_type(), Shape{}, std::vector<double>{1});
-                    one_node = ngraph::op::make_broadcast_node(one_node, data->get_shape());
+                    auto abs_data = std::make_shared<default_opset::Abs>(data);
+                    auto data_plus_one_node =
+                        std::make_shared<default_opset::Multiply>(data, one_node);
 
                     return {data / (std::make_shared<default_opset::Abs>(data) + one_node)};
                 }
