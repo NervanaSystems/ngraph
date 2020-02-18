@@ -340,8 +340,7 @@ namespace ngraph
                 {
                     if (tensor.has_raw_data())
                     {
-                        return detail::__get_raw_data<char>(tensor.raw_data(),
-                                                            tensor.data_type());
+                        return detail::__get_raw_data<char>(tensor.raw_data(), tensor.data_type());
                     }
                     if (tensor.data_type() == onnx::TensorProto_DataType_BOOL)
                     {
