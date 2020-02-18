@@ -112,13 +112,23 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_binary_add_abc)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, test_tensor_bool_type)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, test_tensor_bool_type_and)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/bool_type.prototxt"));
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_expected_output<char>({1});
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, test_tensor_bool_type_pass)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/bool_type_pass.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_expected_output<char>({0});
     test_case.run();
 }
 

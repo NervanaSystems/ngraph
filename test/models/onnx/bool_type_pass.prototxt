@@ -1,0 +1,33 @@
+ir_version: 3
+producer_name: "nGraph ONNX Importer"
+graph {
+  name: "test_graph"
+  initializer {
+    data_type: 9
+    name: "B"
+    int32_data: 0
+  }
+  input {
+    name: "B"
+    type {
+      tensor_type {
+        elem_type: 9
+        shape {
+        }
+      }
+    }
+  }
+  output {
+    name: "B"
+    type {
+      tensor_type {
+        elem_type: 9
+        shape {
+        }
+      }
+    }
+  }
+}
+opset_import {
+  version: 4
+}
