@@ -42,7 +42,7 @@ namespace ngraph
                             data->get_element_type(), Shape{}, std::vector<double>{1});
                     auto abs_data = std::make_shared<default_opset::Abs>(data);
                     auto data_plus_one_node =
-                        std::make_shared<default_opset::Multiply>(data, one_node);
+                        std::make_shared<default_opset::Multiply>(abs_data, one_node);
 
                     return {std::make_shared<default_opset::Divide>(data, data_plus_one_node)};
                 }
