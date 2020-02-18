@@ -35,9 +35,9 @@ Blob::Ptr fill_blob(SizeVector shape, std::vector<float> data)
     case 5: layout = Layout::NCDHW; break;
     default: THROW_IE_EXCEPTION << "Can't convert dims " << shape.size() << " to Layout!";
     }
-    Blob::Ptr blob(new TBlob<float>({Precision::FP32, shape, layout}));
+    MemoryBlob::Ptr blob(new TBlob<float>({Precision::FP32, shape, layout}));
     blob->allocate();
-    float* blob_ptr = (float*)(void*)blob->buffer();
+    float* blob_ptr = blob->rwmap().as<float*>();
     for (int i = 0; i < data.size(); i++)
     {
         blob_ptr[i] = data[i];
