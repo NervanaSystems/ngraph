@@ -46,7 +46,8 @@ namespace ngraph
                 /// \param   attr_name  Attribute name (such as `strides`, `dilations`)
                 ///
                 /// \return             Read vector attribute if available or default value
-                Strides get_attribute_value(const Node& node, const std::string& attr_name)
+                std::vector<std::size_t> get_attribute_value(const Node& node,
+                                                             const std::string& attr_name)
                 {
                     if (node.has_attribute(attr_name))
                     {
@@ -60,7 +61,7 @@ namespace ngraph
                                      attr_name,
                                      "' is not provided data rank must be static");
                     const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
-                    return Strides(data_spatial_dims, 1UL);
+                    return std::vector<std::size_t>(data_spatial_dims, 1UL);
                 }
             } // namespace detail
 
