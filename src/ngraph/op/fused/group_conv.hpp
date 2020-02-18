@@ -187,6 +187,7 @@ namespace ngraph
                                              const PadType& auto_pad = PadType::EXPLICIT,
                                              const CoordinateDiff& output_padding = {});
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual bool is_dynamic() const override;
                 virtual NodeVector decompose_op() const override;
                 virtual void pre_validate_and_infer_types() override;

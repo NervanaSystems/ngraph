@@ -18,6 +18,7 @@
 
 #include "group_conv.hpp"
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
@@ -217,6 +218,17 @@ op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
     , m_output_padding(output_padding)
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v1::GroupConvolutionBackpropData::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("dilations", m_dilations);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    visitor.on_attribute("output_padding", m_output_padding);
+    return true;
 }
 
 bool op::v1::GroupConvolutionBackpropData::is_dynamic() const
