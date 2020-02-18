@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/fused/lstm_sequence.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/frontend/onnx_import/utils/reshape.hpp"
@@ -31,6 +32,19 @@ using namespace ngraph;
 using namespace std;
 
 constexpr NodeTypeInfo op::LSTMSequence::type_info;
+bool ngraph::op::v0::LSTMSequence::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("hidden_size", m_hidden_size);
+    visitor.on_attribute("activations", m_activations);
+    visitor.on_attribute("activations_alpha", m_activations_alpha);
+    visitor.on_attribute("activations_beta", m_activations_beta);
+    visitor.on_attribute("clip", m_clip_threshold);
+    visitor.on_attribute("direction", m_direction);
+
+    visitor.on_attribute("input_forget", m_input_forget);
+    visitor.on_attribute("weights_format", m_weights_format);
+    return true;
+}
 NodeVector op::LSTMSequence::decompose_op() const
 {
     NodeVector results;
@@ -246,3 +260,44 @@ shared_ptr<Node> op::LSTMSequence::prepare_input(Output<Node> node, bool is_reve
     // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
     return builder::squeeze(tmp);
 }
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::LSTMWeightsFormat>& EnumNames<op::LSTMWeightsFormat>::get()
+    {
+        static auto enum_names =
+            EnumNames<op::LSTMWeightsFormat>("op::LSTMWeightsFormat",
+                                             {{"fico", op::LSTMWeightsFormat::FICO},
+                                              {"icof", op::LSTMWeightsFormat::ICOF},
+                                              {"ifco", op::LSTMWeightsFormat::IFCO},
+                                              {"ifoc", op::LSTMWeightsFormat::IFOC},
+                                              {"iofc", op::LSTMWeightsFormat::IOFC}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::LSTMWeightsFormat>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::LSTMWeightsFormat& type)
+    {
+        return s << as_string(type);
+    }
+
+    template <>
+    EnumNames<op::v0::LSTMSequence::direction>& EnumNames<op::v0::LSTMSequence::direction>::get()
+    {
+        static auto enum_names = EnumNames<op::v0::LSTMSequence::direction>(
+            "op::v0::LSTMSequence::direction",
+            {{"forward", op::v0::LSTMSequence::direction::FORWARD},
+             {"reverse", op::v0::LSTMSequence::direction::REVERSE},
+             {"bidirectional", op::v0::LSTMSequence::direction::BIDIRECTIONAL}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v0::LSTMSequence::direction>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::v0::LSTMSequence::direction& type)
+    {
+        return s << as_string(type);
+    }
+} // namespace ngraph

@@ -135,6 +135,7 @@ namespace ngraph
                 {
                 }
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual NodeVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
@@ -185,4 +186,37 @@ namespace ngraph
         }
         using v0::LSTMSequence;
     } // namespace op
+
+    std::ostream& operator<<(std::ostream& s, const op::LSTMWeightsFormat& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::LSTMWeightsFormat>
+        : public EnumAttributeAdapterBase<op::LSTMWeightsFormat>
+    {
+    public:
+        AttributeAdapter(op::LSTMWeightsFormat& value)
+            : EnumAttributeAdapterBase<op::LSTMWeightsFormat>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::LSTMWeightsFormat>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    std::ostream& operator<<(std::ostream& s, const op::v0::LSTMSequence::direction& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v0::LSTMSequence::direction>
+        : public EnumAttributeAdapterBase<op::v0::LSTMSequence::direction>
+    {
+    public:
+        AttributeAdapter(op::v0::LSTMSequence::direction& value)
+            : EnumAttributeAdapterBase<op::v0::LSTMSequence::direction>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v0::LSTMSequence::direction>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 } // namespace ngraph
