@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "default_opset.hpp"
+#include "exceptions.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/validation_util.hpp"
 #include "unsqueeze.hpp"
@@ -33,7 +34,12 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
                     auto axes = node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
-                    const auto expanded_rank = data->get_shape().size() + axes.size();
+                    const auto data_rank = data->get_output_partial_shape(0).rank();
+                    CHECK_VALID_NODE(node,
+                                     data_rank.is_static(),
+                                     "Data rank must be static for creation of ONNX Unsqueeze op");
+                    const auto expanded_rank =
+                        data->get_output_partial_shape(0).rank() + axes.size();
                     std::vector<std::size_t> normalized_axes =
                         ngraph::normalize_axes(node.get_description(), axes, expanded_rank);
                     auto axes_node = std::make_shared<default_opset::Constant>(

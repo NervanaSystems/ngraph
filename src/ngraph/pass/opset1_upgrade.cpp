@@ -13,17 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include "ngraph/pass/opset1_upgrade.hpp"
 
 #include <functional>
 #include <iterator>
 #include <limits>
 #include <numeric>
 
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/ops.hpp"
-#include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/provenance.hpp"
 
 using namespace std;
@@ -108,7 +108,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Broadcast> node)
     {
-        auto replacement_node = ngraph::op::opset1::make_broadcast(
+        auto replacement_node = ngraph::builder::opset1::make_broadcast(
             node->input_value(0), node->get_broadcast_shape(), node->get_broadcast_axes());
         replace_node(node, replacement_node.get_node_shared_ptr());
         return replacement_node.get_node_shared_ptr();
