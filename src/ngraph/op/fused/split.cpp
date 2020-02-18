@@ -67,8 +67,8 @@ void op::v0::Split::pre_validate_and_infer_types()
 
     const auto shape = input(0).get_shape();
 
-    m_axis = ngraph::normalize_axis(this, m_axis, shape.size());
-
+    const auto data_rank = get_input_partial_shape(0).rank();
+    m_axis = ngraph::normalize_axis(this, m_axis, data_rank);
     const auto dimension_at_axis = shape.at(m_axis);
     if (m_split_evenly)
     {
@@ -135,32 +135,30 @@ void op::v1::Split::validate_and_infer_types()
     NODE_VALIDATION_CHECK(
         this, axis_et.is_integral(), "The 'axis' input only accepts integral types");
 
-    if (input_value(1).get_node_shared_ptr()->is_constant())
+    if (input_value(1).get_node_shared_ptr()->is_constant() && data_ps.is_static())
     {
         const auto axis_input = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
         auto axis = axis_input->cast_vector<int64_t>()[0];
 
-        if (data_ps.is_static())
+        const auto data_rank = get_input_partial_shape(0).rank();
+        axis = ngraph::normalize_axis(this, axis, data_rank);
+
+        const auto data_shape = data_ps.to_shape();
+        const auto dimension_at_axis = data_shape.at(axis);
+
+        NODE_VALIDATION_CHECK(this,
+                              dimension_at_axis % m_num_splits == 0,
+                              "The input tensor's dimension pointed by the 'axis' parameter: ",
+                              dimension_at_axis,
+                              " has to be a multiple of the 'num_splits' attribute value: ",
+                              m_num_splits);
+
+        Shape each_output_shape{data_shape};
+        each_output_shape.at(axis) = dimension_at_axis / m_num_splits;
+
+        for (size_t i = 0; i < m_num_splits; ++i)
         {
-            const auto data_shape = data_ps.to_shape();
-            axis = ngraph::normalize_axis(this, axis, data_shape.size());
-
-            const auto dimension_at_axis = data_shape.at(axis);
-
-            NODE_VALIDATION_CHECK(this,
-                                  dimension_at_axis % m_num_splits == 0,
-                                  "The input tensor's dimension pointed by the 'axis' parameter: ",
-                                  dimension_at_axis,
-                                  " has to be a multiple of the 'num_splits' attribute value: ",
-                                  m_num_splits);
-
-            Shape each_output_shape{data_shape};
-            each_output_shape.at(axis) = dimension_at_axis / m_num_splits;
-
-            for (size_t i = 0; i < m_num_splits; ++i)
-            {
-                set_output_type(i, input(0).get_element_type(), each_output_shape);
-            }
+            set_output_type(i, input(0).get_element_type(), each_output_shape);
         }
     }
     else

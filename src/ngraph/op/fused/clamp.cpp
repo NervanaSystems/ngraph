@@ -36,6 +36,7 @@ void op::Clamp::pre_validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(
         this, m_min < m_max, "The 'min' parameter needs to be less than 'max' for Clamp");
+    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
 NodeVector op::Clamp::decompose_op() const
@@ -58,4 +59,11 @@ shared_ptr<Node> op::Clamp::copy_with_new_args(const NodeVector& new_args) const
                           new_args.size());
 
     return make_shared<Clamp>(new_args.at(0), m_min, m_max);
+}
+
+bool op::Clamp::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("min", m_min);
+    visitor.on_attribute("max", m_max);
+    return true;
 }

@@ -48,18 +48,13 @@ namespace ngraph
     }
 
     void traverse_nodes(const std::shared_ptr<const Function> p,
-                        std::function<void(std::shared_ptr<Node>)> f,
-                        bool include_control_deps = false);
+                        std::function<void(std::shared_ptr<Node>)> f);
 
-    void traverse_nodes(const Function* p,
-                        std::function<void(std::shared_ptr<Node>)> f,
-                        bool include_control_deps);
+    void traverse_nodes(const Function* p, std::function<void(std::shared_ptr<Node>)> f);
 
     /// \brief Visit each node in a sub-graph of the entire graph
     /// \param subgraph_results The output nodes of the sub-graph
     /// \param f Function to execute at each node in the traversal
-    /// \param include_control_deps Whether to include control deps
-    ///        while traversing the sub-graph
     /// \param subgraph_params Input nodes of the sub-graph (optional)
     ///
     /// Traverses a sub-graph starting from subgraph_results moving up
@@ -71,8 +66,13 @@ namespace ngraph
     /// subgraph relevant to the computation of certain outputs
     void traverse_nodes(const NodeVector& subgraph_results,
                         std::function<void(std::shared_ptr<Node>)> f,
-                        bool include_control_deps,
                         const NodeVector& subgraph_params = {});
+
+    void traverse_nodes(const NodeVector& subgraph_results,
+                        std::function<void(std::shared_ptr<Node>)> f,
+                        bool,
+                        const NodeVector& subgraph_params = {})
+        NGRAPH_DEPRECATED("Use traverse_nodes without control-deps option");
 
     void traverse_functions(std::shared_ptr<Function> p,
                             std::function<void(std::shared_ptr<Function>)> f)
@@ -217,6 +217,12 @@ namespace ngraph
     void replace_node(std::shared_ptr<Node> target,
                       std::shared_ptr<Node> replacement,
                       const std::vector<int64_t>& output_order);
+
+    /// Replace target.outputs[i] with replacement_values[i] and transfer control dependents and
+    /// provenance from target to the node(s) in replacement_values.
+    NGRAPH_API
+    void replace_node(const std::shared_ptr<Node>& target, const OutputVector& replacement_values);
+
     NGRAPH_API
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
@@ -252,12 +258,11 @@ namespace ngraph
 
     /// Topological sort of nodes needed to compute root_nodes
     template <typename T>
-    std::list<std::shared_ptr<Node>> topological_sort(T root_nodes,
-                                                      bool include_control_deps = false)
+    std::vector<std::shared_ptr<Node>> topological_sort(T root_nodes)
     {
         std::stack<Node*, std::vector<Node*>> nodes_to_do;
         std::unordered_set<Node*> nodes_done;
-        std::list<std::shared_ptr<Node>> result;
+        std::vector<std::shared_ptr<Node>> result;
 
         for (auto& node : root_nodes)
         {
@@ -272,23 +277,20 @@ namespace ngraph
                 size_t arg_count = node->get_input_size();
                 for (size_t i = 0; i < arg_count; ++i)
                 {
-                    Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
+                    Node* dep = node->get_input_node_ptr(arg_count - i - 1);
                     if (nodes_done.count(dep) == 0)
                     {
                         can_add = false;
                         nodes_to_do.push(dep);
                     }
                 }
-                if (include_control_deps)
+                for (auto& depptr : node->get_control_dependencies())
                 {
-                    for (auto& depptr : node->get_control_dependencies())
+                    Node* dep = depptr.get();
+                    if (nodes_done.count(dep) == 0)
                     {
-                        Node* dep = depptr.get();
-                        if (nodes_done.count(dep) == 0)
-                        {
-                            can_add = false;
-                            nodes_to_do.push(dep);
-                        }
+                        can_add = false;
+                        nodes_to_do.push(dep);
                     }
                 }
                 if (can_add)
@@ -308,13 +310,12 @@ namespace ngraph
 
     /// Topological sort of just nodes
     template <typename T>
-    std::list<std::shared_ptr<Node>> subgraph_topological_sort(T nodes,
-                                                               bool include_control_deps = false)
+    std::vector<std::shared_ptr<Node>> subgraph_topological_sort(T nodes)
     {
         std::stack<Node*, std::vector<Node*>> nodes_to_do;
         std::unordered_set<Node*> nodes_done;
         std::unordered_set<Node*> nodes_to_emit;
-        std::list<std::shared_ptr<Node>> result;
+        std::vector<std::shared_ptr<Node>> result;
 
         for (auto& node : nodes)
         {
@@ -332,23 +333,20 @@ namespace ngraph
                 size_t arg_count = node->get_input_size();
                 for (size_t i = 0; i < arg_count; ++i)
                 {
-                    Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
+                    Node* dep = node->get_input_node_ptr(arg_count - i - 1);
                     if (nodes_done.count(dep) == 0 && nodes_to_emit.count(node) != 0)
                     {
                         can_add = false;
                         nodes_to_do.push(dep);
                     }
                 }
-                if (include_control_deps)
+                for (auto& depptr : node->get_control_dependencies())
                 {
-                    for (auto& depptr : node->get_control_dependencies())
+                    Node* dep = depptr.get();
+                    if (nodes_done.count(dep) == 0)
                     {
-                        Node* dep = depptr.get();
-                        if (nodes_done.count(dep) == 0)
-                        {
-                            can_add = false;
-                            nodes_to_do.push(dep);
-                        }
+                        can_add = false;
+                        nodes_to_do.push(dep);
                     }
                 }
                 if (can_add)
@@ -388,8 +386,15 @@ namespace ngraph
     // input nodes are cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
     // NodeMap output (by reference) fully maps input and cloned nodes
+    std::vector<std::shared_ptr<ngraph::Node>>
+        clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map);
+
+    // input nodes are cloned and returned
+    // NodeMap input may contain default node mapping i.e. pre-cloned nodes
+    // NodeMap output (by reference) fully maps input and cloned nodes
     std::list<std::shared_ptr<ngraph::Node>>
-        clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map);
+        clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes,
+                    RawNodeOutputMap& node_map);
 
     // input function is cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
@@ -429,7 +434,7 @@ namespace ngraph
     // or a node that belongs to args
     NodeVector extract_subgraph(const NodeVector& results, const NodeVector& args);
 
-    bool is_one(std::shared_ptr<Node> reduce_constant);
+    bool is_one(const Output<Node>& reduce_constant);
 
     bool compare_constants(const std::shared_ptr<Node>& n1, const std::shared_ptr<Node>& n2);
 

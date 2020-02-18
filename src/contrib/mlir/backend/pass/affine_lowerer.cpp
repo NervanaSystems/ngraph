@@ -266,7 +266,7 @@ namespace
         IdToMemRefMap m_id_to_memref;
         MemoryAnalysis* m_memAnalysis;
         // TODO: Workaround for findOutputValues and buildOutputDefs. See NGCPU-470.
-        std::string funcName;
+        StringRef funcName;
 
         // Store the attributes needed by callback
         std::vector<opAttrs> m_attrsVec;
@@ -339,14 +339,14 @@ namespace
     void DialectLoweringPass::findOutputValues()
     {
         FuncOp f = getModule().lookupSymbol<mlir::FuncOp>(funcName);
-        NGRAPH_CHECK(f, "FuncOp '" + funcName + "' not found");
+        NGRAPH_CHECK(f, "FuncOp '" + funcName.str() + "' not found");
 
         SmallVector<Value, 4> outputList;
         unsigned outputCount = 0;
         unsigned inputCount = f.getType().getNumInputs();
         // we find out output values by looking at returned values
         // any return should return all outputs of the subgraph
-        f.walk([this, &outputCount, inputCount](NGReturnOp ret) {
+        f.walk([&outputCount, inputCount](NGReturnOp ret) {
             for (unsigned i = 0; i < ret.getNumOperands(); i++)
             {
                 // annotate instructions defining outputs with the arg idx of the output
@@ -366,7 +366,7 @@ namespace
                                                                PatternRewriter& rewriter)
     {
         FuncOp f = getModule().lookupSymbol<mlir::FuncOp>(funcName);
-        NGRAPH_CHECK(f, "FuncOp '" + funcName + "' not found");
+        NGRAPH_CHECK(f, "FuncOp '" + funcName.str() + "' not found");
 
         SmallVector<Value, 4> newResults;
         for (auto origResult : op->getResults())
@@ -495,7 +495,7 @@ namespace
     void DialectLoweringPass::insertNoAliasArgAttrs()
     {
         FuncOp func = getModule().lookupSymbol<mlir::FuncOp>(funcName);
-        NGRAPH_CHECK(func, "FuncOp '" + funcName + "' not found");
+        NGRAPH_CHECK(func, "FuncOp '" + funcName.str() + "' not found");
 
         unsigned int argIdx = 0;
         for (auto arg : func.getArguments())
@@ -798,7 +798,7 @@ namespace
         // For each operand, generate a separate loop to copy into the target slice of "result".
         // We'll keep track of the slice offsets via concatenation_axis_pos.
         auto concatenationAxis = concat.concatenation_axis().getSExtValue();
-        IndexHandle concatenationAxisPos(index_t(0));
+        IndexHandle concatenationAxisPos(index_type(0));
 
         for (auto& operand : operands)
         {
@@ -1324,38 +1324,39 @@ namespace
         }
         attrs.gemmAttrs2d.ldc = attrs.gemmAttrs2d.n;
 
-        int broadcastHint;
+        BroadcastType broadcastHint = BroadcastType::ERROR;
         if (vBias.rank() == 0)
         {
             // Scalar
-            broadcastHint = 2;
+            broadcastHint = BroadcastType::ROWCOLUMN;
         }
         else if (vBias.rank() == 2)
         {
             if (biasShape[0] == attrs.gemmAttrs2d.m && biasShape[1] == 1)
             {
-                broadcastHint = 1;
+                broadcastHint = BroadcastType::COLUMN;
             }
             else if (biasShape[0] == 1 && biasShape[1] == attrs.gemmAttrs2d.n)
             {
-                broadcastHint = 0;
+                broadcastHint = BroadcastType::ROW;
             }
-            else
+            else if (biasShape[0] == attrs.gemmAttrs2d.m && biasShape[1] == attrs.gemmAttrs2d.n)
             {
-                broadcastHint = -1;
+                broadcastHint = BroadcastType::NONE;
             }
         }
         else
         {
             if (biasShape[0] == attrs.gemmAttrs2d.m)
             {
-                broadcastHint = 1;
+                broadcastHint = BroadcastType::COLUMN;
             }
             else if (biasShape[0] == attrs.gemmAttrs2d.n)
             {
-                broadcastHint = 0;
+                broadcastHint = BroadcastType::ROW;
             }
         }
+        NGRAPH_CHECK(broadcastHint != BroadcastType::ERROR, "Unhandled broadcast");
         attrs.gemmAttrs2d.broadcastHint = broadcastHint;
 
         auto int64Ty = rewriter.getIntegerType(64);

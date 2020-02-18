@@ -68,22 +68,6 @@ Now you can start exploring some of the :doc:`onnx_integ` examples.
 
 See also nGraph's :doc:`../python_api/index`.
 
-PlaidML
--------
-
-See the :ref:`ngraph_plaidml_backend` section on how to build the 
-nGraph-PlaidML.
-
-
-Other integration paths
------------------------
-
-If you are considering incorporating components from the nGraph Compiler stack 
-in your framework or neural network design, another useful doc is the section 
-on :doc:`other/index` . Contents here are also useful if you are working on 
-something built-from-scratch, or on an existing framework that is less 
-widely-supported than the popular frameworks like TensorFlow and PyTorch.
-
 
 .. _ngraph-tensorflow-bridge: https://pypi.org/project/ngraph-tensorflow-bridge
 .. _ngraph ONNX: https://github.com/NervanaSystems/ngraph-onnx

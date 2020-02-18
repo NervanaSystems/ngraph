@@ -135,7 +135,19 @@ shared_ptr<runtime::Tensor> runtime::Executable::create_input_tensor(size_t /* i
     throw runtime_error("create_input_tensor unimplemented");
 }
 
+shared_ptr<runtime::Tensor> runtime::Executable::create_input_tensor(size_t /* input_index */,
+                                                                     void* /* memory_pointer */)
+{
+    throw runtime_error("create_input_tensor unimplemented");
+}
+
 shared_ptr<runtime::Tensor> runtime::Executable::create_output_tensor(size_t /* output_index */)
+{
+    throw runtime_error("create_output_tensor unimplemented");
+}
+
+shared_ptr<runtime::Tensor> runtime::Executable::create_output_tensor(size_t /* output_index */,
+                                                                      void* /* memory_pointer */)
 {
     throw runtime_error("create_output_tensor unimplemented");
 }
@@ -146,9 +158,21 @@ vector<shared_ptr<runtime::Tensor>>
     throw runtime_error("create_input_tensor unimplemented");
 }
 
+vector<shared_ptr<runtime::Tensor>> runtime::Executable::create_input_tensor(
+    size_t /* input_index */, size_t /* pipeline_depth */, std::vector<void*> /* memory_pointer */)
+{
+    throw runtime_error("create_input_tensor unimplemented");
+}
+
 vector<shared_ptr<runtime::Tensor>>
     runtime::Executable::create_output_tensor(size_t /* output_index */,
                                               size_t /* pipeline_depth */)
+{
+    throw runtime_error("create_output_tensor unimplemented");
+}
+
+vector<shared_ptr<runtime::Tensor>> runtime::Executable::create_output_tensor(
+    size_t /* output_index */, size_t /* pipeline_depth */, std::vector<void*> /* memory_pointer */)
 {
     throw runtime_error("create_output_tensor unimplemented");
 }

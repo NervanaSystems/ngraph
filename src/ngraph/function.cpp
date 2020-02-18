@@ -38,6 +38,7 @@ Function::Function(const ResultVector& results,
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
+    , m_topological_sorter(topological_sort<std::vector<std::shared_ptr<Node>>>)
 {
     init();
 }
@@ -50,6 +51,7 @@ Function::Function(const OutputVector& results,
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
+    , m_topological_sorter(topological_sort<std::vector<std::shared_ptr<Node>>>)
 {
     init();
 }
@@ -62,6 +64,7 @@ Function::Function(const NodeVector& results,
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
+    , m_topological_sorter(topological_sort<std::vector<std::shared_ptr<Node>>>)
 {
     init();
 }
@@ -75,30 +78,31 @@ Function::Function(const std::shared_ptr<Node>& result,
 
 void Function::validate_nodes_and_infer_types()
 {
-    ngraph::validate_nodes_and_infer_types(get_ops());
+    for (auto& node : get_ordered_ops())
+    {
+        node->revalidate_and_infer_types();
+    }
 }
 
 void Function::init()
 {
     validate_nodes_and_infer_types();
 
-    traverse_nodes(this,
-                   [&](shared_ptr<Node> node) {
-                       if (node->is_parameter())
-                       {
-                           auto it = std::find(m_parameters.begin(), m_parameters.end(), node);
-                           if (it == m_parameters.end())
-                           {
-                               throw ngraph_error("Function references undeclared parameter");
-                           }
-                       }
-                   },
-                   true /*include control dependencies*/);
+    traverse_nodes(this, [&](shared_ptr<Node> node) {
+        if (node->is_parameter())
+        {
+            auto it = std::find(m_parameters.begin(), m_parameters.end(), node);
+            if (it == m_parameters.end())
+            {
+                throw ngraph_error("Function references undeclared parameter");
+            }
+        }
+    });
 }
 
-std::list<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps) const
+std::vector<shared_ptr<Node>> Function::get_ordered_ops() const
 {
-    NodeVector nodes;
+    vector<shared_ptr<Node>> nodes;
     for (auto& r : get_results())
     {
         nodes.push_back(r);
@@ -108,7 +112,7 @@ std::list<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps)
         nodes.push_back(param);
     }
 
-    return topological_sort(nodes, include_control_deps);
+    return m_topological_sorter(nodes);
 }
 
 void Function::map_unordered_ops(std::function<void(Node*)> f) const
@@ -132,7 +136,7 @@ void Function::map_unordered_ops(std::function<void(Node*)> f) const
             f(op);
             for (size_t i = 0; i < op->get_input_size(); ++i)
             {
-                remaining_ops.push(op->input(i).get_source_output().get_node());
+                remaining_ops.push(op->get_input_node_ptr(i));
             }
             for (auto& cdep : op->get_control_dependencies())
             {
@@ -223,10 +227,10 @@ shared_ptr<Node> Function::get_result() const
     return m_results.at(0);
 }
 
-std::list<shared_ptr<Node>> Function::get_ops(bool include_control_deps) const
+std::vector<shared_ptr<Node>> Function::get_ops() const
 {
-    std::list<std::shared_ptr<Node>> ops;
-    traverse_nodes(this, [&](shared_ptr<Node> node) { ops.push_back(node); }, include_control_deps);
+    std::vector<std::shared_ptr<Node>> ops;
+    traverse_nodes(this, [&](shared_ptr<Node> node) { ops.push_back(node); });
     return ops;
 }
 
@@ -294,4 +298,9 @@ void Function::replace_parameter(size_t parameter_index, const shared_ptr<op::Pa
                  " parameters.");
     replace_node(m_parameters[parameter_index], parameter);
     m_parameters[parameter_index] = parameter;
+}
+
+void Function::set_topological_sort(topological_sort_t sorter)
+{
+    m_topological_sorter = sorter;
 }
