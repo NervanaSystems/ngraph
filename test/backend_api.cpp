@@ -101,3 +101,11 @@ TEST(backend_api, executable_can_create_tensor)
     EXPECT_TRUE(cpu->executable_can_create_tensors());
 }
 #endif
+
+
+#if defined(NGRAPH_OPV_ENABLE)
+TEST(backend_api, opvTest)
+{
+    auto backend = runtime::Backend::create("OPV");
+}
+#endif

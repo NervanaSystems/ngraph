@@ -248,6 +248,10 @@ else()
         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
     endif()
 
+    if (NGRAPH_OPV_ENABLE)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} OPV)
+    endif()
+
     if (NGRAPH_GENERIC_CPU_ENABLE)
         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
     endif()
