@@ -161,8 +161,12 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual size_t get_version() const override { return 1; }
+                /// \brief Returns axis value after normalization
+                /// \note If input rank required to normalization is dynamic, the exception is
+                /// thrown
                 size_t get_axis() const;
-                int64_t get_raw_axis() const { return m_axis; }
+                /// \brief Returns axis value before normalization
+                int64_t get_provided_axis() const { return m_axis; }
                 void set_axis(const int64_t axis);
                 Mode get_mode() const { return m_mode; }
                 void set_mode(const Mode mode) { m_mode = mode; }
