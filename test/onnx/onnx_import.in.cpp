@@ -117,20 +117,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, test_tensor_bool_type)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/bool_type.prototxt"));
 
-    std::cout << "-------------------------\n";
-    for (auto op : function->get_ordered_ops()){
-        std::cout << "input: " << op->get_type_info().name << std::endl;
-        if (as_type_ptr<ngraph::op::Constant>(op))
-        {
-            std::cout << "found constant input\n";
-            const auto x = as_type_ptr<ngraph::op::Constant>(op);
-            const auto y = x->cast_vector<char>();
-            for (auto z : y) {
-                std::cout << (int)z << std::endl;
-            }
-        }
-    }
-    std::cout << "-------------------------\n";
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_expected_output<char>({1});
     test_case.run();
