@@ -58,6 +58,16 @@ op::v1::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::GroupConvolution::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("dilations", m_dilations);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    return true;
+}
+
 void op::v1::GroupConvolution::validate_and_infer_types()
 {
     const PartialShape& data_batch_pshape = get_input_partial_shape(0);

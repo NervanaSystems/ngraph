@@ -61,6 +61,8 @@ namespace ngraph
                                  const CoordinateDiff& pads_end,
                                  const Strides& dilations,
                                  const PadType& auto_pad = PadType::EXPLICIT);
+
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 // TODO - Remove supports_decompose and validate_and_infer_type once op supports
                 // decomposition
                 bool supports_decompose() const override { return false; }
