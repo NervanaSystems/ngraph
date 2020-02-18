@@ -453,7 +453,7 @@ json JSONSerializer::serialize_function(const Function& f)
     }
 
     json nodes;
-    for (shared_ptr<Node> node : f.get_ordered_ops(true))
+    for (shared_ptr<Node> node : f.get_ordered_ops())
     {
         nodes.push_back(serialize_node(*node));
     }
