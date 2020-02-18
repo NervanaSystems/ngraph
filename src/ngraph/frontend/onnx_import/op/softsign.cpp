@@ -44,7 +44,7 @@ namespace ngraph
                     auto data_plus_one_node =
                         std::make_shared<default_opset::Multiply>(data, one_node);
 
-                    return {data / (std::make_shared<default_opset::Abs>(data) + one_node)};
+                    return {std::make_shared<default_opset::Divide>(data, one_node)};
                 }
 
             } // namespace set_1
