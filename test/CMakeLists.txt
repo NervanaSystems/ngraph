@@ -240,6 +240,10 @@ else()
         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
     endif()
 
+    if (NGRAPH_INTELGPU_ENABLE)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
+    endif()
+
     if(NGRAPH_GPU_ENABLE)
         list(APPEND SRC gpu_test.cpp gpu_fusion.cpp)
         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
