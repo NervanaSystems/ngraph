@@ -344,6 +344,77 @@ mlir::LogicalResult verifyOp(NGMaxPoolBackpropOp op)
     return mlir::success();
 }
 
+template <>
+mlir::LogicalResult verifyOp(NGSliceOp op)
+{
+    NGTensorType t0 = op.getOperation()->getOperand(0).getType().cast<NGTensorType>();
+    NGTensorType r0 = op.getOperation()->getResult(0).getType().cast<NGTensorType>();
+    auto srcShape = t0.getShape();
+    auto resShape = r0.getShape();
+    auto lowerBounds = op.lowerBounds().getValue();
+    auto upperBounds = op.upperBounds().getValue();
+    auto strides = op.strides().getValue();
+
+    if (t0.getElementType() != r0.getElementType())
+    {
+        return op.emitOpError("Element type mismatch");
+    }
+    if (t0.getRank() != r0.getRank())
+    {
+        return op.emitOpError("Src and result ranks are not equal");
+    }
+    if (lowerBounds.size() != t0.getRank())
+    {
+        return op.emitOpError("Incompatible number of lower bounds");
+    }
+    if (upperBounds.size() != t0.getRank())
+    {
+        return op.emitOpError("Incompatible number of upper bounds");
+    }
+    if (strides.size() != t0.getRank())
+    {
+        return op.emitOpError("Incompatible number of strides");
+    }
+    for (auto i = 0; i < t0.getRank(); i++)
+    {
+        auto lb = lowerBounds[i].cast<IntegerAttr>().getInt();
+        auto ub = upperBounds[i].cast<IntegerAttr>().getInt();
+        auto st = strides[i].cast<IntegerAttr>().getInt();
+        if (resShape[i] > srcShape[i])
+        {
+            return op.emitOpError() << "Output shape at "
+                                    << i 
+                                    << " dimension cannot exceed"
+                                    << "input shape dimensions";
+        }
+        if (lb > ub)
+        {
+            return op.emitOpError() << "Lower bound at "
+                                    << i 
+                                    << " dimension is above upper bound";
+        }
+        if (lb < 0)
+        {
+            return op.emitOpError() << "Lower bound at "
+                                    << i
+                                    << " dimension must be non-negative";
+        }
+        if (ub > srcShape[i])
+        {
+            
+            return op.emitOpError() << "Upper bound at "
+                                    << i
+                                    << " dimension is out of range";
+        }
+        if (st < 0)
+        {
+            return op.emitOpError("Stride must be non-negative");
+        }
+    }
+
+    return mlir::success();
+}
+
 namespace mlir
 {
 #include "ops_interfaces.cpp.inc"

@@ -611,6 +611,23 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Softmax)
     softmaxOp.setAxes(attr);
     return op;
 }
+
+template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Slice)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGSliceOp>(ngNode);
+    auto sliceOp = llvm::cast<mlir::NGSliceOp>(op);
+    auto sliceNode = as_type<const ngraph::op::Slice>(ngNode);
+
+    auto attr = NgDialectObj.getShapeAsAttr(sliceNode->get_lower_bounds());
+    sliceOp.setLowerBounds(attr);
+    attr = NgDialectObj.getShapeAsAttr(sliceNode->get_upper_bounds());
+    sliceOp.setUpperBounds(attr);
+    attr = NgDialectObj.getShapeAsAttr(sliceNode->get_strides());
+    sliceOp.setStrides(attr);
+    return op;
+}
+
 template <typename Op>
 mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ngNode, int inNum)
 {
