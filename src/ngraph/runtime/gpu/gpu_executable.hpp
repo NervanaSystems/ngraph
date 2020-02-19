@@ -49,15 +49,11 @@ namespace ngraph
                 std::vector<PerformanceCounter> get_performance_data() const override;
 
             private:
-                class FunctionInstance
-                {
-                public:
-                    std::shared_ptr<GPUCompiledFunction> m_compiled_function;
-                    bool m_performance_counters_enabled = false;
-                    EntryPoint m_runtime;
-                    std::vector<void*> m_inputs;
-                    std::vector<void*> m_outputs;
-                } m_function_instance;
+                std::shared_ptr<GPUCompiledFunction> m_compiled_function;
+                bool m_performance_counters_enabled = false;
+                EntryPoint m_runtime;
+                std::vector<void*> m_inputs;
+                std::vector<void*> m_outputs;
 
                 /// \brief Convert a vector of Tensor into a vector of void* where each void*
                 /// points to a Tensor's data buffer.

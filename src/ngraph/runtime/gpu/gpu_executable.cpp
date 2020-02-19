@@ -37,16 +37,15 @@ runtime::gpu::GPUExecutable::GPUExecutable(shared_ptr<Function> func, bool enabl
     : m_context(new GPUBackend::BackendContext())
 
 {
-    FunctionInstance& instance = m_function_instance;
-    if (instance.m_compiled_function == nullptr)
+    if (m_compiled_function == nullptr)
     {
         m_context->bind_cuda_context_to_thread();
-        instance.m_compiled_function = runtime::gpu::GPUCompiledFunction::make(func, m_context);
-        instance.m_compiled_function->m_emit_timing = enable_timing;
-        instance.m_compiled_function->compile();
-        instance.m_runtime = instance.m_compiled_function->m_runtime;
-        instance.m_inputs.resize(func->get_parameters().size());
-        instance.m_outputs.resize(func->get_output_size());
+        m_compiled_function = runtime::gpu::GPUCompiledFunction::make(func, m_context);
+        m_compiled_function->m_emit_timing = enable_timing;
+        m_compiled_function->compile();
+        m_runtime = m_compiled_function->m_runtime;
+        m_inputs.resize(func->get_parameters().size());
+        m_outputs.resize(func->get_output_size());
     }
     set_parameters_and_results(*func);
 }
@@ -72,8 +71,7 @@ void runtime::gpu::GPUExecutable::initialize_io(void** target,
 bool runtime::gpu::GPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                        const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    FunctionInstance& instance = m_function_instance;
-    if (instance.m_compiled_function == nullptr)
+    if (m_compiled_function == nullptr)
     {
         throw runtime_error("compile() must be called before call().");
     }
@@ -82,11 +80,11 @@ bool runtime::gpu::GPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>
     m_context->prepare_runtime_context();
 
     // Device tensors
-    initialize_io(instance.m_inputs.data(), inputs);
-    initialize_io(instance.m_outputs.data(), outputs);
+    initialize_io(m_inputs.data(), inputs);
+    initialize_io(m_outputs.data(), outputs);
 
     auto ctx = m_context->m_runtime_context.get();
-    instance.m_runtime(instance.m_inputs.data(), instance.m_outputs.data(), ctx);
+    m_runtime(m_inputs.data(), m_outputs.data(), ctx);
 
     return true;
 }
@@ -94,10 +92,9 @@ bool runtime::gpu::GPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>
 vector<runtime::PerformanceCounter> runtime::gpu::GPUExecutable::get_performance_data() const
 {
     std::vector<runtime::PerformanceCounter> rc;
-    const FunctionInstance& instance = m_function_instance;
-    if (instance.m_compiled_function != nullptr)
+    if (m_compiled_function != nullptr)
     {
-        instance.m_compiled_function->get_performance_data(rc);
+        m_compiled_function->get_performance_data(rc);
     }
     return rc;
 }
