@@ -18,7 +18,6 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
 using namespace std;

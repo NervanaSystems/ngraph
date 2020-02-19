@@ -15,6 +15,8 @@
 //*****************************************************************************
 
 #include "ngraph/op/fused/lstm_sequence.hpp"
+
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/frontend/onnx_import/utils/reshape.hpp"
@@ -25,7 +27,6 @@
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -121,7 +122,7 @@ shared_ptr<Node> op::LSTMSequence::get_masked_node(const Output<Node>& data,
         element::i32, data.get_shape(), vector<int32_t>(shape_size(data.get_shape()), time_step));
 
     Output<Node> batch_seq_length =
-        op::legacy_style_broadcast_for_binary_operation(
+        builder::legacy_broadcast_for_binary_operation(
             curr_time_step_node, input_value(3).get_node_shared_ptr(), batch_axis)
             .at(1);
 

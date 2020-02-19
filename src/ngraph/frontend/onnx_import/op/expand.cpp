@@ -27,7 +27,6 @@
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
