@@ -89,12 +89,6 @@ NodeVector op::v1::BatchToSpace::decompose_op() const {
     get_in_vec_int64(crops_begin_const, crops_begin_values);
     get_in_vec_int64(crops_end_const, crops_end_values);
 
-    // temporary workaround
-    if(data_shape.size() == 4) {
-        data = builder::opset1::reorder_axes(data, {0, 2, 3, 1});
-        data_shape = data.get_shape();
-    }
-
     // First we have to disperse the data from depth channel, then rearrange them
     // so as appropriate chunks of data where close to their destination place.
     // Finally squeeze data from respective dimensions.
@@ -141,9 +135,6 @@ NodeVector op::v1::BatchToSpace::decompose_op() const {
     vector<int64_t> begin_mask(data_shape.size(), 0);
     vector<int64_t> end_mask(data_shape.size(), 0);
     flat_node = make_shared<op::v1::StridedSlice>(flat_node, crops_begin_const, upperbounds, begin_mask, end_mask);
-    if(data_shape.size() == 4) {
-        flat_node = builder::opset1::reorder_axes(flat_node, {0, 3, 1, 2});
-    }
     return NodeVector{flat_node};
 }
 

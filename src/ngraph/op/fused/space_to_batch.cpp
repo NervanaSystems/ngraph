@@ -86,11 +86,6 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const {
     get_in_vec_int64(pads_begin_const, pads_begin_values);
     get_in_vec_int64(pads_end_const, pads_end_values);
 
-    // temporary workaround
-    if(data_shape.size() == 4) {
-        data = builder::opset1::reorder_axes(data, {0, 2, 3, 1});
-    }
-
     auto out = make_shared<op::v1::Pad>(data, pads_begin_const, pads_end_const, PadMode::CONSTANT);
     auto out_shape = out->get_shape();
 
@@ -130,10 +125,6 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const {
         squeezed_shape.push_back(out_shape.at(i) / block_values.at(i));
     }
     flat_node = builder::opset1::reshape(flat_node, squeezed_shape);
-
-    if(data_shape.size() == 4) {
-        flat_node = builder::opset1::reorder_axes(flat_node, {0, 3, 1, 2});
-    }
 
     return NodeVector{flat_node};
 }
