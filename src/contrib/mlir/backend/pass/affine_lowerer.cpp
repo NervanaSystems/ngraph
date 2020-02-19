@@ -2100,6 +2100,10 @@ namespace
         {
             ty = OpType::MAXPOOL;
         }
+        else
+        {
+            NGRAPH_UNREACHABLE("Unsupported pooling op");
+        }
 
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         SmallVector<mlir::Value, 4> inputs = {lhs, result};
