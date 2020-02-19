@@ -82,6 +82,24 @@ void op::v1::Convolution::validate_and_infer_types()
         m_pads_end = conv_default_padding(this, data_batch_shape, filters_shape);
     }
 
+    if (m_auto_pad != PadType::EXPLICIT)
+    {
+        NODE_VALIDATION_CHECK(this,
+                              std::all_of(m_pads_begin.begin(),
+                                          m_pads_begin.end(),
+                                          [](std::ptrdiff_t i) { return (i == 0); }),
+                              "m_pads_begin: (",
+                              m_pads_begin,
+                              ") Non-zero padding should not be used along with auto pad modes.");
+        NODE_VALIDATION_CHECK(this,
+                              std::all_of(m_pads_end.begin(),
+                                          m_pads_end.end(),
+                                          [](std::ptrdiff_t i) { return (i == 0); }),
+                              "m_pads_end: (",
+                              m_pads_end,
+                              ") Non-zero padding should not be used along with auto pad modes.");
+    }
+
     if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER)
     {
         if (data_batch_shape.is_static() && filters_shape.is_static())
