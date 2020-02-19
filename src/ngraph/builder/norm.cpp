@@ -66,8 +66,7 @@ namespace ngraph
                         values->get_shape(),
                         vector<float>(shape_size(values->get_shape()), bias))};
 
-                    values = make_shared<ngraph::opset1::Add>(
-                        values, bias_node, ngraph::op::AutoBroadcastSpec::NONE);
+                    values = make_shared<ngraph::opset1::Add>(values, bias_node);
 
                     // Get outer part of equation: raise values to 1/p_norm exponent.
                     shared_ptr<Node> inv_p_node = ngraph::opset1::Constant::create(
@@ -117,8 +116,7 @@ namespace ngraph
                 values->get_shape(),
                 vector<float>(shape_size(values->get_shape()), bias))};
 
-            return make_shared<ngraph::opset1::Add>(
-                       values, bias_node, ngraph::op::AutoBroadcastSpec::NONE)
+            return make_shared<ngraph::opset1::Add>(values, bias_node)
                 ->add_provenance_group_members_above({value});
         }
 
