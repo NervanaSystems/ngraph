@@ -214,9 +214,37 @@ namespace
         NGraphTypeConverter()
             : TypeConverter()
         {
-        }
+            // TODO(dcaballe): split this into independent conversion patterns when there is a
+            // way to check if a type is valid in Std dialect.
+            addConversion([this](Type type) -> Type {
+                if (auto tensorType = type.dyn_cast<NGTensorType>())
+                {
+                    // Convert NGTensorType to Std MemRefType directly instead of going to Std
+                    // TensorType. This may change in the future.
+                    return MemRefType::get(tensorType.getShape(),
+                                           convertType(tensorType.getElementType()),
+                                           {/* no map used */},
+                                           0);
+                }
+                if (auto floatType = type.dyn_cast<NGFloatType>())
+                {
+                    // Float types are already std type.
+                    return floatType;
+                }
+                if (auto intType = type.dyn_cast<NGIntegerType>())
+                {
+                    return mlir::IntegerType::get(intType.getWidth(), intType.getContext());
+                }
+                if (auto boolType = type.dyn_cast<NGBoolType>())
+                {
+                    return mlir::IntegerType::get(1 /* width */, boolType.getContext());
+                }
 
-        Type convertType(Type t) override;
+                // Do not assert/NGRAPH_CHECK here. Type convertion infra expects `convertType` to
+                // return the input type if the type is not supported.
+                return type;
+            });
+        }
     };
 
     /// Dialect Lowering Pass to affine ops
@@ -541,40 +569,6 @@ namespace
     {
         m_attrsVec.push_back(attrs);
         return m_attrsVec.size() - 1;
-    }
-
-    // NGDialect converters
-    Type NGraphTypeConverter::convertType(Type type)
-    {
-        // We may need to refactor this code to a external utility if type conversion is needed
-        // outside of the lowering context since NGraphTypeConverter is private.
-
-        if (auto tensorType = type.dyn_cast<NGTensorType>())
-        {
-            // Convert NGTensorType to Std MemRefType directly instead of going to Std TensorType.
-            // This may change in the future.
-            return MemRefType::get(tensorType.getShape(),
-                                   convertType(tensorType.getElementType()),
-                                   {/* no map used */},
-                                   0);
-        }
-        if (auto floatType = type.dyn_cast<NGFloatType>())
-        {
-            // Float types are already std type.
-            return floatType;
-        }
-        if (auto intType = type.dyn_cast<NGIntegerType>())
-        {
-            return mlir::IntegerType::get(intType.getWidth(), intType.getContext());
-        }
-        if (auto boolType = type.dyn_cast<NGBoolType>())
-        {
-            return mlir::IntegerType::get(1 /* width */, boolType.getContext());
-        }
-
-        // Do not assert/NGRAPH_CHECK here. Type convertion infra expects `convertType` to return
-        // the input type if the type is not supported.
-        return type;
     }
 
 #define REWRITER(OP)                                                                               \
