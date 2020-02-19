@@ -33,6 +33,7 @@ ExternalProject_Add(
     # Disable install step
     INSTALL_COMMAND ""
     UPDATE_COMMAND ""
+    SOURCE_SUBDIR inference-engine/thirdparty/clDNN
     CMAKE_GENERATOR ${CMAKE_GENERATOR}
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
     CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
@@ -54,11 +55,11 @@ if (CLDNN_ROOT_DIR)
     target_include_directories(libcldnn SYSTEM INTERFACE ${CLDNN_INCLUDE_DIRS})
     target_link_libraries(libcldnn INTERFACE ${CLDNN_LIBRARIES})
     install(
-	FILES 
-	    ${CLDNN_LIBRARIES}
-	DESTINATION 
-	    ${NGRAPH_INSTALL_LIB}
-	OPTIONAL
+        FILES
+            ${CLDNN_LIBRARIES}
+        DESTINATION
+            ${NGRAPH_INSTALL_LIB}
+        OPTIONAL
         )
 else()
     ExternalProject_Get_Property(ext_cldnn SOURCE_DIR BINARY_DIR)
