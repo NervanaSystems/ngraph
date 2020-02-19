@@ -588,6 +588,12 @@ if (NGRAPH_PLAIDML_ENABLE)
     target_compile_definitions(unit-test PRIVATE "PlaidML_FLOAT_TOLERANCE_BITS=12")
 endif()
 
+
+if (NGRAPH_OPV_ENABLE)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_OPV_ENABLE)
+    target_link_libraries(unit-test PRIVATE opv_backend)
+endif()
+
 if (NGRAPH_TBB_ENABLE)
     target_compile_definitions(unit-test PRIVATE "NGRAPH_TBB_ENABLE")
 endif()
