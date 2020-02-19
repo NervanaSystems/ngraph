@@ -21,7 +21,6 @@
 #include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/op/util/rnn_cell_base.hpp"
 #include "ngraph/util.hpp"
 
@@ -68,20 +67,19 @@ op::util::ActivationFunction op::util::RNNCellBase::get_activation_function(size
 
 shared_ptr<Node> op::util::RNNCellBase::add(const Output<Node>& lhs, const Output<Node>& rhs)
 {
-    auto args = op::numpy_style_broadcast_values({lhs, rhs});
-    return {make_shared<op::Add>(args.at(0), args.at(1))};
+    return {make_shared<op::Add>(lhs, rhs, op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY))};
 }
 
 shared_ptr<Node> op::util::RNNCellBase::sub(const Output<Node>& lhs, const Output<Node>& rhs)
 {
-    auto args = op::numpy_style_broadcast_values({lhs, rhs});
-    return {make_shared<op::Subtract>(args.at(0), args.at(1))};
+    return {
+        make_shared<op::Subtract>(lhs, rhs, op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY))};
 }
 
 shared_ptr<Node> op::util::RNNCellBase::mul(const Output<Node>& lhs, const Output<Node>& rhs)
 {
-    auto args = op::numpy_style_broadcast_values({lhs, rhs});
-    return {make_shared<op::Multiply>(args.at(0), args.at(1))};
+    return {
+        make_shared<op::Multiply>(lhs, rhs, op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY))};
 }
 
 shared_ptr<Node> op::util::RNNCellBase::clip(const Output<Node>& data) const
