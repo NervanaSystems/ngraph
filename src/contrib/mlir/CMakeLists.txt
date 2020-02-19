@@ -36,6 +36,8 @@ set(SRC
     core/pass/ng_dialect_builder.hpp
     core/pass/ng_dialect_fused_ops.cpp
     core/pass/ng_dialect_fused_ops.hpp
+    core/pass/ng_op_fusion.cpp
+    core/pass/ng_op_fusion.hpp
     runtime/cpu/memory_manager.cpp
     runtime/cpu/cpu_runtime.cpp
     runtime/cpu/cpu_callbacks.cpp

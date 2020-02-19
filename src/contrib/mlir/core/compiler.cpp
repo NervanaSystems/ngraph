@@ -24,6 +24,7 @@
 #include "ngraph_dialect/type.hpp"
 #include "pass/ng_dialect_builder.hpp"
 #include "pass/ng_dialect_fused_ops.hpp"
+#include "pass/ng_op_fusion.hpp"
 
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
@@ -66,6 +67,10 @@ using llvm::ArrayRef;
 
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
+
+static llvm::cl::opt<bool> clEnableOpFusion("ngraph-op-fusion",
+                                            llvm::cl::init(false),
+                                            llvm::cl::desc("Enable ngraph dialect op fusion pass"));
 
 bool MLIRCompiler::initialized = false;
 
@@ -125,7 +130,12 @@ void MLIRCompiler::buildNgDialectModule()
 void MLIRCompiler::optimizeNgDialect()
 {
     mlir::PassManager pm(&m_context);
-    pm.addPass(ngraph::pass::createNgDialectFusedOpsPass());
+    //pm.addPass(ngraph::pass::createNgDialectFusedOpsPass());
+
+    if (clEnableOpFusion)
+    {
+        pm.addPass(mlir::createNgOpFusionPass());
+    }
 
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
