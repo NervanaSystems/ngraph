@@ -28,6 +28,7 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -388,7 +389,7 @@ void runtime::gpu::GPUInternalFunction::emit()
     m_runtime_constructor =
         runtime::gpu::make_unique<GPURuntimeConstructor>(m_function_ordered_ops);
 
-    if (std::getenv("NGRAPH_GPU_TRACE"))
+    if (getenv_bool("NGRAPH_GPU_TRACE"))
     {
         m_trace = std::make_shared<CodeWriter>();
     }
