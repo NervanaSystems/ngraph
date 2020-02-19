@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <CPP/topology.hpp>
+#include <api/topology.hpp>
 
 #include "ngraph/code_writer.hpp"
 

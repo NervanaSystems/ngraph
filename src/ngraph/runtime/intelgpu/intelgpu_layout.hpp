@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include <CPP/concatenation.hpp>
-#include <CPP/layout.hpp>
-#include <CPP/tensor.hpp>
+#include <api/concatenation.hpp>
+#include <api/layout.hpp>
+#include <api/tensor.hpp>
 
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 

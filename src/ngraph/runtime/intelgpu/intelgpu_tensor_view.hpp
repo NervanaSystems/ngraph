@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include <CPP/engine.hpp>
-#include <CPP/memory.hpp>
+#include <api/engine.hpp>
+#include <api/memory.hpp>
 
 #include "ngraph/runtime/tensor.hpp"
 

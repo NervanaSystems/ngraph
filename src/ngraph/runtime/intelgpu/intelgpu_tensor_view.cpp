@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include <CPP/data.hpp>
+#include <api/data.hpp>
 
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"

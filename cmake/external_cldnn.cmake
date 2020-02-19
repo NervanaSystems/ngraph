@@ -73,7 +73,7 @@ else()
         DEPENDEES install
         )
     add_dependencies(libcldnn ext_cldnn)
-    target_include_directories(libcldnn SYSTEM INTERFACE ${SOURCE_DIR}/${CLDNN_SUBDIR}/api)
+    target_include_directories(libcldnn SYSTEM INTERFACE ${SOURCE_DIR}/${CLDNN_SUBDIR})
     target_link_libraries(libcldnn INTERFACE ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CLDNN_LIB})
     install(
         FILES

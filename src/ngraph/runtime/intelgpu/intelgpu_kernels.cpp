@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <CPP/custom_gpu_primitive.hpp>
+#include <api/custom_gpu_primitive.hpp>
 
 #include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <CPP/network.hpp>
+#include <api/network.hpp>
 
 #include "ngraph/runtime/tensor.hpp"
 

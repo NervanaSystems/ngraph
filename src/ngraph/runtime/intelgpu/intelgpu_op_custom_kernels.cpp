@@ -17,9 +17,9 @@
 #include <sys/resource.h>
 #include <sys/time.h>
 
-#include <CPP/concatenation.hpp>
-#include <CPP/custom_gpu_primitive.hpp>
-#include <CPP/reshape.hpp>
+#include <api/concatenation.hpp>
+#include <api/custom_gpu_primitive.hpp>
+#include <api/reshape.hpp>
 
 #include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"

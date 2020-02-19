@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include <CPP/topology.hpp>
+#include <api/topology.hpp>
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/all.hpp"

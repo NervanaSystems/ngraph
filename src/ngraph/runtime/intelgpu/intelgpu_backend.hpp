@@ -19,7 +19,7 @@
 #include <map>
 #include <memory>
 
-#include <CPP/engine.hpp>
+#include <api/engine.hpp>
 
 #include "ngraph/runtime/backend.hpp"
 
