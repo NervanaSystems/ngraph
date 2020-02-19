@@ -76,8 +76,6 @@ namespace
         void buildNgDialectModule();
         void buildNgDialect(mlir::FuncOp function);
         void runOnModule() override;
-        // Applies any nGraph dialect optimizations
-        void optimizeNgDialect() { /*TODO: Add Core NG dialect optimizations */}
 
         mlir::Type getMlirType(const descriptor::Tensor* tensor);
         mlir::Type getMlirType(const element::Type& type);
