@@ -149,7 +149,7 @@ def cpp_flag(compiler):
     if has_flag(compiler, '-std=c++11'):
         return '-std=c++11'
     elif sys.platform == 'win32':
-        return '' #C++11 is on by default in MSVC
+        return ''  # C++11 is on by default in MSVC
     else:
         raise RuntimeError('Unsupported compiler -- C++11 support is needed!')
 
@@ -392,7 +392,7 @@ class BuildExt(build_ext):
                 return ['-O2', '-D_FORTIFY_SOURCE=2']
 
     def _add_win_compiler_flags(self, ext):
-        self._add_extra_compile_arg('/GL', ext.extra_compile_args) # Whole Program Optimization
+        self._add_extra_compile_arg('/GL', ext.extra_compile_args)  # Whole Program Optimization
         self._add_extra_compile_arg('/analyze', ext.extra_compile_args)
 
     def _add_unix_compiler_flags(self, ext):
