@@ -60,6 +60,10 @@
 // Defines a new LLVM debug type for this file to be used by LLVM_DEBUG macro.
 #define DEBUG_TYPE "mlir-compiler"
 
+static llvm::cl::opt<bool> clEnableNgOpFusion("ngraph-op-fusion",
+                                              llvm::cl::init(false),
+                                              llvm::cl::desc("Enable ngraph op fusion pass"));
+
 using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::ArrayRef;
@@ -124,6 +128,11 @@ void MLIRCompiler::buildNgDialectModule()
 
 void MLIRCompiler::optimizeNgDialect()
 {
+    if (!clEnableNgOpFusion)
+    {
+        return;
+    }
+
     mlir::PassManager pm(&m_context);
     pm.addPass(ngraph::pass::createNgDialectFusedOpsPass());
 
