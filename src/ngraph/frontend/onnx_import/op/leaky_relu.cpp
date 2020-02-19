@@ -39,8 +39,8 @@ namespace ngraph
                         << " alpha value should be in range (0,1)";
 
                     std::shared_ptr<ngraph::Node> alpha_node =
-                        std::make_shared<default_opset::Constant>(
-                            data->get_element_type(), Shape{}, std::vector<double>{alpha});
+                        default_opset::Constant::create(
+                            data->get_element_type(), Shape{}, {alpha});
                     auto multiply = std::make_shared<default_opset::Multiply>(data, alpha_node);
                     return {std::make_shared<default_opset::Maximum>(multiply, data)};
                 }

@@ -14,11 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <memory>
 
-#include "core/node.hpp"
 #include "default_opset.hpp"
-#include "ngraph/node.hpp"
+#include "log.hpp"
 
 namespace ngraph
 {
@@ -28,12 +27,9 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector logical_xor(const Node& node)
+                NodeVector log(const Node& node)
                 {
-                    return {std::make_shared<default_opset::LogicalXor>(
-                        node.get_ng_inputs().at(0),
-                        node.get_ng_inputs().at(1),
-                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
+                    return {std::make_shared<default_opset::Log>(node.get_ng_inputs().at(0))};
                 }
 
             } // namespace set_1
