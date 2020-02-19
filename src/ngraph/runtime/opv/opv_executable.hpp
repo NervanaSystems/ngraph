@@ -56,20 +56,6 @@ public:
 
     virtual void save(std::ostream& output_stream) override;
 
-    void set_nan_check(bool enable);
-
-    std::vector<PerformanceCounter> get_performance_data() const override;
-
-    std::shared_ptr<runtime::Tensor> create_input_tensor(size_t input_index) override;
-
-    std::shared_ptr<runtime::Tensor> create_output_tensor(size_t output_index) override;
-
-    std::vector<std::shared_ptr<runtime::Tensor>>
-        create_input_tensor(size_t input_index, size_t pipeline_depth) override;
-
-    std::vector<std::shared_ptr<runtime::Tensor>>
-        create_output_tensor(size_t output_index, size_t pipeline_depth) override;
-
 protected:
 
     bool m_performance_counters_enabled = false;
