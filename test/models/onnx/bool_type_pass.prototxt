@@ -5,7 +5,7 @@ graph {
   initializer {
     data_type: 9
     name: "B"
-    int32_data: 0
+    int32_data: 1
   }
   input {
     name: "B"
