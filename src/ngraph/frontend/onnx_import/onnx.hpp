@@ -21,8 +21,6 @@
 #include <set>
 #include <string>
 
-#include "/home/etusien/ngraph/build/onnx/bin/onnx/onnx-ml.pb.h"
-
 #include "core/operator_set.hpp"
 #include "ngraph/function.hpp"
 
@@ -84,8 +82,8 @@ namespace ngraph
         /// \return The function returns a nGraph function representing single output from graph.
         NGRAPH_API
         std::shared_ptr<Function> import_onnx_model(const std::string& filename);
-        NGRAPH_API
-        std::shared_ptr<Function> import_onnx_proto_model(onnx::ModelProto model_proto);
+        // NGRAPH_API
+        // std::shared_ptr<Function> import_onnx_proto_model(onnx::ModelProto model_proto);
 
     } // namespace onnx_import
 

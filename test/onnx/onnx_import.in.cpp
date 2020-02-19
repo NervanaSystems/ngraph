@@ -1904,3 +1904,15 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reciprocal)
 
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dynamic_quantize_linear)
+{
+    const auto dql_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamicquantizelinear.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(dql_fn, "${BACKEND_NAME}");
+    test_case.add_input<float>({0.f, 2.f, -3.f, -2.5f, 1.34f, 0.5f});
+    test_case.add_expected_output<uint8_t>(Shape{6}, {153, 255, 0, 26, 221, 179});
+    test_case.add_expected_output<float>(Shape{}, {0.019607844});
+    test_case.add_expected_output<uint8_t>(Shape{}, {153});
+    test_case.run();
+}

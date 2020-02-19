@@ -35,6 +35,7 @@ namespace ngraph
         {
         public:
             Graph(const onnx::GraphProto& proto, Model& model);
+            const onnx::ModelProto* get_model() const { return m_model->get_model(); }
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
             const std::vector<ValueInfo>& get_outputs() const { return m_outputs; }

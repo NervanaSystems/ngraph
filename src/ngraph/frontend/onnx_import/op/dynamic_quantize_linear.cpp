@@ -15,11 +15,15 @@
 //*****************************************************************************
 
 #include <memory>
+#include <fstream>
+
 #include "onnx/defs/function.h"
 #include "onnx/defs/schema.h"
 #include "onnx/proto_utils.h"
 #include "round.hpp"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
+#include "ngraph/runtime/backend.hpp"
+
 
 namespace ngraph
 {
@@ -32,26 +36,31 @@ namespace ngraph
                 NodeVector dynamic_quantize_linear(const Node& node)
                 {
                     onnx::GraphProto graph;
+                    const auto& model_proto=  node.model();
+                    const onnx::NodeProto node_proto = node.node_proto();
                     onnx::NodeProto* new_node = graph.add_node();
-                    new_node->set_op_type(node.op_type());
-                    for(auto node_input : node.get_ng_inputs())
-                    {
-                        new_node->add_input(node_input->get_name());
-                    }
-
-                    for(auto node_output : node.get_output_names())
-                    {
-                        new_node->add_output(node_output);
-                    }
-                    const auto* schema = onnx::OpSchemaRegistry::Schema(node.op_type(), 9, "");
+                    *new_node = node_proto;
+                    std::cout<<"schema"<<std::endl;
+                    const auto* schema = onnx::OpSchemaRegistry::Schema(node.op_type(), 11, "");
                     const onnx::FunctionProto* func = schema->GetFunction();
 
-                    FunctionExpandHelper(*new_node, *func, graph);
+                    FunctionExpandHelper(node_proto, *func, graph);
 
-                    onnx::ModelProto model;
+                     graph.mutable_node()->erase(graph.node().begin());
+
+                    std::cout<<"model"<<std::endl;
+                    onnx::ModelProto model = *model_proto; 
                     auto* graph_ptr = model.mutable_graph();
                     *graph_ptr = graph;
-                    auto function = ngraph::onnx_import::import_onnx_proto_model(model);
+                    const std::string path = "/home/etusien/ngraph/test/models/onnx/dql_test.onnx";
+                    std::ofstream output_file{path};
+                    model.SerializeToOstream(&output_file);
+                    std::cout<<"save"<<std::endl;
+                    auto function = ngraph::onnx_import::import_onnx_model(path);
+                    std::cout<<"function"<<std::endl;
+                    std::vector<std::shared_ptr<ngraph::Node>> nodes = function->get_ordered_ops();
+
+                   return NodeVector{nodes};
 
                 }
             } // namespace set_1
