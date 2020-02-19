@@ -88,7 +88,7 @@ void MLIRCPURuntime::bindArguments(const std::vector<MemRefArg>& args)
 {
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
-    auto func = m_module->lookupSymbol<mlir::LLVM::LLVMFuncOp>("main");
+    auto func = m_module->lookupSymbol<mlir::LLVM::LLVMFuncOp>("_mlir_ciface_main");
     NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
 
     // Set external arguments
@@ -142,14 +142,15 @@ void MLIRCPURuntime::execute()
     // uniformity reasons, it takes a list of type-erased pointers to arguments.
     // Please, note that 'invoke' method is overloaded with a parameter pack version.
     // Make sure the MutableArrayRef version is invoked.
-    auto invocationResult = m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invokeArgs));
+    auto invocationResult =
+        m_engine->invoke("_mlir_ciface_main", llvm::MutableArrayRef<void*>(m_invokeArgs));
 
     if (clDumpObjectFile)
     {
         m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
                                                             : clObjectFilename.getValue());
     }
-    NGRAPH_CHECK(!invocationResult, "JIT invocation of 'main' failed\n");
+    NGRAPH_CHECK(!invocationResult, "JIT invocation of '_mlir_ciface_main' failed\n");
 }
 
 void MLIRCPURuntime::cleanup()

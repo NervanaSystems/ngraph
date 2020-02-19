@@ -198,10 +198,20 @@ void MLIRCPUBackend::lowerNgDialect()
 void MLIRCPUBackend::lowerStandardDialect()
 {
     mlir::PassManager pm(&m_context);
-    // We lower memrefs to StaticMemRef descriptors by default. If 'clEnableBarePtrMemRefLowering'
-    // is specified, we lower memref arguments to bare pointers to the memref element type.
-    pm.addPass(mlir::createLowerToLLVMPass(/*useAlloca=*/false,
-                                           /*useBarePtrCallConv=*/clEnableBarePtrMemRefLowering));
+    if (clEnableBarePtrMemRefLowering)
+    {
+        // We lower memrefs to StaticMemRef descriptors by default. If
+        // 'clEnableBarePtrMemRefLowering' is specified, we lower memref arguments to bare pointers
+        // to the memref element type.
+        pm.addPass(mlir::createLowerToLLVMPass(/*useAlloca=*/false,
+                                               /*useBarePtrCallConv=*/true,
+                                               /*emitCWrappers=*/false));
+    }
+    else
+    {
+        pm.addPass(mlir::createLowerToLLVMPass(
+            /*useAlloca=*/false, /*useBarePtrCallConv=*/false, /*emitCWrappers=*/true));
+    }
 
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);

@@ -214,9 +214,37 @@ namespace
         NGraphTypeConverter()
             : TypeConverter()
         {
-        }
+            // TODO(dcaballe): split this into independent conversion patterns when there is a
+            // way to check if a type is valid in Std dialect.
+            addConversion([this](Type type) -> Type {
+                if (auto tensorType = type.dyn_cast<NGTensorType>())
+                {
+                    // Convert NGTensorType to Std MemRefType directly instead of going to Std
+                    // TensorType. This may change in the future.
+                    return MemRefType::get(tensorType.getShape(),
+                                           convertType(tensorType.getElementType()),
+                                           {/* no map used */},
+                                           0);
+                }
+                if (auto floatType = type.dyn_cast<NGFloatType>())
+                {
+                    // Float types are already std type.
+                    return floatType;
+                }
+                if (auto intType = type.dyn_cast<NGIntegerType>())
+                {
+                    return mlir::IntegerType::get(intType.getWidth(), intType.getContext());
+                }
+                if (auto boolType = type.dyn_cast<NGBoolType>())
+                {
+                    return mlir::IntegerType::get(1 /* width */, boolType.getContext());
+                }
 
-        Type convertType(Type t) override;
+                // Do not assert/NGRAPH_CHECK here. Type convertion infra expects `convertType` to
+                // return the input type if the type is not supported.
+                return type;
+            });
+        }
     };
 
     /// Dialect Lowering Pass to affine ops
@@ -248,7 +276,6 @@ namespace
         inline size_t insertAttrs(opAttrs attrs);
 
         MemoryAnalysis* getMemAnalysis() const { return m_memAnalysis; }
-
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
@@ -317,7 +344,8 @@ namespace
 
             // TODO: Encode no alias attribute as part of the function signature conversion or as a
             // separate rewrite pattern. Retrieve new function after signature conversion.
-            insertNoAliasArgAttrs();
+            // TODO: To be enabled in follow-up commit.
+            // insertNoAliasArgAttrs();
         }
 
         opAttrsVec = m_attrsVec;
@@ -492,22 +520,22 @@ namespace
 
     /// Add llvm.noalias attribute to all the memref function arguments. We know that this is safe
     /// by nGraph op semantics.
-    void DialectLoweringPass::insertNoAliasArgAttrs()
-    {
-        FuncOp func = getModule().lookupSymbol<mlir::FuncOp>(funcName);
-        NGRAPH_CHECK(func, "FuncOp '" + funcName.str() + "' not found");
+    // void DialectLoweringPass::insertNoAliasArgAttrs()
+    //{
+    //    FuncOp func = getModule().lookupSymbol<mlir::FuncOp>(funcName);
+    //    NGRAPH_CHECK(func, "FuncOp '" + funcName.str() + "' not found");
 
-        unsigned int argIdx = 0;
-        for (auto arg : func.getArguments())
-        {
-            if (arg.getType().isa<MemRefType>())
-            {
-                func.setArgAttr(argIdx, "llvm.noalias", BoolAttr::get(true, &getContext()));
-            }
+    //    unsigned int argIdx = 0;
+    //    for (auto arg : func.getArguments())
+    //    {
+    //        if (arg.getType().isa<MemRefType>())
+    //        {
+    //            func.setArgAttr(argIdx, "llvm.noalias", BoolAttr::get(true, &getContext()));
+    //        }
 
-            ++argIdx;
-        }
-    }
+    //        ++argIdx;
+    //    }
+    //}
 
     void DialectLoweringPass::insertDeallocs(PatternRewriter& rewriter)
     {
@@ -541,40 +569,6 @@ namespace
     {
         m_attrsVec.push_back(attrs);
         return m_attrsVec.size() - 1;
-    }
-
-    // NGDialect converters
-    Type NGraphTypeConverter::convertType(Type type)
-    {
-        // We may need to refactor this code to a external utility if type conversion is needed
-        // outside of the lowering context since NGraphTypeConverter is private.
-
-        if (auto tensorType = type.dyn_cast<NGTensorType>())
-        {
-            // Convert NGTensorType to Std MemRefType directly instead of going to Std TensorType.
-            // This may change in the future.
-            return MemRefType::get(tensorType.getShape(),
-                                   convertType(tensorType.getElementType()),
-                                   {/* no map used */},
-                                   0);
-        }
-        if (auto floatType = type.dyn_cast<NGFloatType>())
-        {
-            // Float types are already std type.
-            return floatType;
-        }
-        if (auto intType = type.dyn_cast<NGIntegerType>())
-        {
-            return mlir::IntegerType::get(intType.getWidth(), intType.getContext());
-        }
-        if (auto boolType = type.dyn_cast<NGBoolType>())
-        {
-            return mlir::IntegerType::get(1 /* width */, boolType.getContext());
-        }
-
-        // Do not assert/NGRAPH_CHECK here. Type convertion infra expects `convertType` to return
-        // the input type if the type is not supported.
-        return type;
     }
 
 #define REWRITER(OP)                                                                               \
@@ -1153,7 +1147,7 @@ namespace
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
 
         FuncOp callBackFunc = pass.getCallDecl(
-            "__mlir_callback_2_inputs",
+            "callback_2_inputs",
             {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
             {},
             rewriter);
@@ -1246,7 +1240,7 @@ namespace
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         auto callBackFunc = pass.getCallDecl(
-            "__mlir_callback_2_inputs",
+            "callback_2_inputs",
             {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
             {},
             rewriter);
@@ -1362,7 +1356,7 @@ namespace
 
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-        auto callBackFunc = pass.getCallDecl("__mlir_callback_3_inputs",
+        auto callBackFunc = pass.getCallDecl("callback_3_inputs",
                                              {unrankedMemrefTy,
                                               unrankedMemrefTy,
                                               unrankedMemrefTy,
@@ -1426,7 +1420,7 @@ namespace
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::SOFTMAX), 64);
 
         FuncOp callBackFunc =
-            pass.getCallDecl("__mlir_callback_1_input",
+            pass.getCallDecl("callback_1_input",
                              {unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
                              {},
                              rewriter);
@@ -2100,6 +2094,10 @@ namespace
         {
             ty = OpType::MAXPOOL;
         }
+        else
+        {
+            NGRAPH_UNREACHABLE("Unsupported pooling op");
+        }
 
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         SmallVector<mlir::Value, 4> inputs = {lhs, result};
@@ -2107,7 +2105,7 @@ namespace
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
 
         FuncOp callBackFunc =
-            pass.getCallDecl("__mlir_callback_1_input",
+            pass.getCallDecl("callback_1_input",
                              {unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
                              {},
                              rewriter);

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2020 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,32 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
+// NOTE: This file follows nGraph format style.
+// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
+
 #pragma once
 
-#include "core/node.hpp"
-#include "default_opset.hpp"
-#include "ngraph/node.hpp"
+#include <mlir/Pass/Pass.h>
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace pass
     {
-        namespace op
-        {
-            namespace set_1
-            {
-                inline NodeVector logical_xor(const Node& node)
-                {
-                    return {std::make_shared<default_opset::LogicalXor>(
-                        node.get_ng_inputs().at(0),
-                        node.get_ng_inputs().at(1),
-                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
-                }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+        std::unique_ptr<mlir::Pass> createNgDialectFusedOpsPass();
+    }
+}

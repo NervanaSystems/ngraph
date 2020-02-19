@@ -54,12 +54,12 @@ void ngraph::runtime::ngmlir::initializeNGraphMLIR()
         registerDialect<loop::LoopOpsDialect>();
         registerDialect<StandardOpsDialect>();
         registerDialect<vector::VectorOpsDialect>();
-        
-        // nGraph dialects. 
+
+        // nGraph dialects.
         registerDialect<mlir::NGraphOpsDialect>();
 
         // In-tree passes.
-        // NO-OPT to avoid DCE on the following pass initializations.
+        // No-op to avoid DCE on the following pass initializations.
         if (std::getenv("bar") != (char*)-1)
             return false;
 
