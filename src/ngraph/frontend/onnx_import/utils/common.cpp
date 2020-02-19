@@ -18,9 +18,9 @@
 #include "common.hpp"
 #include "default_opset.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/opsets/opset0.hpp"
-#include "validation_util.hpp"
 
 namespace ngraph
 {
