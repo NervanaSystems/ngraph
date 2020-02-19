@@ -1,27 +1,31 @@
+# ******************************************************************************
+# Copyright 2017-2020 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ******************************************************************************
+
+import os
+import subprocess
+import sys
+
+print('Building ngraph wheel for Python {}'.format(sys.version_info.major))
 
 PYBIND_HEADERS_PATH="@CMAKE_CURRENT_BINARY_DIR@/pybind11"
 NGRAPH_CPP_BUILD_PATH="@CMAKE_INSTALL_PREFIX@"
 NGRAPH_ONNX_IMPORT_ENABLE="@NGRAPH_ONNX_IMPORT_ENABLE@"
 NGRAPH_VERSION="@NGRAPH_WHEEL_VERSION@"
-
 PYTHON_API_SOURCE_DIR="@CMAKE_CURRENT_SOURCE_DIR@"
 BUILD_DIR="@CMAKE_CURRENT_BINARY_DIR@"
-
-print("===============")
-print("PYBIND_HEADERS_PATH: ", PYBIND_HEADERS_PATH)
-print("NGRAPH_CPP_BUILD_PATH: ", NGRAPH_CPP_BUILD_PATH)
-print("NGRAPH_ONNX_IMPORT_ENABLE: ", NGRAPH_ONNX_IMPORT_ENABLE)
-print("NGRAPH_VERSION: ", NGRAPH_VERSION)
-print("PYTHON_API_SOURCE_DIR: ", PYTHON_API_SOURCE_DIR)
-print("BUILD_DIR: ", BUILD_DIR)
-print("===============")
-
-from sys import version_info
-import os
-import subprocess
-import sys
-
-print('Building ngraph wheel for Python {}'.format(version_info.major))
 
 BUILD_DEPS = ['setuptools', 'wheel']
 
@@ -48,7 +52,7 @@ try:
 
     print("Running setup.py bdist_wheel")
     build_log = subprocess.Popen(['python', os.path.join(PYTHON_API_SOURCE_DIR, 'setup.py'), 'bdist_wheel'],
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, universal_newlines=True)
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, universal_newlines=True)
 
     for line in build_log.stdout:
         sys.stdout.write(line)
@@ -65,10 +69,3 @@ except subprocess.CalledProcessError as err:
     print("Command std output: ", err.stdout.decode('utf-8'))
     print("Command err output: ", err.stderr.decode('utf-8'))
     sys.exit(1)
-
-# virtualenv build_venv
-# call build_venv/Scripts/activate.bat
-# pip install --upgrade setuptools pip wheel
-# python %SOURCE_DIR%/setup.py bdist_wheel
-# python %SOURCE_DIR%/setup.py sdist
-# deactivate
