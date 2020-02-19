@@ -23,7 +23,7 @@ include(ExternalProject)
 
 set(CLDNN_GIT_REPO_URL https://github.com/opencv/dldt.git)
 set(CLDNN_GIT_LABEL 2020.1)
-set(OUT_DIR ${EXTERNAL_PROJECTS_ROOT}/cldnn/out)
+set(CLDNN_SUBDIR inference-engine/thirdparty/clDNN)
 
 ExternalProject_Add(
     ext_cldnn
@@ -33,7 +33,7 @@ ExternalProject_Add(
     # Disable install step
     INSTALL_COMMAND ""
     UPDATE_COMMAND ""
-    SOURCE_SUBDIR inference-engine/thirdparty/clDNN
+    SOURCE_SUBDIR ${CLDNN_SUBDIR}
     CMAKE_GENERATOR ${CMAKE_GENERATOR}
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
     CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
@@ -63,16 +63,17 @@ if (CLDNN_ROOT_DIR)
         )
 else()
     ExternalProject_Get_Property(ext_cldnn SOURCE_DIR BINARY_DIR)
-    set(CLDNN_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}clDNN64${CMAKE_SHARED_LIBRARY_SUFFIX})
+    set(CLDNN_OUT_DIR ${SOURCE_DIR}/${CLDNN_SUBDIR}/build/out/Linux64/${CMAKE_BUILD_TYPE})
+    set(CLDNN_LIB ${CMAKE_STATIC_LIBRARY_PREFIX}clDNN64${CMAKE_STATIC_LIBRARY_SUFFIX})
     ExternalProject_Add_Step(
         ext_cldnn
         CopyCLDNN
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SOURCE_DIR}/build/out/Linux64/${CMAKE_BUILD_TYPE}/${CLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CLDNN_LIB}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CLDNN_OUT_DIR}/${CLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CLDNN_LIB}
         COMMENT "Copy cldnn runtime libraries to ngraph build directory."
         DEPENDEES install
         )
     add_dependencies(libcldnn ext_cldnn)
-    target_include_directories(libcldnn SYSTEM INTERFACE ${SOURCE_DIR}/api)
+    target_include_directories(libcldnn SYSTEM INTERFACE ${SOURCE_DIR}/${CLDNN_SUBDIR}/api)
     target_link_libraries(libcldnn INTERFACE ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CLDNN_LIB})
     install(
         FILES
