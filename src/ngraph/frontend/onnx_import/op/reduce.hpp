@@ -97,7 +97,7 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_l1(const Node& node)
                 {
-                    auto l1_norm_reduction = std::bind(ngraph::builder::l1_norm,
+                    auto l1_norm_reduction = std::bind(ngraph::builder::opset1::l1_norm,
                                                        std::placeholders::_1,
                                                        std::placeholders::_2,
                                                        0.f);
@@ -119,7 +119,7 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_l2(const Node& node)
                 {
-                    auto l2_norm_reduction = std::bind(ngraph::builder::l2_norm,
+                    auto l2_norm_reduction = std::bind(ngraph::builder::opset1::l2_norm,
                                                        std::placeholders::_1,
                                                        std::placeholders::_2,
                                                        0.f,

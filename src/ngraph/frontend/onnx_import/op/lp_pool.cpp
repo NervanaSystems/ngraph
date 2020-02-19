@@ -54,7 +54,7 @@ namespace ngraph
                         AxisSet reduction_axes{
                             common::get_monotonic_range<std::size_t>(orig_shape.size(), 2)};
 
-                        slice = ngraph::builder::lp_norm(
+                        slice = ngraph::builder::opset1::lp_norm(
                             slice, reduction_axes, static_cast<std::size_t>(p_norm));
 
                         // output shape is all ones except N channel
