@@ -41,25 +41,6 @@
 #include <api/softmax.hpp>
 #include <api/topology.hpp>
 
-#include "ngraph/pass/algebraic_simplification.hpp"
-#include "ngraph/pass/batch_fusion.hpp"
-#include "ngraph/pass/core_fusion.hpp"
-#include "ngraph/pass/cse.hpp"
-#include "ngraph/pass/fused_op_decomposition.hpp"
-#include "ngraph/pass/get_output_element_elimination.hpp"
-#include "ngraph/pass/implicit_broadcast_elimination.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/nop_elimination.hpp"
-#include "ngraph/pass/reshape_elimination.hpp"
-#include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
-#include "ngraph/runtime/intelgpu/visualize_tree.hpp"
-
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
@@ -86,7 +67,6 @@
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
-#include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
@@ -121,6 +101,24 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/batch_fusion.hpp"
+#include "ngraph/pass/core_fusion.hpp"
+#include "ngraph/pass/cse.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
+#include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/implicit_broadcast_elimination.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
+#include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -135,8 +133,7 @@ using intelgpu_space = runtime::intelgpu::IntelGPULayout;
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
-#include "ngraph/op/fused_op_tbl.hpp"
-#include "ngraph/op/op_tbl.hpp"
+#include "ngraph/opsets/opset0_tbl.hpp"
 };
 #undef NGRAPH_OP
 
@@ -148,8 +145,7 @@ static OP_TYPEID get_typeid(const string& s)
 // ...
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const unordered_map<string, OP_TYPEID> typeid_map{
-#include "ngraph/op/fused_op_tbl.hpp"
-#include "ngraph/op/op_tbl.hpp"
+#include "ngraph/opsets/opset0_tbl.hpp"
     };
 #undef NGRAPH_OP
     auto it = typeid_map.find(s);

@@ -71,16 +71,16 @@ string runtime::intelgpu::get_opencl_type_min_max_value(const element::Type& ngr
                        "' in runtime::intelgpu::get_opencl_type_min_max_value()");
 }
 
-vector<cldnn_arg> runtime::intelgpu::get_kernel_args(size_t input, size_t output)
+vector<arg_desc> runtime::intelgpu::get_kernel_args(size_t input, size_t output)
 {
-    vector<cldnn_arg> result;
+    vector<arg_desc> result;
 
-    for (cldnn_arg_index i = 0; i < input; ++i)
+    for (arg_desc_index i = 0; i < input; ++i)
     {
         result.push_back({arg_input, i});
     }
 
-    for (cldnn_arg_index i = 0; i < output; ++i)
+    for (arg_desc_index i = 0; i < output; ++i)
     {
         result.push_back({arg_output, i});
     }
@@ -1301,7 +1301,7 @@ void runtime::intelgpu::do_concat_operation(cldnn::topology& topology,
         writer.block_end();
 
         vector<cldnn::primitive_id> kernel_input;
-        vector<cldnn_arg> kernel_arguments;
+        vector<arg_desc> kernel_arguments;
 
         kernel_input.push_back(*input_name);
         if (idx == 0)

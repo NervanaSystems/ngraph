@@ -16,12 +16,12 @@
 
 #pragma once
 
+#include <api/custom_gpu_primitive.hpp>
 #include <api/topology.hpp>
-
-#include "ngraph/code_writer.hpp"
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -251,7 +251,8 @@ namespace ngraph
             std::string get_opencl_type_name(const element::Type& ngraph_type);
             std::string get_opencl_type_min_max_value(const element::Type& ngraph_type,
                                                       bool is_min);
-            std::vector<cldnn_arg> get_kernel_args(size_t input, size_t output);
+            std::vector<cldnn::custom_gpu_primitive::arg_desc> get_kernel_args(size_t input,
+                                                                               size_t output);
             std::string array_dims(const Shape& dimentions, const AxisSet& axis = {});
             std::string access_dims(const Shape& dimentions,
                                     const std::string& var = "i",
