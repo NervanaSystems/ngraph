@@ -47,7 +47,7 @@ namespace ngraph
                     // In general "entrywise" lp-norm for matrix `A` is defined as following double
                     // sum:
                     // ||A||_p = ||vec(A)||_p = [sum_{i=1}^m sum_{j=1}^n abs(a_{i,j})^p]^{1/p}
-                    shared_ptr<Node> abs_values{make_shared<op::Abs>(value)};
+                    shared_ptr<Node> abs_values{make_shared<ngraph::opset1::Abs>(value)};
                     shared_ptr<Node> p_node = ngraph::opset1::Constant::create(
                         value.get_element_type(),
                         value.get_shape(),
@@ -129,8 +129,9 @@ namespace ngraph
                                                   bool keep_dims)
         {
             shared_ptr<Node> values{make_shared<ngraph::opset1::ReduceSum>(
-                value * value,
-                make_shared<op::Constant>(
+                make_shared<ngraph::opset1::Multiply>(
+                    value, value, ngraph::op::AutoBroadcastType::NONE),
+                ngraph::opset1::Constant::create(
                     element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector()),
                 keep_dims)};
 
