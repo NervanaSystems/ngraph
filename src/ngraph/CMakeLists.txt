@@ -56,6 +56,8 @@ set (SRC
     builder/split.hpp
     builder/tensor_mask.hpp
     check.hpp
+    chrome_trace.cpp
+    chrome_trace.hpp
     code_writer.hpp
     component_manager.hpp
     coordinate.cpp
@@ -98,6 +100,10 @@ set (SRC
     ngraph.cpp
     ngraph.hpp
     ngraph_visibility.hpp
+    node_input.cpp
+    node_input.hpp
+    node_output.cpp
+    node_output.hpp
     node.cpp
     node.hpp
     op/abs.cpp
@@ -439,8 +445,6 @@ set (SRC
     op/util/binary_elementwise_comparison.hpp
     op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise_logical.hpp
-    op/util/broadcasting.cpp
-    op/util/broadcasting.hpp
     op/util/fused_op.cpp
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
@@ -491,6 +495,7 @@ set (SRC
     pass/constant_folding_split.cpp
     pass/constant_folding_variadic_split.cpp
     pass/constant_folding_strided_slice.cpp
+    pass/constant_folding_tile.cpp
     pass/constant_folding_transpose.cpp
     pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
@@ -592,8 +597,6 @@ set (SRC
     runtime/backend_manager.hpp
     runtime/cache.cpp
     runtime/cache.hpp
-    runtime/chrome_trace.cpp
-    runtime/chrome_trace.hpp
     runtime/executable.cpp
     runtime/executable.hpp
     runtime/host_tensor.cpp
@@ -636,7 +639,7 @@ set(SRC ${SRC}
     )
 
 if(NGRAPH_JSON_ENABLE)
-    list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
+    list(APPEND SRC serializer.cpp serializer.hpp)
 else()
     list(APPEND SRC serializer_stub.cpp)
 endif()
