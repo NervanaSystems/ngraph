@@ -34,6 +34,11 @@ void op::v1::ConvertLike::validate_and_infer_types()
     set_output_type(0, get_input_element_type(1), get_input_partial_shape(0));
 }
 
+bool op::v1::ConvertLike::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 shared_ptr<Node> op::v1::ConvertLike::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);

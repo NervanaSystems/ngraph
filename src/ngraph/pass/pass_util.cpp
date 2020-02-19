@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/pass/pass_util.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;

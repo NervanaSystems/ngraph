@@ -44,6 +44,13 @@ op::DepthToSpace::DepthToSpace(const Output<Node>& data,
 {
 }
 
+bool op::DepthToSpace::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("blocksize", m_blocksize);
+    visitor.on_attribute("m_mode", m_mode);
+    return true;
+}
+
 NodeVector op::DepthToSpace::decompose_op() const
 {
     auto data = input_value(0);
@@ -153,14 +160,28 @@ shared_ptr<Node> op::DepthToSpace::copy_with_new_args(const NodeVector& new_args
     return make_shared<DepthToSpace>(new_args.at(0), m_mode, m_blocksize);
 }
 
+namespace ngraph
+{
+    template <>
+    EnumNames<op::DepthToSpace::DepthToSpaceMode>&
+        EnumNames<op::DepthToSpace::DepthToSpaceMode>::get()
+    {
+        static auto enum_names = EnumNames<op::DepthToSpace::DepthToSpaceMode>(
+            "op::DepthToSpace::DepthToSpaceMode",
+            {{"blocks_first", op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST},
+             {"depth_first", op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::DepthToSpace::DepthToSpaceMode>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::DepthToSpace::DepthToSpaceMode& type)
+    {
+        return s << as_string(type);
+    }
+}
+
 op::DepthToSpace::DepthToSpaceMode op::DepthToSpace::mode_from_string(const std::string& mode) const
 {
-    static const std::map<std::string, DepthToSpaceMode> allowed_values = {
-        {"blocks_first", DepthToSpaceMode::BLOCKS_FIRST},
-        {"depth_first", DepthToSpaceMode::DEPTH_FIRST}};
-
-    NODE_VALIDATION_CHECK(
-        this, allowed_values.count(mode) > 0, "Invalid 'depth_to_space_mode' value passed in.");
-
-    return allowed_values.at(mode);
+    return as_enum<DepthToSpaceMode>(mode);
 }

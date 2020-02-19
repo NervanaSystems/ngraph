@@ -60,3 +60,10 @@ shared_ptr<Node> op::Clamp::copy_with_new_args(const NodeVector& new_args) const
 
     return make_shared<Clamp>(new_args.at(0), m_min, m_max);
 }
+
+bool op::Clamp::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("min", m_min);
+    visitor.on_attribute("max", m_max);
+    return true;
+}

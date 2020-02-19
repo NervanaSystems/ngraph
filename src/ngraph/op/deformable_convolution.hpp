@@ -63,8 +63,9 @@ namespace ngraph
                                       const CoordinateDiff& pads_end,
                                       const Strides& dilations,
                                       const PadType& auto_pad = PadType::EXPLICIT,
-                                      const size_t group = 1,
-                                      const size_t deformable_group = 1);
+                                      const int64_t group = 1,
+                                      const int64_t deformable_group = 1);
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 void validate_and_infer_types() override;
 
@@ -78,10 +79,10 @@ namespace ngraph
                 void set_pads_end(const CoordinateDiff& pads_end) { m_pads_end = pads_end; }
                 const PadType& get_auto_pad() const { return m_auto_pad; }
                 void set_auto_pad(const PadType& auto_pad) { m_auto_pad = auto_pad; }
-                size_t get_group() const { return m_group; }
-                void set_group(const size_t group) { m_group = group; }
-                size_t get_deformable_group() const { return m_deformable_group; }
-                void set_deformable_group(const size_t deformable_group)
+                int64_t get_group() const { return m_group; }
+                void set_group(const int64_t group) { m_group = group; }
+                int64_t get_deformable_group() const { return m_deformable_group; }
+                void set_deformable_group(const int64_t deformable_group)
                 {
                     m_deformable_group = deformable_group;
                 }
@@ -95,8 +96,8 @@ namespace ngraph
                 CoordinateDiff m_pads_begin;
                 CoordinateDiff m_pads_end;
                 PadType m_auto_pad;
-                size_t m_group;
-                size_t m_deformable_group;
+                int64_t m_group;
+                int64_t m_deformable_group;
             };
         }
     }
