@@ -33,8 +33,8 @@
 using namespace ngraph;
 using namespace std;
 
-runtime::gpu::GPU_Executable::GPU_Executable(shared_ptr<Function> func, bool enable_timing)
-    : m_context(new GPU_Backend::BackendContext())
+runtime::gpu::GPUExecutable::GPUExecutable(shared_ptr<Function> func, bool enable_timing)
+    : m_context(new GPUBackend::BackendContext())
 
 {
     FunctionInstance& instance = m_function_instance;
@@ -51,8 +51,8 @@ runtime::gpu::GPU_Executable::GPU_Executable(shared_ptr<Function> func, bool ena
     set_parameters_and_results(*func);
 }
 
-void runtime::gpu::GPU_Executable::initialize_io(void** target,
-                                                 const vector<shared_ptr<runtime::Tensor>>& source)
+void runtime::gpu::GPUExecutable::initialize_io(void** target,
+                                                const vector<shared_ptr<runtime::Tensor>>& source)
 {
     for (size_t i = 0; i < source.size(); i++)
     {
@@ -69,8 +69,8 @@ void runtime::gpu::GPU_Executable::initialize_io(void** target,
     }
 }
 
-bool runtime::gpu::GPU_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                        const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::gpu::GPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                       const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     FunctionInstance& instance = m_function_instance;
     if (instance.m_compiled_function == nullptr)
@@ -91,7 +91,7 @@ bool runtime::gpu::GPU_Executable::call(const vector<shared_ptr<runtime::Tensor>
     return true;
 }
 
-vector<runtime::PerformanceCounter> runtime::gpu::GPU_Executable::get_performance_data() const
+vector<runtime::PerformanceCounter> runtime::gpu::GPUExecutable::get_performance_data() const
 {
     std::vector<runtime::PerformanceCounter> rc;
     const FunctionInstance& instance = m_function_instance;

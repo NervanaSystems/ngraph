@@ -35,16 +35,16 @@ namespace ngraph
             class GPUPrimitiveEmitter;
             struct GPURuntimeContext;
             class CudaContextManager;
-            class GPU_Executable;
+            class GPUExecutable;
 
             using EntryPoint_t = void(void** inputs, void** outputs, GPURuntimeContext* ctx);
             using EntryPoint = std::function<EntryPoint_t>;
 
             BackendConstructor GPU_BACKEND_API get_backend_constructor_pointer();
-            class GPU_Backend : public Backend
+            class GPUBackend : public Backend
             {
             public:
-                GPU_Backend();
+                GPUBackend();
 
                 std::shared_ptr<ngraph::runtime::Tensor>
                     create_tensor(const ngraph::element::Type& element_type,

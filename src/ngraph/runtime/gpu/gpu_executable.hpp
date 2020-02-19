@@ -37,10 +37,10 @@ namespace ngraph
             using EntryPoint_t = void(void** inputs, void** outputs, GPURuntimeContext* ctx);
             using EntryPoint = std::function<EntryPoint_t>;
 
-            class GPU_Executable : public Executable
+            class GPUExecutable : public Executable
             {
             public:
-                GPU_Executable(std::shared_ptr<Function> func, bool enable_timing);
+                GPUExecutable(std::shared_ptr<Function> func, bool enable_timing);
 
                 bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
@@ -68,7 +68,7 @@ namespace ngraph
                     initialize_io(void** target,
                                   const std::vector<std::shared_ptr<runtime::Tensor>>& source);
 
-                std::shared_ptr<GPU_Backend::BackendContext> m_context;
+                std::shared_ptr<GPUBackend::BackendContext> m_context;
             };
         }
     }
