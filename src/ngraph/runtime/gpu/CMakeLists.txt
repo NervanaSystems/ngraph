@@ -30,6 +30,7 @@ set(SRC
     gpu_cuda_function_pool.cpp
     gpu_cuda_kernel_builder.cpp
     gpu_emitter.cpp
+    gpu_executable.cpp
     gpu_compiled_function.cpp
     gpu_internal_function.cpp
     gpu_invoke.cpp
