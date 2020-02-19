@@ -44,7 +44,7 @@ namespace ngraph
             /// \param[in]  value           The input tensor.
             /// \param[in]  reduction_axes  The axes along which we calculate norm.
             ///
-            /// \return     L-0 norm of value.
+            /// \return     L-0 norm of value. The output sub-graph is composed of v1 ops.
             ///
             std::shared_ptr<Node> l0_norm(const Output<Node>& value, const AxisSet& reduction_axes);
 
@@ -56,7 +56,7 @@ namespace ngraph
             /// \param[in]  reduction_axes  The axes along which we calculate norm.
             /// \param[in]  bias            The bias added to the calculated sum.
             ///
-            /// \return     L-1 norm of value.
+            /// \return     L-1 norm of value. The output sub-graph is composed of v1 ops.
             ///
             std::shared_ptr<Node>
                 l1_norm(const Output<Node>& value, const AxisSet& reduction_axes, float bias = 0.f);
@@ -72,13 +72,13 @@ namespace ngraph
             /// \param[in]  bias_mode       The method of bias application.
             /// \param[in]  keep_dims       The flag indicates if axes will be removed or kept.
             ///
-            /// \return     L-2 norm of value.
+            /// \return     L-2 norm of value. The output sub-graph is composed of v1 ops.
             ///
             std::shared_ptr<Node> l2_norm(const Output<Node>& value,
-                const AxisSet& reduction_axes,
-                float bias = 0.f,
-                BiasMode bias_mode = BiasMode::ADD,
-                bool keep_dims = false);
+                                          const AxisSet& reduction_axes,
+                                          float bias = 0.f,
+                                          BiasMode bias_mode = BiasMode::ADD,
+                                          bool keep_dims = false);
 
             /// \brief      Creates node which calculates L-p norm on input tensor.
             ///
@@ -87,12 +87,12 @@ namespace ngraph
             /// \param[in]  p_norm          The p norm to calculate.
             /// \param[in]  bias            The bias added to the calculated sum.
             ///
-            /// \return     L-p norm of value.
+            /// \return     L-p norm of value. The output sub-graph is composed of v1 ops.
             ///
             std::shared_ptr<Node> lp_norm(const Output<Node>& value,
-                const AxisSet& reduction_axes,
-                std::size_t p_norm = 2,
-                float bias = 0.f);
+                                          const AxisSet& reduction_axes,
+                                          std::size_t p_norm = 2,
+                                          float bias = 0.f);
         }
     } // namespace builder
 } // namespace ngraph

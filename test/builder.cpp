@@ -78,7 +78,7 @@ shared_ptr<runtime::Tensor> make_reduce_result_false(
 
 TEST(builder, l2_norm)
 {
-    auto result = make_reduce_result(builder::opset1::l2_norm);
+    auto result = make_reduce_result(builder::l2_norm);
     ASSERT_TRUE(test::all_close((vector<float>{5.9160797831f, 7.48331477355f}),
                                 read_vector<float>(result)));
 }
