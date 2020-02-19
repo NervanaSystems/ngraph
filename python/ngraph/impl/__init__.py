@@ -20,17 +20,24 @@ Low level wrappers for the nGraph c++ api.
 
 # flake8: noqa
 
+import os
 import sys
 import six
 
-# workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
+if sys.platform == 'win32':
+    # ngraph.dll is currently located 3 directories above
+    # and this path needs to be visible to the _pyngraph module
+    ngraph_dll = os.path.join(os.path.dirname(__file__), '..', '..', '..')
+    os.environ['PATH'] = os.path.abspath(ngraph_dll) + ';' + os.environ['PATH']
 else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)
+    # workaround to load the libngraph.so with RTLD_GLOBAL
+    if six.PY3:
+        import os
+        flags = os.RTLD_NOW | os.RTLD_GLOBAL
+    else:
+        import ctypes
+        flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
+    sys.setdlopenflags(flags)
 
 from _pyngraph import Function
 from _pyngraph import Node
