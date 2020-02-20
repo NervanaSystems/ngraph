@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "average_pool.hpp"
-#include "ngraph/node.hpp"
-#include "utils/pooling_factory.hpp"
+#include <memory>
+
+#include "ngraph/opsets/opset0.hpp"
+#include "round.hpp"
 
 namespace ngraph
 {
@@ -26,11 +27,11 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector average_pool(const Node& node)
+                NodeVector round(const Node& node)
                 {
-                    return pooling::LocalPoolingFactory(node).make_avg_pool();
+                    const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
+                    return {std::make_shared<ngraph::opset0::Round>(data)};
                 }
-
             } // namespace set_1
 
         } // namespace op

@@ -42,9 +42,9 @@ namespace ngraph
                     auto off_on_values =
                         std::make_shared<default_opset::Split>(values, split_axis, 2);
                     auto off_value =
-                        reshape::interpret_as_scalar(get_output_element(off_on_values, 0ul));
+                        reshape::interpret_as_scalar(get_output_element(off_on_values, size_t{0}));
                     auto on_value =
-                        reshape::interpret_as_scalar(get_output_element(off_on_values, 1ul));
+                        reshape::interpret_as_scalar(get_output_element(off_on_values, size_t{1}));
 
                     auto axis = node.get_attribute_value<std::int64_t>("axis", -1);
 
