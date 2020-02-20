@@ -37,12 +37,14 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
 
-                    std::shared_ptr<ngraph::Node> one_node =
-                        std::make_shared<default_opset::Constant>(
-                            data->get_element_type(), Shape{}, std::vector<double>{1});
-                    one_node = ngraph::builder::make_broadcast_node(one_node, data->get_shape());
+                    const auto one_node =
+                        default_opset::Constant::create(data->get_element_type(), Shape{}, {1.f});
 
-                    return {data / (std::make_shared<default_opset::Abs>(data) + one_node)};
+                    // softsign(data) = data/(1+|data|)
+                    return {std::make_shared<default_opset::Divide>(
+                        data,
+                        std::make_shared<default_opset::Add>(
+                            std::make_shared<default_opset::Abs>(data), one_node))};
                 }
 
             } // namespace set_1

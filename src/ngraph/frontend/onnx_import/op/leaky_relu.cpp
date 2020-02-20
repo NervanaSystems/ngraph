@@ -42,7 +42,8 @@ namespace ngraph
                         std::make_shared<default_opset::Constant>(data->get_element_type(),
                                                                   data->get_shape(),
                                                                   std::vector<double>{alpha});
-                    return {std::make_shared<default_opset::Maximum>(data * alpha_node, data)};
+                    return {std::make_shared<default_opset::Maximum>(
+                        std::make_shared<default_opset::Multiply>(data, alpha_node), data)};
                 }
 
             } // namespace set_1
