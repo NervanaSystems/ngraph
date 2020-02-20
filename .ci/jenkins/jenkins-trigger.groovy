@@ -26,7 +26,7 @@ String JENKINS_BRANCH = "master"
 String TIMEOUTTIME = "3600"
 
 // Constants
-JENKINS_DIR = '.'
+JENKINS_DIR = 'jenkins'
 
 timestamps {
 
@@ -36,10 +36,12 @@ timestamps {
 
         // Clone the cje-algo directory which contains our Jenkins groovy scripts
         def sleeptime=0
-        retry(count: 3) {
+        retry(count: 5) {
             sleep sleeptime; sleeptime = 10
-            sh "git clone -b $JENKINS_BRANCH https://gitlab.devtools.intel.com/AIPG/AlgoVal/cje-algo ."
+            sh "git clone -b $JENKINS_BRANCH https://gitlab.devtools.intel.com/AIPG/AlgoVal/cje-algo ${JENKINS_DIR}"
         }
+
+        stash name: "jenkins_bundle", includes: 'jenkins/**', useDefaultExcludes: false
 
         // Call the main job script.
         //
