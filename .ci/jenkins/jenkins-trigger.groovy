@@ -45,7 +45,9 @@ timestamps {
         sleeptime=0
         retry(count: 5) {
             sleep sleeptime; sleeptime = 10
-            checkout scm
+            dir("ngraph") {
+                checkout scm
+            }
             sh 'cd ngraph && du -h | tail -1'
         }
         stash name: "ngraph_bundle", includes: 'ngraph/**', useDefaultExcludes: false
