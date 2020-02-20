@@ -146,10 +146,10 @@ def has_flag(compiler, flagname):
 
 def cpp_flag(compiler):
     """Check and return the -std=c++11 compiler flag."""
-    if has_flag(compiler, '-std=c++11'):
-        return '-std=c++11'
-    elif sys.platform == 'win32':
+    if sys.platform == 'win32':
         return ''  # C++11 is on by default in MSVC
+    elif has_flag(compiler, '-std=c++11'):
+        return '-std=c++11'
     else:
         raise RuntimeError('Unsupported compiler -- C++11 support is needed!')
 
