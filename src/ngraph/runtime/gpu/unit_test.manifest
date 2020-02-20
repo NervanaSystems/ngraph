@@ -223,6 +223,7 @@ max_pool_uint8
 max_pool_int8
 avg_pool_uint8
 avg_pool_int8
+loop_2d_add
 
 # Needs erf
 gelu_f32

@@ -11,6 +11,9 @@ max_3d_to_scalar_int32
 send_recv
 send_recv_ring
 
+# ONNX Loop
+loop_2d_add
+
 # ONNX TopK with dynamic K
 top_k_opset_10
 
