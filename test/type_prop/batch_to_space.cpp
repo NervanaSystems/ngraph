@@ -24,9 +24,9 @@ using namespace ngraph;
 TEST(type_prop, batch_to_space_output_shape_2D)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{10, 26});
-    auto block_shape = make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{1, 5});
-    auto pads_begin = make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 2});
-    auto pads_end = make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0});
+    auto block_shape = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 5});
+    auto pads_begin = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 2});
+    auto pads_end = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 0});
 
     auto batch_to_space =
         make_shared<op::v1::BatchToSpace>(data, block_shape, pads_begin, pads_end);
@@ -55,11 +55,11 @@ TEST(type_prop, batch_to_space_output_shape_5D)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{960, 6, 13, 128, 16});
     auto block_shape =
-        make_shared<op::Constant>(element::i32, Shape{4}, vector<int64_t>{1, 6, 5, 1, 16});
+        make_shared<op::Constant>(element::i32, Shape{5}, vector<int64_t>{1, 6, 5, 1, 16});
     auto pads_begin =
-        make_shared<op::Constant>(element::i32, Shape{4}, vector<int64_t>{0, 2, 0, 0, 0});
+        make_shared<op::Constant>(element::i32, Shape{5}, vector<int64_t>{0, 2, 0, 0, 0});
     auto pads_end =
-        make_shared<op::Constant>(element::i32, Shape{4}, vector<int64_t>{0, 2, 1, 0, 0});
+        make_shared<op::Constant>(element::i32, Shape{5}, vector<int64_t>{0, 2, 1, 0, 0});
 
     auto batch_to_space =
         make_shared<op::v1::BatchToSpace>(data, block_shape, pads_begin, pads_end);
