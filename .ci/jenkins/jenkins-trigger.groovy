@@ -48,8 +48,9 @@ timestamps {
             dir("ngraph") {
                 checkout scm
             }
-            sh 'ls -lart; cd ngraph && du -h | tail -1'
+            sh 'cd ngraph && du -h | tail -1; git rev-parse HEAD'
         }
+        echo "CHANGE_BRANCH: ${CHANGE_BRANCH}"
         stash name: "ngraph_bundle", includes: 'ngraph/**', useDefaultExcludes: false
 
         // Call the main job script.
@@ -66,7 +67,6 @@ timestamps {
                          prTitle: CHANGE_TITLE,
                          prTarget: CHANGE_TARGET,
                          prAuthor: CHANGE_AUTHOR,
-                         jenkinsBranch: JENKINS_BRANCH,
                          timeoutTime: TIMEOUTTIME,
                          useMBPipelineSCM: 'true',
                          checkoutBranch: '-UNDEFINED-BRANCH-'
