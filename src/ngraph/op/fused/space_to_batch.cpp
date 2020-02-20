@@ -46,7 +46,6 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const
     auto pads_end = input_value(3);
 
     const auto& data_shape = data.get_shape();
-    const auto& block_shape = block.get_shape();
 
     NODE_VALIDATION_CHECK(this,
                           (data_shape.size() >= 2),
