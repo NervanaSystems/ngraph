@@ -53,6 +53,8 @@ static llvm::cl::opt<std::string>
     clObjectFilename("ngraph-mlir-object-filename",
                      llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
+// The bare pointer calling convention lowers memref arguments to bare pointers to the memref
+// element type.
 llvm::cl::opt<bool> clEnableBarePtrMemRefLowering(
     "ngraph-bare-ptr-memref-lowering",
     llvm::cl::init(false),
@@ -183,7 +185,12 @@ void MLIRCPURuntime::cleanup()
 //          ...
 //
 // The bare pointer ABI takes a single arg pointer pointing to data for that MemRef. Not extra
-// information about the MemRef is passed at the moment.
+// information about the MemRef is passed at the moment. Example:
+//
+// Args are laid out as follows:
+//   arg0Ptr-> <data>
+//   arg1Ptr-> <data>
+//   ...
 SmallVector<void*, 8> MLIRCPURuntime::allocateMemrefArgs()
 {
     SmallVector<void*, 8> args;
