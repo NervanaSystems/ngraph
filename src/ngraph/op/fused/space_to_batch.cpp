@@ -48,6 +48,12 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const
     const auto& data_shape = data.get_shape();
     const auto& block_shape = block.get_shape();
 
+    NODE_VALIDATION_CHECK(this,
+                          (data_shape.size() >= 2),
+                          "The data tensor with rank lower than 2 is not supported (data rank: ",
+                          data_shape.size(),
+                          ")");
+
     const auto block_const = as_type_ptr<op::Constant>(block.get_node_shared_ptr());
     const auto pads_begin_const = as_type_ptr<op::Constant>(pads_begin.get_node_shared_ptr());
     const auto pads_end_const = as_type_ptr<op::Constant>(pads_end.get_node_shared_ptr());
@@ -67,6 +73,10 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const
     vector<int64_t> block_values;
     get_in_vec_int64(block_const, block_values);
 
+//    Zero-pad the start and end of dimensions [D_0, ..., D_{N - 1}] of the input according to `pads_begin`
+//    and `pads_end`:
+//    note: P_0 for batch dimension is expected to be 0 (no-padding).
+//      x = [batch + P_0, D_1 + P_1, D_2 + P_2, ..., D_{N - 1} + P_{N - 1}], where P_i = pads_begin[i] + pads_end[i]
     auto out = make_shared<op::v1::Pad>(data, pads_begin_const, pads_end_const, PadMode::CONSTANT);
     auto out_shape = out->get_shape();
 
@@ -74,6 +84,10 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const
     // rearrange them so as appropriate chunks of data where close to their
     // destination place. Finally squeeze data from respective dimensions.
     Shape dispersed_shape{out_shape.at(0)};
+
+//    note: B_0 for batch is ignored.
+//      x' = reshape(x, [batch, (D_1 + P_1) / B_1, B_1, (D_2 + P_2) / B_2, B_2, ...,
+//      (D_{N - 1} + P_{N - 1}) / B_{N - 1}, B_{N - 1}]), where B_i = block_shape[i]
     for (size_t i = 1; i < block_values.size(); ++i)
     {
         NODE_VALIDATION_CHECK(
@@ -91,6 +105,7 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const
     }
     auto flat_node = builder::opset1::reshape(out, dispersed_shape);
 
+//    x'' = transpose(x',  [2, 4, ..., (N - 1) + (N - 1), 0, 1, 3, ..., N + (N - 1)])
     vector<size_t> axes_order;
     for (size_t i = 0, j = 2; i < block_values.size() - 1; ++i, j += 2)
     {
@@ -110,6 +125,8 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const
         prod *= el;
     }
 
+//    y = reshape(x'', [batch * B_1 * ... * B_{N - 1}, (D_1 + P_1) / B_1, (D_2 + P_2) / B_2, ... ,
+//      (D_{N - 1} + P_{N - 1}) / B_{N - 1}])
     squeezed_shape.push_back(out_shape.at(0) * prod);
     for (size_t i = 1; i < block_values.size(); ++i)
     {
@@ -172,8 +189,7 @@ std::shared_ptr<Node>
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<SpaceToBatch>(
-        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
+    return make_shared<SpaceToBatch>(new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }
 
 bool ngraph::op::v1::SpaceToBatch::visit_attributes(ngraph::AttributeVisitor& visitor)

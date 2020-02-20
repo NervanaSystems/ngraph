@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2020 Intel Corporation
+// Copyright 2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,12 +25,30 @@ namespace ngraph
     {
         namespace v1
         {
+            /// \brief SpaceToBatch permutes data tensor blocks of spatial data into batch
+            /// dimension.
+            ///
+            /// \note  Values from spatial blocks dimensions are moved in the batch dimension.
+            ///
+            ///        Output node produces a tensor with shape: tensor with shape
+            ///        `[batch * block_shape[0] * block_shape[1] * ... * block_shape[N - 1],
+            ///         (pads_begin[1] + D_1 + pads_end[1]) / block_shape[1],
+            ///         (pads_begin[2] + D_2 + pads_end[2]) / block_shape[2], ...,
+            ///         (pads_begin[N - 1] + D_{N - 1} + pads_end[N - 1]) / block_shape[N - 1]`
+            ///         of the same type as `data` input.
             class NGRAPH_API SpaceToBatch : public ngraph::op::util::FusedOp
             {
             public:
                 static constexpr NodeTypeInfo type_info{"SpaceToBatch", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 SpaceToBatch() = default;
+
+                /// \brief Constructs a SpaceToBatch operation.
+                ///
+                /// \param data Node producing the data tensor
+                /// \param block_shape The sizes of the block of values to be moved
+                /// \param pads_begin Specifies the padding for the beginning along each axis of `data` input
+                /// \param pads_end Specifies the padding for the ending along each axis of `data` input.
                 SpaceToBatch(const Output<Node>& data,
                              const Output<Node>& block_shape,
                              const ngraph::Output<ngraph::Node>& pads_begin,
