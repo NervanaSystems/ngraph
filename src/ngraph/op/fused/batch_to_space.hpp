@@ -46,8 +46,10 @@ namespace ngraph
                 ///
                 /// \param data Node producing the data tensor
                 /// \param block_shape The sizes of the block of values to be moved
-                /// \param crops_begin Specifies the amount to crop from the beginning along each axis of `data` input
-                /// \param crops_end Specifies the amount to crop from the ending along each axis of `data` input.
+                /// \param crops_begin Specifies the amount to crop from the beginning along each
+                /// axis of `data` input
+                /// \param crops_end Specifies the amount to crop from the ending along each axis of
+                /// `data` input.
                 BatchToSpace(const Output<Node>& data,
                              const Output<Node>& block_shape,
                              const Output<Node>& crops_begin,

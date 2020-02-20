@@ -94,9 +94,10 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
                           " product of block_shape values: ",
                           b_dim_divider);
 
-//   note: B_0 is expected to be 1.
-//      x' = reshape(`data`, [B_1, ..., B_{N - 1}, batch / (B_1 * ... B_{N - 1}), D_1, D_2, ..., D_{N - 1}]),
-//      where B_i = block_shape[i]
+    //   note: B_0 is expected to be 1.
+    //      x' = reshape(`data`, [B_1, ..., B_{N - 1}, batch / (B_1 * ... B_{N - 1}), D_1, D_2, ...,
+    //      D_{N - 1}]),
+    //      where B_i = block_shape[i]
     dispersed_shape.insert(dispersed_shape.begin(), block_values.begin() + 1, block_values.end());
     dispersed_shape.push_back(data_shape.at(0) / b_dim_divider);
     for (size_t i = 1; i < data_shape.size(); ++i)
@@ -115,7 +116,8 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
     }
     flat_node = builder::opset1::reorder_axes(flat_node, axes_order);
 
-//   x''' = reshape(x'', [batch / (B_1 * ... * B_{N - 1}), D_1 * B_1, D_2 * B_2, ... , D_{N - 1} * B_{N - 1}])
+    //   x''' = reshape(x'', [batch / (B_1 * ... * B_{N - 1}), D_1 * B_1, D_2 * B_2, ... , D_{N - 1}
+    //   * B_{N - 1}])
     Shape squeezed_shape{data_shape.at(0) / b_dim_divider};
     for (size_t i = 1; i < block_values.size(); ++i)
     {
@@ -123,11 +125,12 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
     }
     flat_node = builder::opset1::reshape(flat_node, squeezed_shape);
 
-//    Crop the start and end of dimensions according to `crops_begin`, `crops_end` to produce the output of shape:
-//    note: `crops_begin[0], crops_end[0]` are expected to be 0.
-//    `y = [batch / (B_1 * ... * B_{N - 1}), crop(D_1 * B_1, crops_begin[1], crops_end[1]),
-//          crop(D_2 * B_2, crops_begin[2], crops_end[2]), ... ,
-//          crop(D_{N - 1} * B_{N - 1}, crops_begin[N - 1], crops_end[N - 1])]`
+    //    Crop the start and end of dimensions according to `crops_begin`, `crops_end` to produce
+    //    the output of shape:
+    //    note: `crops_begin[0], crops_end[0]` are expected to be 0.
+    //    `y = [batch / (B_1 * ... * B_{N - 1}), crop(D_1 * B_1, crops_begin[1], crops_end[1]),
+    //          crop(D_2 * B_2, crops_begin[2], crops_end[2]), ... ,
+    //          crop(D_{N - 1} * B_{N - 1}, crops_begin[N - 1], crops_end[N - 1])]`
     vector<int64_t> upperbounds_values;
     auto flat_node_shape = flat_node->get_shape();
     for (size_t i = 0; i < flat_node_shape.size(); ++i)
@@ -139,7 +142,8 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
 
     vector<int64_t> begin_mask(data_shape.size(), 0);
     vector<int64_t> end_mask(data_shape.size(), 0);
-    flat_node = make_shared<op::v1::StridedSlice>(flat_node, crops_begin_const, upperbounds, begin_mask, end_mask);
+    flat_node = make_shared<op::v1::StridedSlice>(
+        flat_node, crops_begin_const, upperbounds, begin_mask, end_mask);
     return NodeVector{flat_node};
 }
 

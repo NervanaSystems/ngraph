@@ -47,8 +47,10 @@ namespace ngraph
                 ///
                 /// \param data Node producing the data tensor
                 /// \param block_shape The sizes of the block of values to be moved
-                /// \param pads_begin Specifies the padding for the beginning along each axis of `data` input
-                /// \param pads_end Specifies the padding for the ending along each axis of `data` input.
+                /// \param pads_begin Specifies the padding for the beginning along each axis of
+                /// `data` input
+                /// \param pads_end Specifies the padding for the ending along each axis of `data`
+                /// input.
                 SpaceToBatch(const Output<Node>& data,
                              const Output<Node>& block_shape,
                              const ngraph::Output<ngraph::Node>& pads_begin,
