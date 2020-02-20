@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2020 Intel Corporation
+// Copyright 2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@
 #include <cstddef>
 #include <memory>
 
-#include "space_to_batch.hpp"
-#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/make_constant.hpp"
-#include "ngraph/op/pad.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/fused/space_to_batch.hpp"
+#include "ngraph/op/pad.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;
@@ -29,48 +29,31 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v1::SpaceToBatch::type_info;
 
-ngraph::op::v1::SpaceToBatch::SpaceToBatch(const ngraph::Output<ngraph::Node> &data,
-                                               const ngraph::Output<ngraph::Node> &block_shape,
-                                               const ngraph::Output<ngraph::Node> &pads_begin,
-                                               const ngraph::Output<ngraph::Node> &pads_end)
-                                               : FusedOp({data, block_shape, pads_begin, pads_end})
+ngraph::op::v1::SpaceToBatch::SpaceToBatch(const ngraph::Output<ngraph::Node>& data,
+                                           const ngraph::Output<ngraph::Node>& block_shape,
+                                           const ngraph::Output<ngraph::Node>& pads_begin,
+                                           const ngraph::Output<ngraph::Node>& pads_end)
+    : FusedOp({data, block_shape, pads_begin, pads_end})
 {
     constructor_validate_and_infer_types();
 }
 
-
-NodeVector op::v1::SpaceToBatch::decompose_op() const {
+NodeVector op::v1::SpaceToBatch::decompose_op() const
+{
     auto data = input_value(0);
     auto block = input_value(1);
     auto pads_begin = input_value(2);
     auto pads_end = input_value(3);
 
-    auto data_shape = data.get_shape();
-    auto block_shape = block.get_shape();
-
-    NODE_VALIDATION_CHECK(this,
-                          (data_shape.size() >= 2),
-                          "The input tensor with rank lower than 2 is not supported (input rank: ",
-                          data_shape.size(),
-                          ")");
-
-    NGRAPH_CHECK(block.get_node_shared_ptr()->is_constant(),
-                 "block_shape input node is expected to be a static constant");
-
-    NGRAPH_CHECK(pads_begin.get_node_shared_ptr()->is_constant(),
-                 "paddings input node is expected to be a static constant");
-
-    NGRAPH_CHECK(pads_end.get_node_shared_ptr()->is_constant(),
-                 "paddings input node is expected to be a static constant");
-
+    const auto& data_shape = data.get_shape();
+    const auto& block_shape = block.get_shape();
 
     const auto block_const = as_type_ptr<op::Constant>(block.get_node_shared_ptr());
     const auto pads_begin_const = as_type_ptr<op::Constant>(pads_begin.get_node_shared_ptr());
     const auto pads_end_const = as_type_ptr<op::Constant>(pads_end.get_node_shared_ptr());
 
-    auto get_in_vec_int64 = [](shared_ptr<op::Constant> in_const, vector<int64_t>& values)
-    {
-        if(in_const->get_element_type() == element::i32)
+    auto get_in_vec_int64 = [](const shared_ptr<op::Constant>& in_const, vector<int64_t>& values) {
+        if (in_const->get_element_type() == element::i32)
         {
             auto tmp = in_const->get_vector<int32_t>();
             values.insert(values.begin(), tmp.begin(), tmp.end());
@@ -81,10 +64,8 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const {
         }
     };
 
-    vector<int64_t> block_values, pads_begin_values, pads_end_values;
+    vector<int64_t> block_values;
     get_in_vec_int64(block_const, block_values);
-    get_in_vec_int64(pads_begin_const, pads_begin_values);
-    get_in_vec_int64(pads_end_const, pads_end_values);
 
     auto out = make_shared<op::v1::Pad>(data, pads_begin_const, pads_end_const, PadMode::CONSTANT);
     auto out_shape = out->get_shape();
@@ -95,18 +76,28 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const {
     Shape dispersed_shape{out_shape.at(0)};
     for (size_t i = 1; i < block_values.size(); ++i)
     {
+        NODE_VALIDATION_CHECK(
+            this, block_values.at(i) > 0, "block_shape values must be greater than 0");
+        NODE_VALIDATION_CHECK(this,
+                              out_shape.at(i) % block_values.at(i) == 0,
+                              "The dimension on position: ",
+                              i,
+                              " equal to: ",
+                              out_shape.at(i),
+                              " must be a multiple of block_values[i]: ",
+                              block_values.at(i));
         dispersed_shape.push_back(out_shape.at(i) / block_values.at(i));
         dispersed_shape.push_back(block_values.at(i));
     }
     auto flat_node = builder::opset1::reshape(out, dispersed_shape);
 
     vector<size_t> axes_order;
-    for (size_t i = 0, j = 2; i < block_values.size()-1; ++i, j += 2)
+    for (size_t i = 0, j = 2; i < block_values.size() - 1; ++i, j += 2)
     {
         axes_order.push_back(j);
     }
     axes_order.push_back(0);
-    for (size_t i = 0, j = 1; i < block_values.size()-1; ++i, j += 2)
+    for (size_t i = 0, j = 1; i < block_values.size() - 1; ++i, j += 2)
     {
         axes_order.push_back(j);
     }
@@ -114,7 +105,7 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const {
     flat_node = builder::opset1::reorder_axes(flat_node, axes_order);
     Shape squeezed_shape;
     int64_t prod = 1;
-    for (auto &el : block_values)
+    for (auto& el : block_values)
     {
         prod *= el;
     }
@@ -129,14 +120,63 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const {
     return NodeVector{flat_node};
 }
 
-std::shared_ptr<Node> ngraph::op::v1::SpaceToBatch::copy_with_new_args(const ngraph::NodeVector &new_args) const {
+void ngraph::op::v1::SpaceToBatch::pre_validate_and_infer_types()
+{
+    PartialShape data_pshape = get_input_partial_shape(0);
+
+    auto data = input_value(0);
+    auto block = input_value(1);
+    auto crops_begin = input_value(2);
+    auto crops_end = input_value(3);
+    NGRAPH_CHECK(block.get_node_shared_ptr()->is_constant(),
+                 "block_shape input node is expected to be a static constant");
+
+    NGRAPH_CHECK(crops_begin.get_node_shared_ptr()->is_constant(),
+                 "crops_begin input node is expected to be a static constant");
+
+    NGRAPH_CHECK(crops_end.get_node_shared_ptr()->is_constant(),
+                 "crops_end input node is expected to be a static constant");
+
+    const auto& data_type = get_input_element_type(0);
+    const auto& block_shape_type = get_input_element_type(1);
+    const auto& crops_begin_type = get_input_element_type(2);
+    const auto& crops_end_type = get_input_element_type(3);
+    NODE_VALIDATION_CHECK(this,
+                          block_shape_type == element::i32 || block_shape_type == element::i64,
+                          "block_shape element type must be either int64_t or int32_t but got (",
+                          block_shape_type,
+                          ").");
+
+    NODE_VALIDATION_CHECK(this,
+                          crops_begin_type == element::i32 || crops_begin_type == element::i64,
+                          "crops_begin element type must be either int64_t or int32_t but got (",
+                          crops_begin_type,
+                          ").");
+
+    NODE_VALIDATION_CHECK(this,
+                          crops_end_type == element::i32 || crops_end_type == element::i64,
+                          "crops_end element type must be either int64_t or int32_t but got (",
+                          crops_end_type,
+                          ").");
+
+    if (data_pshape.is_dynamic())
+    {
+        set_output_type(0, data_type, PartialShape::dynamic());
+    }
+}
+
+std::shared_ptr<Node>
+    ngraph::op::v1::SpaceToBatch::copy_with_new_args(const ngraph::NodeVector& new_args) const
+{
     if (new_args.size() != 4)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<SpaceToBatch>(new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
+    return make_shared<SpaceToBatch>(
+        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }
 
-bool ngraph::op::v1::SpaceToBatch::visit_attributes(ngraph::AttributeVisitor &visitor) {
+bool ngraph::op::v1::SpaceToBatch::visit_attributes(ngraph::AttributeVisitor& visitor)
+{
     return true;
 }

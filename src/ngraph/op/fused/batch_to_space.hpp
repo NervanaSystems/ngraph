@@ -31,11 +31,13 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"BatchToSpace", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 BatchToSpace() = default;
-                BatchToSpace(const Output<Node>& data, const Output<Node>& block_shape,
-                        const Output<Node>& crops_begin,
-                        const Output<Node>& crops_end);
+                BatchToSpace(const Output<Node>& data,
+                             const Output<Node>& block_shape,
+                             const Output<Node>& crops_begin,
+                             const Output<Node>& crops_end);
 
                 NodeVector decompose_op() const override;
+                void pre_validate_and_infer_types() override;
                 std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
                 bool visit_attributes(AttributeVisitor& visitor) override;
             };
