@@ -52,7 +52,7 @@ timestamps {
         stash name: "ngraph_bundle", includes: 'ngraph/**', useDefaultExcludes: false
 
         // Call the main job script.
-        //
+        // 
         // NOTE: We keep the main job script in github.intel.com because it may
         //      contain references to technology which has not yet been released.
         //
