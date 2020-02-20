@@ -38,10 +38,17 @@ timestamps {
         def sleeptime=0
         retry(count: 5) {
             sleep sleeptime; sleeptime = 10
-            sh "git clone -b $JENKINS_BRANCH https://gitlab.devtools.intel.com/AIPG/AlgoVal/cje-algo ${JENKINS_DIR}"
+            sh "git clone -b $JENKINS_BRANCH --depth=1 https://gitlab.devtools.intel.com/AIPG/AlgoVal/cje-algo ${JENKINS_DIR}"
         }
-
         stash name: "jenkins_bundle", includes: 'jenkins/**', useDefaultExcludes: false
+
+        sleeptime=0
+        retry(count: 5) {
+            sleep sleeptime; sleeptime = 10
+            checkout scm
+            sh 'cd ngraph && du -h | tail -1'
+        }
+        stash name: "ngraph_bundle", includes: 'ngraph/**', useDefaultExcludes: false
 
         // Call the main job script.
         //
