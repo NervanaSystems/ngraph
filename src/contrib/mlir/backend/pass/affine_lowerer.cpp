@@ -705,6 +705,60 @@ namespace
         return matchSuccess();
     }
 
+    // Slice
+    REWRITER(NGSliceOp)
+    {
+        auto sliceOp = cast<NGSliceOp>(op);
+        auto loc = sliceOp.getLoc();
+        ScopedContext scope(rewriter, loc);
+        Value src = operands[0];
+        Value result = pass.buildOutputDefs(op, rewriter)[0];
+
+        MemRefView vRes(result), vSrc(src);
+        IndexedValue iRes(result), iSrc(src);
+        SmallVector<ValueHandle, 8> lbs, ubs;
+        SmallVector<int64_t, 8> steps;
+
+        auto lowerBounds = sliceOp.lowerBounds().getValue();
+        auto upperBounds = sliceOp.upperBounds().getValue();
+        auto strides = sliceOp.strides().getValue();
+
+        auto ivs = makeIndexHandles(vSrc.rank());
+        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
+
+        for (auto e : llvm::zip(lowerBounds, upperBounds, strides))
+        {
+            auto attrValue = std::get<0>(e).cast<IntegerAttr>().getInt();
+            lbs.push_back(intrinsics::constant_index(attrValue));
+
+            attrValue = std::get<1>(e).cast<IntegerAttr>().getInt();
+            ubs.push_back(intrinsics::constant_index(attrValue));
+
+            attrValue = std::get<2>(e).cast<IntegerAttr>().getInt();
+            steps.push_back(attrValue);
+        }
+
+        // for i_0 : lb_0 -> ub_0, step step_0
+        //   for i_1 : lb_1 -> ub_1 step step_1
+        // ...
+        //   for i_{n-1} : lb_{n-1} -> ub_{n-1} step step_{n-1}
+        //     Result[i_0 - lb_0, i_1 - lb_1, ..., i_{n-1} - lb_{n-1}] =
+        //     Src[i_0, i_1, ... , i_{n-1}]
+        AffineLoopNestBuilder(pivs, lbs, ubs, steps)([&] {
+            ValueHandle val = iSrc(ivs);
+            SmallVector<IndexHandle, 4> adjustedIndices;
+
+            for (auto e : llvm::zip(ivs, lbs))
+            {
+                adjustedIndices.push_back(IndexHandle(std::get<0>(e) - std::get<1>(e)));
+            }
+            iRes(adjustedIndices) = val;
+
+        });
+        rewriter.replaceOp(op, {result});
+        return matchSuccess();
+    }
+
     // Negative
     REWRITER(NGNegOp)
     {

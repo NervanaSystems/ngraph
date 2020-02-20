@@ -382,29 +382,20 @@ mlir::LogicalResult verifyOp(NGSliceOp op)
         auto st = strides[i].cast<IntegerAttr>().getInt();
         if (resShape[i] > srcShape[i])
         {
-            return op.emitOpError() << "Output shape at "
-                                    << i 
-                                    << " dimension cannot exceed"
+            return op.emitOpError() << "Output shape at " << i << " dimension cannot exceed"
                                     << "input shape dimensions";
         }
         if (lb > ub)
         {
-            return op.emitOpError() << "Lower bound at "
-                                    << i 
-                                    << " dimension is above upper bound";
+            return op.emitOpError() << "Lower bound at " << i << " dimension is above upper bound";
         }
         if (lb < 0)
         {
-            return op.emitOpError() << "Lower bound at "
-                                    << i
-                                    << " dimension must be non-negative";
+            return op.emitOpError() << "Lower bound at " << i << " dimension must be non-negative";
         }
         if (ub > srcShape[i])
         {
-            
-            return op.emitOpError() << "Upper bound at "
-                                    << i
-                                    << " dimension is out of range";
+            return op.emitOpError() << "Upper bound at " << i << " dimension is out of range";
         }
         if (st < 0)
         {
