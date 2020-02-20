@@ -48,7 +48,7 @@ timestamps {
             dir("ngraph") {
                 checkout scm
             }
-            sh 'cd ngraph && du -h | tail -1'
+            sh 'ls -lart; cd ngraph && du -h | tail -1'
         }
         stash name: "ngraph_bundle", includes: 'ngraph/**', useDefaultExcludes: false
 
