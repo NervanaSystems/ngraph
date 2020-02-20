@@ -19,6 +19,8 @@
 #include <onnx/onnx_pb.h>
 
 #include "default_opset.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "node.hpp"
@@ -97,12 +99,12 @@ namespace ngraph
             }
 
         protected:
-            std::shared_ptr<op::Parameter> get_ng_parameter() const
+            std::shared_ptr<ngraph::op::Parameter> get_ng_parameter() const
             {
-                return std::make_shared<op::Parameter>(get_element_type(), get_shape());
+                return std::make_shared<ngraph::op::Parameter>(get_element_type(), get_shape());
             }
 
-            std::shared_ptr<op::Constant> get_ng_constant(const Tensor& tensor) const
+            std::shared_ptr<ngraph::op::Constant> get_ng_constant(const Tensor& tensor) const
             {
                 return tensor.get_ng_constant();
             }

@@ -231,15 +231,7 @@ namespace ngraph
                 }
 
                 template <>
-                inline Graph get_value(const onnx::AttributeProto& attribute)
-                {
-                    if (attribute.type() != onnx::AttributeProto_AttributeType_GRAPH)
-                    {
-                        throw error::attribute::InvalidData{attribute.type()};
-                    }
-                    return get_graph(attribute.g());
-                }
-
+                Graph get_value(const onnx::AttributeProto& attribute);
             } // namespace attribute
 
         } // namespace detail
