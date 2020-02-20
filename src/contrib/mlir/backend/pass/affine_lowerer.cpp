@@ -658,16 +658,6 @@ namespace
         auto llvmArray3DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 3);
         auto llvmF32Ty = LLVM::LLVMType::getFloatTy(llvmDialect);
 
-        auto globalType =
-            LLVM::LLVMType::getVectorTy(getLLVMType(AttrsType::CONV3D, llvmDialect), 20);
-        LLVM::GlobalOp globalVal = getGlobal("globalAttrsVec",
-                                             globalType,
-                                             false,
-                                             LLVM::Linkage::Internal,
-                                             builder.getZeroAttr(globalType),
-                                             builder);
-        auto globalPtr = builder.create<LLVM::AddressOfOp>(builder.getUnknownLoc(), globalVal);
-
         // constants needed by gep
         // LLVM requires that structure indexes be (vectors of) 32-bit integer constants.
         std::vector<LLVM::ConstantOp> constants;
@@ -678,17 +668,21 @@ namespace
                 builder.getUnknownLoc(), llvmI32Ty, builder.getI32IntegerAttr(i));
             constants.push_back(constant);
         }
+        auto globalType = getLLVMType(AttrsType::CONV3D, llvmDialect);
         auto gepTy = getLLVMType(AttrsType::CONV3D, llvmDialect).getPointerTo();
 
         int32_t i = 0;
         for (auto attrs : m_attrsVec)
         {
-            auto indexOp = builder.create<LLVM::ConstantOp>(
-                builder.getUnknownLoc(), llvmI32Ty, builder.getI32IntegerAttr(i));
-            auto gepOp = builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                     gepTy,
-                                                     globalPtr,
-                                                     ArrayRef<Value>({constants[0], indexOp}));
+            StringRef name = "globalAttrs" + std::to_string(i);
+            LLVM::GlobalOp globalVal = getGlobal(name,
+                                                 globalType,
+                                                 false,
+                                                 LLVM::Linkage::Internal,
+                                                 builder.getZeroAttr(globalType),
+                                                 builder);
+            auto globalPtr = builder.create<LLVM::AddressOfOp>(builder.getUnknownLoc(), globalVal);
+
             switch (m_attrsTyVec[i])
             {
             case AttrsType::INT:
@@ -696,7 +690,7 @@ namespace
                 auto castOp = builder.create<LLVM::BitcastOp>(
                     builder.getUnknownLoc(),
                     getLLVMType(AttrsType::INT, llvmDialect).getPointerTo(),
-                    gepOp);
+                    globalPtr);
                 auto intOp = builder.create<LLVM::ConstantOp>(
                     builder.getUnknownLoc(), llvmI64Ty, builder.getI64IntegerAttr(attrs.intAttr));
                 builder.create<LLVM::StoreOp>(builder.getUnknownLoc(), intOp, castOp);
@@ -706,7 +700,7 @@ namespace
             {
                 auto gemmTy = getLLVMType(AttrsType::GEMM, llvmDialect);
                 auto castOp = builder.create<LLVM::BitcastOp>(
-                    builder.getUnknownLoc(), gemmTy.getPointerTo(), gepOp);
+                    builder.getUnknownLoc(), gemmTy.getPointerTo(), globalPtr);
 
                 std::vector<LLVM::GEPOp> geps;
                 std::vector<LLVM::LLVMType> elemsTy{llvmI8Ty,
@@ -767,7 +761,7 @@ namespace
             {
                 auto pool2dTy = getLLVMType(AttrsType::POOL2D, llvmDialect);
                 auto castOp = builder.create<LLVM::BitcastOp>(
-                    builder.getUnknownLoc(), pool2dTy.getPointerTo(), gepOp);
+                    builder.getUnknownLoc(), pool2dTy.getPointerTo(), globalPtr);
 
                 std::vector<LLVM::GEPOp> geps;
                 std::vector<LLVM::LLVMType> elemsTy{llvmI8Ty,
@@ -844,7 +838,7 @@ namespace
             {
                 auto pool3dTy = getLLVMType(AttrsType::POOL3D, llvmDialect);
                 auto castOp = builder.create<LLVM::BitcastOp>(
-                    builder.getUnknownLoc(), pool3dTy.getPointerTo(), gepOp);
+                    builder.getUnknownLoc(), pool3dTy.getPointerTo(), globalPtr);
 
                 std::vector<LLVM::GEPOp> geps;
                 std::vector<LLVM::LLVMType> elemsTy{llvmI8Ty,
@@ -921,7 +915,7 @@ namespace
             {
                 auto conv1dTy = getLLVMType(AttrsType::CONV1D, llvmDialect);
                 auto castOp = builder.create<LLVM::BitcastOp>(
-                    builder.getUnknownLoc(), conv1dTy.getPointerTo(), gepOp);
+                    builder.getUnknownLoc(), conv1dTy.getPointerTo(), globalPtr);
 
                 std::vector<LLVM::GEPOp> geps;
                 std::vector<LLVM::LLVMType> elemsTy{llvmI8Ty,
@@ -987,7 +981,7 @@ namespace
             {
                 auto conv2dTy = getLLVMType(AttrsType::CONV2D, llvmDialect);
                 auto castOp = builder.create<LLVM::BitcastOp>(
-                    builder.getUnknownLoc(), conv2dTy.getPointerTo(), gepOp);
+                    builder.getUnknownLoc(), conv2dTy.getPointerTo(), globalPtr);
 
                 std::vector<LLVM::GEPOp> geps;
                 std::vector<LLVM::LLVMType> elemsTy{llvmI8Ty,
@@ -1065,7 +1059,7 @@ namespace
             {
                 auto conv3dTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
                 auto castOp = builder.create<LLVM::BitcastOp>(
-                    builder.getUnknownLoc(), conv3dTy.getPointerTo(), gepOp);
+                    builder.getUnknownLoc(), conv3dTy.getPointerTo(), globalPtr);
 
                 std::vector<LLVM::GEPOp> geps;
                 std::vector<LLVM::LLVMType> elemsTy{llvmI8Ty,
@@ -1704,30 +1698,21 @@ namespace
         }
     }
 
-    static LLVM::GEPOp
+    static LLVM::AddressOfOp
         getGlobalAddr(int32_t index, PatternRewriter& rewriter, DialectLoweringPass& pass)
     {
         auto module = pass.getModule();
         auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
-        auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(llvmDialect);
-        auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
-        auto globalTy = LLVM::LLVMType::getVectorTy(unionTy, 20);
-        LLVM::GlobalOp globalVal = pass.getGlobal("globalAttrsVec",
+        auto globalTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        StringRef name = "globalAttrs" + std::to_string(index);
+        LLVM::GlobalOp globalVal = pass.getGlobal(name,
                                                   globalTy,
                                                   false,
                                                   LLVM::Linkage::Internal,
                                                   rewriter.getZeroAttr(globalTy),
                                                   rewriter);
         auto globalPtr = rewriter.create<LLVM::AddressOfOp>(rewriter.getUnknownLoc(), globalVal);
-        auto indexOp = rewriter.create<LLVM::ConstantOp>(
-            rewriter.getUnknownLoc(), llvmI32Ty, rewriter.getI32IntegerAttr(index));
-        auto constant0 = rewriter.create<LLVM::ConstantOp>(
-            rewriter.getUnknownLoc(), llvmI32Ty, rewriter.getI32IntegerAttr(0));
-        auto gepOp = rewriter.create<LLVM::GEPOp>(rewriter.getUnknownLoc(),
-                                                  unionTy.getPointerTo(),
-                                                  globalPtr,
-                                                  ArrayRef<Value>({constant0, indexOp}));
-        return gepOp;
+        return globalPtr;
     }
 
     REWRITER(NGAvgPoolOp)
@@ -1820,13 +1805,14 @@ namespace
             {},
             rewriter);
         // Insert call
-        auto gepOp = getGlobalAddr(index, rewriter, pass);
+        auto globalPtr = getGlobalAddr(index, rewriter, pass);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MAXPOOLBACKPROP), 64);
         SmallVector<mlir::Value, 4> inputs = {src, delta, result};
         SmallVector<mlir::Value, 4> outputs;
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
-        SmallVector<mlir::Value, 6> args = {outputs[0], outputs[1], outputs[2], gepOp, opTypeArg};
+        SmallVector<mlir::Value, 6> args = {
+            outputs[0], outputs[1], outputs[2], globalPtr, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
         return matchSuccess();
@@ -1896,13 +1882,14 @@ namespace
             {},
             rewriter);
         // Insert call
-        auto gepOp = getGlobalAddr(index, rewriter, pass);
+        auto globalPtr = getGlobalAddr(index, rewriter, pass);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MATMUL), 64);
         SmallVector<mlir::Value, 4> inputs = {lhs, rhs, result};
         SmallVector<mlir::Value, 4> outputs;
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
-        SmallVector<mlir::Value, 6> args = {outputs[0], outputs[1], outputs[2], gepOp, opTypeArg};
+        SmallVector<mlir::Value, 6> args = {
+            outputs[0], outputs[1], outputs[2], globalPtr, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 
@@ -2017,14 +2004,14 @@ namespace
                                              {},
                                              rewriter);
         // Insert call
-        auto gepOp = getGlobalAddr(index, rewriter, pass);
+        auto globalPtr = getGlobalAddr(index, rewriter, pass);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::GEMM), 64);
         SmallVector<mlir::Value, 4> inputs = {lhs, rhs, bias, result};
         SmallVector<mlir::Value, 4> outputs;
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
         SmallVector<mlir::Value, 6> args = {
-            outputs[0], outputs[1], outputs[2], outputs[3], gepOp, opTypeArg};
+            outputs[0], outputs[1], outputs[2], outputs[3], globalPtr, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 
@@ -2072,13 +2059,13 @@ namespace
                              {},
                              rewriter);
         // Insert call
-        auto gepOp = getGlobalAddr(index, rewriter, pass);
+        auto globalPtr = getGlobalAddr(index, rewriter, pass);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::SOFTMAX), 64);
         SmallVector<mlir::Value, 4> inputs = {lhs, result};
         SmallVector<mlir::Value, 4> outputs;
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
-        SmallVector<mlir::Value, 4> args = {outputs[0], outputs[1], gepOp, opTypeArg};
+        SmallVector<mlir::Value, 4> args = {outputs[0], outputs[1], globalPtr, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 
@@ -2168,14 +2155,14 @@ namespace
                                                {},
                                                rewriter);
         // Insert call
-        auto gepOp = getGlobalAddr(index, rewriter, pass);
+        auto globalPtr = getGlobalAddr(index, rewriter, pass);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::CONVOLUTIONBIAS), 64);
         SmallVector<mlir::Value, 4> inputs = {images, filters, bias, result};
         SmallVector<mlir::Value, 4> outputs;
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
         SmallVector<mlir::Value, 6> args = {
-            outputs[0], outputs[1], outputs[2], outputs[3], gepOp, opTypeArg};
+            outputs[0], outputs[1], outputs[2], outputs[3], globalPtr, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 
@@ -2891,13 +2878,13 @@ namespace
                              {},
                              rewriter);
         // Insert call
-        auto gepOp = getGlobalAddr(index, rewriter, pass);
+        auto globalPtr = getGlobalAddr(index, rewriter, pass);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(ty), 64);
         SmallVector<mlir::Value, 4> inputs = {lhs, result};
         SmallVector<mlir::Value, 4> outputs;
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
-        SmallVector<mlir::Value, 4> args = {outputs[0], outputs[1], gepOp, opTypeArg};
+        SmallVector<mlir::Value, 4> args = {outputs[0], outputs[1], globalPtr, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
     }
