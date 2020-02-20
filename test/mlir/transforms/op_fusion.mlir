@@ -36,3 +36,13 @@ func @invalid_elementwise(%arg0: !ng.tensor<512xf32>, %arg1: !ng.tensor<512xf32>
   "ng.return"(%2) : (!ng.tensor<512xf32>) -> ()
 }
 // CHECK-LABEL: func @invalid_elementwise
+
+// -----
+
+func @invalid_multi_use(%arg0: !ng.tensor<512xf32>, %arg1: !ng.tensor<512xf32>) -> !ng.tensor<512xf32> {
+  %0 = "ng.mul"(%arg0, %arg1) : (!ng.tensor<512xf32>, !ng.tensor<512xf32>) -> !ng.tensor<512xf32>
+  %1 = "ng.add"(%0, %arg1) : (!ng.tensor<512xf32>, !ng.tensor<512xf32>) -> !ng.tensor<512xf32>
+  %2 = "ng.sub"(%0, %arg1) : (!ng.tensor<512xf32>, !ng.tensor<512xf32>) -> !ng.tensor<512xf32>
+  "ng.return"(%2) : (!ng.tensor<512xf32>) -> ()
+}
+// CHECK-LABEL: func @invalid_multi_use

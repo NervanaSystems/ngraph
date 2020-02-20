@@ -20,12 +20,14 @@
 #include "ng_op_fusion.hpp"
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 
+#include <llvm/ADT/SetVector.h>
 #include <llvm/Support/Debug.h>
 
 #define PASS_NAME "ng-op-fusion"
 #define DEBUG_TYPE PASS_NAME
 
 using namespace mlir;
+using namespace llvm;
 
 namespace
 {
@@ -57,10 +59,10 @@ namespace
         OpFusionGroup(Operation* op)
             : kind(getOpFusionKind(op))
         {
-            fusedOps.push_back(op);
+            fusedOps.insert(op);
         }
 
-        SmallVector<Operation*, 8> fusedOps;
+        SmallSetVector<Operation*, 8> fusedOps;
         OpFusionKind kind;
     };
 
@@ -70,10 +72,8 @@ namespace
     /// prints the fused ops into the dbgs output.
     ///
     /// Current TODOs:
-    ///   * Take def-use infor into account.
-    ///   * Take number of uses of a particular op into account.
-    ///   * Take shapes into account.
-    ///   * Consider fusion beyond the linear order of operations in the basic bloc.
+    ///   * Support fusing ops with multiple uses.
+    ///   * Consider fusion beyond the linear order of operations in the basic block.
     ///   * Support upcoming region ops.
     ///   * Do not treat constants as definitions that might prevent fusion.
     ///   * Model memory cost, etc.
@@ -84,49 +84,70 @@ namespace
 
     private:
         /// TODO
-        bool fuseIntoActiveGroup(Operation* op);
-        void createNewGroup(Operation* op);
+        OpFusionGroup* createNewGroup(Operation* op);
 
         /// TODO
         SmallVector<OpFusionGroup, 16> fusionGroups;
     };
 } // namespace
 
-bool NgOpFusionPass::fuseIntoActiveGroup(Operation* op)
+static bool fuseOpIntoGroup(Operation* op, OpFusionGroup* currGroup)
 {
-    if (fusionGroups.empty())
+    // Multiple uses not supported yet.
+    if (!currGroup || !op->hasOneUse())
     {
-        // No active group.
+        return false;
+    }
+
+    // Try to fuse op with the current group only if there is a producer-consumer relationship
+    // between them.
+    auto operands = op->getOperands();
+    if (!std::any_of(operands.begin(), operands.end(), [&](Value val) {
+            auto* operand = val.getDefiningOp();
+            if (operand && currGroup->fusedOps.count(operand))
+            {
+                return true;
+            }
+            return false;
+        }))
+    {
         return false;
     }
 
     // Op fusion heuristics.
-    auto& group = fusionGroups.back();
     auto opKind = getOpFusionKind(op);
     if (opKind == OpFusionKind::Unknown)
         return false;
 
-    if ((group.kind == OpFusionKind::ElementWise && opKind == OpFusionKind::ElementWise) ||
-        (group.kind == OpFusionKind::Complex && opKind == OpFusionKind::ElementWise))
+    if ((currGroup->kind == OpFusionKind::ElementWise && opKind == OpFusionKind::ElementWise) ||
+        (currGroup->kind == OpFusionKind::Complex && opKind == OpFusionKind::ElementWise))
     {
-        group.fusedOps.push_back(op);
+        currGroup->fusedOps.insert(op);
         return true;
     }
 
     return false;
 }
 
-void NgOpFusionPass::createNewGroup(Operation* op)
+OpFusionGroup* NgOpFusionPass::createNewGroup(Operation* op)
 {
-    fusionGroups.push_back(OpFusionGroup(op));
+    // Multiple uses not supported yet.
+    if (op->hasOneUse())
+    {
+        fusionGroups.push_back(OpFusionGroup(op));
+        return &fusionGroups.back();
+    }
+
+    return nullptr;
 }
 
 void NgOpFusionPass::runOnFunction()
 {
+    OpFusionGroup* currGroup = nullptr;
     getFunction().walk([&](Operation* op) {
-        if (fuseIntoActiveGroup(op))
+        if (fuseOpIntoGroup(op, currGroup))
             return;
-        createNewGroup(op);
+        currGroup = createNewGroup(op);
     });
 
     unsigned i = 0;
