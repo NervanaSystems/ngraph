@@ -22,7 +22,8 @@
 
 #include <llvm/Support/Debug.h>
 
-#define DEBUG_TYPE "ng-op-fusion"
+#define PASS_NAME "ng-op-fusion"
+#define DEBUG_TYPE PASS_NAME
 
 using namespace mlir;
 
@@ -150,3 +151,6 @@ std::unique_ptr<mlir::Pass> mlir::createNgOpFusionPass()
 {
     return std::make_unique<NgOpFusionPass>();
 }
+
+static PassRegistration<NgOpFusionPass> pass(PASS_NAME,
+                                             "Enable op fusion optimization in nGraph dialect");
