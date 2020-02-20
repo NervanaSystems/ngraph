@@ -141,9 +141,9 @@ void MLIRCPUBackend::init()
     if (!initialized)
     {
         // Override default optimization level with macro value.
-        int32_t clOptLevel = getenv_int("NGRAPH_MLIR_OPT_LEVEL")
-            // -1 is the value returned if the env is not set
-            if (clOptLevel != -1)
+        int32_t clOptLevel = getenv_int("NGRAPH_MLIR_OPT_LEVEL");
+        // -1 is the value returned if the env variable is not set
+        if (clOptLevel != -1)
         {
             NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");
             mlirOptLevel = (llvm::CodeGenOpt::Level)clOptLevel;
