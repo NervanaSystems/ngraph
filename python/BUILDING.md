@@ -2,12 +2,12 @@
 
 ## Building nGraph Python Wheels
 
-If you want to try a newer version of nGraph's Python API than is available 
-from PyPI, you can build the latest version from source code. This process is 
-very similar to what is outlined in our [ngraph_build] instructions with two 
+If you want to try a newer version of nGraph's Python API than is available
+from PyPI, you can build the latest version from source code. This process is
+very similar to what is outlined in our [ngraph_build] instructions with two
 important differences:
 
-1. You must specify: `-DNGRAPH_PYTHON_BUILD_ENABLE=ON` and `-DNGRAPH_ONNX_IMPORT_ENABLE=ON` 
+1. You must specify: `-DNGRAPH_PYTHON_BUILD_ENABLE=ON` and `-DNGRAPH_ONNX_IMPORT_ENABLE=ON`
    when running `cmake`.
 
 2. Instead of running `make`, use the command `make python_wheel`.
@@ -16,13 +16,50 @@ important differences:
 
     `$ make python_wheel`
 
-After this procedure completes, the `ngraph/build/python/dist` directory should 
-contain the Python packages of the version you cloned. For example, if you 
-checked out and built `0.21` for Python 3.7, you might see something like: 
+After this procedure completes, the `ngraph/build/python/dist` directory should
+contain the Python packages of the version you cloned. For example, if you
+checked out and built `0.21` for Python 3.7, you might see something like:
 
     $ ls python/dist/
-    ngraph-core-0.21.0rc0.tar.gz  
-    ngraph_core-0.21.0rc0-cp37-cp37m-linux_x86_64.whl  
+    ngraph-core-0.21.0rc0.tar.gz
+    ngraph_core-0.21.0rc0-cp37-cp37m-linux_x86_64.whl
+
+## Building nGraph Python Wheels on Windows
+
+It's now possible to build the python wheel on Windows too. The build process consists of 3 steps:
+
+1. Configure the build with the following `cmake` invocation:
+~~~~
+cmake ..
+      -G"Visual Studio 15 2017 Win64"
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_INSTALL_PREFIX="C:\temporary_install_dir"
+      -DNGRAPH_DEX_ONLY=TRUE
+      -DNGRAPH_PYTHON_BUILD_ENABLE=TRUE
+      -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE
+      -DCMAKE_CXX_COMPILER=C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Tools\MSVC\14.16.27023\bin\Hostx64\x64
+~~~~
+There are a couple of things to notice here. One is that the full path to the x64 version of
+MSVC compiler has to be specified. This is because DNNL requires a 64-bit version and cmake might
+not detect it correctly by itself.
+On Windows only the DEX mode is supported - hence the `NGRAPH_DEX_ONLY` flag.
+The last but equally important thing is that you should specify a temporary directory where the
+build of ngraph will be installed. In this example it's `C:\temporary_install_dir` but you can pass
+a subdirectory of `ngraph\build` as well. The final python will will contain the contents of this
+temporary directory so it's very important to set it.
+
+2. Build the `install` target:
+
+    `cmake --build . --target install -j 8`
+
+In this step nGraph will be built and installed to the temporary directory specified above. You can
+adjust the number of threads used in the building process to your machine's capabilities.
+
+3. Build the python wheel itself:
+
+    `cmake --build . --target python_wheel -j 8`
+
+The final wheel should be located in `build\python\dist` directory.
 
 ### Using a virtualenv (optional)
 
