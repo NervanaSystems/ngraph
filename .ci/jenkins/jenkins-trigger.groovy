@@ -25,10 +25,6 @@
 String JENKINS_BRANCH = "aslepko/bundle"
 String TIMEOUTTIME = "3600"
 
-// Constants
-JENKINS_DIR = 'jenkins'
-NGRAPH_DIR = 'ngraph'
-
 timestamps {
 
     node("trigger") {
@@ -39,15 +35,14 @@ timestamps {
         def sleeptime=0
         retry(count: 5) {
             sleep sleeptime; sleeptime = 10
-            sh "git clone -b ${JENKINS_BRANCH} --depth=1 https://gitlab.devtools.intel.com/AIPG/AlgoVal/cje-algo ${JENKINS_DIR}"
+            sh "git clone -b ${JENKINS_BRANCH} --depth=1 https://gitlab.devtools.intel.com/AIPG/AlgoVal/cje-algo ./jenkins"
         }
         stash name: "jenkins_bundle", includes: 'jenkins/**', useDefaultExcludes: false
 
         sleeptime=0
         retry(count: 5) {
             sleep sleeptime; sleeptime = 10
-            sh "git clone -b ${CHANGE_BRANCH} --depth=1 https://github.com/NervanaSystems/ngraph ${NGRAPH_DIR}"
-            sh 'cd ngraph && du -h | tail -1; git rev-parse HEAD'
+            sh "git clone -b ${CHANGE_BRANCH} --depth=1 https://github.com/NervanaSystems/ngraph ./ngraph"
         }
         stash name: "ngraph_bundle", includes: 'ngraph/**', useDefaultExcludes: false
 
@@ -58,7 +53,7 @@ timestamps {
         //
         
         echo "Calling ngraph-ci-premerge.groovy"
-        def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
+        def ngraphCIPreMerge = load("./jenkins/ngraph-ci-premerge.groovy")
 
         ngraphCIPreMerge(premerge: 'true',
                          prURL: CHANGE_URL,
@@ -66,8 +61,6 @@ timestamps {
                          prTarget: CHANGE_TARGET,
                          prAuthor: CHANGE_AUTHOR,
                          timeoutTime: TIMEOUTTIME,
-                         useMBPipelineSCM: 'true',
-                         checkoutBranch: '-UNDEFINED-BRANCH-'
                         )
                          
         echo "ngraph-ci-premerge.groovy completed"
