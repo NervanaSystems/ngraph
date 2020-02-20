@@ -711,9 +711,9 @@ namespace
         auto sliceOp = cast<NGSliceOp>(op);
         auto loc = sliceOp.getLoc();
         ScopedContext scope(rewriter, loc);
+
         Value src = operands[0];
         Value result = pass.buildOutputDefs(op, rewriter)[0];
-
         MemRefView vRes(result), vSrc(src);
         IndexedValue iRes(result), iSrc(src);
         SmallVector<ValueHandle, 8> lbs, ubs;
@@ -722,7 +722,6 @@ namespace
         auto lowerBounds = sliceOp.lowerBounds().getValue();
         auto upperBounds = sliceOp.upperBounds().getValue();
         auto strides = sliceOp.strides().getValue();
-
         auto ivs = makeIndexHandles(vSrc.rank());
         auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
 
@@ -747,13 +746,11 @@ namespace
         AffineLoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iSrc(ivs);
             SmallVector<IndexHandle, 4> adjustedIndices;
-
             for (auto e : llvm::zip(ivs, lbs))
             {
                 adjustedIndices.push_back(IndexHandle(std::get<0>(e) - std::get<1>(e)));
             }
             iRes(adjustedIndices) = val;
-
         });
         rewriter.replaceOp(op, {result});
         return matchSuccess();
