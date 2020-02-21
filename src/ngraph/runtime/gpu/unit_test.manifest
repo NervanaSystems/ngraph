@@ -455,6 +455,7 @@ model_gatherND_int32
 model_gatherND_float
 model_pad_constant
 model_reciprocal
+model_round
 tile_3d_small_data_rank
 tile_3d_few_repeats
 select_v1
