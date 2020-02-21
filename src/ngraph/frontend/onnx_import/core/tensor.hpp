@@ -104,7 +104,7 @@ namespace ngraph
                         template <typename T, typename Container>
                         inline std::vector<T> __get_data(const Container& container)
                         {
-                            return {std::begin(container), std::end(container)};
+                            return std::vector<T>(std::begin(container), std::end(container));
                         }
 
                         /// Returns the size if bytes of an ONNX data type.
@@ -135,8 +135,8 @@ namespace ngraph
                                                              int onnx_data_type)
                         {
                             auto it = reinterpret_cast<const T*>(raw_data.data());
-                            return {it,
-                                    it + (raw_data.size() / __get_onnx_data_size(onnx_data_type))};
+                            return std::vector<T>(it,
+                                    it + (raw_data.size() / __get_onnx_data_size(onnx_data_type)));
                         }
                     }
                 }
@@ -336,15 +336,15 @@ namespace ngraph
                 }
 
                 template <>
-                inline std::vector<char> get_data(const onnx::TensorProto& tensor)
+                inline std::vector<bool> get_data(const onnx::TensorProto& tensor)
                 {
                     if (tensor.has_raw_data())
                     {
-                        return detail::__get_raw_data<char>(tensor.raw_data(), tensor.data_type());
+                        return detail::__get_raw_data<bool>(tensor.raw_data(), tensor.data_type());
                     }
                     if (tensor.data_type() == onnx::TensorProto_DataType_BOOL)
                     {
-                        return detail::__get_data<char>(tensor.int32_data());
+                        return detail::__get_data<bool>(tensor.int32_data());
                     }
                     throw error::tensor::invalid_data_type{tensor.data_type()};
                 }
@@ -455,7 +455,7 @@ namespace ngraph
                 switch (m_tensor_proto->data_type())
                 {
                 case onnx::TensorProto_DataType::TensorProto_DataType_BOOL:
-                    return make_ng_constant<char>(element::boolean);
+                    return make_ng_constant<bool>(element::boolean);
                 case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT:
                     return make_ng_constant<float>(element::f32);
                 case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT16:
