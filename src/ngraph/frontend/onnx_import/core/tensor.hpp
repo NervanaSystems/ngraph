@@ -135,8 +135,8 @@ namespace ngraph
                                                              int onnx_data_type)
                         {
                             auto it = reinterpret_cast<const T*>(raw_data.data());
-                            return std::vector<T>(it,
-                                    it + (raw_data.size() / __get_onnx_data_size(onnx_data_type)));
+                            return std::vector<T>(
+                                it, it + (raw_data.size() / __get_onnx_data_size(onnx_data_type)));
                         }
                     }
                 }
