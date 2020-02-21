@@ -80,7 +80,8 @@ namespace ngraph
                 };
 
                 ///
-                /// \brief      Describes a body input formed from slices of an input to TensorIterator.
+                /// \brief      Describes a body input formed from slices of an input to
+                ///             TensorIterator.
                 ///
                 class NGRAPH_API SliceInputDescription : public InputDescription
                 {
@@ -115,8 +116,8 @@ namespace ngraph
                 };
 
                 ///
-                /// \brief      Describes a body input initialized from a TensorIterator input on the
-                ///             first iteration, and then a body output thereafter.
+                /// \brief      Describes a body input initialized from a TensorIterator input on
+                ///             the first iteration, and then a body output thereafter.
                 ///
                 class NGRAPH_API MergedInputDescription : public InputDescription
                 {
@@ -126,10 +127,12 @@ namespace ngraph
                     ///
                     /// \brief      Constructs a new instance.
                     ///
-                    /// \param      input_index           Position of the TensorIterator input supplying a
-                    ///                                   value to body_parameter for the initial iteration.
+                    /// \param      input_index           Position of the TensorIterator input
+                    ///                                   supplying a value to body_parameter for
+                    ///                                   the initial iteration.
                     /// \param      body_parameter_index  Body parameter position to receive input.
-                    /// \param      body_value_index      Body value to supply body_parameter for successive
+                    /// \param      body_value_index      Body value to supply body_parameter for
+                    /// successive
                     ///                                   iterations.
                     ///
                     MergedInputDescription(uint64_t input_index,
@@ -219,8 +222,8 @@ namespace ngraph
                     ///
                     /// \param      body_value_index  A body value that produces the output
                     /// \param      output_index      The TensorIterator output index
-                    /// \param      iteration         which iteration (typically -1, final) will supply the
-                    ///                               value
+                    /// \param      iteration         which iteration (typically -1, final) will
+                    ///                               supply the value
                     ///
                     BodyOutputDescription(uint64_t body_value_index,
                                           uint64_t output_index,
@@ -254,18 +257,19 @@ namespace ngraph
                 ///             iteration and computed value thereafter
                 ///
                 /// \param[in]  body_parameter    The body parameter
-                /// \param      initial_value     Value for the parameter in first iteration. This will
-                ///                               be added as an input to TensorIterator.
-                /// \param      successive_value  Value for the parameter in successive iterations. The
-                ///                               value is what is active in the most recent completed
-                ///                               iteration.
+                /// \param      initial_value     Value for the parameter in first iteration. This
+                ///                               will be added as an input to TensorIterator.
+                /// \param      successive_value  Value for the parameter in successive iterations.
+                ///                               The value is what is active in the most recent
+                ///                               completed iteration.
                 ///
                 void set_merged_input(const std::shared_ptr<Parameter>& body_parameter,
                                       const Output<Node>& initial_value,
                                       const Output<Node>& successive_value);
                 ///
-                /// \brief      Indicates that a body parameter has an invariant value during iteration
-                ///             that may depend on values computed outside of the iteration
+                /// \brief      Indicates that a body parameter has an invariant value during
+                ///             iteration that may depend on values computed outside of the
+                ///             iteration.
                 ///
                 /// \param      body_parameter  The body parameter
                 /// \param      value           The value supplied as an input to the block
@@ -276,8 +280,8 @@ namespace ngraph
                 /// \brief      Gets a value for a particular iteration point
                 ///
                 /// \param      body_value  The value
-                /// \param      iteration   The iteration that supplies the value. Negative values are
-                ///                         from the last iteration.
+                /// \param      iteration   The iteration that supplies the value. Negative values
+                ///                         are from the last iteration.
                 ///
                 /// \return     The iterator value.
                 ///
