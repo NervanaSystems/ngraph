@@ -18,6 +18,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
@@ -61,6 +62,7 @@ namespace ngraph
                 DepthToSpace(const Output<Node>& data,
                              const std::string& mode,
                              std::size_t block_size = 1);
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 std::size_t get_block_size() const { return m_blocksize; }
                 DepthToSpaceMode get_mode() const { return m_mode; }
@@ -77,4 +79,20 @@ namespace ngraph
         }
         using v0::DepthToSpace;
     }
+    std::ostream& operator<<(std::ostream& s, const op::v0::DepthToSpace::DepthToSpaceMode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v0::DepthToSpace::DepthToSpaceMode>
+        : public EnumAttributeAdapterBase<op::v0::DepthToSpace::DepthToSpaceMode>
+    {
+    public:
+        AttributeAdapter(op::v0::DepthToSpace::DepthToSpaceMode& value)
+            : EnumAttributeAdapterBase<op::v0::DepthToSpace::DepthToSpaceMode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v0::DepthToSpace::DepthToSpaceMode>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

@@ -43,9 +43,6 @@ namespace ngraph
                     // Since opset 5 the target shape is provided as input
                     if (ng_inputs.size() == 2)
                     {
-                        NGRAPH_CHECK(ng_inputs.at(1)->is_constant(),
-                                     "The target shape input has to be a Constant.");
-
                         pattern = ng_inputs.at(1);
                     }
                     else
