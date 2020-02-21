@@ -282,6 +282,7 @@ model_argmax_int32
 model_argmin_int32
 model_lp_norm_default
 model_instance_normalization
+model_round
 
 # passing locally, fails closeness checks in CI which may be too strict
 elu
