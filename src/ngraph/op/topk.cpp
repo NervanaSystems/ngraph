@@ -244,7 +244,7 @@ op::v1::TopK::TopK(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-static const std::size_t UNKNOWN_NORMALIZED_AXIS = std::numeric_limits<size_t>::max();
+static const std::uint64_t UNKNOWN_NORMALIZED_AXIS = std::numeric_limits<uint64_t>::max();
 
 op::v1::TopK::TopK(const Output<Node>& data,
                    const Output<Node>& k,
@@ -312,7 +312,7 @@ void op::v1::TopK::set_axis(const int64_t axis)
     m_axis = axis;
 }
 
-size_t op::v1::TopK::get_axis() const
+uint64_t op::v1::TopK::get_axis() const
 {
     NODE_VALIDATION_CHECK(
         this, m_normalized_axis != UNKNOWN_NORMALIZED_AXIS, "Normalized axis of TopK is unknown");

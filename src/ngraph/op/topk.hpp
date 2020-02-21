@@ -164,7 +164,7 @@ namespace ngraph
                 /// \brief Returns axis value after normalization
                 /// \note If input rank required to normalization is dynamic, the exception is
                 /// thrown
-                size_t get_axis() const;
+                uint64_t get_axis() const;
                 /// \brief Returns axis value before normalization
                 int64_t get_provided_axis() const { return m_axis; }
                 void set_axis(const int64_t axis);
@@ -187,7 +187,7 @@ namespace ngraph
 
             protected:
                 int64_t m_axis;
-                size_t m_normalized_axis;
+                uint64_t m_normalized_axis;
                 Mode m_mode;
                 SortType m_sort;
                 element::Type m_index_element_type;
