@@ -104,7 +104,7 @@ NodeVector builder::opset1::split(const Output<Node>& value,
                                   const std::vector<size_t>& split_lengths,
                                   int64_t axis)
 {
-    const auto axis_node = op::Constant::create(element::u64, Shape{}, {axis});
+    const auto axis_node = ngraph::opset1::Constant::create(element::u64, Shape{}, {axis});
     const auto split_lengths_node =
         ngraph::opset1::Constant::create(element::u64, Shape{split_lengths.size()}, split_lengths);
     const auto variadic_split =
