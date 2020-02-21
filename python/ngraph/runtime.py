@@ -15,7 +15,7 @@
 # ******************************************************************************
 """Provide a layer of abstraction for the ngraph++ runtime environment."""
 import logging
-from typing import List, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 
@@ -27,20 +27,22 @@ from ngraph.exceptions import UserInputError
 log = logging.getLogger(__name__)
 
 
-def runtime(backend_name='CPU'):  # type: (str) -> 'Runtime'
+def runtime(backend_name='CPU', config=None):  # type: (str, Optional[Dict[str,str]]) -> 'Runtime'
     """Create a Runtime object (helper factory).
 
     Use signature to parameterize runtime as needed.
     """
-    return Runtime(backend_name)
+    return Runtime(backend_name, config)
 
 
 class Runtime:
     """Represents the ngraph++ runtime environment."""
 
-    def __init__(self, backend_name):  # type: (str) -> None
+    def __init__(self, backend_name, config=None):  # type: (str, Optional[Dict[str,str]]) -> None
         self.backend_name = backend_name
         self.backend = Backend.create(backend_name)
+        if config is not None:
+            self.backend.set_config(config, '')
 
     def __repr__(self):  # type: () -> str
         return "<Runtime: Backend='{}'>".format(self.backend_name)
