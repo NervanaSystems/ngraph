@@ -53,9 +53,9 @@ namespace ngraph
 
                     // required
                     const Graph& body_graph{node.get_attribute_value<Graph>("body")};
-                    const auto& graph_outputs{
-                        ngraph::as_output_vector(body_graph.get_ng_outputs())};
-                    const auto& graph_inputs{body_graph.get_ng_parameters()};
+                    const auto& graph_outputs =
+                        ngraph::as_output_vector(body_graph.get_ng_outputs());
+                    const auto& graph_inputs = body_graph.get_ng_parameters();
 
                     CHECK_VALID_NODE(
                         node,
