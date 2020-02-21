@@ -85,7 +85,7 @@ function(NGRAPH_GET_VERSION_LABEL)
             set(NGRAPH_VERSION_LABEL "${NGRAPH_MOST_RECENT_RELEASE_TAG}+${HASH}" PARENT_SCOPE)
         else()
             if(HASH)
-                set(NGRAPH_VERSION_LABEL "?.?.?+${HASH}" PARENT_SCOPE)
+                set(NGRAPH_VERSION_LABEL "0.0.0+${HASH}" PARENT_SCOPE)
             else()
                 # Not in a git repo
                 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/TAG NGRAPH_TAG)
