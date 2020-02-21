@@ -18,12 +18,12 @@ include(ExternalProject)
 
 # Includes blas 3.8.0 in mkldnn
 set(NGRAPH_MKLDNN_SHORT_VERSION 1)
-set(NGRAPH_MKLDNN_FULL_VERSION 1.1.1.0)
+set(NGRAPH_MKLDNN_FULL_VERSION 1.2.0.0)
 set(NGRAPH_MKLDNN_MKLML_ASSET_VERSION "v0.21")
-set(NGRAPH_MKLDNN_VERSION "v1.1.1")
+set(NGRAPH_MKLDNN_VERSION "v1.2")
 set(NGRAPH_MKLDNN_MKLML_VERSION "2019.0.5.20190502")
 set(NGRAPH_MKLDNN_MKLML_WIN32_VERSION "2020.0.20190813")
-set(NGRAPH_MKLDNN_GIT_TAG "v1.1.1")
+set(NGRAPH_MKLDNN_GIT_TAG "v1.2")
 
 #------------------------------------------------------------------------------
 # Fetch and install MKL-DNN
