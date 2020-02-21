@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "ngraph/op/fused/scatter_nd.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "scatter_nd.hpp"
 
 namespace ngraph
@@ -34,7 +34,7 @@ namespace ngraph
                     auto indices = ng_inputs.at(1);
                     auto updates = ng_inputs.at(2);
 
-                    return {std::make_shared<ngraph::op::ScatterND>(data, indices, updates)};
+                    return {std::make_shared<opset0::ScatterND>(data, indices, updates)};
                 }
 
             } // namespace set_1

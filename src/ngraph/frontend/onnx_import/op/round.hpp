@@ -14,16 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
-#include <vector>
+#pragma once
 
-#include "default_opset.hpp"
-#include "ngraph/builder/autobroadcast.hpp"
-#include "ngraph/op/abs.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/shape.hpp"
-#include "softsign.hpp"
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
@@ -33,17 +27,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector softsign(const Node& node)
-                {
-                    auto data = node.get_ng_inputs().at(0);
-
-                    std::shared_ptr<ngraph::Node> one_node =
-                        std::make_shared<default_opset::Constant>(
-                            data->get_element_type(), Shape{}, std::vector<double>{1});
-                    one_node = ngraph::builder::make_broadcast_node(one_node, data->get_shape());
-
-                    return {data / (std::make_shared<default_opset::Abs>(data) + one_node)};
-                }
+                NodeVector round(const Node& node);
 
             } // namespace set_1
 

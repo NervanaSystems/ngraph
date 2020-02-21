@@ -19,11 +19,11 @@
 #include <functional>
 #include <numeric>
 
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
@@ -157,7 +157,7 @@ namespace
         // (Re)construct axes_mapping.
         AxisSet broadcast_axes = node->get_broadcast_axes().second;
         std::vector<size_t> axes_mapping{
-            ngraph::op::opset1::get_axes_mapping(target_shape, broadcast_axes)};
+            ngraph::builder::opset1::get_axes_mapping(target_shape, broadcast_axes)};
 
         Output<Node> squeezed_arg = arg;
         // Collect axes to squeeze. Broadcast v0 "adds" new axes, thus we have to squeeze
@@ -536,10 +536,10 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::OneHot> node)
     {
-        const auto indices = node->input_value(0).get_node_shared_ptr();
+        const auto indices = node->input_value(0);
         const auto depth = node->input_value(1).get_node_shared_ptr();
-        auto on_value = node->input_value(2).get_node_shared_ptr();
-        auto off_value = node->input_value(3).get_node_shared_ptr();
+        auto on_value = node->input_value(2);
+        auto off_value = node->input_value(3);
         const auto axis = node->get_axis();
 
         NGRAPH_CHECK(depth->is_constant(), "depth input must be constant", *node);
@@ -549,9 +549,9 @@ namespace
 
         auto one_hot = std::make_shared<ngraph::op::Convert>(
             std::make_shared<ngraph::op::OneHot>(indices, output_shape, axis),
-            on_value->get_element_type());
+            on_value.get_element_type());
 
-        auto broadcasted_values = op::numpy_style_broadcast({one_hot, on_value, off_value});
+        auto broadcasted_values = builder::numpy_broadcast_outputs({one_hot, on_value, off_value});
         on_value = broadcasted_values[1];
         off_value = broadcasted_values[2];
 

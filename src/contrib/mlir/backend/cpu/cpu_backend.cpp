@@ -194,7 +194,8 @@ void MLIRCPUBackend::lowerNgDialect()
 void MLIRCPUBackend::lowerStandardDialect()
 {
     mlir::PassManager pm(&m_context);
-    pm.addPass(mlir::createLowerToLLVMPass());
+    pm.addPass(mlir::createLowerToLLVMPass(
+        /*useAlloca=*/false, /*useBarePtrCallConv=*/false, /*emitCWrappers=*/true));
 
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
