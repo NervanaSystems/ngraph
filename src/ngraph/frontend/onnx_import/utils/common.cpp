@@ -18,7 +18,6 @@
 #include "common.hpp"
 #include "default_opset.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/node.hpp"
 #include "ngraph/opsets/opset0.hpp"
 
 namespace ngraph
