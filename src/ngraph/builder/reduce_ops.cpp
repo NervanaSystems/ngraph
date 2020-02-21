@@ -150,7 +150,7 @@ namespace ngraph
                     std::vector<int64_t>(reshape.begin(), reshape.end())),
                 false);
 
-            Output<Node> diff = make_with_numpy_broadcast<ngraph::opset1::Subtract>(value, mu);
+            Output<Node> diff = std::make_shared<ngraph::opset1::Subtract>(value, mu);
 
             diff = std::make_shared<ngraph::opset1::ReduceSum>(
                 std::make_shared<ngraph::opset1::Multiply>(diff, diff),
