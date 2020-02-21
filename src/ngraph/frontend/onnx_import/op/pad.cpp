@@ -134,7 +134,7 @@ namespace ngraph
                     {
                         auto axis =
                             default_opset::Constant::create(element::i64, ngraph::Shape{}, {0});
-                        NodeVector padding = builder::split(pads, 2, 0);
+                        NodeVector padding = builder::opset1::split(pads, 2, 0);
 
                         padding_begin =
                             std::make_shared<default_opset::Convert>(padding.at(0), element::i64);
