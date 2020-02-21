@@ -26,7 +26,6 @@
 #include <llvm/ADT/DenseSet.h>
 #include <map>
 #include <mlir/EDSC/Builders.h>
-#include <mlir/EDSC/Helpers.h>
 #include <mlir/EDSC/Intrinsics.h>
 #include <mlir/IR/AffineExpr.h>
 #include <mlir/IR/IntegerSet.h>
