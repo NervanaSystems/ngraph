@@ -24,7 +24,6 @@
 #include "core/operator_set.hpp"
 #include "ngraph/function.hpp"
 
-
 namespace ngraph
 {
     namespace onnx_import

@@ -14,16 +14,15 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
 #include <fstream>
+#include <memory>
 
+#include "ngraph/frontend/onnx_import/onnx.hpp"
+#include "ngraph/runtime/backend.hpp"
 #include "onnx/defs/function.h"
 #include "onnx/defs/schema.h"
 #include "onnx/proto_utils.h"
 #include "round.hpp"
-#include "ngraph/frontend/onnx_import/onnx.hpp"
-#include "ngraph/runtime/backend.hpp"
-
 
 namespace ngraph
 {
@@ -35,33 +34,100 @@ namespace ngraph
             {
                 NodeVector dynamic_quantize_linear(const Node& node)
                 {
-                    onnx::GraphProto graph;
-                    const auto& model_proto=  node.model();
+                    // Create TypeProto
+                    onnx::TypeProto float_type_shape_6;
+                    float_type_shape_6.mutable_tensor_type()->set_elem_type(
+                        onnx::TensorProto_DataType_FLOAT);
+                    float_type_shape_6.mutable_tensor_type()
+                        ->mutable_shape()
+                        ->add_dim()
+                        ->set_dim_value(6);
+
+                    onnx::TypeProto uint8_type_shape_6;
+                    uint8_type_shape_6.mutable_tensor_type()->set_elem_type(
+                        onnx::TensorProto_DataType_UINT8);
+                    uint8_type_shape_6.mutable_tensor_type()
+                        ->mutable_shape()
+                        ->add_dim()
+                        ->set_dim_value(6);
+
+                    onnx::TypeProto float_type_no_scalar;
+                    float_type_no_scalar.mutable_tensor_type()->set_elem_type(
+                        onnx::TensorProto_DataType_FLOAT);
+
+                    onnx::TypeProto uint8_type_no_scalar;
+                    uint8_type_no_scalar.mutable_tensor_type()->set_elem_type(
+                        onnx::TensorProto_DataType_UINT8);
+
                     const onnx::NodeProto node_proto = node.node_proto();
+
+                    // Create a graph
+                    onnx::GraphProto graph;
                     onnx::NodeProto* new_node = graph.add_node();
-                    *new_node = node_proto;
-                    std::cout<<"schema"<<std::endl;
+                    new_node->CopyFrom(node_proto);
+                    new_node->clear_input();
+                    new_node->clear_output();
+
+                    // Add inputs to node and graph
+                    for (std::shared_ptr<ngraph::Node> input : node.get_ng_inputs())
+                    {
+                        new_node->add_input(input->get_name());
+                        onnx::ValueInfoProto* proto_input = graph.add_input();
+                        proto_input->set_name(input->get_name());
+                        *proto_input->mutable_type() = float_type_shape_6;
+                    }
+
+                    // Add outputs to node
+                    for (auto output : node.get_output_names())
+                    {
+                        new_node->add_output(output);
+                    }
+
+                    // Add outputs to graph
+                    onnx::ValueInfoProto* y = graph.add_output();
+                    y->set_name("y");
+                    *y->mutable_type() = uint8_type_shape_6;
+
+                    onnx::ValueInfoProto* y_scale = graph.add_output();
+                    y_scale->set_name("y_scale");
+                    *y_scale->mutable_type() = float_type_no_scalar;
+
+                    onnx::ValueInfoProto* y_zero_point = graph.add_output();
+                    y_zero_point->set_name("y_zero_point");
+                    *y_zero_point->mutable_type() = uint8_type_no_scalar;
+
                     const auto* schema = onnx::OpSchemaRegistry::Schema(node.op_type(), 11, "");
                     const onnx::FunctionProto* func = schema->GetFunction();
 
-                    FunctionExpandHelper(node_proto, *func, graph);
+                    FunctionExpandHelper(*new_node, *func, graph);
 
-                     graph.mutable_node()->erase(graph.node().begin());
+                    graph.mutable_node()->erase(graph.node().begin());
 
-                    std::cout<<"model"<<std::endl;
-                    onnx::ModelProto model = *model_proto; 
+                    // Save graph to file
+                    onnx::ModelProto model;
                     auto* graph_ptr = model.mutable_graph();
                     *graph_ptr = graph;
+                    model.set_ir_version(5);
+                    model.set_producer_name("backend-test");
+                    auto* opset_version = model.add_opset_import();
+                    opset_version->set_version(11);
                     const std::string path = "/home/etusien/ngraph/test/models/onnx/dql_test.onnx";
                     std::ofstream output_file{path};
                     model.SerializeToOstream(&output_file);
-                    std::cout<<"save"<<std::endl;
+
                     auto function = ngraph::onnx_import::import_onnx_model(path);
-                    std::cout<<"function"<<std::endl;
                     std::vector<std::shared_ptr<ngraph::Node>> nodes = function->get_ordered_ops();
 
-                   return NodeVector{nodes};
-
+                    // Delete parameters and outputs
+                    for (int i = nodes.size() - 1; i >= 0; --i)
+                    {
+                        std::cout << nodes.at(i)->get_name() << std::endl;
+                        if (nodes.at(i)->is_output() || nodes.at(i)->is_parameter())
+                        {
+                            nodes.erase(nodes.begin() + i);
+                        }
+                    }
+                    return NodeVector{nodes};
                 }
             } // namespace set_1
 

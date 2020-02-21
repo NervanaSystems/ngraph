@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-
 #include "default_opset.hpp"
 #include "model.hpp"
 #include "ngraph/op/parameter.hpp"

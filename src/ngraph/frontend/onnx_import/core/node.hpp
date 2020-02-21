@@ -19,7 +19,6 @@
 #include <cstddef>
 #include <string>
 
-
 #include "ngraph/except.hpp"
 #include "ngraph/node.hpp"
 
@@ -27,6 +26,7 @@ namespace onnx
 {
     // forward declaration
     class NodeProto;
+    class ModelProto;
 }
 
 namespace ngraph
@@ -67,7 +67,6 @@ namespace ngraph
             NodeVector get_ng_inputs() const;
             NodeVector get_ng_nodes() const;
             const onnx::NodeProto& node_proto() const;
-            const Model* model() const;
             const std::string& domain() const;
             const std::string& op_type() const;
             const std::string& get_name() const;
