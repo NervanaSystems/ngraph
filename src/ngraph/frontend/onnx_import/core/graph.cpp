@@ -248,7 +248,7 @@ namespace ngraph
             {
                 auto node = m_graph_proto.node()[i];
 
-                if (function_to_expand_whitelist.count(node.op_type()))
+                if (expand_function_whitelist.count(node.op_type()))
                 {
                     const auto operator_set_id = m_model->get_opset_version(node.domain());
                     const onnx::OpSchemaRegistry* schema_registry =
