@@ -19,8 +19,6 @@
 #include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "leaky_relu.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/multiply.hpp"
 
 namespace ngraph
 {
@@ -40,8 +38,7 @@ namespace ngraph
 
                     std::shared_ptr<ngraph::Node> alpha_node =
                         default_opset::Constant::create(data->get_element_type(), Shape{}, {alpha});
-                    auto multiply = std::make_shared<default_opset::Multiply>(data, alpha_node);
-                    return {std::make_shared<default_opset::Maximum>(multiply, data)};
+                    return {std::make_shared<default_opset::PRelu>(data, alpha_node)};
                 }
 
             } // namespace set_1
