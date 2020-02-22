@@ -18,10 +18,10 @@
 #include <vector>
 
 #include "default_opset.hpp"
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/divide.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "softsign.hpp"
 
@@ -40,7 +40,7 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> one_node =
                         std::make_shared<default_opset::Constant>(
                             data->get_element_type(), Shape{}, std::vector<double>{1});
-                    one_node = ngraph::op::make_broadcast_node(one_node, data->get_shape());
+                    one_node = ngraph::builder::make_broadcast_node(one_node, data->get_shape());
 
                     return {data / (std::make_shared<default_opset::Abs>(data) + one_node)};
                 }

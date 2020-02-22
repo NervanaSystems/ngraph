@@ -112,7 +112,7 @@ namespace ngraph
     /// \return    Checking if axis is in range [-tensor_rank, tensor_rank-1], otherwise
     ///            returns error. If negative axis, it counts from the last to the first axis,
     ///            by adding tensor_rank to axis.
-    int64_t normalize_axis(const Node* node, std::int64_t axis, std::int64_t tensor_rank);
+    int64_t normalize_axis(const Node* node, std::int64_t axis, const Rank& tensor_rank);
 
     /// \brief      Handle out of range axes in vector.
     ///
@@ -125,7 +125,7 @@ namespace ngraph
     ///
     std::vector<size_t> normalize_axes(const std::string& node_description,
                                        const std::vector<int64_t>& axes,
-                                       std::int64_t tensor_rank);
+                                       const Rank& tensor_rank);
 
     /// \brief      Handle out of range axis.
     ///
@@ -138,7 +138,7 @@ namespace ngraph
     ///            by adding tensor_rank to axis.
     int64_t normalize_axis(const std::string& node_description,
                            std::int64_t axis,
-                           std::int64_t tensor_rank);
+                           const Rank& tensor_rank);
 
     /// \brief      Handle out of range axis.
     ///
@@ -153,7 +153,7 @@ namespace ngraph
     ///             by adding tensor_rank to axis.
     int64_t normalize_axis(const Node* node,
                            std::int64_t axis,
-                           std::int64_t tensor_rank,
+                           std::uint64_t tensor_rank,
                            std::int64_t axis_range_min,
                            std::int64_t axis_range_max);
 
@@ -170,7 +170,54 @@ namespace ngraph
     ///             by adding tensor_rank to axis.
     int64_t normalize_axis(const std::string& node_description,
                            std::int64_t axis,
-                           std::int64_t tensor_rank,
+                           std::uint64_t tensor_rank,
                            std::int64_t axis_range_min,
                            std::int64_t axis_range_max);
-}
+
+    namespace opset1
+    {
+        ///
+        /// \brief      Calculates output spatial features size.
+        ///
+        /// \param[in]  input_data_shape      The input data shape
+        /// \param[in]  filters_shape         The filters shape
+        /// \param[in]  strides               The strides values.
+        /// \param[in]  dilations             The dilations values.
+        /// \param[in]  pads_begin            The paddings at the beginning of axis.
+        /// \param[in]  pads_end              The paddings at the end of axis.
+        /// \param[in]  output_padding    The output padding values.
+        /// \param      output_spatial_shape  The placeholder for computed output spatial shape.
+        ///
+        void infer_conv_backprop_output_spatial_shape(const Shape& input_data_shape,
+                                                      const Shape& filters_shape,
+                                                      const Strides& strides,
+                                                      const Strides& dilations,
+                                                      const CoordinateDiff& pads_begin,
+                                                      const CoordinateDiff& pads_end,
+                                                      const CoordinateDiff& output_padding,
+                                                      Shape& output_spatial_shape);
+
+        ///
+        /// \brief      Calculates padding values for ConvolutionBackpropData operator.
+        ///
+        /// \param[in]  input_data_shape  The input data shape.
+        /// \param[in]  filters_shape     The filters shape.
+        /// \param[in]  output_shape      The output shape defined only for spatial dimentions.
+        /// \param[in]  strides           The strides values.
+        /// \param[in]  dilations         The dilations values.
+        /// \param[in]  auto_pad_type     The automatic padding mode.
+        /// \param[in]  output_padding    The output padding values.
+        /// \param      pads_begin        The placeholder for paddings at the beginning of axis.
+        /// \param      pads_end          The placeholder for paddings at the end of axis.
+        ///
+        void infer_conv_backprop_auto_padding(const Shape& input_data_shape,
+                                              const Shape& filters_shape,
+                                              const Shape& output_shape,
+                                              const Strides& strides,
+                                              const Strides& dilations,
+                                              const op::PadType auto_pad_type,
+                                              const CoordinateDiff& output_padding,
+                                              CoordinateDiff& pads_begin,
+                                              CoordinateDiff& pads_end);
+    } // namespace opset1
+} // namespace ngraph

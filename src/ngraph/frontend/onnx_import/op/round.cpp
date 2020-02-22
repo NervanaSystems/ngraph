@@ -14,12 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "round.hpp"
-#include <cstddef>
-#include <cstdint>
 #include <memory>
-#include "default_opset.hpp"
-#include "ngraph/op/constant.hpp"
+
+#include "ngraph/opsets/opset0.hpp"
+#include "round.hpp"
 
 namespace ngraph
 {
@@ -32,9 +30,8 @@ namespace ngraph
                 NodeVector round(const Node& node)
                 {
                     const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
-                    return {std::make_shared<ngraph::op::Round>(data)};
+                    return {std::make_shared<ngraph::opset0::Round>(data)};
                 }
-
             } // namespace set_1
 
         } // namespace op

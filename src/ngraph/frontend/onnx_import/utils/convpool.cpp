@@ -30,35 +30,49 @@ namespace ngraph
         {
             Shape get_kernel_shape(const Node& node)
             {
-                std::size_t input_spatial_dims = node.get_ng_inputs().at(0)->get_shape().size() - 2;
-                return node.get_attribute_value<std::vector<std::size_t>>(
-                    "kernel_shape", std::vector<std::size_t>(input_spatial_dims, 1UL));
+                const auto& data_shape = node.get_ng_inputs().at(0)->get_output_partial_shape(0);
+                const size_t input_spatial_dims = static_cast<size_t>(data_shape.rank()) - 2;
+                return node.get_attribute_value<std::vector<size_t>>(
+                    "kernel_shape", std::vector<size_t>(input_spatial_dims, 1UL));
             }
 
             namespace detail
             {
-                Strides get_strides_helper(const Node& node,
-                                           const std::string& name,
-                                           const Shape& kernel_shape)
+                /// \brief              Helper method used to read vector attribute
+                /// \note               Default value is vector of size spatial dims filled with
+                ///                     ones
+                ///
+                /// \param   node       Node from which attribute is read
+                /// \param   attr_name  Attribute name (such as `strides`, `dilations`)
+                ///
+                /// \return             Read vector attribute if available or default value
+                std::vector<std::size_t> get_attribute_value(const Node& node,
+                                                             const std::string& attr_name)
                 {
-                    return node.get_attribute_value<std::vector<std::size_t>>(
-                        name, std::vector<std::size_t>(kernel_shape.size(), 1UL));
+                    if (node.has_attribute(attr_name))
+                    {
+                        return node.get_attribute_value<std::vector<std::size_t>>(attr_name);
+                    }
+                    const auto data_rank =
+                        node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
+                    CHECK_VALID_NODE(node,
+                                     data_rank.is_static(),
+                                     "If '",
+                                     attr_name,
+                                     "' is not provided data rank must be static");
+                    const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
+                    return std::vector<std::size_t>(data_spatial_dims, 1UL);
                 }
             } // namespace detail
 
-            Strides get_strides(const Node& node, const Shape& kernel_shape)
-            {
-                return detail::get_strides_helper(node, "strides", kernel_shape);
-            }
-
             Strides get_strides(const Node& node)
             {
-                return get_strides(node, get_kernel_shape(node));
+                return detail::get_attribute_value(node, "strides");
             }
 
             Strides get_dilations(const Node& node)
             {
-                return detail::get_strides_helper(node, "dilations", get_kernel_shape(node));
+                return detail::get_attribute_value(node, "dilations");
             }
 
             ngraph::op::PadType get_auto_pad(const Node& node)
@@ -89,16 +103,16 @@ namespace ngraph
             }
 
             std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node,
-                                                               const Shape& kernel_shape)
+                                                               const size_t kernel_rank)
             {
-                CoordinateDiff pads(kernel_shape.size(), 0);
+                CoordinateDiff pads(kernel_rank, 0);
                 if (node.has_attribute("pads"))
                 {
                     auto pads_int64 = node.get_attribute_value<std::vector<int64_t>>("pads");
                     pads = CoordinateDiff{std::begin(pads_int64), std::end(pads_int64)};
                 }
 
-                if (pads.size() == kernel_shape.size() * 2)
+                if (pads.size() == kernel_rank * 2)
                 {
                     return {{std::begin(pads), std::begin(pads) + pads.size() / 2},
                             {std::begin(pads) + pads.size() / 2, std::end(pads)}};
@@ -109,6 +123,18 @@ namespace ngraph
                     // padding at both begin and end of axis.
                     return {pads, pads};
                 }
+            }
+
+            std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node)
+            {
+                const auto data_rank =
+                    node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
+                CHECK_VALID_NODE(node,
+                                 data_rank.is_static(),
+                                 "The rank of node must be static in order to calculate pads");
+                const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
+
+                return get_pads(node, data_spatial_dims);
             }
 
             void calculate_auto_pads(const Shape& data_shape,

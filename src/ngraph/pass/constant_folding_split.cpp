@@ -41,8 +41,8 @@ void pass::ConstantFolding::construct_constant_split()
         const auto split = static_pointer_cast<op::v1::Split>(m.get_match_root());
 
         const auto axis_val = axis_node->cast_vector<int64_t>()[0];
-        const auto norm_axis_val =
-            ngraph::normalize_axis(split.get(), axis_val, data_node->get_shape().size());
+        const auto norm_axis_val = ngraph::normalize_axis(
+            split.get(), axis_val, data_node->get_output_partial_shape(0).rank());
         const auto slices = builder::split(data_node, split->get_num_splits(), norm_axis_val);
 
         for (size_t i = 0; i < split->get_output_size(); i++)

@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/slice.hpp"
 
