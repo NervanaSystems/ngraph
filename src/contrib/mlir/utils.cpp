@@ -19,12 +19,12 @@
 
 #include "utils.hpp"
 
-#include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
-
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/Debug.h>
 #include <mlir/IR/Dialect.h>
 #include <mlir/IR/MLIRContext.h>
+#include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
+#include "contrib/mlir/core/ngraph_dialect/ngraph_fusion_dialect/fusion_dialect.hpp"
 
 static llvm::cl::opt<bool> clPrintIRAfterAll(
     "ngraph-print-ir-after-all",
@@ -42,6 +42,7 @@ void ngraph::runtime::ngmlir::initializeNGraphMLIR()
     if (!init)
     {
         mlir::registerDialect<mlir::NGraphOpsDialect>();
+        mlir::registerDialect<mlir::NGraphFusedOpsDialect>();
         init = true;
     }
 }

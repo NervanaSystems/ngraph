@@ -28,6 +28,8 @@ set(SRC
     backend/analysis/memory_analysis.cpp
     core/compiler.cpp
     core/ngraph_dialect/dialect.cpp
+    core/ngraph_dialect/ngraph_fusion_dialect/fusion_dialect.cpp
+    core/ngraph_dialect/ngraph_fusion_dialect/fusion_dialect.hpp
     core/ngraph_dialect/type.cpp
     core/ngraph_dialect/ops.cpp
     core/pass/mlir_subgraph_extraction.cpp
@@ -115,6 +117,12 @@ ngraph_tablegen(ops.h.inc -gen-op-decls)
 ngraph_tablegen(ops.cpp.inc -gen-op-defs)
 add_public_tablegen_target(ngraph_ops_gen)
 
+# table-gen ops.td
+set(LLVM_TARGET_DEFINITIONS core/ngraph_dialect/ngraph_fusion_dialect/ops.td)
+ngraph_tablegen(fusion_dialect_ops.h.inc -gen-op-decls)
+ngraph_tablegen(fusion_dialect_ops.cpp.inc -gen-op-defs)
+add_public_tablegen_target(ngraph_fusion_dialect_ops_gen)
+
 # table-gen ops_interfaces.td
 set(LLVM_TARGET_DEFINITIONS core/ngraph_dialect/ops_interfaces.td)
 ngraph_tablegen(ops_interfaces.h.inc -gen-op-interface-decls)
@@ -132,7 +140,7 @@ set(LLVM_TARGET_DEFINITIONS core/pass/fused_ops_pattern.td)
 ngraph_tablegen(fused_ops_pattern.h.inc -gen-rewriters)
 add_public_tablegen_target(ngraph_ops_pattern_gen)
 
-add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen ngraph_ops_pattern_gen)
+add_dependencies(mlir_backend ngraph_ops_gen ngraph_fusion_dialect_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen ngraph_ops_pattern_gen)
 
 target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
