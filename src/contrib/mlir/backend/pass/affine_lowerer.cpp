@@ -219,6 +219,7 @@ namespace
         Type convertType(Type t) override;
     };
 
+    // Return llvm type for given attributes type
     static LLVM::LLVMType getLLVMType(AttrsType attrsType, LLVM::LLVMDialect* llvmDialect)
     {
         auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
@@ -267,6 +268,7 @@ namespace
         }
     }
 
+    // Create a Constant op and a Store op which stores the Constant
     static void
         createStore(LLVM::LLVMType llvmTy, Attribute valAttr, LLVM::GEPOp gep, OpBuilder& builder)
     {
@@ -300,15 +302,17 @@ namespace
                            ArrayRef<Type> output,
                            PatternRewriter& rewriter);
 
-        mlir::LLVM::GlobalOp getGlobal(StringRef name,
-                                       LLVM::LLVMType globalType,
-                                       bool isConstant,
-                                       LLVM::Linkage linkageType,
-                                       Attribute initVal,
-                                       OpBuilder& rewriter);
+        // Return a GlobalOp with the given name
+        // If such GlobalOp does not exist, create one
+        mlir::LLVM::GlobalOp getGlobalOp(StringRef name,
+                                         LLVM::LLVMType globalType,
+                                         bool isConstant,
+                                         LLVM::Linkage linkageType,
+                                         Attribute initVal,
+                                         OpBuilder& rewriter);
 
-        /// Insert a function to the module which initializes the global vector
-        /// that holds the attributes information for callbacks.
+        /// Insert a function to the module which initializes the global variables
+        /// that hold the attributes information for callbacks.
         void insertInitFunc();
 
         inline int32_t insertAttrs(opAttrs attrs, AttrsType type);
@@ -603,12 +607,12 @@ namespace
         return callBackFunc;
     }
 
-    mlir::LLVM::GlobalOp DialectLoweringPass::getGlobal(StringRef name,
-                                                        LLVM::LLVMType globalType,
-                                                        bool isConstant,
-                                                        LLVM::Linkage linkageType,
-                                                        Attribute initVal,
-                                                        OpBuilder& rewriter)
+    mlir::LLVM::GlobalOp DialectLoweringPass::getGlobalOp(StringRef name,
+                                                          LLVM::LLVMType globalType,
+                                                          bool isConstant,
+                                                          LLVM::Linkage linkageType,
+                                                          Attribute initVal,
+                                                          OpBuilder& rewriter)
     {
         auto module = getModule();
         auto globalVal = module.lookupSymbol<LLVM::GlobalOp>(name);
@@ -621,6 +625,411 @@ namespace
                 rewriter.getUnknownLoc(), globalType, isConstant, linkageType, name, initVal);
         }
         return module.lookupSymbol<LLVM::GlobalOp>(name);
+    }
+
+    // Attribute is int64_t
+    static void initINT(LLVM::LLVMDialect* llvmDialect,
+                        int64_t intAttr,
+                        LLVM::AddressOfOp globalPtr,
+                        OpBuilder& builder)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto castOp =
+            builder.create<LLVM::BitcastOp>(builder.getUnknownLoc(),
+                                            getLLVMType(AttrsType::INT, llvmDialect).getPointerTo(),
+                                            globalPtr);
+        auto intOp = builder.create<LLVM::ConstantOp>(
+            builder.getUnknownLoc(), llvmI64Ty, builder.getI64IntegerAttr(intAttr));
+        builder.create<LLVM::StoreOp>(builder.getUnknownLoc(), intOp, castOp);
+    }
+
+    /*
+            template <int N>
+            struct convAttrs
+            {
+                bool withRelu;
+                int64_t windowStrides[N];
+                int64_t windowDilation[N];
+                int64_t padBelow[N];
+                int64_t padAbove[N];
+            };
+     */
+    static void initCONV1D(LLVM::LLVMDialect* llvmDialect,
+                           convAttrs<1>& convAttrs1d,
+                           SmallVector<LLVM::ConstantOp, 12>& constants,
+                           LLVM::AddressOfOp globalPtr,
+                           OpBuilder& builder)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmArray1DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 1);
+        auto conv1dTy = getLLVMType(AttrsType::CONV1D, llvmDialect);
+        auto castOp = builder.create<LLVM::BitcastOp>(
+            builder.getUnknownLoc(), conv1dTy.getPointerTo(), globalPtr);
+
+        SmallVector<LLVM::GEPOp, 6> geps;
+        SmallVector<LLVM::LLVMType, 6> elemsTy{
+            llvmI8Ty, llvmArray1DI64Ty, llvmArray1DI64Ty, llvmArray1DI64Ty, llvmArray1DI64Ty};
+        for (auto j = 0; j < 5; j++)
+        {
+            auto gepConv1dOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            elemsTy[j].getPointerTo(),
+                                            castOp,
+                                            ArrayRef<Value>({constants[0], constants[j]}));
+            geps.push_back(gepConv1dOp);
+        }
+        // Store attribute values
+        createStore(llvmI8Ty,
+                    builder.getI8IntegerAttr(static_cast<int8_t>(convAttrs1d.withRelu)),
+                    geps[0],
+                    builder);
+        int k = 1;
+        for (auto& convAttr : {convAttrs1d.windowStrides[0],
+                               convAttrs1d.windowDilation[0],
+                               convAttrs1d.padBelow[0],
+                               convAttrs1d.padAbove[0]})
+        {
+            auto gepStructOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            llvmI64PtrTy,
+                                            geps[k],
+                                            ArrayRef<Value>({constants[0], constants[0]}));
+            createStore(llvmI64Ty, builder.getI64IntegerAttr(convAttr), gepStructOp, builder);
+            k++;
+        }
+    }
+
+    static void initCONV2D(LLVM::LLVMDialect* llvmDialect,
+                           convAttrs<2>& convAttrs2d,
+                           SmallVector<LLVM::ConstantOp, 12>& constants,
+                           LLVM::AddressOfOp globalPtr,
+                           OpBuilder& builder)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmArray2DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 2);
+        auto conv2dTy = getLLVMType(AttrsType::CONV2D, llvmDialect);
+        auto castOp = builder.create<LLVM::BitcastOp>(
+            builder.getUnknownLoc(), conv2dTy.getPointerTo(), globalPtr);
+
+        SmallVector<LLVM::GEPOp, 6> geps;
+        SmallVector<LLVM::LLVMType, 6> elemsTy{
+            llvmI8Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty};
+        for (auto j = 0; j < 5; j++)
+        {
+            auto gepConv2dOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            elemsTy[j].getPointerTo(),
+                                            castOp,
+                                            ArrayRef<Value>({constants[0], constants[j]}));
+            geps.push_back(gepConv2dOp);
+        }
+        // Store attribute values
+        createStore(llvmI8Ty,
+                    builder.getI8IntegerAttr(static_cast<int8_t>(convAttrs2d.withRelu)),
+                    geps[0],
+                    builder);
+        int k = 1, m = 0;
+        for (auto& convAttr : {convAttrs2d.windowStrides[0],
+                               convAttrs2d.windowStrides[1],
+                               convAttrs2d.windowDilation[0],
+                               convAttrs2d.windowDilation[1],
+                               convAttrs2d.padBelow[0],
+                               convAttrs2d.padBelow[1],
+                               convAttrs2d.padAbove[0],
+                               convAttrs2d.padAbove[1]})
+        {
+            auto gepStructOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            llvmI64PtrTy,
+                                            geps[k],
+                                            ArrayRef<Value>({constants[0], constants[m]}));
+            createStore(llvmI64Ty, builder.getI64IntegerAttr(convAttr), gepStructOp, builder);
+            // k increments after every 2 iterations
+            if (m == 1)
+            {
+                k++;
+            }
+            // m be 0 or 1 alternatively
+            m = (m + 1) % 2;
+        }
+    }
+
+    static void initCONV3D(LLVM::LLVMDialect* llvmDialect,
+                           convAttrs<3>& convAttrs3d,
+                           SmallVector<LLVM::ConstantOp, 12>& constants,
+                           LLVM::AddressOfOp globalPtr,
+                           OpBuilder& builder)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmArray3DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 3);
+        auto conv3dTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto castOp = builder.create<LLVM::BitcastOp>(
+            builder.getUnknownLoc(), conv3dTy.getPointerTo(), globalPtr);
+
+        SmallVector<LLVM::GEPOp, 6> geps;
+        SmallVector<LLVM::LLVMType, 6> elemsTy{
+            llvmI8Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty};
+        for (auto j = 0; j < 5; j++)
+        {
+            auto gepConv3dOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            elemsTy[j].getPointerTo(),
+                                            castOp,
+                                            ArrayRef<Value>({constants[0], constants[j]}));
+            geps.push_back(gepConv3dOp);
+        }
+        // Store attribute values
+        createStore(llvmI8Ty,
+                    builder.getI8IntegerAttr(static_cast<int8_t>(convAttrs3d.withRelu)),
+                    geps[0],
+                    builder);
+        int k = 1, m = 0;
+        for (auto& convAttr : {convAttrs3d.windowStrides[0],
+                               convAttrs3d.windowStrides[1],
+                               convAttrs3d.windowStrides[2],
+                               convAttrs3d.windowDilation[0],
+                               convAttrs3d.windowDilation[1],
+                               convAttrs3d.windowDilation[2],
+                               convAttrs3d.padBelow[0],
+                               convAttrs3d.padBelow[1],
+                               convAttrs3d.padBelow[2],
+                               convAttrs3d.padAbove[0],
+                               convAttrs3d.padAbove[1],
+                               convAttrs3d.padAbove[2]})
+        {
+            auto gepStructOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            llvmI64PtrTy,
+                                            geps[k],
+                                            ArrayRef<Value>({constants[0], constants[m]}));
+            createStore(llvmI64Ty, builder.getI64IntegerAttr(convAttr), gepStructOp, builder);
+            // k increments after every 3 iterations
+            if (m == 2)
+            {
+                k++;
+            }
+            // m be 0, 1, or 2 repeatedly.
+            m = (m + 1) % 3;
+        }
+    }
+
+    /*
+            template <int N>
+            struct poolAttrs
+            {
+                bool includePaddingInAvgComputation;
+                int64_t windowShape[N];
+                int64_t windowStrides[N];
+                int64_t padBelow[N];
+                int64_t padAbove[N];
+            };
+     */
+    static void initPOOL2D(LLVM::LLVMDialect* llvmDialect,
+                           poolAttrs<2>& poolAttrs2d,
+                           SmallVector<LLVM::ConstantOp, 12>& constants,
+                           LLVM::AddressOfOp globalPtr,
+                           OpBuilder& builder)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmArray2DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 2);
+        auto pool2dTy = getLLVMType(AttrsType::POOL2D, llvmDialect);
+        auto castOp = builder.create<LLVM::BitcastOp>(
+            builder.getUnknownLoc(), pool2dTy.getPointerTo(), globalPtr);
+
+        SmallVector<LLVM::GEPOp, 6> geps;
+        SmallVector<LLVM::LLVMType, 6> elemsTy{
+            llvmI8Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty};
+        for (auto j = 0; j < 5; j++)
+        {
+            auto gepPool2dOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            elemsTy[j].getPointerTo(),
+                                            castOp,
+                                            ArrayRef<Value>({constants[0], constants[j]}));
+            geps.push_back(gepPool2dOp);
+        }
+        // Store attribute values
+        createStore(llvmI8Ty,
+                    builder.getI8IntegerAttr(
+                        static_cast<int8_t>(poolAttrs2d.includePaddingInAvgComputation)),
+                    geps[0],
+                    builder);
+        int k = 1, m = 0;
+        for (auto& poolAttr : {poolAttrs2d.windowShape[0],
+                               poolAttrs2d.windowShape[1],
+                               poolAttrs2d.windowStrides[0],
+                               poolAttrs2d.windowStrides[1],
+                               poolAttrs2d.padBelow[0],
+                               poolAttrs2d.padBelow[1],
+                               poolAttrs2d.padAbove[0],
+                               poolAttrs2d.padAbove[1]})
+        {
+            auto gepStructOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            llvmI64PtrTy,
+                                            geps[k],
+                                            ArrayRef<Value>({constants[0], constants[m]}));
+            createStore(llvmI64Ty, builder.getI64IntegerAttr(poolAttr), gepStructOp, builder);
+            // k increments after every 2 iterations
+            if (m == 1)
+            {
+                k++;
+            }
+            // m be 0 or 1 alternatively
+            m = (m + 1) % 2;
+        }
+    }
+
+    static void initPOOL3D(LLVM::LLVMDialect* llvmDialect,
+                           poolAttrs<3>& poolAttrs3d,
+                           SmallVector<LLVM::ConstantOp, 12>& constants,
+                           LLVM::AddressOfOp globalPtr,
+                           OpBuilder& builder)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmArray3DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 3);
+        auto pool3dTy = getLLVMType(AttrsType::POOL3D, llvmDialect);
+        auto castOp = builder.create<LLVM::BitcastOp>(
+            builder.getUnknownLoc(), pool3dTy.getPointerTo(), globalPtr);
+
+        SmallVector<LLVM::GEPOp, 6> geps;
+        SmallVector<LLVM::LLVMType, 6> elemsTy{
+            llvmI8Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty};
+        for (auto j = 0; j < 5; j++)
+        {
+            auto gepPool3dOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            elemsTy[j].getPointerTo(),
+                                            castOp,
+                                            ArrayRef<Value>({constants[0], constants[j]}));
+            geps.push_back(gepPool3dOp);
+        }
+        // Store attribute values
+        createStore(llvmI8Ty,
+                    builder.getI8IntegerAttr(
+                        static_cast<int8_t>(poolAttrs3d.includePaddingInAvgComputation)),
+                    geps[0],
+                    builder);
+        int k = 1, m = 0;
+        for (auto& poolAttr : {poolAttrs3d.windowShape[0],
+                               poolAttrs3d.windowShape[1],
+                               poolAttrs3d.windowShape[2],
+                               poolAttrs3d.windowStrides[0],
+                               poolAttrs3d.windowStrides[1],
+                               poolAttrs3d.windowStrides[2],
+                               poolAttrs3d.padBelow[0],
+                               poolAttrs3d.padBelow[1],
+                               poolAttrs3d.padBelow[2],
+                               poolAttrs3d.padAbove[0],
+                               poolAttrs3d.padAbove[1],
+                               poolAttrs3d.padAbove[2]})
+        {
+            auto gepStructOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            llvmI64PtrTy,
+                                            geps[k],
+                                            ArrayRef<Value>({constants[0], constants[m]}));
+            createStore(llvmI64Ty, builder.getI64IntegerAttr(poolAttr), gepStructOp, builder);
+            // k increments after every 3 iterations
+            if (m == 2)
+            {
+                k++;
+            }
+            // m be 0, 1, or 2 repeatedly
+            m = (m + 1) % 3;
+        }
+    }
+
+    /*
+            struct gemmAttrs
+            {
+                bool transposeA;
+                bool transposeB;
+                int64_t m;
+                int64_t n;
+                int64_t k;
+                int64_t lda;
+                int64_t ldb;
+                int64_t ldc;
+                float alpha;
+                float beta;
+                BroadcastType broadcastHint;
+            };
+     */
+    static void initGEMM(LLVM::LLVMDialect* llvmDialect,
+                         gemmAttrs gemmAttrs2d,
+                         SmallVector<LLVM::ConstantOp, 12>& constants,
+                         LLVM::AddressOfOp globalPtr,
+                         OpBuilder& builder)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(llvmDialect);
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmF32Ty = LLVM::LLVMType::getFloatTy(llvmDialect);
+        auto gemmTy = getLLVMType(AttrsType::GEMM, llvmDialect);
+        auto castOp = builder.create<LLVM::BitcastOp>(
+            builder.getUnknownLoc(), gemmTy.getPointerTo(), globalPtr);
+
+        SmallVector<LLVM::GEPOp, 12> geps;
+        SmallVector<LLVM::LLVMType, 12> elemsTy{llvmI8Ty,
+                                                llvmI8Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmF32Ty,
+                                                llvmF32Ty,
+                                                llvmI32Ty};
+        for (auto j = 0; j < 11; j++)
+        {
+            auto gepGemmOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            elemsTy[j].getPointerTo(),
+                                            castOp,
+                                            ArrayRef<Value>({constants[0], constants[j]}));
+            geps.push_back(gepGemmOp);
+        }
+        // Store attribute values
+        int k = 0;
+        for (auto& gemmAttr : {gemmAttrs2d.transposeA, gemmAttrs2d.transposeB})
+        {
+            createStore(llvmI8Ty,
+                        builder.getI8IntegerAttr(static_cast<int8_t>(gemmAttr)),
+                        geps[k],
+                        builder);
+            k++;
+        }
+        for (auto& gemmAttr : {gemmAttrs2d.m,
+                               gemmAttrs2d.n,
+                               gemmAttrs2d.k,
+                               gemmAttrs2d.lda,
+                               gemmAttrs2d.ldb,
+                               gemmAttrs2d.ldc})
+        {
+            createStore(llvmI64Ty, builder.getI64IntegerAttr(gemmAttr), geps[k], builder);
+            k++;
+        }
+        for (auto& gemmAttr : {gemmAttrs2d.alpha, gemmAttrs2d.beta})
+        {
+            createStore(llvmF32Ty, builder.getF32FloatAttr(gemmAttr), geps[k], builder);
+            k++;
+        }
+        createStore(llvmI32Ty,
+                    builder.getI32IntegerAttr(static_cast<int32_t>(gemmAttrs2d.broadcastHint)),
+                    geps[10],
+                    builder);
     }
 
     void DialectLoweringPass::insertInitFunc()
@@ -648,19 +1057,11 @@ namespace
 
         // Insert operations into entry block
         auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
-        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
-        auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
         auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(llvmDialect);
-        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
-        auto llvmI8PtrTy = llvmI8Ty.getPointerTo();
-        auto llvmArray1DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 1);
-        auto llvmArray2DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 2);
-        auto llvmArray3DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 3);
-        auto llvmF32Ty = LLVM::LLVMType::getFloatTy(llvmDialect);
 
         // constants needed by gep
         // LLVM requires that structure indexes be (vectors of) 32-bit integer constants.
-        std::vector<LLVM::ConstantOp> constants;
+        SmallVector<LLVM::ConstantOp, 12> constants;
         auto maxNumElem = 11;
         for (auto i = 0; i < maxNumElem; i++)
         {
@@ -675,469 +1076,38 @@ namespace
         for (auto attrs : m_attrsVec)
         {
             StringRef name = "globalAttrs" + std::to_string(i);
-            LLVM::GlobalOp globalVal = getGlobal(name,
-                                                 globalType,
-                                                 false,
-                                                 LLVM::Linkage::Internal,
-                                                 builder.getZeroAttr(globalType),
-                                                 builder);
+            LLVM::GlobalOp globalVal = getGlobalOp(name,
+                                                   globalType,
+                                                   false,
+                                                   LLVM::Linkage::Internal,
+                                                   builder.getZeroAttr(globalType),
+                                                   builder);
             auto globalPtr = builder.create<LLVM::AddressOfOp>(builder.getUnknownLoc(), globalVal);
-
             switch (m_attrsTyVec[i])
             {
-            case AttrsType::INT:
-            {
-                auto castOp = builder.create<LLVM::BitcastOp>(
-                    builder.getUnknownLoc(),
-                    getLLVMType(AttrsType::INT, llvmDialect).getPointerTo(),
-                    globalPtr);
-                auto intOp = builder.create<LLVM::ConstantOp>(
-                    builder.getUnknownLoc(), llvmI64Ty, builder.getI64IntegerAttr(attrs.intAttr));
-                builder.create<LLVM::StoreOp>(builder.getUnknownLoc(), intOp, castOp);
-                break;
-            }
-            case AttrsType::GEMM:
-            {
-                auto gemmTy = getLLVMType(AttrsType::GEMM, llvmDialect);
-                auto castOp = builder.create<LLVM::BitcastOp>(
-                    builder.getUnknownLoc(), gemmTy.getPointerTo(), globalPtr);
-
-                std::vector<LLVM::GEPOp> geps;
-                std::vector<LLVM::LLVMType> elemsTy{llvmI8Ty,
-                                                    llvmI8Ty,
-                                                    llvmI64Ty,
-                                                    llvmI64Ty,
-                                                    llvmI64Ty,
-                                                    llvmI64Ty,
-                                                    llvmI64Ty,
-                                                    llvmI64Ty,
-                                                    llvmF32Ty,
-                                                    llvmF32Ty,
-                                                    llvmI32Ty};
-                for (auto j = 0; j < maxNumElem; j++)
-                {
-                    auto gepGemmOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    elemsTy[j].getPointerTo(),
-                                                    castOp,
-                                                    ArrayRef<Value>({constants[0], constants[j]}));
-                    geps.push_back(gepGemmOp);
-                }
-                // Store attribute values
-                createStore(
-                    llvmI8Ty,
-                    builder.getI8IntegerAttr(static_cast<int8_t>(attrs.gemmAttrs2d.transposeA)),
-                    geps[0],
-                    builder);
-                createStore(
-                    llvmI8Ty,
-                    builder.getI8IntegerAttr(static_cast<int8_t>(attrs.gemmAttrs2d.transposeB)),
-                    geps[1],
-                    builder);
-                createStore(
-                    llvmI64Ty, builder.getI64IntegerAttr(attrs.gemmAttrs2d.m), geps[2], builder);
-                createStore(
-                    llvmI64Ty, builder.getI64IntegerAttr(attrs.gemmAttrs2d.n), geps[3], builder);
-                createStore(
-                    llvmI64Ty, builder.getI64IntegerAttr(attrs.gemmAttrs2d.k), geps[4], builder);
-                createStore(
-                    llvmI64Ty, builder.getI64IntegerAttr(attrs.gemmAttrs2d.lda), geps[5], builder);
-                createStore(
-                    llvmI64Ty, builder.getI64IntegerAttr(attrs.gemmAttrs2d.ldb), geps[6], builder);
-                createStore(
-                    llvmI64Ty, builder.getI64IntegerAttr(attrs.gemmAttrs2d.ldc), geps[7], builder);
-                createStore(
-                    llvmF32Ty, builder.getF32FloatAttr(attrs.gemmAttrs2d.alpha), geps[8], builder);
-                createStore(
-                    llvmF32Ty, builder.getF32FloatAttr(attrs.gemmAttrs2d.beta), geps[9], builder);
-                createStore(llvmI32Ty,
-                            builder.getI32IntegerAttr(
-                                static_cast<int32_t>(attrs.gemmAttrs2d.broadcastHint)),
-                            geps[10],
-                            builder);
-                break;
-            }
-            case AttrsType::POOL2D:
-            {
-                auto pool2dTy = getLLVMType(AttrsType::POOL2D, llvmDialect);
-                auto castOp = builder.create<LLVM::BitcastOp>(
-                    builder.getUnknownLoc(), pool2dTy.getPointerTo(), globalPtr);
-
-                std::vector<LLVM::GEPOp> geps;
-                std::vector<LLVM::LLVMType> elemsTy{llvmI8Ty,
-                                                    llvmArray2DI64Ty,
-                                                    llvmArray2DI64Ty,
-                                                    llvmArray2DI64Ty,
-                                                    llvmArray2DI64Ty};
-                for (auto j = 0; j < 5; j++)
-                {
-                    auto gepPool2dOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    elemsTy[j].getPointerTo(),
-                                                    castOp,
-                                                    ArrayRef<Value>({constants[0], constants[j]}));
-                    geps.push_back(gepPool2dOp);
-                }
-                // Store attribute values
-                createStore(llvmI8Ty,
-                            builder.getI8IntegerAttr(static_cast<int8_t>(
-                                attrs.poolAttrs2d.includePaddingInAvgComputation)),
-                            geps[0],
-                            builder);
-                for (auto k = 0; k < 2; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[1],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.poolAttrs2d.windowShape[k]),
-                                gepStructOp,
-                                builder);
-                }
-                for (auto k = 0; k < 2; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[2],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.poolAttrs2d.windowStrides[k]),
-                                gepStructOp,
-                                builder);
-                }
-                for (auto k = 0; k < 2; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[3],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.poolAttrs2d.padBelow[k]),
-                                gepStructOp,
-                                builder);
-                }
-                for (auto k = 0; k < 2; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[4],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.poolAttrs2d.padAbove[k]),
-                                gepStructOp,
-                                builder);
-                }
-                break;
-            }
-            case AttrsType::POOL3D:
-            {
-                auto pool3dTy = getLLVMType(AttrsType::POOL3D, llvmDialect);
-                auto castOp = builder.create<LLVM::BitcastOp>(
-                    builder.getUnknownLoc(), pool3dTy.getPointerTo(), globalPtr);
-
-                std::vector<LLVM::GEPOp> geps;
-                std::vector<LLVM::LLVMType> elemsTy{llvmI8Ty,
-                                                    llvmArray3DI64Ty,
-                                                    llvmArray3DI64Ty,
-                                                    llvmArray3DI64Ty,
-                                                    llvmArray3DI64Ty};
-                for (auto j = 0; j < 5; j++)
-                {
-                    auto gepPool3dOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    elemsTy[j].getPointerTo(),
-                                                    castOp,
-                                                    ArrayRef<Value>({constants[0], constants[j]}));
-                    geps.push_back(gepPool3dOp);
-                }
-                // Store attribute values
-                createStore(llvmI8Ty,
-                            builder.getI8IntegerAttr(static_cast<int8_t>(
-                                attrs.poolAttrs3d.includePaddingInAvgComputation)),
-                            geps[0],
-                            builder);
-                for (auto k = 0; k < 3; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[1],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.poolAttrs3d.windowShape[k]),
-                                gepStructOp,
-                                builder);
-                }
-                for (auto k = 0; k < 3; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[2],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.poolAttrs3d.windowStrides[k]),
-                                gepStructOp,
-                                builder);
-                }
-                for (auto k = 0; k < 3; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[3],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.poolAttrs3d.padBelow[k]),
-                                gepStructOp,
-                                builder);
-                }
-                for (auto k = 0; k < 3; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[4],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.poolAttrs3d.padAbove[k]),
-                                gepStructOp,
-                                builder);
-                }
-                break;
-            }
+            case AttrsType::INT: initINT(llvmDialect, attrs.intAttr, globalPtr, builder); break;
             case AttrsType::CONV1D:
-            {
-                auto conv1dTy = getLLVMType(AttrsType::CONV1D, llvmDialect);
-                auto castOp = builder.create<LLVM::BitcastOp>(
-                    builder.getUnknownLoc(), conv1dTy.getPointerTo(), globalPtr);
-
-                std::vector<LLVM::GEPOp> geps;
-                std::vector<LLVM::LLVMType> elemsTy{llvmI8Ty,
-                                                    llvmArray1DI64Ty,
-                                                    llvmArray1DI64Ty,
-                                                    llvmArray1DI64Ty,
-                                                    llvmArray1DI64Ty};
-                for (auto j = 0; j < 5; j++)
-                {
-                    auto gepConv1dOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    elemsTy[j].getPointerTo(),
-                                                    castOp,
-                                                    ArrayRef<Value>({constants[0], constants[j]}));
-                    geps.push_back(gepConv1dOp);
-                }
-                // Store attribute values
-                createStore(
-                    llvmI8Ty,
-                    builder.getI8IntegerAttr(static_cast<int8_t>(attrs.convAttrs1d.withRelu)),
-                    geps[0],
-                    builder);
-                auto gepStructOp =
-                    builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                llvmI64PtrTy,
-                                                geps[1],
-                                                ArrayRef<Value>({constants[0], constants[0]}));
-                createStore(llvmI64Ty,
-                            builder.getI64IntegerAttr(attrs.convAttrs1d.windowStrides[0]),
-                            gepStructOp,
-                            builder);
-                gepStructOp =
-                    builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                llvmI64PtrTy,
-                                                geps[2],
-                                                ArrayRef<Value>({constants[0], constants[0]}));
-                createStore(llvmI64Ty,
-                            builder.getI64IntegerAttr(attrs.convAttrs1d.windowDilation[0]),
-                            gepStructOp,
-                            builder);
-                gepStructOp =
-                    builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                llvmI64PtrTy,
-                                                geps[3],
-                                                ArrayRef<Value>({constants[0], constants[0]}));
-                createStore(llvmI64Ty,
-                            builder.getI64IntegerAttr(attrs.convAttrs1d.padBelow[0]),
-                            gepStructOp,
-                            builder);
-                gepStructOp =
-                    builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                llvmI64PtrTy,
-                                                geps[4],
-                                                ArrayRef<Value>({constants[0], constants[0]}));
-                createStore(llvmI64Ty,
-                            builder.getI64IntegerAttr(attrs.convAttrs1d.padAbove[0]),
-                            gepStructOp,
-                            builder);
+                initCONV1D(llvmDialect, attrs.convAttrs1d, constants, globalPtr, builder);
                 break;
-            }
-
             case AttrsType::CONV2D:
-            {
-                auto conv2dTy = getLLVMType(AttrsType::CONV2D, llvmDialect);
-                auto castOp = builder.create<LLVM::BitcastOp>(
-                    builder.getUnknownLoc(), conv2dTy.getPointerTo(), globalPtr);
-
-                std::vector<LLVM::GEPOp> geps;
-                std::vector<LLVM::LLVMType> elemsTy{llvmI8Ty,
-                                                    llvmArray2DI64Ty,
-                                                    llvmArray2DI64Ty,
-                                                    llvmArray2DI64Ty,
-                                                    llvmArray2DI64Ty};
-                for (auto j = 0; j < 5; j++)
-                {
-                    auto gepConv2dOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    elemsTy[j].getPointerTo(),
-                                                    castOp,
-                                                    ArrayRef<Value>({constants[0], constants[j]}));
-                    geps.push_back(gepConv2dOp);
-                }
-                // Store attribute values
-                createStore(
-                    llvmI8Ty,
-                    builder.getI8IntegerAttr(static_cast<int8_t>(attrs.convAttrs2d.withRelu)),
-                    geps[0],
-                    builder);
-                for (auto k = 0; k < 2; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[1],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.convAttrs2d.windowStrides[k]),
-                                gepStructOp,
-                                builder);
-                }
-                for (auto k = 0; k < 2; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[2],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.convAttrs2d.windowDilation[k]),
-                                gepStructOp,
-                                builder);
-                }
-                for (auto k = 0; k < 2; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[3],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.convAttrs2d.padBelow[k]),
-                                gepStructOp,
-                                builder);
-                }
-                for (auto k = 0; k < 2; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[4],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.convAttrs2d.padBelow[k]),
-                                gepStructOp,
-                                builder);
-                }
+                initCONV2D(llvmDialect, attrs.convAttrs2d, constants, globalPtr, builder);
                 break;
-            }
-
             case AttrsType::CONV3D:
-            {
-                auto conv3dTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
-                auto castOp = builder.create<LLVM::BitcastOp>(
-                    builder.getUnknownLoc(), conv3dTy.getPointerTo(), globalPtr);
-
-                std::vector<LLVM::GEPOp> geps;
-                std::vector<LLVM::LLVMType> elemsTy{llvmI8Ty,
-                                                    llvmArray3DI64Ty,
-                                                    llvmArray3DI64Ty,
-                                                    llvmArray3DI64Ty,
-                                                    llvmArray3DI64Ty};
-                for (auto j = 0; j < 5; j++)
-                {
-                    auto gepConv3dOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    elemsTy[j].getPointerTo(),
-                                                    castOp,
-                                                    ArrayRef<Value>({constants[0], constants[j]}));
-                    geps.push_back(gepConv3dOp);
-                }
-                // Store attribute values
-                createStore(
-                    llvmI8Ty,
-                    builder.getI8IntegerAttr(static_cast<int8_t>(attrs.convAttrs3d.withRelu)),
-                    geps[0],
-                    builder);
-                for (auto k = 0; k < 3; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[1],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.convAttrs3d.windowStrides[k]),
-                                gepStructOp,
-                                builder);
-                }
-                for (auto k = 0; k < 3; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[2],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.convAttrs3d.windowDilation[k]),
-                                gepStructOp,
-                                builder);
-                }
-                for (auto k = 0; k < 3; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[3],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.convAttrs3d.padBelow[k]),
-                                gepStructOp,
-                                builder);
-                }
-                for (auto k = 0; k < 3; k++)
-                {
-                    auto gepStructOp =
-                        builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
-                                                    llvmI64PtrTy,
-                                                    geps[4],
-                                                    ArrayRef<Value>({constants[0], constants[k]}));
-                    createStore(llvmI64Ty,
-                                builder.getI64IntegerAttr(attrs.convAttrs3d.padBelow[k]),
-                                gepStructOp,
-                                builder);
-                }
+                initCONV3D(llvmDialect, attrs.convAttrs3d, constants, globalPtr, builder);
                 break;
-            }
+            case AttrsType::POOL2D:
+                initPOOL2D(llvmDialect, attrs.poolAttrs2d, constants, globalPtr, builder);
+                break;
+            case AttrsType::POOL3D:
+                initPOOL3D(llvmDialect, attrs.poolAttrs3d, constants, globalPtr, builder);
+                break;
+            case AttrsType::GEMM:
+                initGEMM(llvmDialect, attrs.gemmAttrs2d, constants, globalPtr, builder);
+                break;
             default: break;
             }
-
             i++;
         }
-
         builder.create<mlir::ReturnOp>(builder.getUnknownLoc());
     }
 
@@ -1705,12 +1675,12 @@ namespace
         auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
         auto globalTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
         StringRef name = "globalAttrs" + std::to_string(index);
-        LLVM::GlobalOp globalVal = pass.getGlobal(name,
-                                                  globalTy,
-                                                  false,
-                                                  LLVM::Linkage::Internal,
-                                                  rewriter.getZeroAttr(globalTy),
-                                                  rewriter);
+        LLVM::GlobalOp globalVal = pass.getGlobalOp(name,
+                                                    globalTy,
+                                                    false,
+                                                    LLVM::Linkage::Internal,
+                                                    rewriter.getZeroAttr(globalTy),
+                                                    rewriter);
         auto globalPtr = rewriter.create<LLVM::AddressOfOp>(rewriter.getUnknownLoc(), globalVal);
         return globalPtr;
     }
