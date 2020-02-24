@@ -35,15 +35,16 @@ namespace ngraph
             class GPUPrimitiveEmitter;
             struct GPURuntimeContext;
             class CudaContextManager;
+            class GPUExecutable;
 
             using EntryPoint_t = void(void** inputs, void** outputs, GPURuntimeContext* ctx);
             using EntryPoint = std::function<EntryPoint_t>;
 
             BackendConstructor GPU_BACKEND_API get_backend_constructor_pointer();
-            class GPU_Backend : public Backend
+            class GPUBackend : public Backend
             {
             public:
-                GPU_Backend();
+                GPUBackend();
 
                 std::shared_ptr<ngraph::runtime::Tensor>
                     create_tensor(const ngraph::element::Type& element_type,
@@ -76,40 +77,6 @@ namespace ngraph
 
             private:
                 std::map<std::shared_ptr<Function>, std::shared_ptr<Executable>> m_exec_map;
-            };
-
-            class GPU_Executable : public Executable
-            {
-            public:
-                GPU_Executable(std::shared_ptr<Function> func, bool enable_timing);
-
-                bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
-
-                // void remove_compiled_function(std::shared_ptr<Function> func) override;
-                std::vector<PerformanceCounter> get_performance_data() const override;
-
-            private:
-                class FunctionInstance
-                {
-                public:
-                    std::shared_ptr<GPUCompiledFunction> m_compiled_function;
-                    bool m_performance_counters_enabled = false;
-                    EntryPoint m_runtime;
-                    std::vector<void*> m_inputs;
-                    std::vector<void*> m_outputs;
-                } m_function_instance;
-
-                /// \brief Convert a vector of Tensor into a vector of void* where each void*
-                /// points to a Tensor's data buffer.
-                /// \param target Pointer to a pre-allocated array of void* with
-                /// size >= source.size()
-                /// \param source Source vector of Tensors
-                static void
-                    initialize_io(void** target,
-                                  const std::vector<std::shared_ptr<runtime::Tensor>>& source);
-
-                std::shared_ptr<GPU_Backend::BackendContext> m_context;
             };
         }
     }
