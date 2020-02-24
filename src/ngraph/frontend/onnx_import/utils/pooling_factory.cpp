@@ -17,6 +17,7 @@
 #include <iterator>
 
 #include "default_opset.hpp"
+#include "exceptions.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "utils/convpool.hpp"
 #include "utils/pooling_factory.hpp"
@@ -30,12 +31,11 @@ namespace ngraph
             PoolingFactory::PoolingFactory(const Node& node)
                 : m_onnx_node{node}
                 , m_inputs{node.get_ng_inputs()}
-                , m_kernel_shape{convpool::get_kernel_shape(node)}
                 , m_strides{convpool::get_strides(node)}
                 , m_dilations{convpool::get_dilations(node)}
                 , m_auto_pad{convpool::get_auto_pad(node)}
             {
-                auto paddings = convpool::get_pads(node);
+                const auto paddings = convpool::get_pads(node);
                 const CoordinateDiff& padding_above{paddings.second};
                 const CoordinateDiff& padding_below{paddings.first};
                 m_padding_below = Shape{std::begin(padding_below), std::end(padding_below)};
@@ -44,7 +44,7 @@ namespace ngraph
 
             NodeVector PoolingFactory::make_avg_pool() const
             {
-                bool count_include_pad =
+                const bool count_include_pad =
                     m_onnx_node.get_attribute_value<std::int64_t>("count_include_pad", 0);
                 return {std::make_shared<default_opset::AvgPool>(m_inputs.at(0),
                                                                  m_strides,
@@ -67,13 +67,31 @@ namespace ngraph
                                                                  m_auto_pad)};
             }
 
+            LocalPoolingFactory::LocalPoolingFactory(const Node& node)
+                : PoolingFactory(node)
+            {
+                // Kernel shape is required
+                m_kernel_shape = node.get_attribute_value<std::vector<std::size_t>>("kernel_shape");
+            }
+
             GlobalPoolingFactory::GlobalPoolingFactory(const Node& node)
                 : PoolingFactory(node)
             {
-                // Correct the kernel shape.
-                const Shape& data_shape{m_inputs.at(0)->get_shape()};
+                const auto data_shape = node.get_ng_inputs().at(0)->get_output_partial_shape(0);
+                const auto data_rank = data_shape.rank();
+                CHECK_VALID_NODE(
+                    node, data_rank.is_static(), "Data rank must be static for global pooling ops");
+                Shape kernel_shape;
+                for (auto i = 2; i < static_cast<size_t>(data_rank); ++i)
+                {
+                    CHECK_VALID_NODE(node,
+                                     data_shape[i].is_static(),
+                                     "All spatial dimensions must be known for global pooling ops");
+                    kernel_shape.emplace_back(static_cast<size_t>(data_shape[i]));
+                }
+
                 // Set shape to all but {N,C} axes.
-                m_kernel_shape = Shape{std::next(std::begin(data_shape), 2), std::end(data_shape)};
+                m_kernel_shape = kernel_shape;
             }
         } // namespace pooling
     }     // namespace onnx_import

@@ -20,14 +20,13 @@
 #include <memory>
 #include <vector>
 
-#include "builder/reshape.hpp"
 #include "conv_transpose.hpp"
 #include "default_opset.hpp"
 #include "exceptions.hpp"
+#include "ngraph/builder/autobroadcast.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/opsets/opset0.hpp"
 #include "ngraph/shape.hpp"
 #include "utils/convpool.hpp"
 
@@ -93,7 +92,7 @@ namespace ngraph
                     Shape new_filters_shape{weights_shape};
                     new_filters_shape.at(0) /= groups;
                     new_filters_shape.insert(std::begin(new_filters_shape), groups);
-                    filters = builder::reshape(filters, new_filters_shape);
+                    filters = builder::opset1::reshape(filters, new_filters_shape);
 
                     std::shared_ptr<ngraph::Node> conv_node;
                     if (!output_shape.empty())

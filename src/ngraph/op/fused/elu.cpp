@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include "ngraph/op/fused/elu.hpp"
 
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
@@ -23,7 +24,6 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -43,7 +43,7 @@ NodeVector op::Elu::decompose_op() const
     shared_ptr<Node> alpha_node =
         make_shared<op::Constant>(data.get_element_type(), Shape{}, vector<double>{m_alpha});
 
-    alpha_node = ngraph::op::numpy_style_broadcast(alpha_node, data.get_shape());
+    alpha_node = builder::numpy_broadcast(alpha_node, data.get_shape());
 
     shared_ptr<ngraph::Node> zero_node =
         builder::make_constant(data.get_element_type(), data.get_shape(), 0);

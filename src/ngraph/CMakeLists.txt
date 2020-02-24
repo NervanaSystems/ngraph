@@ -445,8 +445,6 @@ set (SRC
     op/util/binary_elementwise_comparison.hpp
     op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise_logical.hpp
-    op/util/broadcasting.cpp
-    op/util/broadcasting.hpp
     op/util/fused_op.cpp
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
@@ -497,6 +495,7 @@ set (SRC
     pass/constant_folding_split.cpp
     pass/constant_folding_variadic_split.cpp
     pass/constant_folding_strided_slice.cpp
+    pass/constant_folding_tile.cpp
     pass/constant_folding_transpose.cpp
     pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
