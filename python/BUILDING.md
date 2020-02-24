@@ -26,7 +26,7 @@ checked out and built `0.21` for Python 3.7, you might see something like:
 
 ## Building nGraph Python Wheels on Windows
 
-It's now possible to build the python wheel on Windows too. The build process consists of 3 steps:
+The build process on Windows consists of 3 steps:
 
 1. Configure the build with the following `cmake` invocation:
 ~~~~
@@ -40,12 +40,12 @@ cmake ..
       -DCMAKE_CXX_COMPILER=C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Tools\MSVC\14.16.27023\bin\Hostx64\x64
 ~~~~
 There are a couple of things to notice here. One is that the full path to the x64 version of
-MSVC compiler has to be specified. This is because DNNL requires a 64-bit version and cmake might
-not detect it correctly by itself.
+MSVC compiler has to be specified. This is because DNNL requires a 64-bit version and cmake may
+fail to detect it correctly.
 Only the DEX mode is supported on Windows systems, hence the `NGRAPH_DEX_ONLY` flag.
 The other equally important thing to note is that the temporary directory where the build is to be installed can be specified.
 This examples uses `C:\temporary_install_dir` however, a subdirectory of `ngraph\build` works as well.
-The final python will contain the contents of this temporary directory so it's very important to set it.
+The final Python will contain the contents of this temporary directory so it's very important to set it.
 
 2. Build the `install` target:
 
@@ -54,7 +54,7 @@ The final python will contain the contents of this temporary directory so it's v
 In this step nGraph will be built and installed to the temporary directory specified above. You can
 adjust the number of threads used in the building process to your machine's capabilities.
 
-3. Build the python wheel itself:
+3. Build the Python wheel itself:
 
     `cmake --build . --target python_wheel -j 8`
 
