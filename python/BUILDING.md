@@ -42,11 +42,10 @@ cmake ..
 There are a couple of things to notice here. One is that the full path to the x64 version of
 MSVC compiler has to be specified. This is because DNNL requires a 64-bit version and cmake might
 not detect it correctly by itself.
-On Windows only the DEX mode is supported - hence the `NGRAPH_DEX_ONLY` flag.
-The last but equally important thing is that you should specify a temporary directory where the
-build of ngraph will be installed. In this example it's `C:\temporary_install_dir` but you can pass
-a subdirectory of `ngraph\build` as well. The final python will will contain the contents of this
-temporary directory so it's very important to set it.
+Only the DEX mode is supported on Windows systems, hence the `NGRAPH_DEX_ONLY` flag.
+The other equally important thing to note is that the temporary directory where the build is to be installed can be specified.
+This examples uses `C:\temporary_install_dir` however, a subdirectory of `ngraph\build` works as well.
+The final python will contain the contents of this temporary directory so it's very important to set it.
 
 2. Build the `install` target:
 
