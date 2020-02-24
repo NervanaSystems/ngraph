@@ -128,7 +128,7 @@ std::string runtime::gpu::GPUInternalFunction::emit_op(GPUCompiledFunction* comp
 
 runtime::gpu::GPUInternalFunction::GPUInternalFunction(
     const shared_ptr<ngraph::Function>& function,
-    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
+    const std::shared_ptr<GPUBackend::BackendContext>& shared_context)
     : GPUCompiledFunction(function, shared_context)
 {
 }
