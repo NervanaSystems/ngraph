@@ -179,7 +179,7 @@ namespace
             // (Re)construct axes_mapping.
             AxisSet broadcast_axes = node->get_broadcast_axes().second;
             std::vector<size_t> axes_mapping{
-            ngraph::builder::opset1::get_axes_mapping(target_shape, broadcast_axes)};
+                ngraph::builder::opset1::get_axes_mapping(target_shape, broadcast_axes)};
 
             Output<Node> squeezed_arg = arg;
             // Collect axes to squeeze. Broadcast v0 "adds" new axes, thus we have to squeeze
