@@ -58,6 +58,9 @@ void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>
     tv->write(data.data(), data_size);
 }
 
+template <>
+void copy_data<bool>(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<bool>& data);
+
 template <typename T>
 std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
 {
@@ -252,9 +255,6 @@ template <>
 std::string get_results_str(const std::vector<char>& ref_data,
                             const std::vector<char>& actual_data,
                             size_t max_results);
-
-template <>
-void copy_data<bool>(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<bool>& data);
 
 /// \brief      Reads a binary file to a vector.
 ///
