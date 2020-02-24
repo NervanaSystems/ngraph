@@ -32,7 +32,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/experimental/tile.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/pass/constant_folding.hpp"

@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/fused/scale_shift.hpp"
+#include "ngraph/op/scale_shift.hpp"
 #include "pyngraph/ops/fused/scale_shift.hpp"
 
 namespace py = pybind11;

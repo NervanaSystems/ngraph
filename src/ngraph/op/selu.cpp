@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/op/fused/selu.hpp"
+#include "ngraph/op/selu.hpp"
 
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"

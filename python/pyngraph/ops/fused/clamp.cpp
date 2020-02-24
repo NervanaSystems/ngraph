@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/fused/clamp.hpp"
+#include "ngraph/op/clamp.hpp"
 #include "pyngraph/ops/fused/clamp.hpp"
 
 namespace py = pybind11;

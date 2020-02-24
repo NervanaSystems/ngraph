@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/fused/lstm_sequence.hpp"
+#include "ngraph/op/lstm_sequence.hpp"
 
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reshape.hpp"
@@ -22,7 +22,7 @@
 #include "ngraph/frontend/onnx_import/utils/reshape.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/lstm_cell.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/reverse_sequence.hpp"

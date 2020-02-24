@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/fused/squared_difference.hpp"
+#include "ngraph/op/squared_difference.hpp"
 #include "pyngraph/ops/fused/squared_difference.hpp"
 
 namespace py = pybind11;

@@ -23,7 +23,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/lstm_cell.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 

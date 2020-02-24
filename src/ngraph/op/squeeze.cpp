@@ -18,7 +18,7 @@
 #include <set>
 
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/squeeze.hpp"
 #include "ngraph/op/reshape.hpp"
 
 using namespace std;

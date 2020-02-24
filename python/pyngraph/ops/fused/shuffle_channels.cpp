@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/fused/shuffle_channels.hpp"
+#include "ngraph/op/shuffle_channels.hpp"
 #include "pyngraph/ops/fused/shuffle_channels.hpp"
 
 namespace py = pybind11;

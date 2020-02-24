@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/fused/space_to_depth.hpp"
+#include "ngraph/op/space_to_depth.hpp"
 #include "pyngraph/ops/fused/space_to_depth.hpp"
 
 namespace py = pybind11;

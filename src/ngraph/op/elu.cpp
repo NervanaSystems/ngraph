@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/elu.hpp"
 
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/make_constant.hpp"

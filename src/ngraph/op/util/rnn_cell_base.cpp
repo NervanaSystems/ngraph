@@ -18,7 +18,7 @@
 #include <iterator>
 
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/fused/clamp.hpp"
+#include "ngraph/op/clamp.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/rnn_cell_base.hpp"

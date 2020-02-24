@@ -19,7 +19,7 @@
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/partial_slice.hpp"
+#include "ngraph/op/partial_slice.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"

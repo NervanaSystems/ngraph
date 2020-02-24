@@ -16,7 +16,7 @@
 
 #include "ngraph/except.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 

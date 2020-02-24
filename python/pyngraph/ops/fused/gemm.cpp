@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/fused/gemm.hpp"
+#include "ngraph/op/gemm.hpp"
 #include "pyngraph/ops/fused/gemm.hpp"
 
 namespace py = pybind11;

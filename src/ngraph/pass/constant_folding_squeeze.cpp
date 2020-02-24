@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
-#include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/squeeze.hpp"
 
 using namespace std;
 using namespace ngraph;

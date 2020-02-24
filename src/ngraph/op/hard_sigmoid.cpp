@@ -18,7 +18,7 @@
 
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/hard_sigmoid.hpp"
+#include "ngraph/op/hard_sigmoid.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"

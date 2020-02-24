@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/prelu.hpp"
 
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/op/add.hpp"

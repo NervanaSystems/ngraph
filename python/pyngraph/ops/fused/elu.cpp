@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/elu.hpp"
 #include "pyngraph/ops/fused/elu.hpp"
 
 namespace py = pybind11;

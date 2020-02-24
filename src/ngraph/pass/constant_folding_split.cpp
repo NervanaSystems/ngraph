@@ -17,7 +17,7 @@
 #include "constant_folding.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/split.hpp"
+#include "ngraph/op/split.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;

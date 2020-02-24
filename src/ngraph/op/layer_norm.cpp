@@ -22,7 +22,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
-#include "ngraph/op/fused/layer_norm.hpp"
+#include "ngraph/op/layer_norm.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/reshape.hpp"

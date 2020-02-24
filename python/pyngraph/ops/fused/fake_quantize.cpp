@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/fused/fake_quantize.hpp"
+#include "ngraph/op/fake_quantize.hpp"
 #include "pyngraph/ops/fused/fake_quantize.hpp"
 
 namespace py = pybind11;
