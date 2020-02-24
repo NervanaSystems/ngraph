@@ -406,7 +406,8 @@ namespace ngraph
 
     protected:
         // Will be replaced with clone_with_new_inputs
-        virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const;
+        virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const
+            NGRAPH_DEPRECATED("use copy_with_new_inputs instead");
 
         // TODO: When all copy_with_new_args have been replaced with copy_with_new_inputs, make
         // this pure and remove copy_with_new_args
