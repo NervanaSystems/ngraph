@@ -15,11 +15,9 @@
 //*****************************************************************************
 
 #include <memory>
-#include <vector>
 
-#include "default_opset.hpp"
-#include "ngraph/shape.hpp"
-#include "softsign.hpp"
+#include "ngraph/opsets/opset0.hpp"
+#include "round.hpp"
 
 namespace ngraph
 {
@@ -29,19 +27,11 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector softsign(const Node& node)
+                NodeVector round(const Node& node)
                 {
-                    auto data = node.get_ng_inputs().at(0);
-
-                    std::shared_ptr<ngraph::Node> one_node =
-                        default_opset::Constant::create(data->get_element_type(), Shape{}, {1});
-                    auto abs_data = std::make_shared<default_opset::Abs>(data);
-                    auto data_plus_one_node =
-                        std::make_shared<default_opset::Add>(abs_data, one_node);
-
-                    return {std::make_shared<default_opset::Divide>(data, data_plus_one_node)};
+                    const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
+                    return {std::make_shared<ngraph::opset0::Round>(data)};
                 }
-
             } // namespace set_1
 
         } // namespace op
