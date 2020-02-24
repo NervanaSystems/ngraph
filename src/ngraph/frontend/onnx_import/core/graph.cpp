@@ -199,9 +199,26 @@ namespace ngraph
                 m_model->get_operator(onnx_node.op_type(), onnx_node.domain());
 
             const auto ng_node_vector = ng_node_factory(onnx_node);
+            set_friendly_names(onnx_node, ng_node_vector);
             add_provenance_tags(onnx_node, ng_node_vector);
 
             return ng_node_vector;
+        }
+
+        void Graph::set_friendly_names(const Node& onnx_node,
+                                       const NodeVector& ng_node_vector) const
+        {
+            for (int i = 0; i < ng_node_vector.size(); ++i)
+            {
+                // Trailing optional outputs may not be specified in the ONNX model.
+                // Other optional outputs should have name set to an empty string.
+                if (i >= onnx_node.get_outputs_size())
+                {
+                    break;
+                }
+
+                ng_node_vector[i]->set_friendly_name(onnx_node.output(i));
+            }
         }
 
         void Graph::add_provenance_tag_to_initializer(
