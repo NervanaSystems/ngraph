@@ -81,7 +81,7 @@ static GPUStaticInitializers s_static_initializers;
 
 runtime::gpu::GPUCompiledFunction::GPUCompiledFunction(
     const shared_ptr<ngraph::Function>& function,
-    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
+    const std::shared_ptr<GPUBackend::BackendContext>& shared_context)
     : m_runtime(nullptr)
     , m_function(function)
     , m_emit_timing(false)
@@ -119,7 +119,7 @@ std::vector<std::string> get_case_variants(std::vector<std::string> cases)
 
 std::shared_ptr<runtime::gpu::GPUCompiledFunction> runtime::gpu::GPUCompiledFunction::make(
     const std::shared_ptr<ngraph::Function>& function,
-    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
+    const std::shared_ptr<GPUBackend::BackendContext>& shared_context)
 {
     return std::make_shared<runtime::gpu::GPUInternalFunction>(function, shared_context);
 }
