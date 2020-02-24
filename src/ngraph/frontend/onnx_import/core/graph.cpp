@@ -212,10 +212,12 @@ namespace ngraph
             {
                 // Trailing optional outputs may not be specified in the ONNX model.
                 // Other optional outputs should have name set to an empty string.
-                if (i < onnx_node.get_outputs_size())
+                if (i >= onnx_node.get_outputs_size())
                 {
-                    ng_node_vector[i]->set_friendly_name(onnx_node.output(i));
+                    break;
                 }
+
+                ng_node_vector[i]->set_friendly_name(onnx_node.output(i));
             }
         }
 
