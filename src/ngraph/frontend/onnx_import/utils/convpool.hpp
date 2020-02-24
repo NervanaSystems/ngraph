@@ -36,13 +36,6 @@ namespace ngraph
             /// \brief  Get number of pixels to stride operation by in each direction.
             ///
             /// \param node The Node ptr representing Conv or Pool operation.
-            /// \param kernel_shape The shape of the kernel which we retrieve strides for.
-            /// \return The kernel Shape object representing its dimensions (height, width, depth).
-            Strides get_strides(const Node& node, const Shape& kernel_shape);
-
-            /// \brief  Get number of pixels to stride operation by in each direction.
-            ///
-            /// \param node The Node ptr representing Conv or Pool operation.
             /// \return The kernel Shape object representing its dimensions (height, width, depth).
             Strides get_strides(const Node& node);
 
@@ -59,12 +52,12 @@ namespace ngraph
             ///          `pads` value should follow [x1_begin, x2_begin..., x1_end, x2_end,...].
             ///
             /// \param node The Node ptr representing ONNX operation.
-            /// \param kernel_shape The shape of the kernel which we retrieve pads for.
+            /// \param kernel_rank The rank of the kernel which we retrieve pads for.
             ///
             /// \return A pair of (padding_above, padding_below), which elements contains number of
             ///         pixels to pad in respective dimensions (height, width, depth).
             std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node,
-                                                               const Shape& kernel_shape);
+                                                               const size_t kernel_rank);
 
             /// \brief Get padding values for the operation described by an ONNX node.
             /// \details Values are taken from the `pads` attribute.
@@ -75,11 +68,7 @@ namespace ngraph
             ///
             /// \return A pair of (padding_above, padding_below), which elements contains number of
             ///         pixels to pad in respective dimensions (height, width, depth).
-
-            inline std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node)
-            {
-                return get_pads(node, get_kernel_shape(node));
-            }
+            std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node);
 
             ///
             /// \brief         Calculate paddings with respect to auto_pad value.
