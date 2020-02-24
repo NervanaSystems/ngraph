@@ -20,8 +20,8 @@
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
-#include "ngraph/op/normalize_l2.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/normalize_l2.hpp"
 
 using namespace std;
 using namespace ngraph;

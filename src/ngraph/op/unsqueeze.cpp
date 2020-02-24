@@ -18,8 +18,8 @@
 #include <set>
 
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/unsqueeze.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/unsqueeze.hpp"
 
 using namespace std;
 using namespace ngraph;
