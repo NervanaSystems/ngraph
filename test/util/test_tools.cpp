@@ -200,6 +200,13 @@ string get_results_str(const std::vector<char>& ref_data,
     return ss.str();
 }
 
+template <>
+void copy_data<bool>(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<bool>& data)
+{
+    std::vector<char> data_char(data.begin(), data.end());
+    copy_data(tv, data_char);
+}
+
 #ifndef NGRAPH_JSON_DISABLE
 std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
 {
