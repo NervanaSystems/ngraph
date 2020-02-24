@@ -80,13 +80,13 @@ void op::FakeQuantize::validate_and_infer_types()
 
     element::Type result_et;
     NODE_VALIDATION_CHECK(
-            this,
-            element::Type::merge(result_et, get_input_element_type(3), get_input_element_type(4)),
-            "Arguments do not have the same element type (arg3 element type: ",
-            get_input_element_type(3),
-            ", arg4 element type: ",
-            get_input_element_type(4),
-            ").");
+        this,
+        element::Type::merge(result_et, get_input_element_type(3), get_input_element_type(4)),
+        "Arguments do not have the same element type (arg3 element type: ",
+        get_input_element_type(3),
+        ", arg4 element type: ",
+        get_input_element_type(4),
+        ").");
 
     set_output_type(0, result_et, get_input_partial_shape(0));
 }
