@@ -42,18 +42,7 @@ namespace ngraph
                     const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
                     const std::shared_ptr<ngraph::Node> shape{node.get_ng_inputs().at(1)};
 
-                    NGRAPH_CHECK(shape->is_constant(),
-                                 "Ngraph does not support dynamic braodcasting for Expand op.");
-
-                    std::vector<std::size_t> shape_vector =
-                        ngraph::as_type_ptr<default_opset::Constant>(shape)
-                            ->get_vector<std::size_t>();
-
-                    const ngraph::Shape shape_shape{shape_vector};
-                    return {std::make_shared<default_opset::Broadcast>(
-                        data,
-                        default_opset::Constant::create(
-                            element::i64, Shape{shape_shape.size()}, shape_shape))};
+                    return {std::make_shared<default_opset::Broadcast>(data, shape)};
                 }
 
             } // namespace set_1
