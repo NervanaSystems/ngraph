@@ -453,6 +453,7 @@ model_gatherND_int32
 model_gatherND_float
 model_pad_constant
 model_reciprocal
+model_round
 tile_3d_small_data_rank
 tile_3d_few_repeats
 select_v1
@@ -502,3 +503,4 @@ model_lstm_fwd_hardsigmoid_activation
 model_acosh
 model_asinh
 model_atanh
+model_conv_with_dynamic_batch
