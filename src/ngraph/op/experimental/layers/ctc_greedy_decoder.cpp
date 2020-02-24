@@ -50,6 +50,12 @@ void op::CTCGreedyDecoder::validate_and_infer_types()
     }
 }
 
+bool op::CTCGreedyDecoder::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("ctc_merge_repeated", m_ctc_merge_repeated);
+    return true;
+}
+
 shared_ptr<Node> op::CTCGreedyDecoder::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);

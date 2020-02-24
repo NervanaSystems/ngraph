@@ -35,8 +35,8 @@ op::v1::DeformableConvolution::DeformableConvolution(const Output<Node>& arg,
                                                      const CoordinateDiff& pads_end,
                                                      const Strides& dilations,
                                                      const PadType& auto_pad,
-                                                     const size_t group,
-                                                     const size_t deformable_group)
+                                                     const int64_t group,
+                                                     const int64_t deformable_group)
     : Op({arg, deformable_values, filters})
     , m_strides(strides)
     , m_dilations(dilations)
@@ -47,6 +47,18 @@ op::v1::DeformableConvolution::DeformableConvolution(const Output<Node>& arg,
     , m_deformable_group(deformable_group)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::v1::DeformableConvolution::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("dilations", m_dilations);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    visitor.on_attribute("group", m_group);
+    visitor.on_attribute("deformable_group", m_deformable_group);
+    return true;
 }
 
 void op::v1::DeformableConvolution::validate_and_infer_types()

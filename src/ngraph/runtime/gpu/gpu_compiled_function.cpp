@@ -37,6 +37,7 @@
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
@@ -120,31 +121,7 @@ std::shared_ptr<runtime::gpu::GPUCompiledFunction> runtime::gpu::GPUCompiledFunc
     const std::shared_ptr<ngraph::Function>& function,
     const std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
 {
-#if defined(NGRAPH_DEX_ONLY)
     return std::make_shared<runtime::gpu::GPUInternalFunction>(function, shared_context);
-#else
-    // For now codegen is default unless explicitly disabled
-    bool use_codegen = true;
-    if (auto env = std::getenv("NGRAPH_CODEGEN"))
-    {
-        std::string env_codegen(env);
-        for (auto& opt : get_case_variants({"0", "false"}))
-        {
-            if (env_codegen == opt)
-            {
-                use_codegen = false;
-            }
-        }
-    }
-    if (use_codegen)
-    {
-        return std::make_shared<runtime::gpu::GPUExternalFunction>(function, shared_context);
-    }
-    else
-    {
-        return std::make_shared<runtime::gpu::GPUInternalFunction>(function, shared_context);
-    }
-#endif
 }
 
 void runtime::gpu::GPUCompiledFunction::compile()
@@ -172,6 +149,7 @@ void runtime::gpu::GPUCompiledFunction::compile()
 #endif
     pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager.register_pass<ngraph::pass::Opset0Downgrade>();
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
     pass_manager.register_pass<ngraph::pass::ImplicitBroadcastElimination>();
     pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);

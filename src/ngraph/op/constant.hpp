@@ -193,75 +193,90 @@ namespace ngraph
                 std::vector<T> cast_vector() const
                 {
                     auto source_type = get_element_type();
+                    std::vector<T> rc;
                     switch (source_type)
                     {
                     case element::Type_t::boolean:
                     {
                         auto vector = get_vector<char>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::bf16:
                     {
                         auto vector = get_vector<bfloat16>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::f16:
                     {
                         auto vector = get_vector<float16>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::f32:
                     {
                         auto vector = get_vector<float>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::f64:
                     {
                         auto vector = get_vector<double>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::i8:
                     {
                         auto vector = get_vector<int8_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::i16:
                     {
                         auto vector = get_vector<int16_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::i32:
                     {
                         auto vector = get_vector<int32_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::i64:
                     {
                         auto vector = get_vector<int64_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::u8:
                     {
                         auto vector = get_vector<uint8_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::u16:
                     {
                         auto vector = get_vector<uint16_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::u32:
                     {
                         auto vector = get_vector<uint32_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::u64:
                     {
                         auto vector = get_vector<uint64_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     default: throw std::runtime_error("unsupported type");
                     }
+                    return rc;
                 }
 
                 const void* get_data_ptr() const { return (m_data ? m_data->get_ptr() : nullptr); }

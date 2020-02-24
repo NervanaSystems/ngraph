@@ -22,7 +22,6 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
