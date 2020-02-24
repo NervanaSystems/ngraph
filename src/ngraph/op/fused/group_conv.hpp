@@ -14,6 +14,4 @@
 // limitations under the License.
 //*****************************************************************************
 
-#warning "File is deprecated, use 'ngraph/op/group_conv.hpp'"
-
 #include "ngraph/op/group_conv.hpp"
