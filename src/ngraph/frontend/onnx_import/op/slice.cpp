@@ -72,11 +72,11 @@ namespace ngraph
                         }
                     }
 
-                    const auto begin = ngraph::op::Constant::create(
+                    const auto begin = default_opset::Constant::create(
                         element::i64, Shape{lower_bounds.size()}, lower_bounds);
-                    const auto end = ngraph::op::Constant::create(
+                    const auto end = default_opset::Constant::create(
                         element::i64, Shape{upper_bounds.size()}, upper_bounds);
-                    const auto strides = ngraph::op::Constant::create(
+                    const auto strides = default_opset::Constant::create(
                         element::i64, Shape{data_rank}, std::vector<int64_t>(data_rank, 1));
 
                     return {std::make_shared<default_opset::StridedSlice>(

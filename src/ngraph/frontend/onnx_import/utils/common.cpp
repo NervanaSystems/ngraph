@@ -18,9 +18,7 @@
 #include "common.hpp"
 #include "default_opset.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/opsets/opset0.hpp"
-#include "validation_util.hpp"
 
 namespace ngraph
 {
@@ -49,24 +47,6 @@ namespace ngraph
                 throw ngraph_error("unsupported element type: " +
                                    onnx::TensorProto_DataType_Name(
                                        static_cast<onnx::TensorProto_DataType>(onnx_type)));
-            }
-
-            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
-            {
-                const auto outputs_number = node->get_output_size();
-                ngraph::NodeVector outputs(outputs_number);
-                for (int i = 0; i < outputs_number; ++i)
-                {
-                    if (node->output(i).get_node_shared_ptr()->get_output_size() == 1)
-                    {
-                        outputs[i] = node->get_output_as_single_output_node(i);
-                    }
-                    else
-                    {
-                        outputs[i] = std::make_shared<ngraph::opset0::GetOutputElement>(node, i);
-                    }
-                }
-                return outputs;
             }
 
         } // namespace  common

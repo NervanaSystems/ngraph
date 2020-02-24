@@ -19,8 +19,6 @@
 #include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "leaky_relu.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/multiply.hpp"
 
 namespace ngraph
 {
@@ -42,7 +40,7 @@ namespace ngraph
                         std::make_shared<default_opset::Constant>(data->get_element_type(),
                                                                   data->get_shape(),
                                                                   std::vector<double>{alpha});
-                    return {std::make_shared<default_opset::Maximum>(data * alpha_node, data)};
+                    return {std::make_shared<default_opset::PRelu>(data, alpha_node)};
                 }
 
             } // namespace set_1
