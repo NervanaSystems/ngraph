@@ -60,4 +60,5 @@ private:
     OPVTensor(const OPVTensor&) = delete;
     OPVTensor(OPVTensor&&) = delete;
     OPVTensor& operator=(const OPVTensor&) = delete;
+    std::vector<int8_t> m_data;
 };

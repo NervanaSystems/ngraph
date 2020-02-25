@@ -42,10 +42,21 @@ runtime::opv::OPVTensor::~OPVTensor()
 
 void runtime::opv::OPVTensor::write(const void* source, size_t n_bytes)
 {
-    throw std::runtime_error("OPVTensor::write is unimplemented");
+    // Stuff from here: https://github.com/NervanaSystems/ngraph/blob/master/test/util/backend_utils.hpp#L54
+    const int8_t* v = (const int8_t*)source;
+    if (v == nullptr)
+        return;
+    m_data.resize(n_bytes);
+    std::copy(v, v + n_bytes, m_data.begin());
 }
 
 void runtime::opv::OPVTensor::read(void* target, size_t n_bytes) const
 {
-    throw std::runtime_error("OPVTensor::write is unimplemented");
+    // Stuff from here: https://github.com/NervanaSystems/ngraph/blob/master/test/util/backend_utils.hpp#L63
+    int8_t* v = (int8_t*)target;
+    if (v == nullptr)
+        return;
+    if (n_bytes > m_data.size())
+        n_bytes = m_data.size();
+    std::copy(m_data.begin(), m_data.begin() + n_bytes, v);
 }

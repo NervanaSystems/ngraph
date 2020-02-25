@@ -23,11 +23,17 @@
 #include <string>
 #include <vector>
 
+#include <ie_core.hpp>
+
+
 #include "ngraph/ops.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/tensor.hpp"
+
+#include "ngraph/opsets/opset.hpp"
+
 
 
 namespace ngraph
@@ -59,4 +65,9 @@ public:
 protected:
 
     bool m_performance_counters_enabled = false;
+    InferenceEngine::CNNNetwork network;
+    std::string device; // TODO: for now its CPU? figure it out later
+
+private:
+    InferenceEngine::Blob::Ptr fill_blob(InferenceEngine::SizeVector shape, std::vector<float> data);
 }; 

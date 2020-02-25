@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/opv/opv_backend_visibility.hpp"
-
 #include "ngraph/component_manager.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/except.hpp"
@@ -48,7 +47,7 @@ runtime::opv::OPVBackend::OPVBackend(const vector<string>& unsupported_op_name_l
 shared_ptr<runtime::Tensor>
     runtime::opv::OPVBackend::create_tensor(const element::Type& type, const Shape& shape)
 {
-    throw std::runtime_error("create_tensor function is unimplemented for opv backend");
+    return make_shared<runtime::opv::OPVTensor>(type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::opv::OPVBackend::create_tensor(

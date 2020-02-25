@@ -27,6 +27,8 @@
 
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/tensor.hpp"
+#include "ngraph/runtime/opv/opv_tensor.hpp"
+
 
 namespace ngraph
 {
