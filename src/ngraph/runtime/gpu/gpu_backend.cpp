@@ -23,6 +23,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "ngraph/runtime/gpu/gpu_executable.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_internal_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
@@ -36,16 +37,16 @@ using namespace std;
 extern "C" GPU_BACKEND_API void ngraph_register_gpu_backend()
 {
     runtime::BackendManager::register_backend("GPU", [](const std::string& /* config */) {
-        return make_shared<runtime::gpu::GPU_Backend>();
+        return make_shared<runtime::gpu::GPUBackend>();
     });
 }
 
-runtime::gpu::GPU_Backend::GPU_Backend()
+runtime::gpu::GPUBackend::GPUBackend()
     : runtime::Backend()
 {
 }
 
-runtime::gpu::GPU_Backend::BackendContext::BackendContext()
+runtime::gpu::GPUBackend::BackendContext::BackendContext()
     : m_runtime_context(new GPURuntimeContext)
     , m_primitive_emitter(new GPUPrimitiveEmitter(m_runtime_context))
     , m_cuda_manager(new CudaContextManager)
@@ -75,7 +76,7 @@ runtime::gpu::GPU_Backend::BackendContext::BackendContext()
     m_runtime_context->compiled_kernel_pool = new CudaFunctionPool;
 }
 
-void runtime::gpu::GPU_Backend::BackendContext::prepare_runtime_context()
+void runtime::gpu::GPUBackend::BackendContext::prepare_runtime_context()
 {
     // set context current each time in case thread changed
     bind_cuda_context_to_thread();
@@ -84,12 +85,12 @@ void runtime::gpu::GPU_Backend::BackendContext::prepare_runtime_context()
     m_runtime_context->gpu_memory_primitives = m_primitive_emitter->get_memory_primitives().data();
 }
 
-void runtime::gpu::GPU_Backend::BackendContext::bind_cuda_context_to_thread()
+void runtime::gpu::GPUBackend::BackendContext::bind_cuda_context_to_thread()
 {
     m_cuda_manager->SetContextCurrent();
 }
 
-runtime::gpu::GPU_Backend::BackendContext::~BackendContext()
+runtime::gpu::GPUBackend::BackendContext::~BackendContext()
 {
     cublasDestroy(*m_runtime_context->cublas_handle);
     delete m_runtime_context->cublas_handle;
@@ -99,12 +100,12 @@ runtime::gpu::GPU_Backend::BackendContext::~BackendContext()
 }
 
 shared_ptr<runtime::Tensor>
-    runtime::gpu::GPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
+    runtime::gpu::GPUBackend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
     return make_shared<runtime::gpu::GPUTensor>(element_type, shape);
 }
 
-shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
+shared_ptr<runtime::Tensor> runtime::gpu::GPUBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     if (memory_pointer != nullptr && !is_device_pointer(memory_pointer))
@@ -114,8 +115,8 @@ shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
     return make_shared<runtime::gpu::GPUTensor>(element_type, shape, memory_pointer);
 }
 
-shared_ptr<runtime::Executable> runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func,
-                                                                   bool timing_enable)
+shared_ptr<runtime::Executable> runtime::gpu::GPUBackend::compile(shared_ptr<Function> func,
+                                                                  bool timing_enable)
 {
     shared_ptr<runtime::Executable> rc;
     auto it = m_exec_map.find(func);
@@ -125,87 +126,13 @@ shared_ptr<runtime::Executable> runtime::gpu::GPU_Backend::compile(shared_ptr<Fu
     }
     else
     {
-        rc = make_shared<GPU_Executable>(func, timing_enable);
+        rc = make_shared<GPUExecutable>(func, timing_enable);
         m_exec_map.insert({func, rc});
     }
     return rc;
 }
 
-runtime::gpu::GPU_Executable::GPU_Executable(shared_ptr<Function> func, bool enable_timing)
-    : m_context(new GPU_Backend::BackendContext())
-
-{
-    FunctionInstance& instance = m_function_instance;
-    if (instance.m_compiled_function == nullptr)
-    {
-        m_context->bind_cuda_context_to_thread();
-        instance.m_compiled_function = runtime::gpu::GPUCompiledFunction::make(func, m_context);
-        instance.m_compiled_function->m_emit_timing = enable_timing;
-        instance.m_compiled_function->compile();
-        instance.m_runtime = instance.m_compiled_function->m_runtime;
-        instance.m_inputs.resize(func->get_parameters().size());
-        instance.m_outputs.resize(func->get_output_size());
-    }
-    set_parameters_and_results(*func);
-}
-
-void runtime::gpu::GPU_Executable::initialize_io(void** target,
-                                                 const vector<shared_ptr<runtime::Tensor>>& source)
-{
-    for (size_t i = 0; i < source.size(); i++)
-    {
-        shared_ptr<runtime::gpu::GPUTensor> tv =
-            dynamic_pointer_cast<runtime::gpu::GPUTensor>(source[i]);
-        if (tv)
-        {
-            target[i] = tv->m_allocated_buffer_pool;
-        }
-        else
-        {
-            throw invalid_argument("Tensors passed to GPU backend must be GPU Tensors");
-        }
-    }
-}
-
-bool runtime::gpu::GPU_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                        const vector<shared_ptr<runtime::Tensor>>& inputs)
-{
-    FunctionInstance& instance = m_function_instance;
-    if (instance.m_compiled_function == nullptr)
-    {
-        throw runtime_error("compile() must be called before call().");
-    }
-
-    // ensure the GPURuntimeContext primitive pointers are valid
-    m_context->prepare_runtime_context();
-
-    // Device tensors
-    initialize_io(instance.m_inputs.data(), inputs);
-    initialize_io(instance.m_outputs.data(), outputs);
-
-    auto ctx = m_context->m_runtime_context.get();
-    instance.m_runtime(instance.m_inputs.data(), instance.m_outputs.data(), ctx);
-
-    return true;
-}
-
-// void runtime::gpu::GPU_Backend::remove_compiled_function(shared_ptr<Function> func)
-// {
-//     m_function_map.erase(func);
-// }
-
-vector<runtime::PerformanceCounter> runtime::gpu::GPU_Executable::get_performance_data() const
-{
-    std::vector<runtime::PerformanceCounter> rc;
-    const FunctionInstance& instance = m_function_instance;
-    if (instance.m_compiled_function != nullptr)
-    {
-        instance.m_compiled_function->get_performance_data(rc);
-    }
-    return rc;
-}
-
-bool runtime::gpu::GPU_Backend::is_supported(const Node& op) const
+bool runtime::gpu::GPUBackend::is_supported(const Node& op) const
 {
     set<string> unsupported_ops = {"Quantize",
                                    "Dequantize",

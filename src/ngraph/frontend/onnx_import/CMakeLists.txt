@@ -72,6 +72,8 @@ add_library(onnx_import STATIC
         op/concat.hpp
         op/constant.cpp
         op/constant.hpp
+        op/constant_of_shape.cpp
+        op/constant_of_shape.hpp
         op/conv.cpp
         op/conv.hpp
         op/conv_integer.cpp
@@ -171,6 +173,8 @@ add_library(onnx_import STATIC
         op/reshape.hpp
         op/reverse_sequence.cpp
         op/reverse_sequence.hpp
+        op/round.cpp
+        op/round.hpp
         op/scatter_nd.cpp
         op/scatter_nd.hpp
         op/selu.cpp
