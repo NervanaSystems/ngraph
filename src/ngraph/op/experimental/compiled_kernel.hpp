@@ -29,9 +29,8 @@ namespace ngraph
             ///
             /// This op can be used to delimit sub-graphs that with special compilation requirements
             /// within a function. For example, we currently use it to delimit sub-graphs that will
-            /// be
-            /// independently compiled and executed by MLIR backend.
-            class NGRAPH_API CompiledKernel : public ngraph::op::Op
+            /// be independently compiled and executed by MLIR backend.
+            class NGRAPH_API CompiledKernel : public Op
             {
             public:
                 static constexpr NodeTypeInfo type_info{"CompiledKernel", 0};
@@ -62,8 +61,7 @@ namespace ngraph
                 NodeVector m_node_list;
                 NodeVector m_output_nodes;
                 // Used to store the information of internal nodes that have input coming from
-                // outside
-                // of CK
+                // outside of CK
                 std::unordered_map<std::shared_ptr<Node>, size_t> m_input_map;
             };
         }
