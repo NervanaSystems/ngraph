@@ -405,8 +405,13 @@ namespace ngraph
         std::shared_ptr<Node> get_input_node_shared_ptr(size_t index) const;
 
     protected:
-        // Will be replaced with an OutputVector version
-        virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
+        // Will be replaced with clone_with_new_inputs
+        virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const
+            NGRAPH_DEPRECATED("use copy_with_new_inputs instead");
+
+        // TODO: When all copy_with_new_args have been replaced with copy_with_new_inputs, make
+        // this pure and remove copy_with_new_args
+        virtual std::shared_ptr<Node> clone_with_new_inputs(const OutputVector& inputs) const;
 
     public:
         std::shared_ptr<Node> copy_with_new_inputs(const OutputVector& new_args) const;
