@@ -16,7 +16,7 @@
 
 
 if (NGRAPH_OPV_ENABLE)
-    add_library(opv_backend SHARED opv_backend.cpp opv_executable.cpp)
+    add_library(opv_backend SHARED opv_backend.cpp opv_executable.cpp opv_tensor.cpp)
     target_compile_definitions(opv_backend PRIVATE OPV_BACKEND_EXPORTS)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(opv_backend PROPERTIES
