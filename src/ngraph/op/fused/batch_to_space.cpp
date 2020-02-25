@@ -106,12 +106,12 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
     auto flat_node = builder::opset1::reshape(data, dispersed_shape);
 
     // calculate axes to transpose
-    //      x'' = transpose(x', [N, 0, N + 1, 1, N + 2, ..., N - 1, N + N - 1])
+    //      x'' = transpose(x', [N, N + 1, 0, N + 2, 1, ..., N + N - 1, N - 1])
     vector<size_t> axes_order{block_values.size() - 1};
     for (size_t i = 0; i < block_values.size() - 1; ++i)
     {
-        axes_order.push_back(i);
         axes_order.push_back(i + block_values.size());
+        axes_order.push_back(i);
     }
     flat_node = builder::opset1::reorder_axes(flat_node, axes_order);
 
