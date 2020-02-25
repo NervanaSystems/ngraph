@@ -125,7 +125,7 @@ namespace ngraph
                     inline std::shared_ptr<default_opset::Constant>
                         make_ng_constant<Tensor::Type::boolean>(const Tensor& tensor)
                     {
-                        return __make_ng_constant<bool>(element::boolean, tensor);
+                        return __make_ng_constant<char>(element::boolean, tensor);
                     }
 
                     inline std::shared_ptr<default_opset::Constant>

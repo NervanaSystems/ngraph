@@ -3,9 +3,11 @@ producer_name: "nGraph ONNX Importer"
 graph {
   name: "test_graph"
   initializer {
+    dims: 1
+    dims: 3
     data_type: 9
     name: "A"
-    int32_data: 5
+    raw_data: "\001\000\001"
   }
   input {
     name: "A"
@@ -13,6 +15,12 @@ graph {
       tensor_type {
         elem_type: 9
         shape {
+          dim {
+            dim_value: 1
+          }
+          dim {
+            dim_value: 3
+          }
         }
       }
     }
@@ -23,6 +31,12 @@ graph {
       tensor_type {
         elem_type: 9
         shape {
+          dim {
+            dim_value: 1
+          }
+          dim {
+            dim_value: 3
+          }
         }
       }
     }
