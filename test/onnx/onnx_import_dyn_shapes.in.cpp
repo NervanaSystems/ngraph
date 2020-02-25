@@ -381,6 +381,27 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_3d_output)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_3d_output_2)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    test_case.add_input<float>(Shape{ 3, 1 }, std::vector<float>{1.f, 2.f, 3.f});
+    test_case.add_input<int64_t>(Shape{ 3 }, std::vector<int64_t>{2, 3, 4});
+
+    std::vector<float> expected_values{ 1.f, 1.f, 1.f, 1.f,
+                                        2.f, 2.f, 2.f, 2.f,
+                                        3.f, 3.f, 3.f, 3.f,
+                                        1.f, 1.f, 1.f, 1.f,
+                                        2.f, 2.f, 2.f, 2.f,
+                                        3.f, 3.f, 3.f, 3.f };
+    test_case.add_expected_output<float>(Shape{ 2, 3, 4 }, expected_values);
+
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_2d_output)
 {
     const auto function = onnx_import::import_onnx_model(
