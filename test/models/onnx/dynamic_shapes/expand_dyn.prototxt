@@ -14,17 +14,6 @@ graph {
     type {
       tensor_type {
         elem_type: 1
-        shape {
-          dim {
-            dim_param: "batch"
-          }
-          dim {
-            dim_param: "batch"
-          }
-          dim {
-            dim_param: "batch"
-          }
-        }
       }
     }
   }
@@ -33,11 +22,6 @@ graph {
     type {
       tensor_type {
         elem_type: 7
-        shape {
-          dim {
-            dim_param: "batch"
-          }
-        }
       }
     }
   }

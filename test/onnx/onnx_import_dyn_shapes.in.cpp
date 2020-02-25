@@ -393,7 +393,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_constant_of_shape_int_ones)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_2d_1_dyn_shape)
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_1_dyn_shape)
 {
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_2d_input_dyn.prototxt"));
@@ -411,7 +411,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_2d_1_dyn_shape)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_2d_2_dyn_shape)
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_2_dyn_shape)
 {
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_2d_input_dyn.prototxt"));
@@ -428,7 +428,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_2d_2_dyn_shape)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_2d_3_dyn_shape)
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_3_dyn_shape)
 {
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_2d_input_dyn.prototxt"));
@@ -444,7 +444,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_2d_3_dyn_shape)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_3d_1_dyn_shape)
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_4_dyn_shape)
 {
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_3d_input_dyn.prototxt"));
@@ -460,7 +460,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_3d_1_dyn_shape)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_3d_2_dyn_shape)
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_5_dyn_shape)
 {
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_3d_input_dyn.prototxt"));
@@ -477,7 +477,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_3d_2_dyn_shape)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_3d_3_dyn_shape)
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_6_dyn_shape)
 {
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_3d_input_dyn.prototxt"));
@@ -495,7 +495,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_3d_3_dyn_shape)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_3d_uint16_dyn_shape)
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_uint16_dyn_shape)
 {
     const auto function = onnx_import::import_onnx_model(file_util::path_join(
         SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_3d_input_uint16_dyn.prototxt"));
