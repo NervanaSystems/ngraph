@@ -156,20 +156,20 @@ void ngraph::op::v1::BatchToSpace::pre_validate_and_infer_types()
     const auto& crops_begin_type = get_input_element_type(2);
     const auto& crops_end_type = get_input_element_type(3);
     NODE_VALIDATION_CHECK(this,
-                          block_shape_type == element::i32 || block_shape_type == element::i64,
-                          "block_shape element type must be either int64_t or int32_t but got (",
+                          block_shape_type.is_integral_number(),
+                          "block_shape must be an integral number but got (",
                           block_shape_type,
                           ").");
 
     NODE_VALIDATION_CHECK(this,
-                          crops_begin_type == element::i32 || crops_begin_type == element::i64,
-                          "crops_begin element type must be either int64_t or int32_t but got (",
+                          crops_begin_type.is_integral_number(),
+                          "crops_begin must be an integral number but got (",
                           crops_begin_type,
                           ").");
 
     NODE_VALIDATION_CHECK(this,
-                          crops_end_type == element::i32 || crops_end_type == element::i64,
-                          "crops_end element type must be either int64_t or int32_t but got (",
+                          crops_end_type.is_integral_number(),
+                          "crops_end must be an integral number but got (",
                           crops_end_type,
                           ").");
 
