@@ -57,20 +57,8 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const
     const auto pads_begin_const = as_type_ptr<op::Constant>(pads_begin.get_node_shared_ptr());
     const auto pads_end_const = as_type_ptr<op::Constant>(pads_end.get_node_shared_ptr());
 
-    auto get_in_vec_int64 = [](const shared_ptr<op::Constant>& in_const, vector<int64_t>& values) {
-        if (in_const->get_element_type() == element::i32)
-        {
-            auto tmp = in_const->get_vector<int32_t>();
-            values.insert(values.begin(), tmp.begin(), tmp.end());
-        }
-        else
-        {
-            values = in_const->get_vector<int64_t>();
-        }
-    };
-
     vector<int64_t> block_values;
-    get_in_vec_int64(block_const, block_values);
+    block_values = block_const->cast_vector<int64_t>();
 
     //    Zero-pad the start and end of dimensions [D_0, ..., D_{N - 1}] of the input according to
     //    `pads_begin`
@@ -187,10 +175,7 @@ void ngraph::op::v1::SpaceToBatch::pre_validate_and_infer_types()
 std::shared_ptr<Node>
     ngraph::op::v1::SpaceToBatch::copy_with_new_args(const ngraph::NodeVector& new_args) const
 {
-    if (new_args.size() != 4)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<SpaceToBatch>(
         new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }

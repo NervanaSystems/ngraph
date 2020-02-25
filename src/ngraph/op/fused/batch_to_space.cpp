@@ -57,22 +57,10 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
     const auto crops_begin_const = as_type_ptr<op::Constant>(crops_begin.get_node_shared_ptr());
     const auto crops_end_const = as_type_ptr<op::Constant>(crops_end.get_node_shared_ptr());
 
-    auto get_in_vec_int64 = [](const shared_ptr<op::Constant>& in_const, vector<int64_t>& values) {
-        if (in_const->get_element_type() == element::i32)
-        {
-            auto tmp = in_const->get_vector<int32_t>();
-            values.insert(values.begin(), tmp.begin(), tmp.end());
-        }
-        else
-        {
-            values = in_const->get_vector<int64_t>();
-        }
-    };
-
     vector<int64_t> block_values, crops_begin_values, crops_end_values;
-    get_in_vec_int64(block_const, block_values);
-    get_in_vec_int64(crops_begin_const, crops_begin_values);
-    get_in_vec_int64(crops_end_const, crops_end_values);
+    block_values = block_const->cast_vector<int64_t>();
+    crops_begin_values = crops_begin_const->cast_vector<int64_t>();
+    crops_end_values = crops_end_const->cast_vector<int64_t>();
 
     // First we have to disperse the data from batch, then rearrange them
     // so as appropriate chunks of data where close to their destination place.
@@ -194,10 +182,7 @@ void ngraph::op::v1::BatchToSpace::pre_validate_and_infer_types()
 std::shared_ptr<ngraph::Node>
     ngraph::op::v1::BatchToSpace::copy_with_new_args(const ngraph::NodeVector& new_args) const
 {
-    if (new_args.size() != 4)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<BatchToSpace>(
         new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }

@@ -25,7 +25,7 @@ namespace ngraph
     {
         namespace v1
         {
-            /// \brief BatchToSpace permutes data from the batch dimension of the data blob into
+            /// \brief BatchToSpace permutes data from the batch dimension of the data tensor into
             ///        spatial dimensions.
             ///
             /// \note  Values from the batch dimension are moved in spatial blocks dimensions.
