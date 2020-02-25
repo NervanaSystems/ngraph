@@ -43,6 +43,9 @@
 #define PASS_NAME "convert-ngraph-to-affine"
 #define DEBUG_TYPE PASS_NAME
 
+// Enable the lowering of MemRefs to LLVM bare pointers.
+extern llvm::cl::opt<bool> clEnableBarePtrMemRefLowering;
+
 std::vector<ngraph::runtime::ngmlir::opAttrs> opAttrsVec;
 
 // anonymous namespace
@@ -344,8 +347,10 @@ namespace
 
             // TODO: Encode no alias attribute as part of the function signature conversion or as a
             // separate rewrite pattern. Retrieve new function after signature conversion.
-            // TODO: To be enabled in follow-up commit.
-            // insertNoAliasArgAttrs();
+            if (clEnableBarePtrMemRefLowering)
+            {
+                insertNoAliasArgAttrs();
+            }
         }
 
         opAttrsVec = m_attrsVec;
@@ -520,22 +525,22 @@ namespace
 
     /// Add llvm.noalias attribute to all the memref function arguments. We know that this is safe
     /// by nGraph op semantics.
-    // void DialectLoweringPass::insertNoAliasArgAttrs()
-    //{
-    //    FuncOp func = getModule().lookupSymbol<mlir::FuncOp>(funcName);
-    //    NGRAPH_CHECK(func, "FuncOp '" + funcName.str() + "' not found");
+    void DialectLoweringPass::insertNoAliasArgAttrs()
+    {
+        FuncOp func = getModule().lookupSymbol<mlir::FuncOp>(funcName);
+        NGRAPH_CHECK(func, "FuncOp '" + funcName.str() + "' not found");
 
-    //    unsigned int argIdx = 0;
-    //    for (auto arg : func.getArguments())
-    //    {
-    //        if (arg.getType().isa<MemRefType>())
-    //        {
-    //            func.setArgAttr(argIdx, "llvm.noalias", BoolAttr::get(true, &getContext()));
-    //        }
+        unsigned int argIdx = 0;
+        for (auto arg : func.getArguments())
+        {
+            if (arg.getType().isa<MemRefType>())
+            {
+                func.setArgAttr(argIdx, "llvm.noalias", BoolAttr::get(true, &getContext()));
+            }
 
-    //        ++argIdx;
-    //    }
-    //}
+            ++argIdx;
+        }
+    }
 
     void DialectLoweringPass::insertDeallocs(PatternRewriter& rewriter)
     {
