@@ -1,6 +1,7 @@
 ir_version: 3
 producer_name: "nGraph ONNX Importer"
 graph {
+  name: "test_graph"
   node {
     input: "A"
     input: "B"
@@ -8,7 +9,6 @@ graph {
     name: "node"
     op_type: "Or"
   }
-  name: "test_graph"
   input {
     name: "A"
     type {
