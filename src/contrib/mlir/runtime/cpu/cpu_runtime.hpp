@@ -69,8 +69,9 @@ namespace ngraph
                 /// Helper to create memref arguments for MLIR function signature
                 llvm::SmallVector<void*, 8> allocateMemrefArgs();
 
-                /// Helper to allocate a mem ref object. Handles static shapes only for now.
-                StaticMemRef* allocateMemrefDescriptor(size_t);
+                /// Helper to allocate a default MemRef descriptor for LLVM. Handles static shapes
+                /// only for now.
+                StaticMemRef* allocateDefaultMemrefDescriptor(size_t);
 
             private:
                 // Pointers to externally allocated memory for sub-graph's input and output tensors.

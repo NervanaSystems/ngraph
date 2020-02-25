@@ -72,6 +72,8 @@ add_library(onnx_import STATIC
         op/concat.hpp
         op/constant.cpp
         op/constant.hpp
+        op/constant_of_shape.cpp
+        op/constant_of_shape.hpp
         op/conv.cpp
         op/conv.hpp
         op/conv_integer.cpp

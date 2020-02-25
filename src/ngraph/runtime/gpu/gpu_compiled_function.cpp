@@ -37,6 +37,7 @@
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
@@ -80,7 +81,7 @@ static GPUStaticInitializers s_static_initializers;
 
 runtime::gpu::GPUCompiledFunction::GPUCompiledFunction(
     const shared_ptr<ngraph::Function>& function,
-    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
+    const std::shared_ptr<GPUBackend::BackendContext>& shared_context)
     : m_runtime(nullptr)
     , m_function(function)
     , m_emit_timing(false)
@@ -118,7 +119,7 @@ std::vector<std::string> get_case_variants(std::vector<std::string> cases)
 
 std::shared_ptr<runtime::gpu::GPUCompiledFunction> runtime::gpu::GPUCompiledFunction::make(
     const std::shared_ptr<ngraph::Function>& function,
-    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
+    const std::shared_ptr<GPUBackend::BackendContext>& shared_context)
 {
     return std::make_shared<runtime::gpu::GPUInternalFunction>(function, shared_context);
 }
@@ -148,6 +149,7 @@ void runtime::gpu::GPUCompiledFunction::compile()
 #endif
     pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager.register_pass<ngraph::pass::Opset0Downgrade>();
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
     pass_manager.register_pass<ngraph::pass::ImplicitBroadcastElimination>();
     pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
