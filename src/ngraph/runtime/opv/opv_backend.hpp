@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <ie_core.hpp>
 #include <initializer_list>
 #include <memory>
 #include <sstream>

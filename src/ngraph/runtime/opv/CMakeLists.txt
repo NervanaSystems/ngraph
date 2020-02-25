@@ -30,4 +30,6 @@ if (NGRAPH_OPV_ENABLE)
     )
 
     target_link_libraries(opv_backend PUBLIC libdldt)
+
+    target_include_directories(opv_backend PUBLIC ${IE_MAIN_SOURCE_DIR}/include)
 endif()
