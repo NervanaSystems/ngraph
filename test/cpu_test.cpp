@@ -1052,6 +1052,11 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
     unset_environment("NGRAPH_CPU_CONCURRENCY");
 }
 
+// This test checks if a ConverLayout node is inserted before the ConvolutionBias node.
+// Since MLIR supports ConvolutionBias through callback, the data layout conversion is done in
+// callback.
+// There is no ConvertLayout node when MLIR and MLIR CALLBACK are enabled.
+// Thus this test is disabled with MLIR enabled.
 TEST(cpu_test, MLIR_DISABLE_TEST(constant_convertlayout))
 {
     Shape data_shape{1, 64, 56, 56};

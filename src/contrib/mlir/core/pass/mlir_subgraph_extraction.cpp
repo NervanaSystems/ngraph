@@ -427,7 +427,6 @@ static bool can_use_mkldnn_conv_callback(ngraph::Node* node)
 {
     auto convolution = static_cast<const T*>(node);
     auto arg0_rank = node->get_input_shape(0).size();
-
     auto dilation = convolution->get_data_dilation_strides();
     if (std::any_of(dilation.begin(), dilation.end(), [](size_t s) { return s != 1; }))
     {
