@@ -14,12 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
-#include <vector>
-
+#include "constant.hpp"
+#include "core/tensor.hpp"
 #include "default_opset.hpp"
-#include "ngraph/shape.hpp"
-#include "softsign.hpp"
+#include "ngraph/op/constant.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -29,17 +28,21 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector softsign(const Node& node)
+                NodeVector constant_of_shape(const onnx_import::Node& node)
                 {
-                    auto data = node.get_ng_inputs().at(0);
-
-                    std::shared_ptr<ngraph::Node> one_node =
-                        default_opset::Constant::create(data->get_element_type(), Shape{}, {1});
-                    auto abs_data = std::make_shared<default_opset::Abs>(data);
-                    auto data_plus_one_node =
-                        std::make_shared<default_opset::Add>(abs_data, one_node);
-
-                    return {std::make_shared<default_opset::Divide>(data, data_plus_one_node)};
+                    std::shared_ptr<ngraph::Node> constant_value;
+                    if (node.has_attribute("value"))
+                    {
+                        auto value_tensor = node.get_attribute_value<Tensor>("value");
+                        constant_value = value_tensor.get_ng_constant();
+                        constant_value = reshape::interpret_as_scalar(constant_value);
+                    }
+                    else
+                    {
+                        constant_value = default_opset::Constant::create(element::f32, {}, {0});
+                    }
+                    return {std::make_shared<default_opset::Broadcast>(constant_value,
+                                                                       node.get_ng_inputs().at(0))};
                 }
 
             } // namespace set_1

@@ -14,33 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
-#include <vector>
+// This collection contains one entry for each new op on top of the opset1.
 
-#include "default_opset.hpp"
-#include "ngraph/op/constant.hpp"
-#include "reciprocal.hpp"
-namespace ngraph
-{
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector reciprocal(const Node& node)
-                {
-                    auto data = node.get_ng_inputs().at(0);
+#ifndef NGRAPH_OP
+#warning "NGRAPH_OP not defined"
+#define NGRAPH_OP(x, y)
+#endif
 
-                    auto one_node =
-                        default_opset::Constant::create(data->get_element_type(), Shape{}, {1});
-                    return {std::make_shared<default_opset::Divide>(one_node, data)};
-                }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+#include "opset1_tbl.hpp"
+NGRAPH_OP(Gelu, ngraph::op::v0)
