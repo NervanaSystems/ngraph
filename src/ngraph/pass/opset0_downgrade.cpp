@@ -154,14 +154,14 @@ namespace
 
         shared_ptr<Node> replacement_node;
 
-        if (arg_rank.is_static() && !target_shape_input.get_node_shared_ptr()->is_constant())
+        if (arg_rank.is_static() && static_cast<size_t>(arg_rank) == 0 &&
+            !target_shape_input.get_node_shared_ptr()->is_constant())
         {
             replacement_node = make_shared<op::DynBroadcast>(
                 arg,
                 target_shape_input,
                 make_shared<op::Range>(make_zero(element::i64, {}),
-                                       make_shared<op::ShapeOf>(target_shape_input) -
-                                           make_shared<op::ShapeOf>(make_shared<op::ShapeOf>(arg)),
+                                       make_shared<op::ShapeOf>(target_shape_input),
                                        make_constant_from_string("1", element::i64, {})));
         }
         else
