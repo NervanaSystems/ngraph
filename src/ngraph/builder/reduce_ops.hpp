@@ -150,7 +150,7 @@ namespace ngraph
             /// | ---------------- | --------------------------------- | -------------------------------------------------------|
             /// | `node`           | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | An input tensor of any shape                           |
             /// | `reduction_axes` | AxesSet                           | The axes to eliminate through reduction (0 indexed).   |
-            /// | `keep_dims`      | bool                              | If set to 1 it holds axes that are used for reduction. |
+            /// | `keep_dims`      | bool                              | If set to true it holds reduced axes.                  |
             ///
             /// ## Output
             ///
