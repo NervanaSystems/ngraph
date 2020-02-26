@@ -67,7 +67,6 @@ func @simple_matmul(%arg0: !ng.tensor<3x2xf32>, %arg1: !ng.tensor<2x3xf32>) -> !
 
 // AvePool Op
 // CHECK-LABEL: func @simple_avgpool
-<<<<<<< HEAD
 //       CHECK-DAG: %[[GA0:.*]] = llvm.mlir.addressof @{{[a-zA-Z_][a-zA-Z0-9_]*}} : !llvm<"{ i8, [3 x i64], [3 x i64], [3 x i64], [3 x i64] }*">
 //       CHECK-DAG: %[[C0:.*]] = constant {{[0-9]+}} : i64
 //       CHECK-DAG: %[[MC0:.*]] = memref_cast %arg0 : memref<2x1x3x3xf32> to memref<*xf32>
@@ -82,7 +81,6 @@ func @simple_avgpool(%arg0: !ng.tensor<2x1x3x3xf32>) -> !ng.tensor<2x1x3x3xf32> 
 
 // AvgPoolBackprop Op
 // CHECK-LABEL: func @simple_avgpoolbackprop
-<<<<<<< HEAD
 //       CHECK-DAG: %[[GA0:.*]] = llvm.mlir.addressof @{{[a-zA-Z_][a-zA-Z0-9_]*}} : !llvm<"{ i8, [3 x i64], [3 x i64], [3 x i64], [3 x i64] }*">
 //       CHECK-DAG: %[[C0:.*]] = constant {{[0-9]+}} : i64
 //       CHECK-DAG: %[[MC0:.*]] = memref_cast %arg0 : memref<2x2x2x2xf32> to memref<*xf32>
@@ -97,7 +95,6 @@ func @simple_avgpoolbackprop(%arg0: !ng.tensor<2x2x2x2xf32>) -> !ng.tensor<2x2x3
 
 // MaxPool Op
 // CHECK-LABEL: func @simple_maxpool
-<<<<<<< HEAD
 //       CHECK-DAG: %[[GA0:.*]] = llvm.mlir.addressof @{{[a-zA-Z_][a-zA-Z0-9_]*}} : !llvm<"{ i8, [3 x i64], [3 x i64], [3 x i64], [3 x i64] }*">
 //       CHECK-DAG: %[[C0:.*]] = constant {{[0-9]+}} : i64
 //       CHECK-DAG: %[[MC0:.*]] = memref_cast %arg0 : memref<64x3x7x8x10xf32> to memref<*xf32>
