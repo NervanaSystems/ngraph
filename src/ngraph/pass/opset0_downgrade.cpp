@@ -546,7 +546,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::OneHot> node)
     {
-        const auto indices = node->input_value(0).get_node_shared_ptr();
+        const auto indices = node->input_value(0);
         const auto depth = node->input_value(1).get_node_shared_ptr();
         auto on_value = node->input_value(2).get_node_shared_ptr();
         auto off_value = node->input_value(3).get_node_shared_ptr();
