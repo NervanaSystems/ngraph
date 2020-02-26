@@ -18,37 +18,23 @@
 
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <set>
 #include <string>
 
-#include "core/operator_set.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        /// \brief Registers ONNX custom operator
-        /// Performs the registration of external ONNX operator. This means the code
-        /// of the operator is not part of ONNX importer. The operator shall be registered
-        /// before calling `load_onnx_model()` or `import_onnx_function()` functions.
-        /// \param name    name of the operator,
-        /// \param version  version of the operator (opset),
-        /// \param domain  domain the operator belongs to,
-        /// \param fn       function providing the implementation of the operator.
-        NGRAPH_API
-        void register_operator(const std::string& name,
-                               std::int64_t version,
-                               const std::string& domain,
-                               Operator fn);
-
         /// \brief      Return the set of names of supported operators.
         ///
         /// \param[in]  version  The requested version of ONNX operators set.
         /// \param[in]  domain   The requested domain the operators where registered for.
         ///
         /// \return     The set containing names of supported operators.
-        ///
         NGRAPH_API
         std::set<std::string> get_supported_operators(std::int64_t version,
                                                       const std::string& domain);
@@ -60,7 +46,6 @@ namespace ngraph
         /// \param[in]  domain   The domain the ONNX operator is registered to.
         ///
         /// \return     True if operator is supported, False otherwise.
-        ///
         NGRAPH_API
         bool is_operator_supported(const std::string& op_name,
                                    std::int64_t version,

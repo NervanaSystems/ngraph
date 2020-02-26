@@ -90,14 +90,6 @@ namespace ngraph
             return import_onnx_model(ifs);
         }
 
-        void register_operator(const std::string& name,
-                               std::int64_t version,
-                               const std::string& domain,
-                               Operator fn)
-        {
-            OperatorsBridge::register_operator(name, version, domain, std::move(fn));
-        }
-
         std::set<std::string> get_supported_operators(std::int64_t version,
                                                       const std::string& domain)
         {
