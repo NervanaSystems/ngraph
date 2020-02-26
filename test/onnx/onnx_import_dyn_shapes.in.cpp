@@ -497,8 +497,8 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_6_dyn_shape)
 
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_uint16_dyn_shape)
 {
-    const auto function = onnx_import::import_onnx_model(file_util::path_join(
-        SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_uint16_dyn.prototxt"));
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_uint16_dyn.prototxt"));
 
     auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
 
