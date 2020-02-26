@@ -57,9 +57,8 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
     const auto crops_begin_const = as_type_ptr<op::Constant>(crops_begin.get_node_shared_ptr());
     const auto crops_end_const = as_type_ptr<op::Constant>(crops_end.get_node_shared_ptr());
 
-    vector<int64_t> block_values, crops_begin_values, crops_end_values;
+    vector<int64_t> block_values, crops_end_values;
     block_values = block_const->cast_vector<int64_t>();
-    crops_begin_values = crops_begin_const->cast_vector<int64_t>();
     crops_end_values = crops_end_const->cast_vector<int64_t>();
 
     // First we have to disperse the data from batch, then rearrange them
@@ -77,7 +76,7 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
                           data_shape.at(0) % b_dim_divider == 0,
                           "BatchToSpace: The input data's 'batch' axis size: ",
                           data_shape.at(0),
-                          " must be completely divided by ",
+                          " must be a multiple of ",
                           " product of block_shape values: ",
                           b_dim_divider);
 
