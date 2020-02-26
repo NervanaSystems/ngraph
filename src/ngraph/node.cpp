@@ -104,48 +104,36 @@ std::shared_ptr<Node>
     Node::copy_with_new_inputs(const OutputVector& inputs,
                                const std::vector<std::shared_ptr<Node>>& control_dependencies) const
 {
-    shared_ptr<Node> clone;
-    if (is_type<op::GetOutputElement>(this))
-    {
-        auto& value = inputs.at(0);
-        clone = make_shared<op::GetOutputElement>(value.get_node_shared_ptr(), value.get_index());
-    }
-    else
-    {
-        NodeVector args;
-        for (const Output<Node>& input : inputs)
-        {
-            args.push_back(get_output_element(input, false));
-        }
-        for (int i = 0; i < inputs.size(); ++i)
-        {
-            auto in_val = inputs.at(i);
-            if (is_type<op::GetOutputElement>(in_val.get_node()))
-            {
-                in_val = as_type_ptr<op::GetOutputElement>(in_val.get_node_shared_ptr())
-                             ->get_as_output();
-            }
-            auto in_index = in_val.get_index();
-            auto arg = args.at(i);
-            size_t out_index = 0;
-            if (is_type<op::GetOutputElement>(arg))
-            {
-                out_index = as_type_ptr<op::GetOutputElement>(arg)->get_n();
-            }
-            if (in_index != out_index)
-            {
-                cerr << "Mismatch in: " << in_index << " arg: " << out_index << endl;
-                cerr << "ARG: " << *arg << endl;
-                cerr << "IN: " << *inputs.at(i).get_node() << endl;
-                cerr << "INV: " << *in_val.get_node() << endl;
-                cerr << "In node " << *this << endl;
-            }
-        }
-        clone = copy_with_new_args(args);
-    }
+    shared_ptr<Node> clone = clone_with_new_inputs(inputs);
     for (auto& cdep : control_dependencies)
     {
         clone->add_control_dependency(cdep);
+    }
+    return clone;
+}
+
+std::shared_ptr<Node> Node::copy_with_new_args(const NodeVector& args) const
+{
+    NODE_VALIDATION_CHECK(
+        this, false, "Internal error: copy_with_new_args not replaced by clone_with_new_inputs");
+    return nullptr;
+}
+
+std::shared_ptr<Node> Node::clone_with_new_inputs(const OutputVector& inputs) const
+{
+    NodeVector args;
+    for (const Output<Node>& input : inputs)
+    {
+        args.push_back(get_output_element(input, false));
+    }
+    std::shared_ptr<Node> clone = copy_with_new_args(args);
+    // Remove the inserted GOEs
+    for (size_t i = 0; i < inputs.size(); ++i)
+    {
+        if (clone->input_value(i) != inputs.at(i))
+        {
+            clone->set_argument(i, inputs.at(i));
+        }
     }
     return clone;
 }
