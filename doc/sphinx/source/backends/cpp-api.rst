@@ -8,7 +8,6 @@ Backend APIs
    
    backend-api/index
    dynamicbackend-api/index
-   plaidml-ng-api/index
    
 
 As of version ``0.15``, there is a new backend API to work with functions that 

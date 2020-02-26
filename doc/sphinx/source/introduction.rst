@@ -45,17 +45,13 @@ However, kernel libraries have three main problems:
 #. Framework integration of kernel libraries does not scale. 
 #. The number of required kernels keeps growing.
 
-nGraph Compiler addresses the first two problems, and nGraph Compiler combined
-with PlaidML addresses the third problem. nGraph applies graph-level
+nGraph Compiler addresses the first two problems.
+nGraph applies graph-level
 optimizations by taking the computational graph from a deep learning framework
 such as TensorFlow and reconstructing it with nGraph's 
 :abbr: `IR (Intermediate Representation)`. nGraph IR centralizes computational 
 graphs from various frameworks and provides a unified way to connect backends 
-for targeted hardware. To address the third problem, nGraph is integrated with 
-PlaidML, a tensor compiler, which generates code in LLVM, OpenCL, OpenGL, and 
-Metal. Low-level optimizations are automatically applied to the generated code, 
-resulting in a more efficient execution that does not require manual kernel 
-integration for most hardware targets.
+for targeted hardware.
 
 The following three sections explore the main problems of kernel libraries in
 more detail and describe how nGraph addresses them.

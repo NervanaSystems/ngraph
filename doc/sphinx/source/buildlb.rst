@@ -201,4 +201,3 @@ To perform unit tests on the install:
 .. _ONNX: http://onnx.ai
 .. _website docs: https://ngraph.nervanasys.com/docs/latest/
 .. _googletest framework: https://github.com/google/googletest.git
-.. _PlaidML: https://github.com/plaidml/plaidml

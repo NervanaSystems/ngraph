@@ -42,8 +42,7 @@ performance boost when compared to native framework implementations. We've also
 seen performance boosts running workloads that are not included on the list of  
 [Validated workloads], thanks to nGraph's powerful subgraph pattern matching.
 
-Additionally we have integrated nGraph with [PlaidML] to provide deep learning 
-performance acceleration on Intel, nVidia, & AMD GPUs. More details on current 
+More details on current 
 architecture of the nGraph Compiler stack can be found in [Architecture and features],
 and recent changes to the stack are explained in the [Release Notes].
 
@@ -103,7 +102,6 @@ to improve it:
 [ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/nGraph_main.png "nGraph components"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
-[PlaidML]: https://github.com/plaidml/plaidml
 [Source compile]: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md
 [nGraph-ONNX]: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
 [nGraph-ONNX adaptable]: https://ai.intel.com/adaptable-deep-learning-solutions-with-ngraph-compiler-and-onnx/

@@ -30,8 +30,6 @@ namespace ngraph
         INTERPRETER,
         CPU,
         GPU,
-        NNP,
-        PLAIDML,
     };
 
     std::string placement_to_string(Placement placement);

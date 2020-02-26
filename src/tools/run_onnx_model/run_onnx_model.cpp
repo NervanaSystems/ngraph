@@ -46,7 +46,7 @@ SYNOPSIS
 OPTIONS
         -m or --model    Path to ONNX protobuf file with extension .onnx or .prototext  
         -i or --input    Path to a raw binary file with an array of input data. If not provided, model will be executed with random data.
-        -b or --backend  nGraph backend name, such as INTERPRETER, CPU, GPU, NNP, PlaidML, INTELGPU, where available. Default backend: CPU
+        -b or --backend  nGraph backend name, such as INTERPRETER, CPU, GPU, where available. Default backend: CPU
 
 )###";
 }

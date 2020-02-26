@@ -40,9 +40,8 @@ performance on CPU. However we are also working on adding support for more
 hardware and backends. As with the frameworks, we believe in providing 
 freedom to AI developers to deploy their deep learning workloads to the 
 desired hardware without a lock in. We currently have functioning backends 
-for Intel, Nvidia*, and AMD* GPU either leveraging kernel libraries 
-such as clDNN and cuDNN directly or utilizing PlaidML to compile for codegen 
-and emit OpenCL, OpenGL, LLVM, Cuda, and Metal. Please refer to [Architecture 
+for Nvidia* GPU leveraging kernel libraries 
+such as clDNN and cuDNN directly. Please refer to [Architecture 
 and features] section to learn more about how we plan to take advantage of 
 both solutions using hybrid transformer. We expect to have stable support for aformentioned GPUs
 in the early second half of 2019. In the similar time frame, we plan 
@@ -57,10 +56,7 @@ stack, and early adopters will be able test them in 2019.
 | Backend                                       | Supported         
 |-----------------------------------------------|-------------------
 | Intel® Architecture CPU                       | :heavy_check_mark:               
-| Intel® Architecture GPUs                      | Functional via clDNN and PlaidML      
-| AMD* GPUs                                     | Functional via PlaidML                 
-| Nvidia* GPUs                                  | Functional via cuDNN and PlaidML        
-| Intel® Nervana™ Neural Network Processor (NNP)| Functional               
+| Nvidia* GPUs                                  | Functional via cuDNN        
 | Upcoming DL accelerators                      | Functional and will be announced in the near future       
 
 
