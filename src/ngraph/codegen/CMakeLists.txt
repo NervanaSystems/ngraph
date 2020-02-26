@@ -38,13 +38,6 @@ endif()
 # find_file(HEADER_1 cmath HINTS /usr/include/c++/7)
 get_filename_component(CLANG_INTRIN_INCLUDE_DIR ${LLVM_INCLUDE_DIRS}/../lib/clang/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}/include ABSOLUTE)
 
-if(NGRAPH_CPU_ENABLE)
-    get_target_property(MKLDNN_INCLUDE_DIR libmkldnn INTERFACE_INCLUDE_DIRECTORIES)
-    get_target_property(EIGEN_INCLUDE_DIR libeigen INTERFACE_INCLUDE_DIRECTORIES)
-    list(APPEND HEADER_SEARCH_DEFINES EIGEN_HEADERS_PATH="${EIGEN_INCLUDE_DIR}")
-    list(APPEND HEADER_SEARCH_DEFINES MKLDNN_HEADERS_PATH="${MKLDNN_INCLUDE_DIR}")
-endif()
-
 list(APPEND HEADER_SEARCH_DEFINES CLANG_BUILTIN_HEADERS_PATH="${CLANG_INTRIN_INCLUDE_DIR}")
 list(APPEND HEADER_SEARCH_DEFINES NGRAPH_HEADERS_PATH="${NGRAPH_INCLUDE_PATH}")
 
@@ -73,9 +66,6 @@ add_custom_target(header_resource
     DEPENDS resource_generator
     BYPRODUCTS
 )
-if (NGRAPH_CPU_ENABLE)
-    add_dependencies(header_resource ext_eigen libmkldnn)
-endif()
 
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(codegen PROPERTIES
@@ -83,14 +73,6 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
         SOVERSION ${NGRAPH_API_VERSION})
 endif()
 add_dependencies(codegen header_resource)
-if (NGRAPH_CPU_ENABLE)
-    add_dependencies(codegen libmkldnn libeigen)
-    if(LINUX)
-        # --exclude-libs=ALL prevents symbols from statically-linked libraries (LLVM, in this case)
-        # from being automatically exported
-        set_property(TARGET codegen APPEND PROPERTY LINK_FLAGS "-Wl,--exclude-libs=ALL")
-    endif()
-endif()
 target_include_directories(codegen SYSTEM PRIVATE ${CMAKE_BINARY_DIR})
 target_link_libraries(codegen PRIVATE libllvm ngraph)
 install(TARGETS codegen DESTINATION ${NGRAPH_INSTALL_LIB})

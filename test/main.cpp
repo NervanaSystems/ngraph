@@ -17,9 +17,6 @@
 #include <chrono>
 #include <iostream>
 
-#ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/utils.hpp"
-#endif
 #include "gtest/gtest.h"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
@@ -51,16 +48,8 @@ int main(int argc, char** argv)
         }
     }
     ngraph::runtime::Backend::set_backend_shared_library_search_directory(cpath);
-#ifdef NGRAPH_CPU_ENABLE
-    ngraph_register_cpu_backend();
-#endif
 #ifdef NGRAPH_INTERPRETER_ENABLE
     ngraph_register_interpreter_backend();
-#endif
-
-#ifdef NGRAPH_MLIR_ENABLE
-    // Initialize MLIR
-    ngraph::runtime::ngmlir::initializeNGraphMLIR();
 #endif
 
     auto start = std::chrono::system_clock::now();

@@ -19,11 +19,6 @@ if(NOT NGRAPH_ATEN_TEST_ENABLE)
     return()
 endif()
 
-if(NOT NGRAPH_CPU_ENABLE)
-    message(STATUS "ATen tests needs CPU enabled")
-    return()
-endif()
-
 if(NOT NGRAPH_TEST_UTIL_ENABLE)
     message(WARNING "ATen test: Turning on test util!")
     set(NGRAPH_TEST_UTIL_ENABLE ON)
@@ -73,10 +68,3 @@ if (MSVC)
 endif()
 
 # The INTERPRETER backend is required for convolution, and backwards unit tests
-target_link_libraries(ATen-test PRIVATE cpu_backend)
-target_link_libraries(ATen-test PRIVATE libmkldnn)
-target_compile_definitions(ATen-test PRIVATE NGRAPH_CPU_ENABLE)
-
-if (NGRAPH_TBB_ENABLE)
-    target_compile_definitions(ATen-test PRIVATE "NGRAPH_TBB_ENABLE")
-endif()

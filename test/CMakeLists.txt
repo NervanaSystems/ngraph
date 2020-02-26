@@ -24,11 +24,6 @@ endif()
 
 message(STATUS "unit tests enabled")
 
-if (NGRAPH_MLIR_ENABLE)
-    add_subdirectory(mlir)
-    message(STATUS "MLIR LIT tests enabled")
-endif()
-
 if(LINUX)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 endif()
@@ -229,15 +224,6 @@ else()
             builder.cpp
             backend_api.cpp)
         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
-    endif()
-
-    if (NGRAPH_CPU_ENABLE)
-        list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
-        list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp cpu_debug_tracer.cpp)
-        if (NOT NGRAPH_DEX_ONLY)
-            list(APPEND SRC cpu_codegen.cpp)
-        endif()
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
     endif()
 
     if(NGRAPH_GPU_ENABLE)
@@ -483,11 +469,6 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
             )
 endif()
 
-if (NGRAPH_MLIR_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
-    list(APPEND SRC mlir/ops_test.cpp)
-endif()
-
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/distributed.in.cpp)
 endif()
@@ -599,10 +580,6 @@ endif()
 
 if (NGRAPH_NOP_ENABLE)
     target_link_libraries(unit-test PRIVATE nop_backend)
-endif()
-
-if (NGRAPH_MLIR_ENABLE)
-    target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
 endif()
 
 if (NOT NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
