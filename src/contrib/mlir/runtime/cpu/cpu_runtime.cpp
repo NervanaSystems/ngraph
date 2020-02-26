@@ -157,7 +157,8 @@ void MLIRCPURuntime::execute(bool firstIteration)
                 m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
                                                                     : clObjectFilename.getValue());
             }
-            NGRAPH_CHECK(!invocationResult, "JIT invocation of '_mlir_ciface_callback_init' failed\n");
+            NGRAPH_CHECK(!invocationResult,
+                         "JIT invocation of '_mlir_ciface_callback_init' failed\n");
         }
 
         auto invocationResult =
