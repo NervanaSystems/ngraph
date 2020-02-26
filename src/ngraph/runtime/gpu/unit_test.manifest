@@ -258,6 +258,13 @@ model_split_equal_parts_default
 model_split_equal_parts_2d
 model_split_variable_parts_2d
 model_expand_static_shape
+expand_1_dyn_shape
+expand_2_dyn_shape
+expand_3_dyn_shape
+expand_4_dyn_shape
+expand_5_dyn_shape
+expand_6_dyn_shape
+expand_uint16_dyn_shape
 model_conv2d_strides_padding
 model_conv2d_strides_no_padding
 model_conv2d_strides_assymetric_padding
@@ -453,6 +460,7 @@ model_gatherND_int32
 model_gatherND_float
 model_pad_constant
 model_reciprocal
+model_round
 tile_3d_small_data_rank
 tile_3d_few_repeats
 select_v1
@@ -502,3 +510,4 @@ model_lstm_fwd_hardsigmoid_activation
 model_acosh
 model_asinh
 model_atanh
+model_conv_with_dynamic_batch

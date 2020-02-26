@@ -259,3 +259,254 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, model_atanh_3_2)
 
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, model_conv_with_dynamic_batch)
+{
+    const auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/conv_with_dynamic_batch.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const auto data_shape = Shape{1, 3, 7, 7};
+    const auto filters_shape = Shape{10, 3, 2, 2};
+    const auto data_elems = shape_size(data_shape);
+    const auto filters_elems = shape_size(filters_shape);
+
+    test_case.add_input<int64_t>(data_shape, std::vector<int64_t>(data_elems, 1));
+    test_case.add_input<int64_t>(filters_shape, std::vector<int64_t>(filters_elems, 1));
+    test_case.add_input<int64_t>(Shape{10}, std::vector<int64_t>(10, 1));
+
+    const auto expected_out_shape = Shape{1, 10, 6, 6};
+    const std::vector<int64_t> expected_values(shape_size(expected_out_shape), 13);
+    test_case.add_expected_output<int64_t>(expected_out_shape, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, avg_pool_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/average_pool_2d_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const Shape shape{1, 1, 4, 4};
+    const auto elems_in_tensor = shape_size(shape);
+    std::vector<float> input_values(elems_in_tensor);
+    std::iota(input_values.begin(), input_values.end(), 0.f);
+
+    test_case.add_input<float>(shape, input_values);
+
+    std::vector<float> expected_values{2.5f, 4.5f, 10.5f, 12.5f};
+    test_case.add_expected_output<float>(Shape{1, 1, 2, 2}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, max_pool_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/max_pool_2d_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const Shape shape{1, 1, 4, 4};
+    const auto elems_in_tensor = shape_size(shape);
+    std::vector<float> input_values(elems_in_tensor);
+    std::iota(input_values.begin(), input_values.end(), 0.f);
+
+    test_case.add_input<float>(shape, input_values);
+
+    std::vector<float> expected_values{0.f, 2.f, 3.f, 8.f, 10.f, 11.f, 12.f, 14.f, 15.f};
+    test_case.add_expected_output<float>(Shape{1, 1, 3, 3}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, global_avg_pool_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/global_average_pool_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const Shape shape{1, 3, 5, 5};
+    const auto elems_in_tensor = shape_size(shape);
+    std::vector<float> input_values(elems_in_tensor);
+    std::iota(input_values.begin(), input_values.end(), 0.f);
+
+    test_case.add_input<float>(shape, input_values);
+
+    std::vector<float> expected_values{12.f, 37.f, 62.f};
+    test_case.add_expected_output<float>(Shape{1, 3, 1, 1}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, global_max_pool_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/global_max_pool_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const Shape shape{1, 3, 5, 5};
+    const auto elems_in_tensor = shape_size(shape);
+    std::vector<float> input_values(elems_in_tensor);
+    std::iota(input_values.begin(), input_values.end(), 0.f);
+
+    test_case.add_input<float>(shape, input_values);
+
+    std::vector<float> expected_values{24.f, 49.f, 74.f};
+    test_case.add_expected_output<float>(Shape{1, 3, 1, 1}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_constant_of_shape_float_zeros)
+{
+    auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/constant_of_shape_float_zeros.prototxt"));
+
+    std::vector<float> expected_values(24, 0);
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    test_case.add_input<int64_t>(Shape{3}, std::vector<int64_t>{2, 3, 4});
+    test_case.add_expected_output<float>(Shape{2, 3, 4}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_constant_of_shape_int_ones)
+{
+    auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/constant_of_shape_int_ones.prototxt"));
+
+    std::vector<int32_t> expected_values(6, 1);
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    test_case.add_input<int64_t>(Shape{2}, std::vector<int64_t>{2, 3});
+    test_case.add_expected_output<int32_t>(Shape{2, 3}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_1_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    test_case.add_input<float>(Shape{3, 1}, std::vector<float>{1.f, 2.f, 3.f});
+    test_case.add_input<int64_t>(Shape{3}, std::vector<int64_t>{2, 1, 6});
+
+    std::vector<float> expected_values{1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 2.f, 2.f, 2.f, 2.f, 2.f, 2.f,
+                                       3.f, 3.f, 3.f, 3.f, 3.f, 3.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f,
+                                       2.f, 2.f, 2.f, 2.f, 2.f, 2.f, 3.f, 3.f, 3.f, 3.f, 3.f, 3.f};
+    test_case.add_expected_output<float>(Shape{2, 3, 6}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_2_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    test_case.add_input<float>(Shape{3, 1}, std::vector<float>{1.f, 2.f, 3.f});
+    test_case.add_input<int64_t>(Shape{3}, std::vector<int64_t>{2, 3, 4});
+
+    std::vector<float> expected_values{1.f, 1.f, 1.f, 1.f, 2.f, 2.f, 2.f, 2.f, 3.f, 3.f, 3.f, 3.f,
+                                       1.f, 1.f, 1.f, 1.f, 2.f, 2.f, 2.f, 2.f, 3.f, 3.f, 3.f, 3.f};
+    test_case.add_expected_output<float>(Shape{2, 3, 4}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_3_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    test_case.add_input<float>(Shape{2, 1}, std::vector<float>{4.f, 5.f});
+    test_case.add_input<int64_t>(Shape{2}, std::vector<int64_t>{2, 4});
+
+    std::vector<float> expected_values{4.f, 4.f, 4.f, 4.f, 5.f, 5.f, 5.f, 5.f};
+    test_case.add_expected_output<float>(Shape{2, 4}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_4_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    test_case.add_input<float>(Shape{1, 3, 1}, std::vector<float>{7.f, 8.f, 9.f});
+    test_case.add_input<int64_t>(Shape{2}, std::vector<int64_t>{3, 1});
+
+    std::vector<float> expected_values{7.f, 8.f, 9.f};
+    test_case.add_expected_output<float>(Shape{1, 3, 1}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_5_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    test_case.add_input<float>(Shape{1, 4, 1}, std::vector<float>{7.f, 8.f, 9.f, 10.f});
+    test_case.add_input<int64_t>(Shape{2}, std::vector<int64_t>{1, 4});
+
+    std::vector<float> expected_values{
+        7.f, 7.f, 7.f, 7.f, 8.f, 8.f, 8.f, 8.f, 9.f, 9.f, 9.f, 9.f, 10.f, 10.f, 10.f, 10.f};
+    test_case.add_expected_output<float>(Shape{1, 4, 4}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_6_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    test_case.add_input<float>(Shape{1, 3, 1}, std::vector<float>{7.f, 8.f, 9.f});
+    test_case.add_input<int64_t>(Shape{3}, std::vector<int64_t>{3, 1, 3});
+
+    std::vector<float> expected_values{7.f, 7.f, 7.f, 8.f, 8.f, 8.f, 9.f, 9.f, 9.f,
+                                       7.f, 7.f, 7.f, 8.f, 8.f, 8.f, 9.f, 9.f, 9.f,
+                                       7.f, 7.f, 7.f, 8.f, 8.f, 8.f, 9.f, 9.f, 9.f};
+    test_case.add_expected_output<float>(Shape{3, 3, 3}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_uint16_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/expand_uint16_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    test_case.add_input<uint16_t>(Shape{1, 2, 1}, std::vector<uint16_t>{1, 2});
+    test_case.add_input<int64_t>(Shape{4}, std::vector<int64_t>{2, 2, 1, 2});
+
+    std::vector<uint16_t> expected_values{1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2};
+    test_case.add_expected_output<uint16_t>(Shape{2, 2, 2, 2}, expected_values);
+
+    test_case.run();
+}
