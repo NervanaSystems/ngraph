@@ -19,7 +19,6 @@
 #include "core/node.hpp"
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
