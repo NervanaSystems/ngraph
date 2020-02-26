@@ -418,11 +418,11 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_2_dyn_shape)
 
     auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
 
-    test_case.add_input<float>(Shape{3, 1}, std::vector<float>{1, 2, 3});
+    test_case.add_input<float>(Shape{3, 1}, std::vector<float>{1.f, 2.f, 3.f});
     test_case.add_input<int64_t>(Shape{3}, std::vector<int64_t>{2, 3, 4});
 
-    std::vector<float> expected_values{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3,
-                                       1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3};
+    std::vector<float> expected_values{1.f, 1.f, 1.f, 1.f, 2.f, 2.f, 2.f, 2.f, 3.f, 3.f, 3.f, 3.f,
+                                       1.f, 1.f, 1.f, 1.f, 2.f, 2.f, 2.f, 2.f, 3.f, 3.f, 3.f, 3.f};
     test_case.add_expected_output<float>(Shape{2, 3, 4}, expected_values);
 
     test_case.run();
