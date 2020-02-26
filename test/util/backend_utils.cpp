@@ -15,9 +15,10 @@
 //*****************************************************************************
 
 #ifdef NGRAPH_UNIT_TEST_OPENVINO_ENABLE
-#include "backend_utils.hpp"
-#include <ie_core.hpp>
 #include "ngraph/ngraph.hpp"
+#include "backend_utils.hpp"
+
+IE_SUPPRESS_DEPRECATED_START
 
 using namespace std;
 using namespace ngraph;

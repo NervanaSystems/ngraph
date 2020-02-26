@@ -23,6 +23,7 @@
 #include "ngraph/opsets/opset.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
+IE_SUPPRESS_DEPRECATED_START
 InferenceEngine::Blob::Ptr fill_blob(InferenceEngine::SizeVector shape, std::vector<float> data);
 
 class Handle;
@@ -220,5 +221,5 @@ namespace ngraph
         }
     };
 }
-
+IE_SUPPRESS_DEPRECATED_END
 #endif
