@@ -109,7 +109,7 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const
     flat_node = builder::opset1::reorder_axes(flat_node, axes_order);
     Shape squeezed_shape;
     int64_t prod = 1;
-    for (auto& el : block_values)
+    for (const auto& el : block_values)
     {
         prod *= el;
     }
