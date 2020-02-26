@@ -141,24 +141,6 @@ if (NGRAPH_STATIC_LIB_ENABLE)
     set(NGRAPH_EXPORT_TARGETS_ENABLE OFF)
 endif()
 
-if (NGRAPH_DISTRIBUTED_ENABLE)
-    if ("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL "MLSL")
-        if (NGRAPH_INTEL_CPU_ONLY_ENABLE)
-            set(NGRAPH_DISTRIBUTED_MLSL_ENABLE TRUE)
-        else()
-            message(FATAL_ERROR
-                    "-DNGRAPH_DISTRIBUTED_ENABLE=MLSL to be used, if Intel CPU is the only backend enabled.\n"
-                    "Use -DNGRAPH_DISTRIBUTED_ENABLE=OMPI for all other situations.\n")
-        endif()
-    elseif("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL  "OMPI")
-        set(NGRAPH_DISTRIBUTED_OMPI_ENABLE TRUE)
-    else()
-        message(FATAL_ERROR
-                    "Invalid arguments passed to NGRAPH_DISTRIBUTED_ENABLE, must select  one of  MLSL, OMPI or OFF.\n"
-                    "If using Intel CPU only backend, recommend Intel MLSL by setting -DNGRAPH_DISTRIBUTED_ENABLE=MLSL .\n")
-    endif()
-endif()
-
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
 endif()
@@ -194,7 +176,6 @@ NORMALIZE_BOOL(NGRAPH_DEBUG_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEPRECATED_ENABLE)
 NORMALIZE_BOOL(NGRAPH_ONNX_IMPORT_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEX_ONLY)
-NORMALIZE_BOOL(NGRAPH_ENABLE_CPU_CONV_AUTO)
 NORMALIZE_BOOL(NGRAPH_CODE_COVERAGE_ENABLE)
 NORMALIZE_BOOL(NGRAPH_LIB_VERSIONING_ENABLE)
 NORMALIZE_BOOL(NGRAPH_PYTHON_BUILD_ENABLE)

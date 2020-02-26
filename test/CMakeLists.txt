@@ -473,10 +473,6 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/distributed.in.cpp)
 endif()
 
-if (NGRAPH_CPU_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend/graph_comparison.in.cpp)
-endif()
-
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND MULTI_TEST_SRC
             onnx/onnx_import.in.cpp
@@ -543,13 +539,6 @@ endif()
 # We should probably split up type_prop.cpp.
 if (MSVC)
     target_compile_options(unit-test PRIVATE "/bigobj")
-endif()
-
-if (NGRAPH_CPU_ENABLE)
-    # The INTERPRETER backend is required for convolution, and backwards unit tests
-    target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
-    target_link_libraries(unit-test PRIVATE libmkldnn)
-    target_compile_definitions(unit-test PRIVATE NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_TOOLS_ENABLE)

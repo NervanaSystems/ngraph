@@ -47,8 +47,6 @@ graph. These steps may be cycled or recycled as needed:
 #. Verify that the optimization pass performs correctly, with any or all expected 
    transformations, with the ``NGRAPH_SERIALIZE_TRACING`` option, which 
    serializes a graph in the `json` format after a pass.
-#. Measure and evaluate your performance improvements with ``NGRAPH_CPU_TRACING``, 
-   which produces timelines compatible with ``chrome://tracing``.
 
 Optimizations can be experimented upon without using any backend by registering 
 a pass with pass manager (``Manager``), calling ``run_passes`` on a function, and 
