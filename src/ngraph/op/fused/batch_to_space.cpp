@@ -66,7 +66,7 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
     // Finally squeeze data from respective dimensions.
     Shape dispersed_shape;
     int64_t b_dim_divider = 1;
-    for (auto& el : block_values)
+    for (const auto& el : block_values)
     {
         NODE_VALIDATION_CHECK(this, el > 0, "block_shape values must be greater than 0");
         b_dim_divider *= el;
