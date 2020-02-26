@@ -339,7 +339,7 @@ namespace ngraph
                 inline std::vector<char> get_data(const onnx::TensorProto& tensor)
                 {
                     // Boolean values are stored as char because std::vector<bool>
-                    // can behave different than STL containers.
+                    // can behave differently from other vector containers.
                     if (tensor.has_raw_data())
                     {
                         return detail::__get_raw_data<char>(tensor.raw_data(), tensor.data_type());
