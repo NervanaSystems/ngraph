@@ -113,13 +113,14 @@ namespace ngraph
         }
 
         std::shared_ptr<Node> builder::opset1::mean(const Output<Node>& value,
-                                                    const AxisSet& reduction_axes)
+                                                    const AxisSet& reduction_axes,
+                                                    bool keep_dims)
         {
             const auto xsum = std::make_shared<ngraph::opset1::ReduceSum>(
                 value,
                 ngraph::opset1::Constant::create(
                     element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector()),
-                false);
+                keep_dims);
 
             const auto N = get_num_elements(value.get_shape(), reduction_axes);
             const auto& et = value.get_element_type();
@@ -134,21 +135,8 @@ namespace ngraph
                                                         const AxisSet& reduction_axes,
                                                         const bool bessel_correction)
         {
-            std::shared_ptr<Node> mu = mean(value, reduction_axes);
-
-            auto reshape = value.get_shape();
-            for (auto i : reduction_axes)
-            {
-                reshape[i] = 1;
-            }
-
-            mu = std::make_shared<ngraph::opset1::Reshape>(
-                mu,
-                ngraph::opset1::Constant::create(
-                    element::i64,
-                    Shape{reshape.size()},
-                    std::vector<int64_t>(reshape.begin(), reshape.end())),
-                false);
+            const bool keep_dims = true;
+            std::shared_ptr<Node> mu = opset1::mean(value, reduction_axes, keep_dims);
 
             Output<Node> diff = std::make_shared<ngraph::opset1::Subtract>(value, mu);
 

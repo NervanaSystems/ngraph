@@ -146,10 +146,11 @@ namespace ngraph
             ///
             /// ## Inputs
             ///
-            /// |                  | Type                              | Description |                                        |
-            /// | ---------------- | --------------------------------- | ---------------------------------------------------- |
-            /// | `node`           | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | An input tensor of any shape                         |
-            /// | `reduction_axes` | AxesSet                           | The axes to eliminate through reduction (0 indexed). |
+            /// |                  | Type                              | Description |                                          |
+            /// | ---------------- | --------------------------------- | -------------------------------------------------------|
+            /// | `node`           | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | An input tensor of any shape                           |
+            /// | `reduction_axes` | AxesSet                           | The axes to eliminate through reduction (0 indexed).   |
+            /// | `keep_dims`      | bool                              | If set to 1 it holds axes that are used for reduction. |
             ///
             /// ## Output
             ///
@@ -157,7 +158,9 @@ namespace ngraph
             /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
             /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
             // clang-format on
-            std::shared_ptr<Node> mean(const Output<Node>& node, const AxisSet& reduction_axes);
+            std::shared_ptr<Node> mean(const Output<Node>& node,
+                                       const AxisSet& reduction_axes,
+                                       bool keep_dims = false);
 
             // clang-format off
             /// \brief Sum-based Variance of a Tensor.
