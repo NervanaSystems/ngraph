@@ -45,7 +45,7 @@ fail to detect it correctly.
 Only the DEX mode is supported on Windows systems, hence the `NGRAPH_DEX_ONLY` flag.
 The other equally important thing to note is that the temporary directory where the build is to be installed can be specified.
 This examples uses `C:\temporary_install_dir` however, a subdirectory of `ngraph\build` works as well.
-The final Python will contain the contents of this temporary directory so it's very important to set it.
+The final Python wheel will contain the contents of this temporary directory so it's very important to set it.
 
 2. Build the `install` target:
 
