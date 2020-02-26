@@ -68,7 +68,7 @@ NodeVector op::GRN::decompose_op() const
     }
 
     // Calculate l2 norm across channels.
-    shared_ptr<Node> norm = builder::l2_norm(data, AxisSet{1}, m_bias);
+    shared_ptr<Node> norm = builder::opset1::l2_norm(data, AxisSet{1}, m_bias);
     // Get back reduced axis.
     norm = std::make_shared<Broadcast>(norm, data.get_shape(), AxisSet{1});
     data = data / norm;
