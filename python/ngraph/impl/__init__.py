@@ -25,7 +25,7 @@ import sys
 import six
 
 if sys.platform == 'win32':
-    # ngraph.dll is currently located 3 directories above
+    # ngraph.dll is located 3 directories above
     # and this path needs to be visible to the _pyngraph module
     ngraph_dll = os.path.join(os.path.dirname(__file__), '..', '..', '..')
     os.environ['PATH'] = os.path.abspath(ngraph_dll) + ';' + os.environ['PATH']
