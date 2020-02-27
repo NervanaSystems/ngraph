@@ -486,9 +486,34 @@ TEST(attributes, reverse_sequence_op)
     EXPECT_EQ(g_reverse_sequence->get_origin_sequence_axis(), reverse_sequence->get_origin_sequence_axis());
 }
 
+TEST(attributes, rnn_cell_op_custom_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::RNNCell>();
+    auto X = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto H_t = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto W = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+    auto R = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+
+    const size_t hidden_size = 3;
+    auto activations = std::vector<std::string>{"sigmoid", "tanh"};
+    auto activations_alpha = std::vector<float>{1.0, 1.5};
+    auto activations_beta = std::vector<float>{2.0, 1.0};
+    float clip = 1.0;
+
+    auto rnn_cell = make_shared<opset1::RNNCell>(X, H_t, W, R, hidden_size);
+
+    NodeBuilder builder(rnn_cell);
+    auto g_rnn_cell = as_type_ptr<opset1::RNNCell>(builder.create());
+
+    EXPECT_EQ(g_rnn_cell->get_hidden_size(), rnn_cell->get_hidden_size());
+    EXPECT_EQ(g_rnn_cell->get_clip(), rnn_cell->get_clip());
+    EXPECT_EQ(g_rnn_cell->get_activations(), rnn_cell->get_activations());
+    EXPECT_EQ(g_rnn_cell->get_activations_alpha(), rnn_cell->get_activations_alpha());
+    EXPECT_EQ(g_rnn_cell->get_activations_beta(), rnn_cell->get_activations_beta());
+}
+
 TEST(attributes, rnn_cell_op_default_attributes)
 {
-    // RNNCell derives visit_attributes from op::util::RNNCellBase
     FactoryRegistry<Node>::get().register_factory<opset1::RNNCell>();
     auto X = make_shared<op::Parameter>(element::f32, Shape{2, 3});
     auto H_t = make_shared<op::Parameter>(element::f32, Shape{2, 3});
