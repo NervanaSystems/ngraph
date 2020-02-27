@@ -713,43 +713,44 @@ namespace
 
         Value src = operands[0];
         Value result = pass.buildOutputDefs(op, rewriter)[0];
-        MemRefView vRes(result), vSrc(src);
-        IndexedValue iRes(result), iSrc(src);
-        SmallVector<ValueHandle, 8> lbs, ubs;
-        SmallVector<int64_t, 8> steps;
+        MemRefBoundsCapture vRes(result), vSrc(src);
+        AffineIndexedValue iRes(result), iSrc(src);
+        SmallVector<ValueHandle, 8> sliceLbs;
+        auto loopLbs = vRes.getLbs(), loopUbs = vRes.getUbs();
+        SmallVector<int64_t, 8> strides;
 
-        auto lowerBounds = sliceOp.lowerBounds().getValue();
-        auto upperBounds = sliceOp.upperBounds().getValue();
-        auto strides = sliceOp.strides().getValue();
-        auto ivs = makeIndexHandles(vSrc.rank());
-        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
+        auto lowerBoundsAttr = sliceOp.lowerBounds().getValue();
+        auto upperBoundsAttr = sliceOp.upperBounds().getValue();
+        auto stridesAttr = sliceOp.strides().getValue();
+        auto steps = vSrc.getSteps();
+        auto ivs = ValueHandle::makeIndexHandles(vSrc.rank());
+        auto pivs = makeHandlePointers(ivs);
 
-        for (auto e : llvm::zip(lowerBounds, upperBounds, strides))
+        for (auto e : llvm::zip(lowerBoundsAttr, stridesAttr))
         {
-            auto attrValue = std::get<0>(e).cast<IntegerAttr>().getInt();
-            lbs.push_back(intrinsics::constant_index(attrValue));
-
-            attrValue = std::get<1>(e).cast<IntegerAttr>().getInt();
-            ubs.push_back(intrinsics::constant_index(attrValue));
-
-            attrValue = std::get<2>(e).cast<IntegerAttr>().getInt();
-            steps.push_back(attrValue);
+            auto lb = std::get<0>(e).cast<IntegerAttr>().getInt();
+            sliceLbs.push_back(std_constant_index(lb));
+            auto stride = std::get<1>(e).cast<IntegerAttr>().getInt();
+            strides.push_back(stride);
         }
 
-        // for i_0 : lb_0 -> ub_0, step step_0
-        //   for i_1 : lb_1 -> ub_1 step step_1
+        // for i_0 : 0 -> (ub_0 - lb_0)
+        //   for i_1 : 0 -> (ub_0 - lb_0)
         // ...
-        //   for i_{n-1} : lb_{n-1} -> ub_{n-1} step step_{n-1}
-        //     Result[i_0 - lb_0, i_1 - lb_1, ..., i_{n-1} - lb_{n-1}] =
-        //     Src[i_0, i_1, ... , i_{n-1}]
-        AffineLoopNestBuilder(pivs, lbs, ubs, steps)([&] {
-            ValueHandle val = iSrc(ivs);
-            SmallVector<IndexHandle, 4> adjustedIndices;
-            for (auto e : llvm::zip(ivs, lbs))
+        //   for i_{n-1} : 0 -> ub_{n-1} - lb_{n-1}
+        //     Result[i_0, i_1, ...,i_{n-1}] =
+        //          Src[lb_0 + i_0 * stride_0, lb_1 + i_1 * stride_1, ... ]
+        AffineLoopNestBuilder(pivs, loopLbs, loopUbs, steps)([&] {
+
+            SmallVector<ValueHandle, 4> srcIndices;
+            for (auto e : llvm::zip(ivs, sliceLbs, strides))
             {
-                adjustedIndices.push_back(IndexHandle(std::get<0>(e) - std::get<1>(e)));
+                // src_index = lb + i * stride
+                srcIndices.push_back(std::get<1>(e) +
+                                     std::get<0>(e) * std_constant_index(std::get<2>(e)));
             }
-            iRes(adjustedIndices) = val;
+            ValueHandle val = iSrc(srcIndices);
+            iRes(ivs) = val;
         });
         rewriter.replaceOp(op, {result});
         return matchSuccess();
