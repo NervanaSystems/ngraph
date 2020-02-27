@@ -344,3 +344,19 @@ TEST(attributes, reverse_sequence_op)
     EXPECT_EQ(g_reverse_sequence->get_origin_batch_axis(), reverse_sequence->get_origin_batch_axis());
     EXPECT_EQ(g_reverse_sequence->get_origin_sequence_axis(), reverse_sequence->get_origin_sequence_axis());
 }
+
+TEST(attributes, reduce_sum_op)
+{
+    // ReduceSum derives visit_attributes from op::util::ArithmeticReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceSum>();
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
+
+    bool keep_dims = true;
+
+    auto reduce_sum = make_shared<op::v1::ReduceSum>(arg, axes, keep_dims);
+    NodeBuilder builder(reduce_sum);
+    auto g_reduce_sum = as_type_ptr<opset1::ReduceSum>(builder.create());
+
+    EXPECT_EQ(g_reduce_sum->get_keep_dims(), reduce_sum->get_keep_dims());
+}
