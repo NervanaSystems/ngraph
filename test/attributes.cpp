@@ -327,3 +327,20 @@ TEST(attributes, reverse_op_enum_mode)
 
     EXPECT_EQ(g_reverse->get_mode(), reverse->get_mode());
 }
+
+TEST(attributes, reverse_sequence_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::ReverseSequence>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 2});
+    auto seq_indices = make_shared<op::Parameter>(element::i32, Shape{4});
+
+    auto batch_axis = 2;
+    auto seq_axis = 1;
+
+    auto reverse_sequence = make_shared<opset1::ReverseSequence>(data, seq_indices, batch_axis, seq_axis);
+    NodeBuilder builder(reverse_sequence);
+    auto g_reverse_sequence = as_type_ptr<opset1::ReverseSequence>(builder.create());
+
+    EXPECT_EQ(g_reverse_sequence->get_origin_batch_axis(), reverse_sequence->get_origin_batch_axis());
+    EXPECT_EQ(g_reverse_sequence->get_origin_sequence_axis(), reverse_sequence->get_origin_sequence_axis());
+}
