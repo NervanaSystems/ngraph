@@ -225,6 +225,11 @@ namespace ngraph
         void Graph::add_provenance_tag_to_initializer(
             const Tensor& tensor, std::shared_ptr<default_opset::Constant> node) const
         {
+            if (!ngraph::get_provenance_enabled())
+            {
+                return;
+            }
+
             const std::string tag =
                 detail::build_input_provenance_tag(tensor.get_name(), tensor.get_shape());
 
@@ -234,6 +239,11 @@ namespace ngraph
         void Graph::add_provenance_tag_to_input(const ValueInfo& input,
                                                 std::shared_ptr<ngraph::Node> node) const
         {
+            if (!ngraph::get_provenance_enabled())
+            {
+                return;
+            }
+
             const std::string tag =
                 detail::build_input_provenance_tag(input.get_name(), input.get_shape());
 
@@ -243,6 +253,11 @@ namespace ngraph
         void Graph::add_provenance_tags(const Node& onnx_node,
                                         const NodeVector& ng_node_vector) const
         {
+            if (!ngraph::get_provenance_enabled())
+            {
+                return;
+            }
+
             const auto tag = detail::build_op_provenance_tag(onnx_node);
             const auto ng_inputs = onnx_node.get_ng_inputs();
 
