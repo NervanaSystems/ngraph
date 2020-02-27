@@ -354,7 +354,7 @@ TEST(attributes, arithmetic_reduction_keep_dims_reduce_sum_op)
 
     bool keep_dims = true;
 
-    auto reduce_sum = make_shared<op::v1::ReduceSum>(data, reduction_axes, keep_dims);
+    auto reduce_sum = make_shared<opset1::ReduceSum>(data, reduction_axes, keep_dims);
     NodeBuilder builder(reduce_sum);
     auto g_reduce_sum = as_type_ptr<opset1::ReduceSum>(builder.create());
 
@@ -370,9 +370,32 @@ TEST(attributes, logical_reduction_keep_dims_reduce_logical_and_op)
 
     bool keep_dims = true;
 
-    auto reduce_logical_and = make_shared<op::v1::ReduceSum>(data, reduction_axes, keep_dims);
+    auto reduce_logical_and = make_shared<opset1::ReduceSum>(data, reduction_axes, keep_dims);
     NodeBuilder builder(reduce_logical_and);
     auto g_reduce_logical_and = as_type_ptr<opset1::ReduceSum>(builder.create());
 
     EXPECT_EQ(g_reduce_logical_and->get_keep_dims(), reduce_logical_and->get_keep_dims());
+}
+
+TEST(attributes, rnn_cell_op_default_attributes)
+{
+    // RNNCell derives visit_attributes from op::util::RNNCellBase
+    FactoryRegistry<Node>::get().register_factory<opset1::RNNCell>();
+    auto X = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto H_t = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto W = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+    auto R = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+
+    const size_t hidden_size = 3;
+
+    auto rnn_cell = make_shared<opset1::RNNCell>(X, H_t, W, R, hidden_size);
+
+    NodeBuilder builder(rnn_cell);
+    auto g_rnn_cell = as_type_ptr<opset1::RNNCell>(builder.create());
+
+    EXPECT_EQ(g_rnn_cell->get_hidden_size(), rnn_cell->get_hidden_size());
+    EXPECT_EQ(g_rnn_cell->get_clip(), rnn_cell->get_clip());
+    EXPECT_EQ(g_rnn_cell->get_activations(), rnn_cell->get_activations());
+    EXPECT_EQ(g_rnn_cell->get_activations_alpha(), rnn_cell->get_activations_alpha());
+    EXPECT_EQ(g_rnn_cell->get_activations_beta(), rnn_cell->get_activations_beta());
 }
