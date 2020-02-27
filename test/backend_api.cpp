@@ -115,12 +115,12 @@ TEST(backend_api, opvTest)
 
     auto exec = backend->compile(f);
 
-    float a_in[2] = {1,2};
-    float b_in[2] = {3,4};
+    float a_in[2] = {1.0,2.0};
+    float b_in[2] = {3.0,4.0};
     auto in1 = backend->create_tensor(element::f32, shape);
     auto in2 = backend->create_tensor(element::f32, shape);
-    in1->write(&a_in, 2);
-    in2->write(&b_in, 2);
+    in1->write(&a_in, 2*4);
+    in2->write(&b_in, 2*4);
     vector<shared_ptr<runtime::Tensor>> outputs;
     outputs.push_back(backend->create_tensor(element::f32, shape));
 
@@ -129,7 +129,7 @@ TEST(backend_api, opvTest)
     float out[2];
     outputs[0]->read(out, 2 * 4);
 
-    ASSERT_EQ(out[0], 4);
-    ASSERT_EQ(out[1], 6);
+    ASSERT_EQ(out[0], 4.0);
+    ASSERT_EQ(out[1], 6.0);
 }
 #endif
