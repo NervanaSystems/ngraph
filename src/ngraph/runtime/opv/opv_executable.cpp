@@ -75,6 +75,15 @@ runtime::opv::OPVExecutable::OPVExecutable(const shared_ptr<Function>& function,
 bool runtime::opv::OPVExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    // from here: https://github.com/NervanaSystems/ngraph/blob/fd32fbbe7e72bfcf56688b22e57591f519456a46/src/ngraph/runtime/interpreter/int_executable.cpp#L107
+    // Converting to HostTensor since it exposes get_data_ptr, which we will need to populate orig_data
+    vector<shared_ptr<HostTensor>> func_inputs_as_host_tensors;
+    for (auto tensor : inputs)
+    {
+        auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
+        func_inputs_as_host_tensors.push_back(host_tensor);
+    }
+
     // From here: https://github.com/NervanaSystems/ngraph/blob/master/test/util/backend_utils.hpp#L113
     try
     {
@@ -93,6 +102,7 @@ bool runtime::opv::OPVExecutable::call(const vector<shared_ptr<runtime::Tensor>>
                 << "Function inputs number differ from number of given inputs";
         }
 
+
         size_t i = 0;
         for (auto& it : inputInfo)
         {
@@ -100,18 +110,21 @@ bool runtime::opv::OPVExecutable::call(const vector<shared_ptr<runtime::Tensor>>
             //float* orig_data = (float*)inputs[i]->m_data.data();
             // TODO: CHECK size and orig_data.
             size_t size = inputs[i]->get_size_in_bytes();
-            float* orig_data = nullptr;
+            float* orig_data = func_inputs_as_host_tensors[i]->get_data_ptr<float>();
             std::vector<float> data(orig_data, orig_data + size);
             inferRequest.SetBlob(it.first,
                                     fill_blob(it.second->getTensorDesc().getDims(), data));
             i++;
         }
 
+
+
         //  Prepare output blobs
         std::string output_name = network.getOutputsInfo().begin()->first;
 
         inferRequest.Infer();
         InferenceEngine::Blob::Ptr output = inferRequest.GetBlob(output_name);
+
 
         InferenceEngine::MemoryBlob::Ptr moutput =
             InferenceEngine::as<InferenceEngine::MemoryBlob>(output);

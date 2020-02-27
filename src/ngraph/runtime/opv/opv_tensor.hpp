@@ -21,6 +21,8 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
+
 
 using namespace ngraph;
 using namespace std;

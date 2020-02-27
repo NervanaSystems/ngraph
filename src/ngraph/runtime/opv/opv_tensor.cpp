@@ -26,6 +26,8 @@ runtime::opv::OPVTensor::OPVTensor(const ngraph::element::Type& element_type,
                                    void* memory_pointer)
     : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, ""))
 {
+    m_descriptor->set_tensor_layout(
+        std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
 }
 
 

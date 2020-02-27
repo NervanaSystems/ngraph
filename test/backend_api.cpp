@@ -108,13 +108,22 @@ TEST(backend_api, opvTest)
 {
     auto backend = runtime::Backend::create("OPV");
     
-    Shape shape{2, 2};
+    Shape shape{2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
 
-    backend->create_tensor(element::f32, shape);
-
     auto exec = backend->compile(f);
+
+    float a_in[2] = {1,2};
+    float b_in[2] = {3,4};
+    auto in1 = backend->create_tensor(element::f32, shape);
+    auto in2 = backend->create_tensor(element::f32, shape);
+    in1->write(&a_in, 2);
+    in2->write(&b_in, 2);
+    vector<shared_ptr<runtime::Tensor>> outputs;
+    outputs.push_back(backend->create_tensor(element::f32, shape));
+
+    exec->call(outputs, {in1, in2});
 }
 #endif
