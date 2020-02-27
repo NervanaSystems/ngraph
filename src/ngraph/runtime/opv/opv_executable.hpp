@@ -72,5 +72,5 @@ protected:
     std::string device; // TODO: for now its CPU? figure it out later
 
 private:
-    InferenceEngine::Blob::Ptr fill_blob(InferenceEngine::SizeVector shape, std::vector<float> data);
+    InferenceEngine::Blob::Ptr fill_blob(InferenceEngine::SizeVector shape, float*, size_t);
 }; 

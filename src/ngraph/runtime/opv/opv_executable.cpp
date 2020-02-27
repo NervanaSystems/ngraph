@@ -102,21 +102,17 @@ bool runtime::opv::OPVExecutable::call(const vector<shared_ptr<runtime::Tensor>>
                 << "Function inputs number differ from number of given inputs";
         }
 
-
         size_t i = 0;
         for (auto& it : inputInfo)
         {
-            //size_t size = inputs[i]->m_data.size() / sizeof(float);
-            //float* orig_data = (float*)inputs[i]->m_data.data();
-            // TODO: CHECK size and orig_data.
-            size_t size = inputs[i]->get_size_in_bytes();
+            size_t size_in_bytes = inputs[i]->get_size_in_bytes();
             float* orig_data = func_inputs_as_host_tensors[i]->get_data_ptr<float>();
-            std::vector<float> data(orig_data, orig_data + size);
+            cout << "HERE. Inputs: " << orig_data[0] << " " << orig_data[1] << "\n";
+            // TODO: receiving bad input data here
             inferRequest.SetBlob(it.first,
-                                    fill_blob(it.second->getTensorDesc().getDims(), data));
+                                    fill_blob(it.second->getTensorDesc().getDims(), orig_data, (size_in_bytes/sizeof(float))));
             i++;
         }
-
 
 
         //  Prepare output blobs
@@ -124,6 +120,7 @@ bool runtime::opv::OPVExecutable::call(const vector<shared_ptr<runtime::Tensor>>
 
         inferRequest.Infer();
         InferenceEngine::Blob::Ptr output = inferRequest.GetBlob(output_name);
+
 
 
         InferenceEngine::MemoryBlob::Ptr moutput =
@@ -141,15 +138,18 @@ bool runtime::opv::OPVExecutable::call(const vector<shared_ptr<runtime::Tensor>>
         {
             size *= dim;
         }
-        //  Vector initialization from pointer
-        std::vector<float> result(output_ptr, output_ptr + size);
-        outputs[0]->write(result.data(), result.size() * sizeof(float));
+
+        // TODO remove
+        cout << "HERE:: " << output_ptr[0] << " " << output_ptr[1] << "\n";
+        outputs[0]->write(output_ptr, size * sizeof(float));
+
         return true;
     }
     catch (...)
     {
         THROW_IE_EXCEPTION << "FAILED";
     }
+
 }
 
 void runtime::opv::OPVExecutable::save(ostream& out)
@@ -157,7 +157,7 @@ void runtime::opv::OPVExecutable::save(ostream& out)
     throw std::runtime_error("Save function is unimplemented for opv executable");
 }
 
-InferenceEngine::Blob::Ptr runtime::opv::OPVExecutable::fill_blob(InferenceEngine::SizeVector shape, std::vector<float> data)
+InferenceEngine::Blob::Ptr runtime::opv::OPVExecutable::fill_blob(InferenceEngine::SizeVector shape, float* data, size_t num_floats)
 {
     // From here: https://github.com/NervanaSystems/ngraph/blob/master/test/util/backend_utils.cpp#L26
     Layout layout;
@@ -173,7 +173,7 @@ InferenceEngine::Blob::Ptr runtime::opv::OPVExecutable::fill_blob(InferenceEngin
     MemoryBlob::Ptr blob(new TBlob<float>({Precision::FP32, shape, layout}));
     blob->allocate();
     float* blob_ptr = blob->rwmap().as<float*>();
-    for (int i = 0; i < data.size(); i++)
+    for (int i = 0; i < num_floats; i++)
     {
         blob_ptr[i] = data[i];
     }

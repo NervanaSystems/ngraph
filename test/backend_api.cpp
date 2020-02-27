@@ -125,5 +125,11 @@ TEST(backend_api, opvTest)
     outputs.push_back(backend->create_tensor(element::f32, shape));
 
     exec->call(outputs, {in1, in2});
+
+    float out[2];
+    outputs[0]->read(out, 2 * 4);
+
+    ASSERT_EQ(out[0], 4);
+    ASSERT_EQ(out[1], 6);
 }
 #endif
