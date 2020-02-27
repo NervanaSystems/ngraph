@@ -345,7 +345,7 @@ TEST(attributes, reverse_sequence_op)
     EXPECT_EQ(g_reverse_sequence->get_origin_sequence_axis(), reverse_sequence->get_origin_sequence_axis());
 }
 
-TEST(attributes, arithmetic_reduction_reduce_sum_op)
+TEST(attributes, arithmetic_reduction_keep_dims_reduce_sum_op)
 {
     // ReduceSum derives visit_attributes from op::util::ArithmeticReductionKeepDims
     FactoryRegistry<Node>::get().register_factory<opset1::ReduceSum>();
@@ -361,7 +361,7 @@ TEST(attributes, arithmetic_reduction_reduce_sum_op)
     EXPECT_EQ(g_reduce_sum->get_keep_dims(), reduce_sum->get_keep_dims());
 }
 
-TEST(attributes, logical_reduction_reduce_logical_and_op)
+TEST(attributes, logical_reduction_keep_dims_reduce_logical_and_op)
 {
     // ReduceLogicalAnd derives visit_attributes from op::util::LogicalReductionKeepDims
     FactoryRegistry<Node>::get().register_factory<opset1::ReduceLogicalAnd>();
