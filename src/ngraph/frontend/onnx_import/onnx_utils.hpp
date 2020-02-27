@@ -26,14 +26,17 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        /// \brief Registers ONNX custom operator
-        /// Performs the registration of external ONNX operator. This means the code
-        /// of the operator is not part of ONNX importer. The operator shall be registered
-        /// before calling `load_onnx_model()` or `import_onnx_function()` functions.
-        /// \param name    name of the operator,
-        /// \param version  version of the operator (opset),
-        /// \param domain  domain the operator belongs to,
-        /// \param fn       function providing the implementation of the operator.
+        /// \brief      Registers ONNX custom operator.
+        ///             The function performs the registration of external ONNX operator.
+        ///             which is not part of ONNX importer.
+        ///
+        /// \note       The operator shall be registered before calling
+        ///             "import_onnx_model" functions.
+        ///
+        /// \param      name     The name of the operator
+        /// \param      version  The version of the operator (opset)
+        /// \param      domain   The domain the operator belongs to
+        /// \param      fn       The function providing the implementation of the operator
         NGRAPH_API
         void register_operator(const std::string& name,
                                std::int64_t version,
