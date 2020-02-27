@@ -28,6 +28,8 @@ if (NGRAPH_OPV_ENABLE)
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
         ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
     )
+    add_dependencies(opv_backend libdldt)
+
 
     target_link_libraries(opv_backend PUBLIC libdldt)
 

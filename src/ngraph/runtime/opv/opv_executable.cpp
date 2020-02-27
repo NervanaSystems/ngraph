@@ -39,6 +39,12 @@ using descriptor::layout::DenseTensorLayout;
 runtime::opv::OPVExecutable::OPVExecutable(const shared_ptr<Function>& function,
                   bool enable_performance_collection)
 {
+    // OPV backend can handle only opset 1, hence running upgrade pass
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.run_passes(function);
+
+
     // From here: https://github.com/NervanaSystems/ngraph/blob/master/test/util/backend_utils.hpp#L84
     auto opset = ngraph::get_opset1();
     bool all_opset1 = true;

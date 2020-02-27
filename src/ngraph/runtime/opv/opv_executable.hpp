@@ -33,6 +33,9 @@
 #include "ngraph/runtime/tensor.hpp"
 
 #include "ngraph/opsets/opset.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/opset1_upgrade.hpp"
+
 
 
 

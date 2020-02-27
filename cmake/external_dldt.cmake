@@ -61,4 +61,7 @@ ExternalProject_Add(
 ExternalProject_Get_Property(ext_dldt SOURCE_DIR)
 add_library(libdldt INTERFACE)
 target_include_directories(libdldt SYSTEM INTERFACE ${SOURCE_DIR}/inference-engine/include)
+target_link_libraries(libdldt INTERFACE
+        ${SOURCE_DIR}/bin/intel64/RelWithDebInfo/lib/libinference_engine.so
+        )
 add_dependencies(libdldt ext_dldt)

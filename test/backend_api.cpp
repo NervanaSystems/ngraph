@@ -116,7 +116,5 @@ TEST(backend_api, opvTest)
     backend->create_tensor(element::f32, shape);
 
     auto exec = backend->compile(f);
-    /*C++ exception with description "Unable to find backend 'OPV' as file '/localdisk/sarkars/onnx_runtime_forest/dir_2_feb18_ngtf_bridge/ngraph-bridge/build_cmake/ngraph/build_cmake/src/ngraph/libopv_backend.so'
-Open error message '/localdisk/sarkars/onnx_runtime_forest/dir_2_feb18_ngtf_bridge/ngraph-bridge/build_cmake/ngraph/build_cmake/src/ngraph/libopv_backend.so: undefined symbol: _ZTIN15InferenceEngine10MemoryBlobE'" thrown in the test body.*/
 }
 #endif
