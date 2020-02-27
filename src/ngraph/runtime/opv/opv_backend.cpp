@@ -75,5 +75,5 @@ std::shared_ptr<runtime::Executable> runtime::opv::OPVBackend::load(istream& in)
 
 bool runtime::opv::OPVBackend::set_config(const map<string, string>& config, string& error)
 {
-    throw std::runtime_error("set_config function is unimplemented for opv backend");
+    //throw std::runtime_error("set_config function is unimplemented for opv backend");
 } 

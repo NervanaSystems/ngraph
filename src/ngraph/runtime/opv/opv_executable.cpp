@@ -75,6 +75,7 @@ runtime::opv::OPVExecutable::OPVExecutable(const shared_ptr<Function>& function,
 bool runtime::opv::OPVExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    std::cout << "IN OPV EXECUTABLE\n";
     // from here: https://github.com/NervanaSystems/ngraph/blob/fd32fbbe7e72bfcf56688b22e57591f519456a46/src/ngraph/runtime/interpreter/int_executable.cpp#L107
     // Converting to OPVTensor since it exposes get_data_ptr, which we will need to populate orig_data
     // TODO: maybe its possible to use HostTensor
