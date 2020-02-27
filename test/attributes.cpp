@@ -208,7 +208,6 @@ public:
     {
         shared_ptr<Node> node(FactoryRegistry<Node>::get().create(m_values.get_node_type_info()));
         node->visit_attributes(*this);
-        node->validate_and_infer_types();
         return node;
     }
 
@@ -299,4 +298,32 @@ TEST(attributes, region_yolo_op)
     EXPECT_EQ(g_region_yolo->get_anchors(), region_yolo->get_anchors());
     EXPECT_EQ(g_region_yolo->get_axis(), region_yolo->get_axis());
     EXPECT_EQ(g_region_yolo->get_end_axis(), region_yolo->get_end_axis());
+}
+
+TEST(attributes, reverse_op_string_mode)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Reverse>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto reversed_axes = make_shared<op::Parameter>(element::i32, Shape{200});
+
+    std::string mode = "index"; 
+
+    auto reverse = make_shared<opset1::Reverse>(data, reversed_axes, mode);
+    NodeBuilder builder(reverse);
+    auto g_reverse = as_type_ptr<opset1::Reverse>(builder.create());
+
+    EXPECT_EQ(g_reverse->get_mode(), reverse->get_mode());
+}
+
+TEST(attributes, reverse_op_enum_mode)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Reverse>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto reversed_axes = make_shared<op::Parameter>(element::i32, Shape{200});
+
+    auto reverse = make_shared<opset1::Reverse>(data, reversed_axes, opset1::Reverse::Mode::INDEX);
+    NodeBuilder builder(reverse);
+    auto g_reverse = as_type_ptr<opset1::Reverse>(builder.create());
+
+    EXPECT_EQ(g_reverse->get_mode(), reverse->get_mode());
 }
