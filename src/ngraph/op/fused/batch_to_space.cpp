@@ -20,9 +20,9 @@
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/reshape.hpp"
-#include "ngraph/op/reshape.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/fused/batch_to_space.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;
@@ -92,11 +92,11 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
         dispersed_shape.push_back(data_shape.at(i));
     }
 
-    const auto out_pattern_1 = op::Constant::create(
-            element::i64, Shape{dispersed_shape.size()}, dispersed_shape);
+    const auto out_pattern_1 =
+        op::Constant::create(element::i64, Shape{dispersed_shape.size()}, dispersed_shape);
     const bool special_zero = false;
     auto flat_node = make_shared<ngraph::op::v1::Reshape>(data, out_pattern_1, special_zero)
-            ->add_provenance_group_members_above({data});
+                         ->add_provenance_group_members_above({data});
 
     // calculate axes to transpose
     //      x'' = transpose(x', [N, N + 1, 0, N + 2, 1, ..., N + N - 1, N - 1])
@@ -117,10 +117,10 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
         squeezed_shape.push_back(data_shape.at(i) * block_values.at(i));
     }
 
-    const auto out_pattern_2 = op::Constant::create(
-            element::i64, Shape{squeezed_shape.size()}, squeezed_shape);
+    const auto out_pattern_2 =
+        op::Constant::create(element::i64, Shape{squeezed_shape.size()}, squeezed_shape);
     flat_node = make_shared<ngraph::op::v1::Reshape>(flat_node, out_pattern_2, special_zero)
-            ->add_provenance_group_members_above({data});
+                    ->add_provenance_group_members_above({data});
 
     //    Crop the start and end of dimensions according to `crops_begin`, `crops_end` to produce
     //    the output of shape:
