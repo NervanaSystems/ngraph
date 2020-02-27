@@ -41,6 +41,16 @@ runtime::opv::OPVTensor::~OPVTensor()
     // TODO. Is something needed?
 }
 
+int8_t* runtime::opv::OPVTensor::get_data_ptr()
+{
+    return m_data.data();
+}
+
+const int8_t* runtime::opv::OPVTensor::get_data_ptr() const
+{
+    return m_data.data();
+}
+
 void runtime::opv::OPVTensor::write(const void* source, size_t n_bytes)
 {
     // Stuff from here: https://github.com/NervanaSystems/ngraph/blob/master/test/util/backend_utils.hpp#L54
@@ -48,7 +58,9 @@ void runtime::opv::OPVTensor::write(const void* source, size_t n_bytes)
     if (v == nullptr)
         return;
     m_data.resize(n_bytes);
-    std::copy(v, v + n_bytes, m_data.begin());
+    for (int i = 0; i < n_bytes; i++) {
+        m_data[i] = v[i];
+    }
 }
 
 void runtime::opv::OPVTensor::read(void* target, size_t n_bytes) const
@@ -59,5 +71,7 @@ void runtime::opv::OPVTensor::read(void* target, size_t n_bytes) const
         return;
     if (n_bytes > m_data.size())
         n_bytes = m_data.size();
-    std::copy(m_data.begin(), m_data.begin() + n_bytes, v);
+    for (int i = 0; i < n_bytes; i++) {
+        v[i] = m_data[i];
+    }
 }

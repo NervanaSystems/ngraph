@@ -76,12 +76,13 @@ bool runtime::opv::OPVExecutable::call(const vector<shared_ptr<runtime::Tensor>>
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     // from here: https://github.com/NervanaSystems/ngraph/blob/fd32fbbe7e72bfcf56688b22e57591f519456a46/src/ngraph/runtime/interpreter/int_executable.cpp#L107
-    // Converting to HostTensor since it exposes get_data_ptr, which we will need to populate orig_data
-    vector<shared_ptr<HostTensor>> func_inputs_as_host_tensors;
+    // Converting to OPVTensor since it exposes get_data_ptr, which we will need to populate orig_data
+    // TODO: maybe its possible to use HostTensor
+    vector<shared_ptr<runtime::opv::OPVTensor>> func_inputs_as_opv_tensors;
     for (auto tensor : inputs)
     {
-        auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
-        func_inputs_as_host_tensors.push_back(host_tensor);
+        auto opv_tensor = static_pointer_cast<runtime::opv::OPVTensor>(tensor);
+        func_inputs_as_opv_tensors.push_back(opv_tensor);
     }
 
     // From here: https://github.com/NervanaSystems/ngraph/blob/master/test/util/backend_utils.hpp#L113
@@ -106,8 +107,7 @@ bool runtime::opv::OPVExecutable::call(const vector<shared_ptr<runtime::Tensor>>
         for (auto& it : inputInfo)
         {
             size_t size_in_bytes = inputs[i]->get_size_in_bytes();
-            float* orig_data = func_inputs_as_host_tensors[i]->get_data_ptr<float>();
-            cout << "HERE. Inputs: " << orig_data[0] << " " << orig_data[1] << "\n";
+            float* orig_data = func_inputs_as_opv_tensors[i]->get_data_ptr<float>();
             // TODO: receiving bad input data here
             inferRequest.SetBlob(it.first,
                                     fill_blob(it.second->getTensorDesc().getDims(), orig_data, (size_in_bytes/sizeof(float))));
@@ -139,8 +139,6 @@ bool runtime::opv::OPVExecutable::call(const vector<shared_ptr<runtime::Tensor>>
             size *= dim;
         }
 
-        // TODO remove
-        cout << "HERE:: " << output_ptr[0] << " " << output_ptr[1] << "\n";
         outputs[0]->write(output_ptr, size * sizeof(float));
 
         return true;

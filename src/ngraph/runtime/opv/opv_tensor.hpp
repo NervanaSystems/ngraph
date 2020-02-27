@@ -58,6 +58,23 @@ public:
     void read(void* p, size_t n_bytes) const override;
 
 
+    // https://github.com/NervanaSystems/ngraph/blob/7bb94ca049e720c35adb5844e7deb6c93ddf1b49/src/ngraph/runtime/host_tensor.hpp#L47
+    int8_t* get_data_ptr();
+    const int8_t* get_data_ptr() const;
+
+    template <typename T>
+    T* get_data_ptr()
+    {
+        return reinterpret_cast<T*>(get_data_ptr());
+    }
+
+    template <typename T>
+    const T* get_data_ptr() const
+    {
+        return reinterpret_cast<T*>(get_data_ptr());
+    }
+
+
 private:
     OPVTensor(const OPVTensor&) = delete;
     OPVTensor(OPVTensor&&) = delete;
