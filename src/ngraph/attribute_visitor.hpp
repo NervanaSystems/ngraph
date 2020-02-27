@@ -59,6 +59,10 @@ namespace ngraph
         {
             on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
         }
+        virtual void on_adapter(const std::string& name, ValueAccessor<std::vector<float>>& adapter)
+        {
+            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
+        }
 
         // Use an adapter for non-primitive types
         template <typename T>
