@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #if defined(__x86_64__) || defined(__amd64__)
-#include <xmmintrin.h>
+#include <pmmintrin.h>
 #endif
 
 #include "benchmark_utils.hpp"
