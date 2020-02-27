@@ -65,7 +65,7 @@ namespace ngraph
                 // Try parsing input as a prototxt message
                 if (!google::protobuf::TextFormat::Parse(&iistream, &model_proto))
                 {
-                    throw detail::error::stream_parse{ stream };
+                    throw detail::error::stream_parse{stream};
                 }
             }
 
@@ -82,7 +82,7 @@ namespace ngraph
 
         std::shared_ptr<Function> import_onnx_model(const std::string& file_path)
         {
-            std::ifstream ifs{ file_path, std::ios::in | std::ios::binary};
+            std::ifstream ifs{file_path, std::ios::in | std::ios::binary};
             if (!ifs.is_open())
             {
                 throw detail::error::file_open{file_path};
