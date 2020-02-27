@@ -426,6 +426,21 @@ TEST(attributes, region_yolo_op)
     EXPECT_EQ(g_region_yolo->get_end_axis(), region_yolo->get_end_axis());
 }
 
+TEST(attributes, reshape_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Reshape>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4});
+    auto pattern = make_shared<op::Parameter>(element::i32, Shape{2});
+
+    bool special_zero = true;
+
+    auto reshape = make_shared<opset1::Reshape>(data, pattern, special_zero);
+    NodeBuilder builder(reshape);
+    auto g_reshape = as_type_ptr<opset1::Reshape>(builder.create());
+
+    EXPECT_EQ(g_reshape->get_special_zero(), reshape->get_special_zero());
+}
+
 TEST(attributes, reverse_op_enum_mode)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::Reverse>();
