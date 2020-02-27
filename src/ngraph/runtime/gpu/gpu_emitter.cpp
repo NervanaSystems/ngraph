@@ -1706,6 +1706,11 @@ std::string runtime::gpu::GPU_Emitter::emit_v0_ConvolutionBias(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_v1_SpaceToBatch(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_v0_SpaceToDepth(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
@@ -1757,6 +1762,11 @@ std::string runtime::gpu::GPU_Emitter::emit_v0_BatchMatMulTranspose(EMIT_ARGS)
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_v0_CTCGreedyDecoder(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_v1_BatchToSpace(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
