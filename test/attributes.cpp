@@ -285,6 +285,118 @@ TEST(attributes, user_op)
     EXPECT_EQ(g_oracle->get_ultra_parameters(), oracle->get_ultra_parameters());
 }
 
+TEST(attributes, reduce_logical_and_op)
+{
+    // ReduceLogicalAnd derives visit_attributes from op::util::LogicalReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceLogicalAnd>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_logical_and = make_shared<opset1::ReduceSum>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_logical_and);
+    auto g_reduce_logical_and = as_type_ptr<opset1::ReduceSum>(builder.create());
+
+    EXPECT_EQ(g_reduce_logical_and->get_keep_dims(), reduce_logical_and->get_keep_dims());
+}
+
+TEST(attributes, reduce_logical_or_op)
+{
+    // ReduceLogicalOr derives visit_attributes from op::util::LogicalReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceLogicalOr>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_logical_or = make_shared<opset1::ReduceLogicalOr>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_logical_or);
+    auto g_reduce_logical_or = as_type_ptr<opset1::ReduceLogicalOr>(builder.create());
+
+    EXPECT_EQ(g_reduce_logical_or->get_keep_dims(), reduce_logical_or->get_keep_dims());
+}
+
+TEST(attributes, reduce_max_op)
+{
+    // ReduceMax derives visit_attributes from op::util::ArithmeticReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceMax>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_max = make_shared<opset1::ReduceMax>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_max);
+    auto g_reduce_max = as_type_ptr<opset1::ReduceMax>(builder.create());
+
+    EXPECT_EQ(g_reduce_max->get_keep_dims(), reduce_max->get_keep_dims());
+}
+
+TEST(attributes, reduce_mean_op)
+{
+    // ReduceMean derives visit_attributes from op::util::ArithmeticReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceMean>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_mean = make_shared<opset1::ReduceMean>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_mean);
+    auto g_reduce_mean = as_type_ptr<opset1::ReduceMean>(builder.create());
+
+    EXPECT_EQ(g_reduce_mean->get_keep_dims(), reduce_mean->get_keep_dims());
+}
+
+TEST(attributes, reduce_min_op)
+{
+    // ReduceMax derives visit_attributes from op::util::ArithmeticReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceMin>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_min = make_shared<opset1::ReduceMin>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_min);
+    auto g_reduce_min = as_type_ptr<opset1::ReduceMin>(builder.create());
+
+    EXPECT_EQ(g_reduce_min->get_keep_dims(), reduce_min->get_keep_dims());
+}
+
+TEST(attributes, reduce_prod_op)
+{
+    // ReduceProd derives visit_attributes from op::util::ArithmeticReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceProd>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_prod = make_shared<opset1::ReduceProd>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_prod);
+    auto g_reduce_prod = as_type_ptr<opset1::ReduceProd>(builder.create());
+
+    EXPECT_EQ(g_reduce_prod->get_keep_dims(), reduce_prod->get_keep_dims());
+}
+
+TEST(attributes, reduce_sum_op)
+{
+    // ReduceSum derives visit_attributes from op::util::ArithmeticReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceSum>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_sum = make_shared<opset1::ReduceSum>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_sum);
+    auto g_reduce_sum = as_type_ptr<opset1::ReduceSum>(builder.create());
+
+    EXPECT_EQ(g_reduce_sum->get_keep_dims(), reduce_sum->get_keep_dims());
+}
+
 TEST(attributes, region_yolo_op)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::RegionYolo>();
@@ -314,6 +426,19 @@ TEST(attributes, region_yolo_op)
     EXPECT_EQ(g_region_yolo->get_end_axis(), region_yolo->get_end_axis());
 }
 
+TEST(attributes, reverse_op_enum_mode)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Reverse>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto reversed_axes = make_shared<op::Parameter>(element::i32, Shape{200});
+
+    auto reverse = make_shared<opset1::Reverse>(data, reversed_axes, opset1::Reverse::Mode::INDEX);
+    NodeBuilder builder(reverse);
+    auto g_reverse = as_type_ptr<opset1::Reverse>(builder.create());
+
+    EXPECT_EQ(g_reverse->get_mode(), reverse->get_mode());
+}
+
 TEST(attributes, reverse_op_string_mode)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::Reverse>();
@@ -323,19 +448,6 @@ TEST(attributes, reverse_op_string_mode)
     std::string mode = "index"; 
 
     auto reverse = make_shared<opset1::Reverse>(data, reversed_axes, mode);
-    NodeBuilder builder(reverse);
-    auto g_reverse = as_type_ptr<opset1::Reverse>(builder.create());
-
-    EXPECT_EQ(g_reverse->get_mode(), reverse->get_mode());
-}
-
-TEST(attributes, reverse_op_enum_mode)
-{
-    FactoryRegistry<Node>::get().register_factory<opset1::Reverse>();
-    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
-    auto reversed_axes = make_shared<op::Parameter>(element::i32, Shape{200});
-
-    auto reverse = make_shared<opset1::Reverse>(data, reversed_axes, opset1::Reverse::Mode::INDEX);
     NodeBuilder builder(reverse);
     auto g_reverse = as_type_ptr<opset1::Reverse>(builder.create());
 
@@ -357,38 +469,6 @@ TEST(attributes, reverse_sequence_op)
 
     EXPECT_EQ(g_reverse_sequence->get_origin_batch_axis(), reverse_sequence->get_origin_batch_axis());
     EXPECT_EQ(g_reverse_sequence->get_origin_sequence_axis(), reverse_sequence->get_origin_sequence_axis());
-}
-
-TEST(attributes, arithmetic_reduction_keep_dims_reduce_sum_op)
-{
-    // ReduceSum derives visit_attributes from op::util::ArithmeticReductionKeepDims
-    FactoryRegistry<Node>::get().register_factory<opset1::ReduceSum>();
-    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
-    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
-
-    bool keep_dims = true;
-
-    auto reduce_sum = make_shared<opset1::ReduceSum>(data, reduction_axes, keep_dims);
-    NodeBuilder builder(reduce_sum);
-    auto g_reduce_sum = as_type_ptr<opset1::ReduceSum>(builder.create());
-
-    EXPECT_EQ(g_reduce_sum->get_keep_dims(), reduce_sum->get_keep_dims());
-}
-
-TEST(attributes, logical_reduction_keep_dims_reduce_logical_and_op)
-{
-    // ReduceLogicalAnd derives visit_attributes from op::util::LogicalReductionKeepDims
-    FactoryRegistry<Node>::get().register_factory<opset1::ReduceLogicalAnd>();
-    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
-    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
-
-    bool keep_dims = true;
-
-    auto reduce_logical_and = make_shared<opset1::ReduceSum>(data, reduction_axes, keep_dims);
-    NodeBuilder builder(reduce_logical_and);
-    auto g_reduce_logical_and = as_type_ptr<opset1::ReduceSum>(builder.create());
-
-    EXPECT_EQ(g_reduce_logical_and->get_keep_dims(), reduce_logical_and->get_keep_dims());
 }
 
 TEST(attributes, rnn_cell_op_default_attributes)
