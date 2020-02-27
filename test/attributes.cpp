@@ -141,21 +141,21 @@ public:
     double get_double(const string& name) { return m_doubles.at(name); }
     int64_t get_signed(const string& name) { return m_signeds.at(name); }
     uint64_t get_unsigned(const string& name) { return m_unsigneds.at(name); }
-    vector<int64_t>& get_signed_vector(const string& name) { return m_signed_vectors.at(name); }
     vector<float>& get_float_vector(const string& name) { return m_float_vectors.at(name); }
+    vector<int64_t>& get_signed_vector(const string& name) { return m_signed_vectors.at(name); }
     vector<string>& get_string_vector(const string& name) { return m_string_vectors.at(name); }
     void set_string(const string& name, const string& value) { m_strings[name] = value; }
     void set_bool(const string& name, bool value) { m_bools[name] = value; }
     void set_double(const string& name, double value) { m_doubles[name] = value; }
     void set_signed(const string& name, int64_t value) { m_signeds[name] = value; }
     void set_unsigned(const string& name, uint64_t value) { m_unsigneds[name] = value; }
-    void set_signed_vector(const string& name, const vector<int64_t>& value)
-    {
-        m_signed_vectors[name] = value;
-    }
     void set_float_vector(const string& name, const vector<float>& value)
     {
         m_float_vectors[name] = value;
+    }
+    void set_signed_vector(const string& name, const vector<int64_t>& value)
+    {
+        m_signed_vectors[name] = value;
     }
     void set_string_vector(const string& name, const vector<string>& value)
     {
@@ -173,10 +173,6 @@ public:
     {
         set_string(name, adapter.get());
     };
-    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
-    {
-        set_signed_vector(name, adapter.get());
-    }
     void on_adapter(const string& name, ValueAccessor<int64_t>& adapter) override
     {
         set_signed(name, adapter.get());
@@ -188,6 +184,10 @@ public:
     void on_adapter(const string& name, ValueAccessor<vector<float>>& adapter) override
     {
         set_float_vector(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
+    {
+        set_signed_vector(name, adapter.get());
     }
     void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
     {
@@ -235,10 +235,6 @@ public:
     {
         adapter.set(m_values.get_string(name));
     };
-    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
-    {
-        adapter.set(m_values.get_signed_vector(name));
-    }
     void on_adapter(const string& name, ValueAccessor<int64_t>& adapter) override
     {
         adapter.set(m_values.get_signed(name));
@@ -247,13 +243,17 @@ public:
     {
         adapter.set(m_values.get_double(name));
     }
-    void on_adapter(const string& name, ValueAccessor<vector<float>>& adapter) override
+    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
     {
-        adapter.set(m_values.get_float_vector(name));
+        adapter.set(m_values.get_signed_vector(name));
     }
     void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
     {
         adapter.set(m_values.get_string_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<float>>& adapter) override
+    {
+        adapter.set(m_values.get_float_vector(name));
     }
 
 protected:
@@ -406,13 +406,13 @@ TEST(attributes, region_yolo_op)
     size_t num_classes = 1;
     size_t num_regions = 1;
     auto do_softmax = false;
-    auto mask = std::vector<int64_t> {0, 0};
+    auto mask = std::vector<int64_t>{0, 0};
     auto axis = 1;
     auto end_axis = 2;
     auto anchors = std::vector<float>{1};
 
-    auto region_yolo = make_shared<opset1::RegionYolo>(data, num_coords, num_classes, num_regions, 
-    do_softmax, mask, axis, end_axis, anchors);
+    auto region_yolo = make_shared<opset1::RegionYolo>(
+        data, num_coords, num_classes, num_regions, do_softmax, mask, axis, end_axis, anchors);
     NodeBuilder builder(region_yolo);
     auto g_region_yolo = as_type_ptr<opset1::RegionYolo>(builder.create());
 
@@ -460,7 +460,7 @@ TEST(attributes, reverse_op_string_mode)
     auto data = make_shared<op::Parameter>(element::i32, Shape{200});
     auto reversed_axes = make_shared<op::Parameter>(element::i32, Shape{200});
 
-    std::string mode = "index"; 
+    std::string mode = "index";
 
     auto reverse = make_shared<opset1::Reverse>(data, reversed_axes, mode);
     NodeBuilder builder(reverse);
@@ -478,12 +478,15 @@ TEST(attributes, reverse_sequence_op)
     auto batch_axis = 2;
     auto seq_axis = 1;
 
-    auto reverse_sequence = make_shared<opset1::ReverseSequence>(data, seq_indices, batch_axis, seq_axis);
+    auto reverse_sequence =
+        make_shared<opset1::ReverseSequence>(data, seq_indices, batch_axis, seq_axis);
     NodeBuilder builder(reverse_sequence);
     auto g_reverse_sequence = as_type_ptr<opset1::ReverseSequence>(builder.create());
 
-    EXPECT_EQ(g_reverse_sequence->get_origin_batch_axis(), reverse_sequence->get_origin_batch_axis());
-    EXPECT_EQ(g_reverse_sequence->get_origin_sequence_axis(), reverse_sequence->get_origin_sequence_axis());
+    EXPECT_EQ(g_reverse_sequence->get_origin_batch_axis(),
+              reverse_sequence->get_origin_batch_axis());
+    EXPECT_EQ(g_reverse_sequence->get_origin_sequence_axis(),
+              reverse_sequence->get_origin_sequence_axis());
 }
 
 TEST(attributes, rnn_cell_op_custom_attributes)

@@ -46,11 +46,6 @@ namespace ngraph
         {
             on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
         };
-        virtual void on_adapter(const std::string& name,
-                                ValueAccessor<std::vector<int64_t>>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
         virtual void on_adapter(const std::string& name, ValueAccessor<int64_t>& adapter)
         {
             on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
@@ -59,11 +54,17 @@ namespace ngraph
         {
             on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
         }
+        virtual void on_adapter(const std::string& name,
+                                ValueAccessor<std::vector<int64_t>>& adapter)
+        {
+            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
+        }
         virtual void on_adapter(const std::string& name, ValueAccessor<std::vector<float>>& adapter)
         {
             on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
         }
-        virtual void on_adapter(const std::string& name, ValueAccessor<std::vector<std::string>>& adapter)
+        virtual void on_adapter(const std::string& name,
+                                ValueAccessor<std::vector<std::string>>& adapter)
         {
             on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
         }
