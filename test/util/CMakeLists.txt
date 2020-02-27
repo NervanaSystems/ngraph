@@ -25,6 +25,7 @@ set (SRC
     test_tools.cpp
     test_control.cpp
     test_case.cpp
+    provenance_enabler.hpp
     backend_utils.cpp
 )
 
