@@ -256,3 +256,32 @@ TEST(attributes, user_op)
     EXPECT_EQ(g_oracle->get_hyper_parameters(), oracle->get_hyper_parameters());
     EXPECT_EQ(g_oracle->get_ultra_parameters(), oracle->get_ultra_parameters());
 }
+
+TEST(attributes, region_yolo_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::RegionYolo>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+
+    size_t num_coords = 1;
+    size_t num_classes = 1;
+    size_t num_regions = 1;
+    auto do_softmax = false;
+    auto mask = std::vector<int64_t> {0, 0};
+    auto axis = 1;
+    auto end_axis = 2;
+    auto anchors = std::vector<float>{1};
+
+    auto region_yolo = make_shared<opset1::RegionYolo>(data, num_coords, num_classes, num_regions, 
+    do_softmax, mask, axis, end_axis, anchors);
+    NodeBuilder builder(region_yolo);
+    auto g_region_yolo = as_type_ptr<opset1::RegionYolo>(builder.create());
+
+    EXPECT_EQ(g_region_yolo->get_num_coords(), region_yolo->get_num_coords());
+    EXPECT_EQ(g_region_yolo->get_num_classes(), region_yolo->get_num_classes());
+    EXPECT_EQ(g_region_yolo->get_num_regions(), region_yolo->get_num_regions());
+    EXPECT_EQ(g_region_yolo->get_do_softmax(), region_yolo->get_do_softmax());
+    EXPECT_EQ(g_region_yolo->get_mask(), region_yolo->get_mask());
+    EXPECT_EQ(g_region_yolo->get_anchors(), region_yolo->get_anchors());
+    EXPECT_EQ(g_region_yolo->get_axis(), region_yolo->get_axis());
+    EXPECT_EQ(g_region_yolo->get_end_axis(), region_yolo->get_end_axis());
+}
