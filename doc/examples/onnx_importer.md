@@ -3,7 +3,7 @@
 This sample demonstrates how to use ONNX importer API.
 The API allows to create nGraph Function from ONNX importer model.
 
-All functions forming ONNX importer API are in header file `ngraph/frontend/onnx_import/onnx.hpp`
+All functions forming ONNX importer API are in [onnx.hpp][onnx_header] header file.
 The available functions can be divided into two categories from user's point of view.
 The first group contains helpers' functions used to check which ONNX op are supported in current version of ONNX importer.
 The second group contains function used to read ONNX models from stream or file. Their result is nGraph function which can be calculated on Inference Engine.
@@ -83,5 +83,6 @@ const std::shared_ptr<ngraph::Function> ng_function = ngraph::onnx_import::impor
 If `ng_function` is created, it can be used for running computation on Inference Engine.
 As it was shown in [Build a Model with nGraph Library][build_ngraph] `std::shared_ptr<ngraph::Function>` can be wrapped into a `CNNNetwork`.
 
+[onnx_header]: https://github.com/NervanaSystems/ngraph/blob/master/src/ngraph/frontend/onnx_import/onnx.hpp
 [onnx_model_zoo]: https://github.com/onnx/models
 [build_ngraph]: https://docs.openvinotoolkit.org/latest/_docs_IE_DG_nGraphTutorial.html
