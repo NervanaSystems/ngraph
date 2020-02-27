@@ -148,49 +148,71 @@ namespace
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Broadcast> node)
     {
         auto arg = node->input_value(0);
-        const auto& arg_shape = arg.get_shape();
+        auto arg_pshape = arg.get_partial_shape();
+        auto arg_rank = arg_pshape.rank();
+        auto target_shape_input = node->input_value(1);
 
-        NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
-        auto target_shape = node->output(0).get_shape();
-        NGRAPH_CHECK(node->get_broadcast_axes().first);
+        shared_ptr<Node> replacement_node;
 
-        // (Re)construct axes_mapping.
-        AxisSet broadcast_axes = node->get_broadcast_axes().second;
-        std::vector<size_t> axes_mapping{
-            ngraph::builder::opset1::get_axes_mapping(target_shape, broadcast_axes)};
-
-        Output<Node> squeezed_arg = arg;
-        // Collect axes to squeeze. Broadcast v0 "adds" new axes, thus we have to squeeze
-        // the empty ones (dim:=1), which would be broadcasted by Broadcast v1.
-        std::vector<size_t> empty_axes;
-        for (size_t a{0}; a < axes_mapping.size(); ++a)
+        if (arg_rank.is_static() && static_cast<size_t>(arg_rank) == 0 &&
+            !target_shape_input.get_node_shared_ptr()->is_constant())
         {
-            if (arg_shape.at(a) == 1 && target_shape.at(axes_mapping.at(a)) != 1)
-            {
-                empty_axes.push_back(a);
-            }
+            replacement_node = make_shared<op::DynBroadcast>(
+                arg,
+                target_shape_input,
+                make_shared<op::Range>(make_zero(element::i64, {}),
+                                       make_shared<op::ShapeOf>(target_shape_input),
+                                       make_constant_from_string("1", element::i64, {})));
         }
-        // Check if arg_shape contains some more empty dimensions marked to broadcast.
-        // If axes_mapping size is less than arg_shape size, then some of arg dimensions may
-        // be equal to one and marked to broadcast.
-        if (axes_mapping.size() < arg_shape.size())
+        else
         {
-            for (size_t a{axes_mapping.size()}; a < arg_shape.size(); ++a)
+            NGRAPH_CHECK(arg_pshape.is_static(),
+                         "Unable to convert Broadcast:v1 to Broadcast:v0 "
+                         "if argument shape is not static. Node: ",
+                         *node);
+            const auto& arg_shape = arg_pshape.to_shape();
+
+            NGRAPH_CHECK(target_shape_input.get_node_shared_ptr()->is_constant());
+            auto target_shape = node->output(0).get_shape();
+            NGRAPH_CHECK(node->get_broadcast_axes().first);
+
+            // (Re)construct axes_mapping.
+            AxisSet broadcast_axes = node->get_broadcast_axes().second;
+            std::vector<size_t> axes_mapping{
+                ngraph::builder::opset1::get_axes_mapping(target_shape, broadcast_axes)};
+
+            Output<Node> squeezed_arg = arg;
+            // Collect axes to squeeze. Broadcast v0 "adds" new axes, thus we have to squeeze
+            // the empty ones (dim:=1), which would be broadcasted by Broadcast v1.
+            std::vector<size_t> empty_axes;
+            for (size_t a{0}; a < axes_mapping.size(); ++a)
             {
-                if (arg_shape.at(a) == 1)
+                if (arg_shape.at(a) == 1 && target_shape.at(axes_mapping.at(a)) != 1)
                 {
                     empty_axes.push_back(a);
                 }
             }
-        }
-        if (!empty_axes.empty())
-        {
-            squeezed_arg = builder::squeeze(arg, empty_axes);
-        }
+            // Check if arg_shape contains some more empty dimensions marked to broadcast.
+            // If axes_mapping size is less than arg_shape size, then some of arg dimensions may
+            // be equal to one and marked to broadcast.
+            if (axes_mapping.size() < arg_shape.size())
+            {
+                for (size_t a{axes_mapping.size()}; a < arg_shape.size(); ++a)
+                {
+                    if (arg_shape.at(a) == 1)
+                    {
+                        empty_axes.push_back(a);
+                    }
+                }
+            }
+            if (!empty_axes.empty())
+            {
+                squeezed_arg = builder::squeeze(arg, empty_axes);
+            }
 
-        auto replacement_node =
-            make_shared<op::v0::Broadcast>(squeezed_arg, target_shape, broadcast_axes);
-
+            replacement_node =
+                make_shared<op::v0::Broadcast>(squeezed_arg, target_shape, broadcast_axes);
+        }
         replace_node(node, replacement_node);
         return replacement_node;
     }
@@ -564,7 +586,16 @@ namespace
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Pad> node)
     {
         const auto pad_arg = node->input_value(0);
-        const auto pad_value = node->input_value(3);
+        Output<Node> pad_value;
+        if (node->get_input_size() == 4)
+        {
+            pad_value = node->input_value(3);
+        }
+        else
+        {
+            pad_value =
+                make_shared<op::Constant>(pad_arg.get_element_type(), Shape{}, vector<float>{0.f});
+        }
         auto replacement_node = make_shared<op::v0::Pad>(
             pad_arg, pad_value, node->get_pads_begin(), node->get_pads_end(), node->get_pad_mode());
 

@@ -14,33 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
-#include <vector>
+#pragma once
 
-#include "default_opset.hpp"
-#include "ngraph/op/constant.hpp"
-#include "reciprocal.hpp"
+#include "ngraph/ops.hpp"
+#include "ngraph/opsets/opset1.hpp"
+
 namespace ngraph
 {
-    namespace onnx_import
+    namespace opset2
     {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector reciprocal(const Node& node)
-                {
-                    auto data = node.get_ng_inputs().at(0);
-
-                    auto one_node =
-                        default_opset::Constant::create(data->get_element_type(), Shape{}, {1});
-                    return {std::make_shared<default_opset::Divide>(one_node, data)};
-                }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+#define NGRAPH_OP(a, b) using b::a;
+#include "ngraph/opsets/opset2_tbl.hpp"
+#undef NGRAPH_OP
+    }
+}
