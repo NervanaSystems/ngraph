@@ -50,7 +50,7 @@ bool ngraph::op::v0::RegionYolo::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("axis", m_axis);
     visitor.on_attribute("coords", m_num_coords);
     visitor.on_attribute("classes", m_num_classes);
-    visitor.on_attribute("end_axis", m_axis);
+    visitor.on_attribute("end_axis", m_end_axis);
     visitor.on_attribute("num", m_num_regions);
     visitor.on_attribute("do_softmax", m_do_softmax);
     visitor.on_attribute("mask", m_mask);
