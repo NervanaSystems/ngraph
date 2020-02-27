@@ -60,7 +60,7 @@ $ tar -xzvf resnet50.tar.gz
  {
      try
      {
-         const std::shared_ptr<Function> ng_function = ngraph::onnx_import::import_onnx_model(resnet50_stream);
+         const std::shared_ptr<ngraph::Function> ng_function = ngraph::onnx_import::import_onnx_model(resnet50_stream);
 
          // Let's check for example shape of first output
          std::cout << ng_function->get_output_shape(0) << std::endl;
@@ -77,9 +77,11 @@ $ tar -xzvf resnet50.tar.gz
 The second overloading of `import_onnx_model` uses file path as argument.
 Using this version, the code can be simplified to:
 ```
-const std::shared_ptr<Function> ng_function = ngraph::onnx_import::import_onnx_model(resnet50_path);
+const std::shared_ptr<ngraph::Function> ng_function = ngraph::onnx_import::import_onnx_model(resnet50_path);
 ```
 
 If `ng_function` is created, it can be used for running computation on Inference Engine.
+As it was shown in [Build a Model with nGraph Library][build_ngraph] `std::shared_ptr<ngraph::Function>` can be wrapped into a `CNNNetwork`.
 
 [onnx_model_zoo]: https://github.com/onnx/models
+[build_ngraph]: https://docs.openvinotoolkit.org/latest/_docs_IE_DG_nGraphTutorial.html
