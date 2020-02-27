@@ -363,6 +363,46 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, global_max_pool_dyn_shape)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, arg_max_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/argmax_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const Shape shape{3, 2, 2};
+    const auto elems_in_tensor = shape_size(shape);
+    std::vector<int32_t> input_values(elems_in_tensor);
+    std::iota(input_values.begin(), input_values.end(), 1);
+
+    test_case.add_input<int32_t>(shape, input_values);
+
+    std::vector<int64_t> expected_values{1, 1, 1, 1, 1, 1};
+    test_case.add_expected_output<int64_t>(Shape{3, 1, 2}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, arg_min_no_keep_dims_dyn_shape)
+{
+    const auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/argmin_no_keep_dims_dyn.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const Shape shape{3, 2, 2};
+    const auto elems_in_tensor = shape_size(shape);
+    std::vector<int32_t> input_values(elems_in_tensor);
+    std::iota(input_values.begin(), input_values.end(), 1);
+
+    test_case.add_input<int32_t>(shape, input_values);
+
+    std::vector<int64_t> expected_values{0, 0, 0, 0};
+    test_case.add_expected_output<int64_t>(Shape{2, 2}, expected_values);
+
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_constant_of_shape_float_zeros)
 {
     auto function = onnx_import::import_onnx_model(file_util::path_join(

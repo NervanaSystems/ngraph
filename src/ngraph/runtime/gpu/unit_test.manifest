@@ -328,6 +328,8 @@ model_softplus_infinity
 model_sum_opset8
 model_argmax_int32
 model_argmin_int32
+arg_max_dyn_shape
+arg_min_no_keep_dims_dyn_shape
 model_top_k
 top_k_opset_10
 top_k_opset_10_const_k
