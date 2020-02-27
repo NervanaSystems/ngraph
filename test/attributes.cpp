@@ -143,6 +143,7 @@ public:
     uint64_t get_unsigned(const string& name) { return m_unsigneds.at(name); }
     vector<int64_t>& get_signed_vector(const string& name) { return m_signed_vectors.at(name); }
     vector<float>& get_float_vector(const string& name) { return m_float_vectors.at(name); }
+    vector<string>& get_string_vector(const string& name) { return m_string_vectors.at(name); }
     void set_string(const string& name, const string& value) { m_strings[name] = value; }
     void set_bool(const string& name, bool value) { m_bools[name] = value; }
     void set_double(const string& name, double value) { m_doubles[name] = value; }
@@ -152,9 +153,13 @@ public:
     {
         m_signed_vectors[name] = value;
     }
-        void set_float_vector(const string& name, const vector<float>& value)
+    void set_float_vector(const string& name, const vector<float>& value)
     {
         m_float_vectors[name] = value;
+    }
+    void set_string_vector(const string& name, const vector<string>& value)
+    {
+        m_string_vectors[name] = value;
     }
 
     void on_attribute(const string& name, string& value) override { set_string(name, value); };
@@ -184,6 +189,10 @@ public:
     {
         set_float_vector(name, adapter.get());
     }
+    void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
+    {
+        set_string_vector(name, adapter.get());
+    }
 
 protected:
     NodeTypeInfo m_node_type_info;
@@ -194,6 +203,7 @@ protected:
     map<string, uint64_t> m_unsigneds;
     map<string, vector<int64_t>> m_signed_vectors;
     map<string, vector<float>> m_float_vectors;
+    map<string, vector<std::string>> m_string_vectors;
 };
 
 class NodeBuilder : public AttributeVisitor
@@ -240,6 +250,10 @@ public:
     void on_adapter(const string& name, ValueAccessor<vector<float>>& adapter) override
     {
         adapter.set(m_values.get_float_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
+    {
+        adapter.set(m_values.get_string_vector(name));
     }
 
 protected:
