@@ -20,6 +20,7 @@
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/reshape.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/fused/batch_to_space.hpp"
 #include "ngraph/shape.hpp"
@@ -64,7 +65,7 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
     // First we have to disperse the data from batch, then rearrange them
     // so as appropriate chunks of data where close to their destination place.
     // Finally squeeze data from respective dimensions.
-    Shape dispersed_shape;
+    vector<int64_t> dispersed_shape;
     int64_t b_dim_divider = 1;
     for (const auto& el : block_values)
     {
@@ -90,7 +91,12 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
     {
         dispersed_shape.push_back(data_shape.at(i));
     }
-    auto flat_node = builder::opset1::reshape(data, dispersed_shape);
+
+    const auto out_pattern_1 = op::Constant::create(
+            element::i64, Shape{dispersed_shape.size()}, dispersed_shape);
+    const bool special_zero = false;
+    auto flat_node = make_shared<ngraph::op::v1::Reshape>(data, out_pattern_1, special_zero)
+            ->add_provenance_group_members_above({data});
 
     // calculate axes to transpose
     //      x'' = transpose(x', [N, N + 1, 0, N + 2, 1, ..., N + N - 1, N - 1])
@@ -104,12 +110,17 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
 
     //   x''' = reshape(x'', [batch / (B_1 * ... * B_{N - 1}), D_1 * B_1, D_2 * B_2, ... , D_{N - 1}
     //   * B_{N - 1}])
-    Shape squeezed_shape{data_shape.at(0) / b_dim_divider};
+    vector<int64_t> squeezed_shape;
+    squeezed_shape.push_back(data_shape.at(0) / b_dim_divider);
     for (size_t i = 1; i < block_values.size(); ++i)
     {
         squeezed_shape.push_back(data_shape.at(i) * block_values.at(i));
     }
-    flat_node = builder::opset1::reshape(flat_node, squeezed_shape);
+
+    const auto out_pattern_2 = op::Constant::create(
+            element::i64, Shape{squeezed_shape.size()}, squeezed_shape);
+    flat_node = make_shared<ngraph::op::v1::Reshape>(flat_node, out_pattern_2, special_zero)
+            ->add_provenance_group_members_above({data});
 
     //    Crop the start and end of dimensions according to `crops_begin`, `crops_end` to produce
     //    the output of shape:
