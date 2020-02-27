@@ -351,7 +351,7 @@ TEST(attributes, reduce_mean_op)
 
 TEST(attributes, reduce_min_op)
 {
-    // ReduceMax derives visit_attributes from op::util::ArithmeticReductionKeepDims
+    // ReduceMin derives visit_attributes from op::util::ArithmeticReductionKeepDims
     FactoryRegistry<Node>::get().register_factory<opset1::ReduceMin>();
     auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
     auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
