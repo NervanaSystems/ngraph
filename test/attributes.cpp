@@ -295,10 +295,34 @@ TEST(attributes, matmul_op)
     bool transpose_b = true;
 
     auto matmul = make_shared<opset1::MatMul>(A, B, transpose_a, transpose_b);
-
     NodeBuilder builder(matmul);
     auto g_matmul = as_type_ptr<opset1::MatMul>(builder.create());
 
     EXPECT_EQ(g_matmul->get_transpose_a(), matmul->get_transpose_a());
     EXPECT_EQ(g_matmul->get_transpose_b(), matmul->get_transpose_b());
+}
+
+TEST(attributes, max_pool_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::MaxPool>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});
+
+    auto strides = Strides{2};
+    auto pads_begin = Shape{1};
+    auto pads_end = Shape{1};
+    auto kernel = Shape{1};
+    auto rounding_mode = op::RoundingType::FLOOR;
+    auto auto_pad = op::PadType::EXPLICIT;
+
+    auto max_pool = make_shared<opset1::MaxPool>(
+        data, strides, pads_begin, pads_end, kernel, rounding_mode, auto_pad);
+    NodeBuilder builder(max_pool);
+    auto g_max_pool = as_type_ptr<opset1::MaxPool>(builder.create());
+
+    EXPECT_EQ(g_max_pool->get_strides(), max_pool->get_strides());
+    EXPECT_EQ(g_max_pool->get_pads_begin(), max_pool->get_pads_begin());
+    EXPECT_EQ(g_max_pool->get_pads_end(), max_pool->get_pads_end());
+    EXPECT_EQ(g_max_pool->get_kernel(), max_pool->get_kernel());
+    EXPECT_EQ(g_max_pool->get_rounding_type(), max_pool->get_rounding_type());
+    EXPECT_EQ(g_max_pool->get_auto_pad(), max_pool->get_auto_pad());
 }
