@@ -43,7 +43,7 @@ std::cout << "Is Abs in version 12, domain `ai.onnx`supported: " << (is_abs_op_s
 
 ## How to import ONNX model
 In order to import ONNX model `import_onnx_model` should be used.
-The method has two overloading.
+The method has two overloads.
 The first uses stream as input (e.g. file stream, memory stream).
 The code listing below shows how to convert `ResNet50` ONNX model to nGraph function.
 
@@ -74,14 +74,14 @@ $ tar -xzvf resnet50.tar.gz
  resnet50_stream.close();
 ```
 
-The second overloading of `import_onnx_model` uses file path as argument.
+The second overload of `import_onnx_model` uses file path as argument.
 Using this version, the code can be simplified to:
 ```
 const std::shared_ptr<ngraph::Function> ng_function = ngraph::onnx_import::import_onnx_model(resnet50_path);
 ```
 
 If `ng_function` is created, it can be used for running computation on Inference Engine.
-As it was shown in [Build a Model with nGraph Library][build_ngraph] `std::shared_ptr<ngraph::Function>` can be wrapped into a `CNNNetwork`.
+As it was shown in [Build a Model with nGraph Library][build_ngraph] `std::shared_ptr<ngraph::Function>` can be transformed into a `CNNNetwork`.
 
 [onnx_header]: https://github.com/NervanaSystems/ngraph/blob/master/src/ngraph/frontend/onnx_import/onnx.hpp
 [onnx_model_zoo]: https://github.com/onnx/models
