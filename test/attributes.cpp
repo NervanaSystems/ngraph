@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/opsets/opset1.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -140,15 +141,25 @@ public:
     double get_double(const string& name) { return m_doubles.at(name); }
     int64_t get_signed(const string& name) { return m_signeds.at(name); }
     uint64_t get_unsigned(const string& name) { return m_unsigneds.at(name); }
+    vector<float>& get_float_vector(const string& name) { return m_float_vectors.at(name); }
     vector<int64_t>& get_signed_vector(const string& name) { return m_signed_vectors.at(name); }
+    vector<string>& get_string_vector(const string& name) { return m_string_vectors.at(name); }
     void set_string(const string& name, const string& value) { m_strings[name] = value; }
     void set_bool(const string& name, bool value) { m_bools[name] = value; }
     void set_double(const string& name, double value) { m_doubles[name] = value; }
     void set_signed(const string& name, int64_t value) { m_signeds[name] = value; }
     void set_unsigned(const string& name, uint64_t value) { m_unsigneds[name] = value; }
+    void set_float_vector(const string& name, const vector<float>& value)
+    {
+        m_float_vectors[name] = value;
+    }
     void set_signed_vector(const string& name, const vector<int64_t>& value)
     {
         m_signed_vectors[name] = value;
+    }
+    void set_string_vector(const string& name, const vector<string>& value)
+    {
+        m_string_vectors[name] = value;
     }
 
     void on_attribute(const string& name, string& value) override { set_string(name, value); };
@@ -162,10 +173,6 @@ public:
     {
         set_string(name, adapter.get());
     };
-    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
-    {
-        set_signed_vector(name, adapter.get());
-    }
     void on_adapter(const string& name, ValueAccessor<int64_t>& adapter) override
     {
         set_signed(name, adapter.get());
@@ -173,6 +180,18 @@ public:
     void on_adapter(const string& name, ValueAccessor<double>& adapter) override
     {
         set_double(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<float>>& adapter) override
+    {
+        set_float_vector(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
+    {
+        set_signed_vector(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
+    {
+        set_string_vector(name, adapter.get());
     }
 
 protected:
@@ -183,6 +202,8 @@ protected:
     map<string, int64_t> m_signeds;
     map<string, uint64_t> m_unsigneds;
     map<string, vector<int64_t>> m_signed_vectors;
+    map<string, vector<float>> m_float_vectors;
+    map<string, vector<std::string>> m_string_vectors;
 };
 
 class NodeBuilder : public AttributeVisitor
@@ -197,7 +218,6 @@ public:
     {
         shared_ptr<Node> node(FactoryRegistry<Node>::get().create(m_values.get_node_type_info()));
         node->visit_attributes(*this);
-        node->validate_and_infer_types();
         return node;
     }
 
@@ -215,10 +235,6 @@ public:
     {
         adapter.set(m_values.get_string(name));
     };
-    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
-    {
-        adapter.set(m_values.get_signed_vector(name));
-    }
     void on_adapter(const string& name, ValueAccessor<int64_t>& adapter) override
     {
         adapter.set(m_values.get_signed(name));
@@ -227,32 +243,129 @@ public:
     {
         adapter.set(m_values.get_double(name));
     }
+    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
+    {
+        adapter.set(m_values.get_signed_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
+    {
+        adapter.set(m_values.get_string_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<float>>& adapter) override
+    {
+        adapter.set(m_values.get_float_vector(name));
+    }
 
 protected:
     NodeSaver m_values;
 };
 
-TEST(attributes, user_op)
+TEST(attributes, lrn_op)
 {
-    FactoryRegistry<Node>::get().register_factory<Oracle>();
-    auto program = make_shared<op::Parameter>(element::i32, Shape{200});
-    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
-    auto oracle = make_shared<Oracle>(program,
-                                      data,
-                                      TuringModel::XL1200,
-                                      2,
-                                      4,
-                                      "12AU7",
-                                      true,
-                                      vector<uint64_t>{1, 2, 4, 8},
-                                      vector<int64_t>{-1, -2, -4, -8});
-    NodeBuilder builder(oracle);
-    auto g_oracle = as_type_ptr<Oracle>(builder.create());
+    FactoryRegistry<Node>::get().register_factory<opset1::LRN>();
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    const auto axes = make_shared<op::Parameter>(element::i32, Shape{2});
 
-    EXPECT_EQ(g_oracle->get_turing_model(), oracle->get_turing_model());
-    EXPECT_EQ(g_oracle->get_model_version(), oracle->get_model_version());
-    EXPECT_EQ(g_oracle->get_serial_number(), oracle->get_serial_number());
-    EXPECT_EQ(g_oracle->get_enable_turbo(), oracle->get_enable_turbo());
-    EXPECT_EQ(g_oracle->get_hyper_parameters(), oracle->get_hyper_parameters());
-    EXPECT_EQ(g_oracle->get_ultra_parameters(), oracle->get_ultra_parameters());
+    const double alpha = 1.1;
+    const double beta = 2.2;
+    const double bias = 3.3;
+    const size_t size = 4;
+
+    const auto lrn = make_shared<opset1::LRN>(arg, axes, alpha, beta, bias, size);
+    NodeBuilder builder(lrn);
+    auto g_lrn = as_type_ptr<opset1::LRN>(builder.create());
+
+    EXPECT_EQ(g_lrn->get_alpha(), lrn->get_alpha());
+    EXPECT_EQ(g_lrn->get_beta(), lrn->get_beta());
+    EXPECT_EQ(g_lrn->get_bias(), lrn->get_bias());
+    EXPECT_EQ(g_lrn->get_nsize(), lrn->get_nsize());
+}
+TEST(attributes, lstm_sequence_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::LSTMSequence>();
+    const auto X = make_shared<op::Parameter>(element::f32, Shape{1, 2, 4});
+    const auto initial_hidden_state = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    const auto initial_cell_state = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    const auto sequence_lengths = make_shared<op::Parameter>(element::i32, Shape{2});
+    const auto W = make_shared<op::Parameter>(element::f32, Shape{1, 12, 4});
+    const auto R = make_shared<op::Parameter>(element::f32, Shape{1, 12, 3});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{1, 12});
+
+    const auto hidden_size = 3;
+    const auto lstm_direction = op::LSTMSequence::direction::FORWARD;
+    const auto weights_format = op::LSTMWeightsFormat::ICOF;
+    const std::vector<float> activations_alpha = {1, 2, 3};
+    const std::vector<float> activations_beta = {4, 5, 6};
+    const std::vector<std::string> activations = {"tanh", "sigmoid", "tanh"};
+    const float clip_threshold = 0.5f;
+    const bool input_forget = true;
+
+    const auto lstm_sequence = make_shared<opset1::LSTMSequence>(X,
+                                                                 initial_hidden_state,
+                                                                 initial_cell_state,
+                                                                 sequence_lengths,
+                                                                 W,
+                                                                 R,
+                                                                 B,
+                                                                 hidden_size,
+                                                                 lstm_direction,
+                                                                 weights_format,
+                                                                 activations_alpha,
+                                                                 activations_beta,
+                                                                 activations,
+                                                                 clip_threshold,
+                                                                 input_forget);
+    NodeBuilder builder(lstm_sequence);
+    auto g_lstm_sequence = as_type_ptr<opset1::LSTMSequence>(builder.create());
+
+    EXPECT_EQ(g_lstm_sequence->get_hidden_size(), lstm_sequence->get_hidden_size());
+    EXPECT_EQ(g_lstm_sequence->get_activations(), lstm_sequence->get_activations());
+    EXPECT_EQ(g_lstm_sequence->get_activations_alpha(), lstm_sequence->get_activations_alpha());
+    EXPECT_EQ(g_lstm_sequence->get_activations_beta(), lstm_sequence->get_activations_beta());
+    EXPECT_EQ(g_lstm_sequence->get_clip_threshold(), lstm_sequence->get_clip_threshold());
+    EXPECT_EQ(g_lstm_sequence->get_direction(), lstm_sequence->get_direction());
+    EXPECT_EQ(g_lstm_sequence->get_input_forget(), lstm_sequence->get_input_forget());
+    EXPECT_EQ(g_lstm_sequence->get_weights_format(), lstm_sequence->get_weights_format());
+}
+
+TEST(attributes, lstm_cell_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::LSTMCell>();
+    auto X = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto H = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto W = make_shared<op::Parameter>(element::f32, Shape{12, 3});
+    auto R = make_shared<op::Parameter>(element::f32, Shape{12, 3});
+    const auto initial_hidden_state = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    const auto initial_cell_state = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+
+    const auto hidden_size = 3;
+    const auto weights_format = op::LSTMWeightsFormat::ICOF;
+    const std::vector<std::string> activations = {"tanh", "sigmoid", "tanh"};
+    auto activations_alpha = std::vector<float>{1.0, 1.5};
+    auto activations_beta = std::vector<float>{2.0, 1.0};
+    const float clip = 0.5f;
+    bool input_forget = true;
+
+    const auto lstm_cell = make_shared<opset1::LSTMCell>(X,
+                                                         initial_hidden_state,
+                                                         initial_cell_state,
+                                                         W,
+                                                         R,
+                                                         hidden_size,
+                                                         weights_format,
+                                                         activations,
+                                                         activations_alpha,
+                                                         activations_beta,
+                                                         clip,
+                                                         input_forget);
+    NodeBuilder builder(lstm_cell);
+    auto g_lstm_cell = as_type_ptr<opset1::LSTMCell>(builder.create());
+
+    EXPECT_EQ(g_lstm_cell->get_hidden_size(), lstm_cell->get_hidden_size());
+    EXPECT_EQ(g_lstm_cell->get_activations(), lstm_cell->get_activations());
+    EXPECT_EQ(g_lstm_cell->get_activations_alpha(), lstm_cell->get_activations_alpha());
+    EXPECT_EQ(g_lstm_cell->get_activations_beta(), lstm_cell->get_activations_beta());
+    EXPECT_EQ(g_lstm_cell->get_clip(), lstm_cell->get_clip());
+    EXPECT_EQ(g_lstm_cell->get_input_forget(), lstm_cell->get_input_forget());
+    EXPECT_EQ(g_lstm_cell->get_weights_format(), lstm_cell->get_weights_format());
 }
