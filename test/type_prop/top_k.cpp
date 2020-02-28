@@ -331,3 +331,38 @@ TEST(type_prop, topk_rank_static_dynamic_k_known_ok)
     ASSERT_TRUE(topk->get_output_partial_shape(1).same_scheme(
         PartialShape{Dimension::dynamic(), 2, Dimension::dynamic()}));
 }
+
+TEST(type_prop, topk_v1_negative_axis_support)
+{
+    const auto data_shape = Shape{1, 2, 3, 4};
+    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto k = op::Constant::create(element::i64, Shape{}, {2});
+    const int64_t axis = -2;
+
+    const auto topk = make_shared<op::v1::TopK>(data, k, axis, "max", "value");
+
+    ASSERT_EQ(topk->get_provided_axis(), axis);
+    ASSERT_EQ(topk->get_axis(), data_shape.at(1));
+}
+
+TEST(type_prop, topk_v1_negative_axis_dynamic_rank)
+{
+    const auto data_shape = PartialShape::dynamic();
+    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto k = op::Constant::create(element::i64, Shape{}, {2});
+    const int64_t axis = -2;
+    const auto topk = make_shared<op::v1::TopK>(data, k, axis, "max", "value");
+
+    try
+    {
+        topk->get_axis();
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Normalized axis of TopK is unknown"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}

@@ -328,6 +328,8 @@ model_softplus_infinity
 model_sum_opset8
 model_argmax_int32
 model_argmin_int32
+arg_max_dyn_shape
+arg_min_no_keep_dims_dyn_shape
 model_top_k
 top_k_opset_10
 top_k_opset_10_const_k
@@ -481,6 +483,8 @@ space_to_depth_block_first
 space_to_depth_depth_first
 depth_to_space_block_first
 depth_to_space_depth_first
+space_to_batch
+batch_to_space
 normalize_across_chw_4d
 normalize_across_empty_axes_input
 normalize_across_h_4d
