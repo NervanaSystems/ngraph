@@ -493,7 +493,7 @@ TEST(attributes, rnn_cell_op_custom_attributes)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::RNNCell>();
     auto X = make_shared<op::Parameter>(element::f32, Shape{2, 3});
-    auto H_t = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto H = make_shared<op::Parameter>(element::f32, Shape{2, 3});
     auto W = make_shared<op::Parameter>(element::f32, Shape{3, 3});
     auto R = make_shared<op::Parameter>(element::f32, Shape{3, 3});
 
@@ -503,7 +503,8 @@ TEST(attributes, rnn_cell_op_custom_attributes)
     auto activations_beta = std::vector<float>{2.0, 1.0};
     float clip = 1.0;
 
-    auto rnn_cell = make_shared<opset1::RNNCell>(X, H_t, W, R, hidden_size);
+    auto rnn_cell = make_shared<opset1::RNNCell>(
+        X, H, W, R, hidden_size, activations, activations_alpha, activations_beta, clip);
 
     NodeBuilder builder(rnn_cell);
     auto g_rnn_cell = as_type_ptr<opset1::RNNCell>(builder.create());
@@ -519,13 +520,13 @@ TEST(attributes, rnn_cell_op_default_attributes)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::RNNCell>();
     auto X = make_shared<op::Parameter>(element::f32, Shape{2, 3});
-    auto H_t = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto H = make_shared<op::Parameter>(element::f32, Shape{2, 3});
     auto W = make_shared<op::Parameter>(element::f32, Shape{3, 3});
     auto R = make_shared<op::Parameter>(element::f32, Shape{3, 3});
 
     const size_t hidden_size = 3;
 
-    auto rnn_cell = make_shared<opset1::RNNCell>(X, H_t, W, R, hidden_size);
+    auto rnn_cell = make_shared<opset1::RNNCell>(X, H, W, R, hidden_size);
 
     NodeBuilder builder(rnn_cell);
     auto g_rnn_cell = as_type_ptr<opset1::RNNCell>(builder.create());
