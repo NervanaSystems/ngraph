@@ -326,3 +326,18 @@ TEST(attributes, max_pool_op)
     EXPECT_EQ(g_max_pool->get_rounding_type(), max_pool->get_rounding_type());
     EXPECT_EQ(g_max_pool->get_auto_pad(), max_pool->get_auto_pad());
 }
+
+TEST(attributes, mod_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Mod>();
+    auto A = make_shared<op::Parameter>(element::f32, Shape{0, 2});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{2, 0});
+
+    auto auto_broadcast = op::AutoBroadcastType::NUMPY;
+
+    auto mod = make_shared<opset1::Mod>(A, B, auto_broadcast);
+    NodeBuilder builder(mod);
+    auto g_mod = as_type_ptr<opset1::Mod>(builder.create());
+
+    EXPECT_EQ(g_mod->get_auto_broadcast(), mod->get_auto_broadcast());
+}
