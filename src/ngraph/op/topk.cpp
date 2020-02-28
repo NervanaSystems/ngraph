@@ -20,6 +20,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -235,12 +236,15 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const element::Type& index_element_type)
     : Op{{data, k}}
     , m_axis{axis}
+    , m_normalized_axis{0}
     , m_mode{mode_from_string(mode)}
     , m_sort{sort_type_from_string(sort)}
     , m_index_element_type{index_element_type}
 {
     constructor_validate_and_infer_types();
 }
+
+static const std::uint64_t UNKNOWN_NORMALIZED_AXIS = std::numeric_limits<uint64_t>::max();
 
 op::v1::TopK::TopK(const Output<Node>& data,
                    const Output<Node>& k,
@@ -250,6 +254,7 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const element::Type& index_element_type)
     : Op{{data, k}}
     , m_axis{axis}
+    , m_normalized_axis{UNKNOWN_NORMALIZED_AXIS}
     , m_mode{mode}
     , m_sort{sort}
     , m_index_element_type{index_element_type}
@@ -281,22 +286,38 @@ void op::v1::TopK::validate_and_infer_types()
 
     if (output_shape.rank().is_static())
     {
-        NODE_VALIDATION_CHECK(
-            this,
-            m_axis >= 0 && static_cast<size_t>(m_axis) < static_cast<size_t>(output_shape.rank()),
-            "TopK axis (",
-            m_axis,
-            ") is out of bounds.");
-
+        m_normalized_axis = ngraph::normalize_axis(this, m_axis, output_shape.rank());
         if (k != 0)
         {
-            output_shape[m_axis] = k;
+            output_shape[m_normalized_axis] = k;
         }
     }
 
     set_output_size(2);
     set_output_type(0, get_input_element_type(0), output_shape);
     set_output_type(1, m_index_element_type, output_shape);
+}
+
+void op::v1::TopK::set_axis(const int64_t axis)
+{
+    const auto input_rank = get_input_partial_shape(0).rank();
+    if (input_rank.is_static())
+    {
+        m_normalized_axis = ngraph::normalize_axis(this, axis, input_rank);
+    }
+    else
+    {
+        m_normalized_axis = UNKNOWN_NORMALIZED_AXIS;
+    }
+    m_axis = axis;
+}
+
+uint64_t op::v1::TopK::get_axis() const
+{
+    NODE_VALIDATION_CHECK(
+        this, m_normalized_axis != UNKNOWN_NORMALIZED_AXIS, "Normalized axis of TopK is unknown");
+
+    return m_normalized_axis;
 }
 
 size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
@@ -403,7 +424,7 @@ size_t op::v1::TopK::get_k() const
 
     if (k == 0 && get_input_partial_shape(0).is_static())
     {
-        k = get_input_partial_shape(0).to_shape()[m_axis];
+        k = get_input_partial_shape(0).to_shape()[m_normalized_axis];
     }
     return k;
 }
