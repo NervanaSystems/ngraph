@@ -400,16 +400,16 @@ TEST(attributes, reduce_sum_op)
 TEST(attributes, region_yolo_op)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::RegionYolo>();
-    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto data = make_shared<op::Parameter>(element::i64, Shape{1, 255, 26, 26});
 
-    size_t num_coords = 1;
+    size_t num_coords = 4;
     size_t num_classes = 1;
-    size_t num_regions = 1;
+    size_t num_regions = 6;
     auto do_softmax = false;
-    auto mask = std::vector<int64_t>{0, 0};
+    auto mask = std::vector<int64_t>{0, 1};
     auto axis = 1;
-    auto end_axis = 2;
-    auto anchors = std::vector<float>{1};
+    auto end_axis = 3;
+    auto anchors = std::vector<float>{10, 14, 23, 27, 37, 58, 81, 82, 135, 169, 344, 319};
 
     auto region_yolo = make_shared<opset1::RegionYolo>(
         data, num_coords, num_classes, num_regions, do_softmax, mask, axis, end_axis, anchors);
