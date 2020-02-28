@@ -348,7 +348,7 @@ TEST(attributes, non_max_suppression_op_default_attributes)
     auto boxes = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
     auto scores = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1});
 
-    const auto nms = make_shared<opset1::NonMaxSuppression>(boxes, scores);
+    auto nms = make_shared<opset1::NonMaxSuppression>(boxes, scores);
     NodeBuilder builder(nms);
     auto g_nms = as_type_ptr<opset1::NonMaxSuppression>(builder.create());
 
@@ -365,10 +365,27 @@ TEST(attributes, non_max_suppression_op_custom_attributes)
     auto box_encoding = opset1::NonMaxSuppression::BoxEncodingType::CENTER;
     bool sort_result_descending = false;
 
-    const auto nms = make_shared<opset1::NonMaxSuppression>(boxes, scores);
+    auto nms = make_shared<opset1::NonMaxSuppression>(boxes, scores);
     NodeBuilder builder(nms);
     auto g_nms = as_type_ptr<opset1::NonMaxSuppression>(builder.create());
 
     EXPECT_EQ(g_nms->get_box_encoding(), nms->get_box_encoding());
     EXPECT_EQ(g_nms->get_sort_result_descending(), nms->get_sort_result_descending());
+}
+
+TEST(attributes, normalize_l2_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::NormalizeL2>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{1});
+    const auto axes = make_shared<op::Constant>(element::i32, Shape{}, vector<int32_t>{0});
+
+    float eps{1e-6f};
+    auto eps_mode = op::EpsMode::ADD;
+
+    auto normalize_l2 = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    NodeBuilder builder(normalize_l2);
+    auto g_normalize_l2 = as_type_ptr<opset1::NormalizeL2>(builder.create());
+
+    EXPECT_EQ(g_normalize_l2->get_eps(), normalize_l2->get_eps());
+    EXPECT_EQ(g_normalize_l2->get_eps_mode(), normalize_l2->get_eps_mode());
 }
