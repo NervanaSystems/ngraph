@@ -29,7 +29,7 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        /// \brief      Return the set of names of supported operators which are supported.
+        /// \brief      Return the set of names of supported operators.
         ///
         /// \param[in]  version  Determines set version of operators which are returned
         /// \param[in]  domain   Determines domain of operators which are returned
@@ -52,7 +52,8 @@ namespace ngraph
                                    std::int64_t version,
                                    const std::string& domain = "ai.onnx");
 
-        /// \brief      Import and convert an ONNX model from stream to an nGraph Function representation.
+        /// \brief      Import and convert an ONNX model from stream
+        ///             to an nGraph Function representation.
         ///             The serialized ONNX model is read from input stream.
         ///
         /// \note       If parsing stream fails or ONNX model contains not supported ops
@@ -60,11 +61,13 @@ namespace ngraph
         ///
         /// \param[in]  stream      The input stream (e.g. file stream, memory stream, etc)
         ///
-        /// \return     The function returns a nGraph Function which represents single output from the created graph
+        /// \return     The function returns an nGraph Function which represents single output
+        ///             from the created graph
         NGRAPH_API
         std::shared_ptr<Function> import_onnx_model(std::istream& stream);
 
-        /// \brief     Import and convert an ONNX model from file to an nGraph Function representation.
+        /// \brief     Import and convert an ONNX model from file
+        ///            to an nGraph Function representation.
         ///            The ONNX model is read from ONNX file.
         ///
         /// \note      If parsing file fails or ONNX model contains not supported ops
@@ -72,7 +75,8 @@ namespace ngraph
         ///
         /// \param[in] file_path  The path to file containing ONNX model (relative or absolute)
         ///
-        /// \return    The function returns a nGraph Function which represents single output from the created graph
+        /// \return    The function returns an nGraph Function which represents single output
+        ///            from the created graph
         NGRAPH_API
         std::shared_ptr<Function> import_onnx_model(const std::string& file_path);
 
