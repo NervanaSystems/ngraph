@@ -274,6 +274,27 @@ TEST(attributes, elu_op)
     EXPECT_EQ(g_elu->get_alpha(), elu->get_alpha());
 }
 
+TEST(attributes, fake_quantize_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::FakeQuantize>();
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    const auto input_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto levels = 5;
+    auto auto_broadcast = op::AutoBroadcastType::NUMPY;
+
+    const auto fake_quantize = make_shared<op::FakeQuantize>(
+        data, input_low, input_high, output_low, output_high, levels, auto_broadcast);
+    NodeBuilder builder(fake_quantize);
+    auto g_fake_quantize = as_type_ptr<opset1::FakeQuantize>(builder.create());
+
+    EXPECT_EQ(g_fake_quantize->get_levels(), fake_quantize->get_levels());
+    EXPECT_EQ(g_fake_quantize->get_auto_broadcast(), fake_quantize->get_auto_broadcast());
+}
+
 TEST(attributes, lrn_op)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::LRN>();
