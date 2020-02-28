@@ -342,20 +342,6 @@ TEST(attributes, mod_op)
     EXPECT_EQ(g_mod->get_auto_broadcast(), mod->get_auto_broadcast());
 }
 
-TEST(attributes, non_max_suppression_op_default_attributes)
-{
-    FactoryRegistry<Node>::get().register_factory<opset1::NonMaxSuppression>();
-    auto boxes = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
-    auto scores = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1});
-
-    auto nms = make_shared<opset1::NonMaxSuppression>(boxes, scores);
-    NodeBuilder builder(nms);
-    auto g_nms = as_type_ptr<opset1::NonMaxSuppression>(builder.create());
-
-    EXPECT_EQ(g_nms->get_box_encoding(), nms->get_box_encoding());
-    EXPECT_EQ(g_nms->get_sort_result_descending(), nms->get_sort_result_descending());
-}
-
 TEST(attributes, non_max_suppression_op_custom_attributes)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::NonMaxSuppression>();
@@ -364,6 +350,21 @@ TEST(attributes, non_max_suppression_op_custom_attributes)
 
     auto box_encoding = opset1::NonMaxSuppression::BoxEncodingType::CENTER;
     bool sort_result_descending = false;
+
+    auto nms =
+        make_shared<opset1::NonMaxSuppression>(boxes, scores, box_encoding, sort_result_descending);
+    NodeBuilder builder(nms);
+    auto g_nms = as_type_ptr<opset1::NonMaxSuppression>(builder.create());
+
+    EXPECT_EQ(g_nms->get_box_encoding(), nms->get_box_encoding());
+    EXPECT_EQ(g_nms->get_sort_result_descending(), nms->get_sort_result_descending());
+}
+
+TEST(attributes, non_max_suppression_op_default_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::NonMaxSuppression>();
+    auto boxes = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
+    auto scores = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1});
 
     auto nms = make_shared<opset1::NonMaxSuppression>(boxes, scores);
     NodeBuilder builder(nms);
@@ -382,7 +383,7 @@ TEST(attributes, normalize_l2_op)
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
-    auto normalize_l2 = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto normalize_l2 = make_shared<opset1::NormalizeL2>(data, axes, eps, eps_mode);
     NodeBuilder builder(normalize_l2);
     auto g_normalize_l2 = as_type_ptr<opset1::NormalizeL2>(builder.create());
 
@@ -397,7 +398,6 @@ TEST(attributes, one_hot_op)
     auto depth = op::Constant::create(element::i64, Shape{}, {4});
     auto on_value = op::Constant::create(element::f32, Shape{}, {1.0f});
     auto off_value = op::Constant::create(element::f32, Shape{}, {0.0f});
-    float eps{1e-6f};
 
     int64_t axis = 3;
 
@@ -406,6 +406,22 @@ TEST(attributes, one_hot_op)
     auto g_one_hot = as_type_ptr<opset1::OneHot>(builder.create());
 
     EXPECT_EQ(g_one_hot->get_axis(), one_hot->get_axis());
+}
+
+TEST(attributes, pad_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Pad>();
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{1});
+
+    auto pad_mode = op::PadMode::EDGE;
+
+    auto pad = make_shared<opset1::Pad>(arg, pads_begin, pads_end, pad_mode);
+    NodeBuilder builder(pad);
+    auto g_pad = as_type_ptr<opset1::Pad>(builder.create());
+
+    EXPECT_EQ(g_pad->get_pad_mode(), pad->get_pad_mode());
 }
 
 TEST(attributes, psroi_pooling_op)
@@ -432,20 +448,4 @@ TEST(attributes, psroi_pooling_op)
     EXPECT_EQ(g_psroi_pool->get_spatial_bins_x(), psroi_pool->get_spatial_bins_x());
     EXPECT_EQ(g_psroi_pool->get_spatial_bins_y(), psroi_pool->get_spatial_bins_y());
     EXPECT_EQ(g_psroi_pool->get_mode(), psroi_pool->get_mode());
-}
-
-TEST(attributes, pad_op)
-{
-    FactoryRegistry<Node>::get().register_factory<opset1::Pad>();
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
-    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
-    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{1});
-
-    auto pad_mode = op::PadMode::EDGE;
-
-    auto pad = make_shared<opset1::Pad>(arg, pads_begin, pads_end, pad_mode);
-    NodeBuilder builder(pad);
-    auto g_pad = as_type_ptr<opset1::Pad>(builder.create());
-
-    EXPECT_EQ(g_pad->get_pad_mode(), pad->get_pad_mode());
 }
