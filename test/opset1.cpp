@@ -171,7 +171,9 @@ constexpr NodeTypeInfo NewOp::type_info;
 TEST(opset, new_op)
 {
     // Copy opset1; don't bash the real thing in a test
+    FactoryRegistry<Node> ext_factory = FactoryRegistry<Node>::get();
     OpSet opset1_copy(get_opset1());
+    opset1_copy.set_factory_registry(&ext_factory);
     opset1_copy.insert<NewOp>();
     {
         shared_ptr<Node> op(opset1_copy.create(NewOp::type_info.name));
@@ -188,6 +190,8 @@ TEST(opset, new_op)
     // Fred should be in the copy
     fred = shared_ptr<Node>(opset1_copy.create("Fred"));
     EXPECT_TRUE(fred);
+    // Fred should not be in the registry
+    ASSERT_FALSE(FactoryRegistry<Node>::get().has_factory<NewOp>());
 }
 
 TEST(opset, dump)
