@@ -21,13 +21,13 @@
 #include "exceptions.hpp"
 #include "instance_norm.hpp"
 #include "ngraph/axis_set.hpp"
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/opsets/opset0.hpp"
 #include "utils/common.hpp"
 
@@ -68,15 +68,16 @@ namespace ngraph
                         std::make_shared<default_opset::Constant>(
                             data->get_element_type(), data_shape, std::vector<float>{epsilon});
 
-                    scale = ngraph::op::opset1::make_broadcast(scale, data_shape, 1);
-                    bias = ngraph::op::opset1::make_broadcast(bias, data_shape, 1);
+                    scale = ngraph::builder::opset1::make_broadcast(scale, data_shape, 1);
+                    bias = ngraph::builder::opset1::make_broadcast(bias, data_shape, 1);
 
-                    Output<ngraph::Node> mean = builder::mean(data, reduction_axes);
-                    mean = ngraph::op::opset1::make_broadcast(mean, data_shape, reduction_axes);
+                    Output<ngraph::Node> mean = builder::opset1::mean(data, reduction_axes);
+                    mean =
+                        ngraph::builder::opset1::make_broadcast(mean, data_shape, reduction_axes);
 
-                    Output<ngraph::Node> variance = builder::variance(data, reduction_axes);
-                    variance =
-                        ngraph::op::opset1::make_broadcast(variance, data_shape, reduction_axes);
+                    Output<ngraph::Node> variance = builder::opset1::variance(data, reduction_axes);
+                    variance = ngraph::builder::opset1::make_broadcast(
+                        variance, data_shape, reduction_axes);
 
                     const auto sqrt = std::make_shared<default_opset::Sqrt>(variance + eps_node);
 

@@ -71,7 +71,11 @@ static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
         "inferred from the host CPU using for the cache level specified by "
         "-ngraph-loop-tile-cache-level."));
 
+// Enable the lowering of MemRefs to LLVM bare pointers.
+extern llvm::cl::opt<bool> clEnableBarePtrMemRefLowering;
+
 using namespace ngraph::runtime::ngmlir;
+using namespace mlir;
 
 // Default optimization level.
 llvm::CodeGenOpt::Level MLIRCPUBackend::mlirOptLevel = llvm::CodeGenOpt::Level::Aggressive;
@@ -194,7 +198,19 @@ void MLIRCPUBackend::lowerNgDialect()
 void MLIRCPUBackend::lowerStandardDialect()
 {
     mlir::PassManager pm(&m_context);
-    pm.addPass(mlir::createLowerToLLVMPass());
+    // We lower memrefs to a fat memref descriptor by default. If 'clEnableBarePtrMemRefLowering' is
+    // specified, we lower memref arguments to bare pointers to the memref element type.
+    if (clEnableBarePtrMemRefLowering)
+    {
+        pm.addPass(mlir::createLowerToLLVMPass(/*useAlloca=*/false,
+                                               /*useBarePtrCallConv=*/true,
+                                               /*emitCWrappers=*/false));
+    }
+    else
+    {
+        pm.addPass(mlir::createLowerToLLVMPass(
+            /*useAlloca=*/false, /*useBarePtrCallConv=*/false, /*emitCWrappers=*/true));
+    }
 
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
