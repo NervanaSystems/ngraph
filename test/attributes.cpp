@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/opsets/opset1.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -140,15 +141,25 @@ public:
     double get_double(const string& name) { return m_doubles.at(name); }
     int64_t get_signed(const string& name) { return m_signeds.at(name); }
     uint64_t get_unsigned(const string& name) { return m_unsigneds.at(name); }
+    vector<float>& get_float_vector(const string& name) { return m_float_vectors.at(name); }
     vector<int64_t>& get_signed_vector(const string& name) { return m_signed_vectors.at(name); }
+    vector<string>& get_string_vector(const string& name) { return m_string_vectors.at(name); }
     void set_string(const string& name, const string& value) { m_strings[name] = value; }
     void set_bool(const string& name, bool value) { m_bools[name] = value; }
     void set_double(const string& name, double value) { m_doubles[name] = value; }
     void set_signed(const string& name, int64_t value) { m_signeds[name] = value; }
     void set_unsigned(const string& name, uint64_t value) { m_unsigneds[name] = value; }
+    void set_float_vector(const string& name, const vector<float>& value)
+    {
+        m_float_vectors[name] = value;
+    }
     void set_signed_vector(const string& name, const vector<int64_t>& value)
     {
         m_signed_vectors[name] = value;
+    }
+    void set_string_vector(const string& name, const vector<string>& value)
+    {
+        m_string_vectors[name] = value;
     }
 
     void on_attribute(const string& name, string& value) override { set_string(name, value); };
@@ -162,10 +173,6 @@ public:
     {
         set_string(name, adapter.get());
     };
-    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
-    {
-        set_signed_vector(name, adapter.get());
-    }
     void on_adapter(const string& name, ValueAccessor<int64_t>& adapter) override
     {
         set_signed(name, adapter.get());
@@ -173,6 +180,18 @@ public:
     void on_adapter(const string& name, ValueAccessor<double>& adapter) override
     {
         set_double(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<float>>& adapter) override
+    {
+        set_float_vector(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
+    {
+        set_signed_vector(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
+    {
+        set_string_vector(name, adapter.get());
     }
 
 protected:
@@ -183,6 +202,8 @@ protected:
     map<string, int64_t> m_signeds;
     map<string, uint64_t> m_unsigneds;
     map<string, vector<int64_t>> m_signed_vectors;
+    map<string, vector<float>> m_float_vectors;
+    map<string, vector<std::string>> m_string_vectors;
 };
 
 class NodeBuilder : public AttributeVisitor
@@ -197,7 +218,6 @@ public:
     {
         shared_ptr<Node> node(FactoryRegistry<Node>::get().create(m_values.get_node_type_info()));
         node->visit_attributes(*this);
-        node->validate_and_infer_types();
         return node;
     }
 
@@ -215,10 +235,6 @@ public:
     {
         adapter.set(m_values.get_string(name));
     };
-    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
-    {
-        adapter.set(m_values.get_signed_vector(name));
-    }
     void on_adapter(const string& name, ValueAccessor<int64_t>& adapter) override
     {
         adapter.set(m_values.get_signed(name));
@@ -226,6 +242,18 @@ public:
     void on_adapter(const string& name, ValueAccessor<double>& adapter) override
     {
         adapter.set(m_values.get_double(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
+    {
+        adapter.set(m_values.get_signed_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
+    {
+        adapter.set(m_values.get_string_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<float>>& adapter) override
+    {
+        adapter.set(m_values.get_float_vector(name));
     }
 
 protected:
