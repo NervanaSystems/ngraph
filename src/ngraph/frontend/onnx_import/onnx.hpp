@@ -29,10 +29,10 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        /// \brief      Return the set of names of supported operators.
+        /// \brief      Return the set of names of supported operators which are supported.
         ///
-        /// \param[in]  version  The requested version of ONNX operators set
-        /// \param[in]  domain   The requested domain the operators where registered for
+        /// \param[in]  version  Determines set version of operators which are returned
+        /// \param[in]  domain   Determines domain of operators which are returned
         ///
         /// \return     The set containing names of supported operators
         NGRAPH_API
@@ -46,14 +46,13 @@ namespace ngraph
         /// \param[in]  domain   The domain the ONNX operator is registered to
         ///                      If not set default domain "ai.onnx" is used
         ///
-        /// \return     True if operator is supported, False otherwise.
+        /// \return     True if operator is supported, False otherwise
         NGRAPH_API
         bool is_operator_supported(const std::string& op_name,
                                    std::int64_t version,
                                    const std::string& domain = "ai.onnx");
 
-        /// \brief      Import and convert an ONNX model from stream to nGraph function.
-        ///             The function translated serialized ONNX model to nGraph function.
+        /// \brief      Import and convert an ONNX model from stream to an nGraph Function representation.
         ///             The serialized ONNX model is read from input stream.
         ///
         /// \note       If parsing stream fails or ONNX model contains not supported ops
@@ -61,12 +60,11 @@ namespace ngraph
         ///
         /// \param[in]  stream      The input stream (e.g. file stream, memory stream, etc)
         ///
-        /// \return     The function returns a nGraph function representing single output from graph
+        /// \return     The function returns a nGraph Function which represents single output from the created graph
         NGRAPH_API
         std::shared_ptr<Function> import_onnx_model(std::istream& stream);
 
-        /// \brief     Import and convert an ONNX model from file to nGraph function.
-        ///            The function translated serialized ONNX model to nGraph functions.
+        /// \brief     Import and convert an ONNX model from file to an nGraph Function representation.
         ///            The ONNX model is read from ONNX file.
         ///
         /// \note      If parsing file fails or ONNX model contains not supported ops
@@ -74,7 +72,7 @@ namespace ngraph
         ///
         /// \param[in] file_path  The path to file containing ONNX model (relative or absolute)
         ///
-        /// \return    The function returns a nGraph function representing single output from graph
+        /// \return    The function returns a nGraph Function which represents single output from the created graph
         NGRAPH_API
         std::shared_ptr<Function> import_onnx_model(const std::string& file_path);
 
