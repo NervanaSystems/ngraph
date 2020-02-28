@@ -284,3 +284,21 @@ TEST(attributes, user_op)
     EXPECT_EQ(g_oracle->get_hyper_parameters(), oracle->get_hyper_parameters());
     EXPECT_EQ(g_oracle->get_ultra_parameters(), oracle->get_ultra_parameters());
 }
+
+TEST(attributes, matmul_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::MatMul>();
+    auto A = make_shared<op::Parameter>(element::f32, Shape{0, 2});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{2, 0});
+
+    bool transpose_a = true;
+    bool transpose_b = true;
+
+    auto matmul = make_shared<opset1::MatMul>(A, B, transpose_a, transpose_b);
+
+    NodeBuilder builder(matmul);
+    auto g_matmul = as_type_ptr<opset1::MatMul>(builder.create());
+
+    EXPECT_EQ(g_matmul->get_transpose_a(), matmul->get_transpose_a());
+    EXPECT_EQ(g_matmul->get_transpose_b(), matmul->get_transpose_b());
+}
