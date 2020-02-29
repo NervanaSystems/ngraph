@@ -527,6 +527,11 @@ if (NGRAPH_USE_PREBUILT_MLIR)
         message(FATAL_ERROR "MLIR_LLVM_PREBUILT_PATH not specified")
     endif()
 endif()
+
+if(NGRAPH_DLDT_BUILD_ENABLE)
+	add_definitions(-DNGRAPH_DLDT_BUILD_ENABLE)
+endif()
+
 #-----------------------------------------------------------------------------------------------
 # enable or disable output from NGRAPH_DEBUG statements
 #-----------------------------------------------------------------------------------------------
