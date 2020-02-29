@@ -39,6 +39,7 @@ namespace ngraph
                 /// \param data Input tensor
                 Gelu(const Output<Node>& data);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual NodeVector decompose_op() const override;
 
                 void pre_validate_and_infer_types() override;
