@@ -720,9 +720,10 @@ namespace ngraph
     template <>
     class NGRAPH_API Output<Node>
     {
+#ifdef NGRAPH_DLDT_BUILD_ENABLE
         void eliminate_goe();
         void eliminate_goe(size_t index);
-
+#endif
     public:
         /// \brief Constructs a Output.
         /// \param node A pointer to the node for the output handle.
@@ -731,7 +732,9 @@ namespace ngraph
             : m_node(node->shared_from_this())
             , m_index(index)
         {
+#ifdef NGRAPH_DLDT_BUILD_ENABLE
             eliminate_goe(index);
+#endif
         }
 
         /// \brief Constructs a Output.
@@ -743,7 +746,9 @@ namespace ngraph
             : m_node(node)
             , m_index(index)
         {
+#ifdef NGRAPH_DLDT_BUILD_ENABLE
             eliminate_goe(index);
+#endif
         }
 
         /// \brief Constructs a Output, referencing the zeroth output of the node.
@@ -753,7 +758,9 @@ namespace ngraph
             : m_node(node)
             , m_index(0)
         {
+#ifdef NGRAPH_DLDT_BUILD_ENABLE
             eliminate_goe();
+#endif
         }
 
         /// A null output
@@ -842,8 +849,10 @@ namespace ngraph
     template <>
     class NGRAPH_API Output<const Node>
     {
+#ifdef NGRAPH_DLDT_BUILD_ENABLE
         void eliminate_goe();
         void eliminate_goe(size_t index);
+#endif
 
     public:
         /// \brief Constructs a Output.
@@ -853,7 +862,9 @@ namespace ngraph
             : m_node(node->shared_from_this())
             , m_index(index)
         {
+#ifdef NGRAPH_DLDT_BUILD_ENABLE
             eliminate_goe(index);
+#endif
         }
 
         /// \brief Constructs a Output.
@@ -865,7 +876,9 @@ namespace ngraph
             : m_node(node)
             , m_index(index)
         {
+#ifdef NGRAPH_DLDT_BUILD_ENABLE
             eliminate_goe(index);
+#endif
         }
 
         /// \brief Constructs a Output, referencing the zeroth output of the node.
@@ -874,7 +887,9 @@ namespace ngraph
         Output(const std::shared_ptr<T>& node)
             : Output(node, 0)
         {
+#ifdef NGRAPH_DLDT_BUILD_ENABLE
             eliminate_goe();
+#endif
         }
 
         /// A null output

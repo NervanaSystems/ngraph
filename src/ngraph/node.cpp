@@ -1011,7 +1011,7 @@ void Output<Node>::replace(const Output<Node>& replacement)
         }
     }
 }
-
+#ifdef NGRAPH_DLDT_BUILD_ENABLE
 void Output<Node>::eliminate_goe()
 {
     if (auto goe = as_type_ptr<op::GetOutputElement>(m_node))
@@ -1045,7 +1045,7 @@ void Output<const Node>::eliminate_goe(size_t index)
         m_node = goe->input_value(0).get_node_shared_ptr();
     }
 }
-
+#endif
 Input<Node> Node::input(size_t input_index)
 {
     if (input_index >= m_inputs.size())
