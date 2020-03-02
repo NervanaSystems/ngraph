@@ -29,6 +29,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/serializer.hpp"
+#include "ngraph/chrome_trace.hpp"
 #include "util/all_close.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/ndarray.hpp"
@@ -711,4 +712,16 @@ TEST(util, topological_sort_replace)
     f->get_ordered_ops();
 
     EXPECT_TRUE(custom_sorter_used);
+}
+
+TEST(util, chrome_trace)
+{
+    stopwatch timer;
+    timer.start();
+    for (size_t i=0; i<10000000; i++)
+    {
+        runtime::event::Duration d1("test", "test");
+    }
+    timer.stop();
+    NGRAPH_INFO << "trace " << timer.get_microseconds();
 }

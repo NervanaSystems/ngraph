@@ -65,26 +65,28 @@ void runtime::event::Duration::write()
         lock_guard<mutex> lock(Manager::get_mutex());
 
         ofstream& out = runtime::event::Manager::get_output_stream();
+        stringstream ss;
         if (out.is_open() == false)
         {
             runtime::event::Manager::open();
         }
         else
         {
-            Manager::get_output_stream() << ",\n";
+           ss << ",\n";
         }
 
-        Manager::get_output_stream() <<
+       ss <<
             R"({"name":")" << m_name << R"(","cat":")" << m_category << R"(","ph":"X","pid":)"
                                      << Manager::get_process_id() << R"(,"tid":)"
                                      << Manager::get_thread_id() <<
             R"(,"ts":)" << m_start << R"(,"dur":)" << (stop_time - m_start);
         if (!m_args.empty())
         {
-            out <<
+            ss <<
                 R"(,"args":)" << m_args;
         }
-        out << "}";
+        ss << "}";
+        out << ss.str();
     }
 }
 
@@ -103,7 +105,7 @@ runtime::event::Object::Object(const string& name, const string& args)
         }
         else
         {
-            Manager::get_output_stream() << ",\n";
+            out << ",\n";
         }
         out << R"({"name":")" << m_name << R"(","ph":"N","id":")" << m_id <<
             R"(","ts":)" << Manager::get_current_microseconds() <<
