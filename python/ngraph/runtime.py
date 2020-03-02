@@ -15,7 +15,7 @@
 # ******************************************************************************
 """Provide a layer of abstraction for the ngraph++ runtime environment."""
 import logging
-from typing import List, Union
+from typing import Dict, List, Union
 
 import numpy as np
 
@@ -41,6 +41,10 @@ class Runtime:
     def __init__(self, backend_name):  # type: (str) -> None
         self.backend_name = backend_name
         self.backend = Backend.create(backend_name)
+
+    def set_config(self, config):  # type: (Dict[str, str]) -> None
+        """Set the backend configuration."""
+        self.backend.set_config(config, '')
 
     def __repr__(self):  # type: () -> str
         return "<Runtime: Backend='{}'>".format(self.backend_name)
