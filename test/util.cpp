@@ -712,7 +712,3 @@ TEST(util, topological_sort_replace)
 
     EXPECT_TRUE(custom_sorter_used);
 }
-
-TEST(util, log)
-{
-}
