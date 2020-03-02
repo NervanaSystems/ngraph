@@ -1898,6 +1898,43 @@ TEST(constant_folding, constant_v1_split)
     ASSERT_TRUE(test::all_close_f(vector<float>(data.begin() + 4, data.end()), res3_values));
 }
 
+#ifdef NGRAPH_DLDT_BUILD_ENABLE
+TEST(constant_folding, constant_v1_split_specialized)
+{
+    vector<float> data{.1f, .2f, .3f, .4f, .5f, .6f};
+    const auto const_data = op::Constant::create(element::f32, Shape{data.size()}, data);
+    const auto const_axis = op::Constant::create(element::i64, Shape{}, {0});
+    const auto num_splits = 3;
+
+    auto split_v1 = make_shared<op::v1::Split>(const_data, const_axis, num_splits);
+    auto f = make_shared<Function>(split_v1->outputs(), ParameterVector{});
+
+    auto specialized_function = ::ngraph::specialize_function(
+        std::const_pointer_cast<ngraph::Function>(f), {}, {}, {}, true, true);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Split>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), num_splits);
+
+    auto res1 = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto res2 = as_type_ptr<op::Constant>(f->get_results().at(1)->get_argument(0));
+    auto res3 = as_type_ptr<op::Constant>(f->get_results().at(2)->get_argument(0));
+    ASSERT_TRUE(res1);
+    ASSERT_TRUE(res2);
+    ASSERT_TRUE(res3);
+
+    auto res1_values = res1->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>(data.begin(), data.begin() + 2), res1_values));
+    auto res2_values = res2->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>(data.begin() + 2, data.begin() + 4), res2_values));
+    auto res3_values = res3->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>(data.begin() + 4, data.end()), res3_values));
+}
+#endif
+
 TEST(constant_folding, constant_v1_split_axis_1_4_splits)
 {
     vector<int64_t> data{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
