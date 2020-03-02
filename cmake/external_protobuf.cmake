@@ -24,11 +24,7 @@ include(ExternalProject)
 # This version of PROTOBUF is required by Microsoft ONNX Runtime.
 set(NGRAPH_PROTOBUF_GIT_REPO_URL "https://github.com/protocolbuffers/protobuf")
 
-if(NGRAPH_ONNX_IMPORT_ENABLE)
-    set(NGRAPH_PROTOBUF_GIT_TAG "v3.5.2")
-else()
-    set(NGRAPH_PROTOBUF_GIT_TAG "v3.6.1")
-endif()
+set(NGRAPH_PROTOBUF_GIT_TAG "v3.7.1")
 
 set(Protobuf_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/protobuf)
 set(Protobuf_PROTOC_EXECUTABLE ${Protobuf_INSTALL_PREFIX}/bin/protoc)
@@ -124,32 +120,14 @@ endif()
 # Use the interface of FindProtobuf.cmake
 # -----------------------------------------------------------------------------
 
-if(NGRAPH_ONNX_IMPORT_ENABLE)
-    if (NOT TARGET libprotobuf)
-        add_library(libprotobuf INTERFACE)
-        if (WIN32)
-            target_link_libraries(libprotobuf INTERFACE
-                debug ${Protobuf_INSTALL_PREFIX}/lib/libprotobufd.lib
-                optimized ${Protobuf_INSTALL_PREFIX}/lib/libprotobuf.lib)
-        else()
-            target_link_libraries(libprotobuf INTERFACE
-                ${Protobuf_INSTALL_PREFIX}/lib/libprotobuf.a)
-        endif()
-        set_target_properties(libprotobuf PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES "${Protobuf_INCLUDE_DIR}")
-        add_dependencies(libprotobuf ext_protobuf)
-    endif()
-    set(Protobuf_LIBRARIES libprotobuf)
-else()
-    if (NOT TARGET protobuf::libprotobuf)
-        add_library(protobuf::libprotobuf UNKNOWN IMPORTED)
-        set_target_properties(protobuf::libprotobuf PROPERTIES
-            INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${Protobuf_INCLUDE_DIR}"
-            IMPORTED_LOCATION "${Protobuf_LIBRARY}")
-        add_dependencies(protobuf::libprotobuf ext_protobuf)
-    endif()
-    set(Protobuf_LIBRARIES protobuf::libprotobuf)
+if (NOT TARGET protobuf::libprotobuf)
+    add_library(protobuf::libprotobuf UNKNOWN IMPORTED)
+    set_target_properties(protobuf::libprotobuf PROPERTIES
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${Protobuf_INCLUDE_DIR}"
+        IMPORTED_LOCATION "${Protobuf_LIBRARY}")
+    add_dependencies(protobuf::libprotobuf ext_protobuf)
 endif()
+set(Protobuf_LIBRARIES protobuf::libprotobuf)
 
 if (NOT TARGET protobuf::protoc)
     add_executable(protobuf::protoc IMPORTED)
