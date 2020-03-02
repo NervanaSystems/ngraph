@@ -42,7 +42,7 @@ std::cout << "Is Abs in version 12, domain `ai.onnx`supported: " << (is_abs_op_s
 ```
 
 ## How to import ONNX model
-In order to import ONNX model `import_onnx_model` should be used.
+In order to import ONNX model `import_onnx_model` function should be used.
 The method has two overloads.
 The first uses stream as input (e.g. file stream, memory stream).
 The code listing below shows how to convert `ResNet50` ONNX model to nGraph function.
