@@ -45,12 +45,10 @@ void pass::ConstantFolding::construct_constant_split()
             split.get(), axis_val, data_node->get_output_partial_shape(0).rank());
         const auto slices = builder::split(data_node, split->get_num_splits(), norm_axis_val);
 
-        for (size_t i = 0; i < split->get_output_size(); i++)
+        int index = 0;
+        for (auto& output : split->outputs())
         {
-            for (auto& input : split->output(i).get_target_inputs())
-            {
-                input.replace_source_output((slices[i]->output(0)));
-            }
+            output.replace(slices[index++]->output(0));
         }
         split->outputs().clear();
         construct_constant_slice();
