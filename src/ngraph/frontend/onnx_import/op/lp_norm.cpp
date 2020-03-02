@@ -55,7 +55,7 @@ namespace ngraph
                         << "Invalid `p` attribute value: " << p_norm
                         << "Only normalization of 1st or 2nd order is supported.";
 
-                    std::shared_ptr<ngraph::Node> norm = ngraph::builder::lp_norm(
+                    std::shared_ptr<ngraph::Node> norm = ngraph::builder::opset1::lp_norm(
                         data, AxisSet{normalize_axis}, static_cast<std::size_t>(p_norm));
 
                     const auto target_shape = default_opset::Constant::create(

@@ -130,7 +130,7 @@ void op::v1::Gather::validate_and_infer_types()
                               ").");
     }
 
-    auto axis = get_axis();
+    int64_t axis = get_axis();
     if (input_rank.is_static() && axis != AXIS_NOT_SET_VALUE)
     {
         NODE_VALIDATION_CHECK(this,

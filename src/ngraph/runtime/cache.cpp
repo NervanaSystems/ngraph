@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cache.hpp"
+#include "ngraph/env_util.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -22,14 +23,14 @@ using namespace std;
 // Constructor
 runtime::LRUCache::LRUCache()
 {
-    char* cache_size = getenv("NGRAPH_CACHE_SIZE");
-    if (cache_size == nullptr)
+    int32_t cache_size = getenv_int("NGRAPH_CACHE_SIZE");
+    if (cache_size <= 0)
     {
         m_cache_size = 1024; // TODO(nbpatel): Figure out a default size for the cache
     }
     else
     {
-        m_cache_size = atoi(cache_size);
+        m_cache_size = cache_size;
     }
 
     m_map = {};

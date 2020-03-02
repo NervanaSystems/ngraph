@@ -45,7 +45,8 @@ namespace ngraph
                 ///
                 Abs(const Output<Node>& arg);
 
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
