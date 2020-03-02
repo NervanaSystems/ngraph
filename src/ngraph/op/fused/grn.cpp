@@ -17,6 +17,7 @@
 #include <iterator>
 
 #include "grn.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/builder/reshape.hpp"
@@ -34,6 +35,12 @@ op::GRN::GRN(const Output<Node>& data, float bias)
     , m_bias(bias)
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::GRN::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("bias", m_bias);
+    return true;
 }
 
 void op::GRN::pre_validate_and_infer_types()
