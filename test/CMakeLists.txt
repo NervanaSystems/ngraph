@@ -490,10 +490,6 @@ if (NGRAPH_MLIR_ENABLE)
     list(APPEND SRC mlir/ops_test.cpp)
 endif()
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend/distributed.in.cpp)
-endif()
-
 if (NGRAPH_CPU_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/graph_comparison.in.cpp)
 endif()
