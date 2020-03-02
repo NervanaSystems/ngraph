@@ -80,7 +80,7 @@ const vector<int64_t>& AttributeAdapter<CoordinateDiff>::get()
 
 void AttributeAdapter<CoordinateDiff>::set(const vector<int64_t>& value)
 {
-    m_value = copy_from<CoordinateDiff>(m_value);
+    m_value = copy_from<CoordinateDiff>(value);
     m_buffer_valid = false;
 }
 

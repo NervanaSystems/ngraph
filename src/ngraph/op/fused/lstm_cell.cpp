@@ -17,6 +17,7 @@
 #include <cmath>
 #include <functional>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/add.hpp"
@@ -105,6 +106,19 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
     , m_weights_format{weights_format}
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::LSTMCell::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("hidden_size", m_hidden_size);
+    visitor.on_attribute("activations", m_activations);
+    visitor.on_attribute("activations_alpha", m_activations_alpha);
+    visitor.on_attribute("activations_beta", m_activations_beta);
+    visitor.on_attribute("clip", m_clip);
+
+    visitor.on_attribute("input_forget", m_input_forget);
+    visitor.on_attribute("weights_format", m_weights_format);
+    return true;
 }
 
 void op::LSTMCell::pre_validate_and_infer_types()
@@ -386,3 +400,26 @@ shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) co
         throw ngraph_error("Incorrect number of new arguments");
     }
 }
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::LSTMWeightsFormat>& EnumNames<op::LSTMWeightsFormat>::get()
+    {
+        static auto enum_names =
+            EnumNames<op::LSTMWeightsFormat>("op::LSTMWeightsFormat",
+                                             {{"fico", op::LSTMWeightsFormat::FICO},
+                                              {"icof", op::LSTMWeightsFormat::ICOF},
+                                              {"ifco", op::LSTMWeightsFormat::IFCO},
+                                              {"ifoc", op::LSTMWeightsFormat::IFOC},
+                                              {"iofc", op::LSTMWeightsFormat::IOFC}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::LSTMWeightsFormat>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::LSTMWeightsFormat& type)
+    {
+        return s << as_string(type);
+    }
+} // namespace ngraph
