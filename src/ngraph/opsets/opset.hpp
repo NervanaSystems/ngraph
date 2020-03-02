@@ -32,10 +32,7 @@ namespace ngraph
         static std::mutex& get_mutex();
 
     public:
-        OpSet()
-        {
-        }
-
+        OpSet() {}
         std::set<NodeTypeInfo>::size_type size() const
         {
             std::lock_guard<std::mutex> guard(get_mutex());
