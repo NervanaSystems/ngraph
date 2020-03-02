@@ -166,6 +166,8 @@ create_tensor_2_output
 # Not implemented
 batch_mat_mul_forward
 backwards_batchmatmul_tensor2_tensor2
+bool_init_and
+bool_input_or
 erf
 zero_sized_erf
 model_erf

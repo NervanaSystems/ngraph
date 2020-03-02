@@ -21,6 +21,7 @@
 #include "cpu_backend_visibility.h"
 
 #include "ngraph/component_manager.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
@@ -94,7 +95,7 @@ shared_ptr<runtime::Executable>
                                        bool performance_counters_enabled)
 {
 #ifdef NGRAPH_MLIR_ENABLE
-    if (std::getenv("NGRAPH_MLIR") != nullptr)
+    if (getenv_bool("NGRAPH_MLIR"))
     {
         // Initialize MLIR compiler
         ngmlir::MLIRCompiler::init();
