@@ -58,19 +58,6 @@ if [ "$(echo ${CMD_TO_RUN} | grep build | wc -l)" != "0" ] ; then
     chmod ug+rwx ${OUTPUT_DIR}
 fi
 
-#TODO: add openmpi dependency to enable building with -DNGRAPH_DISTRIBUTED_ENABLE=TRUE
-#
-#if [ -z ${NGRAPH_DISTRIBUTED_ENABLE} ] ; then
-#  NGRAPH_DISTRIBUTED_ENABLE=false
-#fi
-
-#if $NGRAPH_DISTRIBUTED_ENABLE; then
-#   source /home/environment-openmpi-ci.source
-#   which mpirun
-#   mpirun --version
-#   export CMAKE_OPTIONS_EXTRA="-DNGRAPH_DISTRIBUTED_ENABLE=$NGRAPH_DISTRIBUTED_ENABLE"
-#fi
-
 GCC_VERSION=` gcc --version | grep gcc | cut -f 2 -d ')' | cut -f 2 -d ' ' | cut -f 1,2 -d '.'`
 
 # Set the -DNGRAPH_USE_PREBUILT_LLVM=TRUE for appropriate build environments
