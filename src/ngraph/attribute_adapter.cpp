@@ -242,4 +242,40 @@ namespace ngraph
         m_value = copy_from<vector<uint64_t>>(value);
         m_buffer_valid = false;
     }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<float>>::type_info;
+
+    const vector<float>& AttributeAdapter<vector<float>>::get()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = copy_from<vector<float>>(m_value);
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+
+    void AttributeAdapter<vector<float>>::set(const vector<float>& value)
+    {
+        m_value = copy_from<vector<float>>(value);
+        m_buffer_valid = false;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<string>>::type_info;
+
+    const vector<string>& AttributeAdapter<vector<string>>::get()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = copy_from<vector<string>>(m_value);
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+
+    void AttributeAdapter<vector<string>>::set(const vector<string>& value)
+    {
+        m_value = copy_from<vector<string>>(value);
+        m_buffer_valid = false;
+    }
 }
