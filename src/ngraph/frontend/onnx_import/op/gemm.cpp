@@ -73,7 +73,7 @@ namespace ngraph
                     input_a = ngraph::builder::opset1::flatten(input_a, 1);
                     input_b = ngraph::builder::opset1::flatten(input_b, 1);
 
-                    auto matmul_node = std::make_shared<ngraph::op::MatMul>(input_a, input_b);
+                    auto matmul_node = std::make_shared<default_opset::MatMul>(input_a, input_b);
 
                     auto alpha_times_product =
                         std::make_shared<default_opset::Multiply>(alpha_node, matmul_node);

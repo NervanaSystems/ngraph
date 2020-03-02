@@ -719,7 +719,7 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
     }
 }
 
-extern "C" void __mlir_callback_1_input(void* input, void* output, size_t index, OpType type)
+extern "C" void _mlir_ciface_callback_1_input(void* input, void* output, size_t index, OpType type)
 {
     auto unrankedMemRefInput = reinterpret_cast<UnrankedMemRef*>(input);
     auto unrankedMemRefOutput = reinterpret_cast<UnrankedMemRef*>(output);
@@ -752,8 +752,8 @@ extern "C" void __mlir_callback_1_input(void* input, void* output, size_t index,
     }
 }
 
-extern "C" void
-    __mlir_callback_2_inputs(void* input0, void* input1, void* output, size_t index, OpType type)
+extern "C" void _mlir_ciface_callback_2_inputs(
+    void* input0, void* input1, void* output, size_t index, OpType type)
 {
     auto unrankedMemRefInput0 = reinterpret_cast<UnrankedMemRef*>(input0);
     auto unrankedMemRefInput1 = reinterpret_cast<UnrankedMemRef*>(input1);
@@ -780,7 +780,7 @@ extern "C" void
     }
 }
 
-extern "C" void __mlir_callback_3_inputs(
+extern "C" void _mlir_ciface_callback_3_inputs(
     void* input0, void* input1, void* input2, void* output, size_t index, OpType type)
 {
     auto unrankedMemRefInput0 = reinterpret_cast<UnrankedMemRef*>(input0);

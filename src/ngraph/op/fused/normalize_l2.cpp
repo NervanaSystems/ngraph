@@ -22,7 +22,6 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -97,7 +96,8 @@ NodeVector op::NormalizeL2::decompose_op() const
     // Calculate l2 norm across axes determined by axes input
     auto builder_bias_mode =
         (m_eps_mode == EpsMode::MAX) ? builder::BiasMode::MAX : builder::BiasMode::ADD;
-    Output<Node> norm = builder::l2_norm(data, reduction_axes, m_eps, builder_bias_mode, true);
+    Output<Node> norm =
+        builder::opset1::l2_norm(data, reduction_axes, m_eps, builder_bias_mode, true);
 
     data = make_shared<op::Divide>(data, norm, AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
