@@ -260,6 +260,31 @@ protected:
     NodeSaver m_values;
 };
 
+TEST(attributes, user_op)
+{
+    FactoryRegistry<Node>::get().register_factory<Oracle>();
+    auto program = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto oracle = make_shared<Oracle>(program,
+                                      data,
+                                      TuringModel::XL1200,
+                                      2,
+                                      4,
+                                      "12AU7",
+                                      true,
+                                      vector<uint64_t>{1, 2, 4, 8},
+                                      vector<int64_t>{-1, -2, -4, -8});
+    NodeBuilder builder(oracle);
+    auto g_oracle = as_type_ptr<Oracle>(builder.create());
+
+    EXPECT_EQ(g_oracle->get_turing_model(), oracle->get_turing_model());
+    EXPECT_EQ(g_oracle->get_model_version(), oracle->get_model_version());
+    EXPECT_EQ(g_oracle->get_serial_number(), oracle->get_serial_number());
+    EXPECT_EQ(g_oracle->get_enable_turbo(), oracle->get_enable_turbo());
+    EXPECT_EQ(g_oracle->get_hyper_parameters(), oracle->get_hyper_parameters());
+    EXPECT_EQ(g_oracle->get_ultra_parameters(), oracle->get_ultra_parameters());
+}
+
 TEST(attributes, elu_op)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::Elu>();
