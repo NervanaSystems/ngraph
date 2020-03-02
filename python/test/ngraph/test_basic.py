@@ -211,3 +211,9 @@ def test_constant_get_data_unsigned_integer(data_type):
     node = ng.constant(input_data, dtype=data_type)
     retrieved_data = node.get_data()
     assert np.allclose(input_data, retrieved_data)
+
+
+def test_backend_config():
+    dummy_config = {'dummy_option': 'dummy_value'}
+    # Expect no throw
+    ng.runtime(backend_name=test.BACKEND_NAME).set_config(dummy_config)
