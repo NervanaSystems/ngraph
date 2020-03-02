@@ -320,6 +320,20 @@ TEST(attributes, fake_quantize_op)
     EXPECT_EQ(g_fake_quantize->get_auto_broadcast(), fake_quantize->get_auto_broadcast());
 }
 
+TEST(attributes, grn_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::GRN>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+
+    float bias = 1.25f;
+
+    auto grn = make_shared<opset1::GRN>(data, bias);
+    NodeBuilder builder(grn);
+    auto g_grn = as_type_ptr<opset1::GRN>(builder.create());
+
+    EXPECT_EQ(g_grn->get_bias(), grn->get_bias());
+}
+
 TEST(attributes, lrn_op)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::LRN>();
