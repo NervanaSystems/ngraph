@@ -101,7 +101,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    runtime::event::Duration d1("call", "Interpreter");
+    event::Duration d1("call", "Interpreter");
 
     // convert inputs to HostTensor
     vector<shared_ptr<HostTensor>> func_inputs;
@@ -150,7 +150,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
     // for each ordered op in the graph
     for (auto op : m_nodes)
     {
-        runtime::event::Duration d2(op->description(), "Interpreter");
+        event::Duration d2(op->description(), "Interpreter");
         if (op->is_parameter())
         {
             continue;
