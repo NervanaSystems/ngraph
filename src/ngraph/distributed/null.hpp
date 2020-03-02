@@ -20,7 +20,6 @@
 #include <string>
 
 #include "ngraph/distributed.hpp"
-#include "ngraph/except.hpp"
 
 namespace ngraph
 {
