@@ -86,7 +86,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, output_names_check)
     for (std::size_t i{0}; i < size; ++i)
     {
         std::shared_ptr<Node> node = function->get_output_op(i);
-        EXPECT_EQ(node->get_friendly_name(), "output_" + std::to_string(i + 1));
+        EXPECT_EQ(node->get_friendly_name(), "Result: output_" + std::to_string(i + 1));
     }
 }
 

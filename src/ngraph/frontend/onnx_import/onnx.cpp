@@ -75,7 +75,8 @@ namespace ngraph
                 graph.get_ng_outputs(), graph.get_ng_parameters(), graph.get_name());
             for (std::size_t i{0}; i < function->get_output_size(); ++i)
             {
-                function->get_output_op(i)->set_friendly_name(graph.get_outputs().at(i).get_name());
+                function->get_output_op(i)->set_friendly_name("Result: " +
+                                                              graph.get_outputs().at(i).get_name());
             }
             return function;
         }
