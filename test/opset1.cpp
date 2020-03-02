@@ -171,9 +171,7 @@ constexpr NodeTypeInfo NewOp::type_info;
 TEST(opset, new_op)
 {
     // Copy opset1; don't bash the real thing in a test
-    FactoryRegistry<Node> ext_factory = FactoryRegistry<Node>::get();
     OpSet opset1_copy(get_opset1());
-    opset1_copy.set_factory_registry(&ext_factory);
     opset1_copy.insert<NewOp>();
     {
         shared_ptr<Node> op(opset1_copy.create(NewOp::type_info.name));
