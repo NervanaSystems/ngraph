@@ -46,16 +46,25 @@ namespace ngraph
         {
             on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
         };
-        virtual void on_adapter(const std::string& name,
-                                ValueAccessor<std::vector<int64_t>>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
         virtual void on_adapter(const std::string& name, ValueAccessor<int64_t>& adapter)
         {
             on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
         }
         virtual void on_adapter(const std::string& name, ValueAccessor<double>& adapter)
+        {
+            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
+        }
+        virtual void on_adapter(const std::string& name,
+                                ValueAccessor<std::vector<int64_t>>& adapter)
+        {
+            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
+        }
+        virtual void on_adapter(const std::string& name, ValueAccessor<std::vector<float>>& adapter)
+        {
+            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
+        }
+        virtual void on_adapter(const std::string& name,
+                                ValueAccessor<std::vector<std::string>>& adapter)
         {
             on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
         }
@@ -66,6 +75,12 @@ namespace ngraph
         void on_attribute(const std::string& name, T& value)
         {
             AttributeAdapter<T> adapter(value);
+            on_adapter(name, adapter);
+        }
+
+        void on_attribute(const std::string& name, op::AutoBroadcastSpec& value)
+        {
+            AttributeAdapter<op::AutoBroadcastType> adapter(value.m_type);
             on_adapter(name, adapter);
         }
     };
