@@ -450,6 +450,259 @@ TEST(attributes, psroi_pooling_op)
     EXPECT_EQ(g_psroi_pool->get_mode(), psroi_pool->get_mode());
 }
 
+TEST(attributes, reduce_logical_and_op)
+{
+    // ReduceLogicalAnd derives visit_attributes from op::util::LogicalReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceLogicalAnd>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_logical_and = make_shared<opset1::ReduceSum>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_logical_and);
+    auto g_reduce_logical_and = as_type_ptr<opset1::ReduceSum>(builder.create());
+
+    EXPECT_EQ(g_reduce_logical_and->get_keep_dims(), reduce_logical_and->get_keep_dims());
+}
+
+TEST(attributes, reduce_logical_or_op)
+{
+    // ReduceLogicalOr derives visit_attributes from op::util::LogicalReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceLogicalOr>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_logical_or = make_shared<opset1::ReduceLogicalOr>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_logical_or);
+    auto g_reduce_logical_or = as_type_ptr<opset1::ReduceLogicalOr>(builder.create());
+
+    EXPECT_EQ(g_reduce_logical_or->get_keep_dims(), reduce_logical_or->get_keep_dims());
+}
+
+TEST(attributes, reduce_max_op)
+{
+    // ReduceMax derives visit_attributes from op::util::ArithmeticReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceMax>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_max = make_shared<opset1::ReduceMax>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_max);
+    auto g_reduce_max = as_type_ptr<opset1::ReduceMax>(builder.create());
+
+    EXPECT_EQ(g_reduce_max->get_keep_dims(), reduce_max->get_keep_dims());
+}
+
+TEST(attributes, reduce_mean_op)
+{
+    // ReduceMean derives visit_attributes from op::util::ArithmeticReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceMean>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_mean = make_shared<opset1::ReduceMean>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_mean);
+    auto g_reduce_mean = as_type_ptr<opset1::ReduceMean>(builder.create());
+
+    EXPECT_EQ(g_reduce_mean->get_keep_dims(), reduce_mean->get_keep_dims());
+}
+
+TEST(attributes, reduce_min_op)
+{
+    // ReduceMin derives visit_attributes from op::util::ArithmeticReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceMin>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_min = make_shared<opset1::ReduceMin>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_min);
+    auto g_reduce_min = as_type_ptr<opset1::ReduceMin>(builder.create());
+
+    EXPECT_EQ(g_reduce_min->get_keep_dims(), reduce_min->get_keep_dims());
+}
+
+TEST(attributes, reduce_prod_op)
+{
+    // ReduceProd derives visit_attributes from op::util::ArithmeticReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceProd>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_prod = make_shared<opset1::ReduceProd>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_prod);
+    auto g_reduce_prod = as_type_ptr<opset1::ReduceProd>(builder.create());
+
+    EXPECT_EQ(g_reduce_prod->get_keep_dims(), reduce_prod->get_keep_dims());
+}
+
+TEST(attributes, reduce_sum_op)
+{
+    // ReduceSum derives visit_attributes from op::util::ArithmeticReductionKeepDims
+    FactoryRegistry<Node>::get().register_factory<opset1::ReduceSum>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto reduction_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    bool keep_dims = true;
+
+    auto reduce_sum = make_shared<opset1::ReduceSum>(data, reduction_axes, keep_dims);
+    NodeBuilder builder(reduce_sum);
+    auto g_reduce_sum = as_type_ptr<opset1::ReduceSum>(builder.create());
+
+    EXPECT_EQ(g_reduce_sum->get_keep_dims(), reduce_sum->get_keep_dims());
+}
+
+TEST(attributes, region_yolo_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::RegionYolo>();
+    auto data = make_shared<op::Parameter>(element::i64, Shape{1, 255, 26, 26});
+
+    size_t num_coords = 4;
+    size_t num_classes = 1;
+    size_t num_regions = 6;
+    auto do_softmax = false;
+    auto mask = std::vector<int64_t>{0, 1};
+    auto axis = 1;
+    auto end_axis = 3;
+    auto anchors = std::vector<float>{10, 14, 23, 27, 37, 58, 81, 82, 135, 169, 344, 319};
+
+    auto region_yolo = make_shared<opset1::RegionYolo>(
+        data, num_coords, num_classes, num_regions, do_softmax, mask, axis, end_axis, anchors);
+    NodeBuilder builder(region_yolo);
+    auto g_region_yolo = as_type_ptr<opset1::RegionYolo>(builder.create());
+
+    EXPECT_EQ(g_region_yolo->get_num_coords(), region_yolo->get_num_coords());
+    EXPECT_EQ(g_region_yolo->get_num_classes(), region_yolo->get_num_classes());
+    EXPECT_EQ(g_region_yolo->get_num_regions(), region_yolo->get_num_regions());
+    EXPECT_EQ(g_region_yolo->get_do_softmax(), region_yolo->get_do_softmax());
+    EXPECT_EQ(g_region_yolo->get_mask(), region_yolo->get_mask());
+    EXPECT_EQ(g_region_yolo->get_anchors(), region_yolo->get_anchors());
+    EXPECT_EQ(g_region_yolo->get_axis(), region_yolo->get_axis());
+    EXPECT_EQ(g_region_yolo->get_end_axis(), region_yolo->get_end_axis());
+}
+
+TEST(attributes, reshape_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Reshape>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4});
+    auto pattern = make_shared<op::Parameter>(element::i32, Shape{2});
+
+    bool special_zero = true;
+
+    auto reshape = make_shared<opset1::Reshape>(data, pattern, special_zero);
+    NodeBuilder builder(reshape);
+    auto g_reshape = as_type_ptr<opset1::Reshape>(builder.create());
+
+    EXPECT_EQ(g_reshape->get_special_zero(), reshape->get_special_zero());
+}
+
+TEST(attributes, reverse_op_enum_mode)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Reverse>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto reversed_axes = make_shared<op::Parameter>(element::i32, Shape{200});
+
+    auto reverse = make_shared<opset1::Reverse>(data, reversed_axes, opset1::Reverse::Mode::INDEX);
+    NodeBuilder builder(reverse);
+    auto g_reverse = as_type_ptr<opset1::Reverse>(builder.create());
+
+    EXPECT_EQ(g_reverse->get_mode(), reverse->get_mode());
+}
+
+TEST(attributes, reverse_op_string_mode)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Reverse>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto reversed_axes = make_shared<op::Parameter>(element::i32, Shape{200});
+
+    std::string mode = "index";
+
+    auto reverse = make_shared<opset1::Reverse>(data, reversed_axes, mode);
+    NodeBuilder builder(reverse);
+    auto g_reverse = as_type_ptr<opset1::Reverse>(builder.create());
+
+    EXPECT_EQ(g_reverse->get_mode(), reverse->get_mode());
+}
+
+TEST(attributes, reverse_sequence_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::ReverseSequence>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 2});
+    auto seq_indices = make_shared<op::Parameter>(element::i32, Shape{4});
+
+    auto batch_axis = 2;
+    auto seq_axis = 1;
+
+    auto reverse_sequence =
+        make_shared<opset1::ReverseSequence>(data, seq_indices, batch_axis, seq_axis);
+    NodeBuilder builder(reverse_sequence);
+    auto g_reverse_sequence = as_type_ptr<opset1::ReverseSequence>(builder.create());
+
+    EXPECT_EQ(g_reverse_sequence->get_origin_batch_axis(),
+              reverse_sequence->get_origin_batch_axis());
+    EXPECT_EQ(g_reverse_sequence->get_origin_sequence_axis(),
+              reverse_sequence->get_origin_sequence_axis());
+}
+
+TEST(attributes, rnn_cell_op_custom_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::RNNCell>();
+    auto X = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto H = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto W = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+    auto R = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+
+    const size_t hidden_size = 3;
+    auto activations = std::vector<std::string>{"sigmoid", "tanh"};
+    auto activations_alpha = std::vector<float>{1.0, 1.5};
+    auto activations_beta = std::vector<float>{2.0, 1.0};
+    float clip = 1.0;
+
+    auto rnn_cell = make_shared<opset1::RNNCell>(
+        X, H, W, R, hidden_size, activations, activations_alpha, activations_beta, clip);
+
+    NodeBuilder builder(rnn_cell);
+    auto g_rnn_cell = as_type_ptr<opset1::RNNCell>(builder.create());
+
+    EXPECT_EQ(g_rnn_cell->get_hidden_size(), rnn_cell->get_hidden_size());
+    EXPECT_EQ(g_rnn_cell->get_clip(), rnn_cell->get_clip());
+    EXPECT_EQ(g_rnn_cell->get_activations(), rnn_cell->get_activations());
+    EXPECT_EQ(g_rnn_cell->get_activations_alpha(), rnn_cell->get_activations_alpha());
+    EXPECT_EQ(g_rnn_cell->get_activations_beta(), rnn_cell->get_activations_beta());
+}
+
+TEST(attributes, rnn_cell_op_default_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::RNNCell>();
+    auto X = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto H = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto W = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+    auto R = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+
+    const size_t hidden_size = 3;
+
+    auto rnn_cell = make_shared<opset1::RNNCell>(X, H, W, R, hidden_size);
+
+    NodeBuilder builder(rnn_cell);
+    auto g_rnn_cell = as_type_ptr<opset1::RNNCell>(builder.create());
+
+    EXPECT_EQ(g_rnn_cell->get_hidden_size(), rnn_cell->get_hidden_size());
+    EXPECT_EQ(g_rnn_cell->get_clip(), rnn_cell->get_clip());
+    EXPECT_EQ(g_rnn_cell->get_activations(), rnn_cell->get_activations());
+    EXPECT_EQ(g_rnn_cell->get_activations_alpha(), rnn_cell->get_activations_alpha());
+    EXPECT_EQ(g_rnn_cell->get_activations_beta(), rnn_cell->get_activations_beta());
+}
+
 TEST(attributes, elu_op)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::Elu>();

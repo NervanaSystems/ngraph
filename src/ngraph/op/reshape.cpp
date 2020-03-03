@@ -156,6 +156,12 @@ op::v1::Reshape::Reshape(const Output<Node>& arg, const Output<Node>& pattern, b
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::Reshape::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("special_zero", m_special_zero);
+    return true;
+}
+
 void op::v1::Reshape::validate_and_infer_types()
 {
     auto pattern_et = get_input_element_type(1);
