@@ -42,8 +42,8 @@ namespace ngraph
                 /// Return the equilent Output<Node>
                 Output<Node> get_as_output() const;
 
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& inputs) const override;
                 void validate_and_infer_types() override;
 
                 /// \return The index of the tuple element to get.
