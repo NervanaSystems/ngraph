@@ -56,7 +56,7 @@ size_t runtime::cpu::pass::CPUMemoryAssignment::get_bufferID(descriptor::Tensor*
 }
 
 void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(
-    std::list<std::shared_ptr<Node>> nodes)
+    std::vector<std::shared_ptr<Node>> nodes)
 {
     for (shared_ptr<Node> node : nodes)
     {
@@ -215,7 +215,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(const Ou
 
 // slice
 void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(
-    std::list<std::shared_ptr<Node>> nodes)
+    std::vector<std::shared_ptr<Node>> nodes)
 {
     for (shared_ptr<Node>& node : nodes)
     {
@@ -328,7 +328,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_slice(const Inp
 // new set is created. bufferID_to_tensorSets maps bufferID to the pair of TensorRole and buffer
 // set. TensorRole is INPUT, CONSTANT, OUTPUT, or INTERMEDIATE, which tells from where the memory
 // buffer comes. tensor_to_bufferID maps tensor to the ID of the buffer set it belongs to.
-void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared_ptr<Node>>& ops)
+void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(vector<shared_ptr<Node>>& ops)
 {
     unordered_set<descriptor::Tensor*> in_place_slice_chain;
     size_t count = 0;
@@ -545,7 +545,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
 }
 
 void runtime::cpu::pass::CPUMemoryAssignment::liveness_analysis(
-    std::list<std::shared_ptr<Node>>& ops)
+    std::vector<std::shared_ptr<Node>>& ops)
 {
     auto find_role = [](TensorRole tensor_role) -> string {
         switch (tensor_role)
@@ -620,7 +620,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::liveness_analysis(
 
 bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph::Function> function)
 {
-    list<shared_ptr<Node>> ops = function->get_ordered_ops();
+    auto ops = function->get_ordered_ops();
 
     build_buffer_sets_maps(ops);
     liveness_analysis(ops);

@@ -39,27 +39,33 @@ namespace ngraph
                 NodeVector lp_norm(const Node& node)
                 {
                     const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
+                    const auto data_shape = data->get_output_partial_shape(0);
+                    const auto data_rank = data_shape.rank();
+
+                    CHECK_VALID_NODE(
+                        node, data_shape.is_static(), "Data shape must be static for lp_norm op");
+                    const auto data_rank_value = static_cast<size_t>(data_rank);
                     const std::int64_t p_norm{node.get_attribute_value<std::int64_t>("p", 2)};
 
                     const std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
-                    const size_t normalize_axis = ngraph::normalize_axis(
-                        node.get_description(), axis, data->get_shape().size());
+                    const size_t normalize_axis =
+                        ngraph::normalize_axis(node.get_description(), axis, data_rank);
 
                     ASSERT_VALID_ARGUMENT(node, p_norm == 1 || p_norm == 2)
                         << "Invalid `p` attribute value: " << p_norm
                         << "Only normalization of 1st or 2nd order is supported.";
 
-                    std::shared_ptr<ngraph::Node> norm = ngraph::builder::lp_norm(
+                    std::shared_ptr<ngraph::Node> norm = ngraph::builder::opset1::lp_norm(
                         data, AxisSet{normalize_axis}, static_cast<std::size_t>(p_norm));
 
                     const auto target_shape = default_opset::Constant::create(
-                        element::i64, Shape{data->get_shape().size()}, data->get_shape());
+                        element::i64, Shape{data_rank_value}, data_shape.to_shape());
 
                     // Create a default axes order matching the data tensor rank and erase the
                     // element at the 'normalize_axis' position. The erased element indicates the
                     // axis
                     // along which the data should be broadcasted.
-                    std::vector<size_t> axes_values(data->get_shape().size());
+                    std::vector<size_t> axes_values(data_rank_value);
                     std::iota(axes_values.begin(), axes_values.end(), 0);
                     axes_values.erase(axes_values.begin() + normalize_axis);
 

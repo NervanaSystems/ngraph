@@ -112,6 +112,11 @@ op::v1::Gather::Gather(const Output<Node>& params,
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::Gather::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 void op::v1::Gather::validate_and_infer_types()
 {
     const auto& input_rank = get_input_partial_shape(PARAMS).rank();
@@ -120,9 +125,9 @@ void op::v1::Gather::validate_and_infer_types()
 
     if (axis_rank.is_static() && axis_shape.is_static())
     {
-        const auto axis_is_scalar = static_cast<size_t>(axis_rank) == 0;
+        const auto axis_is_scalar = axis_rank.get_length() == 0;
         const auto axis_has_one_elem =
-            static_cast<size_t>(axis_rank) == 1 && static_cast<size_t>(axis_shape[0]) == 1;
+            axis_rank.get_length() == 1 && axis_shape[0].get_length() == 1;
         NODE_VALIDATION_CHECK(this,
                               axis_is_scalar || axis_has_one_elem,
                               "Axes input must be scalar or have 1 element (shape: ",
@@ -130,11 +135,11 @@ void op::v1::Gather::validate_and_infer_types()
                               ").");
     }
 
-    auto axis = get_axis();
+    int64_t axis = get_axis();
     if (input_rank.is_static() && axis != AXIS_NOT_SET_VALUE)
     {
         NODE_VALIDATION_CHECK(this,
-                              axis < static_cast<size_t>(input_rank),
+                              axis < input_rank.get_length(),
                               "The axis must => 0 and <= input_rank (axis: ",
                               axis,
                               ").");
@@ -150,19 +155,18 @@ void op::v1::Gather::validate_and_infer_types()
     if (params_shape.rank().is_static() && indices_shape.rank().is_static() &&
         axis != AXIS_NOT_SET_VALUE)
     {
-        std::vector<Dimension> result_dims(static_cast<size_t>(params_shape.rank()) +
-                                           static_cast<size_t>(indices_shape.rank()) - 1);
-        size_t i = 0;
-        for (; i < static_cast<size_t>(axis); i++)
+        std::vector<Dimension> result_dims(params_shape.rank().get_length() +
+                                           indices_shape.rank().get_length() - 1);
+        uint64_t i = 0;
+        for (; i < axis; i++)
         {
             result_dims[i] = params_shape[i];
         }
-        for (size_t j = 0; j < static_cast<size_t>(indices_shape.rank()); i++, j++)
+        for (uint64_t j = 0; j < indices_shape.rank().get_length(); i++, j++)
         {
             result_dims[i] = indices_shape[j];
         }
-        for (size_t j = static_cast<size_t>(axis) + 1; j < static_cast<size_t>(params_shape.rank());
-             i++, j++)
+        for (uint64_t j = axis + 1; j < params_shape.rank().get_length(); i++, j++)
         {
             result_dims[i] = params_shape[j];
         }
@@ -177,7 +181,7 @@ void op::v1::Gather::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-size_t op::v1::Gather::get_axis() const
+int64_t op::v1::Gather::get_axis() const
 {
     int64_t axis = AXIS_NOT_SET_VALUE;
     auto axes_input_node = input_value(AXIS).get_node_shared_ptr();
@@ -190,10 +194,10 @@ size_t op::v1::Gather::get_axis() const
         const auto& input_rank = get_input_partial_shape(PARAMS).rank();
         if (input_rank.is_static())
         {
-            axis += static_cast<size_t>(input_rank);
+            axis += input_rank.get_length();
         }
     }
-    return static_cast<size_t>(axis);
+    return axis;
 }
 
 void op::v1::Gather::generate_adjoints(autodiff::Adjoints& /* adjoints */,

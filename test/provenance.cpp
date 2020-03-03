@@ -30,6 +30,7 @@
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/provenance.hpp"
+#include "util/provenance_enabler.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -39,18 +40,7 @@ using ProvSet = std::unordered_set<std::string>;
 
 TEST(provenance, provenance)
 {
-    class ProvenanceEnabler
-    {
-    public:
-        ProvenanceEnabler()
-        {
-            saved_enable_state = get_provenance_enabled();
-            set_provenance_enabled(true);
-        }
-        ~ProvenanceEnabler() { set_provenance_enabled(saved_enable_state); }
-    private:
-        bool saved_enable_state;
-    } provenance_enabler;
+    test::ProvenanceEnabler provenance_enabler;
 
     //
     // Before:
@@ -389,7 +379,7 @@ TEST(provenance, builder)
 {
     auto p1 = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
     p1->add_provenance_tag("P1");
-    auto norm = builder::lp_norm(p1, {0}, 1, 0);
+    auto norm = builder::opset1::lp_norm(p1, {0}, 1, 0);
     norm->add_provenance_tag("norm");
     for (auto node : topological_sort(NodeVector{norm}))
     {
@@ -406,7 +396,7 @@ TEST(provenance, builder)
 
 TEST(provenance, fused_copy_origin_tags)
 {
-    set_provenance_enabled(true);
+    test::ProvenanceEnabler provenance_enabler;
 
     auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{2, 3, 4});
     p1->add_provenance_tag("P1");
@@ -439,7 +429,7 @@ TEST(provenance, fused_copy_origin_tags)
 
 TEST(provenance, fused_decomposition_tag)
 {
-    set_provenance_enabled(true);
+    test::ProvenanceEnabler provenance_enabler;
 
     auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{2, 3, 4});
     auto fused_op = make_shared<op::MVN>(p1);
@@ -456,7 +446,7 @@ TEST(provenance, fused_decomposition_tag)
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
     const auto decomposed_op = f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    traverse_nodes(as_node_vector(decomposed_op->outputs()), tag_check, false, {p1});
+    traverse_nodes(as_node_vector(decomposed_op->outputs()), tag_check, {p1});
 }
 
 TEST(provenance, topk_setk)
@@ -556,7 +546,7 @@ TEST(provenance, scaled_quantize_concat_unsigned)
 
 TEST(provenance, opset1_upgrade_pass_topk)
 {
-    set_provenance_enabled(true);
+    test::ProvenanceEnabler provenance_enabler;
 
     const size_t axis = 2;
     const size_t k = 10;
@@ -579,15 +569,13 @@ TEST(provenance, opset1_upgrade_pass_topk)
         auto tags = node->get_provenance_tags();
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
-    traverse_nodes(as_node_vector(topk_v1->outputs()),
-                   tag_check,
-                   false,
-                   as_node_vector(topk_v0->input_values()));
+    traverse_nodes(
+        as_node_vector(topk_v1->outputs()), tag_check, as_node_vector(topk_v0->input_values()));
 }
 
 TEST(provenance, opset0_downgrade_pass_topk)
 {
-    set_provenance_enabled(true);
+    test::ProvenanceEnabler provenance_enabler;
 
     const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
     const int32_t k = 10;
@@ -614,15 +602,13 @@ TEST(provenance, opset0_downgrade_pass_topk)
         auto tags = node->get_provenance_tags();
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
-    traverse_nodes(as_node_vector(topk_v0->outputs()),
-                   tag_check,
-                   false,
-                   as_node_vector(topk_v1->input_values()));
+    traverse_nodes(
+        as_node_vector(topk_v0->outputs()), tag_check, as_node_vector(topk_v1->input_values()));
 }
 
 TEST(provenance, opset1_upgrade_pass_graph)
 {
-    set_provenance_enabled(true);
+    test::ProvenanceEnabler provenance_enabler;
 
     auto x = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
     auto y = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
@@ -665,7 +651,7 @@ TEST(provenance, opset1_upgrade_pass_graph)
 
 TEST(provenance, opset0_downgrade_pass_graph)
 {
-    set_provenance_enabled(true);
+    test::ProvenanceEnabler provenance_enabler;
 
     auto x = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
     auto y = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});

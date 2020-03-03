@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/non_max_suppression.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
 
 using namespace std;
@@ -63,6 +64,13 @@ shared_ptr<Node> op::v1::NonMaxSuppression::copy_with_new_args(const NodeVector&
                                                   new_args.at(4),
                                                   m_box_encoding,
                                                   m_sort_result_descending);
+}
+
+bool ngraph::op::v1::NonMaxSuppression::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("box_encoding", m_box_encoding);
+    visitor.on_attribute("sort_result_descending", m_sort_result_descending);
+    return true;
 }
 
 void op::v1::NonMaxSuppression::validate_and_infer_types()
@@ -157,3 +165,26 @@ int64_t op::v1::NonMaxSuppression::max_boxes_output_from_input() const
 
     return max_output_boxes;
 }
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::v1::NonMaxSuppression::BoxEncodingType>&
+        EnumNames<op::v1::NonMaxSuppression::BoxEncodingType>::get()
+    {
+        static auto enum_names = EnumNames<op::v1::NonMaxSuppression::BoxEncodingType>(
+            "op::v1::NonMaxSuppression::BoxEncodingType",
+            {{"corner", op::v1::NonMaxSuppression::BoxEncodingType::CORNER},
+             {"center", op::v1::NonMaxSuppression::BoxEncodingType::CENTER}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo
+        AttributeAdapter<op::v1::NonMaxSuppression::BoxEncodingType>::type_info;
+
+    std::ostream& operator<<(std::ostream& s,
+                             const op::v1::NonMaxSuppression::BoxEncodingType& type)
+    {
+        return s << as_string(type);
+    }
+} // namespace ngraph

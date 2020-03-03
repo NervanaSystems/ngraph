@@ -114,11 +114,36 @@ std::shared_ptr<Node>
     Node::copy_with_new_inputs(const OutputVector& inputs,
                                const std::vector<std::shared_ptr<Node>>& control_dependencies) const
 {
-    shared_ptr<Node> clone = copy_with_new_args(as_node_vector(inputs));
-    ;
+    shared_ptr<Node> clone = clone_with_new_inputs(inputs);
     for (auto& cdep : control_dependencies)
     {
         clone->add_control_dependency(cdep);
+    }
+    return clone;
+}
+
+std::shared_ptr<Node> Node::copy_with_new_args(const NodeVector& args) const
+{
+    NODE_VALIDATION_CHECK(
+        this, false, "Internal error: copy_with_new_args not replaced by clone_with_new_inputs");
+    return nullptr;
+}
+
+std::shared_ptr<Node> Node::clone_with_new_inputs(const OutputVector& inputs) const
+{
+    NodeVector args;
+    for (const Output<Node>& input : inputs)
+    {
+        args.push_back(get_output_element(input, false));
+    }
+    std::shared_ptr<Node> clone = copy_with_new_args(args);
+    // Remove the inserted GOEs
+    for (size_t i = 0; i < inputs.size(); ++i)
+    {
+        if (clone->input_value(i) != inputs.at(i))
+        {
+            clone->set_argument(i, inputs.at(i));
+        }
     }
     return clone;
 }
@@ -470,14 +495,14 @@ void Node::transfer_provenance_tags(const shared_ptr<Node>& replacement)
         }
     };
 
-    traverse_nodes({shared_from_this()}, set_replacement_prov, false, common_args);
+    traverse_nodes({shared_from_this()}, set_replacement_prov, common_args);
     replacement->add_provenance_tags(removed_subgraph_tags);
 
     auto set_prov_new_nodes = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
         node->add_provenance_tags(removed_subgraph_tags);
     };
 
-    traverse_nodes({replacement}, set_prov_new_nodes, false, common_args);
+    traverse_nodes({replacement}, set_prov_new_nodes, common_args);
 }
 
 std::shared_ptr<Node> Node::get_argument(size_t index) const

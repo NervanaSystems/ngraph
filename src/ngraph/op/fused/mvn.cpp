@@ -18,11 +18,11 @@
 #include "mvn.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -55,13 +55,14 @@ void op::MVN::validate_and_infer_types()
 {
     // if m_across_channels is true we should calculate mean and variance per batch
     // else we calculate these per channel
-    if (m_reduction_axes.empty())
+    if (m_reduction_axes.empty() && input_value(0).get_partial_shape().rank().is_static())
     {
-        auto data = input_value(0);
         AxisSet reduction_axes;
         reduction_axes.insert(0);
         size_t start_axis = m_across_channels ? 1 : 2;
-        for (size_t i = start_axis; i < data.get_shape().size(); ++i)
+        for (size_t i = start_axis;
+             i < static_cast<size_t>(input_value(0).get_partial_shape().rank());
+             ++i)
         {
             reduction_axes.insert(i);
         }

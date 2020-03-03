@@ -58,6 +58,7 @@ namespace ngraph
 
                 RNNCellBase() = default;
 
+                virtual bool visit_attributes(AttributeVisitor& visitor);
                 std::size_t get_hidden_size() const { return m_hidden_size; }
                 float get_clip() const { return m_clip; }
                 const std::vector<std::string>& get_activations() const { return m_activations; }

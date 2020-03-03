@@ -41,6 +41,7 @@
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -244,12 +245,11 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_release_function(release_function)
     , m_emit_timing(false)
 #if defined(NGRAPH_TBB_ENABLE)
-    , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+    , m_use_tbb(getenv_bool("NGRAPH_CPU_USE_TBB"))
 #endif
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
-    , m_direct_execution((std::getenv("NGRAPH_CODEGEN") == nullptr) ||
-                         (std::string(std::getenv("NGRAPH_CODEGEN")) == "0"))
+    , m_direct_execution(!getenv_bool("NGRAPH_CODEGEN"))
 #else
     , m_direct_execution(true)
 #endif
@@ -511,7 +511,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
         femitter, node_function_map, common_function_string);
     pass_manager.run_passes(m_function);
 
-    list<shared_ptr<Node>> ordered_ops = m_function->get_ordered_ops();
+    auto ordered_ops = m_function->get_ordered_ops();
 
     CodeWriter writer;
 
@@ -1005,14 +1005,14 @@ using namespace ngraph::runtime;
         {
             // check inputs and constants?
             if ((!node->is_parameter() && !node->is_constant()) ||
-                std::getenv("NGRAPH_CPU_CHECK_PARMS_AND_CONSTS"))
+                getenv_bool("NGRAPH_CPU_CHECK_PARMS_AND_CONSTS"))
             {
-                if (std::getenv("NGRAPH_CPU_NAN_CHECK"))
+                if (getenv_bool("NGRAPH_CPU_NAN_CHECK"))
                 {
                     generate_isnan_isinf_check(writer, node, out, "isnan");
                 }
 
-                if (std::getenv("NGRAPH_CPU_INF_CHECK"))
+                if (getenv_bool("NGRAPH_CPU_INF_CHECK"))
                 {
                     generate_isnan_isinf_check(writer, node, out, "isinf");
                 }
@@ -1189,7 +1189,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     auto dex = is_direct_execution();
     auto is_supported = [dex](const Node& node) {
 #ifdef NGRAPH_MLIR_ENABLE
-        if (std::getenv("NGRAPH_MLIR") != nullptr && std::getenv("NGRAPH_MLIR_CALLBACK") != nullptr)
+        if (getenv_bool("NGRAPH_MLIR") && getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             if (typeid(ngraph::op::MatMul) == typeid(node) &&
                 node.get_input_element_type(0) == element::f32)
@@ -1294,7 +1294,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUPreFusion, true, runtime::cpu::pass)
 
     // Disable CPUFusion if MLIR is enabled to preserve core ops.
-    if (std::getenv("NGRAPH_MLIR") == nullptr)
+    if (!getenv_bool("NGRAPH_MLIR"))
     {
         REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass)
     }
@@ -1303,7 +1303,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)
 
 #ifdef NGRAPH_MLIR_ENABLE
-    if (std::getenv("NGRAPH_MLIR") != nullptr)
+    if (getenv_bool("NGRAPH_MLIR"))
     {
         REGISTER_KNOBBED_PASS(MLIRSubgraphExtractionPass, /*enable by default*/ true, ngraph::pass)
     }
@@ -1456,7 +1456,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
-    if (std::getenv("NGRAPH_ENABLE_VISUALIZE_TRACING"))
+    if (getenv_bool("NGRAPH_ENABLE_VISUALIZE_TRACING"))
     {
         // Enable per_pass_validation if required for debug purpose
         pass_manager.set_per_pass_validation(false);
@@ -1465,7 +1465,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     pass_manager.run_passes(m_function, false);
 
     static runtime::cpu::CPU_DebugTracer debug_tracer;
-    if (std::getenv("NGRAPH_CPU_DEBUG_TRACER") != nullptr)
+    if (getenv_bool("NGRAPH_CPU_DEBUG_TRACER"))
     {
         debug_tracer.set_enable_tracing(true);
     }
@@ -1717,7 +1717,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         m_perf_counters.emplace_back(node, 0, 0);
     }
 
-    if ((std::getenv("NGRAPH_DEX_DEBUG") != nullptr))
+    if (getenv_bool("NGRAPH_DEX_DEBUG"))
     {
         string filename = file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
         std::stringstream strm;
@@ -1922,8 +1922,8 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         else
 #endif
         {
-            static const auto ddebug = std::getenv("NGRAPH_DEX_DEBUG");
-            if (ddebug != nullptr)
+            static const auto ddebug = getenv_bool("NGRAPH_DEX_DEBUG");
+            if (ddebug)
             {
                 if (ctx->first_iteration)
                 {

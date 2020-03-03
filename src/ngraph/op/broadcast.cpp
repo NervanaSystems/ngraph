@@ -15,9 +15,9 @@
 //*****************************************************************************
 
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/partial_shape.hpp"
 
 #include <numeric>
@@ -81,20 +81,17 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
     else if (m_broadcast_spec.m_type == AutoBroadcastType::NUMPY ||
              m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
     {
-        if (input(0).get_partial_shape().is_static() &&
-            input_value(1).get_node_shared_ptr()->is_constant())
+        if (input(0).get_partial_shape().is_static() && output(0).get_partial_shape().is_static())
         {
             auto arg_shape = input(0).get_shape();
-            auto target_shape =
-                static_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr())
-                    ->get_shape_val();
+            auto result_shape = output(0).get_shape();
             auto start_axis = (m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
                                   ? m_broadcast_spec.m_axis
-                                  : target_shape.size() - arg_shape.size();
+                                  : result_shape.size() - arg_shape.size();
             NGRAPH_CHECK(start_axis >= 0);
-            for (size_t i = 0; i < target_shape.size(); i++)
+            for (size_t i = 0; i < result_shape.size(); i++)
             {
-                if (i < start_axis || target_shape[i] != arg_shape[i - start_axis])
+                if (i < start_axis || result_shape[i] != arg_shape[i - start_axis])
                 {
                     broadcast_axes.insert(i);
                 }
@@ -229,13 +226,15 @@ void op::v1::Broadcast::validate_and_infer_types()
                                       arg_shape.size());
                 for (auto i = start_axis; i < target_shape.size(); i++)
                 {
-                    NODE_VALIDATION_CHECK(this,
-                                          arg_shape[i - start_axis] == 1 ||
-                                              arg_shape[i - start_axis] == target_shape[i],
-                                          "Broadcast incorrect target shape. Expecting ",
-                                          arg_shape[i - start_axis],
-                                          " . Got ",
-                                          target_shape[i]);
+                    NODE_VALIDATION_CHECK(
+                        this,
+                        arg_shape[i - start_axis] == 1 || target_shape[i] == 1 ||
+                            arg_shape[i - start_axis] == target_shape[i],
+                        "Broadcast incorrect target shape. Expecting either 1 or ",
+                        arg_shape[i - start_axis],
+                        " . Got ",
+                        target_shape[i]);
+                    result_shape[i] = std::max(arg_shape[i - start_axis], target_shape[i]);
                 }
             }
         }

@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/binary_convolution.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/reshape.hpp"

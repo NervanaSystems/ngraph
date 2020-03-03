@@ -1898,6 +1898,41 @@ TEST(constant_folding, constant_v1_split)
     ASSERT_TRUE(test::all_close_f(vector<float>(data.begin() + 4, data.end()), res3_values));
 }
 
+TEST(constant_folding, constant_v1_split_specialized)
+{
+    vector<float> data{.1f, .2f, .3f, .4f, .5f, .6f};
+    const auto const_data = op::Constant::create(element::f32, Shape{data.size()}, data);
+    const auto const_axis = op::Constant::create(element::i64, Shape{}, {0});
+    const auto num_splits = 3;
+
+    auto split_v1 = make_shared<op::v1::Split>(const_data, const_axis, num_splits);
+    auto f = make_shared<Function>(split_v1->outputs(), ParameterVector{});
+
+    auto specialized_function = ::ngraph::specialize_function(
+        std::const_pointer_cast<ngraph::Function>(f), {}, {}, {}, true, true);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Split>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), num_splits);
+
+    auto res1 = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto res2 = as_type_ptr<op::Constant>(f->get_results().at(1)->get_argument(0));
+    auto res3 = as_type_ptr<op::Constant>(f->get_results().at(2)->get_argument(0));
+    ASSERT_TRUE(res1);
+    ASSERT_TRUE(res2);
+    ASSERT_TRUE(res3);
+
+    auto res1_values = res1->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>(data.begin(), data.begin() + 2), res1_values));
+    auto res2_values = res2->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>(data.begin() + 2, data.begin() + 4), res2_values));
+    auto res3_values = res3->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>(data.begin() + 4, data.end()), res3_values));
+}
+
 TEST(constant_folding, constant_v1_split_axis_1_4_splits)
 {
     vector<int64_t> data{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
@@ -2193,6 +2228,146 @@ TEST(constant_folding, constant_v1_one_hot_negative_axes_2)
                             off_value,
                             off_value}),
               res->get_vector<bool>());
+}
+
+TEST(constant_folding, constant_tile_1d)
+{
+    Shape shape_in{2};
+    Shape shape_repeats{1};
+    Shape shape_out{4};
+
+    vector<int> values_in{0, 1};
+    auto data = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    vector<int> values_repeats{2};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_repeats, values_repeats);
+    auto tile = make_shared<op::v0::Tile>(data, repeats);
+    auto f = make_shared<Function>(tile, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Tile>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> values_expected{0, 1, 0, 1};
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, constant_tile_3d_small_data_rank)
+{
+    Shape shape_in{2};
+    Shape shape_repeats{3};
+    Shape shape_out{2, 2, 4};
+
+    vector<int> values_in{0, 1};
+    auto data = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    vector<int> values_repeats{2, 2, 2};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_repeats, values_repeats);
+    auto tile = make_shared<op::v0::Tile>(data, repeats);
+    auto f = make_shared<Function>(tile, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Tile>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> values_expected{0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, constant_tile_3d_few_repeats)
+{
+    Shape shape_in{2, 1, 3};
+    Shape shape_repeats{2};
+    Shape shape_out{2, 2, 3};
+
+    vector<int> values_in{1, 2, 3, 4, 5, 6};
+    auto data = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    vector<int> values_repeats{2, 1};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_repeats, values_repeats);
+    auto tile = make_shared<op::v0::Tile>(data, repeats);
+    auto f = make_shared<Function>(tile, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Tile>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> values_expected{1, 2, 3, 1, 2, 3, 4, 5, 6, 4, 5, 6};
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, constant_tile_1d_0_repeats)
+{
+    Shape shape_in{2};
+    Shape shape_repeats{1};
+    Shape shape_out{};
+
+    vector<int> values_in{0, 1};
+    auto data = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    vector<int> values_repeats{0};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_repeats, values_repeats);
+    auto tile = make_shared<op::v0::Tile>(data, repeats);
+    auto f = make_shared<Function>(tile, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Tile>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> values_expected{};
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, constant_tile_0_rank_data)
+{
+    Shape shape_in{};
+    Shape shape_repeats{1};
+    Shape shape_out{4};
+
+    vector<int> values_in{1};
+    auto data = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    vector<int> values_repeats{4};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_repeats, values_repeats);
+    auto tile = make_shared<op::v0::Tile>(data, repeats);
+    auto f = make_shared<Function>(tile, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Tile>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> values_expected{1, 1, 1, 1};
+    ASSERT_EQ(values_expected, values_out);
 }
 
 TEST(constant_folding, pass_property)
