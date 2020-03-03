@@ -59,6 +59,6 @@ void op::util::BinaryElementwiseArithmetic::validate_and_infer_types()
 
 bool op::util::BinaryElementwiseArithmetic::visit_attributes(AttributeVisitor& visitor)
 {
-    visitor.on_attribute("autob", m_autob);
+    visitor.on_attribute("auto_broadcast", m_autob);
     return true;
 }

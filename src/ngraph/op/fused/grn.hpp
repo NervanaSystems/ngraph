@@ -42,6 +42,7 @@ namespace ngraph
                 ///
                 GRN(const Output<Node>& data, float bias);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 float get_bias() const { return m_bias; }
                 virtual void pre_validate_and_infer_types() override;
                 virtual NodeVector decompose_op() const override;
