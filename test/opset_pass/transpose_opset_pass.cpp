@@ -45,7 +45,7 @@ TEST(opset_transform, opset1_transpose_downgrade_pass)
 
     ASSERT_TRUE(reshape_node);
     EXPECT_EQ(reshape_node->get_input_order(), order);
-    EXPECT_EQ(reshape_node->get_output_shape(), Shape({6, 5, 7, 4}));
+    EXPECT_EQ(reshape_node->get_output_shape(0), Shape({6, 5, 7, 4}));
 }
 
 TEST(opset_transform, opset1_transpose_downgrade_pass_data_shape_not_staic)

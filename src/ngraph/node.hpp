@@ -333,7 +333,6 @@ namespace ngraph
         const element::Type& get_element_type() const;
 
         /// Returns the shape for output i
-        // TODO: deprecate in favor of node->output(i).get_shape()
         const Shape& get_output_shape(size_t i) const;
 
         /// Returns the partial shape for output i
@@ -343,7 +342,7 @@ namespace ngraph
                                                                bool for_get_output_element = true);
 
         /// Checks that there is exactly one output and returns its shape
-        // TODO: deprecate in favor of node->output(0).get_shape() with a suitable check in the
+        // TODO: deprecate in favor of node->get_output_shape(0) with a suitable check in the
         // calling code, or updates to the calling code if it is making an invalid assumption of
         // only one output.
         const Shape& get_shape() const;

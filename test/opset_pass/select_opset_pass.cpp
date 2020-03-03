@@ -31,7 +31,7 @@ TEST(opset_transform, opset0_select_downgrade_pass)
 
     ASSERT_TRUE(v0_node);
     EXPECT_EQ(v0_node->output(0).get_element_type(), element::f32);
-    EXPECT_EQ(v0_node->output(0).get_shape(), (Shape{4, 2}));
+    EXPECT_EQ(v0_node->get_output_shape(0), (Shape{4, 2}));
 }
 
 TEST(opset_transform, opset1_select_upgrade_pass)
@@ -55,5 +55,5 @@ TEST(opset_transform, opset1_select_upgrade_pass)
     ASSERT_TRUE(v1_node);
     EXPECT_EQ(v1_node->get_auto_broadcast(), op::AutoBroadcastSpec());
     EXPECT_EQ(v1_node->output(0).get_element_type(), element::f32);
-    EXPECT_EQ(v1_node->output(0).get_shape(), (Shape{4, 2}));
+    EXPECT_EQ(v1_node->get_output_shape(0), (Shape{4, 2}));
 }

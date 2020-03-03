@@ -34,7 +34,7 @@ TEST(type_prop, rnn_cell)
 
     const auto rnn_cell = make_shared<op::RNNCell>(X, H_t, W, R, hidden_size);
     EXPECT_EQ(rnn_cell->output(0).get_element_type(), element::f32);
-    EXPECT_EQ(rnn_cell->output(0).get_shape(), (Shape{batch_size, hidden_size}));
+    EXPECT_EQ(rnn_cell->get_output_shape(0), (Shape{batch_size, hidden_size}));
 }
 
 TEST(type_prop, rnn_cell_invalid_input)

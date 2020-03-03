@@ -251,7 +251,7 @@ bool op::v1::GroupConvolutionBackpropData::is_dynamic() const
     return is_dynamic;
 }
 
-const PartialShape op::v1::GroupConvolutionBackpropData::get_output_shape() const
+const PartialShape op::v1::GroupConvolutionBackpropData::get_convolution_output_shape() const
 {
     auto data_pshape = input(0).get_partial_shape();
 
@@ -364,7 +364,7 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
     // and infer them.
     if (is_output_shape_present)
     {
-        output_pshape = get_output_shape();
+        output_pshape = get_convolution_output_shape();
 
         if (output_pshape.is_static() && data_pshape.is_static() && filters_pshape.is_static())
         {

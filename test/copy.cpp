@@ -280,7 +280,7 @@ TEST(copy, reshape)
     ASSERT_TRUE(nullptr != new_node);
     ASSERT_TRUE(new_args == new_node->get_arguments());
     ASSERT_TRUE(axes == node_cast->get_input_order());
-    ASSERT_TRUE(shape_out == node_cast->get_output_shape());
+    ASSERT_TRUE(shape_out == node_cast->get_output_shape(0));
 }
 
 TEST(copy, select)

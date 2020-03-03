@@ -53,8 +53,8 @@ TEST(type_prop, split)
     const auto axis = op::Constant::create(element::i64, Shape{}, {1});
     const auto split = make_shared<op::Split>(data, axis, 2);
     EXPECT_EQ(split->outputs().size(), 2);
-    EXPECT_EQ(split->output(0).get_shape(), (Shape{2, 3}));
-    EXPECT_EQ(split->output(1).get_shape(), (Shape{2, 3}));
+    EXPECT_EQ(split->get_output_shape(0), (Shape{2, 3}));
+    EXPECT_EQ(split->get_output_shape(1), (Shape{2, 3}));
     EXPECT_EQ(split->output(0).get_element_type(), element::i32);
     EXPECT_EQ(split->output(1).get_element_type(), element::i32);
 }

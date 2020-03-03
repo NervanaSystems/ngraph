@@ -1190,7 +1190,7 @@ protected:
                            args[1]->get_data_ptr<const T>(),
                            out[0]->get_data_ptr<T>(),
                            node.input(0).get_shape(),
-                           node.output(0).get_shape(),
+                           node.get_output_shape(0),
                            pad->get_padding_below(),
                            pad->get_padding_above(),
                            pad->get_pad_mode());
