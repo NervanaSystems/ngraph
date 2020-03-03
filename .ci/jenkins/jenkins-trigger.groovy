@@ -42,7 +42,7 @@ timestamps {
 
         // Clone the cje-algo directory which contains our Jenkins groovy scripts
         try {
-            sh "git clone -b $JENKINS_BRANCH https://github.intel.com/AIPG/cje-algo ."
+            sh "git clone -b $JENKINS_BRANCH https://gitlab.devtools.intel.com/AIPG/AlgoVal/cje-algo ."
         } catch (e) {
             echo "${e}"
             println("ERROR: An error occurred during cje-algo script checkout.")
