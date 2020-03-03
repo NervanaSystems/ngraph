@@ -976,6 +976,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[2], args[0], args[1], args[3], args[4], args[5], epsilon);
             break;
         }
+        case OP_TYPEID::BatchToSpace_v1:
+        {
+            node = make_shared<op::v1::BatchToSpace>(args[0], args[1], args[2], args[3]);
+            break;
+        }
         case OP_TYPEID::BinaryConvolution_v1:
         {
             auto strides = node_js.at("strides").get<vector<size_t>>();
@@ -2792,6 +2797,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], args[2], soft_label, ignore_index);
             break;
         }
+        case OP_TYPEID::SpaceToBatch_v1:
+        {
+            node = make_shared<op::v1::SpaceToBatch>(args[0], args[1], args[2], args[3]);
+            break;
+        }
         case OP_TYPEID::SpaceToDepth:
         {
             auto block_size = node_js.at("block_size").get<size_t>();
@@ -3292,6 +3302,8 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = static_cast<const op::BatchNormTrainingBackprop*>(&n);
         node["eps"] = tmp->get_eps_value();
         break;
+    }
+    case OP_TYPEID::BatchToSpace_v1: { break;
     }
     case OP_TYPEID::BinaryConvolution_v1:
     {
@@ -4446,6 +4458,8 @@ json JSONSerializer::serialize_node(const Node& n)
         node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
+    case OP_TYPEID::SpaceToBatch_v1: { break;
+    }
     case OP_TYPEID::SpaceToDepth:
     {
         auto tmp = static_cast<const op::SpaceToDepth*>(&n);
@@ -4610,7 +4624,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::TopK_v1:
     {
         const auto tmp = static_cast<const op::v1::TopK*>(&n);
-        node["axis"] = tmp->get_axis();
+        node["axis"] = tmp->get_provided_axis();
         node["mode"] = tmp->get_mode();
         node["sort_type"] = tmp->get_sort_type();
         node["index_element_type"] = write_element_type(tmp->get_index_element_type());

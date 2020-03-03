@@ -586,7 +586,16 @@ namespace
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Pad> node)
     {
         const auto pad_arg = node->input_value(0);
-        const auto pad_value = node->input_value(3);
+        Output<Node> pad_value;
+        if (node->get_input_size() == 4)
+        {
+            pad_value = node->input_value(3);
+        }
+        else
+        {
+            pad_value =
+                make_shared<op::Constant>(pad_arg.get_element_type(), Shape{}, vector<float>{0.f});
+        }
         auto replacement_node = make_shared<op::v0::Pad>(
             pad_arg, pad_value, node->get_pads_begin(), node->get_pads_end(), node->get_pad_mode());
 

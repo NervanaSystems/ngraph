@@ -166,6 +166,8 @@ create_tensor_2_output
 # Not implemented
 batch_mat_mul_forward
 backwards_batchmatmul_tensor2_tensor2
+bool_init_and
+bool_input_or
 erf
 zero_sized_erf
 model_erf
@@ -258,6 +260,13 @@ model_split_equal_parts_default
 model_split_equal_parts_2d
 model_split_variable_parts_2d
 model_expand_static_shape
+expand_1_dyn_shape
+expand_2_dyn_shape
+expand_3_dyn_shape
+expand_4_dyn_shape
+expand_5_dyn_shape
+expand_6_dyn_shape
+expand_uint16_dyn_shape
 model_conv2d_strides_padding
 model_conv2d_strides_no_padding
 model_conv2d_strides_assymetric_padding
@@ -321,6 +330,8 @@ model_softplus_infinity
 model_sum_opset8
 model_argmax_int32
 model_argmin_int32
+arg_max_dyn_shape
+arg_min_no_keep_dims_dyn_shape
 model_top_k
 top_k_opset_10
 top_k_opset_10_const_k
@@ -474,6 +485,8 @@ space_to_depth_block_first
 space_to_depth_depth_first
 depth_to_space_block_first
 depth_to_space_depth_first
+space_to_batch
+batch_to_space
 normalize_across_chw_4d
 normalize_across_empty_axes_input
 normalize_across_h_4d
