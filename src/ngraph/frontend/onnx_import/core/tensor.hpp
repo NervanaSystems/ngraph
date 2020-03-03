@@ -115,17 +115,22 @@ namespace ngraph
                             case ONNX_NAMESPACE::TensorProto_DataType_FLOAT: return sizeof(float);
                             case ONNX_NAMESPACE::TensorProto_DataType_UINT8: return sizeof(uint8_t);
                             case ONNX_NAMESPACE::TensorProto_DataType_INT8: return sizeof(int8_t);
-                            case ONNX_NAMESPACE::TensorProto_DataType_UINT16: return sizeof(uint16_t);
+                            case ONNX_NAMESPACE::TensorProto_DataType_UINT16:
+                                return sizeof(uint16_t);
                             case ONNX_NAMESPACE::TensorProto_DataType_INT16: return sizeof(int16_t);
                             case ONNX_NAMESPACE::TensorProto_DataType_INT32: return sizeof(int32_t);
                             case ONNX_NAMESPACE::TensorProto_DataType_INT64: return sizeof(int64_t);
                             case ONNX_NAMESPACE::TensorProto_DataType_BOOL: return sizeof(char);
                             case ONNX_NAMESPACE::TensorProto_DataType_FLOAT16: return 2;
                             case ONNX_NAMESPACE::TensorProto_DataType_DOUBLE: return sizeof(double);
-                            case ONNX_NAMESPACE::TensorProto_DataType_UINT32: return sizeof(uint32_t);
-                            case ONNX_NAMESPACE::TensorProto_DataType_UINT64: return sizeof(uint64_t);
-                            case ONNX_NAMESPACE::TensorProto_DataType_COMPLEX64: return 2 * sizeof(float);
-                            case ONNX_NAMESPACE::TensorProto_DataType_COMPLEX128: return 2 * sizeof(double);
+                            case ONNX_NAMESPACE::TensorProto_DataType_UINT32:
+                                return sizeof(uint32_t);
+                            case ONNX_NAMESPACE::TensorProto_DataType_UINT64:
+                                return sizeof(uint64_t);
+                            case ONNX_NAMESPACE::TensorProto_DataType_COMPLEX64:
+                                return 2 * sizeof(float);
+                            case ONNX_NAMESPACE::TensorProto_DataType_COMPLEX128:
+                                return 2 * sizeof(double);
 
                             default: NGRAPH_UNREACHABLE("Unsupported data type");
                             }
@@ -338,7 +343,7 @@ namespace ngraph
                 }
 
                 template <>
-                inline std::vector<char> get_data(const onnx::TensorProto& tensor)
+                inline std::vector<char> get_data(const ONNX_NAMESPACE::TensorProto& tensor)
                 {
                     // Boolean values are stored as char because std::vector<bool>
                     // can behave differently from other vector containers.
@@ -346,7 +351,7 @@ namespace ngraph
                     {
                         return detail::__get_raw_data<char>(tensor.raw_data(), tensor.data_type());
                     }
-                    if (tensor.data_type() == onnx::TensorProto_DataType_BOOL)
+                    if (tensor.data_type() == ONNX_NAMESPACE::TensorProto_DataType_BOOL)
                     {
                         return detail::__get_data<char>(tensor.int32_data());
                     }
