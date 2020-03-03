@@ -39,8 +39,7 @@ TEST(opset_transform, opset1_topk_upgrade_pass)
     pass_manager.register_pass<pass::Opset1Upgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
     const auto topk_v1 = as_type_ptr<op::v1::TopK>(pass_replacement_node);
     ASSERT_TRUE(topk_v1);
     EXPECT_EQ(topk_v1->get_axis(), axis);
@@ -69,8 +68,7 @@ TEST(opset_transform, opset1_topk_downgrade_pass)
     pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
     const auto topk_v0 = as_type_ptr<op::v0::TopK>(pass_replacement_node);
     ASSERT_TRUE(topk_v0);
     EXPECT_EQ(topk_v0->get_k(), k);

@@ -38,8 +38,7 @@ TEST(opset_transform, opset1_logical_xor_upgrade_pass)
     pass_manager.register_pass<pass::Opset1Upgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
     const auto xor_v1 = as_type_ptr<op::v1::LogicalXor>(pass_replacement_node);
     ASSERT_TRUE(xor_v1);
 
@@ -59,8 +58,7 @@ TEST(opset_transform, opset1_logical_xor_downgrade_pass)
     pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
     const auto xor_v0 = as_type_ptr<op::v0::Xor>(pass_replacement_node);
     ASSERT_TRUE(xor_v0);
 
