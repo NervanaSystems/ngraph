@@ -348,8 +348,7 @@ namespace ngraph
         const Shape& get_shape() const;
 
         /// Returns the tensor for output i
-        descriptor::Tensor& get_output_tensor(size_t i) const
-            NGRAPH_DEPRECATED("use node->output(i).get_tensor() instead");
+        descriptor::Tensor& get_output_tensor(size_t i) const;
 
         /// Returns the tensor name for output i
         const std::string& get_output_tensor_name(size_t i) const;

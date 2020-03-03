@@ -127,7 +127,7 @@ TEST(type_prop, nms_output_shape)
     const auto scores = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2});
 
     const auto nms = make_shared<op::v1::NonMaxSuppression>(boxes, scores);
-    const auto nms_out_ps = nms->output(0).get_partial_shape();
+    const auto nms_out_ps = nms->get_output_partial_shape(0);
 
     EXPECT_TRUE(nms_out_ps.rank().is_static());
     EXPECT_EQ(static_cast<size_t>(nms_out_ps.rank()), 2);
