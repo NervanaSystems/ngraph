@@ -137,6 +137,7 @@ namespace ngraph
                 ///
                 Reshape(const Output<Node>& arg, const Output<Node>& pattern, bool special_zero);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 size_t get_version() const override { return 1; }
