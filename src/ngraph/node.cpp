@@ -970,69 +970,6 @@ bool Node::is_dynamic() const
     return false;
 }
 
-namespace ngraph
-{
-    std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
-    {
-        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
-                                                            << "]:" << output.get_element_type()
-                                                            << output.get_partial_shape();
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Output<const Node>& output)
-    {
-        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
-                                                            << "]:" << output.get_element_type()
-                                                            << output.get_partial_shape();
-    }
-}
-
-void Output<Node>::replace(const Output<Node>& replacement)
-{
-    for (auto& input : get_target_inputs())
-    {
-        // GOEs are used as handles in passes
-        if (!is_type<op::GetOutputElement>(input.get_node()))
-        {
-            input.replace_source_output(replacement);
-        }
-    }
-}
-
-void Output<Node>::eliminate_goe()
-{
-    if (auto goe = as_type_ptr<op::GetOutputElement>(m_node))
-    {
-        *this = m_node->input_value(0);
-    }
-}
-
-void Output<Node>::eliminate_goe(size_t index)
-{
-    if (auto goe = as_type_ptr<op::GetOutputElement>(m_node))
-    {
-        m_node = goe->input_value(0).get_node_shared_ptr();
-    }
-}
-
-void Output<const Node>::eliminate_goe()
-{
-    if (auto goe = as_type_ptr<const op::GetOutputElement>(m_node))
-    {
-        auto value = m_node->input_value(0);
-        m_node = value.get_node_shared_ptr();
-        m_index = value.get_index();
-    }
-}
-
-void Output<const Node>::eliminate_goe(size_t index)
-{
-    if (auto goe = as_type_ptr<const op::GetOutputElement>(m_node))
-    {
-        m_node = goe->input_value(0).get_node_shared_ptr();
-    }
-}
-
 Input<Node> Node::input(size_t input_index)
 {
     if (input_index >= m_inputs.size())
