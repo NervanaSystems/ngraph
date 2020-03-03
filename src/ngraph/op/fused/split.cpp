@@ -47,7 +47,7 @@ op::v0::Split::Split(const Output<Node>& data,
 
 void op::v0::Split::pre_validate_and_infer_types()
 {
-    const auto axis_shape = input(1).get_shape();
+    const auto axis_shape = get_input_shape(1);
     NODE_VALIDATION_CHECK(this, is_scalar(axis_shape), "The 'axis' input node must be scalar");
 
     const auto axis_node = input_value(1).get_node_shared_ptr();
@@ -66,7 +66,7 @@ void op::v0::Split::pre_validate_and_infer_types()
         return;
     }
 
-    const auto shape = input(0).get_shape();
+    const auto shape = get_input_shape(0);
 
     const auto data_rank = get_input_partial_shape(0).rank();
     m_axis = ngraph::normalize_axis(this, m_axis, data_rank);

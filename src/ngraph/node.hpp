@@ -381,11 +381,11 @@ namespace ngraph
         const element::Type& get_input_element_type(size_t i) const;
 
         /// Returns the shape of input i
-        // TODO: deprecate in favor of node->input(i).get_shape()
+        // TODO: deprecate in favor of node->get_input_shape(i)
         const Shape& get_input_shape(size_t i) const;
 
         /// Returns the partial shape of input i
-        // TODO: deprecate in favor of node->input(i).get_partial_shape()
+        // TODO: deprecate in favor of node->get_input_partial_shape(i)
         const PartialShape& get_input_partial_shape(size_t i) const;
 
         /// Returns the tensor name for input i

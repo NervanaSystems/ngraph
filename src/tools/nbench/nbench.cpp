@@ -399,7 +399,7 @@ OPTIONS
                     else if (is_type<op::Result>(node))
                     {
                         total_result_count++;
-                        const Shape& shape = node->input(0).get_shape();
+                        const Shape& shape = node->get_input_shape(0);
                         size_t size = node->get_input_element_type(0).size() * shape_size(shape);
                         total_result_bytes += size;
                     }

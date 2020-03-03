@@ -78,7 +78,7 @@ void op::DynBroadcast::validate_and_infer_types()
                              ->get_axis_set_val();
     }
 
-    PartialShape arg_shape = input(0).get_partial_shape();
+    PartialShape arg_shape = get_input_partial_shape(0);
     if (result_shape.is_static() && axes_known && arg_shape.is_static())
     {
         for (auto axis : broadcast_axes)
