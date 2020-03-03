@@ -55,8 +55,8 @@ TEST(type_prop, split)
     EXPECT_EQ(split->outputs().size(), 2);
     EXPECT_EQ(split->get_output_shape(0), (Shape{2, 3}));
     EXPECT_EQ(split->get_output_shape(1), (Shape{2, 3}));
-    EXPECT_EQ(split->output(0).get_element_type(), element::i32);
-    EXPECT_EQ(split->output(1).get_element_type(), element::i32);
+    EXPECT_EQ(split->get_output_element_type(0), element::i32);
+    EXPECT_EQ(split->get_output_element_type(1), element::i32);
 }
 
 TEST(type_prop, split_axis_must_be_scalar)

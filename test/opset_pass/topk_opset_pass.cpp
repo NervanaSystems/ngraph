@@ -47,7 +47,7 @@ TEST(opset_transform, opset1_topk_upgrade_pass)
     EXPECT_EQ(topk_v1->get_mode(), op::v1::TopK::Mode::MAX);
     EXPECT_EQ(topk_v1->get_sort_type(), op::v1::TopK::SortType::SORT_VALUES);
 
-    const auto values_out_element_type = topk_v1->output(0).get_element_type();
+    const auto values_out_element_type = topk_v1->get_output_element_type(0);
     EXPECT_EQ(values_out_element_type, data->get_element_type());
 }
 
