@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/one_hot.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -192,6 +193,12 @@ void op::v1::OneHot::validate_and_infer_types()
     }
 
     set_output_type(0, on_value_et, result_shape);
+}
+
+bool ngraph::op::v1::OneHot::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    return true;
 }
 
 shared_ptr<Node> op::v1::OneHot::copy_with_new_args(const NodeVector& new_args) const
