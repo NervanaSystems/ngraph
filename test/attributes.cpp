@@ -285,6 +285,171 @@ TEST(attributes, user_op)
     EXPECT_EQ(g_oracle->get_ultra_parameters(), oracle->get_ultra_parameters());
 }
 
+TEST(attributes, matmul_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::MatMul>();
+    auto A = make_shared<op::Parameter>(element::f32, Shape{0, 2});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{2, 0});
+
+    bool transpose_a = true;
+    bool transpose_b = true;
+
+    auto matmul = make_shared<opset1::MatMul>(A, B, transpose_a, transpose_b);
+    NodeBuilder builder(matmul);
+    auto g_matmul = as_type_ptr<opset1::MatMul>(builder.create());
+
+    EXPECT_EQ(g_matmul->get_transpose_a(), matmul->get_transpose_a());
+    EXPECT_EQ(g_matmul->get_transpose_b(), matmul->get_transpose_b());
+}
+
+TEST(attributes, max_pool_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::MaxPool>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});
+
+    auto strides = Strides{2};
+    auto pads_begin = Shape{1};
+    auto pads_end = Shape{1};
+    auto kernel = Shape{1};
+    auto rounding_mode = op::RoundingType::FLOOR;
+    auto auto_pad = op::PadType::EXPLICIT;
+
+    auto max_pool = make_shared<opset1::MaxPool>(
+        data, strides, pads_begin, pads_end, kernel, rounding_mode, auto_pad);
+    NodeBuilder builder(max_pool);
+    auto g_max_pool = as_type_ptr<opset1::MaxPool>(builder.create());
+
+    EXPECT_EQ(g_max_pool->get_strides(), max_pool->get_strides());
+    EXPECT_EQ(g_max_pool->get_pads_begin(), max_pool->get_pads_begin());
+    EXPECT_EQ(g_max_pool->get_pads_end(), max_pool->get_pads_end());
+    EXPECT_EQ(g_max_pool->get_kernel(), max_pool->get_kernel());
+    EXPECT_EQ(g_max_pool->get_rounding_type(), max_pool->get_rounding_type());
+    EXPECT_EQ(g_max_pool->get_auto_pad(), max_pool->get_auto_pad());
+}
+
+TEST(attributes, mod_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Mod>();
+    auto A = make_shared<op::Parameter>(element::f32, Shape{0, 2});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{2, 0});
+
+    auto auto_broadcast = op::AutoBroadcastType::NUMPY;
+
+    auto mod = make_shared<opset1::Mod>(A, B, auto_broadcast);
+    NodeBuilder builder(mod);
+    auto g_mod = as_type_ptr<opset1::Mod>(builder.create());
+
+    EXPECT_EQ(g_mod->get_auto_broadcast(), mod->get_auto_broadcast());
+}
+
+TEST(attributes, non_max_suppression_op_custom_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::NonMaxSuppression>();
+    auto boxes = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
+    auto scores = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1});
+
+    auto box_encoding = opset1::NonMaxSuppression::BoxEncodingType::CENTER;
+    bool sort_result_descending = false;
+
+    auto nms =
+        make_shared<opset1::NonMaxSuppression>(boxes, scores, box_encoding, sort_result_descending);
+    NodeBuilder builder(nms);
+    auto g_nms = as_type_ptr<opset1::NonMaxSuppression>(builder.create());
+
+    EXPECT_EQ(g_nms->get_box_encoding(), nms->get_box_encoding());
+    EXPECT_EQ(g_nms->get_sort_result_descending(), nms->get_sort_result_descending());
+}
+
+TEST(attributes, non_max_suppression_op_default_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::NonMaxSuppression>();
+    auto boxes = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
+    auto scores = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1});
+
+    auto nms = make_shared<opset1::NonMaxSuppression>(boxes, scores);
+    NodeBuilder builder(nms);
+    auto g_nms = as_type_ptr<opset1::NonMaxSuppression>(builder.create());
+
+    EXPECT_EQ(g_nms->get_box_encoding(), nms->get_box_encoding());
+    EXPECT_EQ(g_nms->get_sort_result_descending(), nms->get_sort_result_descending());
+}
+
+TEST(attributes, normalize_l2_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::NormalizeL2>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{1});
+    const auto axes = make_shared<op::Constant>(element::i32, Shape{}, vector<int32_t>{0});
+
+    float eps{1e-6f};
+    auto eps_mode = op::EpsMode::ADD;
+
+    auto normalize_l2 = make_shared<opset1::NormalizeL2>(data, axes, eps, eps_mode);
+    NodeBuilder builder(normalize_l2);
+    auto g_normalize_l2 = as_type_ptr<opset1::NormalizeL2>(builder.create());
+
+    EXPECT_EQ(g_normalize_l2->get_eps(), normalize_l2->get_eps());
+    EXPECT_EQ(g_normalize_l2->get_eps_mode(), normalize_l2->get_eps_mode());
+}
+
+TEST(attributes, one_hot_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::OneHot>();
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{1, 3, 2, 3});
+    auto depth = op::Constant::create(element::i64, Shape{}, {4});
+    auto on_value = op::Constant::create(element::f32, Shape{}, {1.0f});
+    auto off_value = op::Constant::create(element::f32, Shape{}, {0.0f});
+
+    int64_t axis = 3;
+
+    auto one_hot = make_shared<opset1::OneHot>(indices, depth, on_value, off_value, axis);
+    NodeBuilder builder(one_hot);
+    auto g_one_hot = as_type_ptr<opset1::OneHot>(builder.create());
+
+    EXPECT_EQ(g_one_hot->get_axis(), one_hot->get_axis());
+}
+
+TEST(attributes, pad_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Pad>();
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{1});
+
+    auto pad_mode = op::PadMode::EDGE;
+
+    auto pad = make_shared<opset1::Pad>(arg, pads_begin, pads_end, pad_mode);
+    NodeBuilder builder(pad);
+    auto g_pad = as_type_ptr<opset1::Pad>(builder.create());
+
+    EXPECT_EQ(g_pad->get_pad_mode(), pad->get_pad_mode());
+}
+
+TEST(attributes, psroi_pooling_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::PSROIPooling>();
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1024, 63, 38});
+    auto coords = make_shared<op::Parameter>(element::f32, Shape{300, 5});
+
+    const int64_t output_dim = 882;
+    const int64_t group_size = 3;
+    const float spatial_scale = 0.0625;
+    int spatial_bins_x = 1;
+    int spatial_bins_y = 1;
+    string mode = "Avg";
+
+    auto psroi_pool = make_shared<opset1::PSROIPooling>(
+        input, coords, output_dim, group_size, spatial_scale, spatial_bins_x, spatial_bins_y, mode);
+    NodeBuilder builder(psroi_pool);
+    auto g_psroi_pool = as_type_ptr<opset1::PSROIPooling>(builder.create());
+
+    EXPECT_EQ(g_psroi_pool->get_output_dim(), psroi_pool->get_output_dim());
+    EXPECT_EQ(g_psroi_pool->get_group_size(), psroi_pool->get_group_size());
+    EXPECT_EQ(g_psroi_pool->get_spatial_scale(), psroi_pool->get_spatial_scale());
+    EXPECT_EQ(g_psroi_pool->get_spatial_bins_x(), psroi_pool->get_spatial_bins_x());
+    EXPECT_EQ(g_psroi_pool->get_spatial_bins_y(), psroi_pool->get_spatial_bins_y());
+    EXPECT_EQ(g_psroi_pool->get_mode(), psroi_pool->get_mode());
+}
+
 TEST(attributes, reduce_logical_and_op)
 {
     // ReduceLogicalAnd derives visit_attributes from op::util::LogicalReductionKeepDims
