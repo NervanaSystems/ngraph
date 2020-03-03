@@ -38,6 +38,7 @@ namespace ngraph
                 /// \param arg Node that produces the input tensor.
                 Result(const Output<Node>& arg, bool needs_default_layout = false);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
