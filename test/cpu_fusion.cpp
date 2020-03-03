@@ -2029,7 +2029,7 @@ TEST(batch_fusion, group_convolution)
     auto b_ = rng.initialize(backend->create_tensor(element::f32, shape_b));
 
     vector<float> rv(shape_size(shape_r), 0);
-    auto group_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
+    auto group_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensor>(
         backend->create_tensor(element::f32, shape_r, rv.data()));
 
     auto av = read_vector<float>(a_);
@@ -2045,9 +2045,9 @@ TEST(batch_fusion, group_convolution)
     Shape shape_ur{1, 1, 2, 2};
     // allocate a contigious storage for both lower and upper halves.
     vector<float> erv(shape_size(shape_r), 0);
-    auto lower_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
+    auto lower_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensor>(
         backend->create_tensor(element::f32, shape_ur, erv.data()));
-    auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
+    auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensor>(
         backend->create_tensor(element::f32, shape_ur, erv.data() + erv.size() / 2));
     auto handle = backend->compile(f);
     handle->call_with_validate({group_result, lower_result, upper_result},

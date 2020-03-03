@@ -78,8 +78,8 @@ void runtime::cpu::CPU_CallFrame::inner_call(
 
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
-        shared_ptr<runtime::cpu::CPUTensorView> tv =
-            static_pointer_cast<runtime::cpu::CPUTensorView>(input_tvs[i]);
+        shared_ptr<runtime::cpu::CPUTensor> tv =
+            static_pointer_cast<runtime::cpu::CPUTensor>(input_tvs[i]);
         if (disable_caching)
         {
             m_ctx_vec[id]->p_en[i] = true;
@@ -93,8 +93,8 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        shared_ptr<runtime::cpu::CPUTensorView> tv =
-            static_pointer_cast<runtime::cpu::CPUTensorView>(output_tvs[i]);
+        shared_ptr<runtime::cpu::CPUTensor> tv =
+            static_pointer_cast<runtime::cpu::CPUTensor>(output_tvs[i]);
         outputs.push_back(tv->get_data_ptr());
     }
 
