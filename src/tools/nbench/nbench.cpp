@@ -400,7 +400,7 @@ OPTIONS
                     {
                         total_result_count++;
                         const Shape& shape = node->input(0).get_shape();
-                        size_t size = node->input(0).get_element_type().size() * shape_size(shape);
+                        size_t size = node->get_input_element_type(0).size() * shape_size(shape);
                         total_result_bytes += size;
                     }
                 }

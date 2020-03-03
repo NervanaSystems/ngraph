@@ -377,7 +377,7 @@ namespace ngraph
         size_t get_input_size() const;
 
         /// Returns the element type of input i
-        // TODO: deprecate in favor of node->input(i).get_element_type()
+        // TODO: deprecate in favor of node->get_input_element_type(i)
         const element::Type& get_input_element_type(size_t i) const;
 
         /// Returns the shape of input i

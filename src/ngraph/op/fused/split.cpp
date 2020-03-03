@@ -58,7 +58,7 @@ void op::v0::Split::pre_validate_and_infer_types()
     // Create dynamic-typed outputs. Actual shape/type will be computed during shape inference
     for (size_t i = 0; i < std::max(m_splits.size(), m_num_split); i++)
     {
-        set_output_type(i, input(0).get_element_type(), PartialShape::dynamic());
+        set_output_type(i, get_input_element_type(0), PartialShape::dynamic());
     }
 
     if (is_dynamic())
@@ -165,14 +165,14 @@ void op::v1::Split::validate_and_infer_types()
 
         for (size_t i = 0; i < m_num_splits; ++i)
         {
-            set_output_type(i, input(0).get_element_type(), each_output_shape);
+            set_output_type(i, get_input_element_type(0), each_output_shape);
         }
     }
     else
     {
         for (size_t i = 0; i < m_num_splits; ++i)
         {
-            set_output_type(i, input(0).get_element_type(), PartialShape::dynamic());
+            set_output_type(i, get_input_element_type(0), PartialShape::dynamic());
         }
 
         set_input_is_relevant_to_shape(0);

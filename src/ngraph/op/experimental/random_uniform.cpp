@@ -47,8 +47,8 @@ void ngraph::op::RandomUniform::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           element::Type::merge(result_element_type,
-                                               input(0).get_element_type(),
-                                               input(1).get_element_type()),
+                                               get_input_element_type(0),
+                                               get_input_element_type(1)),
                           "Element types for min and max values do not match.");
 
     NODE_VALIDATION_CHECK(this,
@@ -64,7 +64,7 @@ void ngraph::op::RandomUniform::validate_and_infer_types()
                           "Tensor for max_value is not a scalar.");
 
     NODE_VALIDATION_CHECK(this,
-                          input(2).get_element_type().compatible(element::i64),
+                          get_input_element_type(2).compatible(element::i64),
                           "Element type for result_shape is not element::i64.");
 
     NODE_VALIDATION_CHECK(this,
@@ -72,7 +72,7 @@ void ngraph::op::RandomUniform::validate_and_infer_types()
                           "Tensor for result_shape not a vector.");
 
     NODE_VALIDATION_CHECK(this,
-                          input(3).get_element_type().compatible(element::boolean),
+                          get_input_element_type(3).compatible(element::boolean),
                           "Element type for use_fixed_seed is not element::boolean.");
 
     NODE_VALIDATION_CHECK(this,

@@ -289,10 +289,10 @@ void op::v1::GroupConvolutionBackpropData::set_output_shape(const Shape& shape)
 void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
 {
     const auto& data_pshape = input(0).get_partial_shape();
-    element::Type data_et = input(0).get_element_type();
+    element::Type data_et = get_input_element_type(0);
 
     const auto& filters_pshape = input(1).get_partial_shape();
-    element::Type filters_et = input(1).get_element_type();
+    element::Type filters_et = get_input_element_type(1);
 
     element::Type result_et;
     NODE_VALIDATION_CHECK(
@@ -764,8 +764,8 @@ op::v0::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
 
 void op::v0::GroupConvolutionBackpropData::pre_validate_and_infer_types()
 {
-    element::Type data_element_type = input(2).get_element_type();
-    element::Type filters_elem_type = input(1).get_element_type();
+    element::Type data_element_type = get_input_element_type(2);
+    element::Type filters_elem_type = get_input_element_type(1);
 
     NODE_VALIDATION_CHECK(this,
                           data_element_type.is_dynamic() || data_element_type.is_real(),
