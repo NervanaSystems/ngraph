@@ -35,6 +35,12 @@ shared_ptr<Node> op::v1::LogicalXor::copy_with_new_args(const NodeVector& new_ar
     return make_shared<v1::LogicalXor>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
+bool ngraph::op::v1::LogicalXor::visit_attributes(AttributeVisitor& visitor)
+{
+    BinaryElementwiseLogical::visit_attributes(visitor);
+    return true;
+}
+
 constexpr NodeTypeInfo op::v0::Xor::type_info;
 
 op::v0::Xor::Xor(const Output<Node>& arg0,
