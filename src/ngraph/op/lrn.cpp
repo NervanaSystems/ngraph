@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/lrn.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/multiply.hpp"
 
@@ -109,6 +110,15 @@ void op::LRN::validate_and_infer_types()
                           "Axes input must be integral numbers, but are: ",
                           axes_type,
                           ").");
+}
+
+bool ngraph::op::v0::LRN::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("alpha", m_alpha);
+    visitor.on_attribute("beta", m_beta);
+    visitor.on_attribute("bias", m_bias);
+    visitor.on_attribute("size", m_size);
+    return true;
 }
 
 shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const

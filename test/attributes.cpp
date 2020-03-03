@@ -537,3 +537,350 @@ TEST(attributes, rnn_cell_op_default_attributes)
     EXPECT_EQ(g_rnn_cell->get_activations_alpha(), rnn_cell->get_activations_alpha());
     EXPECT_EQ(g_rnn_cell->get_activations_beta(), rnn_cell->get_activations_beta());
 }
+
+TEST(attributes, elu_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Elu>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+
+    double alpha = 0.1;
+
+    const auto elu = make_shared<opset1::Elu>(data, alpha);
+    NodeBuilder builder(elu);
+    auto g_elu = as_type_ptr<opset1::Elu>(builder.create());
+
+    EXPECT_EQ(g_elu->get_alpha(), elu->get_alpha());
+}
+
+TEST(attributes, fake_quantize_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::FakeQuantize>();
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    const auto input_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto levels = 5;
+    auto auto_broadcast = op::AutoBroadcastType::NUMPY;
+
+    const auto fake_quantize = make_shared<op::FakeQuantize>(
+        data, input_low, input_high, output_low, output_high, levels, auto_broadcast);
+    NodeBuilder builder(fake_quantize);
+    auto g_fake_quantize = as_type_ptr<opset1::FakeQuantize>(builder.create());
+
+    EXPECT_EQ(g_fake_quantize->get_levels(), fake_quantize->get_levels());
+    EXPECT_EQ(g_fake_quantize->get_auto_broadcast(), fake_quantize->get_auto_broadcast());
+}
+
+TEST(attributes, grn_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::GRN>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+
+    float bias = 1.25f;
+
+    auto grn = make_shared<opset1::GRN>(data, bias);
+    NodeBuilder builder(grn);
+    auto g_grn = as_type_ptr<opset1::GRN>(builder.create());
+
+    EXPECT_EQ(g_grn->get_bias(), grn->get_bias());
+}
+
+TEST(attributes, group_conv_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::GroupConvolution>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 12, 224, 224});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{4, 1, 3, 5, 5});
+    auto strides = Strides{1, 1};
+    auto pads_begin = CoordinateDiff{1, 2};
+    auto pads_end = CoordinateDiff{1, 2};
+    auto dilations = Strides{1, 1};
+    auto group_conv = make_shared<opset1::GroupConvolution>(
+        data, filters, strides, pads_begin, pads_end, dilations, op::PadType::VALID);
+    NodeBuilder builder(group_conv);
+    auto g_group_conv = as_type_ptr<opset1::GroupConvolution>(builder.create());
+    EXPECT_EQ(g_group_conv->get_strides(), group_conv->get_strides());
+    EXPECT_EQ(g_group_conv->get_pads_begin(), group_conv->get_pads_begin());
+    EXPECT_EQ(g_group_conv->get_pads_end(), group_conv->get_pads_end());
+    EXPECT_EQ(g_group_conv->get_dilations(), group_conv->get_dilations());
+    EXPECT_EQ(g_group_conv->get_auto_pad(), group_conv->get_auto_pad());
+}
+
+TEST(attributes, group_conv_backprop_data_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::GroupConvolutionBackpropData>();
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 20, 224, 224});
+    const auto filter = make_shared<op::Parameter>(element::f32, Shape{4, 5, 2, 3, 3});
+    const auto output_shape = make_shared<op::Parameter>(element::f32, Shape{1, 8, 447, 447});
+
+    const auto strides = Strides{2, 1};
+    const auto pads_begin = CoordinateDiff{3, 4};
+    const auto pads_end = CoordinateDiff{4, 6};
+    const auto dilations = Strides{3, 1};
+    const auto auto_pad = op::PadType::EXPLICIT;
+    const auto output_padding = CoordinateDiff{3, 4};
+
+    const auto gcbd = make_shared<opset1::GroupConvolutionBackpropData>(data,
+                                                                        filter,
+                                                                        output_shape,
+                                                                        strides,
+                                                                        pads_begin,
+                                                                        pads_end,
+                                                                        dilations,
+                                                                        auto_pad,
+                                                                        output_padding);
+    NodeBuilder builder(gcbd);
+    const auto g_gcbd = as_type_ptr<opset1::GroupConvolutionBackpropData>(builder.create());
+
+    EXPECT_EQ(g_gcbd->get_strides(), gcbd->get_strides());
+    EXPECT_EQ(g_gcbd->get_pads_begin(), gcbd->get_pads_begin());
+    EXPECT_EQ(g_gcbd->get_pads_end(), gcbd->get_pads_end());
+    EXPECT_EQ(g_gcbd->get_dilations(), gcbd->get_dilations());
+    EXPECT_EQ(g_gcbd->get_auto_pad(), gcbd->get_auto_pad());
+    EXPECT_EQ(g_gcbd->get_output_padding(), gcbd->get_output_padding());
+}
+
+TEST(attributes, lrn_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::LRN>();
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    const auto axes = make_shared<op::Parameter>(element::i32, Shape{2});
+
+    const double alpha = 1.1;
+    const double beta = 2.2;
+    const double bias = 3.3;
+    const size_t size = 4;
+
+    const auto lrn = make_shared<opset1::LRN>(arg, axes, alpha, beta, bias, size);
+    NodeBuilder builder(lrn);
+    auto g_lrn = as_type_ptr<opset1::LRN>(builder.create());
+
+    EXPECT_EQ(g_lrn->get_alpha(), lrn->get_alpha());
+    EXPECT_EQ(g_lrn->get_beta(), lrn->get_beta());
+    EXPECT_EQ(g_lrn->get_bias(), lrn->get_bias());
+    EXPECT_EQ(g_lrn->get_nsize(), lrn->get_nsize());
+}
+
+TEST(attributes, lstm_cell_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::LSTMCell>();
+    auto X = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto H = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto W = make_shared<op::Parameter>(element::f32, Shape{12, 3});
+    auto R = make_shared<op::Parameter>(element::f32, Shape{12, 3});
+    const auto initial_hidden_state = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    const auto initial_cell_state = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+
+    const auto hidden_size = 3;
+    const auto weights_format = op::LSTMWeightsFormat::ICOF;
+    const std::vector<std::string> activations = {"tanh", "sigmoid", "tanh"};
+    auto activations_alpha = std::vector<float>{1.0, 1.5};
+    auto activations_beta = std::vector<float>{2.0, 1.0};
+    const float clip = 0.5f;
+    bool input_forget = true;
+
+    const auto lstm_cell = make_shared<opset1::LSTMCell>(X,
+                                                         initial_hidden_state,
+                                                         initial_cell_state,
+                                                         W,
+                                                         R,
+                                                         hidden_size,
+                                                         weights_format,
+                                                         activations,
+                                                         activations_alpha,
+                                                         activations_beta,
+                                                         clip,
+                                                         input_forget);
+    NodeBuilder builder(lstm_cell);
+    auto g_lstm_cell = as_type_ptr<opset1::LSTMCell>(builder.create());
+
+    EXPECT_EQ(g_lstm_cell->get_hidden_size(), lstm_cell->get_hidden_size());
+    EXPECT_EQ(g_lstm_cell->get_activations(), lstm_cell->get_activations());
+    EXPECT_EQ(g_lstm_cell->get_activations_alpha(), lstm_cell->get_activations_alpha());
+    EXPECT_EQ(g_lstm_cell->get_activations_beta(), lstm_cell->get_activations_beta());
+    EXPECT_EQ(g_lstm_cell->get_clip(), lstm_cell->get_clip());
+    EXPECT_EQ(g_lstm_cell->get_input_forget(), lstm_cell->get_input_forget());
+    EXPECT_EQ(g_lstm_cell->get_weights_format(), lstm_cell->get_weights_format());
+}
+
+TEST(attributes, lstm_sequence_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::LSTMSequence>();
+    const auto X = make_shared<op::Parameter>(element::f32, Shape{1, 2, 4});
+    const auto initial_hidden_state = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    const auto initial_cell_state = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    const auto sequence_lengths = make_shared<op::Parameter>(element::i32, Shape{2});
+    const auto W = make_shared<op::Parameter>(element::f32, Shape{1, 12, 4});
+    const auto R = make_shared<op::Parameter>(element::f32, Shape{1, 12, 3});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{1, 12});
+
+    const auto hidden_size = 3;
+    const auto lstm_direction = op::LSTMSequence::direction::FORWARD;
+    const auto weights_format = op::LSTMWeightsFormat::ICOF;
+    const std::vector<float> activations_alpha = {1, 2, 3};
+    const std::vector<float> activations_beta = {4, 5, 6};
+    const std::vector<std::string> activations = {"tanh", "sigmoid", "tanh"};
+    const float clip_threshold = 0.5f;
+    const bool input_forget = true;
+
+    const auto lstm_sequence = make_shared<opset1::LSTMSequence>(X,
+                                                                 initial_hidden_state,
+                                                                 initial_cell_state,
+                                                                 sequence_lengths,
+                                                                 W,
+                                                                 R,
+                                                                 B,
+                                                                 hidden_size,
+                                                                 lstm_direction,
+                                                                 weights_format,
+                                                                 activations_alpha,
+                                                                 activations_beta,
+                                                                 activations,
+                                                                 clip_threshold,
+                                                                 input_forget);
+    NodeBuilder builder(lstm_sequence);
+    auto g_lstm_sequence = as_type_ptr<opset1::LSTMSequence>(builder.create());
+
+    EXPECT_EQ(g_lstm_sequence->get_hidden_size(), lstm_sequence->get_hidden_size());
+    EXPECT_EQ(g_lstm_sequence->get_activations(), lstm_sequence->get_activations());
+    EXPECT_EQ(g_lstm_sequence->get_activations_alpha(), lstm_sequence->get_activations_alpha());
+    EXPECT_EQ(g_lstm_sequence->get_activations_beta(), lstm_sequence->get_activations_beta());
+    EXPECT_EQ(g_lstm_sequence->get_clip_threshold(), lstm_sequence->get_clip_threshold());
+    EXPECT_EQ(g_lstm_sequence->get_direction(), lstm_sequence->get_direction());
+    EXPECT_EQ(g_lstm_sequence->get_input_forget(), lstm_sequence->get_input_forget());
+    EXPECT_EQ(g_lstm_sequence->get_weights_format(), lstm_sequence->get_weights_format());
+}
+
+TEST(attributes, shuffle_channels_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::ShuffleChannels>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto axis = 0;
+    auto groups = 2;
+    auto shuffle_channels = make_shared<opset1::ShuffleChannels>(data, axis, groups);
+    NodeBuilder builder(shuffle_channels);
+    auto g_shuffle_channels = as_type_ptr<opset1::ShuffleChannels>(builder.create());
+
+    EXPECT_EQ(g_shuffle_channels->get_axis(), shuffle_channels->get_axis());
+    EXPECT_EQ(g_shuffle_channels->get_groups(), shuffle_channels->get_groups());
+}
+
+TEST(attributes, softmax_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Softmax>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto axis = 0;
+    auto softmax = make_shared<opset1::Softmax>(data, axis);
+    NodeBuilder builder(softmax);
+    auto g_softmax = as_type_ptr<opset1::Softmax>(builder.create());
+
+    EXPECT_EQ(g_softmax->get_axis(), softmax->get_axis());
+}
+
+TEST(attributes, space_to_depth_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::SpaceToDepth>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 50, 50});
+    auto block_size = 2;
+    auto mode = opset1::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
+    auto space_to_depth = make_shared<opset1::SpaceToDepth>(data, mode, block_size);
+    NodeBuilder builder(space_to_depth);
+    auto g_space_to_depth = as_type_ptr<opset1::SpaceToDepth>(builder.create());
+
+    EXPECT_EQ(g_space_to_depth->get_block_size(), space_to_depth->get_block_size());
+    EXPECT_EQ(g_space_to_depth->get_mode(), space_to_depth->get_mode());
+}
+
+TEST(attributes, split_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Split>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto axis = make_shared<op::Parameter>(element::i32, Shape{});
+    auto num_splits = 2;
+    auto split = make_shared<opset1::Split>(data, axis, num_splits);
+    NodeBuilder builder(split);
+    auto g_split = as_type_ptr<opset1::Split>(builder.create());
+
+    EXPECT_EQ(g_split->get_num_splits(), split->get_num_splits());
+}
+
+TEST(attributes, squared_difference_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::SquaredDifference>();
+    auto x1 = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto x2 = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto auto_broadcast = op::AutoBroadcastType::NUMPY;
+    auto squared_difference = make_shared<opset1::SquaredDifference>(x1, x2, auto_broadcast);
+    NodeBuilder builder(squared_difference);
+    auto g_squared_difference = as_type_ptr<opset1::SquaredDifference>(builder.create());
+
+    EXPECT_EQ(g_squared_difference->get_autob(), squared_difference->get_autob());
+}
+
+TEST(attributes, strided_slice_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::StridedSlice>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+    auto begin = make_shared<op::Parameter>(element::i32, Shape{2});
+    auto end = make_shared<op::Parameter>(element::i32, Shape{2});
+    auto stride = make_shared<op::Parameter>(element::i32, Shape{2});
+
+    auto begin_mask = std::vector<int64_t>{0, 0};
+    auto end_mask = std::vector<int64_t>{0, 0};
+    auto new_axis_mask = std::vector<int64_t>{0, 0};
+    auto shrink_axis_mask = std::vector<int64_t>{0, 0};
+    auto ellipsis_mask = std::vector<int64_t>{0, 0};
+
+    auto strided_slice = make_shared<opset1::StridedSlice>(data,
+                                                           begin,
+                                                           end,
+                                                           stride,
+                                                           begin_mask,
+                                                           end_mask,
+                                                           new_axis_mask,
+                                                           shrink_axis_mask,
+                                                           ellipsis_mask);
+    NodeBuilder builder(strided_slice);
+    auto g_strided_slice = as_type_ptr<opset1::StridedSlice>(builder.create());
+
+    EXPECT_EQ(g_strided_slice->get_begin_mask(), strided_slice->get_begin_mask());
+    EXPECT_EQ(g_strided_slice->get_end_mask(), strided_slice->get_end_mask());
+    EXPECT_EQ(g_strided_slice->get_new_axis_mask(), strided_slice->get_new_axis_mask());
+    EXPECT_EQ(g_strided_slice->get_shrink_axis_mask(), strided_slice->get_shrink_axis_mask());
+    EXPECT_EQ(g_strided_slice->get_ellipsis_mask(), strided_slice->get_ellipsis_mask());
+}
+
+TEST(attributes, topk_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::TopK>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+    auto k = make_shared<op::Parameter>(element::i32, Shape{});
+
+    auto axis = 0;
+    auto mode = opset1::TopK::Mode::MAX;
+    auto sort_type = opset1::TopK::SortType::SORT_VALUES;
+
+    auto topk = make_shared<opset1::TopK>(data, k, axis, mode, sort_type);
+    NodeBuilder builder(topk);
+    auto g_topk = as_type_ptr<opset1::TopK>(builder.create());
+
+    EXPECT_EQ(g_topk->get_axis(), topk->get_axis());
+    EXPECT_EQ(g_topk->get_mode(), topk->get_mode());
+    EXPECT_EQ(g_topk->get_sort_type(), topk->get_sort_type());
+}
+
+TEST(attributes, logical_xor_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::LogicalXor>();
+    auto x1 = make_shared<op::Parameter>(element::boolean, Shape{200});
+    auto x2 = make_shared<op::Parameter>(element::boolean, Shape{200});
+
+    auto auto_broadcast = op::AutoBroadcastType::NUMPY;
+
+    auto logical_xor = make_shared<opset1::LogicalXor>(x1, x2, auto_broadcast);
+    NodeBuilder builder(logical_xor);
+    auto g_logical_xor = as_type_ptr<opset1::LogicalXor>(builder.create());
+
+    EXPECT_EQ(g_logical_xor->get_autob(), logical_xor->get_autob());
+}
