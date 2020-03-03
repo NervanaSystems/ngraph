@@ -498,3 +498,136 @@ TEST(attributes, lstm_sequence_op)
     EXPECT_EQ(g_lstm_sequence->get_input_forget(), lstm_sequence->get_input_forget());
     EXPECT_EQ(g_lstm_sequence->get_weights_format(), lstm_sequence->get_weights_format());
 }
+
+TEST(attributes, shuffle_channels_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::ShuffleChannels>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto axis = 0;
+    auto groups = 2;
+    auto shuffle_channels = make_shared<opset1::ShuffleChannels>(data, axis, groups);
+    NodeBuilder builder(shuffle_channels);
+    auto g_shuffle_channels = as_type_ptr<opset1::ShuffleChannels>(builder.create());
+
+    EXPECT_EQ(g_shuffle_channels->get_axis(), shuffle_channels->get_axis());
+    EXPECT_EQ(g_shuffle_channels->get_groups(), shuffle_channels->get_groups());
+}
+
+TEST(attributes, softmax_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Softmax>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto axis = 0;
+    auto softmax = make_shared<opset1::Softmax>(data, axis);
+    NodeBuilder builder(softmax);
+    auto g_softmax = as_type_ptr<opset1::Softmax>(builder.create());
+
+    EXPECT_EQ(g_softmax->get_axis(), softmax->get_axis());
+}
+
+TEST(attributes, space_to_depth_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::SpaceToDepth>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 50, 50});
+    auto block_size = 2;
+    auto mode = opset1::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
+    auto space_to_depth = make_shared<opset1::SpaceToDepth>(data, mode, block_size);
+    NodeBuilder builder(space_to_depth);
+    auto g_space_to_depth = as_type_ptr<opset1::SpaceToDepth>(builder.create());
+
+    EXPECT_EQ(g_space_to_depth->get_block_size(), space_to_depth->get_block_size());
+    EXPECT_EQ(g_space_to_depth->get_mode(), space_to_depth->get_mode());
+}
+
+TEST(attributes, split_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Split>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto axis = make_shared<op::Parameter>(element::i32, Shape{});
+    auto num_splits = 2;
+    auto split = make_shared<opset1::Split>(data, axis, num_splits);
+    NodeBuilder builder(split);
+    auto g_split = as_type_ptr<opset1::Split>(builder.create());
+
+    EXPECT_EQ(g_split->get_num_splits(), split->get_num_splits());
+}
+
+TEST(attributes, squared_difference_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::SquaredDifference>();
+    auto x1 = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto x2 = make_shared<op::Parameter>(element::i32, Shape{200});
+    auto auto_broadcast = op::AutoBroadcastType::NUMPY;
+    auto squared_difference = make_shared<opset1::SquaredDifference>(x1, x2, auto_broadcast);
+    NodeBuilder builder(squared_difference);
+    auto g_squared_difference = as_type_ptr<opset1::SquaredDifference>(builder.create());
+
+    EXPECT_EQ(g_squared_difference->get_autob(), squared_difference->get_autob());
+}
+
+TEST(attributes, strided_slice_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::StridedSlice>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+    auto begin = make_shared<op::Parameter>(element::i32, Shape{2});
+    auto end = make_shared<op::Parameter>(element::i32, Shape{2});
+    auto stride = make_shared<op::Parameter>(element::i32, Shape{2});
+
+    auto begin_mask = std::vector<int64_t>{0, 0};
+    auto end_mask = std::vector<int64_t>{0, 0};
+    auto new_axis_mask = std::vector<int64_t>{0, 0};
+    auto shrink_axis_mask = std::vector<int64_t>{0, 0};
+    auto ellipsis_mask = std::vector<int64_t>{0, 0};
+
+    auto strided_slice = make_shared<opset1::StridedSlice>(data,
+                                                           begin,
+                                                           end,
+                                                           stride,
+                                                           begin_mask,
+                                                           end_mask,
+                                                           new_axis_mask,
+                                                           shrink_axis_mask,
+                                                           ellipsis_mask);
+    NodeBuilder builder(strided_slice);
+    auto g_strided_slice = as_type_ptr<opset1::StridedSlice>(builder.create());
+
+    EXPECT_EQ(g_strided_slice->get_begin_mask(), strided_slice->get_begin_mask());
+    EXPECT_EQ(g_strided_slice->get_end_mask(), strided_slice->get_end_mask());
+    EXPECT_EQ(g_strided_slice->get_new_axis_mask(), strided_slice->get_new_axis_mask());
+    EXPECT_EQ(g_strided_slice->get_shrink_axis_mask(), strided_slice->get_shrink_axis_mask());
+    EXPECT_EQ(g_strided_slice->get_ellipsis_mask(), strided_slice->get_ellipsis_mask());
+}
+
+TEST(attributes, topk_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::TopK>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+    auto k = make_shared<op::Parameter>(element::i32, Shape{});
+
+    auto axis = 0;
+    auto mode = opset1::TopK::Mode::MAX;
+    auto sort_type = opset1::TopK::SortType::SORT_VALUES;
+
+    auto topk = make_shared<opset1::TopK>(data, k, axis, mode, sort_type);
+    NodeBuilder builder(topk);
+    auto g_topk = as_type_ptr<opset1::TopK>(builder.create());
+
+    EXPECT_EQ(g_topk->get_axis(), topk->get_axis());
+    EXPECT_EQ(g_topk->get_mode(), topk->get_mode());
+    EXPECT_EQ(g_topk->get_sort_type(), topk->get_sort_type());
+}
+
+TEST(attributes, logical_xor_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::LogicalXor>();
+    auto x1 = make_shared<op::Parameter>(element::boolean, Shape{200});
+    auto x2 = make_shared<op::Parameter>(element::boolean, Shape{200});
+
+    auto auto_broadcast = op::AutoBroadcastType::NUMPY;
+
+    auto logical_xor = make_shared<opset1::LogicalXor>(x1, x2, auto_broadcast);
+    NodeBuilder builder(logical_xor);
+    auto g_logical_xor = as_type_ptr<opset1::LogicalXor>(builder.create());
+
+    EXPECT_EQ(g_logical_xor->get_autob(), logical_xor->get_autob());
+}

@@ -155,6 +155,7 @@ namespace ngraph
                      const SortType sort,
                      const element::Type& index_element_type = element::i32);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -208,4 +209,20 @@ namespace ngraph
 
         using v0::TopK;
     } // op
+
+    std::ostream& operator<<(std::ostream& s, const op::v1::TopK::Mode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v1::TopK::Mode>
+        : public EnumAttributeAdapterBase<op::v1::TopK::Mode>
+    {
+    public:
+        AttributeAdapter(op::v1::TopK::Mode& value)
+            : EnumAttributeAdapterBase<op::v1::TopK::Mode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::v1::TopK::Mode>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 } // ngraph
