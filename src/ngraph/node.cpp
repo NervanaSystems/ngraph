@@ -88,17 +88,7 @@ std::shared_ptr<Node> Node::copy_with_new_inputs(const OutputVector& inputs) con
     return copy_with_new_inputs(inputs, get_control_dependencies());
 }
 
-Output<Node> Node::get_as_output()
-{
-    return Output<Node>(shared_from_this());
-}
-
-Output<const Node> Node::get_as_output() const
-{
-    return Output<const Node>(shared_from_this());
-}
-
-std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i, bool for_get_output_element)
+std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i)
 {
     if (i == 0 && get_output_size() == 1)
     {
@@ -862,7 +852,7 @@ OutputVector ngraph::as_output_vector(const NodeVector& args)
     {
         if (auto goe = as_type_ptr<op::GetOutputElement>(arg))
         {
-            output_vector.push_back(goe->get_as_output());
+            output_vector.push_back(goe->input_value(0));
         }
         else
         {

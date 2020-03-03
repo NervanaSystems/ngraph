@@ -46,9 +46,9 @@ namespace ngraph
     }
     Node* Output<Node>::get_node() const { return m_node.get(); }
     std::shared_ptr<Node> Output<Node>::get_node_shared_ptr() const { return m_node; }
-    std::shared_ptr<Node> Output<Node>::as_single_output_node(bool for_get_output_element) const
+    std::shared_ptr<Node> Output<Node>::as_single_output_node() const
     {
-        return m_node->get_output_as_single_output_node(m_index, for_get_output_element);
+        return m_node->get_output_as_single_output_node(m_index);
     }
 
     size_t Output<Node>::get_index() const { return m_index; }

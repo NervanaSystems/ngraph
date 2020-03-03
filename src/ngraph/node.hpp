@@ -340,13 +340,9 @@ namespace ngraph
         const PartialShape& get_output_partial_shape(size_t i) const;
 
         /// Second argument is ignored
-        /// Returns the node if i=1 and the node has 1 output, otherwise a GetOutputElement
+        /// Returns the node if i=0 and the node has 1 output, otherwise a GetOutputElement
         /// If the node is a GetOutputElement, applies to the underlying node
-        virtual std::shared_ptr<Node>
-            get_output_as_single_output_node(size_t i, bool for_get_output_element = true);
-
-        virtual Output<Node> get_as_output();
-        virtual Output<const Node> get_as_output() const;
+        virtual std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
 
         /// Checks that there is exactly one output and returns its shape
         // TODO: deprecate in favor of node->output(0).get_shape() with a suitable check in the

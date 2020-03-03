@@ -42,10 +42,6 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GetOutputElement() = default;
 
-                /// Return the equilent Output<Node>
-                Output<Node> get_as_output() override;
-                Output<const Node> get_as_output() const override;
-
                 std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& inputs) const override;
                 void validate_and_infer_types() override;
@@ -54,9 +50,7 @@ namespace ngraph
                 size_t get_n() const { return m_n; }
                 NodeVector get_arguments() const override;
 
-                std::shared_ptr<Node>
-                    get_output_as_single_output_node(size_t i,
-                                                     bool for_get_output_element = true) override
+                std::shared_ptr<Node> get_output_as_single_output_node(size_t i) override
                 {
                     return input_value(0).get_node_shared_ptr()->get_output_as_single_output_node(
                         i);

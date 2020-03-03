@@ -49,17 +49,6 @@ shared_ptr<Node> op::GetOutputElement::clone_with_new_inputs(const OutputVector&
     return make_shared<op::GetOutputElement>(value.get_node_shared_ptr(), value.get_index());
 }
 
-Output<const Node> op::GetOutputElement::get_as_output() const
-{
-    auto inval = input_value(0);
-    return Output<const Node>(inval.get_node_shared_ptr(), inval.get_index());
-}
-
-Output<Node> op::GetOutputElement::get_as_output()
-{
-    return input_value(0);
-}
-
 NodeVector op::GetOutputElement::get_arguments() const
 {
     return NodeVector{input_value(0).get_node_shared_ptr()};

@@ -164,7 +164,7 @@ static std::string label_edge(const std::shared_ptr<Node>& /* src */,
         size_t output = 0;
         if (auto goe = as_type_ptr<op::GetOutputElement>(dst))
         {
-            output = goe->get_as_output().get_index();
+            output = goe->input_value(0).get_index();
         }
         stringstream label_edge;
         label_edge << "[label=\" " << output << " -> " << arg_index << " \"]";
