@@ -32,8 +32,8 @@ set(SRC
     cpu_kernels.cpp
     cpu_layout_descriptor.cpp
     cpu_op_annotations.cpp
-    cpu_tensor_view_wrapper.cpp
-    cpu_tensor_view.cpp
+    cpu_tensor_wrapper.cpp
+    cpu_tensor.cpp
     cpu_tracing.cpp
     cpu_visualize_tree.cpp
     cpu_cse.cpp

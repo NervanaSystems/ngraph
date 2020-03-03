@@ -17,7 +17,7 @@
 #include <cstring>
 #include <memory>
 
-#include "cpu_tensor_view.hpp"
+#include "cpu_tensor.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
