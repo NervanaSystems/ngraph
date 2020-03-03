@@ -88,6 +88,7 @@ namespace ngraph
                 ///
                 Softmax(const Output<Node>& arg, const size_t axis);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 size_t get_version() const override { return 1; }

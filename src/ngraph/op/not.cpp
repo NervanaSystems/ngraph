@@ -28,6 +28,11 @@ op::v1::LogicalNot::LogicalNot(const Output<Node>& arg)
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::LogicalNot::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 // TODO(amprocte): Update this to allow only boolean, for consistency with logical binops.
 void op::v1::LogicalNot::validate_and_infer_types()
 {

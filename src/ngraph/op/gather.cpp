@@ -112,6 +112,11 @@ op::v1::Gather::Gather(const Output<Node>& params,
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::Gather::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 void op::v1::Gather::validate_and_infer_types()
 {
     const auto& input_rank = get_input_partial_shape(PARAMS).rank();

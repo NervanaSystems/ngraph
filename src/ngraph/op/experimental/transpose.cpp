@@ -30,6 +30,11 @@ op::v1::Transpose::Transpose(const Output<Node>& arg, const Output<Node>& input_
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::Transpose::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 void op::v1::Transpose::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
