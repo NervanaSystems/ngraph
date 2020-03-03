@@ -32,15 +32,14 @@ namespace ngraph
                 friend class Node;
 
             public:
+                static constexpr NodeTypeInfo type_info{"GetOutputElement", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                GetOutputElement() = default;
                 /// \brief Constructs a get-tuple-element operation.
                 ///
                 /// \param arg The input tuple.
                 /// \param n The index of the tuple element to get.
                 GetOutputElement(const std::shared_ptr<Node>& arg, size_t n);
-
-                static constexpr NodeTypeInfo type_info{"GetOutputElement", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
-                GetOutputElement() = default;
 
                 std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& inputs) const override;
@@ -68,8 +67,7 @@ namespace ngraph
         using v0::GetOutputElement;
     }
 
-    inline std::shared_ptr<Node> get_output_element(const Output<Node>& output,
-                                                    bool for_get_output_element = false)
+    inline std::shared_ptr<Node> get_output_element(const Output<Node>& output)
     {
         return output.get_node_shared_ptr()->get_output_as_single_output_node(output.get_index());
     }

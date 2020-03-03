@@ -124,7 +124,7 @@ std::shared_ptr<Node> Node::clone_with_new_inputs(const OutputVector& inputs) co
     NodeVector args;
     for (const Output<Node>& input : inputs)
     {
-        args.push_back(get_output_element(input, false));
+        args.push_back(get_output_element(input));
     }
     std::shared_ptr<Node> clone = copy_with_new_args(args);
     // Remove the inserted GOEs
