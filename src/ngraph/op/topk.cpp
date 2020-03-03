@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/topk.hpp"
@@ -262,6 +263,14 @@ op::v1::TopK::TopK(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::TopK::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    visitor.on_attribute("mode", m_mode);
+    visitor.on_attribute("sort", m_sort);
+    return true;
+}
+
 void op::v1::TopK::validate_and_infer_types()
 {
     const auto& input_partial_shape = get_input_partial_shape(0);
@@ -433,4 +442,23 @@ void op::v1::TopK::set_k(size_t k)
 {
     this->input(1).replace_source_output(
         op::Constant::create(element::i64, Shape{}, {k})->output(0));
+}
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::v1::TopK::Mode>& EnumNames<op::v1::TopK::Mode>::get()
+    {
+        static auto enum_names = EnumNames<op::v1::TopK::Mode>(
+            "op::v1::TopK::Mode",
+            {{"max", op::v1::TopK::Mode::MAX}, {"min", op::v1::TopK::Mode::MIN}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v1::TopK::Mode>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::v1::TopK::Mode& type)
+    {
+        return s << as_string(type);
+    }
 }

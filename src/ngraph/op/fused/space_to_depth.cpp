@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <memory>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "space_to_depth.hpp"
@@ -39,6 +40,13 @@ op::SpaceToDepth::SpaceToDepth(const Output<Node>& data,
 op::SpaceToDepth::SpaceToDepth(const Output<Node>& data, const std::string& mode, size_t block_size)
     : SpaceToDepth(data, mode_from_string(mode), block_size)
 {
+}
+
+bool ngraph::op::v0::SpaceToDepth::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("block_size", m_blocksize);
+    visitor.on_attribute("mode", m_mode);
+    return true;
 }
 
 NodeVector op::SpaceToDepth::decompose_op() const
@@ -153,3 +161,24 @@ op::SpaceToDepth::SpaceToDepthMode op::SpaceToDepth::mode_from_string(const std:
 
     return allowed_values.at(mode);
 }
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::v0::SpaceToDepth::SpaceToDepthMode>&
+        EnumNames<op::v0::SpaceToDepth::SpaceToDepthMode>::get()
+    {
+        static auto enum_names = EnumNames<op::v0::SpaceToDepth::SpaceToDepthMode>(
+            "op::v0::SpaceToDepth::SpaceToDepthMode",
+            {{"blocks_first", op::v0::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST},
+             {"depth_first", op::v0::SpaceToDepth::SpaceToDepthMode::DEPTH_FIRST}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v0::SpaceToDepth::SpaceToDepthMode>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::v0::SpaceToDepth::SpaceToDepthMode& type)
+    {
+        return s << as_string(type);
+    }
+} // namespace ngraph

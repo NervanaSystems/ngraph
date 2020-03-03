@@ -48,6 +48,7 @@ namespace ngraph
                                 const int axis = 1,
                                 const size_t groups = 1UL);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 size_t get_zero_based_axis() const;
 
                 virtual void pre_validate_and_infer_types() override;

@@ -188,6 +188,8 @@ TEST(opset, new_op)
     // Fred should be in the copy
     fred = shared_ptr<Node>(opset1_copy.create("Fred"));
     EXPECT_TRUE(fred);
+    // Fred should not be in the registry
+    ASSERT_FALSE(FactoryRegistry<Node>::get().has_factory<NewOp>());
 }
 
 TEST(opset, dump)

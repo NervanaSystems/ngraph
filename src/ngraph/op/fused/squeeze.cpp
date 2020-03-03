@@ -93,6 +93,11 @@ void op::Squeeze::pre_validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), output_data_shape);
 }
 
+bool ngraph::op::v0::Squeeze::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 NodeVector op::Squeeze::decompose_op() const
 {
     NODE_VALIDATION_CHECK(
