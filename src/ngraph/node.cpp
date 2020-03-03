@@ -985,21 +985,8 @@ namespace ngraph
                                                             << "]:" << output.get_element_type()
                                                             << output.get_partial_shape();
     }
-
-    std::ostream& operator<<(std::ostream& out, const Input<Node>& input)
-    {
-        return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
-                                                           << "):" << input.get_element_type()
-                                                           << input.get_partial_shape();
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Input<const Node>& input)
-    {
-        return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
-                                                           << "):" << input.get_element_type()
-                                                           << input.get_partial_shape();
-    }
 }
+
 void Output<Node>::replace(const Output<Node>& replacement)
 {
     for (auto& input : get_target_inputs())
