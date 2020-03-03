@@ -87,7 +87,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::run_on_function(std::shared_ptr<
             continue;
         }
 
-        if (matcher->match(n) && transform(*matcher))
+        if (matcher->match(n->output(0)) && transform(*matcher))
         {
             replaced = true;
         }

@@ -97,7 +97,7 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
                 NGRAPH_DEBUG << "Running matcher " << closure.matcher->get_name() << "("
                              << closure.matcher->get_pattern()->get_name() << ") on "
                              << node->get_name();
-                if (closure.matcher->match(node))
+                if (closure.matcher->match(node->output(0)))
                 {
                     NGRAPH_DEBUG << "Matcher " << closure.matcher << closure.matcher->get_name()
                                  << " matched " << node->get_name();
@@ -226,7 +226,7 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
                     continue;
                 }
                 NGRAPH_DEBUG << "Running matcher " << closure.matcher << " on " << node->get_name();
-                if (closure.matcher->match(node))
+                if (closure.matcher->match(node->output(0)))
                 {
                     NGRAPH_DEBUG << "Matcher " << closure.matcher << " matched "
                                  << node->get_name();

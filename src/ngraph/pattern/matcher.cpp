@@ -54,10 +54,10 @@ namespace ngraph
             return is_successful;
         }
         PatternMap Matcher::get_pattern_map() const { return as_pattern_map(m_pattern_map); }
-        size_t Matcher::add_node(Output<Node> node)
+        size_t Matcher::add_node(Output<Node> value)
         {
             size_t result = m_matched_list.size();
-            m_matched_list.push_back(node.get_node_shared_ptr());
+            m_matched_list.push_back(value);
             return result;
         }
 

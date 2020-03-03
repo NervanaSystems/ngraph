@@ -87,7 +87,7 @@ void pass::ConstantFolding::construct_constant_variadic_split()
         return true;
     };
     auto variadic_split_matcher = make_shared<pattern::Matcher>(
-        variadic_split_pattern, "ConstantFolding.ConstantVariadicSplit");
+        variadic_split_pattern->output(0), "ConstantFolding.ConstantVariadicSplit");
     this->add_matcher(variadic_split_matcher,
                       constant_variadic_split_callback,
                       PassProperty::CHANGE_DYNAMIC_STATE);

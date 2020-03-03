@@ -753,6 +753,8 @@ namespace ngraph
             : m_node(node)
             , m_index(0)
         {
+            NGRAPH_CHECK(
+                node->get_output_size() == 1, "Node ", node, " must produce exactly one value.");
             eliminate_goe();
         }
 
@@ -874,6 +876,8 @@ namespace ngraph
         Output(const std::shared_ptr<T>& node)
             : Output(node, 0)
         {
+            NGRAPH_CHECK(
+                node->get_output_size() == 1, "Node ", node, " must produce exactly one value.");
             eliminate_goe();
         }
 

@@ -143,7 +143,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         NodeVector matched_nodes;
 
         // checks if the graph matches to pattern defined in the matcher_v2
-        if (matcher_v2->match(n))
+        if (matcher_v2->match(n->output(0)))
         {
             auto matched_weight = matcher_v2->get_pattern_map()[W]->get_argument(0);
             auto matched_data = matcher_v2->get_pattern_map()[input_data];
@@ -176,7 +176,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         for (size_t i = 0; i < NUM_MMB_ARGS; i++)
         {
             auto matcher = matchers_v1[i];
-            if (matcher->match(n))
+            if (matcher->match(n->output(0)))
             {
                 // if we get all 3 matches they will all fall
                 // in the right spots (e.g. DATA, WEIGHTS, BIAS) since matchers are ordered
