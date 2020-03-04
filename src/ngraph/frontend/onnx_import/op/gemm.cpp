@@ -52,6 +52,8 @@ namespace ngraph
                     const auto alpha = node.get_attribute_value<float>("alpha", 1);
                     const auto beta = node.get_attribute_value<float>("beta", 1);
 
+                    const auto alpha_node = default_opset::Constant::create(
+                        element::Type_t::f32, Shape{}, std::vector<float>{alpha});
                     const auto beta_node = default_opset::Constant::create(
                         element::Type_t::f32, Shape{}, std::vector<float>{beta});
 
@@ -71,22 +73,20 @@ namespace ngraph
                     input_a = ngraph::builder::opset1::flatten(input_a, 1);
                     input_b = ngraph::builder::opset1::flatten(input_b, 1);
 
-                    std::shared_ptr<ngraph::Node> last_node =
+                    std::shared_ptr<ngraph::Node> matmul_node =
                         std::make_shared<default_opset::MatMul>(input_a, input_b);
 
                     if (alpha != 1)
                     {
-                        last_node = std::make_shared<default_opset::Multiply>(
-                            last_node,
-                            default_opset::Constant::create(
-                                element::Type_t::f32, Shape{}, std::vector<float>{alpha}));
+                        matmul_node =
+                            std::make_shared<default_opset::Multiply>(matmul_node, alpha_node);
                     }
 
                     auto beta_times_input_c =
                         std::make_shared<default_opset::Multiply>(beta_node, input_c);
 
                     return NodeVector{
-                        std::make_shared<default_opset::Add>(last_node, beta_times_input_c)};
+                        std::make_shared<default_opset::Add>(matmul_node, beta_times_input_c)};
                 }
 
             } // namespace set_1
@@ -113,28 +113,28 @@ namespace ngraph
                     const auto alpha = node.get_attribute_value<float>("alpha", 1);
                     const auto beta = node.get_attribute_value<float>("beta", 1);
 
+                    const auto alpha_node = default_opset::Constant::create(
+                        element::Type_t::f32, Shape{}, std::vector<float>{alpha});
                     const auto beta_node = default_opset::Constant::create(
                         element::Type_t::f32, Shape{}, std::vector<float>{beta});
 
                     const bool trans_a = node.get_attribute_value<int64_t>("transA", 0);
                     const bool trans_b = node.get_attribute_value<int64_t>("transB", 0);
 
-                    std::shared_ptr<ngraph::Node> last_node =
+                    std::shared_ptr<ngraph::Node> matmul_node =
                         std::make_shared<default_opset::MatMul>(input_a, input_b, trans_a, trans_b);
 
                     if (alpha != 1)
                     {
-                        last_node = std::make_shared<default_opset::Multiply>(
-                            last_node,
-                            default_opset::Constant::create(
-                                element::Type_t::f32, Shape{}, std::vector<float>{alpha}));
+                        matmul_node =
+                            std::make_shared<default_opset::Multiply>(matmul_node, alpha_node);
                     }
 
                     auto beta_times_input_c =
                         std::make_shared<default_opset::Multiply>(beta_node, input_c);
 
                     return NodeVector{
-                        std::make_shared<default_opset::Add>(last_node, beta_times_input_c)};
+                        std::make_shared<default_opset::Add>(matmul_node, beta_times_input_c)};
                 }
 
             } // namespace set_6
