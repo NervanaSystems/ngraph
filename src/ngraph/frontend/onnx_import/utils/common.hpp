@@ -28,7 +28,6 @@
 #include "core/node.hpp"
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -69,13 +68,6 @@ namespace ngraph
                 return range;
             }
 
-            /// \brief Return the outputs of the node as vector.
-            ///
-            /// \param[in] node            Node with multiple outputs.
-            ///
-            /// \return                    Vector of outputs of input node.
-            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node);
-
             /// \brief Creates a shifted square identity matrix.
             /// \note Shifting in the context of this operator means that
             ///       the matrix can be created with elements equal to 1 not only in the main
@@ -87,7 +79,7 @@ namespace ngraph
             ///
             /// \return A Constant node representing shifted identity matrix.
             template <typename T = double>
-            std::shared_ptr<ngraph::op::Constant>
+            std::shared_ptr<default_opset::Constant>
                 shifted_square_identity(const Shape output_shape,
                                         const element::Type& output_type,
                                         const std::int64_t shift)

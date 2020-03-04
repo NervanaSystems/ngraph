@@ -65,14 +65,19 @@ namespace ngraph
                 NodeVector pad(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
-                    const Shape& data_shape = data->get_shape();
+
+                    const auto data_rank =
+                        node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
+                    CHECK_VALID_NODE(
+                        node, data_rank.is_static(), "Data rank must be static for pad op");
+                    const auto data_rank_value = static_cast<size_t>(data_rank);
 
                     double value = node.get_attribute_value<double>("value", 0);
                     const std::string mode =
                         node.get_attribute_value<std::string>("mode", "constant");
                     ngraph::op::PadMode pad_mode = get_pad_mode(mode);
 
-                    auto paddings = convpool::get_pads(node, data_shape);
+                    const auto paddings = convpool::get_pads(node, data_rank_value);
                     ngraph::CoordinateDiff padding_below = paddings.first;
                     ngraph::CoordinateDiff padding_above = paddings.second;
 
@@ -129,7 +134,7 @@ namespace ngraph
                     {
                         auto axis =
                             default_opset::Constant::create(element::i64, ngraph::Shape{}, {0});
-                        NodeVector padding = builder::split(pads, 2, 0);
+                        NodeVector padding = builder::opset1::split(pads, 2, 0);
 
                         padding_begin =
                             std::make_shared<default_opset::Convert>(padding.at(0), element::i64);

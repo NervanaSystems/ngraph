@@ -55,6 +55,7 @@ namespace ngraph
                            const int end_axis,
                            const std::vector<float>& anchors = std::vector<float>{});
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
