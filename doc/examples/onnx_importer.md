@@ -22,7 +22,7 @@ for(const auto& op : supported_ops)
     std::cout << op << std::endl;
 }
 ```
-Fragment of output:
+The above code compiles to produce a list of all the supported operators for the `version` and `domain` you select. The output should look similar to what is below.
 ```
 Abs
 Acos
@@ -30,7 +30,7 @@ Acos
 Xor
 ```
 
-In order to check if ONNX op in specific version and domain is supported by current version of ONNX importer `is_operator_supported` function should be used.
+To determine whether an ONNX op in a specific version and domain is supported by the importer, use the function `is_operator_supported`.
 The code listing below shows how to do it.
 ```
 const std::string op_name = "Abs";
