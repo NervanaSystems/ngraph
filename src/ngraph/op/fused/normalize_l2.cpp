@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <iterator>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/constant.hpp"
@@ -37,6 +38,13 @@ op::NormalizeL2::NormalizeL2(const Output<Node>& data,
     , m_eps_mode{eps_mode}
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::NormalizeL2::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("eps", m_eps);
+    visitor.on_attribute("eps_mode", m_eps_mode);
+    return true;
 }
 
 void op::NormalizeL2::pre_validate_and_infer_types()

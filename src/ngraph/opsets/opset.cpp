@@ -28,7 +28,7 @@ ngraph::Node* ngraph::OpSet::create(const std::string& name) const
     auto type_info_it = m_name_type_info_map.find(name);
     return type_info_it == m_name_type_info_map.end()
                ? nullptr
-               : FactoryRegistry<Node>::get().create(type_info_it->second);
+               : m_factory_registry.create(type_info_it->second);
 }
 
 const ngraph::OpSet& ngraph::get_opset0()

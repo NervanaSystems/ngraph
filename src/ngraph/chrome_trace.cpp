@@ -65,26 +65,26 @@ void event::Duration::write()
         lock_guard<mutex> lock(Manager::get_mutex());
 
         ofstream& out = event::Manager::get_output_stream();
+        string str;
         if (out.is_open() == false)
         {
             event::Manager::open();
         }
         else
         {
-            Manager::get_output_stream() << ",\n";
+            str += ",\n";
         }
 
-        Manager::get_output_stream() <<
-            R"({"name":")" << m_name << R"(","cat":")" << m_category << R"(","ph":"X","pid":)"
-                                     << Manager::get_process_id() << R"(,"tid":)"
-                                     << Manager::get_thread_id() <<
-            R"(,"ts":)" << m_start << R"(,"dur":)" << (stop_time - m_start);
+        str +=
+            R"({"name":")" + m_name + R"(","cat":")" + m_category + R"(","ph":"X","pid":)" +
+            Manager::get_process_id() + R"(,"tid":)" + Manager::get_thread_id() +
+            R"(,"ts":)" + to_string(m_start) + R"(,"dur":)" + to_string(stop_time - m_start);
         if (!m_args.empty())
         {
-            out <<
-                R"(,"args":)" << m_args;
+            str += R"(,"args":)" + m_args;
         }
-        out << "}";
+        str += "}";
+        out << str;
     }
 }
 
@@ -97,23 +97,23 @@ event::Object::Object(const string& name, const string& args)
         lock_guard<mutex> lock(Manager::get_mutex());
 
         ofstream& out = event::Manager::get_output_stream();
+        string str;
         if (out.is_open() == false)
         {
             event::Manager::open();
         }
         else
         {
-            Manager::get_output_stream() << ",\n";
+            str += ",\n";
         }
-        out << R"({"name":")" << m_name << R"(","ph":"N","id":")" << m_id <<
-            R"(","ts":)" << Manager::get_current_microseconds() <<
-            R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id();
+        str += R"({"name":")" + m_name + R"(","ph":"N","id":")" + to_string(m_id) +
+               R"(","ts":)" + to_string(Manager::get_current_microseconds()) +
+               R"(,"pid":)" + Manager::get_process_id() + R"(,"tid":)" + Manager::get_thread_id();
         if (!args.empty())
         {
-            out <<
-                R"(,"args":)" << args;
+            str += R"(,"args":)" + args;
         }
-        out << "}";
+        str += "}";
 
         write_snapshot(out, args);
     }
@@ -140,15 +140,15 @@ void event::Object::snapshot(const string& args)
 
 void event::Object::write_snapshot(ostream& out, const string& args)
 {
-    out << R"({"name":")" << m_name << R"(","ph":"O","id":")" << m_id <<
-        R"(","ts":)" << Manager::get_current_microseconds() <<
-        R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id();
+    string str = R"({"name":")" + m_name + R"(","ph":"O","id":")" + to_string(m_id) +
+                 R"(","ts":)" + to_string(Manager::get_current_microseconds()) +
+                 R"(,"pid":)" + Manager::get_process_id() + R"(,"tid":)" + Manager::get_thread_id();
     if (!args.empty())
     {
-        out <<
-            R"(,"args":)" << args;
+        str += R"(,"args":)" + args;
     }
-    out << "}";
+    str += "}";
+    out << str;
 }
 
 void event::Object::destroy()
@@ -166,10 +166,10 @@ void event::Object::destroy()
         {
             Manager::get_output_stream() << ",\n";
         }
-        out << R"({"name":")" << m_name << R"(","ph":"D","id":")" << m_id <<
-            R"(","ts":)" << Manager::get_current_microseconds() <<
-            R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id()
-            << "}";
+        string str = R"({"name":")" + m_name + R"(","ph":"D","id":")" + to_string(m_id) +
+                     R"(","ts":)" + to_string(Manager::get_current_microseconds()) +
+                     R"(,"pid":)" + Manager::get_process_id() + R"(,"tid":)" +
+                     Manager::get_thread_id() + "}";
     }
 }
 
