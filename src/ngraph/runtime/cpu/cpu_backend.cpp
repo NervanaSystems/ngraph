@@ -29,7 +29,7 @@
 #include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/static_initialize.hpp"
 #include "ngraph/util.hpp"
 
@@ -73,13 +73,13 @@ shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_fra
 shared_ptr<runtime::Tensor>
     runtime::cpu::CPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
-    return make_shared<runtime::cpu::CPUTensorView>(element_type, shape);
+    return make_shared<runtime::cpu::CPUTensor>(element_type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
-    return make_shared<runtime::cpu::CPUTensorView>(element_type, shape, memory_pointer);
+    return make_shared<runtime::cpu::CPUTensor>(element_type, shape, memory_pointer);
 }
 
 shared_ptr<runtime::Executable>

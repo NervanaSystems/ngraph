@@ -27,15 +27,15 @@ namespace ngraph
     {
         namespace cpu
         {
-            class TensorViewWrapper;
+            class TensorWrapper;
         }
     }
 }
 
-class ngraph::runtime::cpu::TensorViewWrapper
+class ngraph::runtime::cpu::TensorWrapper
 {
 public:
-    TensorViewWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
+    TensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
 
     size_t get_size() const;
     const Shape& get_shape() const;
