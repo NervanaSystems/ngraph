@@ -63,10 +63,7 @@ int main(int argc, char** argv)
     ngraph::runtime::ngmlir::initializeNGraphMLIR();
 #endif
 
-    auto start = std::chrono::system_clock::now();
     int rc = RUN_ALL_TESTS();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now() - start);
 
     return rc;
 }
