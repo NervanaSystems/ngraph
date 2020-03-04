@@ -40,7 +40,6 @@ namespace ngraph
     class NGRAPH_API Output<Node>
     {
         void eliminate_goe();
-        void eliminate_goe(size_t index);
 
     public:
         /// \brief Constructs a Output.
@@ -59,11 +58,8 @@ namespace ngraph
         /// \param node A `shared_ptr` to the node for the output handle.
         template <typename T>
         Output(const std::shared_ptr<T>& node)
-            : Output(node, 0)
+            : Output(node->get_default_output())
         {
-            NGRAPH_CHECK(
-                node->get_output_size() == 1, "Node ", node, " must produce exactly one value.");
-            eliminate_goe();
         }
 
         /// A null output
@@ -125,7 +121,6 @@ namespace ngraph
     class NGRAPH_API Output<const Node>
     {
         void eliminate_goe();
-        void eliminate_goe(size_t index);
 
     public:
         /// \brief Constructs a Output.
@@ -144,11 +139,8 @@ namespace ngraph
         /// \param node A `shared_ptr` to the node for the output handle.
         template <typename T>
         Output(const std::shared_ptr<T>& node)
-            : Output(node, 0)
+            : Output(node->get_default_output())
         {
-            NGRAPH_CHECK(
-                node->get_output_size() == 1, "Node ", node, " must produce exactly one value.");
-            eliminate_goe();
         }
 
         /// A null output

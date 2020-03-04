@@ -344,6 +344,16 @@ namespace ngraph
         /// If the node is a GetOutputElement, applies to the underlying node
         virtual std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
 
+        /// Return the output to use when converting to an Output<Node> with no index specified.
+        /// Throws when not supported.
+        Output<const Node> get_default_output() const;
+        Output<Node> get_default_output();
+
+        /// Returns the output of the default output, or throws if there is none
+        virtual size_t get_default_output_index() const;
+        /// Throws no default
+        size_t no_default_index() const;
+
         /// Checks that there is exactly one output and returns its shape
         // TODO: deprecate in favor of node->output(0).get_shape() with a suitable check in the
         // calling code, or updates to the calling code if it is making an invalid assumption of

@@ -24,14 +24,14 @@ namespace ngraph
         : m_node(node->shared_from_this())
         , m_index(index)
     {
-        eliminate_goe(index);
+        eliminate_goe();
     }
 
     Output<Node>::Output(const std::shared_ptr<Node>& node, size_t index)
         : m_node(node)
         , m_index(index)
     {
-        eliminate_goe(index);
+        eliminate_goe();
     }
 
     void Output<Node>::reset()
@@ -117,17 +117,9 @@ namespace ngraph
     bool Output<Node>::operator>=(const Output& other) const { return !(*this < other); }
     void Output<Node>::eliminate_goe()
     {
-        if (auto goe = as_type_ptr<op::GetOutputElement>(m_node))
+        while (auto goe = as_type_ptr<op::GetOutputElement>(m_node))
         {
             *this = m_node->input_value(0);
-        }
-    }
-
-    void Output<Node>::eliminate_goe(size_t index)
-    {
-        if (auto goe = as_type_ptr<op::GetOutputElement>(m_node))
-        {
-            m_node = goe->input_value(0).get_node_shared_ptr();
         }
     }
 
@@ -135,14 +127,14 @@ namespace ngraph
         : m_node(node->shared_from_this())
         , m_index(index)
     {
-        eliminate_goe(index);
+        eliminate_goe();
     }
 
     Output<const Node>::Output(const std::shared_ptr<const Node>& node, size_t index)
         : m_node(node)
         , m_index(index)
     {
-        eliminate_goe(index);
+        eliminate_goe();
     }
 
     void Output<const Node>::reset()
@@ -206,19 +198,11 @@ namespace ngraph
     bool Output<const Node>::operator>=(const Output& other) const { return !(*this < other); }
     void Output<const Node>::eliminate_goe()
     {
-        if (auto goe = as_type_ptr<const op::GetOutputElement>(m_node))
+        while (auto goe = as_type_ptr<const op::GetOutputElement>(m_node))
         {
             auto value = m_node->input_value(0);
             m_node = value.get_node_shared_ptr();
             m_index = value.get_index();
-        }
-    }
-
-    void Output<const Node>::eliminate_goe(size_t index)
-    {
-        if (auto goe = as_type_ptr<const op::GetOutputElement>(m_node))
-        {
-            m_node = goe->input_value(0).get_node_shared_ptr();
         }
     }
 

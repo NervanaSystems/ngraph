@@ -29,8 +29,6 @@ namespace ngraph
             /// \brief Operation to get an output from a node.
             class NGRAPH_API GetOutputElement : public Op
             {
-                friend class Node;
-
             public:
                 static constexpr NodeTypeInfo type_info{"GetOutputElement", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
@@ -40,6 +38,9 @@ namespace ngraph
                 /// \param arg The input tuple.
                 /// \param n The index of the tuple element to get.
                 GetOutputElement(const std::shared_ptr<Node>& arg, size_t n);
+
+                /// Return the equilent Output<Node>
+                Output<Node> get_as_output() const;
 
                 std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& inputs) const override;

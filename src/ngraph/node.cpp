@@ -100,6 +100,26 @@ std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i)
     }
 }
 
+Output<const Node> Node::get_default_output() const
+{
+    return output(get_default_output_index());
+}
+
+Output<Node> Node::get_default_output()
+{
+    return output(get_default_output_index());
+}
+
+size_t Node::get_default_output_index() const
+{
+    return 0;
+}
+
+size_t Node::no_default_index() const
+{
+    NODE_VALIDATION_CHECK(this, false, "Default output not supported");
+}
+
 std::shared_ptr<Node>
     Node::copy_with_new_inputs(const OutputVector& inputs,
                                const std::vector<std::shared_ptr<Node>>& control_dependencies) const
@@ -965,6 +985,7 @@ bool Node::match_value(pattern::Matcher* matcher,
     {
         return false;
     }
+
     matcher->add_node(graph_value);
     return graph_value.get_node_shared_ptr()->get_type_info() == get_type_info() &&
            matcher->match_arguments(pattern_value, graph_value);
@@ -1012,7 +1033,8 @@ Input<const Node> Node::input(size_t input_index) const
 
 Output<Node> Node::output(size_t output_index)
 {
-    if (output_index >= m_outputs.size())
+    // All nodes will have at least 1 output
+    if (output_index > 0 && output_index >= m_outputs.size())
     {
         throw out_of_range("node output index is out of range");
     }
@@ -1022,7 +1044,8 @@ Output<Node> Node::output(size_t output_index)
 
 Output<const Node> Node::output(size_t output_index) const
 {
-    if (output_index >= m_outputs.size())
+    // All nodes will have at least 1 output
+    if (output_index > 0 && output_index >= m_outputs.size())
     {
         throw out_of_range("node output index is out of range");
     }
