@@ -6,6 +6,3 @@ convert_bf16_float32
 
 onnx_INTERPRETER.model_quant_conv_linear
 onnx_INTERPRETER.top_k_opset_10
-
-# ONNX Dynamic Tile op
-model_tile

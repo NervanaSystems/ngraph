@@ -7,9 +7,6 @@ sum_stable_acc_double
 # failing in CI build but passing on local machine
 max_3d_to_scalar_int32
 
-# ONNX Dynamic Tile op
-model_tile
-
 # Not implemented
 erf
 zero_sized_erf
