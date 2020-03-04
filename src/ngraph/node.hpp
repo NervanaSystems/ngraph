@@ -347,8 +347,9 @@ namespace ngraph
         // only one output.
         const Shape& get_shape() const;
 
-        /// Returns the tensor for output i
+        /// Returns the tensor for output or input i
         descriptor::Tensor& get_output_tensor(size_t i) const;
+        descriptor::Tensor& get_input_tensor(size_t i) const;
 
         /// Returns the tensor name for output i
         const std::string& get_output_tensor_name(size_t i) const;
