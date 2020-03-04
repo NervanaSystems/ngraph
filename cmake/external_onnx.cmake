@@ -48,6 +48,7 @@ ExternalProject_Add(
                -DONNX_GEN_PB_TYPE_STUBS=OFF
                -DCMAKE_PREFIX_PATH=${Protobuf_INSTALL_PREFIX}
                -DONNX_ML=TRUE
+               -DONNX_CUSTOM_PROTOC_EXECUTABLE=/usr/bin/protoc
     TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/tmp"
     STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/stamp"
     DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/download"
