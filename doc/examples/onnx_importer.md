@@ -1,4 +1,4 @@
-# ONNX Importer API usage examples
+# ONNX Importer API Usage Examples
 
 This sample demonstrates how to use the ONNX importer API.
 This API makes it possible to create an nGraph `Function` object from an imported ONNX model.
