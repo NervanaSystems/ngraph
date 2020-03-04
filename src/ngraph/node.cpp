@@ -733,8 +733,7 @@ descriptor::Tensor& Node::get_output_tensor(size_t i) const
 
 descriptor::Tensor& Node::get_input_tensor(size_t i) const
 {
-    NGRAPH_CHECK(
-        i < m_inputs.size(), "index '", i, "' out of range in get_input_tensor(size_t i)");
+    NGRAPH_CHECK(i < m_inputs.size(), "index '", i, "' out of range in get_input_tensor(size_t i)");
     descriptor::Input input = m_inputs[i];
     return input.get_tensor();
 }
