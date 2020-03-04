@@ -1,16 +1,17 @@
-# ONNX Importer API Usage Examples
+# ONNX Importer API usage examples
 
-This sample demonstrates how to use ONNX importer API.
-The API allows to create nGraph Function from ONNX importer model.
+This sample demonstrates how to use the ONNX importer API.
+This API makes it possible to create an nGraph `Function` object from an imported ONNX model.
 
-All functions forming ONNX importer API are in [onnx.hpp][onnx_header] header file.
-The available functions can be divided into two categories from user's point of view.
-The first group contains helpers' functions used to check which ONNX op are supported in current version of ONNX importer.
-The second group contains function used to read ONNX models from stream or file. Their result is nGraph function which can be calculated on Inference Engine.
+All functions of the ONNX importer API are in the [onnx.hpp][onnx_header] header file.
 
-## How to check which ONNX ops are supported
+API functions can be divided into two categories:
+* helper functions used to check which ONNX ops are supported in current version of ONNX importer.
+* function used to read ONNX models from stream or file. Their result is nGraph function which can be executed using the Inference Engine.
 
-In order to list all supported ONNX ops in a specific version and domain `get_supported_operators` function should be used.
+## How to check which ONNX ops are supported?
+
+In order to list all supported ONNX ops in a specific version and domain, the `get_supported_operators` function should be used.
 The code listing below shows how to do it.
 ```
 const std::int64_t version = 12;
@@ -22,7 +23,7 @@ for(const auto& op : supported_ops)
     std::cout << op << std::endl;
 }
 ```
-The above code compiles to produce a list of all the supported operators for the `version` and `domain` you select. The output should look similar to what is below.
+The above code compiles to produce a list of all the supported operators for the `version` and `domain` you selected. The output should be a list similar to this:
 ```
 Abs
 Acos
@@ -30,7 +31,7 @@ Acos
 Xor
 ```
 
-To determine whether an ONNX op in a specific version and domain is supported by the importer, use the function `is_operator_supported`.
+To determine whether a specific ONNX operator in a particular version and domain is supported by the importer, use the function `is_operator_supported`.
 The code listing below shows how to do it.
 ```
 const std::string op_name = "Abs";
@@ -38,16 +39,16 @@ const std::int64_t version = 12;
 const std::string domain = "ai.onnx";
 const bool is_abs_op_supported = ngraph::onnx_import::is_operator_supported(op_name, version, domain);
 
-std::cout << "Is Abs in version 12, domain `ai.onnx`supported: " << (is_abs_op_supported ? "true" : "false") << std::endl;
+std::cout << "Abs in version 12, domain `ai.onnx`is supported: " << (is_abs_op_supported ? "true" : "false") << std::endl;
 ```
 
 ## How to import ONNX model
-In order to import ONNX model `import_onnx_model` function should be used.
+In order to import an ONNX model, the `import_onnx_model` function should be used.
 The method has two overloads.
 The first uses stream as input (e.g. file stream, memory stream).
 The code listing below shows how to convert `ResNet50` ONNX model to nGraph function.
 
-> **NOTE** `ResNet50` ONNX model can be downloaded from many sources. Such source can be for example [ONNX model zoo][onnx_model_zoo].
+> **NOTE** `ResNet50` ONNX model can be downloaded from the [ONNX model zoo][onnx_model_zoo].
 ```
 $ wget https://s3.amazonaws.com/download.onnx/models/opset_8/resnet50.tar.gz
 $ tar -xzvf resnet50.tar.gz
