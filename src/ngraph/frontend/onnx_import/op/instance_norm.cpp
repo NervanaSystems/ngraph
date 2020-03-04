@@ -79,7 +79,8 @@ namespace ngraph
                     variance = ngraph::builder::opset1::make_broadcast(
                         variance, data_shape, reduction_axes);
 
-                    const auto sqrt = std::make_shared<default_opset::Sqrt>(variance + eps_node);
+                    const auto sqrt = std::make_shared<default_opset::Sqrt>(
+                        std::make_shared<default_opset::Add>(variance, eps_node));
 
                     // scale * (data - mean) / sqrt + bias
                     std::shared_ptr<ngraph::Node> result{
