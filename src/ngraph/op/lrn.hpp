@@ -58,6 +58,7 @@ namespace ngraph
                     double bias,
                     size_t size);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
                 void validate_and_infer_types() override;

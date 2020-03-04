@@ -34,6 +34,11 @@ op::v0::Selu::Selu(const Output<Node>& data, const Output<Node>& alpha, const Ou
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::Selu::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 NodeVector op::v0::Selu::decompose_op() const
 {
     const auto data = input_value(0);

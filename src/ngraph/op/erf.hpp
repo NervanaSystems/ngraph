@@ -32,6 +32,7 @@ namespace ngraph
                 Erf() = default;
                 Erf(const Output<Node>& arg);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
             };

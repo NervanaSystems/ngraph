@@ -108,6 +108,7 @@ namespace ngraph
                         const Output<Node>& reversed_axes,
                         const Mode mode);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -135,4 +136,20 @@ namespace ngraph
         // default opset version
         using v0::Reverse;
     }
+
+    std::ostream& operator<<(std::ostream& s, const op::v1::Reverse::Mode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v1::Reverse::Mode>
+        : public EnumAttributeAdapterBase<op::v1::Reverse::Mode>
+    {
+    public:
+        AttributeAdapter(op::v1::Reverse::Mode& value)
+            : EnumAttributeAdapterBase<op::v1::Reverse::Mode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::v1::Reverse::Mode>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

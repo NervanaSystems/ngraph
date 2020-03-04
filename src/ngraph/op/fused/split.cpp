@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include <numeric>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/split.hpp"
@@ -119,6 +120,12 @@ op::v1::Split::Split(const Output<Node>& data, const Output<Node>& axis, const s
     , m_num_splits{num_splits}
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v1::Split::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("num_splits", m_num_splits);
+    return true;
 }
 
 void op::v1::Split::validate_and_infer_types()
