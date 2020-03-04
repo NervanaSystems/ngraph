@@ -242,7 +242,7 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
         }
         else
         {
-            new_args.push_back(output.get_node());
+            new_args.push_back(output.get_output());
         }
         index++;
     }

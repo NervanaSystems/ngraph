@@ -553,7 +553,7 @@ TEST(provenance, opset1_upgrade_pass_topk)
     const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
 
     const auto topk_v0 = make_shared<op::v0::TopK>(data, axis, element::i32, k);
-    const auto result = make_shared<op::Result>(topk_v0);
+    const auto result = make_shared<op::Result>(topk_v0->output(0));
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
@@ -569,8 +569,7 @@ TEST(provenance, opset1_upgrade_pass_topk)
         auto tags = node->get_provenance_tags();
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
-    traverse_nodes(
-        as_node_vector(topk_v1->outputs()), tag_check, as_node_vector(topk_v0->input_values()));
+    traverse_nodes({topk_v1}, tag_check, as_node_vector(topk_v0->input_values()));
 }
 
 TEST(provenance, opset0_downgrade_pass_topk)
@@ -586,7 +585,7 @@ TEST(provenance, opset0_downgrade_pass_topk)
     const auto elem_type = element::i64;
 
     const auto topk_v1 = make_shared<op::v1::TopK>(data, k_node, axis, mode, sort, elem_type);
-    const auto result = make_shared<op::Result>(topk_v1);
+    const auto result = make_shared<op::Result>(topk_v1->output(0));
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
@@ -602,8 +601,7 @@ TEST(provenance, opset0_downgrade_pass_topk)
         auto tags = node->get_provenance_tags();
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
-    traverse_nodes(
-        as_node_vector(topk_v0->outputs()), tag_check, as_node_vector(topk_v1->input_values()));
+    traverse_nodes({topk_v0}, tag_check, as_node_vector(topk_v1->input_values()));
 }
 
 TEST(provenance, opset1_upgrade_pass_graph)
