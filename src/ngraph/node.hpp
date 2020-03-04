@@ -475,7 +475,6 @@ namespace ngraph
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
-
         /// \return A vector containing a handle for each of this node's inputs, in order.
         // TODO: Rename to get_inputs()?
         std::vector<Input<Node>> inputs();
