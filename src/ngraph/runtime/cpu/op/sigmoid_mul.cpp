@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,19 +30,19 @@ ngraph::op::SigmoidMultiply::FunctionType
     op::SigmoidMultiply::identify_node_type(const Output<ngraph::Node>& value)
 {
     auto node = value.get_node_shared_ptr();
-    if (std::dynamic_pointer_cast<ngraph::op::Tanh>(node) != nullptr)
+    if (is_type<ngraph::op::Tanh>(node))
     {
         return ngraph::op::SigmoidMultiply::FunctionType::Tanh;
     }
-    else if (std::dynamic_pointer_cast<ngraph::op::Sigmoid>(node) != nullptr)
+    else if (is_type<ngraph::op::Sigmoid>(node))
     {
         return ngraph::op::SigmoidMultiply::FunctionType::Logistic;
     }
-    else if (std::dynamic_pointer_cast<ngraph::op::Broadcast>(node) != nullptr)
+    else if (is_type<ngraph::op::Broadcast>(node))
     {
         return ngraph::op::SigmoidMultiply::FunctionType::Identity;
     }
-    else if (std::dynamic_pointer_cast<ngraph::op::Add>(node) != nullptr)
+    else if (is_type<ngraph::op::Add>(node))
     {
         return ngraph::op::SigmoidMultiply::FunctionType::Identity;
     }
@@ -92,7 +92,8 @@ shared_ptr<Node> op::SigmoidMultiply::copy_with_new_args(const NodeVector& new_a
         new_args.at(0), new_args.at(1), m_input_type[0], m_input_type[1]);
 }
 
-void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
     auto input_0 = get_argument(0);

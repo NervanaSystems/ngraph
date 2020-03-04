@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,8 @@
 #include "ngraph/node.hpp"
 
 using visualize_tree_ops_map_t =
-    std::unordered_map<std::type_index, std::function<void(const ngraph::Node&, std::ostream& ss)>>;
+    std::unordered_map<ngraph::Node::type_info_t,
+                       std::function<void(const ngraph::Node&, std::ostream& ss)>>;
 
 namespace ngraph
 {

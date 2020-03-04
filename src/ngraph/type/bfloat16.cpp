@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,7 +55,8 @@ std::vector<float> bfloat16::to_float_vector(const std::vector<bfloat16>& v_bf16
 
 std::vector<bfloat16> bfloat16::from_float_vector(const std::vector<float>& v_f32)
 {
-    std::vector<bfloat16> v_bf16(v_f32.size());
+    std::vector<bfloat16> v_bf16;
+    v_bf16.reserve(v_f32.size());
     for (float a : v_f32)
     {
         v_bf16.push_back(static_cast<bfloat16>(a));

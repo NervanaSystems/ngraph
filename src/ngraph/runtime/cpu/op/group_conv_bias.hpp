@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #pragma once
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -27,6 +28,7 @@ namespace ngraph
         class GroupConvolutionBias : public Op
         {
         public:
+            CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"GroupConvolutionBias", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             GroupConvolutionBias(const std::shared_ptr<op::GroupConvolution>& conv,
@@ -64,7 +66,8 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
+            void generate_adjoints(autodiff::Adjoints& adjoints,
+                                   const OutputVector& deltas) override;
 
         protected:
             Strides m_window_movement_strides;

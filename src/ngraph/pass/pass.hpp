@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,12 +55,21 @@ namespace ngraph
             // Pass transformation will change the function's dynamic state
             CHANGE_DYNAMIC_STATE = 1 << 1
         };
-        typedef EnumMask<PassProperty> PassPropertyMask;
-        constexpr PassPropertyMask all_pass_property_off;
     }
 }
 
-class ngraph::pass::PassBase
+template class NGRAPH_API ngraph::EnumMask<ngraph::pass::PassProperty>;
+
+namespace ngraph
+{
+    namespace pass
+    {
+        typedef EnumMask<PassProperty> PassPropertyMask;
+        const PassPropertyMask all_pass_property_off;
+    }
+}
+
+class NGRAPH_API ngraph::pass::PassBase
 {
     friend class Manager;
 
@@ -80,30 +89,31 @@ private:
     ManagerState* m_state{nullptr};
 };
 
-class ngraph::pass::ModulePass : public PassBase
+class NGRAPH_API ngraph::pass::ModulePass : public PassBase
 {
 public:
-    virtual ~ModulePass() {}
+    virtual ~ModulePass();
     virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) = 0;
 };
 
-class ngraph::pass::FunctionPass : public PassBase
+class NGRAPH_API ngraph::pass::FunctionPass : public PassBase
 {
 public:
-    virtual ~FunctionPass() {}
+    virtual ~FunctionPass();
     virtual bool run_on_function(std::shared_ptr<ngraph::Function>) = 0;
 };
 
-class ngraph::pass::NodePass : public PassBase
+class NGRAPH_API ngraph::pass::NodePass : public PassBase
 {
 public:
-    virtual ~NodePass() {}
+    virtual ~NodePass();
     virtual bool run_on_node(std::shared_ptr<ngraph::Node>) = 0;
 };
 
-class ngraph::pass::CallGraphPass : public PassBase
+class NGRAPH_API ngraph::pass::CallGraphPass : public PassBase
 {
 public:
-    virtual ~CallGraphPass() {}
+    virtual ~CallGraphPass();
     virtual bool run_on_call_graph(const std::list<std::shared_ptr<ngraph::Node>>&) = 0;
+    virtual bool run_on_call_graph(const std::vector<std::shared_ptr<ngraph::Node>>&);
 };

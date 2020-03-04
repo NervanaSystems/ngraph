@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 #include "ngraph/ngraph.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
+#include "util/float_util.hpp"
 #include "util/ndarray.hpp"
 #include "util/random.hpp"
 #include "util/test_control.hpp"
@@ -1354,6 +1355,83 @@ NGRAPH_TEST_P(${BACKEND_NAME}, avg_pool_3d_params, avg_pool_3d_uneven_strided_pa
         EXPECT_TRUE(test::all_close_f(
             backend_results.at(i), int_results.at(i), DEFAULT_FLOAT_TOLERANCE_BITS + 1));
     }
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, avg_pool_bprop_2d_2channel_2image_dyn_shape)
+{
+    Shape window_shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+    Shape shape_d{2, 2, 2, 2};
+    auto delta = make_shared<op::Parameter>(element::f32, shape_d);
+    auto forward_arg_shape =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto avg_pool_bprop = make_shared<op::v1::AvgPoolBackprop>(delta,
+                                                               forward_arg_shape,
+                                                               window_movement_strides,
+                                                               padding_below,
+                                                               padding_above,
+                                                               window_shape,
+                                                               true);
+
+    auto f = make_shared<Function>(NodeVector{avg_pool_bprop},
+                                   ParameterVector{delta, forward_arg_shape});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto ex = backend->compile(f);
+
+    auto t_r = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+
+    vector<int64_t> shapes = {2, 2, 3, 3};
+
+    // Create some tensors for input/output
+    auto deltas = backend->create_tensor(element::f32, shape_d);
+    copy_data(deltas,
+              test::NDArray<float, 4>({{{{0.3, 0.3}, // img 0 chan 0
+                                         {0.3, 0.3}},
+
+                                        {{0.2, 0.2}, // img 0 chan 1
+                                         {0.2, 0.2}}},
+
+                                       {{{0.1, 0.1}, // img 1 chan 0
+                                         {0.1, 0.1}},
+
+                                        {{0.4, 0.4}, // img 1 chan 1
+                                         {0.4, 0.4}}}})
+                  .get_vector());
+
+    auto forward_shape = backend->create_tensor(element::i64, Shape{shapes.size()});
+    copy_data(forward_shape, shapes);
+
+    float denom = 2 * 2;
+
+    ex->call_with_validate({t_r}, {deltas, forward_shape});
+    ex->call_with_validate({t_r}, {deltas, forward_shape});
+    ex->call_with_validate({t_r}, {deltas, forward_shape});
+
+    ASSERT_EQ(t_r->get_shape(), (Shape{2, 2, 3, 3}));
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 4>({{{{0.3f / denom, 0.6f / denom, 0.3f / denom}, // img 0 chan 0
+                                    {0.6f / denom, 1.2f / denom, 0.6f / denom},
+                                    {0.3f / denom, 0.6f / denom, 0.3f / denom}},
+
+                                   {{0.2f / denom, 0.4f / denom, 0.2f / denom}, // img 0 chan 1
+                                    {0.4f / denom, 0.8f / denom, 0.4f / denom},
+                                    {0.2f / denom, 0.4f / denom, 0.2f / denom}}},
+
+                                  {{{0.1f / denom, 0.2f / denom, 0.1f / denom}, // img 1 chan 0
+                                    {0.2f / denom, 0.4f / denom, 0.2f / denom},
+                                    {0.1f / denom, 0.2f / denom, 0.1f / denom}},
+
+                                   {{0.4f / denom, 0.8f / denom, 0.4f / denom}, // img 1 chan 1
+                                    {0.8f / denom, 1.6f / denom, 0.8f / denom},
+                                    {0.4f / denom, 0.8f / denom, 0.4f / denom}}}})
+             .get_vector()),
+        read_vector<float>(t_r),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 // avg_pool_3d case generation

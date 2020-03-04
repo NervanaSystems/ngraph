@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -83,6 +83,8 @@ namespace ngraph
                     for (size_t i = 0; i < slice_rank; i++)
                     {
                         U index = indices[indices_index];
+                        // take care of negative indices
+                        index = index >= 0 ? index : index + params_shape[i];
                         params_start_corner[i] = index;
                         params_end_corner[i] = index + 1;
                         indices_index++;

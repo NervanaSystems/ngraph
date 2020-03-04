@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ namespace ngraph
 
                 if (args[1].get_element_type() == element::i32)
                 {
-                    SELECT_KERNEL_BY_RANK(kernel,
+                    SELECT_KERNEL_ET_RANK(kernel,
                                           args[0].get_element_type(),
                                           arg_shape.size(),
                                           runtime::cpu::kernel::reverse_sequence_sli32)

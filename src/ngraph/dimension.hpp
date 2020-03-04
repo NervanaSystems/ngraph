@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,9 @@
 #include <stddef.h>
 #include <stdexcept>
 
+#include "ngraph/deprecated.hpp"
+#include "ngraph/ngraph_visibility.hpp"
+
 namespace ngraph
 {
     /// \brief Class representing a dimension, which may be dynamic (undetermined until runtime),
@@ -29,7 +32,7 @@ namespace ngraph
     /// constructed with Dimension() or Dimension::dynamic().
     ///
     /// XXX: THIS CLASS IS NOT IN USE YET AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
-    class Dimension
+    class NGRAPH_API Dimension
     {
     public:
         /// \brief Construct a static dimension.
@@ -59,18 +62,12 @@ namespace ngraph
         /// \brief Convert this dimension to `size_t`. This dimension must be static and
         ///        non-negative.
         /// \throws std::invalid_argument If this dimension is dynamic or negative.
-        explicit operator size_t() const
-        {
-            if (is_dynamic())
-            {
-                throw std::invalid_argument("Cannot convert dynamic dimension to size_t");
-            }
-            if (m_dimension < 0)
-            {
-                throw std::invalid_argument("Cannot convert negative dimension to size_t");
-            }
-            return m_dimension;
-        }
+        explicit operator size_t() const NGRAPH_DEPRECATED("use get_length() instead");
+
+        /// \brief Convert this dimension to `uint64_t`. This dimension must be static and
+        ///        non-negative.
+        /// \throws std::invalid_argument If this dimension is dynamic or negative.
+        uint64_t get_length() const;
 
         /// \brief Check whether this dimension represents the same scheme as the argument (both
         ///        dynamic, or equal).

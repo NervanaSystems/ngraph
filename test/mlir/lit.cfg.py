@@ -1,5 +1,5 @@
 #*****************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #*****************************************************************************
+"""Lit runner configuration."""
 
 import lit.formats
 from lit.llvm import llvm_config
@@ -24,10 +25,10 @@ config.name = 'nGraph MLIR Compiler'
 config.test_format = lit.formats.ShTest(not llvm_config.use_lit_shell)
 
 # test_source_root: The root path where tests are located.
-config.test_source_root = config.ngraph_mlir_test_dir
+config.test_source_root = config.ngraph_mlir_test_src_dir
 
 # test_exec_root: The root path where tests should be run.
-config.test_exec_root = config.ngraph_mlir_test_dir
+config.test_exec_root = config.ngraph_mlir_test_build_dir
 
 llvm_config.use_default_substitutions()
 

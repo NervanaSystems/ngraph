@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,7 +96,8 @@ namespace ngraph
                 convert_sequence, mask_shape, non_sequence_axes);
 
             // mask = sequence_length < sequence
-            return std::make_shared<T>(broadcast_sequence, broadcast_sequence_lengths);
+            return std::make_shared<T>(broadcast_sequence, broadcast_sequence_lengths)
+                ->add_provenance_group_members_above({sequence_lengths});
         }
     }
 }

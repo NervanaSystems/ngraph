@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -74,11 +74,16 @@ R"(
 
 struct CPURuntimeContextCG
 {
+#if defined(NGRAPH_TBB_ENABLE)
     std::unique_ptr<tbb::flow::graph> tbb_graph;
     std::unique_ptr<tbb::global_control> tbb_gcontrol;
 
     CPURuntimeContextCG() { init_tbb(); init_mkldnn_primitives();}
     ~CPURuntimeContextCG() { cleanup_tbb(); cleanup_mkldnn_primitives();}
+#else
+    CPURuntimeContextCG() { init_mkldnn_primitives();}
+    ~CPURuntimeContextCG() { cleanup_mkldnn_primitives();}
+#endif
 
     std::vector<mkldnn::memory*> mkldnn_memories;
     std::vector<mkldnn::primitive*> mkldnn_primitives;
@@ -97,7 +102,7 @@ struct CPURuntimeContextCG
 	}
 
     void mkldnn_invoke_primitive(size_t primitive_index, std::vector<size_t>& deps,
-                                        OpType type)
+                                        OpType type, size_t scratchpad_size)
 	{
         std::unordered_map<int, mkldnn::memory> exec_args;
         size_t nargs;
@@ -252,10 +257,13 @@ struct CPURuntimeContextCG
             break;
         }
 
-        mkldnn::memory scratchpad(*mkldnn_scratchpad_mds[primitive_index],
-                                  global_cpu_engine,
-                                  scratchpad_buffer->get_ptr());
-        exec_args.insert({MKLDNN_ARG_SCRATCHPAD, scratchpad});
+        if (scratchpad_size)
+        {
+            mkldnn::memory scratchpad(*mkldnn_scratchpad_mds[primitive_index],
+                                      global_cpu_engine,
+                                      scratchpad_buffer->get_ptr());
+            exec_args.insert({MKLDNN_ARG_SCRATCHPAD, scratchpad});
+        }
 
         mkldnn::stream s(global_cpu_engine);
         try
@@ -265,11 +273,12 @@ struct CPURuntimeContextCG
         }
         catch (const mkldnn::error& e)
         {
-            throw std::runtime_error("Could not run mkdnn primitive " + *e.message);
+            throw std::runtime_error("Could not run mkdnn primitive " + std::string(e.message));
         }
     }
 
 private:
+#if defined(NGRAPH_TBB_ENABLE)
     inline void init_tbb()
     {
         if (std::getenv("NGRAPH_CPU_USE_TBB"))
@@ -299,6 +308,7 @@ private:
             }
         }
     }
+#endif
 
     void init_mkldnn_primitives();
 
@@ -329,10 +339,7 @@ private:
         {
             free(w);
         }
-    }
 
-    inline void cleanup_mkldnn_descriptors()
-    {
         for (auto d : mkldnn_descriptors)
         {
             free(d);
@@ -352,14 +359,14 @@ extern "C" void destroy_cg_ctx(CPURuntimeContextCG* cg_ctx)
 
 static void
 	deserialize_memory_descs_and_build_memory(std::ifstream& desc_file,
-														 CPURuntimeContextCG* cg_ctx,
-														 size_t descs_count)
+                                              CPURuntimeContextCG* cg_ctx,
+                                              size_t descs_count)
 {
     cg_ctx->mkldnn_descriptors = std::vector<mkldnn::memory::desc*>(descs_count);
     for (auto i = 0; i < descs_count; i++)
     {
-    		size_t index;
-		    desc_file >> index;
+        size_t index;
+        desc_file >> index;
         auto desc = (mkldnn::memory::desc*)malloc(sizeof(mkldnn::memory::desc));
         if (!desc)
         {
@@ -367,8 +374,8 @@ static void
         }
         desc_file.read(reinterpret_cast<char*>(desc), sizeof(mkldnn::memory::desc));
 
-		    cg_ctx->mkldnn_descriptors[i] = desc;
-		    cg_ctx->mkldnn_memories[index] = new mkldnn::memory(*cg_ctx->mkldnn_descriptors[i], cg_ctx->global_cpu_engine, nullptr);
+        cg_ctx->mkldnn_descriptors[i] = desc;
+        cg_ctx->mkldnn_memories[index] = new mkldnn::memory(*cg_ctx->mkldnn_descriptors[i], cg_ctx->global_cpu_engine, nullptr);
 	}
 };
 )"

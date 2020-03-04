@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -571,7 +571,8 @@ TEST(type_prop, pad_v1_arg_pads_begin_incompatible_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("pads_begin must be type i64 (axes type:"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("pads_begin must be an integral number, but is:"));
     }
     catch (...)
     {
@@ -594,59 +595,8 @@ TEST(type_prop, pad_v1_arg_pads_end_incompatible_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("pads_end must be type i64 (axes type:"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, pad_v1_pads_begin_elem_negative_value)
-{
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
-    auto pads_begin =
-        make_shared<op::Constant>(element::i64, Shape{3}, std::vector<int64_t>{6, 9, -3});
-    auto pads_end =
-        make_shared<op::Constant>(element::i64, Shape{3}, std::vector<int64_t>{5, 3, 0});
-    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
-    try
-    {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::REFLECT);
-
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Negative pads_begin element exception not thrown";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("All pads_begin element must be non-negative (pads_begin_coord"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, pad_v1_pads_end_elem_negative_value)
-{
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
-    auto pads_begin =
-        make_shared<op::Constant>(element::i64, Shape{3}, std::vector<int64_t>{5, 3, 0});
-    auto pads_end =
-        make_shared<op::Constant>(element::i64, Shape{3}, std::vector<int64_t>{6, 9, -3});
-    try
-    {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::REFLECT);
-
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Negative pads_end element exception not thrown";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(
-            error.what(), std::string("All pads_end element must be non-negative (pads_end_coord"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("pads_end must be an integral number, but is:"));
     }
     catch (...)
     {

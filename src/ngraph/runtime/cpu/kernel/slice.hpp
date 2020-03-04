@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 
 #include "ngraph/coordinate.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -87,6 +88,24 @@ namespace ngraph
 
                     out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         in.stridedSlice(start_indices, stop_indices, strides);
+                }
+
+                template <typename ElementType>
+                void ref_slice(void* input,
+                               void* output,
+                               const Shape& input_shape,
+                               const Coordinate& lower_bounds,
+                               const Coordinate& upper_bounds,
+                               const Strides& slice_strides,
+                               const Shape& output_shape)
+                {
+                    reference::slice<ElementType>(static_cast<const ElementType*>(input),
+                                                  static_cast<ElementType*>(output),
+                                                  input_shape,
+                                                  lower_bounds,
+                                                  upper_bounds,
+                                                  slice_strides,
+                                                  output_shape);
                 }
             }
         }

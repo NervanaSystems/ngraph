@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,11 @@
 #include <string>
 
 #include "gtest/gtest.h"
+
+#ifdef NGRAPH_UNIT_TEST_OPENVINO_ENABLE
+#include "util/backend_utils.hpp"
+#define runtime ov_runtime
+#endif
 
 // Copied from gtest
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,27 +20,27 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Max::type_info;
+constexpr NodeTypeInfo op::v0::Max::type_info;
 
-op::Max::Max(const Output<Node>& arg, const AxisSet& reduction_axes)
+op::v0::Max::Max(const Output<Node>& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-op::Max::Max(const Output<Node>& arg, const Output<Node>& reduction_axes)
+op::v0::Max::Max(const Output<Node>& arg, const Output<Node>& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Max::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Max::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Max>(new_args.at(0), new_args.at(1));
+    return make_shared<op::v0::Max>(new_args.at(0), new_args.at(1));
 }
 
-shared_ptr<Node> op::Max::get_default_value() const
+shared_ptr<Node> op::v0::Max::get_default_value() const
 {
     switch (get_element_type())
     {
@@ -75,8 +75,25 @@ shared_ptr<Node> op::Max::get_default_value() const
     case element::Type_t::u64:
         return make_constant_from_string(
             to_string(numeric_limits<uint64_t>::min()), get_element_type(), get_shape());
+    case element::Type_t::u1:
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
     default: throw runtime_error("Max default value not defined for type");
     }
+}
+
+constexpr NodeTypeInfo op::v1::ReduceMax::type_info;
+
+op::v1::ReduceMax::ReduceMax(const Output<Node>& arg,
+                             const Output<Node>& reduction_axes,
+                             bool keep_dims)
+    : ArithmeticReductionKeepDims(arg, reduction_axes, keep_dims)
+{
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v1::ReduceMax::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<op::v1::ReduceMax>(new_args.at(0), new_args.at(1), get_keep_dims());
 }

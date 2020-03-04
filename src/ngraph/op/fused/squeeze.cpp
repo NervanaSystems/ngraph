@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -32,24 +33,26 @@ op::Squeeze::Squeeze(const Output<Node>& data, const Output<Node>& axes)
     constructor_validate_and_infer_types();
 }
 
-NodeVector op::Squeeze::decompose_op() const
+void op::Squeeze::pre_validate_and_infer_types()
 {
     auto data = input_value(0);
     auto axes_node = input_value(1).get_node_shared_ptr();
 
-    // Currently only support Constant node for axes.
-    NODE_VALIDATION_CHECK(this,
-                          axes_node->is_constant(),
-                          "doesn't support 'axes' input of other type than a Constant.");
+    if (data.get_partial_shape().is_dynamic() || !axes_node->is_constant())
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+        return;
+    }
+
+    auto data_shape = data.get_shape();
 
     // Get value of axes from Constant
     auto axes_constant = as_type_ptr<op::Constant>(axes_node);
-    auto axes = axes_constant->get_vector<size_t>();
-
-    auto data_shape = data.get_shape();
-    std::vector<uint64_t> axes_to_squeeze(data_shape.size());
+    auto axes = normalize_axes(
+        this->description(), axes_constant->cast_vector<int64_t>(), data_shape.size());
 
     // Prepare set of unique axes marked to be removed from input data.
+    std::vector<uint64_t> axes_to_squeeze(data_shape.size());
     if (axes.empty())
     {
         // Default behaviour is to remove all single dimension axes.
@@ -87,6 +90,23 @@ NodeVector op::Squeeze::decompose_op() const
         }
     }
 
+    set_output_type(0, get_input_element_type(0), output_data_shape);
+}
+
+bool ngraph::op::v0::Squeeze::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
+NodeVector op::Squeeze::decompose_op() const
+{
+    NODE_VALIDATION_CHECK(
+        this,
+        (get_output_partial_shape(0).is_static()),
+        "output shape was not calculated during pre_validate_and_infer_types. Can not decompose.");
+    auto data = input_value(0);
+    auto data_shape = data.get_shape();
+    auto output_data_shape = get_output_shape(0);
     AxisVector input_order{get_default_order(data_shape.size())};
     return {make_shared<op::Reshape>(data, input_order, output_data_shape)};
 }

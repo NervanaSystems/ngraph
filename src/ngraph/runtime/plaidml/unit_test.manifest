@@ -15,6 +15,7 @@ min_3d_eliminate_zero_dim               # Out-of-range for PlaidML
 reverse_sequence_n2c3h4w2               # No plans to implement ReverseSequence
 reverse_sequence_n4c3h2w2               # No plans to implement ReverseSequence
 reverse_sequence_n4d2c3h2w2             # No plans to implement ReverseSequence
+reverse_sequence_negative_axes          # No plans to implement ReverseSequence
 topk_1d_max_all                         # No plans to implement TopK
 topk_1d_max_partial                     # No plans to implement TopK
 topk_1d_max_one                         # No plans to implement TopK
@@ -48,6 +49,13 @@ topk_max_sort_index                     # No plans to implement TopK
 topk_min_sort_index                     # No plans to implement TopK
 topk_2d_max_one_with_equal_values       # No plans to implement TopK
 model_top_k                             # No plans to implement TopK
+top_k_opset_10                          # No plans to implement TopK
+top_k_opset_10_const_k                  # No plans to implement TopK
+top_k_opset_11_const_k_smallest         # No plans to implement TopK
+
+# unsupported op: `Atan2`
+atan2
+backwards_atan2
 
 # unsupported op: `Erf`
 erf
@@ -91,6 +99,11 @@ model_lstm_mixed_seq_reverse
 model_reverse_sequence_0_batch_1
 model_reverse_sequence_1_batch_0
 
+# unsupported broadcast mode (pdpd)
+fake_quantize_pdpd
+auto_bcast_binary_elementwise_pdpd
+auto_bcast_binary_elementwise_pdpd_dynamic
+
 # result mismatch
 model_dequantize_linear_scalar_zero_scale_int8
 model_softmax
@@ -119,6 +132,7 @@ batch_norm_fprop_b1c2h2w2
 batch_norm_fprop_b2c2h2w1
 batch_norm_fprop_b2c2d2h1w1
 batch_norm_fprop_inference_b2c2h2w1
+dyn_batch_norm_fprop_b1c2h2w2
 pad_edge_1d
 pad_edge_1d_top_neg
 pad_edge_1d_top_neg_bigger_than_tensor
@@ -135,6 +149,7 @@ pad_reflect_1d_multi_reflect
 pad_reflect_2d
 pad_reflect_2d_with_neg
 pad_symmetric
+cross_entropy_with_one_hot
 
 # No double precision FP support in PlaidML
 sum_trivial_in_double
@@ -186,6 +201,7 @@ max_trivial_5d_int32
 floor_int32
 any_trivial
 any_2x2x3_eliminate_dim_0
+backwards_batch_norm_training_3d
 
 # unsupported op: `GenerateMask`
 generate_mask
@@ -196,6 +212,7 @@ gather_4d_indices_no_axis_uint8
 gather_4d_indices_no_axis_2d_input
 gather_3d_indices_no_axis_2d_input
 gather_2d_indices_no_axis_2d_input
+gather_2d_negative_and_positive_indices_no_axis_2d_input
 gather_1d_indices_no_axis_1d_input
 gather_scalar_indices_no_axis_2d_input
 gather_2d_indices_axis_1_2d_input
@@ -226,20 +243,38 @@ gather_no_axis_bool
 batch_mat_mul_forward
 backwards_batchmatmul_tensor2_tensor2
 
+# unsupported op: `CumSum`
+cum_sum_default
+cum_sum_2dim
+cum_sum_3d
+cum_sum_2dim_allmodes
+model_cum_sum_1d
+model_cum_sum_2d_axis_input
+model_cum_sum_2d_dynamic_axis_input
+model_cum_sum_3d_exclusive_reverse
+
+# unsupported op: `Round`
+round
+round_2D
+
 # onnx tests
 model_quant_conv_linear_2d
 model_quant_conv_linear_3d
 model_conv_integer
 model_conv_integer_zero_point_zero
 model_conv_integer_pads
+model_convtranspose_groups_pads_bias
 model_lstm_fwd_hardsigmoid_activation
 model_lstm_fwd_with_clip
 model_lstm_fwd_mixed_seq
 model_lstm_fwd_large_batch_no_clip
+model_gatherND_int32
+model_gatherND_float
 model_global_lp_pool_p3
 model_argmin_no_keepdims
 model_reduce_log_sum_exp
 model_elu
+model_scatterND
 model_selu
 model_sigmoid
 model_softplus
@@ -247,6 +282,9 @@ model_argmax_int32
 model_argmin_int32
 model_lp_norm_default
 model_instance_normalization
+model_round
+arg_max_dyn_shape               # unsupported op `TopK`
+arg_min_no_keep_dims_dyn_shape  # unsupported op `TopK`
 
 # passing locally, fails closeness checks in CI which may be too strict
 elu
@@ -261,6 +299,9 @@ dot_2x0_0
 auto_bcast_binary_elementwise
 max_pool_2d_1channel_1image_overpadded
 
+# node validation error: "Applying function, tensor with mismatching dimensionality: F, expected=4, got=5"
+group_conv_groups_included_in_shape
+
 # passes locally, fails in CI
 numeric_float_nan
 fake_quantize_with_clip_across_channels
@@ -272,3 +313,44 @@ lrn_across_all_dims
 lrn_across_nw
 lrn_across_empty
 lrn_6D_across_2_axes
+lrn_2d_across_empty
+lrn_2d_across_outermost_axis
+
+# RandomUniform not supported in PlaidML backend
+random_uniform_all_static_seed_unused
+random_uniform_all_static_seed_used
+random_uniform_seed_use_dynamic
+random_uniform_all_static_range_dynamic
+random_uniform_dynamic_shapes
+
+# Fused op test fails on mac
+layer_norm_affine_stats
+layer_norm_bprop_affine_stats
+layer_norm_bprop_affine
+layer_norm_bprop_4d_input
+
+# Another fused op decomposition pass required after the downgrade pass
+model_split_equal_parts_default
+model_split_equal_parts_2d
+model_split_variable_parts_2d
+
+# shapes with zeros dimensions like (5, 0, 5) not supported in PlaidML backend
+dyn_replace_slice
+
+# bf16 test cases not supported
+convert_float32_bf16
+convert_bf16_float32
+
+# infinitive values are returned for below cases
+normalize_across_c_2x2_shape
+normalize_across_c_2x4_shape
+
+# Tile op case that the number of elements in "repeats" and shape of "data" are different
+tile_3d_small_data_rank
+tile_3d_few_repeats
+
+# dyn shape
+dyn_generate_mask
+
+# Test fails on intel gpu mac
+model_mod

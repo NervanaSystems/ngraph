@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::HostTensor : public ngraph::runtime::Tensor
+class NGRAPH_API ngraph::runtime::HostTensor : public ngraph::runtime::Tensor
 {
 public:
     HostTensor(const ngraph::element::Type& element_type,

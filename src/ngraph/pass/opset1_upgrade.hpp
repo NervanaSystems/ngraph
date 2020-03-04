@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,15 +22,15 @@ namespace ngraph
 {
     namespace pass
     {
-        class Opset1Upgrade : public NodePass
+        class NGRAPH_API Opset1Upgrade : public NodePass
         {
         public:
             ///
-            /// \brief    Constructor for the Opset 1 transformation pass.
+            /// \brief    Constructor for the Opset1Upgrade transformation pass.
             ///
             /// \details  This transformation pass iterates over all nodes in a graph
-            /// and updates opset version 0 ops to their opset version 1 equivalents.
-            /// All ops in the final graph have opset version 1.
+            /// and updates version 0 ops to their version 1 equivalents.
+            /// All ops in the final graph have op version 1.
             Opset1Upgrade() = default;
             bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
         };

@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -59,6 +59,7 @@ from ngraph.ops import get_output_element
 from ngraph.ops import greater
 from ngraph.ops import greater_eq
 from ngraph.ops import grn
+from ngraph.ops import group_convolution
 from ngraph.ops import hard_sigmoid
 from ngraph.ops import less
 from ngraph.ops import less_eq
@@ -89,6 +90,7 @@ from ngraph.ops import relu
 from ngraph.ops import replace_slice
 from ngraph.ops import reshape
 from ngraph.ops import reverse
+from ngraph.ops import rnn_cell
 from ngraph.ops import scale_shift
 from ngraph.ops import select
 from ngraph.ops import shuffle_channels

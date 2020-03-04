@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/reference/softmax.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -163,6 +164,15 @@ namespace ngraph
                                     int arena)
                 {
                     softmax<ElementType, 4, 3>(input, output, input_shape, softmax_axes, arena);
+                }
+
+                template <typename ElementType>
+                void ref_softmax(void* input, void* output, const Shape& shape, const AxisSet& axes)
+                {
+                    reference::softmax<ElementType>(static_cast<const ElementType*>(input),
+                                                    static_cast<ElementType*>(output),
+                                                    shape,
+                                                    axes);
                 }
             }
         }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -428,6 +428,7 @@ void pass::DynElimination::construct_range()
         case element::Type_t::u64:
             replacement = make_range_replacement<uint64_t>(et, shape, start_arg, step_arg);
             break;
+        case element::Type_t::u1:
         case element::Type_t::undefined:
         case element::Type_t::dynamic:
         case element::Type_t::boolean:

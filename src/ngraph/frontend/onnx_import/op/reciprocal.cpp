@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,13 +17,9 @@
 #include <memory>
 #include <vector>
 
+#include "default_opset.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/shape.hpp"
-
 #include "reciprocal.hpp"
-
 namespace ngraph
 {
     namespace onnx_import
@@ -36,11 +32,9 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
 
-                    std::shared_ptr<ngraph::Node> one_node = std::make_shared<ngraph::op::Constant>(
-                        data->get_element_type(), Shape{}, std::vector<double>{1});
-                    one_node = ngraph::op::make_broadcast_node(one_node, data->get_shape());
-
-                    return {one_node / data};
+                    auto one_node =
+                        default_opset::Constant::create(data->get_element_type(), Shape{}, {1});
+                    return {std::make_shared<default_opset::Divide>(one_node, data)};
                 }
 
             } // namespace set_1

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,23 +15,36 @@
 //*****************************************************************************
 
 #include "ngraph/op/gather.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/shape.hpp"
+
+#include <limits>
 
 using namespace std;
 using namespace ngraph;
 
-static int PARAMS = 0;
-static int INDICES = 1;
+static const int PARAMS = 0;
+static const int INDICES = 1;
+static const int AXIS = 2;
 
-constexpr NodeTypeInfo op::Gather::type_info;
+static const int64_t AXIS_NOT_SET_VALUE = std::numeric_limits<int64_t>::max();
 
-shared_ptr<Node> op::Gather::copy_with_new_args(const NodeVector& new_args) const
+constexpr NodeTypeInfo op::v0::Gather::type_info;
+
+op::v0::Gather::Gather(const Output<Node>& params, const Output<Node>& indices, size_t axis)
+    : Op({params, indices})
+    , m_axis(axis)
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Gather>(new_args.at(PARAMS), new_args.at(INDICES), m_axis);
+    constructor_validate_and_infer_types();
 }
 
-void op::Gather::validate_and_infer_types()
+shared_ptr<Node> op::v0::Gather::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v0::Gather>(new_args.at(PARAMS), new_args.at(INDICES), m_axis);
+}
+
+void op::v0::Gather::validate_and_infer_types()
 {
     element::Type result_et = get_input_element_type(PARAMS);
     element::Type indices_et = get_input_element_type(INDICES);
@@ -81,4 +94,120 @@ void op::Gather::validate_and_infer_types()
     }
 
     set_output_type(0, result_et, result_shape);
+}
+
+void op::v0::Gather::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                       const OutputVector& /* deltas */)
+{
+    throw ngraph_error("Not yet implemented");
+}
+
+constexpr NodeTypeInfo op::v1::Gather::type_info;
+
+op::v1::Gather::Gather(const Output<Node>& params,
+                       const Output<Node>& indices,
+                       const Output<Node>& axes)
+    : Op({params, indices, axes})
+{
+    constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v1::Gather::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
+void op::v1::Gather::validate_and_infer_types()
+{
+    const auto& input_rank = get_input_partial_shape(PARAMS).rank();
+    const auto& axis_shape = get_input_partial_shape(AXIS);
+    const auto& axis_rank = axis_shape.rank();
+
+    if (axis_rank.is_static() && axis_shape.is_static())
+    {
+        const auto axis_is_scalar = axis_rank.get_length() == 0;
+        const auto axis_has_one_elem =
+            axis_rank.get_length() == 1 && axis_shape[0].get_length() == 1;
+        NODE_VALIDATION_CHECK(this,
+                              axis_is_scalar || axis_has_one_elem,
+                              "Axes input must be scalar or have 1 element (shape: ",
+                              axis_shape,
+                              ").");
+    }
+
+    int64_t axis = get_axis();
+    if (input_rank.is_static() && axis != AXIS_NOT_SET_VALUE)
+    {
+        NODE_VALIDATION_CHECK(this,
+                              axis < input_rank.get_length(),
+                              "The axis must => 0 and <= input_rank (axis: ",
+                              axis,
+                              ").");
+    }
+
+    element::Type result_et = get_input_element_type(PARAMS);
+    element::Type indices_et = get_input_element_type(INDICES);
+
+    const PartialShape& params_shape = get_input_partial_shape(PARAMS);
+    const PartialShape& indices_shape = get_input_partial_shape(INDICES);
+
+    PartialShape result_shape;
+    if (params_shape.rank().is_static() && indices_shape.rank().is_static() &&
+        axis != AXIS_NOT_SET_VALUE)
+    {
+        std::vector<Dimension> result_dims(params_shape.rank().get_length() +
+                                           indices_shape.rank().get_length() - 1);
+        uint64_t i = 0;
+        for (; i < axis; i++)
+        {
+            result_dims[i] = params_shape[i];
+        }
+        for (uint64_t j = 0; j < indices_shape.rank().get_length(); i++, j++)
+        {
+            result_dims[i] = indices_shape[j];
+        }
+        for (uint64_t j = axis + 1; j < params_shape.rank().get_length(); i++, j++)
+        {
+            result_dims[i] = params_shape[j];
+        }
+
+        result_shape = PartialShape(result_dims);
+    }
+    else
+    {
+        result_shape = PartialShape::dynamic();
+    }
+
+    set_output_type(0, result_et, result_shape);
+}
+
+int64_t op::v1::Gather::get_axis() const
+{
+    int64_t axis = AXIS_NOT_SET_VALUE;
+    auto axes_input_node = input_value(AXIS).get_node_shared_ptr();
+    if (auto const_op = as_type_ptr<op::Constant>(axes_input_node))
+    {
+        axis = const_op->cast_vector<int64_t>()[0];
+    }
+    if (axis < 0)
+    {
+        const auto& input_rank = get_input_partial_shape(PARAMS).rank();
+        if (input_rank.is_static())
+        {
+            axis += input_rank.get_length();
+        }
+    }
+    return axis;
+}
+
+void op::v1::Gather::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                       const OutputVector& /* deltas */)
+{
+    throw ngraph_error("Not yet implemented");
+}
+
+shared_ptr<Node> op::v1::Gather::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v1::Gather>(new_args.at(PARAMS), new_args.at(INDICES), new_args.at(AXIS));
 }

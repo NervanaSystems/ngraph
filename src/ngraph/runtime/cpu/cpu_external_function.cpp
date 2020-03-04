@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,9 +23,11 @@
 #include <typeinfo>
 #include <unordered_map>
 
+#if defined(NGRAPH_TBB_ENABLE)
 #define TBB_PREVIEW_FLOW_GRAPH_TRACE 1
 
 #include <tbb/flow_graph.h>
+#endif
 
 #if !defined(NGRAPH_DEX_ONLY)
 #include "ngraph/code_writer.hpp"
@@ -34,11 +36,12 @@
 #endif
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/compiler/pass/mlir_subgraph_extraction.hpp"
+#include "contrib/mlir/core/pass/mlir_subgraph_extraction.hpp"
 #endif
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -54,6 +57,7 @@
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
+#include "ngraph/op/atan2.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -65,6 +69,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/cum_sum.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
@@ -78,11 +83,16 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
+#include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
+#include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/matmul.hpp"
+#include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -148,6 +158,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/propagate_cacheability.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/reshape_sinking.hpp"
@@ -167,7 +178,6 @@
 #include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -175,6 +185,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -196,7 +207,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
-#include "ngraph/runtime/cpu/pass/halide_subgraph_extraction.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -234,11 +244,12 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     : m_function(function)
     , m_release_function(release_function)
     , m_emit_timing(false)
-    , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+#if defined(NGRAPH_TBB_ENABLE)
+    , m_use_tbb(getenv_bool("NGRAPH_CPU_USE_TBB"))
+#endif
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
-    , m_direct_execution((std::getenv("NGRAPH_CODEGEN") == nullptr) ||
-                         (std::string(std::getenv("NGRAPH_CODEGEN")) == "0"))
+    , m_direct_execution(!getenv_bool("NGRAPH_CODEGEN"))
 #else
     , m_direct_execution(true)
 #endif
@@ -315,8 +326,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Any), &runtime::cpu::CPU_Emitter::emit<op::Any>},
     {TI(ngraph::op::All), &runtime::cpu::CPU_Emitter::emit<op::All>},
     {TI(ngraph::op::BatchMatMul), &runtime::cpu::CPU_Emitter::emit<op::BatchMatMul>},
-    {TI(ngraph::op::BatchMatMulTranspose),
-     &runtime::cpu::CPU_Emitter::emit<op::BatchMatMulTranspose>},
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::emit<op::Concat>},
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::emit<op::Divide>},
     {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::emit<op::Equal>},
@@ -351,6 +360,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Sinh), &runtime::cpu::CPU_Emitter::emit<op::Sinh>},
     {TI(ngraph::op::Cos), &runtime::cpu::CPU_Emitter::emit<op::Cos>},
     {TI(ngraph::op::Cosh), &runtime::cpu::CPU_Emitter::emit<op::Cosh>},
+    {TI(ngraph::op::CumSum), &runtime::cpu::CPU_Emitter::emit<op::CumSum>},
     {TI(ngraph::op::Tan), &runtime::cpu::CPU_Emitter::emit<op::Tan>},
     {TI(ngraph::op::Tanh), &runtime::cpu::CPU_Emitter::emit<op::Tanh>},
     {TI(ngraph::op::TopK), &runtime::cpu::CPU_Emitter::emit<op::TopK>},
@@ -359,6 +369,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::ArgMax), &runtime::cpu::CPU_Emitter::emit<op::ArgMax>},
     {TI(ngraph::op::Acos), &runtime::cpu::CPU_Emitter::emit<op::Acos>},
     {TI(ngraph::op::Atan), &runtime::cpu::CPU_Emitter::emit<op::Atan>},
+    {TI(ngraph::op::Atan2), &runtime::cpu::CPU_Emitter::emit<op::Atan2>},
     {TI(ngraph::op::ReplaceSlice), &runtime::cpu::CPU_Emitter::emit<op::ReplaceSlice>},
     {TI(ngraph::op::UpdateSlice), &runtime::cpu::CPU_Emitter::emit<op::UpdateSlice>},
     {TI(ngraph::op::OneHot), &runtime::cpu::CPU_Emitter::emit<op::OneHot>},
@@ -442,7 +453,9 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<ngraph::op::DeconvolutionBias>},
     {TI(ngraph::op::Dropout), &runtime::cpu::CPU_Emitter::emit<op::Dropout>},
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
-};
+    {TI(ngraph::op::Gelu), &runtime::cpu::CPU_Emitter::emit<op::Gelu>},
+    {TI(ngraph::op::GeluBackprop), &runtime::cpu::CPU_Emitter::emit<op::GeluBackprop>},
+    {TI(ngraph::op::Round), &runtime::cpu::CPU_Emitter::emit<op::Round>}};
 
 static void
     generate_isnan_isinf_check(CodeWriter& writer,
@@ -486,7 +499,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
     // Build mkldnn primitives for codegen.
     pass_manager.register_pass<runtime::cpu::pass::MKLDNNPrimitiveBuildPass>(
-        m_desc_filename, *m_mkldnn_emitter, m_node_primitive_string_deps_index_map);
+        m_desc_filename, *m_mkldnn_emitter, m_node_primitive_string_deps_index_size_map);
 
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
@@ -498,11 +511,12 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
         femitter, node_function_map, common_function_string);
     pass_manager.run_passes(m_function);
 
-    list<shared_ptr<Node>> ordered_ops = m_function->get_ordered_ops();
+    auto ordered_ops = m_function->get_ordered_ops();
 
     CodeWriter writer;
 
     writer << "// Generated by the nGraph CPU backend\n";
+#if defined(NGRAPH_TBB_ENABLE)
     if (m_use_tbb)
     {
         if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
@@ -513,6 +527,8 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
         }
         writer << "#include <tbb/flow_graph.h>";
     }
+#endif
+
     writer +=
         R"(
 #include <cmath>
@@ -537,6 +553,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/convolution.hpp"
+#include "ngraph/runtime/reference/cum_sum.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/runtime/reference/embedding_lookup.hpp"
@@ -566,7 +583,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/state/rng_state.hpp"
+#include "ngraph/state/bernoulli_rng_state.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
 
@@ -638,7 +655,7 @@ using namespace ngraph::runtime;
     writer << "// Declare all constants\n";
     for (shared_ptr<Node> node : ordered_ops)
     {
-        ngraph::op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
+        ngraph::op::Constant* c = as_type<ngraph::op::Constant>(node.get());
         if (c)
         {
             m_active_constants.push_back(node);
@@ -685,8 +702,15 @@ using namespace ngraph::runtime;
     writer << "mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>("
            << to_string(m_mkldnn_emitter->get_mkldnn_scratchpad_mds().size()) << ");\n";
     writer << "size_t scratchpad_size = " << m_mkldnn_emitter->get_max_scratchpad_size() << ";\n";
+    writer << "if (scratchpad_size > 0)\n";
+    writer.block_begin();
     writer << "size_t alignment = 4096;\n";
     writer << "scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment);\n";
+    writer.block_end();
+    writer << "else\n";
+    writer.block_begin();
+    writer << "scratchpad_buffer = nullptr;\n";
+    writer.block_end();
     writer.block_end();
     writer << "\n";
 
@@ -699,7 +723,7 @@ using namespace ngraph::runtime;
     set<descriptor::Tensor*> constants;
     for (shared_ptr<Node> node : ordered_ops)
     {
-        if (dynamic_cast<ngraph::op::Constant*>(node.get()))
+        if (is_type<ngraph::op::Constant>(node))
         {
             shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
             constants.insert(tv.get());
@@ -770,6 +794,7 @@ using namespace ngraph::runtime;
 
     writer << "bool* t_en = (bool*)" << m_function->get_name() << "_t_en;\n";
 
+#if defined(NGRAPH_TBB_ENABLE)
     if (m_use_tbb)
     {
         writer << "\n";
@@ -780,6 +805,7 @@ using namespace ngraph::runtime;
                << " = new tbb::flow::continue_node<tbb::flow::continue_msg> "
                   "(*(cg_ctx->tbb_graph), [&](const tbb::flow::continue_msg &msg)\n{});\n";
     }
+#endif
 
     // Add inputs to the variable name map
     size_t arg_index = 0;
@@ -979,14 +1005,14 @@ using namespace ngraph::runtime;
         {
             // check inputs and constants?
             if ((!node->is_parameter() && !node->is_constant()) ||
-                std::getenv("NGRAPH_CPU_CHECK_PARMS_AND_CONSTS"))
+                getenv_bool("NGRAPH_CPU_CHECK_PARMS_AND_CONSTS"))
             {
-                if (std::getenv("NGRAPH_CPU_NAN_CHECK"))
+                if (getenv_bool("NGRAPH_CPU_NAN_CHECK"))
                 {
                     generate_isnan_isinf_check(writer, node, out, "isnan");
                 }
 
-                if (std::getenv("NGRAPH_CPU_INF_CHECK"))
+                if (getenv_bool("NGRAPH_CPU_INF_CHECK"))
                 {
                     generate_isnan_isinf_check(writer, node, out, "isinf");
                 }
@@ -1016,14 +1042,17 @@ using namespace ngraph::runtime;
                        << "(std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() - "
                           "start_ts)).count();\n";
             }
+#if defined(NGRAPH_TBB_ENABLE)
             if (m_use_tbb)
             {
                 writer.indent--;
                 writer << "});\n";
             }
+#endif
         }
     }
 
+#if defined(NGRAPH_TBB_ENABLE)
     if (m_use_tbb)
     {
         writer << "\n";
@@ -1059,6 +1088,7 @@ using namespace ngraph::runtime;
                << "->try_put(tbb::flow::continue_msg());\n";
         writer << "try { cg_ctx->tbb_graph->wait_for_all(); } catch(...) { throw; }\n";
     }
+#endif
     writer << "ctx->first_iteration = false;\n";
 
     writer.indent--;
@@ -1158,7 +1188,22 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     auto dex = is_direct_execution();
     auto is_supported = [dex](const Node& node) {
+#ifdef NGRAPH_MLIR_ENABLE
+        if (getenv_bool("NGRAPH_MLIR") && getenv_bool("NGRAPH_MLIR_CALLBACK"))
+        {
+            if (typeid(ngraph::op::MatMul) == typeid(node) &&
+                node.get_input_element_type(0) == element::f32)
+            {
+                return true;
+            }
 
+            if (typeid(ngraph::op::Gemm) == typeid(node) &&
+                node.get_input_element_type(0) == element::f32)
+            {
+                return true;
+            }
+        }
+#endif
         // this checks averts the decomposition of LSTMCell
         // we will map LSTMCell to LSTM CPU op in the later
         // graph pass
@@ -1169,7 +1214,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
             // TODO (pthoreho) : For MKLDNN > V1.0, change mkldnn kernel integration to compute for
             // LSTMCell
             // with peephole as well.
-            if (std::dynamic_pointer_cast<ngraph::op::Constant>(node.get_argument(6)) != nullptr)
+            if (is_type<ngraph::op::Constant>(node.get_argument(6)))
             {
                 return true;
             }
@@ -1177,6 +1222,31 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
             {
                 return false;
             }
+        }
+        else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
+        {
+#if MKLDNN_VERSION_MAJOR < 1
+            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
+            return false;
+#else
+            // TODO: will be supported in mkldnn v1.1
+            return false;
+#endif
+        }
+        else if (typeid(ngraph::op::Gelu) == typeid(node))
+        {
+#if MKLDNN_VERSION_MAJOR < 1
+            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
+            return false;
+#else
+            // TODO: will be supported in mkldnn v1.1
+            return false;
+#endif
+        }
+        // GroupConvolution is only supported with MKLDNN
+        else if (auto conv = as_type<ngraph::op::GroupConvolution>(const_cast<Node*>(&node)))
+        {
+            return mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolution>(conv);
         }
 
         if (dex)
@@ -1204,6 +1274,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass)
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported)
+    REGISTER_KNOBBED_PASS(Opset0Downgrade, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass)
@@ -1214,28 +1285,25 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(BiDirectionalRnn, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPURnnMatFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(BatchFusion, true, ngraph::pass)
-    REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass)
     REGISTER_KNOBBED_PASS(ReshapeElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(RecurrentReshapeElimination, false, ngraph::pass)
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         CoreFusion, true, ngraph::pass, ngraph::pass::FusionType::ALL_FUSIONS)
+    REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported)
     REGISTER_KNOBBED_PASS(CPUPreFusion, true, runtime::cpu::pass)
 
     // Disable CPUFusion if MLIR is enabled to preserve core ops.
-    if (std::getenv("NGRAPH_MLIR") == nullptr)
+    if (!getenv_bool("NGRAPH_MLIR"))
     {
         REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass)
     }
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)
-#if defined(NGRAPH_HALIDE)
-    REGISTER_KNOBBED_PASS(HalideSubgraphExtraction, true, ngraph::runtime::cpu::pass)
-#endif
 
 #ifdef NGRAPH_MLIR_ENABLE
-    if (std::getenv("NGRAPH_MLIR") != nullptr)
+    if (getenv_bool("NGRAPH_MLIR"))
     {
         REGISTER_KNOBBED_PASS(MLIRSubgraphExtractionPass, /*enable by default*/ true, ngraph::pass)
     }
@@ -1325,6 +1393,7 @@ static void dump_one_kernel_with_type(runtime::cpu::CPU_DebugTracer& debug_trace
     case element::Type_t::f64:
     case element::Type_t::i16:
     case element::Type_t::i64:
+    case element::Type_t::u1:
     case element::Type_t::u16:
     case element::Type_t::u32:
     case element::Type_t::u64:
@@ -1373,23 +1442,30 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         return;
     }
 
+#if defined(NGRAPH_TBB_ENABLE)
     if (m_use_tbb && (runtime::cpu::IsTracingEnabled() || m_emit_timing))
     {
         throw ngraph_error(
             "CPU Backend: Tracing and performance breakdowns might not be accurate with TBB "
             "enabled due to concurrent graph execution");
     }
+#endif
 
     // stream writer to dump the debug manifest for the DEX
     static const string s_debug_dir = "cpu_codegen";
     static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
+    if (getenv_bool("NGRAPH_ENABLE_VISUALIZE_TRACING"))
+    {
+        // Enable per_pass_validation if required for debug purpose
+        pass_manager.set_per_pass_validation(false);
+    }
     register_common_passes(pass_manager, pass_config);
     pass_manager.run_passes(m_function, false);
 
     static runtime::cpu::CPU_DebugTracer debug_tracer;
-    if (std::getenv("NGRAPH_CPU_DEBUG_TRACER") != nullptr)
+    if (getenv_bool("NGRAPH_CPU_DEBUG_TRACER"))
     {
         debug_tracer.set_enable_tracing(true);
     }
@@ -1641,7 +1717,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         m_perf_counters.emplace_back(node, 0, 0);
     }
 
-    if ((std::getenv("NGRAPH_DEX_DEBUG") != nullptr))
+    if (getenv_bool("NGRAPH_DEX_DEBUG"))
     {
         string filename = file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
         std::stringstream strm;
@@ -1735,6 +1811,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
 
         auto functor = functors.begin();
+#if defined(NGRAPH_TBB_ENABLE)
         if (m_use_tbb)
         {
             // Build the flow graph
@@ -1842,9 +1919,10 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             }
         }
         else
+#endif
         {
-            static const auto ddebug = std::getenv("NGRAPH_DEX_DEBUG");
-            if (ddebug != nullptr)
+            static const auto ddebug = getenv_bool("NGRAPH_DEX_DEBUG");
+            if (ddebug)
             {
                 if (ctx->first_iteration)
                 {
@@ -1949,7 +2027,11 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
 
     m_is_built = true;
 
+#if defined(NGRAPH_TBB_ENABLE)
     if (m_release_function && !m_use_tbb)
+#else
+    if (m_release_function)
+#endif
     {
         release_function();
     }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include <mkldnn.hpp>
 
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
@@ -36,6 +37,7 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -55,6 +57,7 @@
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
+#include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -408,7 +411,9 @@ namespace ngraph
                          (arg0_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
                         (node->get_input_element_type(0) == element::f32 ||
                          node->get_input_element_type(0) == element::u8 ||
-                         node->get_input_element_type(0) == element::i8))
+                         node->get_input_element_type(0) == element::i8 ||
+                         (node->get_input_element_type(0) == element::bf16 &&
+                          runtime::cpu::mkldnn_utils::is_bf16_supported())))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -528,7 +533,7 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ScatterAdd)
                 {
                     (void)external_function;
-                    auto update_slice = static_cast<ngraph::op::ScatterAdd*>(node);
+                    auto scatter_add = static_cast<ngraph::op::ScatterAdd*>(node);
 
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -537,18 +542,21 @@ namespace ngraph
                         // Safe to overwrite input
                         op_annotations->add_in_place_oi_pair({0, 0, true});
                     }
-                    update_slice->set_op_annotations(op_annotations);
+                    scatter_add->set_op_annotations(op_annotations);
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::LRN)
                 {
                     (void)external_function;
+                    auto lrn = static_cast<ngraph::op::LRN*>(node);
+                    AxisSet axes = lrn->get_reduction_axes();
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->get_output_shape(0);
 
-                    if ((arg0_rank == 4) && node->get_input_element_type(0) == element::f32)
+                    if ((arg0_rank == 4) && node->get_input_element_type(0) == element::f32 &&
+                        axes == AxisSet{1})
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -739,6 +747,48 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Gelu)
+                {
+                    (void)external_function;
+                    auto gelu = static_cast<ngraph::op::Gelu*>(node);
+
+                    if (node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        {
+                            // Safe to overwrite input
+                            op_annotations->add_in_place_oi_pair({0, 0, true});
+                        }
+                        gelu->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::GeluBackprop)
+                {
+                    (void)external_function;
+                    auto gelu = static_cast<ngraph::op::GeluBackprop*>(node);
+
+                    if (node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        {
+                            // Safe to overwrite input
+                            op_annotations->add_in_place_oi_pair({0, 0, true});
+                        }
+                        gelu->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::CPULeakyRelu)
                 {
                     (void)external_function;
@@ -769,11 +819,11 @@ namespace ngraph
                     (void)external_function;
                     auto qconv = static_cast<ngraph::op::QuantizedConvolution*>(node);
                     auto input_zero_point =
-                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(3));
+                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(3));
                     auto filter_zero_point =
-                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(5));
+                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(5));
                     auto output_zero_point =
-                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(7));
+                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(7));
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
                     {
@@ -1054,6 +1104,9 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::DeconvolutionBias>},
     {TI(ngraph::op::ScatterAdd),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ScatterAdd>},
+    {TI(ngraph::op::Gelu), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Gelu>},
+    {TI(ngraph::op::GeluBackprop),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GeluBackprop>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

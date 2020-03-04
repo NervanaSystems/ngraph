@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,6 +55,7 @@ namespace ngraph
         class Rnn : public Op
         {
         public:
+            CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"Rnn", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
 #if MKLDNN_VERSION_MAJOR < 1

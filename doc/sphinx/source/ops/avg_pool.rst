@@ -195,7 +195,7 @@ Backprop
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::AvgPool
+.. doxygenclass:: ngraph::op::v0::AvgPool
    :project: ngraph
    :members:
 

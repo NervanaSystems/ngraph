@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,14 +37,14 @@ void op::PriorBoxClustered::validate_and_infer_types()
     // shape node should have integer data type. For now we only allow i64
     auto layer_shape_et = get_input_element_type(0);
     NODE_VALIDATION_CHECK(this,
-                          layer_shape_et.compatible(element::Type_t::i64),
-                          "layer shape input must have element type i64, but has ",
+                          layer_shape_et.is_integral_number(),
+                          "layer shape input must be an integral number, but is: ",
                           layer_shape_et);
 
     auto image_shape_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
-                          image_shape_et.compatible(element::Type_t::i64),
-                          "image shape input must have element type i64, but has ",
+                          image_shape_et.is_integral_number(),
+                          "image shape input must be an integral number, but is: ",
                           image_shape_et);
 
     auto layer_shape_rank = get_input_partial_shape(0).rank();
@@ -57,18 +57,11 @@ void op::PriorBoxClustered::validate_and_infer_types()
                           image_shape_rank);
 
     NODE_VALIDATION_CHECK(this,
-                          m_attrs.widths.size() == m_attrs.num_priors,
-                          "Num_priors ",
-                          m_attrs.num_priors,
+                          m_attrs.widths.size() == m_attrs.heights.size(),
+                          "Size of heights vector",
+                          m_attrs.widths.size(),
                           " doesn't match size of widths vector ",
                           m_attrs.widths.size());
-
-    NODE_VALIDATION_CHECK(this,
-                          m_attrs.heights.size() == m_attrs.num_priors,
-                          "Num_priors ",
-                          m_attrs.num_priors,
-                          " doesn't match size of heights vector ",
-                          m_attrs.heights.size());
 
     set_input_is_relevant_to_shape(0);
 
@@ -81,8 +74,9 @@ void op::PriorBoxClustered::validate_and_infer_types()
 
         auto layer_shape = const_shape->get_shape_val();
         // {Prior boxes, variances-adjusted prior boxes}
+        const auto num_priors = m_attrs.widths.size();
         set_output_type(
-            0, element::f32, Shape{2, 4 * layer_shape[0] * layer_shape[1] * m_attrs.num_priors});
+            0, element::f32, Shape{2, 4 * layer_shape[0] * layer_shape[1] * num_priors});
     }
     else
     {

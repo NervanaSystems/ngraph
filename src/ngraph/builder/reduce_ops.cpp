@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/opsets/opset1.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -47,7 +48,7 @@ namespace ngraph
             auto x2 = node * node;
             auto x2sum = std::make_shared<op::Sum>(x2, reduction_axes);
 
-            return std::make_shared<op::Sqrt>(x2sum);
+            return std::make_shared<op::Sqrt>(x2sum)->add_provenance_group_members_above({node});
         }
 
         std::shared_ptr<Node> mean(const Output<Node>& value, const AxisSet& reduction_axes)
@@ -59,14 +60,15 @@ namespace ngraph
 
             auto divisor = op::Constant::create(et, xsum->get_shape(), {N});
 
-            return xsum / divisor;
+            return (xsum / divisor)->add_provenance_group_members_above({value});
         }
 
         std::shared_ptr<Node> std_dev(const Output<Node>& node,
                                       const AxisSet& reduction_axes,
                                       const bool bessel_correction)
         {
-            return std::make_shared<op::Sqrt>(variance(node, reduction_axes, bessel_correction));
+            return std::make_shared<op::Sqrt>(variance(node, reduction_axes, bessel_correction))
+                ->add_provenance_group_members_above({node});
         }
 
         // This currently calculates [E[X^2] - E[X]^2] instead of [E[(X-\mu)^2]]
@@ -96,16 +98,69 @@ namespace ngraph
             const auto& et = value.get_element_type();
             auto N = get_num_elements(value.get_shape(), reduction_axes);
 
+            std::shared_ptr<Node> result;
             if (bessel_correction)
             {
                 auto N1const = op::Constant::create(et, diff.get_shape(), {N - 1});
-                return diff / N1const;
+                result = diff / N1const;
             }
             else
             {
                 auto Nconst = op::Constant::create(et, diff.get_shape(), {N});
-                return diff / Nconst;
+                result = diff / Nconst;
             }
+            return result->add_provenance_group_members_above({value});
+        }
+
+        std::shared_ptr<Node> builder::opset1::mean(const Output<Node>& value,
+                                                    const AxisSet& reduction_axes,
+                                                    bool keep_dims)
+        {
+            const auto xsum = std::make_shared<ngraph::opset1::ReduceSum>(
+                value,
+                ngraph::opset1::Constant::create(
+                    element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector()),
+                keep_dims);
+
+            const auto N = get_num_elements(value.get_shape(), reduction_axes);
+            const auto& et = value.get_element_type();
+
+            const auto divisor = ngraph::opset1::Constant::create(et, Shape{}, {N});
+
+            return std::make_shared<ngraph::opset1::Divide>(xsum, divisor)
+                ->add_provenance_group_members_above({value});
+        }
+
+        std::shared_ptr<Node> builder::opset1::variance(const Output<Node>& value,
+                                                        const AxisSet& reduction_axes,
+                                                        const bool bessel_correction)
+        {
+            const bool keep_dims = true;
+            std::shared_ptr<Node> mu = opset1::mean(value, reduction_axes, keep_dims);
+
+            Output<Node> diff = std::make_shared<ngraph::opset1::Subtract>(value, mu);
+
+            diff = std::make_shared<ngraph::opset1::ReduceSum>(
+                std::make_shared<ngraph::opset1::Multiply>(diff, diff),
+                ngraph::opset1::Constant::create(
+                    element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector()),
+                false);
+
+            const auto& et = value.get_element_type();
+            const auto N = get_num_elements(value.get_shape(), reduction_axes);
+
+            std::shared_ptr<Node> result;
+            if (bessel_correction)
+            {
+                const auto N1const = ngraph::opset1::Constant::create(et, Shape{}, {N - 1});
+                result = std::make_shared<ngraph::opset1::Divide>(diff, N1const);
+            }
+            else
+            {
+                const auto Nconst = ngraph::opset1::Constant::create(et, Shape{}, {N});
+                result = std::make_shared<ngraph::opset1::Divide>(diff, Nconst);
+            }
+            return result->add_provenance_group_members_above({value});
         }
 
     } // namespace builder

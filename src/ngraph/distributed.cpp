@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,32 +15,32 @@
 //*****************************************************************************
 
 #include "ngraph/distributed.hpp"
-#include "ngraph/distributed/mlsl.hpp"
 #include "ngraph/distributed/null.hpp"
-#include "ngraph/distributed/open_mpi.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/type.hpp"
 
 using namespace ngraph;
 
+namespace ngraph
+{
+    template <>
+    EnumNames<reduction::Type>& EnumNames<reduction::Type>::get()
+    {
+        static auto enum_names = EnumNames<reduction::Type>("reduction::Type",
+                                                            {{"SUM", reduction::Type::SUM},
+                                                             {"PROD", reduction::Type::PROD},
+                                                             {"MIN", reduction::Type::MIN},
+                                                             {"MAX", reduction::Type::MAX}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<reduction::Type>::type_info;
+}
+
 std::ostream& reduction::operator<<(std::ostream& out, const reduction::Type& obj)
 {
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
-#endif
-    switch (obj)
-    {
-    case reduction::Type::SUM: out << "SUM"; break;
-    case reduction::Type::PROD: out << "PROD"; break;
-    case reduction::Type::MIN: out << "MIN"; break;
-    case reduction::Type::MAX: out << "MAX"; break;
-    }
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
-#pragma GCC diagnostic pop
-#endif
-    return out;
-};
+    return out << as_string(obj);
+}
 
 static std::unique_ptr<DistributedInterface> s_distributed_interface;
 
@@ -54,16 +54,8 @@ DistributedInterface* ngraph::get_distributed_interface()
 {
     if (nullptr == s_distributed_interface)
     {
-#ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
-        set_distributed_interface(std::unique_ptr<DistributedInterface>(
-            new ngraph::distributed::OpenMPIDistributedInterface()));
-#elif defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-        set_distributed_interface(std::unique_ptr<DistributedInterface>(
-            new ngraph::distributed::MLSLDistributedInterface()));
-#else
         set_distributed_interface(std::unique_ptr<DistributedInterface>(
             new ngraph::distributed::NullDistributedInterface()));
-#endif
     }
     return s_distributed_interface.get();
 }

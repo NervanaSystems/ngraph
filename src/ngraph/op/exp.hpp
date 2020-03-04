@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,25 +22,29 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise natural exponential (exp) operation.
-        class Exp : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Exp", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs an exponential operation.
-            Exp() = default;
-            /// \brief Constructs an exponential operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Exp(const Output<Node>& arg);
+            /// \brief Elementwise natural exponential (exp) operation.
+            class NGRAPH_API Exp : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Exp", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs an exponential operation.
+                Exp() = default;
+                /// \brief Constructs an exponential operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                Exp(const Output<Node>& arg);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
+            };
+        }
+        using v0::Exp;
     }
 }

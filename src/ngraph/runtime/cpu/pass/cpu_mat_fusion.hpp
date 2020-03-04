@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,22 +32,6 @@ namespace ngraph
                 public:
                     virtual bool
                         run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-                class CPU_BACKEND_API CPUBatchFusion : public ngraph::pass::FunctionPass
-                {
-                public:
-                    typedef ngraph::pass::FusionType FusionType;
-                    typedef ngraph::pass::FusionTypeMask FusionTypeMask;
-                    CPUBatchFusion(FusionTypeMask fusions = FusionType::ALL_FUSIONS)
-                        : FunctionPass()
-                        , m_fusion_type(fusions)
-                    {
-                    }
-                    virtual bool
-                        run_on_function(std::shared_ptr<ngraph::Function> function) override;
-
-                private:
-                    FusionTypeMask m_fusion_type;
                 };
             }
         }

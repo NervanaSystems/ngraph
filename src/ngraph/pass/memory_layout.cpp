@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<Function> function)
         {
             auto op = std::static_pointer_cast<op::Op>(node);
             // concat and slice in_place_oi should be treated differently
-            if (!node->is_type<op::Concat>() && !node->is_type<op::Slice>())
+            if (!is_type<op::Concat>(node) && !is_type<op::Slice>(node))
             {
                 if (auto op_annotations = op->get_op_annotations())
                 {
@@ -60,12 +60,12 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<Function> function)
                     {
                         auto output = &node->output(oi_pair.output).get_tensor();
                         auto input = &node->input(oi_pair.input).get_tensor();
-                        auto input_node = node->input(oi_pair.input).get_source_output().get_node();
+                        auto input_node = node->get_input_node_ptr(oi_pair.input);
 
                         // For destructive kernel, this should be the last use
                         // Non-destructive kernels can pass through if memory sharing is disabled
                         if ((node->liveness_free_list.count(input) != 0 ||
-                             node->is_type<op::GetOutputElement>() ||
+                             is_type<op::GetOutputElement>(node) ||
                              (m_disable_memory_sharing && !oi_pair.destructive &&
                               !input_node->is_parameter() && !input_node->is_constant())) &&
                             node->liveness_new_list.count(output) != 0)
@@ -125,7 +125,7 @@ pass::MemoryManager::MemoryManager(size_t alignment, bool disable_memory_reuse)
 
 size_t pass::MemoryManager::allocate(size_t size)
 {
-    size_t rc;
+    size_t rc = 0;
     switch (m_scheme)
     {
     case allocation_scheme::FIRST_FIT: rc = first_fit(size); break;

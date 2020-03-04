@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 #include "cpu_layout.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
@@ -102,7 +103,8 @@ static shared_ptr<Node>
     {
         const auto& output = input.get_output();
         auto tv = output.get_tensor_ptr();
-        auto tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
+        auto tvl =
+            std::dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
         if (!tvl)
         {
             throw ngraph_error(
@@ -341,13 +343,8 @@ void set_layouts_binaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* exter
     {
         vector<memory::desc> i_mds;
         vector<memory::desc> o_mds;
-        int select = 0;
-        char* ngraph_pass_cpu_layout_eltwise = std::getenv("NGRAPH_PASS_CPU_LAYOUT_ELTWISE");
-        if (ngraph_pass_cpu_layout_eltwise != nullptr)
-        {
-            const int user_select = std::atoi(ngraph_pass_cpu_layout_eltwise);
-            select = (user_select == 0 || user_select == 1) ? user_select : select;
-        }
+        const int32_t user_select = getenv_int("NGRAPH_PASS_CPU_LAYOUT_ELTWISE");
+        int select = (user_select == 0 || user_select == 1) ? user_select : 0;
         i_mds.push_back(arg_mds[select]);
         i_mds.push_back(arg_mds[select]);
         o_mds.push_back(arg_mds[select]);
@@ -380,12 +377,11 @@ namespace ngraph
 
                     // Convert filters to MKLDNN shape
                     // o,i,h,w -> g,o,i,h,w (e.g., {6, 2, 1, 1}, groups = 2 -> {2, 3, 1, 1, 1})
-                    if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node))
+                    if (auto gconv = as_type_ptr<ngraph::op::GroupConvolution>(node))
                     {
                         arg1_shape = gconv->get_weights_dimensions();
                     }
-                    if (auto gconv =
-                            std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node))
+                    if (auto gconv = as_type_ptr<ngraph::op::GroupConvolutionBias>(node))
                     {
                         arg1_shape = gconv->get_weights_dimensions();
                     }
@@ -1743,22 +1739,14 @@ namespace ngraph
                     memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
 
-                    auto fprop_input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-
-#if MKLDNN_VERSION_MAJOR < 1
-                    auto fprop_input_layout =
-                        static_cast<memory::format>(fprop_input_md.data.format);
-                    auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, fprop_input_layout);
-#else
-                    auto strides = fprop_input_md.data.format_desc.blocking.strides;
-                    memory::dims strides_arg;
-                    for (auto i = 0; i < fprop_input_md.data.ndims; i++)
+                    if (arg0_shape.size() != 4 && arg0_shape.size() != 5)
                     {
-                        strides_arg.push_back(strides[i]);
+                        throw ngraph_error("MKLDNN Unsupported pooling layout");
                     }
-                    auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, strides_arg);
-#endif
-                    auto diff_src_desc = memory::desc(mkldnn_arg0_shape, et, memory::FORMAT::any);
+                    auto default_format = arg0_shape.size() == 4 ? mkldnn::memory::FORMAT::nchw
+                                                                 : mkldnn::memory::FORMAT::ncdhw;
+                    auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, default_format);
+                    auto diff_src_desc = memory::desc(mkldnn_arg0_shape, et, default_format);
 
                     try
                     {
@@ -1784,7 +1772,8 @@ namespace ngraph
 
                         auto prim_desc = pooling_backward::primitive_desc(
                             bwd_desc, executor::global_cpu_engine, fwd_prim_desc);
-                        i_mds.push_back(fprop_input_md);
+
+                        i_mds.push_back(diff_src_desc);
                         i_mds.push_back(diff_dst_desc);
 
                         if (with_indices)
@@ -1799,22 +1788,12 @@ namespace ngraph
                         {
                             i_mds.push_back(diff_dst_desc);
                         }
-#if MKLDNN_VERSION_MAJOR < 1
-                        o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
-#else
-                        o_mds.push_back(prim_desc.diff_src_desc());
-#endif
+                        o_mds.push_back(diff_src_desc);
                     }
                     catch (const mkldnn::error& e)
                     {
-#if MKLDNN_VERSION_MAJOR < 1
-                        throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                           to_string(fprop_input_md.data.format) +
-                                           MKLDNN_ERROR_MESSAGE);
-#else
                         throw ngraph_error("MKLDNN Unsupported pooling layout" +
                                            MKLDNN_ERROR_MESSAGE);
-#endif
                     }
                 }
 
@@ -1896,12 +1875,7 @@ namespace ngraph
                         if (input_shape[axis_order[i]] != output_shape[i])
                             return false;
                     }
-#if MKLDNN_VERSION_MAJOR >= 1
-                    if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(md))
-                    {
-                        return false;
-                    }
-#endif
+
                     return true;
                 }
 
@@ -2326,7 +2300,7 @@ namespace ngraph
                     }
                     else
                     {
-                        throw ngraph_error("Batchnorm Backprop only supported in MKLDNN for now");
+                        set_native_layouts(external_function, node);
                     }
                 }
 
@@ -2457,7 +2431,7 @@ namespace ngraph
                                   vector<memory::desc>& o_mds)
                 {
                     auto concat = static_cast<const T*>(node.get());
-                    size_t concat_dim = concat->get_concatenation_axis();
+                    auto concat_dim = concat->get_concatenation_axis();
                     auto result_desc = mkldnn_utils::create_default_mkldnn_md(
                         node.get(), 0, true, memory::FORMAT::any);
 #if MKLDNN_VERSION_MAJOR < 1
@@ -2705,13 +2679,11 @@ bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::share
         {
             handler->second(m_external_function, node);
         }
-        else if (dynamic_pointer_cast<ngraph::op::util::UnaryElementwiseArithmetic>(node) !=
-                 nullptr)
+        else if (node->is_unary_elementwise_arithmetic())
         {
             set_layouts_unaryeltwise(m_external_function, node);
         }
-        else if (dynamic_pointer_cast<ngraph::op::util::BinaryElementwiseArithmetic>(node) !=
-                 nullptr)
+        else if (node->is_binary_elementwise_arithmetic())
         {
             set_layouts_binaryeltwise(m_external_function, node);
         }

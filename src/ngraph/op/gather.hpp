@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,39 +22,65 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Gather slices from axis of params according to indices
-        class Gather : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Gather", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            Gather() = default;
-            /// \param params The tensor from which slices are gathered
-            /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-            /// \param axis Axis in params to gather
-            Gather(const Output<Node>& params, const Output<Node>& indices, size_t axis = 0)
-                : Op({params, indices})
-                , m_axis(axis)
+            /// \brief Gather slices from axis of params according to indices
+            class NGRAPH_API Gather : public Op
             {
-                constructor_validate_and_infer_types();
-            }
+            public:
+                static constexpr NodeTypeInfo type_info{"Gather", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Gather() = default;
+                /// \param params The tensor from which slices are gathered
+                /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
+                /// \param axis Axis in params to gather
+                Gather(const Output<Node>& params, const Output<Node>& indices, size_t axis = 0);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                   const NodeVector& /* deltas */) override
+                void generate_adjoints(autodiff::Adjoints& adjoints,
+                                       const OutputVector& deltas) override;
+
+                size_t get_axis() const { return m_axis; }
+                void set_axis(size_t axis) { m_axis = axis; }
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+            protected:
+                size_t m_axis;
+            };
+        }
+
+        namespace v1
+        {
+            /// \brief Gather slices from axis of params according to indices
+            class NGRAPH_API Gather : public Op
             {
-                throw ngraph_error("Not yet implemented");
-            }
+            public:
+                static constexpr NodeTypeInfo type_info{"Gather", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Gather() = default;
+                /// \param params The tensor from which slices are gathered
+                /// \param indices Tensor with indexes to gather
+                /// \param axis The tensor is a dimension index to gather data from
+                Gather(const Output<Node>& params,
+                       const Output<Node>& indices,
+                       const Output<Node>& axis);
 
-            size_t get_axis() const { return m_axis; }
-            void set_axis(size_t axis) { m_axis = axis; }
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                int64_t get_axis() const;
 
-        protected:
-            size_t m_axis;
-        };
+                void validate_and_infer_types() override;
+
+                void generate_adjoints(autodiff::Adjoints& adjoints,
+                                       const OutputVector& deltas) override;
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+
+        // latest stable opset version
+        using v0::Gather;
     }
 }

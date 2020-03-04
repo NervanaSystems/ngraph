@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,13 +18,12 @@
 #include <cstdint>
 #include <memory>
 
+#include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "lp_pool.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/builder/split.hpp"
-#include "ngraph/op/concat.hpp"
-#include "ngraph/op/reshape.hpp"
 #include "ngraph/util.hpp"
 #include "utils/common.hpp"
 
@@ -38,15 +37,16 @@ namespace ngraph
             {
                 NodeVector global_lp_pool(const Node& node)
                 {
-                    std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
-                    std::size_t channel_axis{1};
-                    std::size_t channels_count = data->get_shape().at(channel_axis);
-                    std::int64_t p_norm{node.get_attribute_value<std::int64_t>("p", 2)};
+                    const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
+                    const std::size_t channel_axis{1};
+                    const std::size_t channels_count = data->get_shape().at(channel_axis);
+                    const std::int64_t p_norm{node.get_attribute_value<std::int64_t>("p", 2)};
 
                     ASSERT_VALID_ARGUMENT(node, p_norm >= 0)
                         << "Only positive (including zero) values are supported for 'p' attribute.";
 
-                    NodeVector slices = ngraph::builder::split(data, channels_count, channel_axis);
+                    NodeVector slices =
+                        ngraph::builder::opset1::split(data, channels_count, channel_axis);
 
                     for (auto& slice : slices)
                     {
@@ -55,19 +55,21 @@ namespace ngraph
                         AxisSet reduction_axes{
                             common::get_monotonic_range<std::size_t>(orig_shape.size(), 2)};
 
-                        slice = ngraph::builder::lp_norm(
+                        slice = ngraph::builder::opset1::lp_norm(
                             slice, reduction_axes, static_cast<std::size_t>(p_norm));
 
                         // output shape is all ones except N channel
                         Shape output_shape(orig_shape.size(), 1);
                         output_shape.at(0) = orig_shape.at(0);
-                        slice = std::make_shared<ngraph::op::Reshape>(
-                            slice,
-                            ngraph::get_default_order(slice->get_shape().size()),
-                            output_shape);
+
+                        const auto reshape_pattern = default_opset::Constant::create(
+                            element::i64, Shape{output_shape.size()}, output_shape);
+
+                        slice =
+                            std::make_shared<default_opset::Reshape>(slice, reshape_pattern, false);
                     }
 
-                    return {std::make_shared<ngraph::op::Concat>(slices, channel_axis)};
+                    return {std::make_shared<default_opset::Concat>(slices, channel_axis)};
                 }
 
             } // namespace set_1

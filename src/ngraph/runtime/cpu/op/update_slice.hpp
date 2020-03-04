@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include "ngraph/coordinate.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -52,6 +53,7 @@ namespace ngraph
         class UpdateSlice : public Op
         {
         public:
+            CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"UpdateSlice", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a tensor slice update operation.

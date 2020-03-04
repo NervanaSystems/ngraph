@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,10 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pass/dyn_elimination.hpp"
 #include "gtest/gtest.h"
+
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/constant_folding.hpp"
+#include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "util/all_close_f.hpp"
 #include "util/test_tools.hpp"
 
@@ -43,8 +46,7 @@ TEST(dyn_elimination, transpose)
     ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
 
-    auto new_reshape =
-        std::dynamic_pointer_cast<op::Reshape>(f->get_results().at(0)->get_argument(0));
+    auto new_reshape = as_type_ptr<op::Reshape>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_reshape);
 
     ASSERT_EQ(new_reshape->get_input_order(), (AxisVector{2, 3, 1, 0}));
@@ -76,8 +78,7 @@ TEST(dyn_elimination, transpose_dyn_shape)
     ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_transpose =
-        std::dynamic_pointer_cast<op::Transpose>(f->get_results().at(0)->get_argument(0));
+    auto new_transpose = as_type_ptr<op::Transpose>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_transpose);
 
     ASSERT_EQ(new_transpose->get_output_element_type(0), element::boolean);
@@ -226,7 +227,7 @@ TEST(dyn_elimination, range)
     ASSERT_EQ(count_ops_of_type<op::Range>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto replacement = dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto replacement = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
 
     ASSERT_NE(replacement, nullptr);
     ASSERT_EQ(replacement->get_element_type(), element::i64);
@@ -257,7 +258,7 @@ TEST(dyn_elimination, range_f64)
     ASSERT_EQ(count_ops_of_type<op::Range>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto replacement = dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto replacement = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
 
     ASSERT_NE(replacement, nullptr);
     ASSERT_EQ(replacement->get_element_type(), element::f64);
@@ -268,3 +269,25 @@ TEST(dyn_elimination, range_f64)
     ASSERT_TRUE(test::all_close_f(
         vals, vector<double>{-0.5, -0.25, 0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75}));
 }
+
+#ifndef NGRAPH_JSON_DISABLE
+TEST(dyn_elimination, paddlepaddle_transpose)
+{
+    string model = "paddlepaddle/transpose.json";
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, model);
+    const string json_string = file_util::read_file_to_string(json_path);
+    shared_ptr<Function> f = ngraph::deserialize(json_string);
+
+    vector<element::Type> arg_element_types = {element::f64, element::f64};
+    vector<PartialShape> arg_shapes = {{3, 4}, {4, 3}};
+    std::vector<void*> arg_value_base_pointers = {nullptr, nullptr};
+    auto clone = specialize_function(f, arg_element_types, arg_shapes, arg_value_base_pointers);
+
+    pass::Manager passes;
+    passes.register_pass<pass::ConstantFolding>();
+    passes.register_pass<pass::DynElimination>();
+    passes.register_pass<pass::Opset0Downgrade>(); // Converts dynamic v1 variants to v0 ops
+    passes.set_per_pass_validation(false);
+    passes.run_passes(clone);
+}
+#endif

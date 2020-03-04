@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -107,12 +107,13 @@ def test_depth_to_space():
                             [15, 16, 17]],
                             [[18, 19, 20],
                             [21, 22, 23]]]], dtype=np.float32)
+    mode = 'blocks_first'
     block_size = np.float32(2)
 
     data_shape = [1, 4, 2, 3]
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
 
-    model = ng.depth_to_space(parameter_data, block_size)
+    model = ng.depth_to_space(parameter_data, mode, block_size)
     computation = runtime.computation(model, parameter_data)
 
     result = computation(data_value)
@@ -174,7 +175,7 @@ def test_gelu_operator_with_parameters():
     result = computation(data_value)
     expected = np.array([[-1.4901161e-06, 8.4134471e-01], [-4.5500278e-02, 2.9959502]],
                         dtype=np.float32)
-    assert np.allclose(result, expected)
+    assert np.allclose(result, expected, .007, .007)
 
 
 def test_gelu_operator_with_array():
@@ -189,7 +190,7 @@ def test_gelu_operator_with_array():
     expected = np.array([[-1.4901161e-06, 8.4134471e-01], [-4.5500278e-02, 2.9959502]],
                         dtype=np.float32)
 
-    assert np.allclose(result, expected)
+    assert np.allclose(result, expected, .007, .007)
 
 
 def test_clamp_operator():
@@ -350,17 +351,19 @@ def test_hard_sigmoid_operator():
     runtime = get_runtime()
 
     data_shape = [3]
-    alpha = np.float32(0.5)
-    beta = np.float32(0.6)
+    alpha_value = np.float32(0.5)
+    beta_value = np.float32(0.6)
 
     data_value = np.array([-1, 0, 1], dtype=np.float32)
 
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    parameter_alpha = ng.parameter([], name='Alpha', dtype=np.float32)
+    parameter_beta = ng.parameter([], name='Beta', dtype=np.float32)
 
-    model = ng.hard_sigmoid(parameter_data, alpha, beta)
-    computation = runtime.computation(model, parameter_data)
+    model = ng.hard_sigmoid(parameter_data, parameter_alpha, parameter_beta)
+    computation = runtime.computation(model, parameter_data, parameter_alpha, parameter_beta)
 
-    result = computation(data_value)
+    result = computation(data_value, alpha_value, beta_value)
     expected = [0.1, 0.6, 1.]
     assert np.allclose(result, expected)
 
@@ -428,11 +431,12 @@ def test_space_to_depth_operator():
 
     data_shape = [1, 2, 4, 4]
     data_value = np.arange(start=0, stop=32, step=1.0, dtype=np.float32).reshape(data_shape)
+    mode = 'blocks_first'
     block_size = 2
 
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
 
-    model = ng.space_to_depth(parameter_data, block_size)
+    model = ng.space_to_depth(parameter_data, mode, block_size)
     computation = runtime.computation(model, parameter_data)
 
     result = computation(data_value)
@@ -440,4 +444,104 @@ def test_space_to_depth_operator():
                         1, 3, 9, 11, 17, 19, 25, 27,
                         4, 6, 12, 14, 20, 22, 28, 30,
                         5, 7, 13, 15, 21, 23, 29, 31], dtype=np.float32).reshape(1, 8, 2, 2)
+    assert np.allclose(result, expected)
+
+
+def test_rnn_cell_operator():
+    runtime = get_runtime()
+
+    batch_size = 2
+    input_size = 3
+    hidden_size = 3
+
+    X_shape = [batch_size, input_size]
+    W_shape = [hidden_size, input_size]
+    R_shape = [hidden_size, hidden_size]
+    H_t_shape = [batch_size, hidden_size]
+    B_shape = [hidden_size]
+
+    parameter_X = ng.parameter(X_shape, name='X', dtype=np.float32)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=np.float32)
+    parameter_W = ng.parameter(W_shape, name='W', dtype=np.float32)
+    parameter_R = ng.parameter(R_shape, name='R', dtype=np.float32)
+    parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
+
+    X_value = np.array([0.3432185, 0.612268, 0.20272376,
+                        0.9513413, 0.30585995, 0.7265472],
+                       dtype=np.float32).reshape(X_shape)
+    H_t_value = np.array([0.12444675, 0.52055854, 0.46489045,
+                          0.4983964, 0.7730452, 0.28439692],
+                         dtype=np.float32).reshape(H_t_shape)
+    W_value = np.array([0.41930267, 0.7872176, 0.89940447,
+                        0.23659843, 0.24676207, 0.17101714,
+                        0.3147149, 0.6555601, 0.4559603],
+                       dtype=np.float32).reshape(W_shape)
+    R_value = np.array([0.8374871, 0.86660194, 0.82114047,
+                        0.71549815, 0.18775631, 0.3182116,
+                        0.25392973, 0.38301638, 0.85531586],
+                       dtype=np.float32).reshape(R_shape)
+    B_value = np.array([1.0289404, 1.6362579, 0.4370661],
+                       dtype=np.float32).reshape(B_shape)
+    activations = ['sigmoid']
+    activation_alpha = []
+    activation_beta = []
+    clip = 2.88
+
+    model = ng.rnn_cell(parameter_X,
+                        parameter_H_t,
+                        parameter_W,
+                        parameter_R,
+                        parameter_B,
+                        hidden_size,
+                        activations,
+                        activation_alpha,
+                        activation_beta,
+                        clip)
+    computation = runtime.computation(model,
+                                      parameter_X,
+                                      parameter_H_t,
+                                      parameter_W,
+                                      parameter_R,
+                                      parameter_B)
+
+    result = computation(X_value, H_t_value, W_value, R_value, B_value)
+    expected = np.array([0.94126844, 0.9036043, 0.841243,
+                         0.9468489, 0.934215, 0.873708],
+                        dtype=np.float32).reshape(batch_size, hidden_size)
+
+    assert np.allclose(result, expected)
+
+
+def test_group_convolution_operator():
+    runtime = get_runtime()
+
+    data_shape = [1, 4, 2, 2]
+    filters_shape = [2, 2, 1, 1]
+
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    parameter_filters = ng.parameter(filters_shape, name='Filters', dtype=np.float32)
+
+    data_value = np.arange(start=1.0, stop=17.0, dtype=np.float32).reshape(data_shape)
+    filters_value = np.arange(start=1.0, stop=5.0, dtype=np.float32).reshape(filters_shape)
+    window_movement_strides = [1, 1]
+    window_dilation_strides = [1, 1]
+    padding_below = [0, 0]
+    padding_above = [0, 0]
+    data_dilation_strides = [1, 1]
+    groups = 2
+
+    model = ng.group_convolution(parameter_data,
+                                 parameter_filters,
+                                 window_movement_strides,
+                                 window_dilation_strides,
+                                 padding_below, padding_above,
+                                 data_dilation_strides,
+                                 groups,
+                                 0)
+    computation = runtime.computation(model, parameter_data, parameter_filters)
+
+    result = computation(data_value, filters_value)
+    expected = np.array([11, 14, 17, 20, 79, 86, 93, 100],
+                        dtype=np.float32).reshape(1, 2, 2, 2)
+
     assert np.allclose(result, expected)

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,10 +19,11 @@
 #include <iterator>
 #include <numeric>
 
+#include "default_opset.hpp"
+#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/reshape.hpp"
-#include "ngraph/op/reshape.hpp"
-#include "utils/common.hpp"
-#include "utils/reshape.hpp"
+#include "ngraph/shape.hpp"
+#include "reshape.hpp"
 
 namespace ngraph
 {
@@ -100,7 +101,16 @@ namespace ngraph
                              "Scalar value can't be derived from a node with ",
                              node_shape);
 
-                return ngraph::builder::reshape(node, Shape{});
+                // If node is a Constant, recreate as Constant with Shape{}
+                if (node->is_constant())
+                {
+                    const auto value =
+                        ngraph::as_type_ptr<default_opset::Constant>(node)->get_data_ptr();
+                    return std::make_shared<default_opset::Constant>(
+                        node->get_element_type(), ngraph::Shape{}, value);
+                }
+
+                return ngraph::builder::opset1::reshape(node, Shape{});
             }
 
         } // namespace  reshape

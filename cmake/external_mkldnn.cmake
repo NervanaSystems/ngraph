@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,11 +18,12 @@ include(ExternalProject)
 
 # Includes blas 3.8.0 in mkldnn
 set(NGRAPH_MKLDNN_SHORT_VERSION 0)
-set(NGRAPH_MKLDNN_FULL_VERSION 0.20)
-set(NGRAPH_MKLDNN_ASSET_VERSION "v0.20")
-set(NGRAPH_MKLDNN_VERSION "v0.20.2")
+set(NGRAPH_MKLDNN_FULL_VERSION 0.21)
+set(NGRAPH_MKLDNN_ASSET_VERSION "v0.21")
+set(NGRAPH_MKLDNN_VERSION "v0.21")
 set(NGRAPH_MKLDNN_MKLML_VERSION "2019.0.5.20190502")
-set(NGRAPH_MKLDNN_GIT_TAG "v0.20.2")
+set(NGRAPH_MKLDNN_MKLML_WIN32_VERSION "2020.0.20190813") 
+set(NGRAPH_MKLDNN_GIT_TAG "v0.21")
 
 #------------------------------------------------------------------------------
 # Fetch and install MKL-DNN
@@ -91,6 +92,7 @@ endif()
 
 set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/${NGRAPH_MKLDNN_ASSET_VERSION}/")
 set(MKLVERSION ${NGRAPH_MKLDNN_MKLML_VERSION})
+set(MKLWIN32VERSION ${NGRAPH_MKLDNN_MKLML_WIN32_VERSION})
 if (LINUX)
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH 6ab490f0b358124338d04ee9383c3cbc536969d8)
@@ -98,8 +100,8 @@ elseif (APPLE)
     set(MKLPACKAGE "mklml_mac_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH a1c42af04f990b0e515a1c31946424b2e68fccc9)
 elseif (WIN32)
-    set(MKLPACKAGE "mklml_win_${MKLVERSION}.zip")
-    set(MKL_SHA1_HASH 9d6ff4d5a486689338158093e96c43ee442b65f0)
+    set(MKLPACKAGE "mklml_win_${MKLWIN32VERSION}.zip")
+    set(MKL_SHA1_HASH cc117093e658d50a8e4e3d1cf192c300b6bac0fc)
 endif()
 set(MKL_LIBS ${MKLML_LIB} ${OMP_LIB})
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
@@ -129,6 +131,8 @@ ExternalProject_Add(
     UPDATE_COMMAND ""
     DOWNLOAD_NO_PROGRESS TRUE
     EXCLUDE_FROM_ALL TRUE
+    BUILD_BYPRODUCTS ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
+                     ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB}
 )
 
 set(MKLDNN_DEPENDS ext_mkl)
@@ -208,6 +212,8 @@ if (WIN32)
             ${NGRAPH_FORWARD_CMAKE_ARGS}
             -DWITH_TEST=FALSE
             -DWITH_EXAMPLE=FALSE
+            -DMKLDNN_BUILD_TESTS=FALSE
+            -DMKLDNN_BUILD_EXAMPLES=FALSE
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
@@ -241,6 +247,8 @@ else()
             ${NGRAPH_FORWARD_CMAKE_ARGS}
             -DWITH_TEST=FALSE
             -DWITH_EXAMPLE=FALSE
+            -DMKLDNN_BUILD_TESTS=FALSE
+            -DMKLDNN_BUILD_EXAMPLES=FALSE
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
             ${MKLDNN_RPATH}
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
@@ -254,6 +262,7 @@ else()
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
         EXCLUDE_FROM_ALL TRUE
+        BUILD_BYPRODUCTS ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
         )
 endif()
 

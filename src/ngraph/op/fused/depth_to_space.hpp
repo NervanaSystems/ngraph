@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,41 +18,81 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief DepthToSpace permutes data from the depth dimension of the input blob into
-        ///        spatial dimensions.
-        ///
-        /// \note  Values from the depth dimension (assuming NCHW layout) are moved in
-        ///        spatial blocks to the height and width dimensions.
-        ///
-        ///        Output node produces a tensor with shape:
-        ///        [N, C/(blocksize * blocksize), H * blocksize, W * blocksize]
-        class DepthToSpace : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"DepthToSpace", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            DepthToSpace() = default;
-            /// \brief Constructs a DepthToSpace operation.
+            /// \brief DepthToSpace permutes data from the depth dimension of the input blob into
+            ///        spatial dimensions.
             ///
-            /// \param data - Node producing the input tensor
-            /// \param block_size - the size of the block of values to be moved
-            DepthToSpace(const Output<Node>& data, std::size_t block_size);
+            /// \note  Values from the depth dimension (assuming NCHW layout) are moved in
+            ///        spatial blocks to the height and width dimensions.
+            ///
+            ///        Output node produces a tensor with shape:
+            ///        [N, C/(blocksize * blocksize), H * blocksize, W * blocksize]
+            class NGRAPH_API DepthToSpace : public ngraph::op::util::FusedOp
+            {
+            public:
+                enum class DepthToSpaceMode
+                {
+                    // The input depth is divided to [block_size, ..., block_size, new_depth]
+                    BLOCKS_FIRST,
+                    // The input depth is divided to [new_depth, block_size, ..., block_size]
+                    DEPTH_FIRST
+                };
 
-            std::size_t get_block_size() const { return m_blocksize; }
-            virtual NodeVector decompose_op() const override;
+                static constexpr NodeTypeInfo type_info{"DepthToSpace", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                DepthToSpace() = default;
+                /// \brief Constructs a DepthToSpace operation.
+                ///
+                /// \param data Node producing the input tensor
+                /// \param mode Specifies how the input depth dimension is split to block
+                /// coordinates
+                /// \param block_size The size of the block of values to be moved
+                DepthToSpace(const Output<Node>& data,
+                             const DepthToSpaceMode& mode,
+                             std::size_t block_size = 1);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                DepthToSpace(const Output<Node>& data,
+                             const std::string& mode,
+                             std::size_t block_size = 1);
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
-        protected:
-            std::size_t m_blocksize;
-        };
+                std::size_t get_block_size() const { return m_blocksize; }
+                DepthToSpaceMode get_mode() const { return m_mode; }
+                virtual NodeVector decompose_op() const override;
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+            protected:
+                std::size_t m_blocksize;
+                DepthToSpaceMode m_mode;
+                DepthToSpaceMode mode_from_string(const std::string& mode) const;
+            };
+        }
+        using v0::DepthToSpace;
     }
+    std::ostream& operator<<(std::ostream& s, const op::v0::DepthToSpace::DepthToSpaceMode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v0::DepthToSpace::DepthToSpaceMode>
+        : public EnumAttributeAdapterBase<op::v0::DepthToSpace::DepthToSpaceMode>
+    {
+    public:
+        AttributeAdapter(op::v0::DepthToSpace::DepthToSpaceMode& value)
+            : EnumAttributeAdapterBase<op::v0::DepthToSpace::DepthToSpaceMode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v0::DepthToSpace::DepthToSpaceMode>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

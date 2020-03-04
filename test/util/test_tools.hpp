@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
@@ -46,7 +45,7 @@ namespace ngraph
     class Function;
 }
 
-bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
+bool validate_list(const std::vector<std::shared_ptr<ngraph::Node>>& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
 #ifndef NGRAPH_JSON_DISABLE
 std::shared_ptr<ngraph::Function> make_function_from_file(const std::string& file_name);
@@ -58,6 +57,9 @@ void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>
     size_t data_size = data.size() * sizeof(T);
     tv->write(data.data(), data_size);
 }
+
+template <>
+void copy_data<bool>(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<bool>& data);
 
 template <typename T>
 std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
@@ -87,7 +89,7 @@ std::vector<std::shared_ptr<T>> get_ops_of_type(std::shared_ptr<ngraph::Function
     std::vector<std::shared_ptr<T>> ops;
     for (auto op : f->get_ops())
     {
-        if (auto cop = std::dynamic_pointer_cast<T>(op))
+        if (auto cop = ngraph::as_type_ptr<T>(op))
         {
             ops.push_back(cop);
         }
@@ -102,7 +104,7 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
     size_t count = 0;
     for (auto op : f->get_ops())
     {
-        if (std::dynamic_pointer_cast<T>(op))
+        if (ngraph::is_type<T>(op))
         {
             count++;
         }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,7 +61,8 @@ TEST(type_prop, normalize_invalid_axes_rank)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input axes must have rank equals 1"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input axes must be scalar or have rank equal to 1"));
     }
     catch (...)
     {

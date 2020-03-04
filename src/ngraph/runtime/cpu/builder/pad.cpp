@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,14 +50,16 @@ namespace ngraph
                 auto padding_above = pad->get_padding_above();
                 auto pad_mode = pad->get_pad_mode();
 
-                if (pad_mode == ngraph::op::PadMode::CONSTANT)
+                if ((pad_mode == ngraph::op::PadMode::CONSTANT ||
+                     pad_mode == ngraph::op::PadMode::REFLECT) &&
+                    is_optimized_et(args[0].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 
-                    SELECT_KERNEL_BY_RANK(kernel,
-                                          args[0].get_element_type(),
-                                          arg_shape.size(),
-                                          runtime::cpu::kernel::pad_and_slice)
+                    SELECT_ETS_AND_RANK7(kernel,
+                                         args[0].get_element_type(),
+                                         arg_shape.size(),
+                                         runtime::cpu::kernel::pad_and_slice);
 
                     auto functor = [&,
                                     kernel,
@@ -65,6 +67,7 @@ namespace ngraph
                                     out_shape,
                                     padding_below,
                                     padding_above,
+                                    pad_mode,
                                     arg_buffer_index,
                                     padding_value_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
@@ -76,6 +79,7 @@ namespace ngraph
                                out_shape,
                                CoordinateDiff(padding_below.begin(), padding_below.end()),
                                CoordinateDiff(padding_above.begin(), padding_above.end()),
+                               pad_mode,
                                ectx->arena);
                     };
                     functors.emplace_back(functor);
@@ -122,26 +126,30 @@ namespace ngraph
                 auto padding_above = pad->get_padding_above();
                 auto pad_mode = pad->get_pad_mode();
 
-                if (pad_mode == ngraph::op::PadMode::CONSTANT)
+                if ((pad_mode == ngraph::op::PadMode::CONSTANT ||
+                     pad_mode == ngraph::op::PadMode::REFLECT) &&
+                    is_optimized_et(pad->get_input_element_type(0)))
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 
-                    SELECT_KERNEL_BY_RANK(kernel,
-                                          pad->get_input_element_type(0),
-                                          arg_shape.size(),
-                                          runtime::cpu::kernel::pad_and_slice)
+                    SELECT_ETS_AND_RANK7(kernel,
+                                         pad->get_input_element_type(0),
+                                         arg_shape.size(),
+                                         runtime::cpu::kernel::pad_and_slice);
 
-                    auto functor = [kernel, arg_shape, out_shape, padding_below, padding_above](
-                        const std::vector<void*>& inputs, std::vector<void*>& outputs) {
-                        kernel(inputs[0],
-                               outputs[0],
-                               inputs[1],
-                               arg_shape,
-                               out_shape,
-                               CoordinateDiff(padding_below.begin(), padding_below.end()),
-                               CoordinateDiff(padding_above.begin(), padding_above.end()),
-                               0);
-                    };
+                    auto functor =
+                        [kernel, arg_shape, out_shape, padding_below, padding_above, pad_mode](
+                            const std::vector<void*>& inputs, std::vector<void*>& outputs) {
+                            kernel(inputs[0],
+                                   outputs[0],
+                                   inputs[1],
+                                   arg_shape,
+                                   out_shape,
+                                   CoordinateDiff(padding_below.begin(), padding_below.end()),
+                                   CoordinateDiff(padding_above.begin(), padding_above.end()),
+                                   pad_mode,
+                                   0);
+                        };
                     return functor;
                 }
                 else

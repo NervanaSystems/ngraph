@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 //*****************************************************************************
 #include "ngraph/op/fused/elu.hpp"
 
+#include "ngraph/attribute_visitor.hpp"
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
@@ -23,7 +25,6 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -37,13 +38,19 @@ op::Elu::Elu(const Output<Node>& data, const double alpha)
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::Elu::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("alpha", m_alpha);
+    return true;
+}
+
 NodeVector op::Elu::decompose_op() const
 {
     auto data = input_value(0);
     shared_ptr<Node> alpha_node =
         make_shared<op::Constant>(data.get_element_type(), Shape{}, vector<double>{m_alpha});
 
-    alpha_node = ngraph::op::numpy_style_broadcast(alpha_node, data.get_shape());
+    alpha_node = builder::numpy_broadcast(alpha_node, data.get_shape());
 
     shared_ptr<ngraph::Node> zero_node =
         builder::make_constant(data.get_element_type(), data.get_shape(), 0);

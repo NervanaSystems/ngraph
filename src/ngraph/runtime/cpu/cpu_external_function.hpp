@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,10 +26,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#if defined(NGRAPH_HALIDE)
-#include <Halide.h>
-#endif
 
 #if !defined(NGRAPH_DEX_ONLY)
 
@@ -137,13 +133,14 @@ namespace ngraph
                     return m_mkldnn_emitter;
                 }
 
-                // Return the tuple including the string to create mkldnn primitive, the deps and
-                // the index in CODEGEN
-                const std::tuple<std::string, std::vector<size_t>, size_t>&
+                // Return the tuple including the string to create mkldnn primitive, the deps, the
+                // index and
+                // the scratchpad size in CODEGEN
+                const std::tuple<std::string, std::vector<size_t>, size_t, size_t>&
                     get_primitive_build_tuple(const Node* node) const
                 {
-                    auto it = m_node_primitive_string_deps_index_map.find(node);
-                    NGRAPH_CHECK(it != m_node_primitive_string_deps_index_map.end(),
+                    auto it = m_node_primitive_string_deps_index_size_map.find(node);
+                    NGRAPH_CHECK(it != m_node_primitive_string_deps_index_size_map.end(),
                                  "Primitive build tuple not found for node ",
                                  node->description());
 
@@ -182,25 +179,6 @@ namespace ngraph
                                    const std::string& filename);
 
                 const std::vector<PerformanceCounter>& get_perf_counters();
-
-#if defined(NGRAPH_HALIDE)
-                std::unordered_map<std::string, Halide::Func>& get_halide_functions()
-                {
-                    return halide_functions;
-                }
-                std::unordered_map<std::string, Halide::ImageParam>& get_subgraph_params()
-                {
-                    return subgraph_params;
-                }
-                std::unordered_map<std::string, int>& get_subgraph_param_sizes()
-                {
-                    return subgraph_param_sizes;
-                }
-                std::unordered_map<std::string, size_t>> &get_subgraph_param_indices()
-                {
-                    return subgraph_param_indices;
-                }
-#endif
 
             protected:
                 void build(ngraph::pass::PassConfig& pass_config);
@@ -264,7 +242,9 @@ namespace ngraph
                 bool m_release_function;
                 bool m_emit_timing;
 
+#if defined(NGRAPH_TBB_ENABLE)
                 bool m_use_tbb;
+#endif
 #if !defined(NGRAPH_DEX_ONLY)
                 bool m_is_compiled;
 #endif
@@ -341,17 +321,10 @@ namespace ngraph
                 bool m_is_built;
                 std::vector<runtime::PerformanceCounter> m_perf_counters;
 
-#if defined(NGRAPH_HALIDE)
-                std::unordered_map<std::string, Halide::Func> halide_functions;
-                std::unordered_map<std::string, Halide::ImageParam> subgraph_params;
-                std::unordered_map<std::string, int> subgraph_param_sizes;
-                std::unordered_map<std::string, size_t> subgraph_param_indices;
-#endif
-
                 /// Map each node with mkldnn implementation to its mkldnn primitive creating
-                /// string, deps, and mkldnn primitive index.
-                std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>
-                    m_node_primitive_string_deps_index_map;
+                /// string, deps, mkldnn primitive index, and mkldnn scratchpad size.
+                std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t, size_t>>
+                    m_node_primitive_string_deps_index_size_map;
                 /// Name of the file to store descriptors for mkldnn_primitives
                 const std::string m_desc_filename = "desc_file";
             };

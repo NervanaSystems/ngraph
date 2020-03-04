@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/fused/shuffle_channels.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/reshape.hpp"
 
 using namespace std;
@@ -28,6 +29,13 @@ op::ShuffleChannels::ShuffleChannels(const Output<Node>& data, const int axis, c
     , m_groups{groups}
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::ShuffleChannels::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    visitor.on_attribute("groups", m_groups);
+    return true;
 }
 
 size_t op::ShuffleChannels::get_zero_based_axis() const

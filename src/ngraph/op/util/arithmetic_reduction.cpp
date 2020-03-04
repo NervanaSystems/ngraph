@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include "ngraph/op/util/arithmetic_reduction.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -31,6 +32,7 @@ op::util::ArithmeticReduction::ArithmeticReduction(const Output<Node>& arg,
               element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector())
               ->output(0)})
 {
+    add_provenance_group_member(input_value(1).get_node_shared_ptr());
 }
 
 op::util::ArithmeticReduction::ArithmeticReduction(const Output<Node>& arg,
@@ -41,7 +43,7 @@ op::util::ArithmeticReduction::ArithmeticReduction(const Output<Node>& arg,
 
 bool op::util::ArithmeticReduction::reduction_axes_constant() const
 {
-    return input_value(1).get_node()->is_type<op::Constant>();
+    return is_type<op::Constant>(input_value(1).get_node());
 }
 
 const AxisSet op::util::ArithmeticReduction::get_reduction_axes() const
@@ -63,30 +65,39 @@ void op::util::ArithmeticReduction::set_reduction_axes(const AxisSet& reduction_
 
 void op::util::ArithmeticReduction::validate_and_infer_types()
 {
-    auto reduction_axes = get_reduction_axes();
     auto input_shape = get_input_partial_shape(0);
-    auto input_rank = input_shape.rank();
+    const auto input_rank = input_shape.rank();
 
     PartialShape result_shape{PartialShape::dynamic()};
 
     if (input_rank.is_static() && reduction_axes_constant())
     {
-        std::vector<Dimension> dims;
-
-        for (auto axis : reduction_axes)
+        AxisSet reduction_axes;
+        auto reduction_axes_val =
+            as_type<op::Constant>(input_value(1).get_node())->get_vector<int64_t>();
+        for (auto axis : reduction_axes_val)
         {
-            NODE_VALIDATION_CHECK(this,
-                                  axis < size_t(input_rank),
-                                  "Reduction axis (",
-                                  axis,
-                                  ") is out of bounds ",
-                                  "(argument shape: ",
-                                  input_shape,
-                                  ", reduction axes: ",
-                                  reduction_axes,
-                                  ")");
+            try
+            {
+                axis = normalize_axis(this, axis, input_rank);
+            }
+            catch (const ngraph_error&)
+            {
+                NODE_VALIDATION_CHECK(this,
+                                      false,
+                                      "Reduction axis (",
+                                      axis,
+                                      ") is out of bounds ",
+                                      "(argument shape: ",
+                                      input_shape,
+                                      ", reduction axes: ",
+                                      reduction_axes,
+                                      ")");
+            }
+            reduction_axes.insert(axis);
         }
 
+        std::vector<Dimension> dims;
         for (size_t i = 0; i < size_t(input_rank); i++)
         {
             if (reduction_axes.count(i) == 0)

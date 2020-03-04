@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@
 #include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
+#include "ngraph/op/atan2.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/cos.hpp"
@@ -58,6 +59,7 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/op/round.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
@@ -75,6 +77,7 @@
 #include "ngraph/runtime/cpu/kernel/and.hpp"
 #include "ngraph/runtime/cpu/kernel/asin.hpp"
 #include "ngraph/runtime/cpu/kernel/atan.hpp"
+#include "ngraph/runtime/cpu/kernel/atan2.hpp"
 #include "ngraph/runtime/cpu/kernel/broadcast.hpp"
 #include "ngraph/runtime/cpu/kernel/ceil.hpp"
 #include "ngraph/runtime/cpu/kernel/cos.hpp"
@@ -98,6 +101,7 @@
 #include "ngraph/runtime/cpu/kernel/or.hpp"
 #include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
+#include "ngraph/runtime/cpu/kernel/round.hpp"
 #include "ngraph/runtime/cpu/kernel/sign.hpp"
 #include "ngraph/runtime/cpu/kernel/sin.hpp"
 #include "ngraph/runtime/cpu/kernel/sinh.hpp"
@@ -107,12 +111,11 @@
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
 #include "ngraph/runtime/cpu/kernel/xor.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
-#include "ngraph/runtime/cpu/op/halide_op.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/compiler/compiler.hpp"
+#include "contrib/mlir/core/compiler.hpp"
 #endif
 
 using namespace std;
@@ -248,6 +251,29 @@ namespace ngraph
             }
 
             template <>
+            void Builder::BUILDER_DECL(ngraph::op::v1::LogicalXor)
+            {
+                (void)node;
+                auto& functors = external_function->get_functors();
+
+                auto element_count = out[0].get_size();
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
+
+                auto functor =
+                    [&, element_count, arg0_buffer_index, arg1_buffer_index, out0_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        runtime::cpu::kernel::logical_xor(ctx->buffer_data[arg0_buffer_index],
+                                                          ctx->buffer_data[arg1_buffer_index],
+                                                          ctx->buffer_data[out0_buffer_index],
+                                                          element_count,
+                                                          ectx->arena);
+                    };
+                functors.emplace_back(functor);
+            }
+
+            template <>
             void Builder::BUILDER_DECL(ngraph::op::Xor)
             {
                 (void)node;
@@ -312,6 +338,12 @@ namespace ngraph
             }
 
             template <>
+            void Builder::BUILDER_DECL(ngraph::op::Atan2)
+            {
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::atan2);
+            }
+
+            template <>
             void Builder::BUILDER_DECL(ngraph::op::Ceiling)
             {
                 BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::ceil);
@@ -336,6 +368,12 @@ namespace ngraph
             }
 
             template <>
+            void Builder::BUILDER_DECL(ngraph::op::Round)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::round);
+            }
+
+            template <>
             void Builder::BUILDER_DECL(ngraph::op::Negative)
             {
                 BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::negative);
@@ -350,7 +388,31 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Result)
             {
-                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::result);
+                if (args[0].get_element_type() == element::bf16)
+                {
+                    auto& functors = external_function->get_functors();
+                    std::function<void(void*, void*, size_t, int)> kernel;
+
+                    kernel = ngraph::runtime::cpu::kernel::result<bfloat16>;
+
+                    auto element_count = out[0].get_size();
+                    auto arg0_buffer_index =
+                        external_function->get_buffer_index(args[0].get_name());
+                    auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
+
+                    auto functor = [&, kernel, element_count, arg0_buffer_index, out0_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[out0_buffer_index],
+                               element_count,
+                               ectx->arena);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::result);
+                }
             }
 
             template <>
@@ -449,6 +511,12 @@ namespace ngraph
             }
 
             template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Power)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::cwise_pow);
+            }
+
+            template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Divide)
             {
                 const ngraph::op::Divide* divop = static_cast<const ngraph::op::Divide*>(node);
@@ -503,6 +571,12 @@ namespace ngraph
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Floor)
             {
                 BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::floor);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Round)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::round);
             }
 
             template <>
@@ -605,9 +679,7 @@ namespace ngraph
                 static BuildOpMap build_dispatcher{
                     {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
                     {TI(ngraph::op::CompiledKernel),
-                     &runtime::cpu::Builder::build<ngraph::op::CompiledKernel>},
-                    {TI(ngraph::runtime::cpu::op::HalideOp),
-                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::HalideOp>}};
+                     &runtime::cpu::Builder::build<ngraph::op::CompiledKernel>}};
 
                 return build_dispatcher;
             }
@@ -630,6 +702,7 @@ namespace ngraph
                 REGISTER_OP_BUILDER(Acos);
                 REGISTER_OP_BUILDER(Asin);
                 REGISTER_OP_BUILDER(Atan);
+                REGISTER_OP_BUILDER(Atan2);
                 REGISTER_OP_BUILDER(Ceiling);
                 REGISTER_OP_BUILDER(Cos);
                 REGISTER_OP_BUILDER(Cosh);
@@ -637,6 +710,7 @@ namespace ngraph
                 REGISTER_OP_BUILDER(Negative);
                 REGISTER_OP_BUILDER(Exp);
                 REGISTER_OP_BUILDER(Log);
+                REGISTER_OP_BUILDER(Round);
                 REGISTER_OP_BUILDER(Sqrt);
                 REGISTER_OP_BUILDER(Sign);
                 REGISTER_OP_BUILDER(Sin);
@@ -678,8 +752,10 @@ namespace ngraph
                 REGISTER_CF_BUILDER(And);
                 REGISTER_CF_BUILDER(Or);
                 REGISTER_CF_BUILDER(Xor);
+                REGISTER_CF_BUILDER(Round);
                 REGISTER_CF_BUILDER(Sign);
                 REGISTER_CF_BUILDER(Not);
+                REGISTER_CF_BUILDER(Power);
             }
         }
     }

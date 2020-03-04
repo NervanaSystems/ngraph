@@ -101,7 +101,7 @@ We work backwards
 C++ Interface
 ==============
 
-.. doxygenclass:: ngraph::op::BatchNormTrainingBackprop
+.. doxygenclass:: ngraph::op::v0::BatchNormTrainingBackprop
    :project: ngraph
    :members:
 

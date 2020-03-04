@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -206,11 +206,9 @@ TEST(memory_manager, memory_align)
 
 TEST(memory_layout, basic)
 {
-    string dump_file = "memory_layout.txt";
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>();
-    pass_manager.register_pass<pass::DumpSorted>(dump_file);
 
     auto graph = make_test_graph();
     pass_manager.run_passes(graph);
@@ -221,11 +219,9 @@ TEST(memory_layout, basic)
 
 TEST(memory_layout, constant)
 {
-    string dump_file = "constant.txt";
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>();
-    pass_manager.register_pass<pass::DumpSorted>(dump_file);
 
     Shape shape{1};
     auto c = op::Constant::create(element::i32, shape, {5});

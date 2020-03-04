@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,11 @@ namespace ngraph
                 {
                     SELECT_KERNEL(
                         kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_bool)
+                }
+                else if (args[0].get_element_type() == element::bf16 &&
+                         out[0].get_element_type() == element::f32)
+                {
+                    kernel = runtime::cpu::kernel::convert_to_float32<bfloat16>;
                 }
                 else if (out[0].get_element_type() == element::f32)
                 {
@@ -97,9 +102,18 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_u64)
                 }
+                else if (args[0].get_element_type() == element::f32 &&
+                         out[0].get_element_type() == element::bf16)
+                {
+                    kernel = runtime::cpu::kernel::convert_to_bf16<float>;
+                }
                 else
                 {
-                    throw ngraph_error("Cannot convert from an invalid input element type");
+                    NGRAPH_CHECK(false,
+                                 "Cannot convert from an invalid input element type : ",
+                                 args[0].get_element_type(),
+                                 " -> ",
+                                 out[0].get_element_type());
                 }
 
                 auto functor = [&, kernel, element_count, arg_buffer_index, out_buffer_index](

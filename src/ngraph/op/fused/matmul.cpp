@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #include <numeric>
 
 #include "matmul.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/matmul_factory.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -37,30 +38,44 @@ op::MatMul::MatMul(const Output<Node>& A,
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::MatMul::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("transpose_a", m_transpose_a);
+    visitor.on_attribute("transpose_b", m_transpose_b);
+    return true;
+}
+
+void op::MatMul::pre_validate_and_infer_types()
+{
+    element::Type result_et;
+    NODE_VALIDATION_CHECK(
+        this,
+        element::Type::merge(result_et, get_input_element_type(0), get_input_element_type(1)),
+        "Arguments do not have the same element type (arg0 element type: ",
+        get_input_element_type(0),
+        ", arg1 element type: ",
+        get_input_element_type(1),
+        ").");
+
+    const Rank& A_rank = get_input_partial_shape(0).rank();
+    const Rank& B_rank = get_input_partial_shape(1).rank();
+
+    if (A_rank.is_static() && B_rank.is_static())
+    {
+        Rank max_rank = int64_t(A_rank) > int64_t(B_rank) ? A_rank : B_rank;
+        set_output_type(0, result_et, PartialShape::dynamic(max_rank));
+    }
+}
+
 NodeVector op::MatMul::decompose_op() const
 {
     auto A = input_value(0);
     auto B = input_value(1);
 
-    // Specification is expecting that A & B have at least 2 dimenstions.
-    // Missing dimensions are padded with 1.
-    int a_rank = A.get_shape().size();
-    if (a_rank < 2)
-    {
-        A = a_rank == 0 ? make_shared<op::Reshape>(A, AxisVector{}, Shape{1, 1})
-                        : make_shared<op::Reshape>(A, AxisVector{1}, Shape{1, A.get_shape()[0]});
-        a_rank = 2;
-    }
+    const auto a_rank = A.get_shape().size();
+    const auto b_rank = B.get_shape().size();
 
-    int b_rank = B.get_shape().size();
-    if (b_rank < 2)
-    {
-        B = b_rank == 0 ? make_shared<op::Reshape>(B, AxisVector{}, Shape{1, 1})
-                        : make_shared<op::Reshape>(B, AxisVector{1}, Shape{1, B.get_shape()[0]});
-        b_rank = 2;
-    }
-
-    if (m_transpose_a)
+    if (m_transpose_a && a_rank >= 2)
     {
         vector<size_t> axes_order(a_rank);
         // generate default axes_order.
@@ -70,7 +85,7 @@ NodeVector op::MatMul::decompose_op() const
         A = builder::reorder_axes(A, axes_order);
     }
 
-    if (m_transpose_b)
+    if (m_transpose_b && b_rank >= 2)
     {
         vector<size_t> axes_order(b_rank);
         iota(axes_order.begin(), axes_order.end(), 0);

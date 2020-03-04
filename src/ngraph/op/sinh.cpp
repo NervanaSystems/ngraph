@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,13 +29,18 @@ op::Sinh::Sinh(const Output<Node>& arg)
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::Sinh::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 shared_ptr<Node> op::Sinh::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Sinh>(new_args.at(0));
 }
 
-void op::Sinh::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Sinh::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

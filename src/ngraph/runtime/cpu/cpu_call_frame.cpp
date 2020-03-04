@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <thread>
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
@@ -37,14 +38,14 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
     , m_compiled_destroy_ctx_func(compiled_destroy_ctx_func)
     , m_compiled_function(compiled_function)
 {
-    const auto envConcurrency = std::getenv("NGRAPH_CPU_CONCURRENCY");
-    m_num_ctx = envConcurrency == nullptr ? 1 : std::atoi(envConcurrency);
+    const auto envConcurrency = getenv_int("NGRAPH_CPU_CONCURRENCY");
+    m_num_ctx = envConcurrency <= 0 ? 1 : envConcurrency;
     if (m_num_ctx > std::thread::hardware_concurrency())
     {
         throw ngraph_error(
             "Unexpected value specified for NGRAPH_CPU_CONCURRENCY "
             "(" +
-            std::string(envConcurrency) + "). Please specify a value in range [1-" +
+            std::to_string(envConcurrency) + "). Please specify a value in range [1-" +
             std::to_string(std::thread::hardware_concurrency()) + "]");
     }
 
@@ -217,7 +218,14 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
                 std::vector<mkldnn::memory*>(mkldnn_emitter->get_mkldnn_memories().size());
             ctx->mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>(
                 mkldnn_emitter->get_mkldnn_scratchpad_mds().size());
-            ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment);
+            if (scratchpad_size > 0)
+            {
+                ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment, allocator);
+            }
+            else
+            {
+                ctx->scratchpad_buffer = nullptr;
+            }
         }
         else
         {
@@ -226,18 +234,18 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
         }
 
         ctx->states = m_external_function->m_states.data();
-
-        if (m_external_function->is_direct_execution() &&
-            std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+#if defined(NGRAPH_TBB_ENABLE)
+        if (m_external_function->is_direct_execution() && getenv_bool("NGRAPH_CPU_USE_TBB"))
         {
             // For codegen mode, graph and global control are now part of the code generated
             // CPURuntimeContextCG class.
             ctx->G = new tbb::flow::graph;
-            const auto envParallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
-            const auto parallelism = envParallelism == nullptr ? 1 : std::atoi(envParallelism);
+            const auto envParallelism = getenv_int("NGRAPH_INTER_OP_PARALLELISM");
+            const auto parallelism = envParallelism <= 0 ? 1 : envParallelism;
             ctx->c =
                 new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
         }
+#endif
     }
     m_num_ctx_available = m_num_ctx;
 }
@@ -272,8 +280,8 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
             delete ctx->scratchpad_buffer;
         }
 
-        if (m_external_function->is_direct_execution() &&
-            std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+#if defined(NGRAPH_TBB_ENABLE)
+        if (m_external_function->is_direct_execution() && getenv_bool("NGRAPH_CPU_USE_TBB"))
         {
             // For codegen mode, graph and global control are now part of a code generated
             // CPURuntimeContext class.
@@ -292,6 +300,7 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
             }
             delete ctx->c;
         }
+#endif
         delete ctx;
     }
     m_num_ctx_available = 0;

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,6 +100,7 @@ void random_init(shared_ptr<runtime::Tensor> tensor)
     case element::Type_t::u64: init_int_tensor<uint64_t>(tensor, 0, 1); break;
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
+    case element::Type_t::u1:
     case element::Type_t::bf16:
     case element::Type_t::f16:
     default: throw runtime_error("unsupported type");

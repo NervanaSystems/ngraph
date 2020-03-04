@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 
 #include "ngraph/coordinate.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/reference/scatter_add.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -167,6 +168,46 @@ namespace ngraph
                                                                     indices_shape,
                                                                     updates_shape,
                                                                     arena);
+                }
+
+                template <typename ElementType>
+                void ref_scatter_add_i32(void* inputs,
+                                         void* indices,
+                                         void* updates,
+                                         void* output,
+                                         const Shape& inputs_shape,
+                                         const Shape& indices_shape,
+                                         const Shape& updates_shape,
+                                         const Shape& output_shape)
+                {
+                    reference::scatter_add<ElementType, int32_t>(static_cast<ElementType*>(inputs),
+                                                                 static_cast<int32_t*>(indices),
+                                                                 static_cast<ElementType*>(updates),
+                                                                 static_cast<ElementType*>(output),
+                                                                 inputs_shape,
+                                                                 indices_shape,
+                                                                 updates_shape,
+                                                                 output_shape);
+                }
+
+                template <typename ElementType>
+                void ref_scatter_add_i64(void* inputs,
+                                         void* indices,
+                                         void* updates,
+                                         void* output,
+                                         const Shape& inputs_shape,
+                                         const Shape& indices_shape,
+                                         const Shape& updates_shape,
+                                         const Shape& output_shape)
+                {
+                    reference::scatter_add<ElementType, int64_t>(static_cast<ElementType*>(inputs),
+                                                                 static_cast<int64_t*>(indices),
+                                                                 static_cast<ElementType*>(updates),
+                                                                 static_cast<ElementType*>(output),
+                                                                 inputs_shape,
+                                                                 indices_shape,
+                                                                 updates_shape,
+                                                                 output_shape);
                 }
             }
         }

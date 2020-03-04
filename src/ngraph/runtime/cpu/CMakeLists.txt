@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,12 +52,14 @@ set(SRC
     builder/convert.cpp
     builder/convert_layout.cpp
     builder/convolution.cpp
+    builder/cum_sum.cpp
     builder/dot.cpp
     builder/dropout.cpp
     builder/embedding_lookup.cpp
     builder/erf.cpp
     builder/gather.cpp
     builder/gather_nd.cpp
+    builder/gelu.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
@@ -66,6 +68,7 @@ set(SRC
     builder/max_pool.cpp
     builder/min.cpp
     builder/one_hot.cpp
+    builder/random_uniform.cpp
     builder/relu.cpp
     builder/pad.cpp
     builder/product.cpp
@@ -98,7 +101,6 @@ set(SRC
     mkldnn_emitter.cpp
     mkldnn_invoke.cpp
     mkldnn_utils.cpp
-    op/batch_mat_mul_transpose.cpp
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/conv_add.cpp
@@ -106,8 +108,8 @@ set(SRC
     op/convert_layout.cpp
     op/deconv.cpp
     op/dropout.cpp
+    op/gelu_backprop.cpp
     op/group_conv_bias.cpp
-    op/halide_op.cpp
     op/leaky_relu.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
@@ -139,16 +141,6 @@ if (NOT NGRAPH_DEX_ONLY)
         )
 endif()
 
-if (NGRAPH_HALIDE)
-    set(SRC
-        ${SRC}
-        builder/compiled_kernel.cpp
-        builder/halide_op.cpp
-        builder/halide_generators.cpp
-        pass/halide_subgraph_extraction.cpp
-        )
-endif()
-
 if (NGRAPH_MLIR_ENABLE)
     set(SRC
         ${SRC}
@@ -156,8 +148,39 @@ if (NGRAPH_MLIR_ENABLE)
         )
 endif()
 
+set(NGRAPH_CPU_ALL_DATATYPES
+    boolean
+    f32
+    f64
+    i8
+    i16
+    i32
+    i64
+    u8
+    u16
+    u32
+    u64
+    )
+
+set(NGRAPH_CPU_COMMON_DATATYPES
+    f32
+    i64
+    )
+
+
 if (NGRAPH_CPU_ENABLE)
-    set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
+    set(NGRAPH_CPU_OPTIMIZED_DATATYPES "common"
+        CACHE STRING "Semicolon-separated list of datatypes to optimize for, or \"common\" or \"all\".")
+
+    if (NGRAPH_CPU_OPTIMIZED_DATATYPES STREQUAL "all")
+        set(NGRAPH_CPU_OPTIMIZED_DATATYPES ${NGRAPH_CPU_ALL_DATATYPES})
+    endif()
+
+    if (NGRAPH_CPU_OPTIMIZED_DATATYPES STREQUAL "common")
+        set(NGRAPH_CPU_OPTIMIZED_DATATYPES ${NGRAPH_CPU_COMMON_DATATYPES})
+    endif()
+
+    list(REMOVE_DUPLICATES NGRAPH_CPU_OPTIMIZED_DATATYPES)
 
     add_library(cpu_backend ${LIBRARY_TYPE} ${SRC})
     if (NGRAPH_CPU_STATIC_LIB_ENABLE)
@@ -177,16 +200,8 @@ if (NGRAPH_CPU_ENABLE)
     if (NGRAPH_ENABLE_CPU_CONV_AUTO)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_ENABLE_CPU_CONV_AUTO")
     endif()
-    if(NGRAPH_TBB_ENABLE)
-        set_source_files_properties(cpu_external_function.cpp
-            PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
-    endif()
-    if (NGRAPH_HALIDE)
-        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
-        ExternalProject_Get_Property(ext_halide BINARY_DIR)
-        target_include_directories(cpu_backend SYSTEM PRIVATE ${BINARY_DIR}/include)
-        target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.a libhalidellvm)
-        add_dependencies(cpu_backend ext_halide)
+    if (NGRAPH_TBB_ENABLE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_TBB_ENABLE")
     endif()
 
     if(NOT NGRAPH_FAST_MATH_ENABLE)
@@ -202,25 +217,31 @@ if (NGRAPH_CPU_ENABLE)
          message(WARNING "The build toolset doesn't support OpenMP. This will impact performance and lead to slowdowns.")
     endif()
 
-    if (MSVS)
+    if (MSVC)
         target_compile_definitions(cpu_backend PRIVATE EIGEN_HAS_CONSTEXPR)
         # under debug mode, more files besides builder/dot.cpp rises the error
         target_compile_options(cpu_backend PRIVATE "/bigobj" )
     endif()
     target_compile_definitions(cpu_backend PRIVATE CPU_BACKEND_DLL_EXPORTS)
 
+    foreach(t ${NGRAPH_CPU_OPTIMIZED_DATATYPES})
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_CPU_OPTIMIZE_${t}")
+    endforeach()
+
     add_dependencies(cpu_backend libmkldnn ext_eigen)
-   	target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libtbb)
-        
+   	target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen)
     if (NGRAPH_JSON_ENABLE)
         target_link_libraries(cpu_backend PUBLIC libjson)
+    endif()    
+    if (NGRAPH_TBB_ENABLE)
+        target_link_libraries(cpu_backend PUBLIC libtbb)
     endif()
     if (NOT NGRAPH_DEX_ONLY)
-        target_link_libraries(cpu_backend PUBLIC codegen)
+        target_link_libraries(cpu_backend PRIVATE codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
 
-    if (NOT APPLE AND NOT MSVS)
+    if (NOT APPLE AND NOT MSVC)
         # CPU backend uses third-party libraries like Eigen that might be linked in and
         # exported by other DSOs as well. In the absence of versioning, this could lead to the
         # CPU backend picking up the wrong version or even multiple versions of the
@@ -233,7 +254,7 @@ if (NGRAPH_CPU_ENABLE)
         # TODO: can we get away without LLVM/MLIR include path. 
         # Currently mlir backend compiler.hpp include LLVM/MLIR files
         get_directory_property(MLIR_LLVM_INCLUDEPATH
-                               DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}/compiler
+                               DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}
                                DEFINITION MLIR_LLVM_INCLUDEPATH)
         
         message(STATUS "Building CPU backend with MLIR")

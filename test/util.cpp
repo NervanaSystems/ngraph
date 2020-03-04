@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/util/op_annotations.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/serializer.hpp"
@@ -191,7 +192,7 @@ public:
     std::shared_ptr<Node> AplusBtimesC = AplusB * C;
 
     NodeMap node_map;
-    std::list<std::shared_ptr<ngraph::Node>> nodes;
+    std::vector<std::shared_ptr<ngraph::Node>> nodes;
     std::shared_ptr<Function> func =
         make_shared<Function>(AplusBtimesC, ParameterVector{A, B, C}, "f");
 
@@ -204,8 +205,8 @@ public:
         nodes.push_back(C);
     }
 
-    bool CompareNodeVector(const std::list<std::shared_ptr<ngraph::Node>>& orig,
-                           const std::list<std::shared_ptr<ngraph::Node>>& clone,
+    bool CompareNodeVector(const std::vector<std::shared_ptr<ngraph::Node>>& orig,
+                           const std::vector<std::shared_ptr<ngraph::Node>>& clone,
                            const NodeMap& nm)
     {
         if (orig.size() != clone.size())
@@ -232,11 +233,11 @@ TEST_F(CloneTest, clone_nodes_full)
     auto cloned_nodes = clone_nodes(nodes, node_map);
     ASSERT_TRUE(CompareNodeVector(nodes, cloned_nodes, node_map));
 
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.at(A.get())));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.at(B.get())));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.at(C.get())));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Add>(node_map.at(AplusB.get())));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Multiply>(node_map.at(AplusBtimesC.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::Parameter>(node_map.at(A.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::Parameter>(node_map.at(B.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::Parameter>(node_map.at(C.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::Add>(node_map.at(AplusB.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::Multiply>(node_map.at(AplusBtimesC.get())));
 
     auto sorted_nodes = topological_sort(nodes);
     auto sorted_cloned_nodes = topological_sort(cloned_nodes);
@@ -372,7 +373,7 @@ TEST(graph_util, test_subgraph_topological_sort)
     auto mul = C * add;
     auto result = make_shared<op::Result>(mul);
     auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A});
-    std::list<std::shared_ptr<Node>> expected{A, add, mul};
+    std::vector<std::shared_ptr<Node>> expected{A, add, mul};
     ASSERT_EQ(expected, sorted);
 }
 
@@ -389,8 +390,8 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     add->add_control_dependency(E);
     auto mul = C * add;
     auto result = make_shared<op::Result>(mul);
-    auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D}, true);
-    std::list<std::shared_ptr<Node>> expected{A, D, add, mul};
+    auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D});
+    std::vector<std::shared_ptr<Node>> expected{A, D, add, mul};
     ASSERT_EQ(expected, sorted);
 }
 
@@ -444,39 +445,39 @@ TEST(util, enum_mask_set_clear)
     EXPECT_EQ(0, m.value());
     m.set(Type::d);
     m.set(Type::b);
-    EXPECT_EQ(true, m.is_set(Type::d));
-    EXPECT_EQ(false, m.is_set(Type::a));
-    EXPECT_EQ(true, m.is_set(Type::b));
-    EXPECT_EQ(false, m.is_set(Type::c));
-    EXPECT_EQ(false, m.is_set({Type::a, Type::b}));
-    EXPECT_EQ(false, m.is_set({Type::c, Type::d}));
-    EXPECT_EQ(false, m.is_set({Type::a, Type::c}));
-    EXPECT_EQ(true, m.is_set({Type::b, Type::d}));
-    EXPECT_EQ(false, m.is_clear(Type::d));
-    EXPECT_EQ(true, m.is_clear(Type::a));
-    EXPECT_EQ(false, m.is_clear(Type::b));
-    EXPECT_EQ(true, m.is_clear(Type::c));
-    EXPECT_EQ(false, m.is_clear({Type::c, Type::d}));
-    EXPECT_EQ(false, m.is_clear({Type::a, Type::b}));
-    EXPECT_EQ(true, m.is_clear({Type::a, Type::c}));
-    EXPECT_EQ(false, m.is_clear({Type::b, Type::d}));
+    EXPECT_TRUE(m.is_set(Type::d));
+    EXPECT_FALSE(m.is_set(Type::a));
+    EXPECT_TRUE(m.is_set(Type::b));
+    EXPECT_FALSE(m.is_set(Type::c));
+    EXPECT_FALSE(m.is_set({Type::a, Type::b}));
+    EXPECT_FALSE(m.is_set({Type::c, Type::d}));
+    EXPECT_FALSE(m.is_set({Type::a, Type::c}));
+    EXPECT_TRUE(m.is_set({Type::b, Type::d}));
+    EXPECT_FALSE(m.is_clear(Type::d));
+    EXPECT_TRUE(m.is_clear(Type::a));
+    EXPECT_FALSE(m.is_clear(Type::b));
+    EXPECT_TRUE(m.is_clear(Type::c));
+    EXPECT_FALSE(m.is_clear({Type::c, Type::d}));
+    EXPECT_FALSE(m.is_clear({Type::a, Type::b}));
+    EXPECT_TRUE(m.is_clear({Type::a, Type::c}));
+    EXPECT_FALSE(m.is_clear({Type::b, Type::d}));
 
-    EXPECT_EQ(true, m.is_any_set({Type::a, Type::b}));
-    EXPECT_EQ(true, m.is_any_set({Type::a, Type::d}));
-    EXPECT_EQ(true, m.is_any_set({Type::b, Type::c}));
-    EXPECT_EQ(true, m.is_any_set({Type::c, Type::d}));
-    EXPECT_EQ(false, m.is_any_set({Type::a, Type::c}));
-    EXPECT_EQ(true, m.is_any_clear({Type::c, Type::d}));
-    EXPECT_EQ(true, m.is_any_clear({Type::a, Type::b}));
-    EXPECT_EQ(true, m.is_any_clear({Type::a, Type::c}));
-    EXPECT_EQ(true, m.is_any_clear({Type::b, Type::c}));
-    EXPECT_EQ(false, m.is_any_clear({Type::b, Type::d}));
+    EXPECT_TRUE(m.is_any_set({Type::a, Type::b}));
+    EXPECT_TRUE(m.is_any_set({Type::a, Type::d}));
+    EXPECT_TRUE(m.is_any_set({Type::b, Type::c}));
+    EXPECT_TRUE(m.is_any_set({Type::c, Type::d}));
+    EXPECT_FALSE(m.is_any_set({Type::a, Type::c}));
+    EXPECT_TRUE(m.is_any_clear({Type::c, Type::d}));
+    EXPECT_TRUE(m.is_any_clear({Type::a, Type::b}));
+    EXPECT_TRUE(m.is_any_clear({Type::a, Type::c}));
+    EXPECT_TRUE(m.is_any_clear({Type::b, Type::c}));
+    EXPECT_FALSE(m.is_any_clear({Type::b, Type::d}));
 
     m.set(Type::a);
-    EXPECT_EQ(false, m.is_clear(Type::a));
-    EXPECT_EQ(false, m.is_clear(Type::b));
-    EXPECT_EQ(true, m.is_clear(Type::c));
-    EXPECT_EQ(false, m.is_clear(Type::d));
+    EXPECT_FALSE(m.is_clear(Type::a));
+    EXPECT_FALSE(m.is_clear(Type::b));
+    EXPECT_TRUE(m.is_clear(Type::c));
+    EXPECT_FALSE(m.is_clear(Type::d));
 }
 
 TEST(util, enum_mask_operators)
@@ -491,9 +492,9 @@ TEST(util, enum_mask_operators)
     EnumMask<Type> m;
     m = Type::b;
     EXPECT_EQ(static_cast<uint32_t>(Type::b), m.value());
-    EXPECT_EQ(true, m[Type::b]);
-    EXPECT_EQ(false, m[Type::a]);
-    EXPECT_EQ(false, m[Type::c]);
+    EXPECT_TRUE(m[Type::b]);
+    EXPECT_FALSE(m[Type::a]);
+    EXPECT_FALSE(m[Type::c]);
     m |= Type::c;
     EXPECT_EQ(static_cast<uint32_t>(Type::b) | static_cast<uint32_t>(Type::c), m.value());
     m &= Type::d;
@@ -501,16 +502,16 @@ TEST(util, enum_mask_operators)
 
     m |= Type::a;
     m |= Type::c;
-    EXPECT_EQ(true, m.is_set(Type::a));
-    EXPECT_EQ(false, m.is_set(Type::b));
-    EXPECT_EQ(true, m.is_set(Type::c));
-    EXPECT_EQ(false, m.is_set(Type::d));
-    EXPECT_EQ(true, m.is_any_set(Type::a));
-    EXPECT_EQ(false, m.is_any_set(Type::b));
-    EXPECT_EQ(true, m.is_any_set(Type::c));
-    EXPECT_EQ(false, m.is_any_set(Type::d));
-    EXPECT_EQ(true, m.is_any_set({Type::a, Type::c}));
-    EXPECT_EQ(false, m.is_any_set({Type::b, Type::d}));
+    EXPECT_TRUE(m.is_set(Type::a));
+    EXPECT_FALSE(m.is_set(Type::b));
+    EXPECT_TRUE(m.is_set(Type::c));
+    EXPECT_FALSE(m.is_set(Type::d));
+    EXPECT_TRUE(m.is_any_set(Type::a));
+    EXPECT_FALSE(m.is_any_set(Type::b));
+    EXPECT_TRUE(m.is_any_set(Type::c));
+    EXPECT_FALSE(m.is_any_set(Type::d));
+    EXPECT_TRUE(m.is_any_set({Type::a, Type::c}));
+    EXPECT_FALSE(m.is_any_set({Type::b, Type::d}));
 
     EnumMask<Type> n;
     n = m | n;
@@ -518,24 +519,24 @@ TEST(util, enum_mask_operators)
     n = m & n;
     EXPECT_EQ(m, n);
     bool r = (n == m);
-    EXPECT_EQ(true, r);
+    EXPECT_TRUE(r);
     r = (n != m);
-    EXPECT_EQ(false, r);
+    EXPECT_FALSE(r);
     n.clear_all();
     n = {Type::a, Type::b};
     r = (n == m);
-    EXPECT_EQ(false, r);
+    EXPECT_FALSE(r);
     r = (n != m);
-    EXPECT_EQ(true, r);
+    EXPECT_TRUE(r);
     n = m & n;
     EXPECT_EQ(static_cast<uint32_t>(Type::a), n.value());
     n = m | Type::b;
-    EXPECT_EQ(true, n.is_set(Type::a));
-    EXPECT_EQ(true, n.is_set(Type::b));
-    EXPECT_EQ(true, n.is_set(Type::c));
-    EXPECT_EQ(false, n.is_set(Type::d));
-    EXPECT_EQ(false, n[Type::d]);
-    EXPECT_EQ(true, n[Type::b]);
+    EXPECT_TRUE(n.is_set(Type::a));
+    EXPECT_TRUE(n.is_set(Type::b));
+    EXPECT_TRUE(n.is_set(Type::c));
+    EXPECT_FALSE(n.is_set(Type::d));
+    EXPECT_FALSE(n[Type::d]);
+    EXPECT_TRUE(n[Type::b]);
 }
 
 TEST(graph, huge)
@@ -651,4 +652,63 @@ TEST(util, clone_function_friendly_name)
     }
     EXPECT_TRUE(found_A);
     EXPECT_TRUE(found_B);
+}
+
+TEST(util, clone_function_op_annotations)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(A + B + C, ParameterVector{A, B, C});
+
+    auto cacheable_op_annotation = std::make_shared<op::util::OpAnnotations>();
+    cacheable_op_annotation->set_cacheable(true);
+    A->set_op_annotations(cacheable_op_annotation);
+
+    auto uncacheable_op_annotation = std::make_shared<op::util::OpAnnotations>();
+    uncacheable_op_annotation->set_cacheable(false);
+    B->set_op_annotations(uncacheable_op_annotation);
+
+    auto g = clone_function(*f);
+
+    bool found_A = false;
+    bool found_B = false;
+    for (auto parameter : g->get_parameters())
+    {
+        if (auto op_annotation = parameter->get_op_annotations())
+        {
+            if (op_annotation->is_cacheable())
+            {
+                found_A = true;
+            }
+            else
+            {
+                found_B = true;
+            }
+        }
+    }
+    EXPECT_TRUE(found_A);
+    EXPECT_TRUE(found_B);
+}
+
+TEST(util, topological_sort_replace)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(A + B + C, ParameterVector{A, B, C});
+    bool custom_sorter_used = false;
+
+    f->set_topological_sort(
+        [&custom_sorter_used](const std::vector<std::shared_ptr<Node>>& root_nodes) {
+            custom_sorter_used = true;
+            return topological_sort(root_nodes);
+        });
+
+    // Need to now call topological sort but don't care about the results
+    f->get_ordered_ops();
+
+    EXPECT_TRUE(custom_sorter_used);
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@ namespace ngraph
                         template <typename T, typename Container>
                         inline std::vector<T> __get_data(const Container& container)
                         {
-                            return {std::begin(container), std::end(container)};
+                            return std::vector<T>(std::begin(container), std::end(container));
                         }
 
                         /// Returns the size if bytes of an ONNX data type.
@@ -119,7 +119,7 @@ namespace ngraph
                             case onnx::TensorProto_DataType_INT16: return sizeof(int16_t);
                             case onnx::TensorProto_DataType_INT32: return sizeof(int32_t);
                             case onnx::TensorProto_DataType_INT64: return sizeof(int64_t);
-                            case onnx::TensorProto_DataType_BOOL: return sizeof(bool);
+                            case onnx::TensorProto_DataType_BOOL: return sizeof(char);
                             case onnx::TensorProto_DataType_FLOAT16: return 2;
                             case onnx::TensorProto_DataType_DOUBLE: return sizeof(double);
                             case onnx::TensorProto_DataType_UINT32: return sizeof(uint32_t);
@@ -135,8 +135,8 @@ namespace ngraph
                                                              int onnx_data_type)
                         {
                             auto it = reinterpret_cast<const T*>(raw_data.data());
-                            return {it,
-                                    it + (raw_data.size() / __get_onnx_data_size(onnx_data_type))};
+                            return std::vector<T>(
+                                it, it + (raw_data.size() / __get_onnx_data_size(onnx_data_type)));
                         }
                     }
                 }
@@ -334,6 +334,22 @@ namespace ngraph
                     }
                     return detail::__get_data<uint64_t>(tensor.uint64_data());
                 }
+
+                template <>
+                inline std::vector<char> get_data(const onnx::TensorProto& tensor)
+                {
+                    // Boolean values are stored as char because std::vector<bool>
+                    // can behave differently from other vector containers.
+                    if (tensor.has_raw_data())
+                    {
+                        return detail::__get_raw_data<char>(tensor.raw_data(), tensor.data_type());
+                    }
+                    if (tensor.data_type() == onnx::TensorProto_DataType_BOOL)
+                    {
+                        return detail::__get_data<char>(tensor.int32_data());
+                    }
+                    throw error::tensor::invalid_data_type{tensor.data_type()};
+                }
             }
         }
 
@@ -365,6 +381,13 @@ namespace ngraph
                 : m_tensor_proto{&tensor}
                 , m_shape{std::begin(tensor.dims()), std::end(tensor.dims())}
             {
+                if (m_shape == Shape{0})
+                {
+                    // It's possible to construct a tensor in ONNX with "dims: 0" property
+                    // Such tensor contains a scalar. This results in a Shape{0} stored in m_shape.
+                    // In nGraph a scalar is represented with Shape{} and thus this replacement.
+                    m_shape = Shape{};
+                }
             }
 
             Tensor(const Tensor&) = default;
@@ -434,7 +457,7 @@ namespace ngraph
                 switch (m_tensor_proto->data_type())
                 {
                 case onnx::TensorProto_DataType::TensorProto_DataType_BOOL:
-                    return make_ng_constant<bool>(element::boolean);
+                    return make_ng_constant<char>(element::boolean);
                 case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT:
                     return make_ng_constant<float>(element::f32);
                 case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT16:

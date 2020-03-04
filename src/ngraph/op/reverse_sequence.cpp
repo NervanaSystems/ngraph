@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,10 @@
 #include <algorithm>
 #include <memory>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -27,13 +29,22 @@ constexpr NodeTypeInfo op::ReverseSequence::type_info;
 
 op::ReverseSequence::ReverseSequence(const Output<Node>& arg,
                                      const Output<Node>& seq_indices,
-                                     size_t batch_axis,
-                                     size_t seq_axis)
+                                     int64_t batch_axis,
+                                     int64_t seq_axis)
     : Op({arg, seq_indices})
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
+    , m_normalized_batch_axis{0}
+    , m_normalized_seq_axis{0}
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::ReverseSequence::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("batch_axis", m_batch_axis);
+    visitor.on_attribute("seq_axis", m_seq_axis);
+    return true;
 }
 
 void op::ReverseSequence::validate_and_infer_types()
@@ -41,21 +52,8 @@ void op::ReverseSequence::validate_and_infer_types()
     auto input_shape = get_input_partial_shape(0);
     auto input_rank = input_shape.rank();
 
-    NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || m_batch_axis < size_t(input_rank),
-                          "Batch axis index (",
-                          m_batch_axis,
-                          ") is out of bounds (argument shape: ",
-                          input_shape,
-                          ").");
-
-    NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || m_seq_axis < size_t(input_rank),
-                          "Sequence axis index (",
-                          m_seq_axis,
-                          ") is out of bounds (argument shape: ",
-                          input_shape,
-                          ").");
+    m_normalized_batch_axis = ngraph::normalize_axis(this, m_batch_axis, input_rank);
+    m_normalized_seq_axis = ngraph::normalize_axis(this, m_seq_axis, input_rank);
 
     auto indices_shape = get_input_partial_shape(1);
     auto indices_rank = indices_shape.rank();
@@ -73,20 +71,21 @@ void op::ReverseSequence::validate_and_infer_types()
     {
         Dimension merged_sequence_length;
 
-        NODE_VALIDATION_CHECK(
-            this,
-            Dimension::merge(merged_sequence_length, input_shape[m_batch_axis], indices_shape[0]),
-            "Sequence length (",
-            indices_shape[0],
-            ") is not equal to batch axis ",
-            "dimension (",
-            input_shape[m_batch_axis],
-            ") (argument shape: ",
-            input_shape,
-            ", sequence indices shape: ",
-            indices_shape,
-            ").");
-        output_shape[m_batch_axis] = merged_sequence_length;
+        NODE_VALIDATION_CHECK(this,
+                              Dimension::merge(merged_sequence_length,
+                                               input_shape[m_normalized_batch_axis],
+                                               indices_shape[0]),
+                              "Sequence length (",
+                              indices_shape[0],
+                              ") is not equal to batch axis ",
+                              "dimension (",
+                              input_shape[m_normalized_batch_axis],
+                              ") (argument shape: ",
+                              input_shape,
+                              ", sequence indices shape: ",
+                              indices_shape,
+                              ").");
+        output_shape[m_normalized_batch_axis] = merged_sequence_length;
     }
 
     set_output_type(0, get_input_element_type(0), output_shape);
@@ -100,7 +99,8 @@ shared_ptr<Node> op::ReverseSequence::copy_with_new_args(const NodeVector& new_a
     return move(res);
 }
 
-void op::ReverseSequence::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::ReverseSequence::generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const OutputVector& deltas)
 {
     auto x = input_value(0);
     auto rs_delta =

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -78,12 +78,13 @@ namespace ngraph
             ///
             /// \brief      Class representing activation function used in RNN cells.
             ///
-            class ActivationFunction
+            class NGRAPH_API ActivationFunction
             {
             public:
                 ActivationFunction(ActivationFunctionType f, float alpha, float beta);
                 ActivationFunction(ActivationFunctionType f, float alpha);
                 ActivationFunction(ActivationFunctionType f);
+                ActivationFunction() = default;
 
                 ///
                 /// \brief  Calls stored activation function with provided node argument.

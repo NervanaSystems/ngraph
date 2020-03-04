@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,8 @@ namespace ngraph
 
             auto zero = make_constant(quant_type, shape, 0);
             auto scale = quantization_utils::get_scale(min, max, quant_type, true);
-            return make_shared<op::Quantize>(input, scale, zero, quant_type, axes, round_mode);
+            return make_shared<op::Quantize>(input, scale, zero, quant_type, axes, round_mode)
+                ->add_provenance_group_members_above({input, min, max});
         }
     }
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,33 +22,37 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Product reduction operation.
-        ///
-        /// Reduces the tensor, eliminating the specified reduction axes by taking the product.
-        class Product : public util::ArithmeticReduction
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Product", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a product reduction operation.
-            Product() = default;
-            /// \brief Constructs a product reduction operation.
+            /// \brief Product reduction operation.
             ///
-            /// \param arg The tensor to be reduced.
-            /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Product(const Output<Node>& arg, const AxisSet& reduction_axes);
-            /// \brief Constructs a product reduction operation.
-            ///
-            /// \param arg The tensor to be reduced.
-            /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Product(const Output<Node>& arg, const Output<Node>& reduction_axes);
+            /// Reduces the tensor, eliminating the specified reduction axes by taking the product.
+            class NGRAPH_API Product : public util::ArithmeticReduction
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Product", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a product reduction operation.
+                Product() = default;
+                /// \brief Constructs a product reduction operation.
+                ///
+                /// \param arg The tensor to be reduced.
+                /// \param reduction_axes The axis positions (0-based) to be eliminated.
+                Product(const Output<Node>& arg, const AxisSet& reduction_axes);
+                /// \brief Constructs a product reduction operation.
+                ///
+                /// \param arg The tensor to be reduced.
+                /// \param reduction_axes The axis positions (0-based) to be eliminated.
+                Product(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
-            /// \return The default value for Product.
-            virtual std::shared_ptr<Node> get_default_value() const override;
+                /// \return The default value for Product.
+                virtual std::shared_ptr<Node> get_default_value() const override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+            };
+        }
+        // default opset version
+        using v0::Product;
     }
 }

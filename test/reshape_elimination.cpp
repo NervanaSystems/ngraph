@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -148,9 +148,9 @@ TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
     auto func = make_shared<Function>(graph, ParameterVector{W, x});
     pass_manager.run_passes(func);
     auto gdot = graph->get_argument(0);
-    ASSERT_TRUE(std::dynamic_pointer_cast<op::Dot>(gdot));
-    ASSERT_TRUE(std::dynamic_pointer_cast<op::Reshape>(gdot->get_argument(0)));
-    ASSERT_TRUE(std::dynamic_pointer_cast<op::Reshape>(gdot->get_argument(1)));
+    ASSERT_TRUE(as_type_ptr<op::Dot>(gdot));
+    ASSERT_TRUE(as_type_ptr<op::Reshape>(gdot->get_argument(0)));
+    ASSERT_TRUE(as_type_ptr<op::Reshape>(gdot->get_argument(1)));
     ASSERT_EQ(gdot->get_argument(0)->get_argument(0), x);
     ASSERT_EQ(gdot->get_argument(1)->get_argument(0), W);
     ASSERT_EQ(gdot->get_shape(), (Shape{1, 2}));
@@ -482,12 +482,12 @@ TEST(reshape_elimination, pass_property)
 {
     {
         auto pass = std::make_shared<ngraph::pass::ReshapeElimination>();
-        ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
-        ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+        ASSERT_FALSE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+        ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
     }
     {
         auto pass = std::make_shared<ngraph::pass::RecurrentReshapeElimination>();
-        ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
-        ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+        ASSERT_FALSE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+        ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
     }
 }

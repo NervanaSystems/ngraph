@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,11 +40,13 @@
 #include "op/clip.hpp"
 #include "op/concat.hpp"
 #include "op/constant.hpp"
+#include "op/constant_of_shape.hpp"
 #include "op/conv.hpp"
 #include "op/conv_integer.hpp"
 #include "op/conv_transpose.hpp"
 #include "op/cos.hpp"
 #include "op/cosh.hpp"
+#include "op/cum_sum.hpp"
 #include "op/depth_to_space.hpp"
 #include "op/dequantize_linear.hpp"
 #include "op/div.hpp"
@@ -53,10 +55,12 @@
 #include "op/equal.hpp"
 #include "op/erf.hpp"
 #include "op/exp.hpp"
+#include "op/expand.hpp"
 #include "op/eye_like.hpp"
 #include "op/flatten.hpp"
 #include "op/floor.hpp"
 #include "op/gather.hpp"
+#include "op/gather_nd.hpp"
 #include "op/gemm.hpp"
 #include "op/global_average_pool.hpp"
 #include "op/global_max_pool.hpp"
@@ -80,8 +84,10 @@
 #include "op/mean.hpp"
 #include "op/mean_variance_normalization.hpp"
 #include "op/min.hpp"
+#include "op/mod.hpp"
 #include "op/mul.hpp"
 #include "op/neg.hpp"
+#include "op/non_max_suppression.hpp"
 #include "op/not.hpp"
 #include "op/onehot.hpp"
 #include "op/or.hpp"
@@ -95,7 +101,9 @@
 #include "op/reduce.hpp"
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
-#include "op/reverse_sequence.h"
+#include "op/reverse_sequence.hpp"
+#include "op/round.hpp"
+#include "op/scatter_nd.hpp"
 #include "op/selu.hpp"
 #include "op/shape.hpp"
 #include "op/shrink.hpp"
@@ -249,13 +257,16 @@ namespace ngraph
             REGISTER_OPERATOR("Cast", 1, cast);
             REGISTER_OPERATOR("Ceil", 1, ceil);
             REGISTER_OPERATOR("Clip", 1, clip);
+            REGISTER_OPERATOR("Clip", 11, clip);
             REGISTER_OPERATOR("Concat", 1, concat);
             REGISTER_OPERATOR("Constant", 1, constant);
+            REGISTER_OPERATOR("ConstantOfShape", 1, constant_of_shape);
             REGISTER_OPERATOR("Conv", 1, conv);
             REGISTER_OPERATOR("ConvInteger", 1, conv_integer);
             REGISTER_OPERATOR("ConvTranspose", 1, conv_transpose);
             REGISTER_OPERATOR("Cos", 1, cos);
             REGISTER_OPERATOR("Cosh", 1, cosh);
+            REGISTER_OPERATOR("CumSum", 1, cum_sum);
             REGISTER_OPERATOR("DepthToSpace", 1, depth_to_space);
             REGISTER_OPERATOR("DequantizeLinear", 1, dequantize_linear);
             REGISTER_OPERATOR("Div", 1, div);
@@ -265,11 +276,14 @@ namespace ngraph
             REGISTER_OPERATOR("Equal", 1, equal);
             REGISTER_OPERATOR("Erf", 1, erf);
             REGISTER_OPERATOR("Exp", 1, exp);
+            REGISTER_OPERATOR("Expand", 1, expand);
             REGISTER_OPERATOR("EyeLike", 1, eye_like);
             REGISTER_OPERATOR("Flatten", 1, flatten);
             REGISTER_OPERATOR("Floor", 1, floor);
             REGISTER_OPERATOR("Gather", 1, gather);
+            REGISTER_OPERATOR("GatherND", 1, gather_nd);
             REGISTER_OPERATOR("Gemm", 1, gemm);
+            REGISTER_OPERATOR("Gemm", 6, gemm);
             REGISTER_OPERATOR("GlobalAveragePool", 1, global_average_pool);
             REGISTER_OPERATOR("GlobalLpPool", 1, global_lp_pool);
             REGISTER_OPERATOR("GlobalMaxPool", 1, global_max_pool);
@@ -291,18 +305,20 @@ namespace ngraph
             REGISTER_OPERATOR("Max", 1, max);
             REGISTER_OPERATOR("Max", 8, max);
             REGISTER_OPERATOR("Mean", 1, mean);
-            REGISTER_OPERATOR("Mean", 8, mean);
             REGISTER_OPERATOR("MeanVarianceNormalization", 1, mean_variance_normalization);
             REGISTER_OPERATOR("MeanVarianceNormalization", 9, mean_variance_normalization);
             REGISTER_OPERATOR("Min", 1, min);
             REGISTER_OPERATOR("Min", 8, min);
+            REGISTER_OPERATOR("Mod", 1, mod);
             REGISTER_OPERATOR("Mul", 1, mul);
             REGISTER_OPERATOR("Mul", 7, mul);
             REGISTER_OPERATOR("Neg", 1, neg);
+            REGISTER_OPERATOR("NonMaxSuppression", 1, non_max_suppression);
             REGISTER_OPERATOR("Not", 1, logical_not);
             REGISTER_OPERATOR("Or", 1, logical_or);
             REGISTER_OPERATOR("OneHot", 1, onehot);
             REGISTER_OPERATOR("Pad", 1, pad);
+            REGISTER_OPERATOR("Pad", 11, pad);
             REGISTER_OPERATOR("Pow", 1, pow);
             REGISTER_OPERATOR("PRelu", 1, prelu);
             REGISTER_OPERATOR("QLinearConv", 1, quant_conv);
@@ -322,6 +338,8 @@ namespace ngraph
             REGISTER_OPERATOR("Relu", 1, relu);
             REGISTER_OPERATOR("Reshape", 1, reshape);
             REGISTER_OPERATOR("ReverseSequence", 1, reverse_sequence);
+            REGISTER_OPERATOR("Round", 1, round);
+            REGISTER_OPERATOR("ScatterND", 1, scatter_nd);
             REGISTER_OPERATOR("Selu", 1, selu);
             REGISTER_OPERATOR("Shape", 1, shape);
             REGISTER_OPERATOR("Shrink", 1, shrink);
@@ -347,6 +365,8 @@ namespace ngraph
             REGISTER_OPERATOR("ThresholdedRelu", 1, thresholded_relu);
             REGISTER_OPERATOR("Tile", 1, tile);
             REGISTER_OPERATOR("TopK", 1, topk);
+            REGISTER_OPERATOR("TopK", 10, topk);
+            REGISTER_OPERATOR("TopK", 11, topk);
             REGISTER_OPERATOR("Transpose", 1, transpose);
             REGISTER_OPERATOR("Unsqueeze", 1, unsqueeze);
             REGISTER_OPERATOR("Where", 1, where);

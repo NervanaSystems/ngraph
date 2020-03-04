@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,7 @@
 #include <iterator> // std::begin, std::end
 #include <numeric>  // std::accumulate
 
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/divide.hpp"
+#include "default_opset.hpp"
 #include "ngraph/shape.hpp"
 #include "reduce.hpp"
 
@@ -33,30 +32,53 @@ namespace ngraph
             {
                 NodeVector reduce_mean(const Node& node)
                 {
-                    auto input_shape = node.get_ng_inputs().at(0)->get_shape();
-                    auto reduction_axes = reduction::detail::get_reduction_axes(node);
-                    std::size_t elem_count_product =
-                        std::accumulate(std::begin(reduction_axes),
-                                        std::end(reduction_axes),
-                                        1UL,
-                                        [&input_shape](const std::size_t& a, const std::size_t& b) {
-                                            return a * input_shape.at(b);
-                                        });
+                    const auto data = node.get_ng_inputs().at(0);
+                    const auto& data_shape = data->get_output_partial_shape(0);
 
-                    auto sum_node = std::shared_ptr<ngraph::Node>{reduction::make_ng_reduction_op(
+                    // sum up the input data along the reduction axes
+                    const auto sum_node = reduction::make_ng_reduction_op(
                         node,
-                        node.get_ng_inputs().at(0),
-                        std::make_shared<ngraph::op::Sum,
+                        data,
+                        std::make_shared<default_opset::ReduceSum,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         const ngraph::AxisSet&>)};
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>);
 
-                    auto const_node = ngraph::op::Constant::create(
-                        sum_node->get_element_type(),
-                        sum_node->get_shape(),
-                        std::vector<std::size_t>(shape_size(sum_node->get_shape()),
-                                                 elem_count_product));
+                    // calculate the product of dimensions pointed to by reduction axes
+                    size_t reduced_elems_count = 1U;
 
-                    return {std::make_shared<ngraph::op::Divide>(sum_node, const_node)};
+                    if (data_shape.is_static())
+                    {
+                        const auto input_shape = data_shape.to_shape();
+
+                        // calculate the product of dimensions pointed to by reduction axes
+                        // this value represents the number of input tensor values that were reduced
+                        for (const auto axis : reduction::detail::get_reduction_axes(node))
+                        {
+                            reduced_elems_count *= input_shape.at(axis);
+                        }
+                    }
+                    else
+                    {
+                        for (const auto axis : reduction::detail::get_reduction_axes(node))
+                        {
+                            const auto dim_to_reduce = data_shape[axis];
+                            NGRAPH_CHECK(dim_to_reduce.is_static(),
+                                         "Axis ",
+                                         axis,
+                                         " in the input data tensor needs to be statically "
+                                         "specified to create a ReduceMean operation");
+
+                            reduced_elems_count *= static_cast<size_t>(dim_to_reduce);
+                        }
+                    }
+
+                    const auto const_node = default_opset::Constant::create(
+                        sum_node->get_element_type(), {}, {reduced_elems_count});
+
+                    // divide the sum node containing reduced values by the number
+                    // of those values to obtain the mean
+                    return {std::make_shared<default_opset::Divide>(sum_node, const_node)};
                 }
 
             } // namespace set_1

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,8 +26,10 @@
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/opsets/opset1.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -35,7 +37,8 @@ using namespace std;
 
 shared_ptr<Node> builder::reshape(const Output<Node>& value, const Shape& shape)
 {
-    return make_shared<op::Reshape>(value, get_default_order(value.get_shape().size()), shape);
+    return make_shared<op::Reshape>(value, get_default_order(value.get_shape().size()), shape)
+        ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
@@ -55,7 +58,8 @@ shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t>
     }
 
     auto axis_vector = AxisVector{begin(axes_order), end(axes_order)};
-    return make_shared<op::Reshape>(value, axis_vector, out_shape);
+    return make_shared<op::Reshape>(value, axis_vector, out_shape)
+        ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::transpose(const Output<Node>& value)
@@ -80,7 +84,8 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, int axis)
         accumulate(next(begin(data_shape), axis), end(data_shape), 1UL, multiplies<size_t>());
 
     return make_shared<op::Reshape>(
-        value, get_default_order(data_shape.size()), Shape{first_dim_size, last_dim_size});
+               value, get_default_order(data_shape.size()), Shape{first_dim_size, last_dim_size})
+        ->add_provenance_group_members_above({value});
 }
 
 // Dynamic version of "flatten".
@@ -118,7 +123,8 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>&
     auto flattened_dims = make_shared<op::Concat>(NodeVector{row_dims_prod, col_dims_prod}, 0);
 
     // result := DynReshape(value, flattened_dims)
-    return make_shared<op::DynReshape>(value, flattened_dims);
+    return make_shared<op::DynReshape>(value, flattened_dims)
+        ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::squeeze(const Output<Node>& value, vector<size_t> axes)
@@ -131,7 +137,7 @@ shared_ptr<Node> builder::squeeze(const Output<Node>& value, vector<size_t> axes
     Shape in_shape{value.get_shape()};
     for (size_t idx = 0; idx < axes.size(); ++idx)
     {
-        in_shape.at(idx) = 0;
+        in_shape.at(axes.at(idx)) = 0;
     }
     Shape output_shape;
     for (auto axis : in_shape)
@@ -166,5 +172,82 @@ shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
     advance(empty_axis_it, axis);
     output_shape.insert(empty_axis_it, 1);
     return make_shared<op::Reshape>(
-        value, get_default_order(value.get_shape().size()), output_shape);
+               value, get_default_order(value.get_shape().size()), output_shape)
+        ->add_provenance_group_members_above({value});
+}
+
+shared_ptr<Node> builder::opset1::reshape(const Output<Node>& value, const Shape& shape)
+{
+    const auto out_pattern = op::Constant::create(
+        element::i64, Shape{shape.size()}, vector<int64_t>(shape.begin(), shape.end()));
+    const bool special_zero = false;
+    return make_shared<ngraph::opset1::Reshape>(value, out_pattern, special_zero)
+        ->add_provenance_group_members_above({value});
+}
+
+shared_ptr<Node> builder::opset1::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
+{
+    const auto axes_order_const =
+        op::Constant::create(element::i64,
+                             Shape{axes_order.size()},
+                             vector<int64_t>(axes_order.begin(), axes_order.end()));
+    return make_shared<ngraph::opset1::Transpose>(value, axes_order_const)
+        ->add_provenance_group_members_above({value});
+}
+
+shared_ptr<Node> builder::opset1::transpose(const Output<Node>& value)
+{
+    vector<size_t> axes_order(value.get_shape().size());
+    iota(begin(axes_order), end(axes_order), 0);
+    reverse(begin(axes_order), end(axes_order));
+    return builder::opset1::reorder_axes(value, axes_order);
+}
+
+shared_ptr<Node> builder::opset1::flatten(const Output<Node>& value, int axis)
+{
+    auto data_shape = value.get_shape();
+
+    // First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of input
+    // tensor. The last dimension is the product of the rest of input tensor dimensions:
+    // [d_{axis}, ..., d_n]
+    size_t first_dim_size =
+        accumulate(begin(data_shape), next(begin(data_shape), axis), 1UL, multiplies<size_t>());
+
+    size_t last_dim_size =
+        accumulate(next(begin(data_shape), axis), end(data_shape), 1UL, multiplies<size_t>());
+
+    return builder::opset1::reshape(value, Shape{first_dim_size, last_dim_size});
+}
+
+shared_ptr<Node> builder::opset1::expand_dims(const Output<Node>& value, size_t axis)
+{
+    Shape output_shape(value.get_shape());
+    // Add empty axis at specified position.
+    auto empty_axis_it = begin(output_shape);
+    advance(empty_axis_it, axis);
+    output_shape.insert(empty_axis_it, 1);
+    return builder::opset1::reshape(value, output_shape);
+}
+
+shared_ptr<Node> builder::opset1::squeeze(const Output<Node>& value, vector<size_t> axes)
+{
+    if (axes.empty())
+    {
+        return value.get_node_shared_ptr();
+    }
+
+    Shape in_shape{value.get_shape()};
+    for (size_t idx = 0; idx < axes.size(); ++idx)
+    {
+        in_shape.at(axes.at(idx)) = 0;
+    }
+    Shape output_shape;
+    for (auto axis : in_shape)
+    {
+        if (axis != 0)
+        {
+            output_shape.push_back(axis);
+        }
+    }
+    return builder::opset1::reshape(value, output_shape);
 }

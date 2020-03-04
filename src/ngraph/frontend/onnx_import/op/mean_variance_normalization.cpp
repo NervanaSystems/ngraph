@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 #include "mean_variance_normalization.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/fused/mvn.hpp"
+#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -36,7 +38,7 @@ namespace ngraph
                     bool normalize_variance =
                         node.get_attribute_value<std::int64_t>("normalize_variance", 1);
 
-                    return {std::make_shared<ngraph::op::MVN>(
+                    return {std::make_shared<ngraph::opset0::MVN>(
                         data, across_channels, normalize_variance)};
                 }
 
@@ -47,9 +49,11 @@ namespace ngraph
                 NodeVector mean_variance_normalization(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
-                    auto axes = node.get_attribute_value<std::vector<size_t>>("axes", {0, 2, 3});
+                    auto axes = node.get_attribute_value<std::vector<int64_t>>("axes", {0, 2, 3});
+                    const std::vector<std::size_t> normalized_axes = ngraph::normalize_axes(
+                        node.get_description(), axes, data->get_output_partial_shape(0).rank());
 
-                    return {std::make_shared<ngraph::op::MVN>(data, AxisSet(axes))};
+                    return {std::make_shared<ngraph::opset0::MVN>(data, AxisSet(normalized_axes))};
                 }
 
             } // namespace set_9

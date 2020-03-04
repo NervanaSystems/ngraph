@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -29,6 +30,7 @@ namespace ngraph
         class BoundedRelu : public ngraph::op::util::UnaryElementwiseArithmetic
         {
         public:
+            CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"BoundedRelu", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a BoundedRelu operation.

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -158,7 +158,7 @@ shared_ptr<Node> op::Dequantize::copy_with_new_args(const NodeVector& new_args) 
 }
 
 void op::Dequantize::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const NodeVector& /* deltas */)
+                                       const OutputVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,17 +17,9 @@
 #include <cstdint>
 #include <memory>
 
-#include "exceptions.hpp"
-#include "ngraph/coordinate.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/convert.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/one_hot.hpp"
-#include "ngraph/op/slice.hpp"
-#include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
+#include "default_opset.hpp"
 #include "onehot.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -41,51 +33,23 @@ namespace ngraph
                 {
                     NodeVector inputs{node.get_ng_inputs()};
                     auto indices =
-                        std::make_shared<ngraph::op::Convert>(inputs.at(0), element::i64);
-                    auto indices_shape = indices->get_shape();
-                    auto depth = inputs.at(1);
+                        std::make_shared<default_opset::Convert>(inputs.at(0), element::i64);
+                    auto depth = reshape::interpret_as_scalar(inputs.at(1));
+
+                    // Rank 1 tensor containing exactly two elements: [off_value, on_value]
                     auto values = inputs.at(2);
-                    std::shared_ptr<ngraph::Node> off_value =
-                        std::make_shared<ngraph::op::Slice>(values, Coordinate{0}, Coordinate{1});
-                    std::shared_ptr<ngraph::Node> on_value =
-                        std::make_shared<ngraph::op::Slice>(values, Coordinate{1}, Coordinate{2});
+                    auto split_axis = default_opset::Constant::create(element::i64, {}, {0});
+                    auto off_on_values =
+                        std::make_shared<default_opset::Split>(values, split_axis, 2);
+                    auto off_value =
+                        reshape::interpret_as_scalar(get_output_element(off_on_values, size_t{0}));
+                    auto on_value =
+                        reshape::interpret_as_scalar(get_output_element(off_on_values, size_t{1}));
+
                     auto axis = node.get_attribute_value<std::int64_t>("axis", -1);
 
-                    if (axis < 0)
-                    {
-                        axis += indices_shape.size() + 1;
-                    }
-
-                    ASSERT_VALID_ARGUMENT(
-                        node, (axis >= 0) && (axis <= static_cast<int64_t>(indices_shape.size())))
-                        << "invalid 'axis' attribute: "
-                        << node.get_attribute_value<std::int64_t>("axis", -1);
-
-                    auto constant_depth = std::dynamic_pointer_cast<ngraph::op::Constant>(depth);
-
-                    ASSERT_VALID_ARGUMENT(node, constant_depth)
-                        << "Only constant values for depth input are supported for the OneHot "
-                           "operator.";
-
-                    std::int64_t depth_value = constant_depth->get_vector<std::int64_t>()[0];
-                    auto output_shape = indices_shape;
-                    // Insert OneHot axis on position pointed by an axis attribute.
-                    // example:
-                    // data_shape = (2, 2)
-                    // axis = 1
-                    // depth = 10
-                    // output_shape = (2, 10, 2)
-                    output_shape.insert(std::next(std::begin(output_shape), axis), depth_value);
-
-                    std::shared_ptr<ngraph::Node> one_hot = std::make_shared<ngraph::op::Convert>(
-                        std::make_shared<ngraph::op::OneHot>(indices, output_shape, axis),
-                        values->get_element_type());
-                    auto broadcasted_values =
-                        ngraph::op::numpy_style_broadcast({one_hot, on_value, off_value});
-                    on_value = broadcasted_values[1];
-                    off_value = broadcasted_values[2];
-                    one_hot = one_hot * (on_value - off_value) + off_value;
-                    return {one_hot};
+                    return {std::make_shared<default_opset::OneHot>(
+                        indices, depth, on_value, off_value, axis)};
                 }
 
             } // namespace set_1

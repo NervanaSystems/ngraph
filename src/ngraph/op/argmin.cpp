@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,12 @@ op::ArgMin::ArgMin(const Output<Node>& arg, size_t axis, const element::Type& in
     : op::util::IndexReduction(arg, axis, index_element_type)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::ArgMin::visit_attributes(AttributeVisitor& visitor)
+{
+    IndexReduction::visit_attributes(visitor);
+    return true;
 }
 
 shared_ptr<Node> op::ArgMin::copy_with_new_args(const NodeVector& new_args) const

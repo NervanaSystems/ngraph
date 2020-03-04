@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,10 +26,9 @@ namespace ngraph
         {
             /// \brief Softmax operation.
             ///
-            class Softmax : public Op
+            class NGRAPH_API Softmax : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Softmax", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Softmax() = default;
@@ -42,27 +41,37 @@ namespace ngraph
                 /// Output `[d0, ...]`
                 ///
                 Softmax(const Output<Node>& arg, const AxisSet& axes);
+                /// \brief Constructs a softmax operation.
+                ///
+                /// \param arg Node that produces the first input tensor.<br>
+                /// `[d0, ...]`
+                /// \param axes node produces the axis positions (0-based) on which to calculate the
+                /// softmax.
+                ///
+                /// Output `[d0, ...]`
+                ///
+                Softmax(const Output<Node>& arg, const Output<Node>& axes);
+
+                void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
-                const AxisSet& get_axes() const { return m_axes; }
-                void set_axes(const AxisSet& axes) { m_axes = axes; }
+                bool are_axes_constant() const;
+                const AxisSet get_axes() const;
+                void set_axes(const AxisSet& axes);
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
-
-            private:
-                AxisSet m_axes;
+                                               const OutputVector& deltas) override;
             };
         }
 
         namespace v1
         {
-            class Softmax : public Op
+            class NGRAPH_API Softmax : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Softmax", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Softmax()
@@ -79,6 +88,9 @@ namespace ngraph
                 ///
                 Softmax(const Output<Node>& arg, const size_t axis);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                void validate_and_infer_types() override;
+
                 size_t get_version() const override { return 1; }
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -87,7 +99,7 @@ namespace ngraph
                 void set_axis(const size_t axis) { m_axis = axis; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             private:
                 size_t m_axis;
