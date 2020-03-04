@@ -90,6 +90,7 @@ namespace ngraph
                              const std::vector<int64_t>& shrink_axis_mask = std::vector<int64_t>{},
                              const std::vector<int64_t>& ellipsis_mask = std::vector<int64_t>{});
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 const std::vector<int64_t>& get_begin_mask() const { return m_begin_mask; }
                 const std::vector<int64_t>& get_end_mask() const { return m_end_mask; }
                 const std::vector<int64_t>& get_new_axis_mask() const { return m_new_axis_mask; }

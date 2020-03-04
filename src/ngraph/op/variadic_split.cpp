@@ -33,6 +33,11 @@ op::v1::VariadicSplit::VariadicSplit(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::VariadicSplit::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
 {
     set_input_is_relevant_to_value(0);

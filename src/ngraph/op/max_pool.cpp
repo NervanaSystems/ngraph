@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/validation_util.hpp"
@@ -301,6 +302,17 @@ op::v1::MaxPool::MaxPool(const Output<Node>& arg,
                          op::RoundingType rounding_type)
     : v1::MaxPool(arg, strides, pads_begin, pads_end, kernel, rounding_type, op::PadType::EXPLICIT)
 {
+}
+
+bool ngraph::op::v1::MaxPool::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("kernel", m_kernel);
+    visitor.on_attribute("rounding_type", m_rounding_type);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    return true;
 }
 
 void op::v1::MaxPool::validate_and_infer_types()
