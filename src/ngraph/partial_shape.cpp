@@ -214,7 +214,13 @@ Shape PartialShape::to_shape() const
         throw std::invalid_argument("to_shape was called on a dynamic shape.");
     }
 
-    return Shape(m_dimensions.begin(), m_dimensions.end());
+    std::vector<size_t> dimensions_to_shape(m_dimensions.size());
+    std::transform(m_dimensions.begin(),
+                   m_dimensions.end(),
+                   dimensions_to_shape.begin(),
+                   [](const Dimension& d) {return d.get_length();});
+
+    return Shape(dimensions_to_shape.begin(), dimensions_to_shape.end());
 }
 
 bool PartialShape::merge_into(PartialShape& dst, const PartialShape& src)
