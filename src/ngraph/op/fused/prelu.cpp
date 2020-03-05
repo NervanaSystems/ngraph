@@ -35,6 +35,11 @@ op::PRelu::PRelu(const Output<Node>& data, const Output<Node>& slope)
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::PRelu::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 NodeVector op::PRelu::decompose_op() const
 {
     auto data = input_value(0);

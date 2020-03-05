@@ -18,6 +18,7 @@
 
 #include <algorithm>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -162,6 +163,12 @@ op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
     , m_axis(axis)
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v1::Softmax::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    return true;
 }
 
 void op::v1::Softmax::validate_and_infer_types()

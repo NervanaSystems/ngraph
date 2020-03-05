@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/strided_slice.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/validation_util.hpp"
 
@@ -64,6 +65,16 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
                    shrink_axis_mask,
                    ellipsis_mask)
 {
+}
+
+bool ngraph::op::v1::StridedSlice::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("begin_mask", m_begin_mask);
+    visitor.on_attribute("end_mask", m_end_mask);
+    visitor.on_attribute("new_axis_mask", m_new_axis_mask);
+    visitor.on_attribute("shrink_axis_mask", m_shrink_axis_mask);
+    visitor.on_attribute("ellipsis_mask", m_ellipsis_mask);
+    return true;
 }
 
 void op::v1::StridedSlice::validate_and_infer_types()

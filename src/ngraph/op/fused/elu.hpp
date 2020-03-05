@@ -42,6 +42,7 @@ namespace ngraph
                 /// \param alpha Multiplier for negative values
                 Elu(const Output<Node>& data, const double alpha);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual NodeVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
