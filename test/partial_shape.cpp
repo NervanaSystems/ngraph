@@ -73,9 +73,7 @@ TEST(partial_shape, dim_construction_size_t_max)
 
 TEST(partial_shape, dim_conversion_dynamic)
 {
-    EXPECT_ANY_THROW({
-        auto s = Dimension::dynamic().get_length();
-    });
+    EXPECT_ANY_THROW({ auto s = Dimension::dynamic().get_length(); });
 }
 
 TEST(partial_shape, rank_construction_static)

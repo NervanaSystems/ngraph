@@ -61,8 +61,7 @@ void op::v0::Gather::validate_and_infer_types()
     // output rank is rank(params) + rank(indices) - 1
     NODE_VALIDATION_CHECK(this,
                           params_shape.rank().is_dynamic() ||
-                              params_shape.rank().get_length() >
-                                  static_cast<size_t>(m_axis),
+                              params_shape.rank().get_length() > static_cast<size_t>(m_axis),
                           "params rank is expected to be at least axis + 1");
 
     PartialShape result_shape;
@@ -79,8 +78,7 @@ void op::v0::Gather::validate_and_infer_types()
         {
             result_dims[i] = indices_shape[j];
         }
-        for (size_t j = static_cast<size_t>(m_axis) + 1;
-             j < params_shape.rank().get_length();
+        for (size_t j = static_cast<size_t>(m_axis) + 1; j < params_shape.rank().get_length();
              i++, j++)
         {
             result_dims[i] = params_shape[j];

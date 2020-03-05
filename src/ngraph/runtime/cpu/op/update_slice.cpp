@@ -114,7 +114,8 @@ void op::UpdateSlice::validate_and_infer_types()
     }
 
     NODE_VALIDATION_CHECK(this,
-                          merged_args_rank.is_dynamic() || merged_args_rank.get_length() == output_rank,
+                          merged_args_rank.is_dynamic() ||
+                              merged_args_rank.get_length() == output_rank,
                           "Argument ranks do not match the rank of the lower bounds (",
                           m_lower_bounds,
                           "), upper bounds (",

@@ -29,8 +29,7 @@ void op::EmbeddingLookup::validate_and_infer_types()
     const PartialShape& arg1_shape = get_input_partial_shape(1);
 
     NODE_VALIDATION_CHECK(this,
-                          arg1_shape.rank().is_dynamic() ||
-                              arg1_shape.rank().get_length() == 2,
+                          arg1_shape.rank().is_dynamic() || arg1_shape.rank().get_length() == 2,
                           "weights are expected to be a matrix");
 
     PartialShape result_shape;

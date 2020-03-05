@@ -116,15 +116,14 @@ void op::v1::BinaryConvolution::validate_and_infer_types()
     }
 
     PartialShape result_shape;
-    result_shape =
-        infer_convolution_forward(this,
-                                  data_batch_shape,
-                                  Strides(data_batch_shape.rank().get_length() - 2, 1),
-                                  m_pads_begin,
-                                  m_pads_end,
-                                  filters_shape,
-                                  m_strides,
-                                  m_dilations);
+    result_shape = infer_convolution_forward(this,
+                                             data_batch_shape,
+                                             Strides(data_batch_shape.rank().get_length() - 2, 1),
+                                             m_pads_begin,
+                                             m_pads_end,
+                                             filters_shape,
+                                             m_strides,
+                                             m_dilations);
 
     set_output_type(0, data_batch_et, result_shape);
 }

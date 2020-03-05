@@ -89,8 +89,7 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
                           boxes_ps);
 
     NODE_VALIDATION_CHECK(this,
-                          scores_ps.rank().is_static() &&
-                              scores_ps.rank().get_length() == 3,
+                          scores_ps.rank().is_static() && scores_ps.rank().get_length() == 3,
                           "Expected a 3D tensor for the 'scores' input. Got: ",
                           scores_ps);
 

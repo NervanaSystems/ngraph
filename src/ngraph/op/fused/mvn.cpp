@@ -60,9 +60,7 @@ void op::MVN::validate_and_infer_types()
         AxisSet reduction_axes;
         reduction_axes.insert(0);
         size_t start_axis = m_across_channels ? 1 : 2;
-        for (size_t i = start_axis;
-             i < input_value(0).get_partial_shape().rank().get_length();
-             ++i)
+        for (size_t i = start_axis; i < input_value(0).get_partial_shape().rank().get_length(); ++i)
         {
             reduction_axes.insert(i);
         }

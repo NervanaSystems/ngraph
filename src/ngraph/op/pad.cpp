@@ -108,8 +108,7 @@ void op::v0::Pad::validate_and_infer_types()
                         "spatial axis.");
                     NODE_VALIDATION_CHECK(
                         this,
-                        m_pad_mode != op::PadMode::REFLECT ||
-                            arg_shape[i].get_length() >= 2,
+                        m_pad_mode != op::PadMode::REFLECT || arg_shape[i].get_length() >= 2,
                         "REFLECT padding mode requires an input of dimension of at least 2 at each "
                         "spatial axis.");
                 }
@@ -333,8 +332,7 @@ void op::v1::Pad::validate_and_infer_types()
                         "spatial axis.");
                     NODE_VALIDATION_CHECK(
                         this,
-                        m_pad_mode != op::PadMode::REFLECT ||
-                            arg_shape[i].get_length() >= 2,
+                        m_pad_mode != op::PadMode::REFLECT || arg_shape[i].get_length() >= 2,
                         "REFLECT padding mode requires an input of dimension of at least 2 at each "
                         "spatial axis.");
                 }

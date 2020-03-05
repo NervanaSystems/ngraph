@@ -315,10 +315,8 @@ namespace
             input_rank.is_static())
         {
             const auto output_shape = node->get_output_shape(0);
-            replacement_node =
-                make_shared<op::Reshape>(node->input_value(0),
-                                         get_default_order(input_rank.get_length()),
-                                         output_shape);
+            replacement_node = make_shared<op::Reshape>(
+                node->input_value(0), get_default_order(input_rank.get_length()), output_shape);
         }
         else
         {

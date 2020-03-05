@@ -83,7 +83,8 @@ std::ostream& ngraph::operator<<(std::ostream& str, const PartialShape& shape)
 PartialShape PartialShape::dynamic(Rank r)
 {
     return PartialShape(
-        r.is_static(), std::vector<Dimension>(r.is_static() ? r.get_length() : 0, Dimension::dynamic()));
+        r.is_static(),
+        std::vector<Dimension>(r.is_static() ? r.get_length() : 0, Dimension::dynamic()));
 }
 
 bool PartialShape::compatible(const PartialShape& s) const
@@ -218,7 +219,7 @@ Shape PartialShape::to_shape() const
     std::transform(m_dimensions.begin(),
                    m_dimensions.end(),
                    dimensions_to_shape.begin(),
-                   [](const Dimension& d) {return d.get_length();});
+                   [](const Dimension& d) { return d.get_length(); });
 
     return Shape(dimensions_to_shape.begin(), dimensions_to_shape.end());
 }

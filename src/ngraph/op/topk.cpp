@@ -190,8 +190,7 @@ void op::v0::TopK::validate_and_infer_types()
             }
             else if (k == 0 && output_shape[top_k_axis.get_length()].is_static())
             {
-                output_shape[top_k_axis.get_length()] =
-                    input_shape[top_k_axis.get_length()];
+                output_shape[top_k_axis.get_length()] = input_shape[top_k_axis.get_length()];
             }
         }
         else

@@ -89,8 +89,7 @@ void op::v1::DeformablePSROIPooling::validate_and_infer_types()
     const auto& box_coords_pshape = get_input_partial_shape(1);
 
     NODE_VALIDATION_CHECK(this,
-                          input_pshape.rank().is_dynamic() ||
-                              input_pshape.rank().get_length() == 4,
+                          input_pshape.rank().is_dynamic() || input_pshape.rank().get_length() == 4,
                           "Feature map input rank must equal to 4 (input rank: ",
                           input_pshape.rank().get_length(),
                           ")");

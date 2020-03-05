@@ -49,23 +49,20 @@ void op::GatherND::validate_and_infer_types()
                           "indices rank is expected to be at least 1");
 
     NODE_VALIDATION_CHECK(this,
-                          params_shape.rank().is_dynamic() ||
-                              params_shape.rank().get_length() >= 1,
+                          params_shape.rank().is_dynamic() || params_shape.rank().get_length() >= 1,
                           "params rank is expected to be at least 1");
 
-    NODE_VALIDATION_CHECK(
-        this,
-        params_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
-            indices_shape[indices_shape.rank().get_length() - 1].get_length() <=
-                params_shape.rank().get_length(),
-        "last dimension of indices can be at most the rank of params");
+    NODE_VALIDATION_CHECK(this,
+                          params_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
+                              indices_shape[indices_shape.rank().get_length() - 1].get_length() <=
+                                  params_shape.rank().get_length(),
+                          "last dimension of indices can be at most the rank of params");
 
     PartialShape result_shape;
     if (params_shape.rank().is_static() && indices_shape.rank().is_static())
     {
         std::vector<Dimension> result_dims(
-            indices_shape.rank().get_length() - 1 +
-            params_shape.rank().get_length() -
+            indices_shape.rank().get_length() - 1 + params_shape.rank().get_length() -
             indices_shape[indices_shape.rank().get_length() - 1].get_length());
         size_t i = 0;
         for (; i < indices_shape.rank().get_length() - 1; i++)

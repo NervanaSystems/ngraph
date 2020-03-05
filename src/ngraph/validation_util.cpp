@@ -311,9 +311,8 @@ PartialShape ngraph::infer_convolution_forward(const Node* node,
         }
     }
 
-    NODE_VALIDATION_CHECK(node,
-                          batch_size.is_dynamic() || batch_size.get_length() > 0,
-                          "Batch size is zero.");
+    NODE_VALIDATION_CHECK(
+        node, batch_size.is_dynamic() || batch_size.get_length() > 0, "Batch size is zero.");
 
     Dimension merged_channel_count;
 
@@ -416,9 +415,8 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
             data_spatial_shape[i] = data_batch_shape[i + 2];
         }
 
-        NODE_VALIDATION_CHECK(node,
-                              batch_size.is_dynamic() || batch_size.get_length() > 0,
-                              "Batch size is zero.");
+        NODE_VALIDATION_CHECK(
+            node, batch_size.is_dynamic() || batch_size.get_length() > 0, "Batch size is zero.");
 
         NODE_VALIDATION_CHECK(node,
                               channel_count.is_dynamic() || channel_count.get_length() > 0,

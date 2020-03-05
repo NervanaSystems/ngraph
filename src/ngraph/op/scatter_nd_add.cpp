@@ -55,22 +55,19 @@ void op::ScatterNDAdd::validate_and_infer_types()
                               indices_shape.rank().get_length() >= 1,
                           "Indices rank is expected to be at least 1");
 
-    NODE_VALIDATION_CHECK(
-        this,
-        inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
-            indices_shape[indices_shape.rank().get_length() - 1].get_length() <=
-                inputs_shape.rank().get_length(),
-        "Last dimension of indices can be at most the rank of inputs");
+    NODE_VALIDATION_CHECK(this,
+                          inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
+                              indices_shape[indices_shape.rank().get_length() - 1].get_length() <=
+                                  inputs_shape.rank().get_length(),
+                          "Last dimension of indices can be at most the rank of inputs");
 
     NODE_VALIDATION_CHECK(
         this,
         inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
             updates_shape.rank().is_dynamic() ||
             updates_shape.rank().get_length() ==
-                indices_shape.rank().get_length() +
-                    inputs_shape.rank().get_length() -
-                    indices_shape[indices_shape.rank().get_length() - 1].get_length() -
-                    1,
+                indices_shape.rank().get_length() + inputs_shape.rank().get_length() -
+                    indices_shape[indices_shape.rank().get_length() - 1].get_length() - 1,
         "Rank of updates must be rank of inputs + rank of indices - last dimension of indices - 1");
 
     bool compatible = true;

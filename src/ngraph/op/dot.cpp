@@ -130,7 +130,8 @@ void op::Dot::validate_and_infer_types()
                 ").");
         }
 
-        std::vector<Dimension> result_dims(arg0_shape.rank().get_length() + arg1_shape.rank().get_length() -
+        std::vector<Dimension> result_dims(arg0_shape.rank().get_length() +
+                                           arg1_shape.rank().get_length() -
                                            2 * m_reduction_axes_count);
 
         size_t i = 0;

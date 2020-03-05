@@ -77,7 +77,8 @@ void op::util::IndexReduction::validate_and_infer_types()
     const PartialShape& arg_shape = get_input_partial_shape(0);
     Rank rank = arg_shape.rank();
 
-    NODE_VALIDATION_CHECK(this, rank.is_dynamic() || rank.get_length() >= 1, "Argument rank is zero.");
+    NODE_VALIDATION_CHECK(
+        this, rank.is_dynamic() || rank.get_length() >= 1, "Argument rank is zero.");
     NODE_VALIDATION_CHECK(this,
                           rank.is_dynamic() || m_axis < rank.get_length(),
                           "Reduction axis (",
