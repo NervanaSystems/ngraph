@@ -17,7 +17,7 @@
 #include <cstring>
 #include <memory>
 
-#include "cpu_tensor_view.hpp"
+#include "cpu_tensor.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
@@ -34,9 +34,9 @@ using namespace std;
 // TODO(jmenon): Refactor all the alignment specifications into
 // a single place and allow lower or no alignment when possible
 
-runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
-                                           const Shape& shape,
-                                           void* memory_pointer)
+runtime::cpu::CPUTensor::CPUTensor(const ngraph::element::Type& element_type,
+                                   const Shape& shape,
+                                   void* memory_pointer)
     : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, ""))
     , buffer(nullptr)
     , aligned_buffer(nullptr)
@@ -72,28 +72,27 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     }
 }
 
-runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
-                                           const Shape& shape)
-    : CPUTensorView(element_type, shape, nullptr)
+runtime::cpu::CPUTensor::CPUTensor(const ngraph::element::Type& element_type, const Shape& shape)
+    : CPUTensor(element_type, shape, nullptr)
 {
 }
 
-runtime::cpu::CPUTensorView::~CPUTensorView()
+runtime::cpu::CPUTensor::~CPUTensor()
 {
     ngraph_free(buffer);
 }
 
-char* runtime::cpu::CPUTensorView::get_data_ptr()
+char* runtime::cpu::CPUTensor::get_data_ptr()
 {
     return aligned_buffer;
 }
 
-const char* runtime::cpu::CPUTensorView::get_data_ptr() const
+const char* runtime::cpu::CPUTensor::get_data_ptr() const
 {
     return aligned_buffer;
 }
 
-void runtime::cpu::CPUTensorView::write(const void* source, size_t n)
+void runtime::cpu::CPUTensor::write(const void* source, size_t n)
 {
     if (n > buffer_size)
     {
@@ -103,7 +102,7 @@ void runtime::cpu::CPUTensorView::write(const void* source, size_t n)
     memcpy(target, source, n);
 }
 
-void runtime::cpu::CPUTensorView::read(void* target, size_t n) const
+void runtime::cpu::CPUTensor::read(void* target, size_t n) const
 {
     if (n > buffer_size)
     {
@@ -164,19 +163,19 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t n) const
     }
 }
 
-void runtime::cpu::CPUTensorView::copy_from(const ngraph::runtime::Tensor& source)
+void runtime::cpu::CPUTensor::copy_from(const ngraph::runtime::Tensor& source)
 {
     if (get_element_count() != source.get_element_count())
     {
-        throw invalid_argument("runtime::cpu::CPUTensorView::copy_from element count must match");
+        throw invalid_argument("runtime::cpu::CPUTensor::copy_from element count must match");
     }
 
     if (get_element_type() != source.get_element_type())
     {
-        throw invalid_argument("runtime::cpu::CPUTensorView::copy_from element types must match");
+        throw invalid_argument("runtime::cpu::CPUTensor::copy_from element types must match");
     }
 
-    if (auto cpu_source = dynamic_cast<const runtime::cpu::CPUTensorView*>(&source))
+    if (auto cpu_source = dynamic_cast<const runtime::cpu::CPUTensor*>(&source))
     {
         auto this_tl =
             dynamic_cast<ngraph::runtime::cpu::LayoutDescriptor*>(this->get_tensor_layout().get());

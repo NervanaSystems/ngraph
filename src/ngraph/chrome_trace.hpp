@@ -33,14 +33,11 @@
 
 namespace ngraph
 {
-    namespace runtime
+    namespace event
     {
-        namespace event
-        {
-            class Duration;
-            class Object;
-            class Manager;
-        }
+        class Duration;
+        class Object;
+        class Manager;
     }
 }
 
@@ -75,7 +72,7 @@ namespace ngraph
 // More information about this is at:
 // http://dev.chromium.org/developers/how-tos/trace-event-profiling-tool
 
-class ngraph::runtime::event::Manager
+class ngraph::event::Manager
 {
     friend class Duration;
     friend class Object;
@@ -102,7 +99,7 @@ private:
     static bool s_tracing_enabled;
 };
 
-class ngraph::runtime::event::Duration
+class ngraph::event::Duration
 {
 public:
     explicit Duration(const std::string& name,
@@ -130,7 +127,7 @@ private:
     std::string m_args;
 };
 
-class ngraph::runtime::event::Object
+class ngraph::event::Object
 {
 public:
     Object(const std::string& name, const std::string& args);

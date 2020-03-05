@@ -54,8 +54,8 @@ DistributedInterface* ngraph::get_distributed_interface()
 {
     if (nullptr == s_distributed_interface)
     {
-        set_distributed_interface(std::unique_ptr<DistributedInterface>(
-            new ngraph::distributed::NullDistributedInterface()));
+        set_distributed_interface(
+            std::unique_ptr<DistributedInterface>(new ngraph::distributed::Null()));
     }
     return s_distributed_interface.get();
 }
