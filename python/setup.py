@@ -266,15 +266,6 @@ sources = [
     'pyngraph/types/regmodule_pyngraph_types.cpp',
 ]
 
-package_dir = {
-    'ngraph': PYNGRAPH_SRC_DIR + '/ngraph',
-    'ngraph.utils': PYNGRAPH_SRC_DIR + '/ngraph/utils',
-    'ngraph.impl': PYNGRAPH_SRC_DIR + '/ngraph/impl',
-    'ngraph.impl.op': PYNGRAPH_SRC_DIR + '/ngraph/impl/op',
-    'ngraph.impl.op.util': PYNGRAPH_SRC_DIR + '/ngraph/impl/op/util',
-    'ngraph.impl.passes': PYNGRAPH_SRC_DIR + '/ngraph/impl/passes',
-    'ngraph.impl.runtime': PYNGRAPH_SRC_DIR + '/ngraph/impl/runtime',
-}
 packages = [
     'ngraph',
     'ngraph.utils',
@@ -327,9 +318,6 @@ if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
     onnx_sources = [PYNGRAPH_SRC_DIR + '/' + source for source in onnx_sources]
     sources = sources + onnx_sources
 
-    package_dir['ngraph.impl.onnx_import'] = (
-        PYNGRAPH_SRC_DIR + '/ngraph/impl/onnx_import'
-    )
     packages.append('ngraph.impl.onnx_import')
 
 ext_modules = [
@@ -421,7 +409,7 @@ setup(
     long_description=open(os.path.join(PYNGRAPH_ROOT_DIR, 'README.md')).read(),
     long_description_content_type='text/markdown',
     ext_modules=ext_modules,
-    package_dir=package_dir,
+    package_dir={'': 'src'},
     packages=packages,
     cmdclass={'build_ext': BuildExt},
     data_files=data_files,
