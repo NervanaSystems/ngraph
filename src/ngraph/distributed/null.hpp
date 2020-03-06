@@ -20,49 +20,33 @@
 #include <string>
 
 #include "ngraph/distributed.hpp"
-#include "ngraph/except.hpp"
 
 namespace ngraph
 {
     namespace distributed
     {
-        class NullDistributedInterface : public DistributedInterface
+        class Null : public DistributedInterface
         {
-            const std::string& get_name() const override { return m_name; }
-            int get_size() override { return 0; }
-            int get_rank() override { return 0; }
-            void all_reduce(void* /* in */,
-                            void* /* out */,
-                            element::Type_t /* element_type */,
-                            reduction::Type /* reduce_type */,
-                            size_t /* count */) override
-            {
-                throw ngraph_error("Distributed Library not supported/mentioned");
-            }
+            const std::string& get_name() const override;
+            int get_size() override;
+            int get_rank() override;
+            void all_reduce(void* in,
+                            void* out,
+                            element::Type_t element_type,
+                            reduction::Type reduce_type,
+                            size_t count) override;
 
-            void broadcast(void* /* in */,
-                           element::Type_t /* element_type */,
-                           size_t /* count */,
-                           int /* root_id */) override
-            {
-                throw ngraph_error("Distributed Library not supported/mentioned");
-            }
+            void broadcast(void* in,
+                           element::Type_t element_type,
+                           size_t count,
+                           int root_id) override;
 
-            void recv(void* /* in */,
-                      element::Type_t /* element_type */,
-                      size_t /* count */,
-                      int /* src_id*/) override
-            {
-                throw ngraph_error("Distributed Library not supported/mentioned");
-            }
+            void recv(void* in, element::Type_t element_type, size_t count, int src_id) override;
 
-            void send(const void* /* in */,
-                      element::Type_t /* element_type */,
-                      size_t /* count */,
-                      int /* dest_id */) override
-            {
-                throw ngraph_error("Distributed Library not supported/mentioned");
-            }
+            void send(const void* in,
+                      element::Type_t element_type,
+                      size_t count,
+                      int dest_id) override;
 
         protected:
             std::string m_name{"NULL"};
