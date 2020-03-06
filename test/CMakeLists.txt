@@ -580,7 +580,7 @@ if (NGRAPH_PLAIDML_ENABLE)
 endif()
 
 if (NGRAPH_INFERENCE_ENGINE_ENABLE)
-    target_link_libraries(unit-test PRIVATE ie_backend)
+    target_link_libraries(unit-test PRIVATE inference_engine_backend)
 endif()
 
 if (NGRAPH_TBB_ENABLE)

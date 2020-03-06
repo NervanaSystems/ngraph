@@ -67,7 +67,7 @@ bool ngraph::runtime::inference_engine::IE_Backend::is_supported_property(
     return false;
 }
 
-extern "C" IE_BACKEND_API void ngraph_register_ie_backend()
+extern "C" IE_BACKEND_API void ngraph_register_inference_engine_backend()
 {
     ngraph::runtime::BackendManager::register_backend("INFERENCE_ENGINE", [](const string& config) {
         return make_shared<ngraph::runtime::inference_engine::IE_Backend>(config);

@@ -29,4 +29,4 @@ extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend();
 extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend();
 extern "C" PLAIDML_BACKEND_API void ngraph_register_plaidml_backend();
 extern "C" NOP_BACKEND_API void ngraph_register_nop_backend();
-extern "C" IE_BACKEND_API void ngraph_register_ie_backend();
+extern "C" IE_BACKEND_API void ngraph_register_inference_engine_backend();
