@@ -16,8 +16,11 @@
 
 #pragma once
 
+#include <memory>
+
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/get_output_element.hpp"
 
 namespace ngraph
 {
@@ -29,7 +32,8 @@ namespace ngraph
             {
                 inline NodeVector identity(const Node& node)
                 {
-                    return {node.get_ng_inputs().at(0)};
+                    return {std::make_shared<ngraph::op::v0::GetOutputElement>(
+                        node.get_ng_inputs().at(0), 0)};
                 }
             } // namespace set_1
 
