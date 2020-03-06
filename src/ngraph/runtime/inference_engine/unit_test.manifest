@@ -94,6 +94,11 @@ model_eye_like
 convert_float32_bool
 broadcast_trivial
 aliased_output
+bool_init_raw
+bool_const_op
+
+# [NOT_IMPLEMENTED] Input image format BOOL is not supported yet...
+bool_input_or
 
 # Layer <name> input port 1 is not connected to any data
 model_conv2d_strides_padding
@@ -142,6 +147,7 @@ model_asinh_3_2
 # TopK Incorrect input data/index values precision
 model_argmax_int32
 model_argmin_int32
+arg_max_dyn_shape
 
 # Constant has zero dimension that is not allowable
 top_k_opset_10
@@ -163,6 +169,12 @@ model_reverse_sequence_1_batch_0
 
 # Could not eliminate all Dyn nodes
 model_conv_with_dynamic_batch
+
+# Segmentation fault
+bool_init_and
+
+# Incorrect number of 'indices_to_squeeze' input dimensions!
+arg_min_no_keep_dims_dyn_shape
 
 #-------------------------------------------------------------------------------
 #
