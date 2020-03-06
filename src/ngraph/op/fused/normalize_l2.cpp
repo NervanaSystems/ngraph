@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <iterator>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/constant.hpp"
@@ -37,6 +38,13 @@ op::NormalizeL2::NormalizeL2(const Output<Node>& data,
     , m_eps_mode{eps_mode}
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::NormalizeL2::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("eps", m_eps);
+    visitor.on_attribute("eps_mode", m_eps_mode);
+    return true;
 }
 
 void op::NormalizeL2::pre_validate_and_infer_types()
@@ -96,7 +104,8 @@ NodeVector op::NormalizeL2::decompose_op() const
     // Calculate l2 norm across axes determined by axes input
     auto builder_bias_mode =
         (m_eps_mode == EpsMode::MAX) ? builder::BiasMode::MAX : builder::BiasMode::ADD;
-    Output<Node> norm = builder::l2_norm(data, reduction_axes, m_eps, builder_bias_mode, true);
+    Output<Node> norm =
+        builder::opset1::l2_norm(data, reduction_axes, m_eps, builder_bias_mode, true);
 
     data = make_shared<op::Divide>(data, norm, AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 

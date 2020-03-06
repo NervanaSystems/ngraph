@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <memory>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/validation_util.hpp"
@@ -37,6 +38,13 @@ op::ReverseSequence::ReverseSequence(const Output<Node>& arg,
     , m_normalized_seq_axis{0}
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::ReverseSequence::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("batch_axis", m_batch_axis);
+    visitor.on_attribute("seq_axis", m_seq_axis);
+    return true;
 }
 
 void op::ReverseSequence::validate_and_infer_types()

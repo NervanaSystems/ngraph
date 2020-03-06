@@ -47,6 +47,8 @@ namespace ngraph
             NodeVector make_ng_nodes(const Node& onnx_node) const;
 
         protected:
+            void set_friendly_names(const Node& onnx_node, const NodeVector& ng_node_vector) const;
+
             void add_provenance_tag_to_initializer(
                 const Tensor& initializer, std::shared_ptr<default_opset::Constant> node) const;
 

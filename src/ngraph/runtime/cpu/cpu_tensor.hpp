@@ -31,15 +31,15 @@ namespace ngraph
     {
         namespace cpu
         {
-            class CPUTensorView : public ngraph::runtime::Tensor
+            class CPUTensor : public ngraph::runtime::Tensor
             {
             public:
-                CPU_BACKEND_API CPUTensorView(const ngraph::element::Type& element_type,
-                                              const Shape& shape);
-                CPU_BACKEND_API CPUTensorView(const ngraph::element::Type& element_type,
-                                              const Shape& shape,
-                                              void* memory_pointer);
-                CPU_BACKEND_API virtual ~CPUTensorView() override;
+                CPU_BACKEND_API CPUTensor(const ngraph::element::Type& element_type,
+                                          const Shape& shape);
+                CPU_BACKEND_API CPUTensor(const ngraph::element::Type& element_type,
+                                          const Shape& shape,
+                                          void* memory_pointer);
+                CPU_BACKEND_API virtual ~CPUTensor() override;
 
                 CPU_BACKEND_API char* get_data_ptr();
                 CPU_BACKEND_API const char* get_data_ptr() const;
@@ -61,9 +61,9 @@ namespace ngraph
                 static constexpr int BufferAlignment = NGRAPH_CPU_ALIGNMENT;
 
             private:
-                CPUTensorView(const CPUTensorView&) = delete;
-                CPUTensorView(CPUTensorView&&) = delete;
-                CPUTensorView& operator=(const CPUTensorView&) = delete;
+                CPUTensor(const CPUTensor&) = delete;
+                CPUTensor(CPUTensor&&) = delete;
+                CPUTensor& operator=(const CPUTensor&) = delete;
 
                 char* buffer;
                 char* aligned_buffer;

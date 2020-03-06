@@ -35,6 +35,11 @@ op::Result::Result(const Output<Node>& arg, bool needs_default_layout)
     set_placement_index(input_value(0).get_node()->get_placement_index());
 }
 
+bool ngraph::op::v0::Result::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 void op::Result::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(
