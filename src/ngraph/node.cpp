@@ -96,7 +96,14 @@ std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i)
     }
     else
     {
-        return shared_ptr<Node>(new op::GetOutputElement(shared_from_this(), i));
+        for (auto in : output(i).get_target_inputs())
+        {
+            if (is_type<op::GetOutputElement>(in.get_node()))
+            {
+                return in.get_node()->shared_from_this();
+            }
+        }
+        return make_shared<op::GetOutputElement>(shared_from_this(), i);
     }
 }
 
@@ -819,25 +826,17 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
 NodeVector Node::get_users(bool check_is_used) const
 {
     NodeVector result;
-
-    for (size_t i = 0; i < get_output_size(); ++i)
+    for (auto output : outputs())
     {
-        for (auto input : m_outputs.at(i).get_inputs())
+        for (auto input : output.get_target_inputs())
         {
-            if (check_is_used)
+            Node* input_node = input.get_node();
+            if (!check_is_used || is_used(input_node))
             {
-                if (is_used(input->get_node().get()))
-                {
-                    result.push_back(input->get_node());
-                }
-            }
-            else
-            {
-                result.push_back(input->get_node());
+                result.push_back(input_node->shared_from_this());
             }
         }
     }
-
     return result;
 }
 
@@ -985,10 +984,14 @@ bool Node::match_value(pattern::Matcher* matcher,
     {
         return false;
     }
+    return match_node(matcher, graph_value);
+}
 
+bool Node::match_node(pattern::Matcher* matcher, const Output<Node>& graph_value)
+{
     matcher->add_node(graph_value);
     return graph_value.get_node_shared_ptr()->get_type_info() == get_type_info() &&
-           matcher->match_arguments(pattern_value, graph_value);
+           matcher->match_arguments(this, graph_value.get_node_shared_ptr());
 }
 
 // default implementation for the node to check if it contains partial shape

@@ -31,12 +31,14 @@ void pass::ConstantFolding::construct_constant_shape_of()
         NGRAPH_DEBUG << "In callback for constant_shape_of_callback against node = "
                      << *m.get_match_root();
 
-        auto pattern_map = m.get_pattern_value_map();
+        auto pattern_value_map = m.get_pattern_value_map();
 
-        auto arg_match = pattern_map[arg_label];
+        auto arg_match = pattern_value_map[arg_label];
+
         if (arg_match.get_partial_shape().is_static())
         {
             NGRAPH_CHECK(revalidate_and_ensure_static(m.get_match_root()));
+
             auto arg_shape = arg_match.get_shape();
             auto replacement =
                 make_shared<op::Constant>(element::i64, Shape{arg_shape.size()}, arg_shape.data());

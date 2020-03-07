@@ -179,8 +179,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(ref_lstm_cell->output(0),
-                                                        "LSTMFusion.onnx_lstm_cell");
+    auto m = std::make_shared<ngraph::pattern::Matcher>(ref_lstm_cell, "LSTMFusion.onnx_lstm_cell");
     this->add_matcher(m, callback);
 }
 

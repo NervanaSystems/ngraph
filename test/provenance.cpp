@@ -569,8 +569,7 @@ TEST(provenance, opset1_upgrade_pass_topk)
         auto tags = node->get_provenance_tags();
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
-    traverse_nodes(
-        as_node_vector(topk_v1->outputs()), tag_check, as_node_vector(topk_v0->input_values()));
+    traverse_nodes({topk_v1}, tag_check, as_node_vector(topk_v0->input_values()));
 }
 
 TEST(provenance, opset0_downgrade_pass_topk)
@@ -602,8 +601,7 @@ TEST(provenance, opset0_downgrade_pass_topk)
         auto tags = node->get_provenance_tags();
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
-    traverse_nodes(
-        as_node_vector(topk_v0->outputs()), tag_check, as_node_vector(topk_v1->input_values()));
+    traverse_nodes({topk_v0}, tag_check, as_node_vector(topk_v1->input_values()));
 }
 
 TEST(provenance, opset1_upgrade_pass_graph)

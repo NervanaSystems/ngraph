@@ -67,20 +67,6 @@ void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints,
     adjoints.add_delta(input_value(0), delta);
 }
 
-/// Get all the nodes that uses the current node
-NodeVector op::GetOutputElement::get_users(bool check_is_used) const
-{
-    NodeVector result;
-    for (auto node : input_value(0).get_node_shared_ptr()->get_users(check_is_used))
-    {
-        if (node.get() != this)
-        {
-            result.push_back(node);
-        }
-    }
-    return result;
-};
-
 NodeVector op::get_output_elements(const shared_ptr<Node>& mon)
 {
     NodeVector goes(mon->get_output_size());

@@ -15,11 +15,22 @@
 //*****************************************************************************
 
 #include "ngraph/node_output.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/get_output_element.hpp"
 
 namespace ngraph
 {
+    namespace
+    {
+        static bool remove_goe = true;
+    }
+    void set_remove_goe(bool value)
+    {
+        NGRAPH_DEBUG << "Remove GOE set: " << value;
+        remove_goe = value;
+    }
+    bool get_remove_goe() { return remove_goe; }
     Output<Node>::Output(Node* node, size_t index)
         : m_node(node->shared_from_this())
         , m_index(index)
@@ -117,9 +128,12 @@ namespace ngraph
     bool Output<Node>::operator>=(const Output& other) const { return !(*this < other); }
     void Output<Node>::eliminate_goe()
     {
-        while (auto goe = as_type_ptr<op::GetOutputElement>(m_node))
+        if (remove_goe)
         {
-            *this = m_node->input_value(0);
+            while (auto goe = as_type_ptr<op::GetOutputElement>(m_node))
+            {
+                *this = m_node->input_value(0);
+            }
         }
     }
 
@@ -198,11 +212,14 @@ namespace ngraph
     bool Output<const Node>::operator>=(const Output& other) const { return !(*this < other); }
     void Output<const Node>::eliminate_goe()
     {
-        while (auto goe = as_type_ptr<const op::GetOutputElement>(m_node))
+        if (remove_goe)
         {
-            auto value = m_node->input_value(0);
-            m_node = value.get_node_shared_ptr();
-            m_index = value.get_index();
+            while (auto goe = as_type_ptr<const op::GetOutputElement>(m_node))
+            {
+                auto value = m_node->input_value(0);
+                m_node = value.get_node_shared_ptr();
+                m_index = value.get_index();
+            }
         }
     }
 

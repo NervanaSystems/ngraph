@@ -404,7 +404,7 @@ TEST(algebraic_simplification, concat_reshape_slice)
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
     pass_manager.run_passes(f);
-    ASSERT_TRUE(as_type_ptr<op::Reshape>(f->get_results().at(0)->get_argument(0)));
+    ASSERT_TRUE(is_type<op::Reshape>(f->get_results().at(0)->get_argument(0)));
 }
 
 TEST(algebraic_simplification, concat_slice)
@@ -486,6 +486,29 @@ TEST(algebraic_simplification, concat_parameter_non_uniform_slices)
     auto slice1 = make_shared<op::Slice>(a, Coordinate{0, 0}, Coordinate{38, 100}, Strides{1, 1});
     auto slice2 = make_shared<op::Slice>(a, Coordinate{38, 0}, Coordinate{64, 100}, Strides{1, 1});
     auto slice3 = make_shared<op::Slice>(a, Coordinate{64, 0}, Coordinate{96, 100}, Strides{1, 1});
+
+    size_t concat_axis = 0;
+    auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
+    pass_manager.run_passes(f);
+    ASSERT_EQ(f->get_results().at(0)->get_argument(0), concat);
+}
+
+TEST(algebraic_simplification, concat_different_inputs)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{96, 100});
+    auto goe1 = -a;
+    auto goe2 = -a;
+    auto slice1 =
+        make_shared<op::Slice>(goe1, Coordinate{0, 0}, Coordinate{32, 100}, Strides{1, 1});
+    auto slice2 =
+        make_shared<op::Slice>(goe2, Coordinate{32, 0}, Coordinate{64, 100}, Strides{1, 1});
+    auto slice3 =
+        make_shared<op::Slice>(goe1, Coordinate{64, 0}, Coordinate{96, 100}, Strides{1, 1});
 
     size_t concat_axis = 0;
     auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);

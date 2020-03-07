@@ -50,15 +50,6 @@ namespace ngraph
                 size_t get_n() const { return m_n; }
                 NodeVector get_arguments() const override;
 
-                std::shared_ptr<Node> get_output_as_single_output_node(size_t i) override
-                {
-                    return input_value(0).get_node_shared_ptr()->get_output_as_single_output_node(
-                        i);
-                };
-
-                /// Get all the nodes that uses the current node
-                NodeVector get_users(bool check_is_used = false) const override;
-
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

@@ -59,7 +59,7 @@ static shared_ptr<pattern::Matcher>
                           shared_ptr<pattern::op::Label> const_label)
 {
     auto bcst = make_shared<pattern::op::Skip>(const_label, pattern::has_class<op::Broadcast>());
-    auto bcst_label = make_shared<pattern::op::Label>(bcst, nullptr, OutputVector{bcst});
+    auto bcst_label = make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
     auto matcher = make_shared<pattern::Matcher>(make_shared<T>(label, bcst_label));
     return matcher;
 }
@@ -79,13 +79,13 @@ static bool simplify_concat(shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_concat for " << n->get_name();
 
-    shared_ptr<Node> branch_tip;
+    Output<Node> branch_tip;
 
     auto ltip = make_shared<pattern::op::Label>(element::i32, Shape{2, 1});
 
     auto pslice = make_shared<op::Slice>(ltip, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
 
-    auto lslice = make_shared<pattern::op::Label>(pslice, nullptr, OutputVector{pslice});
+    auto lslice = make_shared<pattern::op::Label>(pslice, nullptr, NodeVector{pslice});
 
     auto skip_reshape = make_shared<pattern::op::Skip>(lslice, pattern::has_class<op::Reshape>());
 
@@ -93,23 +93,22 @@ static bool simplify_concat(shared_ptr<Node> n)
 
     Coordinate prev_lower_bounds;
     Shape prev_slice_shape;
-    Shape slice_shape;
 
-    for (auto carg : n->get_arguments())
+    for (auto carg : n->input_values())
     {
         if (!matcher->match(carg))
         {
-            NGRAPH_DEBUG << carg->get_name() << " doesn't match";
+            NGRAPH_DEBUG << carg << " doesn't match";
             return false;
         }
 
-        auto slice = static_pointer_cast<op::Slice>(matcher->get_pattern_map()[lslice]);
-        if (branch_tip)
+        auto& pattern_value_map = matcher->get_pattern_value_map();
+        auto slice = as_type_ptr<op::Slice>(pattern_value_map[lslice].get_node_shared_ptr());
+        if (branch_tip != Output<Node>())
         {
-            if (branch_tip != matcher->get_pattern_map()[ltip])
+            if (branch_tip != pattern_value_map[ltip])
             {
-                NGRAPH_DEBUG << *branch_tip << " doesn't match "
-                             << *matcher->get_pattern_map()[ltip];
+                NGRAPH_DEBUG << branch_tip << " doesn't match " << pattern_value_map[ltip];
                 return false;
             }
 
@@ -118,7 +117,7 @@ static bool simplify_concat(shared_ptr<Node> n)
             auto cur_lower_bounds = slice->get_lower_bounds();
             if (cur_lower_bounds < prev_lower_bounds)
             {
-                NGRAPH_DEBUG << *slice << " is in the wrong order";
+                NGRAPH_DEBUG << slice << " is in the wrong order";
                 return false;
             }
             prev_lower_bounds.assign(cur_lower_bounds.begin(), cur_lower_bounds.end());
@@ -126,45 +125,44 @@ static bool simplify_concat(shared_ptr<Node> n)
             // slice shapes need to match
             if (slice->get_shape() != prev_slice_shape)
             {
-                NGRAPH_DEBUG << *slice << " doesn't match the shape of the previous slice";
+                NGRAPH_DEBUG << slice << " doesn't match the shape of the previous slice";
                 return false;
             }
         }
         else
         {
-            branch_tip = matcher->get_pattern_map()[ltip];
+            branch_tip = pattern_value_map[ltip];
             prev_lower_bounds.assign(slice->get_lower_bounds().begin(),
                                      slice->get_lower_bounds().end());
             prev_slice_shape.assign(slice->get_shape().begin(), slice->get_shape().end());
-            slice_shape = prev_slice_shape;
-            NGRAPH_DEBUG << "setting branch_tip to " << *branch_tip;
+            NGRAPH_DEBUG << "setting branch_tip to " << branch_tip;
         }
 
         if (slice->get_users(true).size() > 1)
         {
-            NGRAPH_DEBUG << slice->get_name() << " has more than one user";
+            NGRAPH_DEBUG << slice << " has more than one user";
             return false;
         }
 
         if (shape_size(slice->get_strides()) != 1)
         {
-            NGRAPH_DEBUG << slice->get_name() << " is strided";
+            NGRAPH_DEBUG << slice << " is strided";
             return false;
         }
 
         // check that no other node uses slices and reshapes
-        if (auto rcarg = as_type_ptr<op::Reshape>(carg))
+        if (auto rcarg = as_type_ptr<op::Reshape>(carg.get_node_shared_ptr()))
         {
-            auto default_shape = get_default_order(rcarg->get_argument(0)->get_shape());
+            auto default_shape = get_default_order(rcarg->input_value(0).get_shape());
             if (default_shape != rcarg->get_input_order())
             {
-                NGRAPH_DEBUG << carg->get_name() << " reshape also does transposes";
+                NGRAPH_DEBUG << carg << " reshape also does transposes";
                 return false;
             }
 
             if (rcarg->get_users(true).size() > 1)
             {
-                NGRAPH_DEBUG << rcarg->get_name() << " has more than one user";
+                NGRAPH_DEBUG << rcarg << " has more than one user";
                 return false;
             }
         }
@@ -173,9 +171,10 @@ static bool simplify_concat(shared_ptr<Node> n)
     auto concat = static_pointer_cast<op::Concat>(n);
     auto concat_axis = concat->get_concatenation_axis();
 
+    auto slice_shape = branch_tip.get_node_shared_ptr()->get_users(true).at(0)->get_shape();
     size_t slice_axis = numeric_limits<size_t>::max();
 
-    auto btip_shape = branch_tip->get_shape();
+    auto btip_shape = branch_tip.get_shape();
 
     // slices should cover all elements
     if (shape_size(btip_shape) != shape_size(n->get_shape()))
@@ -240,8 +239,7 @@ static bool simplify_concat(shared_ptr<Node> n)
             }
         }
     }
-
-    replace_node(n, replacement);
+    n->output(0).replace(replacement);
     return true;
 }
 

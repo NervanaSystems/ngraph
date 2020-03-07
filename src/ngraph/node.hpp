@@ -60,6 +60,12 @@ namespace ngraph
 
     class Function;
 
+    // Intermal, controls whether GetOutputElement nodes are elided
+    // Defaults to being elided. Transformer should set to false if
+    // it has passes that depend on GetOutputElement.
+    NGRAPH_API void set_remove_goe(bool value);
+    NGRAPH_API bool get_remove_goe();
+
     namespace op
     {
         struct AutoBroadcastSpec;
@@ -342,7 +348,7 @@ namespace ngraph
         /// Second argument is ignored
         /// Returns the node if i=0 and the node has 1 output, otherwise a GetOutputElement
         /// If the node is a GetOutputElement, applies to the underlying node
-        virtual std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
+        std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
 
         /// Return the output to use when converting to an Output<Node> with no index specified.
         /// Throws when not supported.
@@ -542,6 +548,8 @@ namespace ngraph
         virtual bool match_value(pattern::Matcher* matcher,
                                  const Output<Node>& pattern_value,
                                  const Output<Node>& graph_value);
+
+        virtual bool match_node(pattern::Matcher* matcher, const Output<Node>& graph_value);
 
     private:
         descriptor::Input& get_input_descriptor(size_t position);

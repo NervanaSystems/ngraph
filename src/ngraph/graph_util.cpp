@@ -179,7 +179,6 @@ void ngraph::replace_node(const std::shared_ptr<Node>& target,
         throw ngraph_error("Result nodes cannot be replaced.");
     }
 
-    NGRAPH_CHECK(!target->get_users().empty(), "Attempted to replace unreachable node '", *target);
     NGRAPH_CHECK(target->get_output_size() == replacement_values.size());
 
     unordered_set<shared_ptr<Node>> replacement_nodes;
