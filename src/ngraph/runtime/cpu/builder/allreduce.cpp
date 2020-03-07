@@ -42,18 +42,13 @@ namespace ngraph
                 auto reduce_type = allreduce->get_reduce_type();
 
                 auto external_function_name = external_function->get_function_name();
-                NGRAPH_DEBUG_PRINT(
-                    "AllReduce Queued[%d]: Function: %s Node: %s %s Size: "
-                    "%d",
-                    call_seq,
-                    external_function_name.c_str(),
-                    node->get_name().c_str(),
-                    // if provenance_tags is set in nGraph once and only once, it will print the tag
-                    // name otherwise, it will print the get_friendly_name
-                    node->get_provenance_tags().size() == 1
-                        ? (*(node->get_provenance_tags()).begin()).c_str()
-                        : node->get_friendly_name().c_str(),
-                    count);
+                NGRAPH_DEBUG << "AllReduce Queued[" << call_seq
+                             << "]: Function: " << external_function_name
+                             << " Node: " << node->get_name() << " "
+                             << (node->get_provenance_tags().size() == 1
+                                     ? (*(node->get_provenance_tags()).begin())
+                                     : node->get_friendly_name())
+                             << " Size: " << count;
 
                 auto functor =
                     [&, count, reduce_type, data_type, arg_buffer_index, out_buffer_index](
