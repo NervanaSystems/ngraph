@@ -35,12 +35,6 @@ int ngraph::distributed::Null::get_rank()
     return 0;
 }
 
-void ngraph::distributed::Null::log_print(const std::string& timestamp,
-                                          const std::vector<char>& buf)
-{
-    std::cout << timestamp << ": " << std::string(buf.data()) << "\n";
-}
-
 void ngraph::distributed::Null::all_reduce(void*, void*, element::Type_t, reduction::Type, size_t)
 {
     throw ngraph_error("Distributed Library not supported/mentioned");

@@ -169,21 +169,4 @@ namespace ngraph
 #define NGRAPH_DEBUG                                                                               \
     ::ngraph::NullLogger {}
 #endif
-
-#if defined(__linux) || defined(__APPLE__)
-    std::string get_timestamp();
-    void LogPrintf(const char* fmt, ...);
-    extern bool DISABLE_LOGGING;
-
-#define NGRAPH_DEBUG_PRINT(fmt, ...)                                                               \
-    do                                                                                             \
-    {                                                                                              \
-        if (!ngraph::DISABLE_LOGGING)                                                              \
-        {                                                                                          \
-            ngraph::LogPrintf(fmt, __VA_ARGS__);                                                   \
-        }                                                                                          \
-    } while (0)
-#else
-#define NGRAPH_DEBUG_PRINT(fmt, ...)
-#endif
 }
