@@ -45,13 +45,13 @@ bool check_binary()
     Shape shape{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape);
-    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape),
-                        make_shared<op::Parameter>(element::f32, shape)};
+    OutputVector new_args{make_shared<op::Parameter>(element::f32, shape),
+                          make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<OP>(arg0, arg1);
-    auto new_node = node->copy_with_new_args(new_args);
+    auto new_node = node->copy_with_new_inputs(new_args);
 
-    return (nullptr != new_node) && (new_args == new_node->get_arguments());
+    return (nullptr != new_node) && (new_args == new_node->input_values());
 }
 
 TEST(copy, abs)
