@@ -60,7 +60,6 @@ namespace ngraph
         virtual const std::string& get_name() const = 0;
         virtual int get_size() = 0;
         virtual int get_rank() = 0;
-        virtual void log_print(const std::string& timestamp, const std::vector<char>& buf) = 0;
 
         virtual void all_reduce(void* in,
                                 void* out,

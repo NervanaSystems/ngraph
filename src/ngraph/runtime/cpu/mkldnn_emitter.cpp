@@ -40,7 +40,7 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
@@ -640,7 +640,7 @@ size_t MKLDNNEmitter::build_quantized_inner_product_forward(
 
 #if MKLDNN_VERSION_MAJOR >= 1
 mkldnn::memory::desc
-    MKLDNNEmitter::build_memory_descriptor(const TensorViewWrapper& tvw,
+    MKLDNNEmitter::build_memory_descriptor(const TensorWrapper& tvw,
                                            mkldnn::memory::format_tag fmt_tag) const
 {
     return mkldnn::memory::desc(
@@ -1654,7 +1654,7 @@ size_t MKLDNNEmitter::query_scratchpad_softmax_forward(const mkldnn::softmax_for
 }
 
 #else
-mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const TensorViewWrapper& tvw,
+mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const TensorWrapper& tvw,
                                                             mkldnn::memory::format fmt) const
 {
     if (fmt == mkldnn::memory::format::blocked)
