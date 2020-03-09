@@ -77,7 +77,7 @@ namespace ngraph
 
                 double get_eps_value() const { return m_epsilon; }
                 void set_eps_value(double epsilon) { m_epsilon = epsilon; }
-                virtual std::shared_ptr<Node>
+                std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
@@ -144,7 +144,7 @@ namespace ngraph
 
                 double get_eps_value() const { return m_epsilon; }
                 void set_eps_value(double epsilon) { m_epsilon = epsilon; }
-                virtual std::shared_ptr<Node>
+                std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
@@ -194,7 +194,7 @@ namespace ngraph
 
                 double get_eps_value() const { return m_epsilon; }
                 void set_eps_value(double epsilon) { m_epsilon = epsilon; }
-                virtual std::shared_ptr<Node>
+                std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
             private:

@@ -48,7 +48,7 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
-                virtual std::shared_ptr<Node>
+                std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return A set containing the indices of the broadcast axes (0-based).
@@ -93,7 +93,7 @@ namespace ngraph
                               const Output<Node>& like_arg,
                               const AxisSet& initial_broadcast_axes);
                 bool visit_attributes(AttributeVisitor& visitor) override;
-                virtual std::shared_ptr<Node>
+                std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 void infer_shape() override;
@@ -155,7 +155,7 @@ namespace ngraph
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
-                virtual std::shared_ptr<Node>
+                std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return Broadcast Specification.
