@@ -27,7 +27,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace inference_engine
+        namespace ie
         {
             // A Inference Engine executable object produced by compiling an nGraph function.
             class IE_Executable final : public Executable
@@ -39,12 +39,12 @@ namespace ngraph
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) final;
 
             private:
-                InferenceEngine::CNNNetwork network;
-                std::string device;
+                InferenceEngine::CNNNetwork m_network;
+                std::string m_device;
             };
 
-            InferenceEngine::Blob::Ptr fill_blob(InferenceEngine::SizeVector shape,
-                                                 std::vector<float> data);
+            InferenceEngine::Blob::Ptr
+                fill_blob(InferenceEngine::SizeVector shape, const float* data, size_t data_size);
         }
     }
 }

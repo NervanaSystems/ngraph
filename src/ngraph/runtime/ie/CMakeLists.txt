@@ -24,15 +24,15 @@ set(SRC
     ie_backend.cpp
     ie_backend.hpp
     ie_backend_visibility.hpp
-    ie_tensor_view.cpp
-    ie_tensor_view.hpp
+    ie_tensor.cpp
+    ie_tensor.hpp
     ie_executable.cpp
     ie_executable.hpp
 )
 
-add_library(inference_engine_backend ${LIBRARY_TYPE} ${SRC})
-target_compile_definitions(inference_engine_backend PRIVATE IE_BACKEND_DLL_EXPORTS)
-target_include_directories(inference_engine_backend PUBLIC ${IE_MAIN_SOURCE_DIR}/include)
-target_link_libraries(inference_engine_backend PUBLIC ngraph inference_engine)
+add_library(ie_backend ${LIBRARY_TYPE} ${SRC})
+target_compile_definitions(ie_backend PRIVATE IE_BACKEND_DLL_EXPORTS)
+target_include_directories(ie_backend PUBLIC ${IE_MAIN_SOURCE_DIR}/include)
+target_link_libraries(ie_backend PUBLIC ngraph inference_engine)
 
-install(TARGETS inference_engine_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+install(TARGETS ie_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})

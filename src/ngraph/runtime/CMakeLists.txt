@@ -39,6 +39,6 @@ if (NGRAPH_PLAIDML_ENABLE)
     add_subdirectory(plaidml)
 endif()
 
-if (NGRAPH_INFERENCE_ENGINE_ENABLE)
-    add_subdirectory(inference_engine)
+if (NGRAPH_IE_ENABLE)
+    add_subdirectory(ie)
 endif()

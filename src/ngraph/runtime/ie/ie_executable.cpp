@@ -14,22 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/inference_engine/ie_executable.hpp"
-#include "ngraph/opsets/opset.hpp"
+#include "ngraph/runtime/ie/ie_executable.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/opsets/opset.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
-#include "ngraph/runtime/inference_engine/ie_tensor_view.hpp"
+#include "ngraph/runtime/ie/ie_tensor.hpp"
+#include "ngraph/shape.hpp"
 
-ngraph::runtime::inference_engine::IE_Executable::IE_Executable(std::shared_ptr<Function> func,
-                                                                std::string _device)
+using namespace std;
+using namespace ngraph;
+
+runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
 {
-    auto opset = ngraph::get_opset1();
+    const auto& opset = get_opset1();
     pass::Manager passes;
     passes.register_pass<pass::Opset1Upgrade>();
     passes.run_passes(func);
 
-    for (auto& node : func->get_ops())
+    for (const auto& node : func->get_ops())
     {
         if (!opset.contains_op_type(node.get()))
         {
@@ -40,61 +43,60 @@ ngraph::runtime::inference_engine::IE_Executable::IE_Executable(std::shared_ptr<
             }
             else
             {
-                std::cout << "UNSUPPORTED OP DETECTED: " << node->get_type_info().name << std::endl;
+                cout << "UNSUPPORTED OP DETECTED: " << node->get_type_info().name << endl;
                 THROW_IE_EXCEPTION << "Detected op not belonging to opset1!";
             }
         }
     }
 
 #ifdef NGRAPH_DEBUG_ENABLE
-    std::cout << "Nodes in test: ";
-    for (auto& node : func->get_ops())
+    cout << "Nodes in test: ";
+    for (const auto& node : func->get_ops())
     {
-        std::cout << node << std::endl;
+        cout << node << endl;
     }
-    std::cout << std::endl;
+    cout << endl;
 #endif
 
-    network = InferenceEngine::CNNNetwork(func);
-    device = _device == "INFERENCE_ENGINE" ? "CPU" : _device;
+    m_network = InferenceEngine::CNNNetwork(func);
+    m_device = device == "IE" ? "CPU" : device;
     set_parameters_and_results(*func);
 }
 
-bool ngraph::runtime::inference_engine::IE_Executable::call(
-    const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-    const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                      const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     InferenceEngine::Core ie;
 
     //  Loading model to the plugin (BACKEND_NAME)
-    InferenceEngine::ExecutableNetwork exeNetwork = ie.LoadNetwork(network, device);
+    InferenceEngine::ExecutableNetwork exe_network = ie.LoadNetwork(m_network, m_device);
     //  Create infer request
-    InferenceEngine::InferRequest inferRequest = exeNetwork.CreateInferRequest();
+    InferenceEngine::InferRequest infer_request = exe_network.CreateInferRequest();
     //  Prepare input and output blobs
-    InferenceEngine::InputsDataMap inputInfo = network.getInputsInfo();
+    InferenceEngine::InputsDataMap input_info = m_network.getInputsInfo();
 
-    if (inputInfo.size() != inputs.size())
+    if (input_info.size() != inputs.size())
     {
         THROW_IE_EXCEPTION << "Function inputs number differ from number of given inputs";
     }
 
     size_t i = 0;
-    for (auto& it : inputInfo)
+    for (const auto& it : input_info)
     {
-        std::shared_ptr<runtime::inference_engine::IETensorView> tv =
-            std::static_pointer_cast<runtime::inference_engine::IETensorView>(inputs[i]);
-        size_t size = tv->data.size() / sizeof(float);
-        float* orig_data = (float*)tv->data.data();
-        std::vector<float> data(orig_data, orig_data + size);
-        inferRequest.SetBlob(it.first, fill_blob(it.second->getTensorDesc().getDims(), data));
+        shared_ptr<runtime::ie::IETensor> tv =
+            static_pointer_cast<runtime::ie::IETensor>(inputs[i]);
+        size_t size = tv->get_element_count();
+        const float* orig_data = static_cast<const float*>(tv->get_data_ptr());
+        infer_request.SetBlob(it.first,
+                              fill_blob(it.second->getTensorDesc().getDims(), orig_data, size));
         i++;
     }
 
     //  Prepare output blobs
-    std::string output_name = network.getOutputsInfo().begin()->first;
+    string output_name = m_network.getOutputsInfo().begin()->first;
 
-    inferRequest.Infer();
-    InferenceEngine::Blob::Ptr output = inferRequest.GetBlob(output_name);
+    infer_request.Infer();
+    InferenceEngine::Blob::Ptr output = infer_request.GetBlob(output_name);
 
     InferenceEngine::MemoryBlob::Ptr moutput =
         InferenceEngine::as<InferenceEngine::MemoryBlob>(output);
@@ -105,21 +107,13 @@ bool ngraph::runtime::inference_engine::IE_Executable::call(
 
     auto lm = moutput->rmap();
     float* output_ptr = lm.as<float*>();
-    // TODO: how to get size without explicit calculation?
-    size_t size = 1;
-    for (const auto& dim : output->getTensorDesc().getDims())
-    {
-        size *= dim;
-    }
-    //  Vector initialization from pointer
-    std::vector<float> result(output_ptr, output_ptr + size);
-    outputs[0]->write(result.data(), result.size() * sizeof(float));
+    size_t size = shape_size(output->getTensorDesc().getDims());
+    outputs[0]->write(output_ptr, size * sizeof(float));
     return true;
 }
 
 InferenceEngine::Blob::Ptr
-    ngraph::runtime::inference_engine::fill_blob(InferenceEngine::SizeVector shape,
-                                                 std::vector<float> data)
+    runtime::ie::fill_blob(InferenceEngine::SizeVector shape, const float* data, size_t data_size)
 {
     InferenceEngine::Layout layout;
     switch (shape.size())
@@ -135,9 +129,6 @@ InferenceEngine::Blob::Ptr
         new InferenceEngine::TBlob<float>({InferenceEngine::Precision::FP32, shape, layout}));
     blob->allocate();
     float* blob_ptr = blob->rwmap().as<float*>();
-    for (int i = 0; i < data.size(); i++)
-    {
-        blob_ptr[i] = data[i];
-    }
+    memcpy(blob_ptr, data, data_size * sizeof(float));
     return blob;
 }
