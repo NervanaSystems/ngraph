@@ -25,8 +25,11 @@
 #include "ngraph/function.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 
+/// \brief              Top level NGraph namespace.
 namespace ngraph
 {
+    /// \brief          ONNX importer features namespace.
+    ///                 Elements belongs to the namespace allow to use ONNX format.
     namespace onnx_import
     {
         /// \brief      Returns the set of names of supported operators.
