@@ -80,6 +80,8 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
+    distributed/null.cpp
+    distributed/null.hpp
     distributed.cpp
     distributed.hpp
     enum_names.hpp
