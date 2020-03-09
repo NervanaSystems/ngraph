@@ -145,7 +145,8 @@ void op::v1::Convolution::validate_and_infer_types()
 shared_ptr<Node> op::v1::Convolution::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    if(m_auto_pad == PadType::EXPLICIT) {
+    if (m_auto_pad == PadType::EXPLICIT)
+    {
         return make_shared<v1::Convolution>(new_args.at(0),
                                             new_args.at(1),
                                             m_strides,
@@ -153,7 +154,9 @@ shared_ptr<Node> op::v1::Convolution::copy_with_new_args(const NodeVector& new_a
                                             m_pads_end,
                                             m_dilations,
                                             m_auto_pad);
-    } else { // Discard old inferred pad values for auto pad mode
+    }
+    else
+    { // Discard old inferred pad values for auto pad mode
         return make_shared<v1::Convolution>(new_args.at(0),
                                             new_args.at(1),
                                             m_strides,
