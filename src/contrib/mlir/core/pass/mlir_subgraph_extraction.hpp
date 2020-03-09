@@ -20,7 +20,10 @@
 #pragma once
 
 #include <mutex>
+
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/pass/pass.hpp"
+
 namespace ngraph
 {
     namespace pass
@@ -102,10 +105,12 @@ namespace ngraph
             void add_subgraph(MLIRSubgraph& sg) { m_id_to_graph.emplace(sg.get_id(), sg); }
         private:
             void build_subgraphs(std::shared_ptr<Function> func);
-            NodeVector build_ck_nodes(std::shared_ptr<Function> func);
+            std::vector<std::shared_ptr<ngraph::op::CompiledKernel>>
+                build_ck_nodes(std::shared_ptr<Function> func);
             void process_supported_op(std::shared_ptr<ngraph::Node> node, int current_subgraph_id);
 
-            void sanity_check(std::shared_ptr<Function> func, NodeVector& ck_nodes);
+            void sanity_check(std::shared_ptr<Function> func,
+                              std::vector<std::shared_ptr<ngraph::op::CompiledKernel>>& ck_nodes);
             void clean_up();
             static const std::set<ngraph::Node::type_info_t>& getSupportedOps();
 
