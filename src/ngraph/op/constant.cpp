@@ -522,7 +522,7 @@ AxisSet op::Constant::get_axis_set_val() const
     return output_axis_set;
 }
 
-shared_ptr<Node> op::Constant::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Constant::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Constant>(*this);
@@ -605,7 +605,8 @@ shared_ptr<op::Constant> op::ScalarConstantLike::as_constant() const
     return std::make_shared<op::Constant>(m_element_type, m_shape, m_data->get_ptr());
 }
 
-std::shared_ptr<Node> op::ScalarConstantLike::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node>
+    op::ScalarConstantLike::clone_with_new_inputs(const OutputVector& new_args) const
 {
     return std::make_shared<ScalarConstantLike>(new_args.at(0), m_value);
 }

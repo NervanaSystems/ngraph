@@ -429,7 +429,7 @@ void op::TensorIterator::validate_and_infer_types()
     }
 }
 
-std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node> op::TensorIterator::clone_with_new_inputs(const OutputVector& new_args) const
 {
     auto op = make_shared<op::TensorIterator>(as_output_vector(new_args));
     op->set_output_size(m_output_descriptions.size());

@@ -145,7 +145,7 @@ void op::v1::GroupConvolution::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<Node> op::v1::GroupConvolution::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::GroupConvolution::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::GroupConvolution>(new_args.at(0),
@@ -505,7 +505,7 @@ void op::v1::GroupConvolutionBackpropData::generate_adjoints(autodiff::Adjoints&
 }
 
 shared_ptr<Node>
-    op::v1::GroupConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
+    op::v1::GroupConvolutionBackpropData::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 3)
@@ -662,7 +662,7 @@ Shape op::v0::GroupConvolution::get_weights_dimensions() const
     return weights_shape_groups;
 }
 
-shared_ptr<Node> op::v0::GroupConvolution::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::GroupConvolution::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
 
@@ -789,7 +789,7 @@ void op::v0::GroupConvolutionBackpropData::pre_validate_and_infer_types()
 }
 
 shared_ptr<Node>
-    op::v0::GroupConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
+    op::v0::GroupConvolutionBackpropData::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {
@@ -887,8 +887,8 @@ void op::v0::GroupConvolutionBackpropFilters::pre_validate_and_infer_types()
     }
 }
 
-shared_ptr<Node>
-    op::v0::GroupConvolutionBackpropFilters::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::GroupConvolutionBackpropFilters::clone_with_new_inputs(
+    const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {

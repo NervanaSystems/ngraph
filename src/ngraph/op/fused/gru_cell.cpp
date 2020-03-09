@@ -279,7 +279,7 @@ void op::GRUCell::add_default_bias_input()
     set_argument(4, B);
 }
 
-shared_ptr<Node> op::GRUCell::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::GRUCell::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 4)

@@ -119,7 +119,7 @@ void op::v0::Softmax::validate_and_infer_types()
     set_input_is_relevant_to_shape(1);
 }
 
-shared_ptr<Node> op::v0::Softmax::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Softmax::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Softmax>(new_args.at(0), new_args.at(1));
@@ -188,7 +188,7 @@ void op::v1::Softmax::validate_and_infer_types()
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 }
 
-shared_ptr<Node> op::v1::Softmax::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Softmax::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v1::Softmax>(new_args.at(0), m_axis);

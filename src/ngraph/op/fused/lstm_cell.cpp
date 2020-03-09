@@ -344,7 +344,7 @@ shared_ptr<Node> op::LSTMCell::convert_node_format(const Output<Node>& node) con
     return make_shared<op::Concat>(nodes_in_new_format, 0);
 }
 
-shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::LSTMCell::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 5)

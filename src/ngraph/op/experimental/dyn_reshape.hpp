@@ -56,7 +56,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool get_zero_flag() const { return m_zero_flag; }
                 void set_zero_flag(bool zero_flag) { m_zero_flag = zero_flag; }

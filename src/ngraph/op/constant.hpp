@@ -163,7 +163,7 @@ namespace ngraph
                 }
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The initialization literals for the tensor constant.
                 std::vector<std::string> get_value_strings() const;
@@ -416,7 +416,8 @@ namespace ngraph
 
                 ScalarConstantLike() = default;
 
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 std::shared_ptr<op::v0::Constant> as_constant() const;
 
             protected:

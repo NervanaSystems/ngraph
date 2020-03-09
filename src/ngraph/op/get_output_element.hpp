@@ -68,7 +68,6 @@ namespace ngraph
                    : std::make_shared<op::GetOutputElement>(output.get_node_shared_ptr(),
                                                             output.get_index());
     }
-
     inline std::shared_ptr<Node> get_output_element(const std::shared_ptr<Node> node, size_t i = 0)
     {
         return ((i == 0) && node->get_output_size() == 1)

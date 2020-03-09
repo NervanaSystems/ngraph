@@ -35,7 +35,7 @@ op::v0::ScatterND::ScatterND(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v0::ScatterND::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::ScatterND::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ScatterND>(new_args.at(0), new_args.at(1), new_args.at(2));

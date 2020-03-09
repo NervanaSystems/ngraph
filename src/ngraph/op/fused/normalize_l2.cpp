@@ -112,7 +112,7 @@ NodeVector op::NormalizeL2::decompose_op() const
     return as_node_vector({data});
 }
 
-shared_ptr<Node> op::NormalizeL2::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::NormalizeL2::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {

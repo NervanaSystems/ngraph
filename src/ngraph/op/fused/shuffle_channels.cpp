@@ -91,7 +91,7 @@ NodeVector op::ShuffleChannels::decompose_op() const
     return {builder::reshape(shuffled, data_shape)};
 }
 
-shared_ptr<Node> op::ShuffleChannels::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ShuffleChannels::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {

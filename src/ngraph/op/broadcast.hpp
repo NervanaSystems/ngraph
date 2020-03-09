@@ -49,7 +49,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return A set containing the indices of the broadcast axes (0-based).
                 const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
@@ -94,7 +94,7 @@ namespace ngraph
                               const AxisSet& initial_broadcast_axes);
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 void infer_shape() override;
                 const AxisSet& get_initial_broadcast_axes() const
@@ -156,7 +156,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return Broadcast Specification.
                 const AutoBroadcastSpec& get_broadcast_spec() const { return m_broadcast_spec; }
@@ -164,7 +164,6 @@ namespace ngraph
                 {
                     m_broadcast_spec = broadcast_spec;
                 }
-
                 /// \return true and the AxisSet if broadcast axes can be fully determined.
                 std::pair<bool, AxisSet> get_broadcast_axes() const;
 
