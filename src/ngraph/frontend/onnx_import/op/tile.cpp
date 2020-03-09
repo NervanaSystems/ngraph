@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 #include <memory>
 
 #include "core/node.hpp"
-#include "ngraph/op/convert.hpp"
+#include "default_opset.hpp"
 #include "tile.hpp"
 
 namespace ngraph
@@ -33,9 +33,9 @@ namespace ngraph
                     auto input = node.get_ng_inputs().at(0);
                     auto repeats = node.get_ng_inputs().at(1);
 
-                    repeats = std::make_shared<ngraph::op::Convert>(repeats, element::i64);
+                    repeats = std::make_shared<default_opset::Convert>(repeats, element::i64);
 
-                    return {std::make_shared<ngraph::op::Tile>(input, repeats)};
+                    return {std::make_shared<default_opset::Tile>(input, repeats)};
                 }
 
             } // namespace set_1
