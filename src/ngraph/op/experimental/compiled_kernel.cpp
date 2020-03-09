@@ -34,13 +34,13 @@ shared_ptr<Node>
     }
 
     // map inputs
-    NodeMap nm;
+    unordered_map<Node*, Output<Node>> nm;
     for (size_t i = 0; i < args.size(); i++)
     {
         nm[args.at(i).get_node()] = new_args.at(i);
     }
 
-    NodeVector new_node_list;
+    OutputVector new_node_list;
     for (auto n : m_node_list)
     {
         OutputVector cur_args;
@@ -53,7 +53,7 @@ shared_ptr<Node>
             }
             else
             {
-                cur_args.push_back(a.for_node(nm.at(a.get_node())));
+                cur_args.push_back(nm.at(a.get_node()));
             }
         }
         auto new_n = n->copy_with_new_inputs(cur_args);
@@ -61,7 +61,7 @@ shared_ptr<Node>
         new_node_list.push_back(new_n);
     }
 
-    NodeVector new_outputs;
+    OutputVector new_outputs;
     for (auto o : m_output_nodes)
     {
         new_outputs.push_back(nm.at(o.get()));
