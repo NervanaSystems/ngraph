@@ -145,13 +145,23 @@ void op::v1::Convolution::validate_and_infer_types()
 shared_ptr<Node> op::v1::Convolution::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v1::Convolution>(new_args.at(0),
-                                        new_args.at(1),
-                                        m_strides,
-                                        m_pads_begin,
-                                        m_pads_end,
-                                        m_dilations,
-                                        m_auto_pad);
+    if(m_auto_pad == PadType::EXPLICIT) {
+        return make_shared<v1::Convolution>(new_args.at(0),
+                                            new_args.at(1),
+                                            m_strides,
+                                            m_pads_begin,
+                                            m_pads_end,
+                                            m_dilations,
+                                            m_auto_pad);
+    } else { // Discard old inferred pad values for auto pad mode
+        return make_shared<v1::Convolution>(new_args.at(0),
+                                            new_args.at(1),
+                                            m_strides,
+                                            CoordinateDiff(0, 0),
+                                            CoordinateDiff(0, 0),
+                                            m_dilations,
+                                            m_auto_pad);
+    }
 }
 
 void op::v1::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
