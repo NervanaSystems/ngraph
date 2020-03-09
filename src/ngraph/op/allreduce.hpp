@@ -37,7 +37,8 @@ namespace ngraph
 
                 void validate_and_infer_types() override;
 
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 reduction::Type get_reduce_type() const;
                 void set_reduce_type(reduction::Type reduce_type);
                 bool visit_attributes(AttributeVisitor& visitor) override;

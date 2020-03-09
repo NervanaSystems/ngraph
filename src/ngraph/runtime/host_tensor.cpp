@@ -97,7 +97,7 @@ const char* runtime::HostTensor::get_data_ptr() const
 
 void runtime::HostTensor::write(const void* source, size_t n)
 {
-    runtime::event::Duration d1("write", "HostTensor");
+    event::Duration d1("write", "HostTensor");
 
     if (n != m_buffer_size)
     {
@@ -109,7 +109,7 @@ void runtime::HostTensor::write(const void* source, size_t n)
 
 void runtime::HostTensor::read(void* target, size_t n) const
 {
-    runtime::event::Duration d1("read", "HostTensor");
+    event::Duration d1("read", "HostTensor");
     if (n != m_buffer_size)
     {
         throw out_of_range("partial tensor read access not supported");
