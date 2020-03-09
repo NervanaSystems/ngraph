@@ -569,7 +569,7 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     endif()
     include(cmake/external_onnx.cmake)
     if (TARGET ext_protobuf)
-        add_dependencies(ext_onnx ext_protobuf)
+        add_dependencies(onnx ext_protobuf)
     endif()
 endif()
 
