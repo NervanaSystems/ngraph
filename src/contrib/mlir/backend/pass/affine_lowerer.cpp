@@ -2037,7 +2037,8 @@ namespace
                     if (i != axis)
                     {
                         tempIVs.push_back(allIVs[i]);
-                    } else
+                    }
+                    else
                     {
                         tempIVs.push_back(currRedIdx);
                     }
