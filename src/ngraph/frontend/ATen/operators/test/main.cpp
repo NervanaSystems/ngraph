@@ -56,7 +56,6 @@ int main(int argc, char** argv)
     int rc = RUN_ALL_TESTS();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start);
-    NGRAPH_DEBUG_PRINT("[MAIN] Tests finished: Time: %d ms Exit code: %d", elapsed.count(), rc);
 
     return rc;
 }
