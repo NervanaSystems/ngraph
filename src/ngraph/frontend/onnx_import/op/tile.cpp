@@ -33,6 +33,8 @@ namespace ngraph
                     auto input = node.get_ng_inputs().at(0);
                     auto repeats = node.get_ng_inputs().at(1);
 
+                    // Workaround for backends which require repeats to be i64.
+                    // Remove the following line when no longer needed.
                     repeats = std::make_shared<default_opset::Convert>(repeats, element::i64);
 
                     return {std::make_shared<default_opset::Tile>(input, repeats)};
