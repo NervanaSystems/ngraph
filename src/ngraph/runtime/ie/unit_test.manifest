@@ -160,12 +160,6 @@ model_where
 
 # y Incorrect input precision. Only FP32 is supported!
 model_erf_int32
-floor_int32
-
-# [PARAMETER_MISMATCH] Failed to set Blob with precision FP32
-model_shrink_int
-model_reverse_sequence_0_batch_1
-model_reverse_sequence_1_batch_0
 
 # Could not eliminate all Dyn nodes
 model_conv_with_dynamic_batch
@@ -401,6 +395,13 @@ greatereq
 less
 lesseq
 lesseq_bool
+sum_3d_to_scalar_int32
+sum_2d_to_scalar_int8
+max_pool_uint8
+max_pool_int8
+avg_pool_uint8
+avg_pool_int8
+max_to_scalar_int8
 
 # Can't convert dims 6 to Layout!
 sum_matrix_6d
@@ -408,49 +409,7 @@ depth_to_space_space_to_depth_block_first
 depth_to_space_space_to_depth_depth_first
 
 # [PARAMETER_MISMATCH] Failed to set Blob with precision FP32
-sum_3d_to_scalar_int32
-sum_5d_to_scalar_int32
-sum_2d_to_scalar_int8
-reverse_sequence_n2c3h4w2
-reverse_sequence_n4c3h2w2
-reverse_sequence_n4d2c3h2w2
-reverse_sequence_negative_axes
-relu_2Dfprop_i32
-product_2d_to_scalar_int32
-product_to_scalar_int32
-max_pool_uint8
-max_pool_int8
-avg_pool_uint8
-avg_pool_int8
-negative_i32
-minimum_int32
-min_matrix_rows_int32
-min_3d_to_scalar_int32
-maximum_int32
-max_to_scalar_int8
-max_matrix_rows_int32
-max_3d_to_scalar_int32
 gather_4d_indices_no_axis_uint8
-gather_4d_indices_no_axis_2d_input
-gather_3d_indices_no_axis_2d_input
-gather_2d_indices_no_axis_2d_input
-gather_2d_negative_and_positive_indices_no_axis_2d_input
-gather_1d_indices_no_axis_1d_input
-gather_2d_indices_axis_1_2d_input
-gather_1d_indices_axis_2_4d_input
-gather_no_axis_int8
-gather_no_axis_int32
-gather_no_axis_uint8
-squared_difference_broadcast
-split_3_equal_parts
-split_var_len_parts
-divide_int32
-divide_cpp_rounding_int32
-divide_python_rounding_int32
-convert_int32_float32
-convert_int32_bool
-lesseq_int32
-broadcast_scalar_to_matrix_int32
 
 # Incorrect precision f64!
 sum_trivial_in_double
@@ -463,57 +422,6 @@ max_3d_to_scalar_double
 generate_mask
 generate_mask2
 argmin_trivial_in_double
-
-# Incorrect precision u32!
-gather_no_axis_uint32
-strided_slice_0
-strided_slice_1
-strided_slice_stride_optional
-dyn_slice_127
-dyn_slice_128
-dyn_slice_130
-dyn_slice_131
-dyn_slice_132
-dyn_slice_133
-dyn_slice_134
-dyn_slice_135
-dyn_slice_136
-dyn_slice_140
-dyn_slice_141
-dyn_slice_142
-dyn_slice_143
-dyn_slice_144
-dyn_slice_145
-dyn_slice_146
-dyn_slice_147
-dyn_slice_148
-dyn_slice_149
-dyn_slice_150
-dyn_slice_151
-dyn_slice_152
-dyn_slice_153
-dyn_slice_154
-dyn_slice_155
-dyn_slice_156
-dyn_slice_157
-dyn_slice_158
-dyn_slice_159
-dyn_slice_160
-dyn_slice_161
-dyn_slice_162
-dyn_slice_163
-dyn_slice_164
-dyn_slice_165
-dyn_slice_166
-dyn_slice_167
-dyn_slice_181
-dyn_slice_126
-dyn_slice_129
-dyn_slice_137
-dyn_slice_138
-dyn_slice_139
-dyn_slice_182
-dyn_slice_186
 
 # Incorrect precision bf16!
 convert_float32_bf16
@@ -910,7 +818,6 @@ relu_4Dbackprop
 range
 parameter_as_output
 
-
 # Cannot cast ngraph node RandomUniform to CNNLayer!
 random_uniform_all_static_seed_unused
 random_uniform_all_static_seed_used
@@ -1224,3 +1131,21 @@ flatten
 # Cannot cast ngraph node BatchMatMulTranspose_783933 to CNNLayer!
 batch_mat_mul_transpose
 batch_mat_mul_transpose_with_transpose
+
+# Failing from new reason after unblocking more Blob types
+gather_2d_negative_and_positive_indices_no_axis_2d_input
+gather_no_axis_int8
+gather_no_axis_uint8
+gather_no_axis_uint32
+squared_difference_broadcast
+split_3_equal_parts
+split_var_len_parts
+floor_int32
+strided_slice_0
+strided_slice_1
+strided_slice_stride_optional
+divide_int32
+divide_cpp_rounding_int32
+divide_python_rounding_int32
+convert_int32_bool
+lesseq_int32

@@ -42,9 +42,6 @@ namespace ngraph
                 InferenceEngine::CNNNetwork m_network;
                 std::string m_device;
             };
-
-            InferenceEngine::Blob::Ptr
-                fill_blob(InferenceEngine::SizeVector shape, const float* data, size_t data_size);
         }
     }
 }
