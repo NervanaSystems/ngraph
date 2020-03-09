@@ -103,11 +103,7 @@ namespace ngraph
     {
         for (auto& input : get_target_inputs())
         {
-            // GOEs are used as handles in passes
-            if (!is_type<op::GetOutputElement>(input.get_node()))
-            {
-                input.replace_source_output(replacement);
-            }
+            input.replace_source_output(replacement);
         }
     }
 
