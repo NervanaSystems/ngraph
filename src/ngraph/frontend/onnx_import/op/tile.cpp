@@ -18,7 +18,7 @@
 
 #include "core/node.hpp"
 #include "ngraph/op/convert.hpp"
-#include "ngraph/op/experimental/tile.hpp"
+#include "tile.hpp"
 
 namespace ngraph
 {
