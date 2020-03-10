@@ -14,10 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "resize.hpp"
 #include "default_opset.hpp"
 #include "exceptions.hpp"
-#include "resize.hpp"
-
 
 namespace ngraph
 {
@@ -40,7 +39,7 @@ namespace ngraph
 
                     auto attrs = ngraph::op::InterpolateAttrs();
                     attrs.mode = mode;
-                    
+
                     if (scales_shape.rank().is_static())
                     {
                         AxisSet axes;
@@ -52,15 +51,18 @@ namespace ngraph
                     }
                     else
                     {
-                        throw error::NotSupported("ResizeOp: Dynamic shape of Scales input is not supported");
+                        throw error::NotSupported(
+                            "ResizeOp: Dynamic rank of Scales input is not supported");
                     }
 
                     auto shape_of_data = std::make_shared<default_opset::Convert>(
-                        std::make_shared<default_opset::ShapeOf>(data), ngraph::element::f32); 
-                    auto multiply = std::make_shared<default_opset::Multiply>(shape_of_data, scales);
+                        std::make_shared<default_opset::ShapeOf>(data), ngraph::element::f32);
+                    auto multiply =
+                        std::make_shared<default_opset::Multiply>(shape_of_data, scales);
                     auto output_shape = std::make_shared<default_opset::Convert>(
                         std::make_shared<default_opset::Floor>(multiply), ngraph::element::i64);
-                    return {std::make_shared<default_opset::Interpolate>(data, output_shape, attrs)};
+                    return {
+                        std::make_shared<default_opset::Interpolate>(data, output_shape, attrs)};
                 }
 
             } // namespace set_10
