@@ -603,8 +603,8 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     if (is_type<ngraph::op::MatMul>(node))
     {
         // MatMul is only supported through callback
-        if (!getenv_bool("NGRAPH_MLIR_CALLBACK") ||
-            node->get_input_shape(0).size() != 2 || node->get_input_shape(1).size() != 2)
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK") || node->get_input_shape(0).size() != 2 ||
+            node->get_input_shape(1).size() != 2)
         {
             return false;
         }
@@ -613,8 +613,8 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     if (is_type<ngraph::op::Gemm>(node))
     {
         // Gemm is only supported through callback
-        if (!getenv_bool("NGRAPH_MLIR_CALLBACK") ||
-            node->get_input_shape(0).size() != 2 || node->get_input_shape(1).size() != 2)
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK") || node->get_input_shape(0).size() != 2 ||
+            node->get_input_shape(1).size() != 2)
         {
             return false;
         }
