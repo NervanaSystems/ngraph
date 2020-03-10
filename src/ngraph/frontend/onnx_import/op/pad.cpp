@@ -70,7 +70,7 @@ namespace ngraph
                         node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
                     CHECK_VALID_NODE(
                         node, data_rank.is_static(), "Data rank must be static for pad op");
-                    const auto data_rank_value = static_cast<size_t>(data_rank);
+                    const auto data_rank_value = data_rank.get_length();
 
                     double value = node.get_attribute_value<double>("value", 0);
                     const std::string mode =
