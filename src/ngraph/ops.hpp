@@ -71,6 +71,7 @@
 #include "ngraph/op/experimental/layers/psroi_pooling.hpp"
 #include "ngraph/op/experimental/layers/region_yolo.hpp"
 #include "ngraph/op/experimental/layers/reorg_yolo.hpp"
+#include "ngraph/op/experimental/layers/roi_align.hpp"
 #include "ngraph/op/experimental/layers/roi_pooling.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
