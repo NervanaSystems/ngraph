@@ -32,7 +32,8 @@ namespace ngraph
     ///                 Elements belongs to the namespace allow to use ONNX format.
     namespace onnx_import
     {
-        /// \brief      Returns a set of names of supported operators for the given opset version and domain.
+        /// \brief      Returns a set of names of supported operators
+        ///             for the given opset version and domain.
         ///
         /// \param[in]  version  An opset version to get the supported operators for.
         /// \param[in]  domain   A domain to get the supported operators for.
@@ -73,7 +74,8 @@ namespace ngraph
         /// \note      If file parsing fails or the ONNX model contains unsupported ops,
         ///            the function throws an ngraph_error exception.
         ///
-        /// \param[in] file_path  The path to a file containing the ONNX model (relative or absolute).
+        /// \param[in] file_path  The path to a file containing the ONNX model
+        ///                       (relative or absolute).
         ///
         /// \return    An nGraph function that represents a single output from the created graph.
         NGRAPH_API
