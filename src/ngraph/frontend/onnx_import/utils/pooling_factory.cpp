@@ -82,12 +82,12 @@ namespace ngraph
                 CHECK_VALID_NODE(
                     node, data_rank.is_static(), "Data rank must be static for global pooling ops");
                 Shape kernel_shape;
-                for (auto i = 2; i < static_cast<size_t>(data_rank); ++i)
+                for (auto i = 2; i < data_rank.get_length(); ++i)
                 {
                     CHECK_VALID_NODE(node,
                                      data_shape[i].is_static(),
                                      "All spatial dimensions must be known for global pooling ops");
-                    kernel_shape.emplace_back(static_cast<size_t>(data_shape[i]));
+                    kernel_shape.emplace_back(data_shape[i].get_length());
                 }
 
                 // Set shape to all but {N,C} axes.

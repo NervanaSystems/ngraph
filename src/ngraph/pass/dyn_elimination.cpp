@@ -328,7 +328,7 @@ void pass::DynElimination::construct_dyn_reshape()
         }
 
         auto& result_shape = dyn_reshape_node->get_output_shape(0);
-        AxisVector perm(size_t(data_arg->get_output_partial_shape(0).rank()));
+        AxisVector perm(data_arg->get_output_partial_shape(0).rank().get_length());
         std::iota(perm.begin(), perm.end(), 0);
 
         auto replacement = std::make_shared<op::Reshape>(data_arg, perm, result_shape);
