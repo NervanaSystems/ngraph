@@ -33,10 +33,10 @@ namespace ngraph
         /// \note       The operator shall be registered before calling
         ///             "import_onnx_model" functions.
         ///
-        /// \param      name     The name of the operator.
-        /// \param      version  The version of the operator (opset).
-        /// \param      domain   The domain the operator belongs to
-        /// \param      fn       The function providing the implementation of the operator.
+        /// \param      name      The ONNX operator name.
+        /// \param      version   The ONNX operator set version.
+        /// \param      domain    The domain the ONNX operator is registered to.
+        /// \param      fn        The function providing the implementation of the operator.
         NGRAPH_API
         void register_operator(const std::string& name,
                                std::int64_t version,

@@ -35,8 +35,8 @@ namespace ngraph
         /// \brief      Returns a set of names of supported operators
         ///             for the given opset version and domain.
         ///
-        /// \param[in]  version  An opset version to get the supported operators for.
-        /// \param[in]  domain   A domain to get the supported operators for.
+        /// \param[in]  version   An opset version to get the supported operators for.
+        /// \param[in]  domain    A domain to get the supported operators for.
         ///
         /// \return     The set containing names of supported operators.
         NGRAPH_API
@@ -45,10 +45,10 @@ namespace ngraph
 
         /// \brief      Determines whether ONNX operator is supported.
         ///
-        /// \param[in]  op_name  The ONNX operator name.
-        /// \param[in]  version  The ONNX operator set version.
-        /// \param[in]  domain   The domain the ONNX operator is registered to.
-        ///                      If not set, the default domain "ai.onnx" is used.
+        /// \param[in]  op_name   The ONNX operator name.
+        /// \param[in]  version   The ONNX operator set version.
+        /// \param[in]  domain    The domain the ONNX operator is registered to.
+        ///                       If not set, the default domain "ai.onnx" is used.
         ///
         /// \return     true if operator is supported, false otherwise.
         NGRAPH_API
@@ -62,7 +62,7 @@ namespace ngraph
         /// \note       If stream parsing fails or the ONNX model contains unsupported ops,
         ///             the function throws an ngraph_error exception.
         ///
-        /// \param[in]  stream      The input stream (e.g. file stream, memory stream, etc).
+        /// \param[in]  stream    The input stream (e.g. file stream, memory stream, etc).
         ///
         /// \return     An nGraph function that represents a single output from the created graph.
         NGRAPH_API
