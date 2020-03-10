@@ -99,6 +99,8 @@ else()
                    -DLLVM_ENABLE_TERMINFO=OFF
                    -DLLVM_ENABLE_ZLIB=OFF
                    -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON
+                   -DLLVM_ENABLE_WARNINGS=OFF
+                   -DLLVM_ENABLE_PEDANTIC=OFF
                    -DLIBOMP_OMPT_SUPPORT=OFF
                    -DCLANG_ENABLE_ARCMT=OFF
                    -DCLANG_ANALYZER_ENABLE_Z3_SOLVER=OFF
