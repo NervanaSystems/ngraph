@@ -101,6 +101,7 @@
 #include "op/reduce.hpp"
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
+#include "op/resize.hpp"
 #include "op/reverse_sequence.hpp"
 #include "op/round.hpp"
 #include "op/scatter_nd.hpp"
@@ -336,6 +337,7 @@ namespace ngraph
             REGISTER_OPERATOR("ReduceSumSquare", 1, reduce_sum_square);
             REGISTER_OPERATOR("Relu", 1, relu);
             REGISTER_OPERATOR("Reshape", 1, reshape);
+            REGISTER_OPERATOR("Resize", 10, resize);
             REGISTER_OPERATOR("ReverseSequence", 1, reverse_sequence);
             REGISTER_OPERATOR("Round", 1, round);
             REGISTER_OPERATOR("ScatterND", 1, scatter_nd);
