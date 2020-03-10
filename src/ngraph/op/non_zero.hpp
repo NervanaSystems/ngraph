@@ -22,17 +22,17 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v2
+        namespace v0
         {
             /// \brief NonZero operation.
             class NGRAPH_API NonZero : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"NonZero", 2};
+                static constexpr NodeTypeInfo type_info{"NonZero", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                /// \brief Constructs a logical negation operation.
+                /// \brief Constructs a NonZero operation.
                 NonZero() = default;
-                /// \brief Constructs a logical negation operation.
+                /// \brief Constructs a NonZero operation.
                 ///
                 /// \param arg Node that produces the input tensor.
                 NonZero(const Output<Node>& arg);
@@ -44,10 +44,6 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
             };
         }
-        using v2::NonZero;
+        using v0::NonZero;
     } // namespace op
 } // namespace ngraph
-
-
-
-
