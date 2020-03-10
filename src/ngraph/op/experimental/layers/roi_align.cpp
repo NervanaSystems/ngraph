@@ -87,6 +87,11 @@ void op::v0::ROIAlign::validate_and_infer_types()
                           " and: ",
                           batch_indices_ps[0]);
 
+    NODE_VALIDATION_CHECK(this,
+                          m_mode == "avg" || m_mode == "max",
+                          "The ROIAlign supports 'avg' and 'max' modes. Got: ",
+                          m_mode);
+
     // the output shape should have the following format [NUM_ROIS, C, pooled_h, pooled_w]
     auto output_shape = PartialShape{
         {Dimension::dynamic(), input_ps[1], Dimension{m_pooled_h}, Dimension{m_pooled_w}}};
