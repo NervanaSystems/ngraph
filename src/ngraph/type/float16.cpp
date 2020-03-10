@@ -206,6 +206,12 @@ float16::operator float() const
     return f_val;
 }
 
+bool std::isnan(float16 x)
+{
+    // Sign doesn't matter, frac not zero (infinity)
+    return (x.to_bits & 0x7FFF) > 0x7c000;
+}
+
 uint16_t float16::to_bits() const
 {
     return m_value;

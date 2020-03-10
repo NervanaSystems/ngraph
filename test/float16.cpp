@@ -104,10 +104,8 @@ TEST(float16, values)
               float16(0, 0x1F, 0).to_bits());
     EXPECT_EQ(static_cast<float16>(-std::numeric_limits<float>::infinity()).to_bits(),
               float16(1, 0x1F, 0).to_bits());
-    EXPECT_EQ(static_cast<float16>(std::numeric_limits<float>::quiet_NaN()).to_bits(),
-              float16(0, 0x1F, 0x200).to_bits());
-    EXPECT_EQ(static_cast<float16>(std::numeric_limits<float>::signaling_NaN()).to_bits(),
-              float16(0, 0x1f, 0x100).to_bits());
+    EXPECT_TRUE(isnan(static_cast<float16>(std::numeric_limits<float>::quiet_NaN()).to_bits()));
+    EXPECT_TRUE(isnan(static_cast<float16>(std::numeric_limits<float>::signaling_NaN()).to_bits()));
     EXPECT_EQ(static_cast<float16>(2.73786e-05).to_bits(), 459);
     EXPECT_EQ(static_cast<float16>(3.87722e-05).to_bits(), 650);
     EXPECT_EQ(static_cast<float16>(-0.0223043).to_bits(), 42422);
