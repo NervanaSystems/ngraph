@@ -2010,7 +2010,8 @@ namespace
             auto allIVs = ValueHandle::makeIndexHandles(vArg.rank());
             auto pAllIVs = makeHandlePointers(allIVs);
             auto steps = vArg.getSteps();
-            SmallVector<ValueHandle, 8> nonRedIVs, tempIVs;
+            SmallVector<ValueHandle, 8> nonRedIVs;
+            SmallVector<ValueHandle, 8> tempIVs;
 
             Type resTy = result.getType().cast<MemRefType>().getElementType();
             NGRAPH_CHECK(resTy.isa<IntegerType>(),
