@@ -93,8 +93,10 @@ void op::v0::ROIAlign::validate_and_infer_types()
                           m_mode);
 
     // the output shape should have the following format [NUM_ROIS, C, pooled_h, pooled_w]
-    auto output_shape = PartialShape{
-        {Dimension::dynamic(), input_ps[1], Dimension{m_pooled_h}, Dimension{m_pooled_w}}};
+    auto output_shape = PartialShape{{Dimension::dynamic(),
+                                      input_ps[1],
+                                      Dimension{static_cast<int64_t>(m_pooled_h)},
+                                      Dimension{static_cast<int64_t>(m_pooled_w)}}};
 
     // if either of those 2 dimensions is static its value will be used
     // for the first dimension of the output shape - 'NUM_ROIS'
