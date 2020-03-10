@@ -165,9 +165,11 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
     {
         auto csw = work_queue.front();
         work_queue.pop_front();
-        auto n = csw.input.get_source_output().get_node_shared_ptr();
-        auto materialize = [csw, n]() {
-            auto new_reshape = csw.reshape->copy_with_new_args({n});
+        auto n_output = csw.input.get_source_output();
+        auto n = n_output.get_node_shared_ptr();
+        auto materialize = [csw, n_output]() {
+            auto n = n_output.get_node_shared_ptr();
+            auto new_reshape = csw.reshape->clone_with_new_inputs({n});
             new_reshape->merge_provenance_tags_from(n);
             NGRAPH_DEBUG << "Materializing new reshape " << describe_reshape(new_reshape);
             csw.input.replace_source_output(new_reshape->output(0));
