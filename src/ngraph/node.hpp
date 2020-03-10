@@ -63,8 +63,9 @@ namespace ngraph
     // Intermal, controls whether GetOutputElement nodes are elided
     // Defaults to being elided. Transformer should set to false if
     // it has passes that depend on GetOutputElement.
-    NGRAPH_API void set_remove_goe(bool value);
-    NGRAPH_API bool get_remove_goe();
+    NGRAPH_API void set_remove_goe(bool value)
+        NGRAPH_DEPRECATED("Remove dependencies on GetOrderedOutput");
+    NGRAPH_API bool get_remove_goe() NGRAPH_DEPRECATED("Remove dependencies on GetOrderedOutput");
 
     namespace op
     {

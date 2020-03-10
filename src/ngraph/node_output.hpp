@@ -39,7 +39,7 @@ namespace ngraph
     template <>
     class NGRAPH_API Output<Node>
     {
-        void eliminate_goe();
+        void eliminate_goe() NGRAPH_DEPRECATED("Remove when GetOrderedOutput is removed");
 
     public:
         /// \brief Constructs a Output.

@@ -272,10 +272,9 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
     }
 }
 
-std::vector<std::shared_ptr<ngraph::op::CompiledKernel>>
-    MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Function> func)
+ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Function> func)
 {
-    std::vector<std::shared_ptr<op::CompiledKernel>> ck_nodes;
+    NodeVector ck_nodes;
     NGRAPH_DEBUG << "[CK Extract] Construct CK nodes";
     // attach CK node to each sub-graph.
     for (auto it : m_id_to_graph)
@@ -318,18 +317,47 @@ std::vector<std::shared_ptr<ngraph::op::CompiledKernel>>
 
     // Connect CompiledKernel to output nodes by replacing the output descriptors of the output
     // Do this after all CK nodes are constructed since they add new edges in the graph (CK inputs)
-    for (auto& ck : ck_nodes)
+    for (auto& node : ck_nodes)
     {
+        auto ck = std::static_pointer_cast<CompiledKernel>(node);
+
         auto& outputs_vector = ck->get_kernel_outputs();
         auto& node_list = ck->get_node_list();
         std::unordered_set<std::shared_ptr<Node>> node_set(node_list.begin(), node_list.end());
 
         for (size_t i = 0, end = outputs_vector.size(); i < end; ++i)
         {
-            auto output_descs = outputs_vector[i]->outputs();
+            auto& output_descs = outputs_vector[i]->get_outputs();
             NGRAPH_CHECK(output_descs.size() == 1, "Unexpected multiple output descriptors");
             auto& out_desc = output_descs[0];
-            out_desc.replace(ck->output(i));
+
+            // 'replace_output' invalidates iterator of the original container. Use a copy instead.
+            const std::vector<descriptor::Input*> input_descs = out_desc.get_inputs();
+
+            for (descriptor::Input* in_desc : input_descs)
+            {
+                if (node_set.find(in_desc->get_node()) == node_set.end())
+                {
+                    in_desc->replace_output(ck, i);
+                }
+            }
+        }
+    }
+    for (auto& node : ck_nodes)
+    {
+        auto ck = std::static_pointer_cast<CompiledKernel>(node);
+        if (ck->get_output_size() > 1)
+        {
+            for (auto& old_output : ck->outputs())
+            {
+                auto inputs = old_output.get_target_inputs();
+                auto goe_node = old_output.as_single_output_node();
+                auto new_output = goe_node->output(0);
+                for (auto& input : inputs)
+                {
+                    input.replace_source_output(new_output);
+                }
+            }
         }
     }
 
@@ -340,9 +368,7 @@ std::vector<std::shared_ptr<ngraph::op::CompiledKernel>>
 //  - no cycles
 //  - inputs to sub-graph are inputs to CK
 //  - no outputs out of subgraph for output nodes
-void MLIRSubgraphExtractionPass::sanity_check(
-    std::shared_ptr<Function> func,
-    std::vector<std::shared_ptr<ngraph::op::CompiledKernel>>& ck_nodes)
+void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, NodeVector& ck_nodes)
 {
     NodeVector cycles;
     bool is_bkwd_cycle;
@@ -361,8 +387,9 @@ void MLIRSubgraphExtractionPass::sanity_check(
         NGRAPH_UNREACHABLE("Function contains cycle after subgraph constructions");
     }
 
-    for (auto& ck_node : ck_nodes)
+    for (auto& node : ck_nodes)
     {
+        auto ck_node = std::static_pointer_cast<CompiledKernel>(node);
         auto& node_list = ck_node->get_node_list();
         std::unordered_set<std::shared_ptr<Node>> node_set(node_list.begin(), node_list.end());
         // CK output nodes shouldn't have any users outside the sub-graph,
