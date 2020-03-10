@@ -23,12 +23,13 @@ constexpr NodeTypeInfo op::v0::ROIAlign::type_info;
 
 op::v0::ROIAlign::ROIAlign(const Output<Node>& input,
                            const Output<Node>& rois,
+                           const Output<Node>& batch_indices,
                            const size_t pooled_h,
                            const size_t pooled_w,
                            const size_t sampling_ratio,
                            const float spatial_scale,
                            const std::string& mode)
-    : Op{{input, rois}}
+    : Op{{input, rois, batch_indices}}
     , m_pooled_h{pooled_h}
     , m_pooled_w{pooled_w}
     , m_sampling_ratio{sampling_ratio}
@@ -59,6 +60,7 @@ shared_ptr<Node> op::v0::ROIAlign::copy_with_new_args(const NodeVector& new_args
     check_new_args_count(this, new_args);
     return make_shared<ROIAlign>(new_args.at(0),
                                  new_args.at(1),
+                                 new_args.at(2),
                                  m_pooled_h,
                                  m_pooled_w,
                                  m_sampling_ratio,
