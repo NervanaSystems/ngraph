@@ -91,7 +91,7 @@ void op::Slice::validate_and_infer_types()
     Dimension input_rank = input_shape.rank();
 
     NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || size_t(input_rank) == output_rank,
+                          input_rank.is_dynamic() || input_rank.get_length() == output_rank,
                           "Input rank does not match the rank of the lower bounds (",
                           m_lower_bounds,
                           "), upper bounds (",
@@ -106,7 +106,7 @@ void op::Slice::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(this,
                               input_rank.is_dynamic() || input_shape[i].is_dynamic() ||
-                                  m_upper_bounds[i] <= size_t(input_shape[i]),
+                                  m_upper_bounds[i] <= input_shape[i].get_length(),
                               "Upper bound for slice at axis ",
                               i,
                               " is out of range ",

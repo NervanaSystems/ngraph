@@ -86,7 +86,7 @@ size_t op::v0::TopK::get_k() const
     Dimension top_k_axis = get_top_k_axis_dynamic();
     if (k == 0 && get_input_partial_shape(0).is_static() && top_k_axis.is_static())
     {
-        k = get_input_partial_shape(0).to_shape()[static_cast<size_t>(top_k_axis)];
+        k = get_input_partial_shape(0).to_shape()[top_k_axis.get_length()];
     }
     return k;
 }
@@ -105,7 +105,7 @@ size_t op::v0::TopK::get_top_k_axis() const
     auto d = get_top_k_axis_dynamic();
     NGRAPH_CHECK(d.is_static(),
                  "get_top_k_axis called on a TopK node whose 'top_k_axis' input is not constant");
-    return static_cast<size_t>(d);
+    return d.get_length();
 }
 
 Dimension op::v0::TopK::get_top_k_axis_dynamic() const
@@ -146,7 +146,7 @@ void op::v0::TopK::validate_and_infer_types()
                           ").");
 
     NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || static_cast<size_t>(input_rank) > 0,
+                          input_rank.is_dynamic() || input_rank.get_length() > 0,
                           "Argument rank must be greater than 0.");
 
     NODE_VALIDATION_CHECK(this,
@@ -159,7 +159,7 @@ void op::v0::TopK::validate_and_infer_types()
     Dimension top_k_axis = get_top_k_axis_dynamic();
     NODE_VALIDATION_CHECK(this,
                           input_rank.is_dynamic() || top_k_axis.is_dynamic() ||
-                              static_cast<size_t>(top_k_axis) < static_cast<size_t>(input_rank),
+                              top_k_axis.get_length() < input_rank.get_length(),
                           "TopK axis (",
                           top_k_axis,
                           ") is out of bounds.");
@@ -167,13 +167,13 @@ void op::v0::TopK::validate_and_infer_types()
     size_t k = get_k();
     NODE_VALIDATION_CHECK(this,
                           input_rank.is_dynamic() || top_k_axis.is_dynamic() ||
-                              input_shape[static_cast<size_t>(top_k_axis)].is_dynamic() ||
+                              input_shape[top_k_axis.get_length()].is_dynamic() ||
                               static_cast<size_t>(k) <=
-                                  static_cast<size_t>(input_shape[static_cast<size_t>(top_k_axis)]),
+                                  input_shape[top_k_axis.get_length()].get_length(),
                           "K (",
                           k,
                           ") exceeds the dimension (",
-                          input_shape[static_cast<size_t>(top_k_axis)],
+                          input_shape[top_k_axis.get_length()],
                           ") of the TopK axis (axis ",
                           top_k_axis,
                           ").");
@@ -186,12 +186,11 @@ void op::v0::TopK::validate_and_infer_types()
         {
             if (k != 0)
             {
-                output_shape[static_cast<size_t>(top_k_axis)] = k;
+                output_shape[top_k_axis.get_length()] = k;
             }
-            else if (k == 0 && output_shape[static_cast<size_t>(top_k_axis)].is_static())
+            else if (k == 0 && output_shape[top_k_axis.get_length()].is_static())
             {
-                output_shape[static_cast<size_t>(top_k_axis)] =
-                    input_shape[static_cast<size_t>(top_k_axis)];
+                output_shape[top_k_axis.get_length()] = input_shape[top_k_axis.get_length()];
             }
         }
         else
@@ -277,7 +276,7 @@ void op::v1::TopK::validate_and_infer_types()
     const auto input_rank = input_partial_shape.rank();
 
     NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || static_cast<size_t>(input_rank) > 0,
+                          input_rank.is_dynamic() || input_rank.get_length() > 0,
                           "Input rank must be greater than 0.");
 
     const auto& k_partial_shape = get_input_partial_shape(1);
