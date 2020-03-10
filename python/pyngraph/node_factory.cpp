@@ -27,6 +27,13 @@ public:
     NodeFactory()
     {
         std::cout << "Constructor called" << std::endl;
+        std::cout << "default opset will be used" << std::endl;
+    }
+
+    NodeFactory(std::string opset_name)
+    {
+        std::cout << "Constructor called" << std::endl;
+        std::cout << "opset_name:" << opset_name << std::endl;
     }
 
     void create(const std::string op_type_name, ngraph::NodeVector arguments, py::dict attributes)
@@ -47,12 +54,7 @@ public:
             std::cout << "key: " << item.first << ", value=" << item.second << std::endl;
             std::cout << "key: " << item.first << ", class=" << typeid(item.second).name() << std::endl;
         }
-
-
-
     }
-
-
 };
 
 
@@ -64,6 +66,7 @@ void regclass_pyngraph_NodeFactory(py::module m)
     node_factory.doc() = "NodeFactory creates nGraph nodes";
 
     node_factory.def(py::init());
+    node_factory.def(py::init<std::string>());
 
     node_factory.def("create", &NodeFactory::create);
 
