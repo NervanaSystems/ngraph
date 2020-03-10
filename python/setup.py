@@ -150,6 +150,7 @@ sources = [
     'pyngraph/function.cpp',
     'pyngraph/serializer.cpp',
     'pyngraph/node.cpp',
+    'pyngraph/node_factory.cpp',
     'pyngraph/shape.cpp',
     'pyngraph/strides.cpp',
     'pyngraph/coordinate_diff.cpp',
