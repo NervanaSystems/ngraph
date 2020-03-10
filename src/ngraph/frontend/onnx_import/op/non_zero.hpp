@@ -28,11 +28,11 @@ namespace ngraph
             namespace set_1
             {
                 ///
-                /// \brief Convert ONNX MaxPool operation to an nGraph node.
+                /// \brief Convert ONNX NonZero operation to an nGraph node.
                 ///
                 /// \param node   The ONNX node object representing this operation.
                 ///
-                /// \return The vector containing Ngraph nodes producing output of ONNX MaxPool
+                /// \return The vector containing Ngraph nodes producing output of ONNX NonZero
                 ///         operation.
                 ///
                 NodeVector non_zero(const Node& node);
