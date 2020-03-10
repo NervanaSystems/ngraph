@@ -146,3 +146,16 @@ uint64_t Dimension::get_length() const
     }
     return m_dimension;
 }
+
+Dimension::operator size_t() const
+{
+    if (is_dynamic())
+    {
+        throw std::invalid_argument("Cannot convert dynamic dimension to size_t");
+    }
+    if (m_dimension < 0)
+    {
+        throw std::invalid_argument("Cannot convert negative dimension to size_t");
+    }
+    return m_dimension;
+}
