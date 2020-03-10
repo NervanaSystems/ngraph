@@ -19,15 +19,15 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::ROIAlign::type_info;
+constexpr NodeTypeInfo op::v0::ROIAlign::type_info;
 
-op::ROIAlign::ROIAlign(const Output<Node>& input,
-                       const Output<Node>& rois,
-                       const size_t pooled_h,
-                       const size_t pooled_w,
-                       const size_t sampling_ratio,
-                       const float spatial_scale,
-                       const std::string& mode)
+op::v0::ROIAlign::ROIAlign(const Output<Node>& input,
+                           const Output<Node>& rois,
+                           const size_t pooled_h,
+                           const size_t pooled_w,
+                           const size_t sampling_ratio,
+                           const float spatial_scale,
+                           const std::string& mode)
     : Op{{input, rois}}
     , m_pooled_h{pooled_h}
     , m_pooled_w{pooled_w}
@@ -38,12 +38,23 @@ op::ROIAlign::ROIAlign(const Output<Node>& input,
     constructor_validate_and_infer_types();
 }
 
-void op::ROIAlign::validate_and_infer_types()
+void op::v0::ROIAlign::validate_and_infer_types()
 {
     // TODO
 }
 
-shared_ptr<Node> op::ROIAlign::copy_with_new_args(const NodeVector& new_args) const
+bool op::v0::ROIAlign::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("pooled_h", m_pooled_h);
+    visitor.on_attribute("pooled_w", m_pooled_w);
+    visitor.on_attribute("sampling_ratio", m_sampling_ratio);
+    visitor.on_attribute("spatial_scale", m_spatial_scale);
+    visitor.on_attribute("mode", m_mode);
+
+    return true;
+}
+
+shared_ptr<Node> op::v0::ROIAlign::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ROIAlign>(new_args.at(0),

@@ -47,7 +47,9 @@ namespace ngraph
                          const float spatial_scale,
                          const std::string& mode);
 
-                void validate_and_infer_types() override;
+                virtual void validate_and_infer_types() override;
+
+                virtual bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
