@@ -258,7 +258,7 @@ const PartialShape op::v1::GroupConvolutionBackpropData::get_output_shape() cons
     PartialShape shape;
     if (data_pshape.rank().is_static())
     {
-        shape = PartialShape{vector<Dimension>(static_cast<size_t>(data_pshape.rank() - 2))};
+        shape = PartialShape{vector<Dimension>(data_pshape.rank().get_length() - 2)};
     }
     else
     {
@@ -592,7 +592,7 @@ void op::v0::GroupConvolution::pre_validate_and_infer_types()
         // Update groups
         if (m_groups_in_filters)
         {
-            m_groups = static_cast<size_t>(get_input_partial_shape(1)[0]);
+            m_groups = get_input_partial_shape(1)[0].get_length();
         }
 
         // Data channels
