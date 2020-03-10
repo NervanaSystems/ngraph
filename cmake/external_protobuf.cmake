@@ -46,6 +46,7 @@ if (WIN32)
         ext_protobuf
         PREFIX protobuf
         GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
+        GIT_SHALLOW TRUE
         GIT_TAG ${NGRAPH_PROTOBUF_GIT_TAG}
         UPDATE_COMMAND ""
         PATCH_COMMAND ""
@@ -54,6 +55,7 @@ if (WIN32)
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
         CMAKE_ARGS
             ${NGRAPH_FORWARD_CMAKE_ARGS}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_CXX_FLAGS=${CMAKE_ORIGINAL_CXX_FLAGS}
             -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
             -Dprotobuf_WITH_ZLIB=OFF
