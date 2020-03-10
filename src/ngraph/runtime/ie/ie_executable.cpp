@@ -36,6 +36,7 @@ namespace
         InferenceEngine::Layout layout;
         switch (shape.size())
         {
+        case 0: layout = InferenceEngine::Layout::SCALAR; break;
         case 1: layout = InferenceEngine::Layout::C; break;
         case 2: layout = InferenceEngine::Layout::NC; break;
         case 3: layout = InferenceEngine::Layout::CHW; break;
@@ -53,10 +54,7 @@ namespace
 
         switch (elem_type)
         {
-        case element::Type_t::f32:
-            blob = MAKE_IE_TBLOB(float, FP32, shape, layout);
-            break;
-        // case element::Type_t::f16: blob = MAKE_IE_TBLOB(float, FP16, shape, layout); break;
+        case element::Type_t::f32: blob = MAKE_IE_TBLOB(float, FP32, shape, layout); break;
         case element::Type_t::i16: blob = MAKE_IE_TBLOB(int16_t, I16, shape, layout); break;
         case element::Type_t::u8: blob = MAKE_IE_TBLOB(uint8_t, U8, shape, layout); break;
         case element::Type_t::i8: blob = MAKE_IE_TBLOB(int8_t, I8, shape, layout); break;
@@ -67,7 +65,6 @@ namespace
         case element::Type_t::boolean: blob = MAKE_IE_TBLOB(uint8_t, BOOL, shape, layout); break;
         default: THROW_IE_EXCEPTION << "Can't convert type " << elem_type << " to IE Precision!";
         }
-
 #undef MAKE_IE_TBLOB
 
         blob->allocate();
