@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <sstream>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/reverse.hpp"
@@ -89,6 +90,12 @@ op::v1::Reverse::Reverse(const Output<Node>& data,
     , m_mode{mode}
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v1::Reverse::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("mode", m_mode);
+    return true;
 }
 
 void op::v1::Reverse::validate_and_infer_types()
@@ -194,3 +201,22 @@ op::v1::Reverse::Mode op::v1::Reverse::mode_from_string(const std::string& mode)
 
     return allowed_values.at(mode);
 }
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::v1::Reverse::Mode>& EnumNames<op::v1::Reverse::Mode>::get()
+    {
+        static auto enum_names = EnumNames<op::v1::Reverse::Mode>(
+            "op::v1::Reverse::Mode",
+            {{"index", op::v1::Reverse::Mode::INDEX}, {"mask", op::v1::Reverse::Mode::MASK}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v1::Reverse::Mode>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::v1::Reverse::Mode& type)
+    {
+        return s << as_string(type);
+    }
+} // namespace ngraph

@@ -43,3 +43,8 @@ void op::util::UnaryElementwiseArithmetic::validate_and_infer_types()
 {
     validate_and_infer_elementwise_arithmetic();
 }
+
+bool op::util::UnaryElementwiseArithmetic::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}

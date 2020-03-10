@@ -38,6 +38,11 @@ shared_ptr<Node> op::v1::GatherTree::copy_with_new_args(const NodeVector& new_ar
         new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }
 
+bool ngraph::op::v1::GatherTree::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 void op::v1::GatherTree::validate_and_infer_types()
 {
     const auto& step_ids_rank = get_input_partial_shape(0);

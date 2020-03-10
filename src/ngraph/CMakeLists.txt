@@ -80,6 +80,8 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
+    distributed/null.cpp
+    distributed/null.hpp
     distributed.cpp
     distributed.hpp
     enum_names.hpp
@@ -365,6 +367,8 @@ set (SRC
     op/xor.hpp
     op/fused/batch_mat_mul_transpose.cpp
     op/fused/batch_mat_mul_transpose.hpp
+    op/fused/batch_to_space.cpp
+    op/fused/batch_to_space.hpp
     op/fused/clamp.cpp
     op/fused/clamp.hpp
     op/fused/conv_fused.cpp
@@ -421,6 +425,8 @@ set (SRC
     op/fused/shuffle_channels.hpp
     op/fused/softmax_crossentropy.cpp
     op/fused/softmax_crossentropy.hpp
+    op/fused/space_to_batch.cpp
+    op/fused/space_to_batch.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
     op/fused/split.cpp
@@ -662,19 +668,6 @@ endif()
 
 if(NGRAPH_CPU_STATIC_LIB_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_CPU_STATIC_LIB_ENABLE)
-endif()
-
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-        target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
-        target_link_libraries(ngraph PRIVATE libmlsl)
-    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-        find_package(MPI REQUIRED)
-        target_include_directories(ngraph SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-        target_link_libraries(ngraph PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    else()
-        message(FATAL_ERROR "Distributed Library not supported/mentioned")
-    endif()
 endif()
 
 add_subdirectory(frontend)

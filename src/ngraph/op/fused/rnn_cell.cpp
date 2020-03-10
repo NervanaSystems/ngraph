@@ -65,6 +65,11 @@ op::RNNCell::RNNCell(const Output<Node>& X,
     constructor_validate_and_infer_types();
 }
 
+bool op::RNNCell::visit_attributes(AttributeVisitor& visitor)
+{
+    return op::util::RNNCellBase::visit_attributes(visitor);
+}
+
 void op::RNNCell::pre_validate_and_infer_types()
 {
     if (is_dynamic())

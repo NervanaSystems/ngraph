@@ -40,7 +40,7 @@
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
@@ -2099,7 +2099,7 @@ TEST(cpu_test, tensor_copy_from_same_rotated_layouts)
 
     // Check internal values in rotated layout
     auto result2_internal_buffer = reinterpret_cast<uint8_t*>(
-        static_pointer_cast<runtime::cpu::CPUTensorView>(result2)->get_data_ptr());
+        static_pointer_cast<runtime::cpu::CPUTensor>(result2)->get_data_ptr());
     vector<uint8_t> vec(result2_internal_buffer, result2_internal_buffer + 6);
     // This check can be removed if the CPU backend stops optimizing reshapes using layout
     // transformations
