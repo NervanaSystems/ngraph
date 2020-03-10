@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "default_opset.hpp"
+#include "exceptions.hpp"
 #include "resize.hpp"
 
 
@@ -28,42 +29,38 @@ namespace ngraph
             {
                 NodeVector resize(const onnx_import::Node& node)
                 {
-                    const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
-                    const auto data_shape = data->get_output_partial_shape(0);
-                    const auto data_rank = data_shape.rank();
-                    auto mode = node.get_attribute_value<std::string>("mode", "nearest");
-                    auto scales = node.get_attribute_value<std::vector<float>>("scales");
+                    auto inputs = node.get_ng_inputs();
+                    auto data = inputs.at(0);
+                    auto scales = inputs.at(1);
 
-                    AxisSet axes;
-                    for (auto ax = 0; ax < scales.size(); ++ax)
-                    {
-                        axes.insert(ax);
-                    }
+                    const auto data_shape = data->get_output_partial_shape(0);
+                    const auto scales_shape = scales->get_output_partial_shape(0);
+
+                    auto mode = node.get_attribute_value<std::string>("mode", "nearest");
 
                     auto attrs = ngraph::op::InterpolateAttrs();
-                    attrs.axes = axes;
                     attrs.mode = mode;
                     
-                    if (data_shape.is_static())
+                    if (scales_shape.rank().is_static())
                     {
-                        auto data_static_shape = data_shape.to_shape();
-                        Shape output_shape;
-                        for (size_t i = 0; i < data_static_shape.size(); ++i)
+                        AxisSet axes;
+                        for (int ax = 0; ax < scales_shape.rank().get_length(); ++ax)
                         {
-                            output_shape.push_back(std::floor(data_static_shape.at(i) * scales.at(i)));
+                            axes.insert(ax);
                         }
-                        auto output_shape_const = default_opset::Constant::create(element::u64, 
-                            Shape(output_shape.size()), output_shape);
-                        return {std::make_shared<default_opset::Interpolate>(data, output_shape_const, attrs)};
+                        attrs.axes = axes;
                     }
                     else
                     {
-                        auto shape_of_data = std::make_shared<default_opset::ShapeOf>(data);
-                        auto scales_const = default_opset::Constant::create(element::f32, Shape(scales.size()), scales);
-                        auto multiply = std::make_shared<default_opset::Multiply>(shape_of_data, scales_const);
-                        auto output_shape = std::make_shared<default_opset::Floor>(multiply);
-                        return {std::make_shared<default_opset::Interpolate>(data, output_shape, attrs)};
+                        throw error::NotSupported("ResizeOp: Dynamic shape of Scales input is not supported");
                     }
+
+                    auto shape_of_data = std::make_shared<default_opset::Convert>(
+                        std::make_shared<default_opset::ShapeOf>(data), ngraph::element::f32); 
+                    auto multiply = std::make_shared<default_opset::Multiply>(shape_of_data, scales);
+                    auto output_shape = std::make_shared<default_opset::Convert>(
+                        std::make_shared<default_opset::Floor>(multiply), ngraph::element::i64);
+                    return {std::make_shared<default_opset::Interpolate>(data, output_shape, attrs)};
                 }
 
             } // namespace set_10
