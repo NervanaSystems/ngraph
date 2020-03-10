@@ -41,7 +41,85 @@ op::v0::ROIAlign::ROIAlign(const Output<Node>& input,
 
 void op::v0::ROIAlign::validate_and_infer_types()
 {
-    // TODO
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(0) == element::f32 &&
+                              get_input_element_type(1) == element::f32,
+                          "The data type for input and ROIs is expected to be float32. Got: ",
+                          get_input_element_type(0),
+                          " and: ",
+                          get_input_element_type(1));
+
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(2) == element::i32,
+                          "The data type for batch indices is expected to be int32. Got: ",
+                          get_input_element_type(2));
+
+    const auto& input_ps = get_input_partial_shape(0);
+    NODE_VALIDATION_CHECK(this,
+                          input_ps.rank().compatible(4),
+                          "Expected a 4D tensor for the input data. Got: ",
+                          input_ps);
+
+    const auto& rois_ps = get_input_partial_shape(1);
+    NODE_VALIDATION_CHECK(this,
+                          rois_ps.rank().compatible(2),
+                          "Expected a 2D tensor for the ROIs input. Got: ",
+                          rois_ps);
+
+    const auto rois_second_dim = rois_ps[1];
+    NODE_VALIDATION_CHECK(this,
+                          rois_second_dim.compatible(4),
+                          "The second dimension of ROIs input should contain box coordinates. ",
+                          "This dimension is expected to be equal to 4. Got: ",
+                          rois_second_dim);
+
+    const auto& batch_indices_ps = get_input_partial_shape(2);
+    NODE_VALIDATION_CHECK(this,
+                          batch_indices_ps.rank().compatible(1),
+                          "Expected a 2D tensor for the batch indices input. Got: ",
+                          batch_indices_ps);
+
+    NODE_VALIDATION_CHECK(this,
+                          rois_ps[0].same_scheme(batch_indices_ps[0]),
+                          "The first dimension of ROIs input must be equal to the first dimension ",
+                          "if the batch indices input. Got: ",
+                          rois_ps[0],
+                          " and: ",
+                          batch_indices_ps[0]);
+
+    // the output shape should have the following format [NUM_ROIS, C, pooled_h, pooled_w]
+    auto output_shape = PartialShape{
+        {Dimension::dynamic(), input_ps[1], Dimension{m_pooled_h}, Dimension{m_pooled_w}}};
+
+    // if either of those 2 dimensions is static its value will be used
+    // for the first dimension of the output shape - 'NUM_ROIS'
+    if (rois_ps[0].is_static())
+    {
+        output_shape[0] = rois_ps[0];
+    }
+
+    if (batch_indices_ps[0].is_static())
+    {
+        output_shape[0] = batch_indices_ps[0];
+    }
+
+    set_output_size(1);
+    set_output_type(0, get_input_element_type(0), output_shape);
+
+    // if the channels dimension is not known
+    // the first input should be used during the function specialization
+    if (input_ps[1].is_dynamic())
+    {
+        set_input_is_relevant_to_shape(0);
+    }
+
+    // if the 'NUM_ROIS' value is not known
+    // the last 2 inputs should be used during the function specialization
+    if (output_shape[0].is_dynamic())
+    {
+        set_input_is_relevant_to_shape(1);
+        set_input_is_relevant_to_shape(2);
+    }
 }
 
 bool op::v0::ROIAlign::visit_attributes(AttributeVisitor& visitor)
