@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "ngraph/opsets/opset2.hpp"
+#include "ngraph/opsets/opset3.hpp"
 #include "roi_align.hpp"
 
 namespace ngraph
@@ -41,7 +41,7 @@ namespace ngraph
                         node.get_attribute_value<float>("spatial_scale", 1.0f);
                     const auto mode = node.get_attribute_value<std::string>("mode", "avg");
 
-                    return {std::make_shared<ngraph::opset2::ROIAlign>(data,
+                    return {std::make_shared<ngraph::opset3::ROIAlign>(data,
                                                                        rois,
                                                                        num_rois,
                                                                        pooled_h,
