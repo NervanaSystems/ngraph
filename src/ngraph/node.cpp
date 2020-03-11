@@ -368,16 +368,6 @@ void Node::set_placement(Placement placement)
     m_placement = placement;
 }
 
-size_t Node::get_placement_index() const
-{
-    return m_placement_index;
-}
-
-void Node::set_placement_index(size_t placement)
-{
-    m_placement_index = placement;
-}
-
 void Node::add_provenance_group_member(const shared_ptr<Node>& node)
 {
     m_provenance_group.insert(node);
