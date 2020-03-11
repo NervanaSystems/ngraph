@@ -104,8 +104,7 @@ void op::v0::ROIAlign::validate_and_infer_types()
     {
         output_shape[0] = rois_ps[0];
     }
-
-    if (batch_indices_ps[0].is_static())
+    else if (batch_indices_ps[0].is_static())
     {
         output_shape[0] = batch_indices_ps[0];
     }
