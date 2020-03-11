@@ -82,7 +82,7 @@ void op::v0::ROIAlign::validate_and_infer_types()
     NODE_VALIDATION_CHECK(this,
                           rois_ps[0].same_scheme(batch_indices_ps[0]),
                           "The first dimension of ROIs input must be equal to the first dimension ",
-                          "if the batch indices input. Got: ",
+                          "of the batch indices input. Got: ",
                           rois_ps[0],
                           " and: ",
                           batch_indices_ps[0]);
