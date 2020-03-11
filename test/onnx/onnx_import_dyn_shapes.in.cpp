@@ -555,5 +555,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_resize_opset10)
 {
     const auto resize = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/resize_opset10.prototxt"));
+
     auto test_case = ngraph::test::NgraphTestCase(resize, "${BACKEND_NAME}", BackendMode::DYNAMIC);
 }

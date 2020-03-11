@@ -24,7 +24,7 @@ namespace ngraph
     {
         namespace op
         {
-            namespace set_10
+            namespace set_1
             {
                 NodeVector resize(const onnx_import::Node& node)
                 {
@@ -65,7 +65,7 @@ namespace ngraph
                         std::make_shared<default_opset::Interpolate>(data, output_shape, attrs)};
                 }
 
-            } // namespace set_10
+            } // namespace set_1
 
         } // namespace op
 
