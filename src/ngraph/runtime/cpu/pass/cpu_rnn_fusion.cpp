@@ -64,6 +64,38 @@
 
 using namespace ngraph;
 
+void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
+{
+    // pattern to capture the vanilla RNN
+    // at = W*h{t, l-1} + U *h{t-1, l} + B
+    // ht = activation(at)
+
+    auto ht_current = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 34});
+    auto ht_prev = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 34});
+    auto concat = std::make_shared<ngraph::op::Concat>(NodeVector{ht_current, ht_prev}, 0);
+    auto weights = std::make_shared<pattern::op::Label>(element::f32, Shape{34, 2});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{64, 2});
+    auto broadcast_pred = [](std::shared_ptr<Node> n) {
+        return ((is_type<ngraph::op::Broadcast>(n)) || (is_type<ngraph::op::Reshape>(n)));
+    };
+    auto dot = std::make_shared<ngraph::op::Dot>(concat, weights);
+    auto add = std::make_shared<ngraph::op::Add>(
+        dot, std::make_shared<pattern::op::Skip>(bias, broadcast_pred));
+
+    auto activation = std::make_shared<ngraph::op::Tanh>(add);
+
+    auto callback = [ht_current, ht_prev, weights, bias](pattern::Matcher& m) {
+        auto pattern_map = m.get_pattern_map();
+        ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
+            ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_rnn;
+
+        return true;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(activation, "VanillaRNNFusion.vanilla_rnn");
+    this->add_matcher(m, callback);
+}
+
 void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 {
     size_t ref_batch_size = 2;
