@@ -42,7 +42,8 @@ FetchContent_Declare(
     GIT_REPOSITORY ${ONNX_GIT_REPO_URL}
     GIT_TAG ${ONNX_GIT_BRANCH}
 )
-include_directories("C:/workspace/dldt_ninja/ngraph/build/protobuf/include")
+
+include_directories("${Protobuf_INCLUDE_DIR}")
 
 FetchContent_GetProperties(ext_onnx)
 if(NOT ext_onnx_POPULATED)
