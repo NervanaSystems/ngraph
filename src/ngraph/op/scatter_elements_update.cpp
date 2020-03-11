@@ -37,6 +37,34 @@ bool ngraph::op::v0::ScatterElementsUpdate::visit_attributes(AttributeVisitor& v
 
 void op::v0::ScatterElementsUpdate::validate_and_infer_types()
 {
+    element::Type data_et = get_input_element_type(0);
+    element::Type indices_et = get_input_element_type(1);
+    element::Type updates_et = get_input_element_type(2);
+    element::Type axis_et = get_input_element_type(3);
+
+    const PartialShape& data_shape = get_input_partial_shape(0);
+    const PartialShape& indices_shape = get_input_partial_shape(1);
+    const PartialShape& updates_shape = get_input_partial_shape(2);
+    const PartialShape& axis_shape = get_input_partial_shape(3);
+
+    NODE_VALIDATION_CHECK(this,
+                          indices_et == element::i32 || indices_et == element::i64,
+                          "Indices element type must be i64 or i32");
+
+    NODE_VALIDATION_CHECK(this,
+                          axis_et == element::i32 || axis_et == element::i64,
+                          "Axis element type must be i64 or i32");
+
+    NODE_VALIDATION_CHECK(this,
+                          indices_shape.compatible(updates_shape),
+                          "Indices and updates input shapes are required to be the same ",
+                          "Got: ",
+                          indices_shape,
+                          " and: ",
+                          updates_shape);
+
+    set_output_size(1);
+    set_output_type(0, data_et, data_shape);
 }
 
 shared_ptr<Node> op::v0::ScatterElementsUpdate::copy_with_new_args(const NodeVector& new_args) const
