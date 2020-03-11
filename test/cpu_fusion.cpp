@@ -1211,6 +1211,7 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
 
 TEST(cpu_fusion, fuse_deconv)
 {
+    DisableRemoveGOE nogoe;
     bool use_deconv_fuse = (getenv_bool("NGRAPH_DECONV_FUSE"));
     if (!use_deconv_fuse)
     {
@@ -3762,6 +3763,7 @@ TEST(cpu_fusion, fuse_rnn_across_layer_2layer_3timestep)
 
 TEST(cpu_fusion, fuse_bi_directional_rnn)
 {
+    DisableRemoveGOE nogoe;
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
@@ -3829,6 +3831,7 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
 
 TEST(cpu_fusion, fuse_lstm_cells)
 {
+    DisableRemoveGOE nogoe;
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     const string json_path =
@@ -3866,6 +3869,7 @@ TEST(cpu_fusion, fuse_2_layer_rnn)
 
 TEST(cpu_fusion, fuse_1_layer_rnn)
 {
+    DisableRemoveGOE nogoe;
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
@@ -3934,6 +3938,7 @@ TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
 
 TEST(cpu_fusion, lstm_cell)
 {
+    DisableRemoveGOE nogoe;
     auto make_function = []() {
         const size_t batch_size = 3;
         const size_t input_size = 4;
