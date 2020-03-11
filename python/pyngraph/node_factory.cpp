@@ -14,12 +14,103 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "ngraph/attribute_visitor.hpp"
+#include "ngraph/check.hpp"
+#include "ngraph/except.hpp"
 #include "node_factory.hpp"
+// #include "ngraph/factory.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/opsets/opset.hpp"
 #include "ngraph/output_vector.hpp"
+#include "ngraph/util.hpp"
+
+class DictAttributeDeserializer : public ngraph::AttributeVisitor
+{
+public:
+    DictAttributeDeserializer(const py::dict& attributes)
+        : m_attributes(attributes)
+    {
+    }
+
+    void on_attribute(const std::string& name, std::string& value) override
+    {
+        if (m_attributes.contains(name))
+        {
+            value = m_attributes[name.c_str()].cast<std::string>();
+        }
+    }
+    void on_attribute(const std::string& name, bool& value) override
+    {
+        if (m_attributes.contains(name))
+        {
+            value = m_attributes[name.c_str()].cast<bool>();
+        }
+    }
+    void on_attribute(const std::string& name, double& value)
+    {
+        if (m_attributes.contains(name))
+        {
+            value = m_attributes[name.c_str()].cast<double>();
+        }
+    }
+    void on_attribute(const std::string& name, int64_t& value)
+    {
+        if (m_attributes.contains(name))
+        {
+            value = m_attributes[name.c_str()].cast<int64_t>();
+        }
+    }
+    void on_attribute(const std::string& name, uint64_t& value)
+    {
+        if (m_attributes.contains(name))
+        {
+            value = m_attributes[name.c_str()].cast<uint64_t>();
+        }
+    }
+    void on_adapter(const std::string& name, ngraph::ValueAccessor<void>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            // if (auto a = as_type<AttributeAdapter<ngraph::element::Type>>(&adapter))
+            // {
+            //     static_cast<ngraph::element::Type&>(*a) =
+            //     m_attributes[name.c_str()].cast<ngraph::element::Type>();
+            // }
+            // else if (auto a = as_type<AttributeAdapter<ngraph::PartialShape>>(&adapter))
+            // {
+            //     static_cast<ngraph::PartialShape&>(*a) =
+            //     m_attributes[name.c_str()].cast<ngraph::PartialShape>();
+            // }
+            std::cout << "Inside: on_adapter(const std::string& name, ngraph::ValueAccessor<void>& "
+                         "adapter)"
+                      << std::endl;
+        }
+    }
+    void on_adapter(const std::string& name, ngraph::ValueAccessor<std::string>& adapter)
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::string>());
+        }
+    }
+    void on_adapter(const std::string& name, ngraph::ValueAccessor<std::vector<int64_t>>& adapter)
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::vector<int64_t>>());
+        }
+    }
+
+protected:
+    const py::dict& m_attributes;
+};
 
 class NodeFactory
 {
@@ -30,33 +121,68 @@ public:
         std::cout << "default opset will be used" << std::endl;
     }
 
-    NodeFactory(std::string opset_name)
+    NodeFactory(const std::string& opset_name)
+        : m_opset{get_opset(opset_name)}
     {
         std::cout << "Constructor called" << std::endl;
         std::cout << "opset_name:" << opset_name << std::endl;
     }
 
-    void create(const std::string op_type_name, ngraph::NodeVector arguments, py::dict attributes)
+    std::shared_ptr<ngraph::Node> create(const std::string op_type_name,
+                                         const ngraph::NodeVector& arguments,
+                                         const py::dict& attributes = py::dict())
     {
         std::cout << "create called" << std::endl;
         std::cout << "op_type_name: " << op_type_name << std::endl;
 
+        const auto op_node = std::shared_ptr<ngraph::Node>(m_opset.create(op_type_name));
+
+        NGRAPH_CHECK(op_node != nullptr, "Couldn't create operator: ", op_type_name);
+        DictAttributeDeserializer visitor(attributes);
 
         for (auto item : arguments)
         {
             std::cout << "argument: " << item << std::endl;
         }
+        op_node->set_arguments(arguments);
+        op_node->visit_attributes(visitor);
+        op_node->constructor_validate_and_infer_types();
 
         std::cout << "attributes: " << attributes << std::endl;
-
         for (auto item : attributes)
         {
             std::cout << "key: " << item.first << ", value=" << item.second << std::endl;
-            std::cout << "key: " << item.first << ", class=" << typeid(item.second).name() << std::endl;
+            std::cout << "key: " << item.first << ", class=" << typeid(item.second).name()
+                      << std::endl;
+        }
+
+        return op_node;
+    }
+
+private:
+    const ngraph::OpSet& get_opset(const std::string& opset_name)
+    {
+        const std::string& opset_name_{ngraph::to_lower(opset_name)};
+        if (opset_name_ == "opset0")
+        {
+            return ngraph::get_opset0();
+        }
+        else if (opset_name_ == "opset1")
+        {
+            return ngraph::get_opset1();
+        }
+        else if (opset_name_ == "opset2")
+        {
+            return ngraph::get_opset2();
+        }
+        else
+        {
+            throw ngraph::ngraph_error("Unsupported opset version requested.");
         }
     }
-};
 
+    const ngraph::OpSet& m_opset{ngraph::get_opset0()};
+};
 
 namespace py = pybind11;
 
@@ -70,7 +196,5 @@ void regclass_pyngraph_NodeFactory(py::module m)
 
     node_factory.def("create", &NodeFactory::create);
 
-    node_factory.def("__repr__", [](const NodeFactory& self) {
-        return "<NodeFactory>";
-    });
+    node_factory.def("__repr__", [](const NodeFactory& self) { return "<NodeFactory>"; });
 }
