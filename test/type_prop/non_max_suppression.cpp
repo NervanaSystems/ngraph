@@ -130,8 +130,8 @@ TEST(type_prop, nms_output_shape)
     const auto nms_out_ps = nms->get_output_partial_shape(0);
 
     EXPECT_TRUE(nms_out_ps.rank().is_static());
-    EXPECT_EQ(static_cast<size_t>(nms_out_ps.rank()), 2);
-    EXPECT_EQ(static_cast<size_t>(nms_out_ps[1]), 3);
+    EXPECT_EQ(nms_out_ps.rank().get_length(), 2);
+    EXPECT_EQ(nms_out_ps[1].get_length(), 3);
 }
 
 TEST(type_prop, nms_output_shape_2)

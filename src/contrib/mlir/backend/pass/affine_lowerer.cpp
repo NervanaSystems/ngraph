@@ -2011,6 +2011,7 @@ namespace
             auto pAllIVs = makeHandlePointers(allIVs);
             auto steps = vArg.getSteps();
             SmallVector<ValueHandle, 8> nonRedIVs;
+            SmallVector<ValueHandle, 8> tempIVs;
 
             Type resTy = result.getType().cast<MemRefType>().getElementType();
             NGRAPH_CHECK(resTy.isa<IntegerType>(),
@@ -2032,8 +2033,17 @@ namespace
                     (ValueHandle)iRes(nonRedIVs), IndexType::get(resTy.getContext()));
 
                 // Build list of IVs including current min index.
-                auto tempIVs = allIVs;
-                tempIVs[axis] = currRedIdx;
+                for (auto i = 0; i < vArg.rank(); i++)
+                {
+                    if (i != axis)
+                    {
+                        tempIVs.push_back(allIVs[i]);
+                    }
+                    else
+                    {
+                        tempIVs.push_back(currRedIdx);
+                    }
+                }
 
                 // Select the min/max value and cast it back to integer type before storing it.
                 ValueHandle newRedIdx =

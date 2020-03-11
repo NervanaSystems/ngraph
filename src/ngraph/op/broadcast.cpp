@@ -246,7 +246,7 @@ void op::v1::Broadcast::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), result_shape);
 }
 
-shared_ptr<Node> op::v1::Broadcast::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Broadcast::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::Broadcast>(
@@ -339,7 +339,7 @@ void op::v0::Broadcast::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), m_shape);
 }
 
-shared_ptr<Node> op::v0::Broadcast::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Broadcast::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::Broadcast>(new_args.at(0), m_shape, m_broadcast_axes);
@@ -373,7 +373,7 @@ bool op::v0::BroadcastLike::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::v0::BroadcastLike::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::BroadcastLike::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {

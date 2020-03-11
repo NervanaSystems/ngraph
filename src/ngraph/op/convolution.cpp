@@ -242,7 +242,7 @@ const PartialShape op::v1::ConvolutionBackpropData::get_output_shape() const
     PartialShape shape;
     if (data_pshape.rank().is_static())
     {
-        shape = PartialShape{vector<Dimension>(static_cast<size_t>(data_pshape.rank() - 2))};
+        shape = PartialShape{vector<Dimension>(data_pshape.rank().get_length() - 2)};
     }
     else
     {
@@ -443,7 +443,7 @@ void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
 
         ptrdiff_t pads_end_backward =
             (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * m_dilations[i] +
-            ((m_pads_begin[i] + (static_cast<size_t>(get_output_shape()[i]) - 1) * m_strides[i] +
+            ((m_pads_begin[i] + (get_output_shape()[i].get_length() - 1) * m_strides[i] +
               m_pads_end[i] - (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * m_dilations[i]) %
              m_strides[i]) -
             m_pads_end[i];
@@ -605,7 +605,7 @@ void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
         forward_result_shape =
             infer_convolution_forward(this,
                                       data_batch_shape,
-                                      Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 1),
+                                      Strides(data_batch_shape.rank().get_length() - 2, 1),
                                       m_pads_begin,
                                       m_pads_end,
                                       filters_shape,
