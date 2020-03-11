@@ -28,9 +28,9 @@ namespace ngraph
             {
                 NodeVector resize(const onnx_import::Node& node)
                 {
-                    auto inputs = node.get_ng_inputs();
-                    auto data = inputs.at(0);
-                    auto scales = inputs.at(1);
+                    const auto inputs = node.get_ng_inputs();
+                    const auto data = inputs.at(0);
+                    const auto scales = inputs.at(1);
 
                     const auto data_shape = data->get_output_partial_shape(0);
                     const auto scales_shape = scales->get_output_partial_shape(1);
