@@ -36,7 +36,8 @@ namespace ngraph
                 NodeVector slice(const Node& node);
 
             } // namespace set_10
-        }     // namespace op
+
+        } // namespace op
 
     } // namespace onnx_import
 
