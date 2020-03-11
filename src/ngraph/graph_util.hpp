@@ -210,7 +210,7 @@ namespace ngraph
     ///
     /// To avoid the cycle, a valid way to perform the above desired insertion would be,
     ///
-    ///        auto new_N = N->copy_with_new_args(N->get_arguments());
+    ///        auto new_N = N->clone_with_new_inputs(as_output_vector(N->get_arguments()));
     ///        shared_ptr<Node> M = make_shared<SomeUnaryOp>(new_N);
     ///        replace_node(N, M);
     NGRAPH_API
