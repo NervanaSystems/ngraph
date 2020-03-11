@@ -75,7 +75,7 @@ void op::v0::ROIAlign::validate_and_infer_types()
 
     const auto& batch_indices_ps = get_input_partial_shape(2);
     NODE_VALIDATION_CHECK(this,
-                          batch_indices_ps.rank().compatible(1),
+                          batch_indices_ps.rank().compatible(2),
                           "Expected a 2D tensor for the batch indices input. Got: ",
                           batch_indices_ps);
 
