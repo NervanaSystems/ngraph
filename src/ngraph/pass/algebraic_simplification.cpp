@@ -323,14 +323,14 @@ static shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
 static bool is_input_uniform_constant(shared_ptr<Node> op,
                                       int constant_value,
                                       shared_ptr<Node>& constant,
-                                      shared_ptr<Node>& value)
+                                      Output<Node>& value)
 {
     bool rc = false;
     auto c = get_constant(op->input(0).get_source_output().get_node_shared_ptr());
     if (is_uniform_constant(c.get(), constant_value))
     {
         constant = op->input(0).get_source_output().get_node_shared_ptr();
-        value = op->input(1).get_source_output().get_node_shared_ptr();
+        value = op->input(1).get_source_output();
         rc = true;
     }
     else
@@ -339,7 +339,7 @@ static bool is_input_uniform_constant(shared_ptr<Node> op,
         if (is_uniform_constant(c.get(), constant_value))
         {
             constant = op->input(1).get_source_output().get_node_shared_ptr();
-            value = op->input(0).get_source_output().get_node_shared_ptr();
+            value = op->input(0).get_source_output();
             rc = true;
         }
     }
@@ -360,7 +360,7 @@ static bool simplify_multiply(shared_ptr<Node> n)
     if (multiply)
     {
         shared_ptr<Node> constant;
-        shared_ptr<Node> value;
+        Output<Node> value;
         if (is_input_uniform_constant(multiply, 0, constant, value))
         {
             replace_node(multiply, constant);
@@ -370,7 +370,7 @@ static bool simplify_multiply(shared_ptr<Node> n)
         {
             if (is_input_uniform_constant(multiply, 1, constant, value))
             {
-                replace_node(multiply, value);
+                multiply->output(0).replace(value);
                 rc = true;
             }
         }
@@ -391,10 +391,10 @@ static bool simplify_add(shared_ptr<Node> n)
     if (add)
     {
         shared_ptr<Node> constant;
-        shared_ptr<Node> value;
+        Output<Node> value;
         if (is_input_uniform_constant(add, 0, constant, value))
         {
-            replace_node(add, value);
+            add->output(0).replace(value);
             rc = true;
         }
     }
