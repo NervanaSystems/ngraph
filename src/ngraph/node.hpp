@@ -429,12 +429,6 @@ namespace ngraph
         /// Set device placement
         void set_placement(Placement placement);
 
-        /// Get device placement
-        size_t get_placement_index() const;
-
-        /// Set device placement
-        void set_placement_index(size_t placement);
-
         using RTMap = std::map<std::string, std::shared_ptr<Variant>>;
 
         RTMap& get_rt_info() { return m_rt_info; }
@@ -481,8 +475,6 @@ namespace ngraph
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
-        static const size_t placement_invalid = -1;
-
         /// \return A vector containing a handle for each of this node's inputs, in order.
         // TODO: Rename to get_inputs()?
         std::vector<Input<Node>> inputs();
@@ -548,7 +540,6 @@ namespace ngraph
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
-        size_t m_placement_index = placement_invalid;
         std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
         std::map<std::string, std::shared_ptr<Variant>> m_rt_info;
     };
