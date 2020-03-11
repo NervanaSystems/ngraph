@@ -75,14 +75,14 @@ void op::v0::ROIAlign::validate_and_infer_types()
 
     const auto& batch_indices_ps = get_input_partial_shape(2);
     NODE_VALIDATION_CHECK(this,
-                          batch_indices_ps.rank().compatible(1),
+                          batch_indices_ps.rank().compatible(2),
                           "Expected a 2D tensor for the batch indices input. Got: ",
                           batch_indices_ps);
 
     NODE_VALIDATION_CHECK(this,
                           rois_ps[0].same_scheme(batch_indices_ps[0]),
                           "The first dimension of ROIs input must be equal to the first dimension ",
-                          "if the batch indices input. Got: ",
+                          "of the batch indices input. Got: ",
                           rois_ps[0],
                           " and: ",
                           batch_indices_ps[0]);
