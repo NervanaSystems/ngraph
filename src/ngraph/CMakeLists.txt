@@ -350,6 +350,7 @@ set (SRC
     op/softmax.cpp
     op/softmax.hpp
     op/strided_slice.cpp
+    op/strided_slice.hpp
     op/sqrt.cpp
     op/sqrt.hpp
     op/stop_gradient.cpp
