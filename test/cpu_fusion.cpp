@@ -3987,13 +3987,14 @@ TEST(cpu_fusion, fuse_vanilla_rnn_cells)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::VanillaRNNFusion>();
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "tensorflow/basic_rnn.json");
+    const string json_path =
+        file_util::path_join(SERIALIZED_ZOO, "tensorflow/vanilla_rnn_3_time_step.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
-    auto lstm_ops = get_ops_of_type<op::Lstm>(func);
-    EXPECT_EQ(lstm_ops.size(), 1);
+    auto lstm_ops = get_ops_of_type<op::Rnn>(func);
+    EXPECT_EQ(lstm_ops.size(), 3);
 }
 
 TEST(cpu_fusion, validate_fuse_gru_inputs)
