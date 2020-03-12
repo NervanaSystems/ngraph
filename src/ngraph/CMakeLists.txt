@@ -329,6 +329,8 @@ set (SRC
     op/reverse_sequence.hpp
     op/scatter_add.cpp
     op/scatter_add.hpp
+    op/scatter_elements_update.cpp
+    op/scatter_elements_update.hpp
     op/scatter_nd_add.cpp
     op/scatter_nd_add.hpp
     op/select.cpp

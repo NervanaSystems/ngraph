@@ -14,13 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-// This collection contains one entry for each new op on top of the opset1.
+#pragma once
 
-#ifndef NGRAPH_OP
-#warning "NGRAPH_OP not defined"
-#define NGRAPH_OP(x, y)
-#endif
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
-#include "opset2_tbl.hpp"
-NGRAPH_OP(ROIAlign, ngraph::op::v0)
-NGRAPH_OP(ScatterElementsUpdate, ngraph::op::v0)
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector scatter_elements(const Node& node);
+
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
