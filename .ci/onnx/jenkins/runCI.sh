@@ -213,9 +213,7 @@ function run_ci() {
 function check_container_status() {
     # Returns status of container for container name given as parameter
     local docker_container_name="${1}"
-    local pattern="(?<=${docker_container_name}-).+"
-    local format="{{ .Names }}-{{ .Status }}"
-    echo "$(docker ps -a --format=\"${format}\" | grep -iPo \"${pattern}\")"
+    echo "$(docker ps -a --format="{{ .Status }}" --filter="name=${docker_container_name}")"
 
     return 0
 }
