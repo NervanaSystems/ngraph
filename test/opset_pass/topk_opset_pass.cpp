@@ -39,15 +39,14 @@ TEST(opset_transform, opset1_topk_upgrade_pass)
     pass_manager.register_pass<pass::Opset1Upgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
     const auto topk_v1 = as_type_ptr<op::v1::TopK>(pass_replacement_node);
     ASSERT_TRUE(topk_v1);
     EXPECT_EQ(topk_v1->get_axis(), axis);
     EXPECT_EQ(topk_v1->get_mode(), op::v1::TopK::Mode::MAX);
     EXPECT_EQ(topk_v1->get_sort_type(), op::v1::TopK::SortType::SORT_VALUES);
 
-    const auto values_out_element_type = topk_v1->output(0).get_element_type();
+    const auto values_out_element_type = topk_v1->get_output_element_type(0);
     EXPECT_EQ(values_out_element_type, data->get_element_type());
 }
 
@@ -69,8 +68,7 @@ TEST(opset_transform, opset1_topk_downgrade_pass)
     pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
     const auto topk_v0 = as_type_ptr<op::v0::TopK>(pass_replacement_node);
     ASSERT_TRUE(topk_v0);
     EXPECT_EQ(topk_v0->get_k(), k);

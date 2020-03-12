@@ -315,7 +315,7 @@ static shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
     set<Node::type_info_t> nomath = {op::Broadcast::type_info, op::Reshape::type_info};
     while (nomath.find(op->get_type_info()) != nomath.end())
     {
-        op = op->input(0).get_source_output().get_node_shared_ptr();
+        op = op->get_input_node_shared_ptr(0);
     }
     return as_type_ptr<op::Constant>(op);
 }
@@ -326,19 +326,19 @@ static bool is_input_uniform_constant(shared_ptr<Node> op,
                                       Output<Node>& value)
 {
     bool rc = false;
-    auto c = get_constant(op->input(0).get_source_output().get_node_shared_ptr());
+    auto c = get_constant(op->get_input_node_shared_ptr(0));
     if (is_uniform_constant(c.get(), constant_value))
     {
-        constant = op->input(0).get_source_output().get_node_shared_ptr();
+        constant = op->get_input_node_shared_ptr(0);
         value = op->input(1).get_source_output();
         rc = true;
     }
     else
     {
-        c = get_constant(op->input(1).get_source_output().get_node_shared_ptr());
+        c = get_constant(op->get_input_node_shared_ptr(1));
         if (is_uniform_constant(c.get(), constant_value))
         {
-            constant = op->input(1).get_source_output().get_node_shared_ptr();
+            constant = op->get_input_node_shared_ptr(1);
             value = op->input(0).get_source_output();
             rc = true;
         }
