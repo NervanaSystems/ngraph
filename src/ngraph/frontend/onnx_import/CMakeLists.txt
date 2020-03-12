@@ -173,6 +173,8 @@ add_library(onnx_import STATIC
         op/relu.hpp
         op/reshape.cpp
         op/reshape.hpp
+        op/resize.cpp
+        op/resize.hpp
         op/reverse_sequence.cpp
         op/reverse_sequence.hpp
         op/roi_align.cpp
