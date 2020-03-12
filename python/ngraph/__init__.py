@@ -110,6 +110,7 @@ from ngraph.ops import tan
 from ngraph.ops import tanh
 from ngraph.ops import topk
 from ngraph.ops import unsqueeze
+from ngraph.ops import variadic_split
 
 
 from ngraph.runtime import runtime

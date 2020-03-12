@@ -1668,3 +1668,10 @@ def matmul(data_a, data_b, transpose_a, transpose_b):  # type: (Node, Node, bool
     print("transpose_a", transpose_a, "transpose_b", transpose_b)
     return _get_node_factory().create('MatMul', [data_a, data_b],
                                       {"transpose_a": transpose_a, "transpose_b": transpose_b})
+
+
+@nameable_op
+def variadic_split(data, axis, split_lengths):  # type: (Node, Node, Node) -> Node
+    """Return a node which splits the input tensor into variadic length slices
+    """
+    return _get_node_factory().create("VariadicSplit", [data, axis, split_lengths])
