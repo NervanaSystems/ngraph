@@ -64,29 +64,29 @@ function main() {
 
     WORKSPACE="$(pwd)/$( dirname "${BASH_SOURCE[0]}" )"
     cd "${WORKSPACE}"
+    local repo_clone_location="${WORKSPACE%/.ci*}"
 
     if [ "${CLEANUP}" = "true" ]; then
-        cleanup
+        cleanup "${repo_clone_location}"
         return 0
     fi
 
-    local repo_clone_location="${WORKSPACE%/.ci*}"
     if ! check_ngraph_onnx_repo "${repo_clone_location}"; then
         git clone "${NGRAPH_ONNX_REPO_ADDRESS}" --branch "${NGRAPH_ONNX_REPO_BRANCH}" "${repo_clone_location}/${NGRAPH_ONNX_REPO_DIR_NAME}"
     fi
 
-    local cloned_repo_branch="$(ngraph_onnx_rev_parse "--abbrev-ref")"
+    local cloned_repo_branch="$(ngraph_onnx_rev_parse "${repo_clone_location}" "--abbrev-ref")"
     if [[ "${cloned_repo_branch}"!="${NGRAPH_ONNX_REPO_BRANCH}" ]]; then
-        checkout_ngraph_onnx_repo "${NGRAPH_ONNX_REPO_BRANCH}"
+        checkout_ngraph_onnx_repo "${repo_clone_location}" "${NGRAPH_ONNX_REPO_BRANCH}"
     fi
 
-    local cloned_repo_sha="$(ngraph_onnx_rev_parse)"
+    local cloned_repo_sha="$(ngraph_onnx_rev_parse "${repo_clone_location}")"
     if [ -z "${NGRAPH_ONNX_REPO_SHA}" ]; then
         NGRAPH_ONNX_REPO_SHA="${cloned_repo_sha}"
     fi
 
     if [[ "${NGRAPH_ONNX_REPO_SHA}" != "${cloned_repo_sha}" ]]; then
-        checkout_ngraph_onnx_repo "${NGRAPH_ONNX_REPO_SHA}"
+        checkout_ngraph_onnx_repo "${repo_clone_location}" "${NGRAPH_ONNX_REPO_SHA}"
     fi
 
     run_ci "${repo_clone_location}"
@@ -139,13 +139,14 @@ function parse_arguments {
 
 function cleanup() {
     # Performs cleanup of artifacts and containers from previous runs.
+    local repo_clone_location="${1}"
     local container_name_pattern="${DOCKER_CONTAINER_NAME_PATTERN/<OPERATING_SYSTEM>/*}"
     local ngraph_path="${WORKSPACE%/.ci*}"
     docker rm -f "$(docker ps -a --format="{{.ID}}" --filter="name=${container_name_pattern}")"
     rm -rf "${ngraph_path}/python/dist/ngraph*.whl"
     rm -rf "${ngraph_path}/python/*.so"
     rm -rf "${ngraph_path}/python/build"
-    rm -rf "${ngraph_path}/${NGRAPH_ONNX_REPO_DIR_NAME}"
+    rm -rf "${repo_clone_location}/${NGRAPH_ONNX_REPO_DIR_NAME}"
 
     return 0
 }
@@ -153,8 +154,8 @@ function cleanup() {
 
 function check_ngraph_onnx_repo() {
     # Verifies if nGraph-ONNX repository is present
-    local repo_location="${1}"
-    local ngraph_onnx_git="${repo_location}/${NGRAPH_ONNX_REPO_DIR_NAME}/.git"
+    local repo_clone_location="${1}"
+    local ngraph_onnx_git="${repo_clone_location}/${NGRAPH_ONNX_REPO_DIR_NAME}/.git"
     if [ -d "${ngraph_onnx_git}" ]; then
         # 0 - true
         return 0
@@ -166,9 +167,10 @@ function check_ngraph_onnx_repo() {
 
 function ngraph_onnx_rev_parse() {
     # Returns the result of git rev-parse on nGraph-ONNX repository.
-    local rev_parse_args="${1}"
+    local repo_clone_location="${1}"
+    local rev_parse_args="${2}"
     local previous_dir="$(pwd)"
-    local ngraph_onnx_dir="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}"
+    local ngraph_onnx_dir="${repo_clone_location}/${NGRAPH_ONNX_REPO_DIR_NAME}"
     cd "${ngraph_onnx_dir}"
     local result="$(git rev-parse ${rev_parse_args} HEAD)"
     cd "${previous_dir}"
@@ -179,9 +181,10 @@ function ngraph_onnx_rev_parse() {
 
 function checkout_ngraph_onnx_repo() {
     # Switches nGraph-ONNX repository to commit SHA
-    local rev="${1}"
+    local repo_clone_location="${1}"
+    local rev="${2}"
     local previous_dir="$(pwd)"
-    cd "${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}"
+    cd "${repo_clone_location}/${NGRAPH_ONNX_REPO_DIR_NAME}"
     git checkout "${rev}"
     cd "${previous_dir}"
 
@@ -204,7 +207,7 @@ function run_ci() {
         # Rebuild container if REBUILD parameter used or if there's no container present
         if [[ "${REBUILD}" = "true" || -z "$(check_container_status "${docker_container_name}")" ]]; then
             docker rm -f "${docker_container_name}" >/dev/null 2>&1
-            build_docker_image "${operating_system}" "${docker_image_name}"
+            build_docker_image "${repo_clone_location}" "${operating_system}" "${docker_image_name}"
             run_docker_container "${docker_image_name}" "${docker_container_name}" "${ngraph_parrent_path}"
             prepare_environment "${docker_container_name}" "${container_ngraph_ci_dir}"
         elif [[ "$(check_container_status)"==*"Exited"* ]]; then
@@ -226,9 +229,10 @@ function check_container_status() {
 
 function build_docker_image() {
     # Builds CI Docker image for operating system given as parameter
+    local repo_clone_location="${1}"
     local operating_system="${1}"
     local docker_image_name="${2}"
-    local dockerfiles_dir="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}/dockerfiles"
+    local dockerfiles_dir="${repo_clone_location}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}/dockerfiles"
     local postprocess_dockerfile_subpath="postprocess/append_user.dockerfile"
     local previous_dir="$(pwd)"
     cd "${dockerfiles_dir}"
