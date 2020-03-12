@@ -71,7 +71,7 @@ function main() {
     fi
 
     if ! check_ngraph_onnx_repo; then
-        git clone "${NGRAPH_ONNX_REPO_ADDRESS}" --branch "${NGRAPH_ONNX_REPO_BRANCH}" "${NGRAPH_ONNX_REPO_DIR_NAME}"
+        git clone "${NGRAPH_ONNX_REPO_ADDRESS}" --branch "${NGRAPH_ONNX_REPO_BRANCH}" "${WORKSPACE%/.ci*}/${NGRAPH_ONNX_REPO_DIR_NAME}"
     fi
 
     local cloned_repo_branch="$(ngraph_onnx_rev_parse "--abbrev-ref")"
@@ -268,7 +268,7 @@ function prepare_environment() {
     # Prepares environment - builds nGraph
     local docker_container_name="${1}"
     local container_ngraph_ci_dir="${2}"
-    local ngraph_onnx_ci_dir="${DOCKER_HOME}/${container_ngraph_ci_dir}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}"
+    local ngraph_onnx_ci_dir="${DOCKER_HOME}/${container_ngraph_ci_dir%/.ci*}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}"
     docker exec ${docker_container_name} bash -c "${ngraph_onnx_ci_dir}/prepare_environment.sh \
                                                     --build-dir=${DOCKER_HOME} \
                                                     --backends=${BACKENDS// /,}"
@@ -292,7 +292,7 @@ function run_backend_test() {
     local docker_container_name="${1}"
     local container_ngraph_ci_dir="${2}"
     local backend="${3}"
-    local container_ngraph_onnx_path="${DOCKER_HOME}/${container_ngraph_ci_dir}/${NGRAPH_ONNX_REPO_DIR_NAME}"
+    local container_ngraph_onnx_path="${DOCKER_HOME}/${container_ngraph_ci_dir%/.ci*}/${NGRAPH_ONNX_REPO_DIR_NAME}"
     local container_ngraph_path="${DOCKER_HOME}/${container_ngraph_ci_dir%/.ci*}"
     local backend_env="NGRAPH_BACKEND=$(printf '%s\n' "${backend}" | awk '{ print toupper($0) }')"
     local ngraph_whl=$(docker exec ${docker_container_name} find ${container_ngraph_path}/python/dist/ -name 'ngraph*.whl')
