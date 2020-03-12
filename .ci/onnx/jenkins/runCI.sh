@@ -187,16 +187,6 @@ function checkout_ngraph_onnx_repo() {
     return 0
 }
 
-function check_container_status() {
-    # Returns status of container for container name given as parameter
-    local docker_container_name="${1}"
-    local pattern="(?<=${docker_container_name}-).+"
-    local format="{{ .Names }}-{{ .Status }}"
-    echo "$(docker ps -a --format=\"${format}\" | grep -iPo \"${pattern}\")"
-
-    return 0
-}
-
 function run_ci() {
     # Builds necessary Docker images and executes CI
     local ngraph_onnx_ci_dockerfiles_dir="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}/dockerfiles"
@@ -216,6 +206,16 @@ function run_ci() {
         prepare_environment "${docker_container_name}" "${ngraph_ci_dir}"
         run_tox_tests "${docker_container_name}" "${ngraph_ci_dir}"
     done
+
+    return 0
+}
+
+function check_container_status() {
+    # Returns status of container for container name given as parameter
+    local docker_container_name="${1}"
+    local pattern="(?<=${docker_container_name}-).+"
+    local format="{{ .Names }}-{{ .Status }}"
+    echo "$(docker ps -a --format=\"${format}\" | grep -iPo \"${pattern}\")"
 
     return 0
 }
