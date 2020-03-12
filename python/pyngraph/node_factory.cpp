@@ -24,12 +24,11 @@
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/except.hpp"
-#include "node_factory.hpp"
-// #include "ngraph/factory.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/opsets/opset.hpp"
 #include "ngraph/output_vector.hpp"
 #include "ngraph/util.hpp"
+#include "node_factory.hpp"
 
 class DictAttributeDeserializer : public ngraph::AttributeVisitor
 {
@@ -53,27 +52,6 @@ public:
             value = m_attributes[name.c_str()].cast<bool>();
         }
     }
-    void on_attribute(const std::string& name, double& value)
-    {
-        if (m_attributes.contains(name))
-        {
-            value = m_attributes[name.c_str()].cast<double>();
-        }
-    }
-    void on_attribute(const std::string& name, int64_t& value)
-    {
-        if (m_attributes.contains(name))
-        {
-            value = m_attributes[name.c_str()].cast<int64_t>();
-        }
-    }
-    void on_attribute(const std::string& name, uint64_t& value)
-    {
-        if (m_attributes.contains(name))
-        {
-            value = m_attributes[name.c_str()].cast<uint64_t>();
-        }
-    }
     void on_adapter(const std::string& name, ngraph::ValueAccessor<void>& adapter) override
     {
         if (m_attributes.contains(name))
@@ -88,73 +66,90 @@ public:
             //     static_cast<ngraph::PartialShape&>(*a) =
             //     m_attributes[name.c_str()].cast<ngraph::PartialShape>();
             // }
-            std::cout << "Inside: on_adapter(const std::string& name, ngraph::ValueAccessor<void>& "
-                         "adapter)"
-                      << std::endl;
+            NGRAPH_CHECK(
+                false, "No AttributeVisitor support for accessing attribute named: ", name);
         }
     }
-    void on_adapter(const std::string& name, ngraph::ValueAccessor<std::string>& adapter)
+    void on_adapter(const std::string& name, ngraph::ValueAccessor<std::string>& adapter) override
     {
         if (m_attributes.contains(name))
         {
             adapter.set(m_attributes[name.c_str()].cast<std::string>());
         }
     }
-    void on_adapter(const std::string& name, ngraph::ValueAccessor<std::vector<int64_t>>& adapter)
+    void on_adapter(const std::string& name, ngraph::ValueAccessor<std::int64_t>& adapter) override
     {
         if (m_attributes.contains(name))
         {
-            adapter.set(m_attributes[name.c_str()].cast<std::vector<int64_t>>());
+            adapter.set(m_attributes[name.c_str()].cast<std::int64_t>());
+        }
+    }
+    void on_adapter(const std::string& name, ngraph::ValueAccessor<double>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<double>());
+        }
+    }
+    void on_adapter(const std::string& name,
+                    ngraph::ValueAccessor<std::vector<int64_t>>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::vector<std::int64_t>>());
+        }
+    }
+    void on_adapter(const std::string& name,
+                    ngraph::ValueAccessor<std::vector<std::string>>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::vector<std::string>>());
+        }
+    }
+    void on_adapter(const std::string& name,
+                    ngraph::ValueAccessor<std::vector<float>>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::vector<float>>());
         }
     }
 
 protected:
+    // template <typename T>
+    // void set_adapter_value(const std::string& key, ngraph::ValueAccessor<T>& adapter)
+    // {
+    //     if (m_attributes.contains(key))
+    //     {
+    //         adapter.set(m_attributes[key.c_str()]).cast<T&>();
+    //     }
+    // }
+
     const py::dict& m_attributes;
 };
 
 class NodeFactory
 {
 public:
-    NodeFactory()
-    {
-        std::cout << "Constructor called" << std::endl;
-        std::cout << "default opset will be used" << std::endl;
-    }
-
+    NodeFactory() {}
     NodeFactory(const std::string& opset_name)
         : m_opset{get_opset(opset_name)}
     {
-        std::cout << "Constructor called" << std::endl;
-        std::cout << "opset_name:" << opset_name << std::endl;
     }
 
     std::shared_ptr<ngraph::Node> create(const std::string op_type_name,
                                          const ngraph::NodeVector& arguments,
                                          const py::dict& attributes = py::dict())
     {
-        std::cout << "create called" << std::endl;
-        std::cout << "op_type_name: " << op_type_name << std::endl;
-
         const auto op_node = std::shared_ptr<ngraph::Node>(m_opset.create(op_type_name));
 
         NGRAPH_CHECK(op_node != nullptr, "Couldn't create operator: ", op_type_name);
         DictAttributeDeserializer visitor(attributes);
 
-        for (auto item : arguments)
-        {
-            std::cout << "argument: " << item << std::endl;
-        }
         op_node->set_arguments(arguments);
         op_node->visit_attributes(visitor);
         op_node->constructor_validate_and_infer_types();
-
-        std::cout << "attributes: " << attributes << std::endl;
-        for (auto item : attributes)
-        {
-            std::cout << "key: " << item.first << ", value=" << item.second << std::endl;
-            std::cout << "key: " << item.first << ", class=" << typeid(item.second).name()
-                      << std::endl;
-        }
 
         return op_node;
     }
