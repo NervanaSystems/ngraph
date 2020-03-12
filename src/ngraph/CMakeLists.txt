@@ -80,6 +80,8 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
+    distributed/null.cpp
+    distributed/null.hpp
     distributed.cpp
     distributed.hpp
     enum_names.hpp
@@ -749,10 +751,9 @@ endif()
 
 # nGraph
 install(TARGETS ngraph EXPORT ngraphTargets
-        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB}
-        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB}
-        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB}
-        COMPONENT ngraph)
+        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph
+        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph
+        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION ${NGRAPH_INSTALL_INCLUDE}/ngraph
     COMPONENT ngraph
