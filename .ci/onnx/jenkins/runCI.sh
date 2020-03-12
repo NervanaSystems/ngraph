@@ -163,7 +163,7 @@ function check_ngraph_onnx_repo() {
 }
 
 function ngraph_onnx_rev_parse() {
-    # Returns the result of got rev-parse on nGraph-ONNX repository.
+    # Returns the result of git rev-parse on nGraph-ONNX repository.
     local rev_parse_args="${1}"
     local previous_dir="$(pwd)"
     local ngraph_onnx_dir="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}"
@@ -293,9 +293,9 @@ function run_backend_test() {
     local container_ngraph_ci_dir="${2}"
     local backend="${3}"
     local container_ngraph_onnx_path="${DOCKER_HOME}/${container_ngraph_ci_dir}/${NGRAPH_ONNX_REPO_DIR_NAME}"
-    local container_ngraph_dir_path="${DOCKER_HOME}/${container_ngraph_ci_dir%/.ci*}"
+    local container_ngraph_path="${DOCKER_HOME}/${container_ngraph_ci_dir%/.ci*}"
     local backend_env="NGRAPH_BACKEND=$(printf '%s\n' "${backend}" | awk '{ print toupper($0) }')"
-    local ngraph_whl=$(docker exec ${docker_container_name} find ${container_ngraph_dir_path}/python/dist/ -name 'ngraph*.whl')
+    local ngraph_whl=$(docker exec ${docker_container_name} find ${container_ngraph_path}/python/dist/ -name 'ngraph*.whl')
     local tox_env="TOX_INSTALL_NGRAPH_FROM=${ngraph_whl}"
     docker exec -e "${tox_env}" -e "${backend_env}" -w "${container_ngraph_onnx_path}" ${docker_container_name} tox -c .
 
