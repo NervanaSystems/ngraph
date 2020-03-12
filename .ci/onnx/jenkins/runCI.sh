@@ -28,7 +28,7 @@ Arguments:
                                   Default: master
     --ngraph_onnx_sha=...       - Checkout to specified nGraph-ONNX commit.
                                   Default: none - latest commit of cloned branch used
-    --backends=...              - Comma separated list of nGraph backends to run CI on.
+    --backends=...              - Comma separated list (no whitespaces!) of nGraph backends to run CI on.
                                   Default: cpu,interpreter
 "
 
@@ -114,8 +114,8 @@ function parse_arguments {
                 ;;
             "--backends="*)
                 BACKENDS="${i//${PATTERN}/}"
-                IFS="," read -ra BACKENDS <<< "${BACKENDS}"
-                BACKENDS="${BACKENDS[@]}"
+                # Convert comma separated values into whitespace separated
+                BACKENDS="${BACKENDS//,/ }"
                 ;;
             *)
                 echo "[ERROR] Unrecognized argument: ${i}"
@@ -268,7 +268,7 @@ function prepare_environment() {
     local ngraph_onnx_ci_dir="${DOCKER_HOME}/ngraph/${ngraph_ci_dir}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}"
     docker exec ${docker_container_name} bash -c "${ngraph_onnx_ci_dir}/prepare_environment.sh \
                                                     --build-dir=${DOCKER_HOME} \
-                                                    --backends=${BACKENDS}"
+                                                    --backends=${BACKENDS// /,}"
 
     return 0
 }
