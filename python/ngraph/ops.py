@@ -178,7 +178,7 @@ def unsqueeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
                   One of: input node or array.
     :return: The new node performing an unsqueeze operation on input tensor.
     """
-    return Unsqueeze(data, as_node(axes))
+    return _get_node_factory().create("Unsqueeze", [data, as_node(axes)])
 
 
 def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
