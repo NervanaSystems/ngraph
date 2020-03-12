@@ -257,7 +257,9 @@ function prepare_environment() {
     # Prepares environment - builds nGraph
     local docker_container_name="${1}"
     local ngraph_ci_dir="${2}"
-    local ngraph_onnx_ci_dir="${DOCKER_HOME}/ngraph/${ngraph_ci_dir}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}"
+    local ngraph_path="${WORKSPACE%/.ci*}"
+    local ngraph_dir_name="${ngraph_path##*/}"
+    local ngraph_onnx_ci_dir="${DOCKER_HOME}/${ngraph_dir_name}/${ngraph_ci_dir}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}"
     docker exec ${docker_container_name} bash -c "${ngraph_onnx_ci_dir}/prepare_environment.sh \
                                                     --build-dir=${DOCKER_HOME} \
                                                     --backends=${BACKENDS// /,}"
