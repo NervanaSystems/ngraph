@@ -14,16 +14,33 @@
 // limitations under the License.
 //*****************************************************************************
 
-// This collection contains one entry for each new op on top of the opset1.
+#pragma once
 
-#ifndef NGRAPH_OP
-#warning "NGRAPH_OP not defined"
-#define NGRAPH_OP(x, y)
-#endif
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
-#include "opset1_tbl.hpp"
-NGRAPH_OP(Gelu, ngraph::op::v0)
-NGRAPH_OP(BatchToSpace, ngraph::op::v1)
-NGRAPH_OP(ROIAlign, ngraph::op::v0)
-NGRAPH_OP(SpaceToBatch, ngraph::op::v1)
-NGRAPH_OP(NonZero, ngraph::op::v0)
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                ///
+                /// \brief Convert ONNX NonZero operation to an nGraph node.
+                ///
+                /// \param node   The ONNX node object representing this operation.
+                ///
+                /// \return The vector containing Ngraph nodes producing output of ONNX NonZero
+                ///         operation.
+                ///
+                NodeVector non_zero(const Node& node);
+
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

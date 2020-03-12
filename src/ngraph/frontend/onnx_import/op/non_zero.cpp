@@ -14,16 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-// This collection contains one entry for each new op on top of the opset1.
+#include <memory>
 
-#ifndef NGRAPH_OP
-#warning "NGRAPH_OP not defined"
-#define NGRAPH_OP(x, y)
-#endif
+#include "ngraph/opsets/opset2.hpp"
+#include "non_zero.hpp"
 
-#include "opset1_tbl.hpp"
-NGRAPH_OP(Gelu, ngraph::op::v0)
-NGRAPH_OP(BatchToSpace, ngraph::op::v1)
-NGRAPH_OP(ROIAlign, ngraph::op::v0)
-NGRAPH_OP(SpaceToBatch, ngraph::op::v1)
-NGRAPH_OP(NonZero, ngraph::op::v0)
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector non_zero(const Node& node)
+                {
+                    const Output<ngraph::Node> data = node.get_ng_inputs().at(0);
+                    return {std::make_shared<ngraph::opset2::NonZero>(data)};
+                }
+
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
