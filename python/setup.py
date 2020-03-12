@@ -66,14 +66,20 @@ def find_pybind_headers_dir():
 NGRAPH_CPP_DIST_DIR = find_ngraph_dist_dir()
 PYBIND11_INCLUDE_DIR = find_pybind_headers_dir() + '/include'
 NGRAPH_CPP_INCLUDE_DIR = NGRAPH_CPP_DIST_DIR + '/include'
-if os.path.exists(NGRAPH_CPP_DIST_DIR + '/lib'):
-    NGRAPH_CPP_LIBRARY_DIR = NGRAPH_CPP_DIST_DIR + '/lib'
-elif os.path.exists(NGRAPH_CPP_DIST_DIR + '/lib64'):
-    NGRAPH_CPP_LIBRARY_DIR = NGRAPH_CPP_DIST_DIR + '/lib64'
+if os.path.exists(os.path.join(NGRAPH_CPP_DIST_DIR, 'lib')):
+    NGRAPH_CPP_LIBRARY_DIR = os.path.join(NGRAPH_CPP_DIST_DIR, 'lib')
+elif os.path.exists(os.path.join(NGRAPH_CPP_DIST_DIR, 'lib64')):
+    NGRAPH_CPP_LIBRARY_DIR = os.path.join(NGRAPH_CPP_DIST_DIR, 'lib64')
 else:
     print('Cannot find library directory in {}, make sure that nGraph is installed '
           'correctly'.format(NGRAPH_CPP_DIST_DIR))
     sys.exit(1)
+
+if sys.platform == 'win32':
+    NGRAPH_CPP_DIST_DIR = os.path.normpath(NGRAPH_CPP_DIST_DIR)
+    PYBIND11_INCLUDE_DIR = os.path.normpath(PYBIND11_INCLUDE_DIR)
+    NGRAPH_CPP_INCLUDE_DIR = os.path.normpath(NGRAPH_CPP_INCLUDE_DIR)
+    NGRAPH_CPP_LIBRARY_DIR = os.path.normpath(NGRAPH_CPP_LIBRARY_DIR)
 
 NGRAPH_CPP_LIBRARY_NAME = 'ngraph'
 """For some platforms OpenVINO adds 'd' suffix to library names in debug configuration"""
@@ -140,7 +146,9 @@ def has_flag(compiler, flagname):
 
 def cpp_flag(compiler):
     """Check and return the -std=c++11 compiler flag."""
-    if has_flag(compiler, '-std=c++11'):
+    if sys.platform == 'win32':
+        return ''  # C++11 is on by default in MSVC
+    elif has_flag(compiler, '-std=c++11'):
         return '-std=c++11'
     else:
         raise RuntimeError('Unsupported compiler -- C++11 support is needed!')
@@ -302,20 +310,20 @@ data_files = [
     (
         'lib',
         [
-            NGRAPH_CPP_LIBRARY_DIR + '/' + library
+            os.path.join(NGRAPH_CPP_LIBRARY_DIR, library)
             for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR)
         ],
     ),
     (
         'licenses',
         [
-            NGRAPH_CPP_DIST_DIR + '/licenses/' + license
-            for license in os.listdir(NGRAPH_CPP_DIST_DIR + '/licenses')
+            os.path.join(NGRAPH_CPP_DIST_DIR, 'licenses', license)
+            for license in os.listdir(os.path.join(NGRAPH_CPP_DIST_DIR, 'licenses'))
         ],
     ),
     (
         '',
-        [NGRAPH_CPP_DIST_DIR + '/LICENSE'],
+        [os.path.join(NGRAPH_CPP_DIST_DIR, 'LICENSE')],
     ),
 ]
 
@@ -347,7 +355,7 @@ ext_modules = [
 
 
 def add_platform_specific_link_args(link_args):
-    """Add linker flags specific for actual OS."""
+    """Add linker flags specific for the OS detected during the build."""
     if sys.platform.startswith('linux'):
         link_args += ['-Wl,-rpath,$ORIGIN/../..']
         link_args += ['-z', 'noexecstack']
@@ -356,6 +364,8 @@ def add_platform_specific_link_args(link_args):
     elif sys.platform == 'darwin':
         link_args += ['-Wl,-rpath,@loader_path/../..']
         link_args += ['-stdlib=libc++']
+    elif sys.platform == 'win32':
+        link_args += ['/LTCG']
 
 
 class BuildExt(build_ext):
@@ -371,14 +381,33 @@ class BuildExt(build_ext):
     def add_debug_or_release_flags(self):
         """Return compiler flags for Release and Debug build types."""
         if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
-            return ['-O0', '-g']
+            if sys.platform == 'win32':
+                return ['/Od', '/Zi', '/RTC1']
+            else:
+                return ['-O0', '-g']
         else:
-            return ['-O2', '-D_FORTIFY_SOURCE=2']
+            if sys.platform == 'win32':
+                return ['/O2']
+            else:
+                return ['-O2', '-D_FORTIFY_SOURCE=2']
+
+    def _add_win_compiler_flags(self, ext):
+        self._add_extra_compile_arg('/GL', ext.extra_compile_args)  # Whole Program Optimization
+        self._add_extra_compile_arg('/analyze', ext.extra_compile_args)
+
+    def _add_unix_compiler_flags(self, ext):
+        if not self._add_extra_compile_arg('-fstack-protector-strong', ext.extra_compile_args):
+            self._add_extra_compile_arg('-fstack-protector', ext.extra_compile_args)
+
+        self._add_extra_compile_arg('-fvisibility=hidden', ext.extra_compile_args)
+        self._add_extra_compile_arg('-flto', ext.extra_compile_args)
+        self._add_extra_compile_arg('-fPIC', ext.extra_compile_args)
+
+        ext.extra_compile_args += ['-Wformat', '-Wformat-security']
+        ext.extra_compile_args += self.add_debug_or_release_flags()
 
     def build_extensions(self):
         """Build extension providing extra compiler flags."""
-        if sys.platform == 'win32':
-            raise RuntimeError('Unsupported platform: win32!')
         # -Wstrict-prototypes is not a valid option for c++
         try:
             self.compiler.compiler_so.remove('-Wstrict-prototypes')
@@ -387,19 +416,17 @@ class BuildExt(build_ext):
         for ext in self.extensions:
             ext.extra_compile_args += [cpp_flag(self.compiler)]
 
-            if not self._add_extra_compile_arg('-fstack-protector-strong', ext.extra_compile_args):
-                self._add_extra_compile_arg('-fstack-protector', ext.extra_compile_args)
+            if sys.platform == 'win32':
+                self._add_win_compiler_flags(ext)
+            else:
+                self._add_unix_compiler_flags(ext)
 
-            self._add_extra_compile_arg('-fvisibility=hidden', ext.extra_compile_args)
-            self._add_extra_compile_arg('-flto', ext.extra_compile_args)
-            self._add_extra_compile_arg('-fPIC', ext.extra_compile_args)
-            add_platform_specific_link_args(ext.extra_link_args)
-
-            ext.extra_compile_args += ['-Wformat', '-Wformat-security']
             ext.extra_compile_args += self.add_debug_or_release_flags()
+            add_platform_specific_link_args(ext.extra_link_args)
 
             if sys.platform == 'darwin':
                 ext.extra_compile_args += ['-stdlib=libc++']
+
         build_ext.build_extensions(self)
 
 
