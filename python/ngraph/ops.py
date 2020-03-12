@@ -1680,3 +1680,14 @@ def variadic_split(data, axis, split_lengths):  # type: (Node, Node, Node) -> No
     :return: VariadicSplit node
     """
     return _get_node_factory().create("VariadicSplit", [data, axis, split_lengths])
+
+
+@nameable_op
+def transpose(data, input_order):  # type: (Node, Node) -> Node
+    """Return a node which transposes the data in the input tensor
+
+    :param data: The input tensor to be transposed
+    :param input_order: Permutation of axes to be applied to the input tensor
+    :return: Transpose node
+    """
+    return _get_node_factory().create("Transpose", [data, input_order])

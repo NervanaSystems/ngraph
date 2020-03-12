@@ -35,6 +35,8 @@ from ngraph.impl.op import Concat, Select
 from ngraph.impl.op import Reverse, MaxPool, ReplaceSlice, Slice
 from ngraph.impl.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
 
+import ngraph as ng
+
 import test
 
 def binary_op(op_str, a, b):
@@ -1343,3 +1345,15 @@ def test_convolutionBackpropFilters():
            [ 425832,  190752,  432960.],
            [1084212,  485232, 1100250.]]]])
     assert np.allclose(result_arr, result_arr_ref)
+
+
+@pytest.mark.skip_on_gpu
+def test_transpose():
+    input_tensor = np.arange(3 * 3 * 224 * 224).reshape((3, 3, 224, 224))
+    input_order = np.array([0, 2, 3, 1])
+
+    result = test.ngraph.util.run_op_node([input_tensor, input_order], ng.ops.transpose)
+
+    expected = np.transpose(input_tensor, input_order)
+
+    assert np.allclose(result, expected)
