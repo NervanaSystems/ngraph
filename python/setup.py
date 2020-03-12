@@ -24,6 +24,7 @@ import distutils.ccompiler
 
 __version__ = os.environ.get('NGRAPH_VERSION', '0.0.0-dev')
 PYNGRAPH_ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
+PYNGRAPH_SRC_DIR = os.path.join(PYNGRAPH_ROOT_DIR, 'src')
 NGRAPH_DEFAULT_INSTALL_DIR = os.environ.get('HOME')
 NGRAPH_ONNX_IMPORT_ENABLE = os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE')
 NGRAPH_PYTHON_DEBUG = os.environ.get('NGRAPH_PYTHON_DEBUG')
@@ -273,15 +274,6 @@ sources = [
     'pyngraph/types/regmodule_pyngraph_types.cpp',
 ]
 
-package_dir = {
-    'ngraph': PYNGRAPH_ROOT_DIR + '/ngraph',
-    'ngraph.utils': PYNGRAPH_ROOT_DIR + '/ngraph/utils',
-    'ngraph.impl': PYNGRAPH_ROOT_DIR + '/ngraph/impl',
-    'ngraph.impl.op': PYNGRAPH_ROOT_DIR + '/ngraph/impl/op',
-    'ngraph.impl.op.util': PYNGRAPH_ROOT_DIR + '/ngraph/impl/op/util',
-    'ngraph.impl.passes': PYNGRAPH_ROOT_DIR + '/ngraph/impl/passes',
-    'ngraph.impl.runtime': PYNGRAPH_ROOT_DIR + '/ngraph/impl/runtime',
-}
 packages = [
     'ngraph',
     'ngraph.utils',
@@ -292,9 +284,9 @@ packages = [
     'ngraph.impl.runtime',
 ]
 
-sources = [PYNGRAPH_ROOT_DIR + '/' + source for source in sources]
+sources = [PYNGRAPH_SRC_DIR + '/' + source for source in sources]
 
-include_dirs = [PYNGRAPH_ROOT_DIR, NGRAPH_CPP_INCLUDE_DIR, PYBIND11_INCLUDE_DIR]
+include_dirs = [PYNGRAPH_SRC_DIR, NGRAPH_CPP_INCLUDE_DIR, PYBIND11_INCLUDE_DIR]
 
 library_dirs = [NGRAPH_CPP_LIBRARY_DIR]
 
@@ -331,12 +323,9 @@ if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
     onnx_sources = [
         'pyngraph/onnx_import/onnx_import.cpp',
     ]
-    onnx_sources = [PYNGRAPH_ROOT_DIR + '/' + source for source in onnx_sources]
+    onnx_sources = [PYNGRAPH_SRC_DIR + '/' + source for source in onnx_sources]
     sources = sources + onnx_sources
 
-    package_dir['ngraph.impl.onnx_import'] = (
-        PYNGRAPH_ROOT_DIR + '/ngraph/impl/onnx_import'
-    )
     packages.append('ngraph.impl.onnx_import')
 
 ext_modules = [
@@ -447,7 +436,7 @@ setup(
     long_description=open(os.path.join(PYNGRAPH_ROOT_DIR, 'README.md')).read(),
     long_description_content_type='text/markdown',
     ext_modules=ext_modules,
-    package_dir=package_dir,
+    package_dir={'': 'src'},
     packages=packages,
     cmdclass={'build_ext': BuildExt},
     data_files=data_files,
