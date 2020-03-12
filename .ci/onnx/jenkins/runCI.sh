@@ -60,15 +60,15 @@ function main() {
     NGRAPH_ONNX_REPO_SHA="${DEFAULT_NGRAPH_ONNX_REPO_SHA}"
     BACKENDS="${DEFAULT_BACKENDS}"
 
-    parse_arguments
+    parse_arguments "${@}"
+
+    WORKSPACE="$(pwd)/$( dirname "${BASH_SOURCE[0]}" )"
+    cd "${WORKSPACE}"
 
     if [ "${CLEANUP}" = "true" ]; then
         cleanup
         return 0
     fi
-
-    WORKSPACE="$(pwd)/$( dirname "${BASH_SOURCE[0]}" )"
-    cd "${WORKSPACE}"
 
     if ! check_ngraph_onnx_repo; then
         clone_ngraph_onnx
@@ -298,4 +298,4 @@ function run_backend_test() {
     return 0
 }
 
-main "$@"
+main "${@}"
