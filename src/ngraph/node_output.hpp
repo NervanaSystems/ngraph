@@ -58,7 +58,7 @@ namespace ngraph
         /// \param node A `shared_ptr` to the node for the output handle.
         template <typename T>
         Output(const std::shared_ptr<T>& node)
-            : Output(node->get_default_output())
+            : Output(node ? node->get_default_output() : Output<Node>())
         {
         }
 
@@ -139,7 +139,7 @@ namespace ngraph
         /// \param node A `shared_ptr` to the node for the output handle.
         template <typename T>
         Output(const std::shared_ptr<T>& node)
-            : Output(node->get_default_output())
+            : Output(node ? node->get_default_output() : Output<const Node>())
         {
         }
 
