@@ -89,7 +89,7 @@ function main() {
         checkout_ngraph_onnx_repo "${NGRAPH_ONNX_REPO_SHA}"
     fi
 
-    run_ci
+    run_ci "${repo_clone_location}"
 
     return 0
 }
@@ -190,9 +190,9 @@ function checkout_ngraph_onnx_repo() {
 
 function run_ci() {
     # Builds necessary Docker images and executes CI
-
+    local repo_clone_location="${1}"
     # Calculate necessary paths
-    local ngraph_onnx_ci_dockerfiles_dir="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}/dockerfiles"
+    local ngraph_onnx_ci_dockerfiles_dir="${repo_clone_location}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}/dockerfiles"
     local ngraph_parrent_path="$(dirname ${WORKSPACE%/.ci*})"
     # path to ngraph onnx CI directory inside container
     local container_ngraph_ci_dir="${WORKSPACE#*$ngraph_parrent_path/}"
