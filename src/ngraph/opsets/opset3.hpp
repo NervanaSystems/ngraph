@@ -14,15 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
-// This collection contains one entry for each new op on top of the opset1.
+#pragma once
 
-#ifndef NGRAPH_OP
-#warning "NGRAPH_OP not defined"
-#define NGRAPH_OP(x, y)
-#endif
+#include "ngraph/ops.hpp"
+#include "ngraph/opsets/opset2.hpp"
 
-#include "opset1_tbl.hpp"
-NGRAPH_OP(Gelu, ngraph::op::v0)
-NGRAPH_OP(BatchToSpace, ngraph::op::v1)
-NGRAPH_OP(ROIAlign, ngraph::op::v0)
-NGRAPH_OP(SpaceToBatch, ngraph::op::v1)
+namespace ngraph
+{
+    namespace opset3
+    {
+#define NGRAPH_OP(a, b) using b::a;
+#include "ngraph/opsets/opset3_tbl.hpp"
+#undef NGRAPH_OP
+    }
+}

@@ -14,15 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
-// This collection contains one entry for each new op on top of the opset1.
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
 
-#ifndef NGRAPH_OP
-#warning "NGRAPH_OP not defined"
-#define NGRAPH_OP(x, y)
-#endif
+using namespace std;
+using namespace ngraph;
 
-#include "opset1_tbl.hpp"
-NGRAPH_OP(Gelu, ngraph::op::v0)
-NGRAPH_OP(BatchToSpace, ngraph::op::v1)
-NGRAPH_OP(ROIAlign, ngraph::op::v0)
-NGRAPH_OP(SpaceToBatch, ngraph::op::v1)
+TEST(type_prop_layers, roi_align_basic_shape_inference)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 5, 5});
+    const auto rois = make_shared<op::Parameter>(element::f32, Shape{7, 4});
+    const auto batch_indices = make_shared<op::Parameter>(element::i32, Shape{7});
+    const auto op = make_shared<op::ROIAlign>(data, rois, batch_indices, 2, 2, 1, 1.0f, "avg");
+    ASSERT_EQ(op->get_shape(), (Shape{7, 3, 2, 2}));
+}

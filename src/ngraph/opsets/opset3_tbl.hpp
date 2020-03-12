@@ -21,8 +21,5 @@
 #define NGRAPH_OP(x, y)
 #endif
 
-#include "opset1_tbl.hpp"
-NGRAPH_OP(Gelu, ngraph::op::v0)
-NGRAPH_OP(BatchToSpace, ngraph::op::v1)
+#include "opset2_tbl.hpp"
 NGRAPH_OP(ROIAlign, ngraph::op::v0)
-NGRAPH_OP(SpaceToBatch, ngraph::op::v1)
