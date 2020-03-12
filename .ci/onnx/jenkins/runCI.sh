@@ -191,7 +191,7 @@ function run_ci() {
     # Builds necessary Docker images and executes CI
     local ngraph_onnx_ci_dockerfiles_dir="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}/dockerfiles"
     local ngraph_ci_dir="${WORKSPACE#*ngraph/}"
-    for dockerfile in "$(find ${ngraph_onnx_ci_dockerfiles_dir} -maxdepth 1 -name *.dockerfile -printf "%f")"; do
+    for dockerfile in $(find ${ngraph_onnx_ci_dockerfiles_dir} -maxdepth 1 -name *.dockerfile -printf "%f"); do
         local operating_system="${dockerfile/.dockerfile/}"
         local docker_container_name="${DOCKER_CONTAINER_NAME_PATTERN/<OPERATING_SYSTEM>/$operating_system}"
         local docker_image_name="${DOCKER_IMAGE_NAME_PATTERN/<OPERATING_SYSTEM>/$operating_system}"
@@ -277,7 +277,7 @@ function run_tox_tests() {
     # Executes tox tests for every backend
     local docker_container_name="${1}"
     local ngraph_ci_dir="${2}"
-    for backend in "${BACKENDS}"; do
+    for backend in ${BACKENDS}; do
         run_backend_test "${docker_container_name}" "${ngraph_ci_dir}" "${backend}"
     done
 
