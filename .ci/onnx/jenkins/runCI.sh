@@ -200,10 +200,10 @@ function run_ci() {
             docker rm -f "${docker_container_name}" >/dev/null 2>&1
             build_docker_image "${operating_system}" "${docker_image_name}"
             run_docker_container "${docker_image_name}" "${docker_container_name}"
+            prepare_environment "${docker_container_name}" "${ngraph_ci_dir}"
         elif [[ "$(check_container_status)"==*"Exited"* ]]; then
             docker start "${docker_container_name}"
         fi
-        prepare_environment "${docker_container_name}" "${ngraph_ci_dir}"
         run_tox_tests "${docker_container_name}" "${ngraph_ci_dir}"
     done
 
