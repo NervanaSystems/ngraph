@@ -56,6 +56,15 @@ void op::v0::ScatterElementsUpdate::validate_and_infer_types()
                           "Axis element type must be i64 or i32");
 
     NODE_VALIDATION_CHECK(this,
+                          axis_shape.compatible(PartialShape{}) ||
+                              axis_shape.compatible(PartialShape{1}),
+                          "Axis input shape are required to be scalar or 1D tensor ",
+                          "Got: ",
+                          axis_shape,
+                          " and: ",
+                          axis_shape);
+
+    NODE_VALIDATION_CHECK(this,
                           indices_shape.compatible(updates_shape),
                           "Indices and updates input shapes are required to be the same ",
                           "Got: ",
