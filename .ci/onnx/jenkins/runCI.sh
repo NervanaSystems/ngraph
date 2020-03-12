@@ -70,8 +70,9 @@ function main() {
         return 0
     fi
 
-    if ! check_ngraph_onnx_repo; then
-        git clone "${NGRAPH_ONNX_REPO_ADDRESS}" --branch "${NGRAPH_ONNX_REPO_BRANCH}" "${WORKSPACE%/.ci*}/${NGRAPH_ONNX_REPO_DIR_NAME}"
+    local repo_clone_location="${WORKSPACE%/.ci*}"
+    if ! check_ngraph_onnx_repo "${repo_clone_location}"; then
+        git clone "${NGRAPH_ONNX_REPO_ADDRESS}" --branch "${NGRAPH_ONNX_REPO_BRANCH}" "${repo_clone_location}/${NGRAPH_ONNX_REPO_DIR_NAME}"
     fi
 
     local cloned_repo_branch="$(ngraph_onnx_rev_parse "--abbrev-ref")"
@@ -152,7 +153,8 @@ function cleanup() {
 
 function check_ngraph_onnx_repo() {
     # Verifies if nGraph-ONNX repository is present
-    local ngraph_onnx_git="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}/.git"
+    local repo_location="${1}"
+    local ngraph_onnx_git="${repo_location}/${NGRAPH_ONNX_REPO_DIR_NAME}/.git"
     if [ -d "${ngraph_onnx_git}" ]; then
         # 0 - true
         return 0
