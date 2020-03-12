@@ -234,7 +234,7 @@ function build_docker_image() {
         -t "${docker_image_name}:${DOCKER_BASE_IMAGE_TAG}" .
     # build image with appended user
     docker build \
-        --build-arg base_image="${docker_image_name}:${base_image_tag}" \
+        --build-arg base_image="${docker_image_name}:${DOCKER_BASE_IMAGE_TAG}" \
         --build-arg UID="$(id -u)" \
         --build-arg GID="$(id -g)" \
         --build-arg USERNAME="${USER}" \
