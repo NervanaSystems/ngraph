@@ -32,7 +32,7 @@ Arguments:
                                   Default: cpu,interpreter
 "
 
-NGRAPH_ONNX_REPO_ADDRESS="https://github.com/NervanaSystems/ngraph-onnx"
+NGRAPH_ONNX_REPO_ADDRESS="https://github.com/NervanaSystems/ngraph-onnx.git"
 NGRAPH_ONNX_REPO_DIR_NAME="ngraph-onnx"
 NGRAPH_ONNX_CI_DIR=".ci/jenkins"
 
@@ -71,7 +71,7 @@ function main() {
     fi
 
     if ! check_ngraph_onnx_repo; then
-        clone_ngraph_onnx
+        git clone "${NGRAPH_ONNX_REPO_ADDRESS}" --branch "${NGRAPH_ONNX_REPO_BRANCH}" "${NGRAPH_ONNX_REPO_DIR_NAME}"
     fi
 
     local cloned_repo_sha="$(check_ngraph_onnx_rev)"
@@ -155,14 +155,6 @@ function check_ngraph_onnx_repo() {
         # 0 - false
         return 1
     fi
-}
-
-function clone_ngraph_onnx() {
-    # Clones nGraph-ONNX repository
-    local branch="${1}"
-    git clone "${NGRAPH_ONNX_REPO_ADDRESS}" --branch "${NGRAPH_ONNX_REPO_BRANCH}" "${NGRAPH_ONNX_REPO_DIR_NAME}"
-
-    return 0
 }
 
 function check_ngraph_onnx_rev() {
