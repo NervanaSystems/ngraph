@@ -57,6 +57,7 @@ namespace
     {
 #define VSUF0(NAME) NAME
 #define VSUF1(NAME) NAME##_v1
+#define VSUF2(NAME) NAME##_v2
 #define NGRAPH_OP(NAME, NAMESPACE, VERSION) VSUF##VERSION(NAME),
 #include "ngraph/op/op_version_tbl.hpp"
 #undef NGRAPH_OP
@@ -2748,6 +2749,24 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             break;
         }
 
+        case OP_TYPEID::StridedSlice_v2:
+        {
+            auto new_axis_mask = node_js.at("new_axis_mask").get<vector<int64_t>>();
+            auto shrink_axis_mask = node_js.at("shrink_axis_mask").get<vector<int64_t>>();
+            auto ellipsis_mask = node_js.at("ellipsis_mask").get<vector<int64_t>>();
+            node = make_shared<op::v2::StridedSlice>(args[0],
+                                                     args[1],
+                                                     args[2],
+                                                     args[3],
+                                                     args[4],
+                                                     args[5],
+                                                     args[6],
+                                                     new_axis_mask,
+                                                     shrink_axis_mask,
+                                                     ellipsis_mask);
+
+            break;
+        }
         case OP_TYPEID::StridedSlice_v1:
         {
             auto begin_mask = node_js.at("begin_mask").get<vector<int64_t>>();
@@ -4466,7 +4485,13 @@ json JSONSerializer::serialize_node(const Node& n)
         node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
-    case OP_TYPEID::SpaceToBatch_v1: { break;
+    case OP_TYPEID::StridedSlice_v2:
+    {
+        auto tmp = static_cast<const op::v2::StridedSlice*>(&n);
+        node["new_axis_mask"] = tmp->get_new_axis_mask();
+        node["shrink_axis_mask"] = tmp->get_shrink_axis_mask();
+        node["ellipsis_mask"] = tmp->get_ellipsis_mask();
+        break;
     }
     case OP_TYPEID::SpaceToDepth:
     {
