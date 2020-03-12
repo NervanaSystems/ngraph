@@ -118,7 +118,7 @@ void op::v1::StridedSlice::validate_and_infer_types()
     if (begin_shape.rank().is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(begin_shape.rank()) == 1,
+                              begin_shape.rank().get_length() == 1,
                               "Begin input must be 1D (begin rank: ",
                               begin_shape.rank(),
                               ").");
@@ -127,7 +127,7 @@ void op::v1::StridedSlice::validate_and_infer_types()
     if (end_shape.rank().is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(end_shape.rank()) == 1,
+                              end_shape.rank().get_length() == 1,
                               "End input must be 1D (end rank: ",
                               end_shape.rank(),
                               ").");

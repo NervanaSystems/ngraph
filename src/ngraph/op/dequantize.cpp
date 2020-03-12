@@ -84,7 +84,7 @@ void op::Dequantize::validate_and_infer_types()
     for (auto axis : m_axes)
     {
         NODE_VALIDATION_CHECK(this,
-                              input_rank.is_dynamic() || axis < size_t(input_rank),
+                              input_rank.is_dynamic() || axis < input_rank.get_length(),
                               "Quantization axis (",
                               axis,
                               ") must be less than input shape rank (",
@@ -120,7 +120,7 @@ void op::Dequantize::validate_and_infer_types()
 
         vector<Dimension> injected_scale_zero_point_dims;
 
-        for (size_t j = 0; j < size_t(input_shape.rank()); j++)
+        for (size_t j = 0; j < input_shape.rank().get_length(); j++)
         {
             if (m_axes.count(j) != 0)
             {

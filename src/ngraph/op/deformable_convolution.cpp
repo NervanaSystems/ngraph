@@ -113,7 +113,7 @@ void op::v1::DeformableConvolution::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(
             this,
-            static_cast<size_t>(deformable_values_shape.rank()) >= 3u,
+            deformable_values_shape.rank().get_length() >= 3u,
             "The deformable values tensor rank is expected to be at least 3, got: ",
             deformable_values_shape.rank());
     }
@@ -121,7 +121,7 @@ void op::v1::DeformableConvolution::validate_and_infer_types()
     if (m_group > 1 && data_batch_shape[1].is_static() && filters_shape[0].is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(data_batch_shape[1]) % m_group == 0,
+                              data_batch_shape[1].get_length() % m_group == 0,
                               "The input data shape must be evenly divisible by the 'group' value "
                               "along the channels axis. Current input shape: ",
                               data_batch_shape,
@@ -130,7 +130,7 @@ void op::v1::DeformableConvolution::validate_and_infer_types()
 
         NODE_VALIDATION_CHECK(
             this,
-            static_cast<size_t>(filters_shape[0]) % m_group == 0,
+            filters_shape[0].get_length() % m_group == 0,
             "The weights shape must be evenly divisible by the 'group' value along "
             "the channels axis. Current weights shape: ",
             filters_shape,
@@ -142,7 +142,7 @@ void op::v1::DeformableConvolution::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(
             this,
-            static_cast<size_t>(deformable_values_shape[1]) % m_deformable_group == 0,
+            deformable_values_shape[1].get_length() % m_deformable_group == 0,
             "The deformable values input must be evenly divisible by the 'deformable group' value "
             "along the channels axis. Current input shape: ",
             deformable_values_shape,

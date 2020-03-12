@@ -48,8 +48,7 @@ static void validate_convbias_shapes(const Node* node,
                           ").");
 
     NODE_VALIDATION_CHECK(node,
-                          bias_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(bias_shape.rank()) == 1,
+                          bias_shape.rank().is_dynamic() || bias_shape.rank().get_length() == 1,
                           "Bias must have a rank of 1 (bias_shape: ",
                           bias_shape,
                           ").");

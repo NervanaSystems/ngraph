@@ -60,7 +60,7 @@ void op::NormalizeL2::pre_validate_and_infer_types()
     if (axes_rank.is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(axes_rank) <= 1,
+                              axes_rank.get_length() <= 1,
                               "Input axes must be scalar or have rank equal to 1 (axes rank: ",
                               axes_rank,
                               ").");
@@ -71,7 +71,7 @@ void op::NormalizeL2::pre_validate_and_infer_types()
             for (auto axis : reduction_axes)
             {
                 NODE_VALIDATION_CHECK(this,
-                                      axis < size_t(input_rank),
+                                      axis < input_rank.get_length(),
                                       "Reduction axis (",
                                       axis,
                                       ") is out of bounds ",

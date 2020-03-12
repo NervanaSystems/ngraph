@@ -135,7 +135,7 @@ void op::v1::Split::validate_and_infer_types()
     const auto axis_et = input_value(1).get_element_type();
 
     NODE_VALIDATION_CHECK(this,
-                          axis_ps.rank().is_static() && (size_t)axis_ps.rank() == 0,
+                          axis_ps.rank().is_static() && axis_ps.rank().get_length() == 0,
                           "The 'axis' input is expected to be a scalar. Got: ",
                           axis_ps);
 

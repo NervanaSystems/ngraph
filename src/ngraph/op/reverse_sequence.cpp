@@ -60,7 +60,7 @@ void op::ReverseSequence::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(
         this,
-        indices_rank.is_dynamic() || size_t(indices_rank) == 1,
+        indices_rank.is_dynamic() || indices_rank.get_length() == 1,
         "Sequence indices must be a 1-dimensional tensor (sequence indices shape: ",
         get_input_partial_shape(1),
         ").");

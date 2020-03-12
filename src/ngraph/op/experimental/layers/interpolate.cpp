@@ -44,7 +44,7 @@ void op::Interpolate::validate_and_infer_types()
     {
         for (auto axis : m_attrs.axes)
         {
-            NGRAPH_CHECK(axis < static_cast<size_t>(output_shape.rank()));
+            NGRAPH_CHECK(axis < output_shape.rank().get_length());
             output_shape[axis] = Dimension::dynamic();
         }
     }

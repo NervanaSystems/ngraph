@@ -48,7 +48,7 @@ size_t op::ShuffleChannels::get_zero_based_axis() const
     {
         if (!get_input_partial_shape(0).rank().is_dynamic())
         {
-            return m_axis + static_cast<size_t>(get_input_partial_shape(0).rank());
+            return m_axis + get_input_partial_shape(0).rank().get_length();
         }
         else
         {
