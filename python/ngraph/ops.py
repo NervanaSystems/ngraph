@@ -1653,3 +1653,18 @@ def topk(data,       # type: Node
 def get_output_element(data, index):  # type: (Node, int) -> Node
     """Return the n-th element of the input tuple."""
     return GetOutputElement(data, index)
+
+
+@nameable_op
+def matmul(data_a, data_b, transpose_a, transpose_b):  # type: (Node, Node, bool, bool) -> Node
+    """Return the Matrix Multiplication operation.
+
+    :param data_a: left-hand side matrix
+    :param data_b: right-hand side matrix
+    :param transpose_a: should the first matrix be transposed before operation
+    :param transpose_b: should the second matrix be transposed
+    :return: MatMul operation node
+    """
+    print("transpose_a", transpose_a, "transpose_b", transpose_b)
+    return _get_node_factory().create('MatMul', [data_a, data_b],
+                                      {"transpose_a": transpose_a, "transpose_b": transpose_b})
