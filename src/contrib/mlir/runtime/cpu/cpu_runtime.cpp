@@ -53,6 +53,13 @@ static llvm::cl::opt<std::string>
     clObjectFilename("ngraph-mlir-object-filename",
                      llvm::cl::desc("Dump MLIR JITted-compiled object to file jitted_mlir.o"));
 
+// The bare pointer calling convention lowers memref arguments to bare pointers to the memref
+// element type.
+llvm::cl::opt<bool> clEnableBarePtrMemRefLowering(
+    "ngraph-bare-ptr-memref-lowering",
+    llvm::cl::init(false),
+    llvm::cl::desc("Enable the lowering of MemRefs to LLVM bare pointers"));
+
 void MLIRCPURuntime::run(const std::vector<MemRefArg>& args)
 {
     // run_internal(*reinterpret_cast<std::vector<void*>*>(args), shapeVec, stridesVec);
@@ -83,7 +90,7 @@ void MLIRCPURuntime::bindArguments(const std::vector<MemRefArg>& args)
 {
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
-    auto func = m_module->lookupSymbol<mlir::LLVM::LLVMFuncOp>("main");
+    auto func = m_module->lookupSymbol<mlir::LLVM::LLVMFuncOp>("_mlir_ciface_main");
     NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
 
     // Set external arguments
@@ -108,14 +115,24 @@ void MLIRCPURuntime::bindArguments(const std::vector<MemRefArg>& args)
     // Assign external tensor pointers to invocation arguments.
     for (size_t i = 0, numArgs = m_invokeArgs.size(); i < numArgs; ++i)
     {
-        auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(m_invokeArgs[i]));
-        memRefArg->allocatedPtr = (*m_externalTensors)[i].m_tensor;
-        memRefArg->alignedPtr = (*m_externalTensors)[i].m_tensor;
-        auto rank = m_ranks[i];
-        for (auto j = 0; j < rank; j++)
+        if (!clEnableBarePtrMemRefLowering)
         {
-            memRefArg->shapeAndStrides[j] = (*m_externalTensors)[i].m_shape[j];
-            memRefArg->shapeAndStrides[rank + j] = (*m_externalTensors)[i].m_strides[j];
+            // Default memref lowering lowers memrefs to StaticMemRef descriptors.
+            auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(m_invokeArgs[i]));
+            memRefArg->allocatedPtr = (*m_externalTensors)[i].m_tensor;
+            memRefArg->alignedPtr = (*m_externalTensors)[i].m_tensor;
+            auto rank = m_ranks[i];
+            for (auto j = 0; j < rank; j++)
+            {
+                memRefArg->shapeAndStrides[j] = (*m_externalTensors)[i].m_shape[j];
+                memRefArg->shapeAndStrides[rank + j] = (*m_externalTensors)[i].m_strides[j];
+            }
+        }
+        else
+        {
+            // Custom memref lowering lowers memref arguments to bare pointers to tensors.
+            auto** memRefArg = reinterpret_cast<void**>(m_invokeArgs[i]);
+            *memRefArg = (*m_externalTensors)[i].m_tensor;
         }
     }
 }
@@ -127,14 +144,15 @@ void MLIRCPURuntime::execute()
     // uniformity reasons, it takes a list of type-erased pointers to arguments.
     // Please, note that 'invoke' method is overloaded with a parameter pack version.
     // Make sure the MutableArrayRef version is invoked.
-    auto invocationResult = m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invokeArgs));
+    auto invocationResult =
+        m_engine->invoke("_mlir_ciface_main", llvm::MutableArrayRef<void*>(m_invokeArgs));
 
     if (clDumpObjectFile)
     {
         m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
                                                             : clObjectFilename.getValue());
     }
-    NGRAPH_CHECK(!invocationResult, "JIT invocation of 'main' failed\n");
+    NGRAPH_CHECK(!invocationResult, "JIT invocation of '_mlir_ciface_main' failed\n");
 }
 
 void MLIRCPURuntime::cleanup()
@@ -142,33 +160,62 @@ void MLIRCPURuntime::cleanup()
     // Free void double pointer arguments without freeing external tensor data.
     for (auto* arg : m_invokeArgs)
     {
-        auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(arg));
-        free(memRefArg);
-        free(arg);
+        if (!clEnableBarePtrMemRefLowering)
+        {
+            // Default memref lowering lowers memrefs to StaticMemRef descriptors.
+            auto* memRefArg = *(reinterpret_cast<StaticMemRef**>(arg));
+            free(memRefArg);
+            free(arg);
+        }
+        else
+        {
+            // Custom memref lowering lowers memref arguments to bare pointers to tensors.
+            auto** memRefArg = reinterpret_cast<void**>(arg);
+            free(memRefArg);
+        }
     }
 }
 
-// The current call ABI takes a single arg pointer (argPtr) pointing to a list of args.
+// The default call ABI takes a single arg pointer (argPtr) pointing to a list of args.
 // Each arg is a  pointer to a StaticMemRef which contains a data pointer
 //
 // The args are laid out as follows
 // argPtr-> arg[0]-> StaticMemRef -> <data>
 //          arg[1]-> StaticMemRef -> <data>
 //          ...
+//
+// The bare pointer ABI takes a single arg pointer pointing to data for that MemRef. Not extra
+// information about the MemRef is passed at the moment. Example:
+//
+// Args are laid out as follows:
+//   arg0Ptr-> <data>
+//   arg1Ptr-> <data>
+//   ...
 SmallVector<void*, 8> MLIRCPURuntime::allocateMemrefArgs()
 {
     SmallVector<void*, 8> args;
     for (auto i = 0; i < m_externalTensors->size(); i++)
     {
-        auto descriptor = allocateMemrefDescriptor(m_ranks[i]);
-        StaticMemRef** arg = reinterpret_cast<StaticMemRef**>(malloc(sizeof(StaticMemRef*)));
-        *arg = descriptor;
-        args.push_back(arg);
+        if (!clEnableBarePtrMemRefLowering)
+        {
+            // Default memref lowering lowers memrefs to StaticMemRef descriptors.
+            auto descriptor = allocateDefaultMemrefDescriptor(m_ranks[i]);
+            StaticMemRef** arg = reinterpret_cast<StaticMemRef**>(malloc(sizeof(StaticMemRef*)));
+            *arg = descriptor;
+            args.push_back(arg);
+        }
+        else
+        {
+            // Custom memref lowering lowers memref arguments to bare pointers to tensors.
+            auto** arg = reinterpret_cast<void**>(malloc(sizeof(void**)));
+            *arg = reinterpret_cast<void*>(malloc(sizeof(void*)));
+            args.push_back(arg);
+        }
     }
     return args;
 }
 
-StaticMemRef* MLIRCPURuntime::allocateMemrefDescriptor(size_t rank)
+StaticMemRef* MLIRCPURuntime::allocateDefaultMemrefDescriptor(size_t rank)
 {
     // We only use StaticMemRef because that's what MLIR currently offers.
     // We should expand this with different types and dynamic MemRefs

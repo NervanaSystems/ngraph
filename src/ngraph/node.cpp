@@ -104,48 +104,36 @@ std::shared_ptr<Node>
     Node::copy_with_new_inputs(const OutputVector& inputs,
                                const std::vector<std::shared_ptr<Node>>& control_dependencies) const
 {
-    shared_ptr<Node> clone;
-    if (is_type<op::GetOutputElement>(this))
-    {
-        auto& value = inputs.at(0);
-        clone = make_shared<op::GetOutputElement>(value.get_node_shared_ptr(), value.get_index());
-    }
-    else
-    {
-        NodeVector args;
-        for (const Output<Node>& input : inputs)
-        {
-            args.push_back(get_output_element(input, false));
-        }
-        for (int i = 0; i < inputs.size(); ++i)
-        {
-            auto in_val = inputs.at(i);
-            if (is_type<op::GetOutputElement>(in_val.get_node()))
-            {
-                in_val = as_type_ptr<op::GetOutputElement>(in_val.get_node_shared_ptr())
-                             ->get_as_output();
-            }
-            auto in_index = in_val.get_index();
-            auto arg = args.at(i);
-            size_t out_index = 0;
-            if (is_type<op::GetOutputElement>(arg))
-            {
-                out_index = as_type_ptr<op::GetOutputElement>(arg)->get_n();
-            }
-            if (in_index != out_index)
-            {
-                cerr << "Mismatch in: " << in_index << " arg: " << out_index << endl;
-                cerr << "ARG: " << *arg << endl;
-                cerr << "IN: " << *inputs.at(i).get_node() << endl;
-                cerr << "INV: " << *in_val.get_node() << endl;
-                cerr << "In node " << *this << endl;
-            }
-        }
-        clone = copy_with_new_args(args);
-    }
+    shared_ptr<Node> clone = clone_with_new_inputs(inputs);
     for (auto& cdep : control_dependencies)
     {
         clone->add_control_dependency(cdep);
+    }
+    return clone;
+}
+
+std::shared_ptr<Node> Node::copy_with_new_args(const NodeVector& args) const
+{
+    NODE_VALIDATION_CHECK(
+        this, false, "Internal error: copy_with_new_args not replaced by clone_with_new_inputs");
+    return nullptr;
+}
+
+std::shared_ptr<Node> Node::clone_with_new_inputs(const OutputVector& inputs) const
+{
+    NodeVector args;
+    for (const Output<Node>& input : inputs)
+    {
+        args.push_back(get_output_element(input, false));
+    }
+    std::shared_ptr<Node> clone = copy_with_new_args(args);
+    // Remove the inserted GOEs
+    for (size_t i = 0; i < inputs.size(); ++i)
+    {
+        if (clone->input_value(i) != inputs.at(i))
+        {
+            clone->set_argument(i, inputs.at(i));
+        }
     }
     return clone;
 }
@@ -353,16 +341,6 @@ void Node::set_placement(Placement placement)
     m_placement = placement;
 }
 
-size_t Node::get_placement_index() const
-{
-    return m_placement_index;
-}
-
-void Node::set_placement_index(size_t placement)
-{
-    m_placement_index = placement;
-}
-
 void Node::add_provenance_group_member(const shared_ptr<Node>& node)
 {
     m_provenance_group.insert(node);
@@ -497,14 +475,14 @@ void Node::transfer_provenance_tags(const shared_ptr<Node>& replacement)
         }
     };
 
-    traverse_nodes({shared_from_this()}, set_replacement_prov, false, common_args);
+    traverse_nodes({shared_from_this()}, set_replacement_prov, common_args);
     replacement->add_provenance_tags(removed_subgraph_tags);
 
     auto set_prov_new_nodes = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
         node->add_provenance_tags(removed_subgraph_tags);
     };
 
-    traverse_nodes({replacement}, set_prov_new_nodes, false, common_args);
+    traverse_nodes({replacement}, set_prov_new_nodes, common_args);
 }
 
 std::shared_ptr<Node> Node::get_argument(size_t index) const
@@ -989,49 +967,6 @@ bool Node::is_dynamic() const
         }
     }
     return false;
-}
-
-namespace ngraph
-{
-    std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
-    {
-        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
-                                                            << "]:" << output.get_element_type()
-                                                            << output.get_partial_shape();
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Output<const Node>& output)
-    {
-        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
-                                                            << "]:" << output.get_element_type()
-                                                            << output.get_partial_shape();
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Input<Node>& input)
-    {
-        return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
-                                                           << "):" << input.get_element_type()
-                                                           << input.get_partial_shape();
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Input<const Node>& input)
-    {
-        return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
-                                                           << "):" << input.get_element_type()
-                                                           << input.get_partial_shape();
-    }
-
-    void Output<Node>::replace(const Output<Node>& replacement)
-    {
-        for (auto& input : get_target_inputs())
-        {
-            // GOEs are used as handles in passes
-            if (!is_type<op::GetOutputElement>(input.get_node()))
-            {
-                input.replace_source_output(replacement);
-            }
-        }
-    }
 }
 
 Input<Node> Node::input(size_t input_index)

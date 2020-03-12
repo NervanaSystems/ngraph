@@ -76,6 +76,8 @@ namespace ngraph
                                        float trans_std = 1,
                                        int64_t part_size = 1);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>

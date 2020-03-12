@@ -20,6 +20,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -42,14 +43,15 @@ void op::Squeeze::pre_validate_and_infer_types()
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
         return;
     }
+    auto data_shape = data.get_shape();
 
     // Get value of axes from Constant
     auto axes_constant = as_type_ptr<op::Constant>(axes_node);
-    auto axes = axes_constant->cast_vector<size_t>();
-    auto data_shape = data.get_shape();
-    std::vector<uint64_t> axes_to_squeeze(data_shape.size());
+    auto axes = normalize_axes(
+        this->description(), axes_constant->cast_vector<int64_t>(), data_shape.size());
 
     // Prepare set of unique axes marked to be removed from input data.
+    std::vector<uint64_t> axes_to_squeeze(data_shape.size());
     if (axes.empty())
     {
         // Default behaviour is to remove all single dimension axes.
@@ -90,8 +92,17 @@ void op::Squeeze::pre_validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), output_data_shape);
 }
 
+bool ngraph::op::v0::Squeeze::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 NodeVector op::Squeeze::decompose_op() const
 {
+    NODE_VALIDATION_CHECK(
+        this,
+        (get_output_partial_shape(0).is_static()),
+        "output shape was not calculated during pre_validate_and_infer_types. Can not decompose.");
     auto data = input_value(0);
     auto data_shape = data.get_shape();
     auto output_data_shape = get_output_shape(0);

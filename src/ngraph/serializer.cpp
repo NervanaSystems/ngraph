@@ -23,6 +23,7 @@
 #include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
@@ -165,7 +166,7 @@ static json write_dimension(Dimension d)
     }
     else
     {
-        return static_cast<size_t>(d);
+        return d.get_length();
     }
 }
 
@@ -189,7 +190,7 @@ static json write_partial_shape(const PartialShape& s)
     }
     else
     {
-        std::vector<json> vals(static_cast<size_t>(s.rank()));
+        std::vector<json> vals(s.rank().get_length());
         for (size_t i = 0; i < vals.size(); i++)
         {
             vals[i] = write_dimension(s[i]);
@@ -359,33 +360,6 @@ std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t ind
     return ::serialize(func, indent, false);
 }
 
-std::string
-    ngraph::serialize_types(const std::vector<std::pair<PartialShape, element::Type>>& types)
-{
-    json attrs = json::array();
-    for (const auto& n : types)
-    {
-        json j;
-        j["shape"] = write_partial_shape(n.first);
-        j["type"] = write_element_type(n.second);
-        attrs.push_back(j);
-    }
-    return attrs.dump();
-}
-
-std::vector<std::pair<PartialShape, element::Type>>
-    ngraph::deserialize_types(const std::string& str)
-{
-    std::vector<std::pair<PartialShape, element::Type>> outs;
-    json js = json::parse(str);
-    for (auto& j : js)
-    {
-        auto s = read_partial_shape(j["shape"]);
-        auto t = read_element_type(j["type"]);
-        outs.emplace_back(s, t);
-    }
-    return outs;
-}
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 {
     shared_ptr<Function> rc;
@@ -479,7 +453,7 @@ json JSONSerializer::serialize_function(const Function& f)
     }
 
     json nodes;
-    for (shared_ptr<Node> node : f.get_ordered_ops(true))
+    for (shared_ptr<Node> node : f.get_ordered_ops())
     {
         nodes.push_back(serialize_node(*node));
     }
@@ -1002,6 +976,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[2], args[0], args[1], args[3], args[4], args[5], epsilon);
             break;
         }
+        case OP_TYPEID::BatchToSpace_v1:
+        {
+            node = make_shared<op::v1::BatchToSpace>(args[0], args[1], args[2], args[3]);
+            break;
+        }
         case OP_TYPEID::BinaryConvolution_v1:
         {
             auto strides = node_js.at("strides").get<vector<size_t>>();
@@ -1457,7 +1436,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
-        case OP_TYPEID::DepthToSpace_v1:
+        case OP_TYPEID::DepthToSpace:
         {
             auto mode = node_js.at("mode").get<op::DepthToSpace::DepthToSpaceMode>();
             auto block_size = node_js.at("block_size").get<size_t>();
@@ -2818,6 +2797,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], args[2], soft_label, ignore_index);
             break;
         }
+        case OP_TYPEID::SpaceToBatch_v1:
+        {
+            node = make_shared<op::v1::SpaceToBatch>(args[0], args[1], args[2], args[3]);
+            break;
+        }
         case OP_TYPEID::SpaceToDepth:
         {
             auto block_size = node_js.at("block_size").get<size_t>();
@@ -3319,6 +3303,8 @@ json JSONSerializer::serialize_node(const Node& n)
         node["eps"] = tmp->get_eps_value();
         break;
     }
+    case OP_TYPEID::BatchToSpace_v1: { break;
+    }
     case OP_TYPEID::BinaryConvolution_v1:
     {
         auto tmp = static_cast<const op::v1::BinaryConvolution*>(&n);
@@ -3598,7 +3584,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["axes"] = serialize_axis_set(tmp->get_axes());
         break;
     }
-    case OP_TYPEID::DepthToSpace_v1:
+    case OP_TYPEID::DepthToSpace:
     {
         auto tmp = static_cast<const op::DepthToSpace*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
@@ -4472,6 +4458,8 @@ json JSONSerializer::serialize_node(const Node& n)
         node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
+    case OP_TYPEID::SpaceToBatch_v1: { break;
+    }
     case OP_TYPEID::SpaceToDepth:
     {
         auto tmp = static_cast<const op::SpaceToDepth*>(&n);
@@ -4636,7 +4624,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::TopK_v1:
     {
         const auto tmp = static_cast<const op::v1::TopK*>(&n);
-        node["axis"] = tmp->get_axis();
+        node["axis"] = tmp->get_provided_axis();
         node["mode"] = tmp->get_mode();
         node["sort_type"] = tmp->get_sort_type();
         node["index_element_type"] = write_element_type(tmp->get_index_element_type());

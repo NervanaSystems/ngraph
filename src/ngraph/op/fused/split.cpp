@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include <numeric>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/split.hpp"
@@ -67,8 +68,8 @@ void op::v0::Split::pre_validate_and_infer_types()
 
     const auto shape = input(0).get_shape();
 
-    m_axis = ngraph::normalize_axis(this, m_axis, shape.size());
-
+    const auto data_rank = get_input_partial_shape(0).rank();
+    m_axis = ngraph::normalize_axis(this, m_axis, data_rank);
     const auto dimension_at_axis = shape.at(m_axis);
     if (m_split_evenly)
     {
@@ -121,6 +122,12 @@ op::v1::Split::Split(const Output<Node>& data, const Output<Node>& axis, const s
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::Split::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("num_splits", m_num_splits);
+    return true;
+}
+
 void op::v1::Split::validate_and_infer_types()
 {
     const auto data_ps = input_value(0).get_partial_shape();
@@ -128,7 +135,7 @@ void op::v1::Split::validate_and_infer_types()
     const auto axis_et = input_value(1).get_element_type();
 
     NODE_VALIDATION_CHECK(this,
-                          axis_ps.rank().is_static() && (size_t)axis_ps.rank() == 0,
+                          axis_ps.rank().is_static() && axis_ps.rank().get_length() == 0,
                           "The 'axis' input is expected to be a scalar. Got: ",
                           axis_ps);
 
@@ -140,9 +147,10 @@ void op::v1::Split::validate_and_infer_types()
         const auto axis_input = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
         auto axis = axis_input->cast_vector<int64_t>()[0];
 
-        const auto data_shape = data_ps.to_shape();
-        axis = ngraph::normalize_axis(this, axis, data_shape.size());
+        const auto data_rank = get_input_partial_shape(0).rank();
+        axis = ngraph::normalize_axis(this, axis, data_rank);
 
+        const auto data_shape = data_ps.to_shape();
         const auto dimension_at_axis = data_shape.at(axis);
 
         NODE_VALIDATION_CHECK(this,

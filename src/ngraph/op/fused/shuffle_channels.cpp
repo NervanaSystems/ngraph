@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/fused/shuffle_channels.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/reshape.hpp"
 
 using namespace std;
@@ -30,6 +31,13 @@ op::ShuffleChannels::ShuffleChannels(const Output<Node>& data, const int axis, c
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::ShuffleChannels::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    visitor.on_attribute("groups", m_groups);
+    return true;
+}
+
 size_t op::ShuffleChannels::get_zero_based_axis() const
 {
     if (m_axis >= 0)
@@ -40,7 +48,7 @@ size_t op::ShuffleChannels::get_zero_based_axis() const
     {
         if (!get_input_partial_shape(0).rank().is_dynamic())
         {
-            return m_axis + static_cast<size_t>(get_input_partial_shape(0).rank());
+            return m_axis + get_input_partial_shape(0).rank().get_length();
         }
         else
         {

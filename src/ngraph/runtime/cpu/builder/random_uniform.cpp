@@ -30,8 +30,8 @@ namespace ngraph
         {
             template <typename T>
             CPUKernelFunctor prepare_functor(const Node* node,
-                                             const vector<TensorViewWrapper>& args,
-                                             const vector<TensorViewWrapper>& out,
+                                             const vector<TensorWrapper>& args,
+                                             const vector<TensorWrapper>& out,
                                              CPU_ExternalFunction* external_function)
             {
                 auto ru = static_cast<const ngraph::op::RandomUniform*>(node);

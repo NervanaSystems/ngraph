@@ -247,6 +247,7 @@ namespace ngraph
                         const Shape& kernel,
                         op::RoundingType rounding_mode);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 

@@ -45,7 +45,8 @@ namespace ngraph
                     ASSERT_VALID_ARGUMENT(node, p_norm >= 0)
                         << "Only positive (including zero) values are supported for 'p' attribute.";
 
-                    NodeVector slices = ngraph::builder::split(data, channels_count, channel_axis);
+                    NodeVector slices =
+                        ngraph::builder::opset1::split(data, channels_count, channel_axis);
 
                     for (auto& slice : slices)
                     {
@@ -54,7 +55,7 @@ namespace ngraph
                         AxisSet reduction_axes{
                             common::get_monotonic_range<std::size_t>(orig_shape.size(), 2)};
 
-                        slice = ngraph::builder::lp_norm(
+                        slice = ngraph::builder::opset1::lp_norm(
                             slice, reduction_axes, static_cast<std::size_t>(p_norm));
 
                         // output shape is all ones except N channel

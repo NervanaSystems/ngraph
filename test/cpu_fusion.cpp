@@ -60,7 +60,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -2029,7 +2029,7 @@ TEST(batch_fusion, group_convolution)
     auto b_ = rng.initialize(backend->create_tensor(element::f32, shape_b));
 
     vector<float> rv(shape_size(shape_r), 0);
-    auto group_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
+    auto group_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensor>(
         backend->create_tensor(element::f32, shape_r, rv.data()));
 
     auto av = read_vector<float>(a_);
@@ -2045,9 +2045,9 @@ TEST(batch_fusion, group_convolution)
     Shape shape_ur{1, 1, 2, 2};
     // allocate a contigious storage for both lower and upper halves.
     vector<float> erv(shape_size(shape_r), 0);
-    auto lower_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
+    auto lower_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensor>(
         backend->create_tensor(element::f32, shape_ur, erv.data()));
-    auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
+    auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensor>(
         backend->create_tensor(element::f32, shape_ur, erv.data() + erv.size() / 2));
     auto handle = backend->compile(f);
     handle->call_with_validate({group_result, lower_result, upper_result},
@@ -4025,4 +4025,39 @@ TEST(cpu_fusion, validate_fuse_gru_inputs)
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
+
+TEST(cpu_fusion, mlir_matmul_bias)
+{
+    Shape shape{};
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    Shape shape_b{1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_w);
+    auto B = make_shared<op::Parameter>(element::f32, shape_x);
+    auto C = make_shared<op::Parameter>(element::f32, shape_b);
+
+    auto dot = make_shared<op::Dot>(A, B);
+    auto broadcast = make_shared<op::Broadcast>(C, dot->get_shape(), AxisSet{0});
+    auto add = dot + broadcast;
+
+    auto int_func = make_shared<Function>(NodeVector{add}, ParameterVector{A, B, C});
+    auto cpu_func = make_shared<Function>(NodeVector{add}, ParameterVector{A, B, C});
+
+    test::Uniform<float> rng(-10.0f, 10.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : int_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(cpu_func, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_func, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
 #endif

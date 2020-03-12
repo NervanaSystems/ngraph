@@ -29,6 +29,11 @@ op::Sin::Sin(const Output<Node>& arg)
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::Sin::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 shared_ptr<Node> op::Sin::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);

@@ -18,6 +18,7 @@
 
 #include "group_conv.hpp"
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
@@ -55,6 +56,16 @@ op::v1::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
     , m_auto_pad(auto_pad)
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v1::GroupConvolution::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("dilations", m_dilations);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    return true;
 }
 
 void op::v1::GroupConvolution::validate_and_infer_types()
@@ -219,6 +230,17 @@ op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::GroupConvolutionBackpropData::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("dilations", m_dilations);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    visitor.on_attribute("output_padding", m_output_padding);
+    return true;
+}
+
 bool op::v1::GroupConvolutionBackpropData::is_dynamic() const
 {
     bool is_dynamic = Node::is_dynamic();
@@ -236,7 +258,7 @@ const PartialShape op::v1::GroupConvolutionBackpropData::get_output_shape() cons
     PartialShape shape;
     if (data_pshape.rank().is_static())
     {
-        shape = PartialShape{vector<Dimension>(static_cast<size_t>(data_pshape.rank() - 2))};
+        shape = PartialShape{vector<Dimension>(data_pshape.rank().get_length() - 2)};
     }
     else
     {
@@ -248,6 +270,10 @@ const PartialShape op::v1::GroupConvolutionBackpropData::get_output_shape() cons
         if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
         {
             shape = const_op->get_shape_val();
+        }
+        else
+        {
+            shape = PartialShape::dynamic();
         }
     }
     return shape;
@@ -409,6 +435,10 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
             output_shape.insert(output_shape.begin(), data_shape.at(0));
             output_pshape = output_shape;
         }
+        else
+        {
+            output_pshape = PartialShape::dynamic(data_pshape.rank());
+        }
     }
 
     set_input_is_relevant_to_shape(0);
@@ -562,7 +592,7 @@ void op::v0::GroupConvolution::pre_validate_and_infer_types()
         // Update groups
         if (m_groups_in_filters)
         {
-            m_groups = static_cast<size_t>(get_input_partial_shape(1)[0]);
+            m_groups = get_input_partial_shape(1)[0].get_length();
         }
 
         // Data channels

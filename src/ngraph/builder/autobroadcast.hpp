@@ -16,24 +16,22 @@
 
 #pragma once
 
-#include "ngraph/except.hpp"
-#include "ngraph/node.hpp"
-
 #include <memory>
 #include <utility>
+
+#include "ngraph/except.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/broadcast.hpp"
 
 namespace ngraph
 {
     namespace builder
     {
-        class autobroadcast_incompatible_shapes : public ngraph::ngraph_error
+        class numpy_autobroadcast_incompatible_shapes : public ngraph::ngraph_error
         {
         public:
-            autobroadcast_incompatible_shapes(const ngraph::Shape& shape1,
-                                              const ngraph::Shape& shape2);
-
-            const ngraph::Shape& get_shape1() const;
-            const ngraph::Shape& get_shape2() const;
+            numpy_autobroadcast_incompatible_shapes(const ngraph::Shape& shape1,
+                                                    const ngraph::Shape& shape2);
 
         private:
             const ngraph::Shape m_shape1;
@@ -41,6 +39,33 @@ namespace ngraph
 
             static std::string error_str(const ngraph::Shape& shape1, const ngraph::Shape& shape2);
         };
+
+        ///
+        /// \brief      Broadcast all values, if necessary, to obtain equal shapes according
+        ///             to NumPy's auto-broadcasting scheme.
+        ///
+        /// \note       There are some shape combinations which the autobroadcast algoritm cannot
+        ///             handle. An exception is thrown when such combinations are provided to this
+        ///             function.
+        ///
+        /// \param      values  Vector of output values.
+        ///
+        /// \exception  ngraph::builder::numpy_autobroadcast_incompatible_shapes
+        ///
+        /// \return     Vector of broadcasted values.
+        ///
+        OutputVector numpy_broadcast_outputs(const OutputVector& values);
+
+        ///
+        /// \brief      Broadcast input value to provided shape using NumPy's auto-broadcasting
+        ///             rules.
+        ///
+        /// \param      value  Input value
+        /// \param      shape  Requested output shape
+        ///
+        /// \return     Node producing values with requested shape.
+        ///
+        std::shared_ptr<Node> numpy_broadcast(const Output<Node>& value, const Shape& shape);
 
         /// \brief Wrap two graph values, if necessary, to obtain values with identical shapes,
         /// using NumPy's auto-broadcast rules.
@@ -69,7 +94,7 @@ namespace ngraph
         /// - If an exception was not thrown, then the return value's \p first and \p second
         ///   elements point to ngraph::Node objects whose output values have the same shape.
         ///
-        /// \exception ngraph::builder::autobroadcast_incompatible_shapes
+        /// \exception ngraph::builder::numpy_autobroadcast_incompatible_shapes
         std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
             numpy_broadcast(const std::pair<Output<Node>, Output<Node>>& args);
 
@@ -86,7 +111,7 @@ namespace ngraph
         ///
         /// \return The sink node of any/all nodes created by this function.  Will never be null.
         ///
-        /// \exception ngraph::builder::autobroadcast_incompatible_shapes
+        /// \exception ngraph::builder::numpy_autobroadcast_incompatible_shapes
         template <typename NodeType>
         std::shared_ptr<NodeType>
             make_with_numpy_broadcast(const Output<Node>& operand1_reshapeable,
@@ -113,7 +138,7 @@ namespace ngraph
         ///
         /// \return The sink node of any/all nodes created by this function.  Will never be null.
         ///
-        /// \exception ngraph::builder::autobroadcast_incompatible_shapes
+        /// \exception ngraph::builder::numpy_autobroadcast_incompatible_shapes
         template <typename NodeType>
         std::shared_ptr<Node> make_with_numpy_broadcast(const Output<Node>& operand1,
                                                         const Output<Node>& operand2_reshapeable,
@@ -123,5 +148,174 @@ namespace ngraph
             return std::make_shared<NodeType>(
                 operand1, shaped_op2_op3.first, shaped_op2_op3.second);
         }
-    } // namespace builder
+
+        ///
+        /// \brief      Cast shape of two outputs to make them compatible for an element-wise binary
+        ///             operation.
+        ///
+        /// \note       If necessary the right-hand-side argument will be broadcast to match the
+        ///             shape of left-hand-side argument. The starting of the mutually equal shape
+        ///             is specified by the argument "start_match_axis", and if it is not set suffix
+        ///             matching is assumed.
+        ///
+        /// \note       This style of broadcast was used in ONNX Op sets prior to version 7, where
+        ///             it was replaced by NumPy style auto-broadcasting mechanism.
+        ///
+        /// \param      left              Node which contain input of binary op.
+        /// \param      right             Node which contain input of binary op.
+        /// \param      start_match_axis  Position in shape denoting start of the mutually equal
+        ///                               shape
+        ///
+        /// \return     Left and right node after broadcasting.
+        ///
+        OutputVector legacy_broadcast_for_binary_operation(const Output<Node>& left,
+                                                           const Output<Node>& right,
+                                                           size_t start_match_axis);
+
+        /// \brief      Broadcast shape of two nodes to make them compatible for a matrix
+        ///             multiplication.
+        ///
+        /// \note       This function is reflecting broadcasting behaviour of NumPy's `matmul`
+        ///             operation.
+        ///             (https://docs.scipy.org/doc/numpy/reference/generated/numpy.matmul.html)
+        ///             This mean that only \"stack of matrices\" axes are bidirectionally
+        ///             broadcasted. The last two dimension are left untouched.
+        ///
+        /// \param[in]  left   The Node providing data for the left-hand side of matrix
+        ///                    multiplication.
+        /// \param[in]  right  The Node providing data for the right-hand side of matrix
+        ///                    multiplication.
+        ///
+        /// \return     The vector containing both outputs broadcasted.
+        ///
+        OutputVector numpy_broadcast_for_matmul_operation(const Output<Node>& left,
+                                                          const Output<Node>& right);
+
+        /// \brief Cast shape of all input nodes for an element-wise operation that requires
+        ///        shape-compatibility
+        ///
+        /// \param inputs Original list of inputs
+        /// \param axis Index starting to align
+        ///
+        /// \return pdpd-style broadcasted list of nodes.
+        OutputVector pdpd_broadcast(const OutputVector& inputs, int64_t axis);
+
+        /// \brief Generate a list of broadcast axes.
+        ///
+        /// \details Informally, a broadcast "adds" axes to the input tensor, replicating
+        ///          elements from the input tensor as needed to fill the new dimensions.
+        ///          Function calculate which of the output axes are added in this way.
+        ///
+        /// \param output_shape      The new shape for the output tensor.
+        /// \param input_shape       The shape of input tensor.
+        /// \param start_match_axis  The axis along which we want to replicate elements.
+        ///                          The starting axis position (0-based) int the output
+        ///                          shape from which the current shape of the tensor
+        ///                          matches the desired new shape.
+        ///
+        /// \return The indices of added axes.
+        AxisSet calculate_broadcast_axes(const Shape& output_shape,
+                                         const Shape& input_shape,
+                                         std::size_t start_match_axis);
+
+        /// \brief Generate a list of broadcast along axes.
+        ///
+        /// \details Broadcast "adds" elements along axes to the input tensor, replicating
+        ///          elements from the input tensor as needed to fill the new dimensions.
+        ///          Function calculate which of the output axes are added in this way.
+        ///
+        ///          This function will attempt to match shapes, assuming the current shape
+        ///          matches the rightmost positions of the desired new shape. This behaviour
+        ///          is similar to NumPy's broadcasting.
+        ///
+        /// \param output_shape The new shape for the output tensor.
+        /// \param input_shape  The shape of input tensor.
+        ///
+        /// \return             The indices of added axes.
+        inline AxisSet calculate_broadcast_axes(const Shape& output_shape, const Shape& input_shape)
+        {
+            return calculate_broadcast_axes(
+                output_shape, input_shape, output_shape.size() - input_shape.size());
+        }
+
+        inline std::shared_ptr<Node> make_broadcast_node(const Output<Node>& output,
+                                                         Shape new_shape)
+        {
+            return std::make_shared<op::Broadcast>(
+                output, new_shape, calculate_broadcast_axes(new_shape, output.get_shape()));
+        }
+
+        inline std::shared_ptr<Node> make_broadcast_node(const Output<Node>& value,
+                                                         const Shape& new_shape,
+                                                         std::size_t start_match_axis)
+        {
+            return std::make_shared<op::Broadcast>(
+                value,
+                new_shape,
+                calculate_broadcast_axes(new_shape, value.get_shape(), start_match_axis));
+        }
+
+        namespace opset1
+        {
+            ///
+            /// \brief      Broadcast right node to left node's shape using legacy scheme.
+            ///
+            /// \param[in]  left              The left hand side node of binary operation.
+            /// \param[in]  right             The right hand side node of binary operation. The one
+            ///                               to be broadcasted.
+            /// \param[in]  start_match_axis  The axis index starting mutually equal shapes
+            ///                               of both nodes.
+            ///
+            /// \return     The Output object connected to node producing broadcasted right node.
+            ///
+            Output<Node> legacy_broadcast_for_binary_operation(const Output<Node>& left,
+                                                               const Output<Node>& right,
+                                                               size_t start_match_axis);
+
+            ///
+            /// \brief      Reconstructs axes mapping vector for Broadcast:v1 operation.
+            ///
+            /// \param[in]  output_shape    The output shape of Broadcast operation.
+            /// \param[in]  broadcast_axes  The broadcast axes used for Broadcast:v0 operator.
+            ///
+            /// \return     The vector with axes indexes mapping .
+            ///
+            std::vector<std::size_t> get_axes_mapping(const Shape& output_shape,
+                                                      const AxisSet& broadcast_axes);
+
+            ///
+            /// \brief      Creates Node returning the axes mapping for Broadcast:v1 operation.
+            ///
+            /// \param[in]  output_shape      The output shape of Broadcast operation.
+            /// \param[in]  input_shape       The input shape.
+            /// \param[in]  start_match_axis  The axis index at which input shape starts to be
+            ///                               identical as the output shape.
+            ///
+            /// \return     Returns the Output object pointing to node with the axes mapping.
+            ///
+            Output<Node> get_axes_mapping_output(const Shape& output_shape,
+                                                 const Shape& input_shape,
+                                                 std::size_t start_match_axis);
+
+            ///
+            /// \brief      Creates Node returning the axes mapping for Broadcast:v1 operation.
+            ///
+            /// \param[in]  output_shape    The output shape of Broadcast operation.
+            /// \param[in]  broadcast_axes  The broadcast axes used for Broadcast:v0 operator.
+            ///
+            /// \return     The Output object with Node returning axes mapping.
+            ///
+            Output<Node> get_axes_mapping_output(const Shape& output_shape,
+                                                 const AxisSet& broadcast_axes);
+
+            Output<Node> make_broadcast(const Output<Node>& node,
+                                        const Shape& target_shape,
+                                        const AxisSet& broadcast_axes);
+
+            Output<Node> make_broadcast(const Output<Node>& node,
+                                        const Shape& target_shape,
+                                        std::size_t start_match_axis);
+
+        } // namespace opset1
+    }     // namespace builder
 } // namespace ngraph

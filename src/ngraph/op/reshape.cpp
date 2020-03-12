@@ -59,14 +59,14 @@ void op::Reshape::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(
             this,
-            m_input_order.size() == size_t(input_rank),
+            m_input_order.size() == input_rank.get_length(),
             "Input axis order is not a permutation of argument's axis indices (axis order: ",
             m_input_order,
             ", argument shape: ",
             input_shape,
             ").");
 
-        for (size_t i = 0; i < size_t(input_rank); i++)
+        for (size_t i = 0; i < input_rank.get_length(); i++)
         {
             auto it = find(begin(m_input_order), end(m_input_order), i);
             NODE_VALIDATION_CHECK(
@@ -81,7 +81,7 @@ void op::Reshape::validate_and_infer_types()
 
         // TODO(amprocte): make a partial_shape_size() analogous to shape_size().
         Dimension input_shape_product = 1;
-        for (size_t i = 0; i < size_t(input_rank); i++)
+        for (size_t i = 0; i < input_rank.get_length(); i++)
         {
             input_shape_product *= input_shape[i];
         }
@@ -90,7 +90,7 @@ void op::Reshape::validate_and_infer_types()
         {
             NODE_VALIDATION_CHECK(
                 this,
-                size_t(input_shape_product) == shape_size(m_output_shape),
+                input_shape_product.get_length() == shape_size(m_output_shape),
                 "Product of output shape dimensions does not match product of argument shape "
                 "dimensions ",
                 "(output shape: ",
@@ -156,6 +156,12 @@ op::v1::Reshape::Reshape(const Output<Node>& arg, const Output<Node>& pattern, b
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::Reshape::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("special_zero", m_special_zero);
+    return true;
+}
+
 void op::v1::Reshape::validate_and_infer_types()
 {
     auto pattern_et = get_input_element_type(1);
@@ -199,7 +205,7 @@ void op::v1::Reshape::validate_and_infer_types()
         }
         else
         {
-            std::vector<Dimension> partial_shape(static_cast<size_t>(output_rank));
+            std::vector<Dimension> partial_shape(output_rank.get_length());
             // Replace zeros and negatives with Dynamic dimensions as needed
             std::transform(out_shape_val.begin(),
                            out_shape_val.end(),
@@ -217,7 +223,7 @@ void op::v1::Reshape::validate_and_infer_types()
 
                 auto input_shape = get_input_partial_shape(0).to_shape();
                 size_t input_elements = shape_size(input_shape);
-                for (size_t i = 0; i < static_cast<size_t>(output_rank); i++)
+                for (size_t i = 0; i < output_rank.get_length(); i++)
                 {
                     if (out_shape_val[i] == 0 && m_special_zero)
                     {
