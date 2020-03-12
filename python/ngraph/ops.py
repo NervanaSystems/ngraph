@@ -1673,5 +1673,10 @@ def matmul(data_a, data_b, transpose_a, transpose_b):  # type: (Node, Node, bool
 @nameable_op
 def variadic_split(data, axis, split_lengths):  # type: (Node, Node, Node) -> Node
     """Return a node which splits the input tensor into variadic length slices
+
+    :param data: The input tensor to be split
+    :param axis: Axis along which the input data will be split
+    :param split_lengths: Sizes of the output tensors along the split axis
+    :return: VariadicSplit node
     """
     return _get_node_factory().create("VariadicSplit", [data, axis, split_lengths])
