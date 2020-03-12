@@ -16,104 +16,288 @@
 # limitations under the License.
 # ******************************************************************************
 
-NGRAPH_ONNX_REPO="https://github.com/NervanaSystems/ngraph-onnx"
-CI_PATH="$(pwd)"
-CI_ROOT=".ci/onnx/jenkins"
-REPO_ROOT="${CI_PATH%$CI_ROOT}"
-DOCKER_CONTAINER="ngraph-onnx_ci_reproduction"
+HELP_MESSAGE="Usage: runCI.sh [ARGS] [--help]
 
-# Function run() builds image with requirements needed to build ngraph and run onnx tests, runs container and executes tox tests
-function run() {
-    set -x
-    set -e
+Builds nGraph and runs nGraph-ONNX tests.
 
-    cd ./dockerfiles
-    docker build --build-arg http_proxy=$http_proxy --build-arg https_proxy=$https_proxy -f=./ubuntu_16_04.dockerfile -t ngraph-onnx:ubuntu-16_04 .
+Arguments:
+    --help                      - Displays this message.
+    --cleanup                   - Removes docker container and files created during script execution, instead of running CI.
+    --rebuild                   - Rebuilds nGraph and runs tox tests.
+    --ngraph_onnx_branch=...    - Will use specified branch of nGraph-ONNX.
+                                  Default: master
+    --ngraph_onnx_sha=...       - Checkout to specified nGraph-ONNX commit.
+                                  Default: none - latest commit of cloned branch used
+    --backends=...              - Comma separated list of nGraph backends to run CI on.
+                                  Default: cpu,interpreter
+"
 
-    cd "${CI_PATH}"
-    if [[ -z $(docker ps -a | grep -i "${DOCKER_CONTAINER}") ]];
-    then
-        docker run -h "$(hostname)" --privileged --name "${DOCKER_CONTAINER}" -v "${REPO_ROOT}":/root \
-            -d ngraph-onnx:ubuntu-16_04 tail -f /dev/null
-        BUILD="TRUE"
+NGRAPH_ONNX_REPO_ADDRESS="https://github.com/NervanaSystems/ngraph-onnx"
+NGRAPH_ONNX_REPO_DIR_NAME="ngraph-onnx"
+NGRAPH_ONNX_CI_DIR=".ci/jenkins"
+
+DEFAULT_NGRAPH_ONNX_REPO_BRANCH="master"
+DEFAULT_NGRAPH_ONNX_REPO_SHA=""
+
+# "<OPERATING_SYSTEM>" will be replaced by particular OS during script execution
+DOCKER_CONTAINER_NAME_PATTERN="ngraph-onnx_ci_reproduction_<OPERATING_SYSTEM>"
+DOCKER_IMAGE_NAME_PATTERN="aibt/aibt/ngraph/<OPERATING_SYSTEM>/base"
+DOCKER_BASE_IMAGE_TAG="ci"
+DOCKER_EXEC_IMAGE_TAG="ci_run"
+DOCKER_HOME="/home/${USER}"
+
+DEFAULT_BACKENDS="cpu interpreter"
+HTTP_PROXY="${http_proxy}"
+HTTPS_PROXY="${https_proxy}"
+
+function main() {
+    # Main function
+
+    # Load parameters defaults
+    CLEANUP="false"
+    REBUILD="false"
+    NGRAPH_ONNX_REPO_BRANCH="${DEFAULT_NGRAPH_ONNX_REPO_BRANCH}"
+    NGRAPH_ONNX_REPO_SHA="${DEFAULT_NGRAPH_ONNX_REPO_SHA}"
+    BACKENDS="${DEFAULT_BACKENDS}"
+
+    parse_arguments
+
+    if [ "${CLEANUP}" = "true" ]; then
+        cleanup
+        return 0
     fi
 
-    if [[ "${BUILD}" == "TRUE" ]];
-    then
-        BUILD_NGRAPH_CMD='cd /root && \
-            mkdir -p ./build && \
-            cd ./build && \
-            cmake ../ -DNGRAPH_TOOLS_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE \
-            -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX=/root/ngraph_dist && \
-            make -j $(lscpu --parse=CORE | grep -v '"'#'"' | sort | uniq | wc -l) && \
-            make install && \
-            cd /root/python && \
-            if [[ -z $(ls /root/ngraph-onnx 2>/dev/null) ]]; then
-                git clone --recursive https://github.com/pybind/pybind11.git;
-            fi
-            export PYBIND_HEADERS_PATH=/root/python/pybind11 && \
-            export NGRAPH_CPP_BUILD_PATH=/root/ngraph_dist && \
-            export NGRAPH_ONNX_IMPORT_ENABLE=TRUE && \
-            python3 setup.py bdist_wheel && \
-            cd /root'
-        docker exec "${DOCKER_CONTAINER}" bash -c "${BUILD_NGRAPH_CMD}"
+    WORKSPACE="$(pwd)/$( dirname "${BASH_SOURCE[0]}" )"
+    cd "${WORKSPACE}"
+
+    if ! check_ngraph_onnx_repo; then
+        clone_ngraph_onnx "${NGRAPH_ONNX_BRANCH}"
     fi
 
-    CLONE_CMD='cd /root &&\
-        if [[ -z $(ls /root/ngraph-onnx 2>/dev/null) ]]; then
-            git clone '"${NGRAPH_ONNX_REPO}"';
-        fi'
-    docker exec "${DOCKER_CONTAINER}" bash -c "${CLONE_CMD}"
-    NGRAPH_WHL=$(docker exec ${DOCKER_CONTAINER} find /root/python/dist/ -name "ngraph*.whl")
-    docker exec -e TOX_INSTALL_NGRAPH_FROM="${NGRAPH_WHL}" -e NGRAPH_BACKEND=CPU "${DOCKER_CONTAINER}" tox -c /root/ngraph-onnx/
-    docker exec -e TOX_INSTALL_NGRAPH_FROM="${NGRAPH_WHL}" -e NGRAPH_BACKEND=INTEPRETER "${DOCKER_CONTAINER}" tox -c /root/ngraph-onnx/
+    local cloned_repo_sha="$(check_ngraph_onnx_rev)"
+    if [ -z "${NGRAPH_ONNX_REPO_SHA}" ]; then
+        NGRAPH_ONNX_REPO_SHA="${cloned_repo_sha}"
+    fi
+
+    if [[ "${NGRAPH_ONNX_REPO_SHA}" != "${cloned_repo_sha}" ]]; then
+        checkout_ngraph_onnx_repo "${NGRAPH_ONNX_REPO_SHA}"
+    fi
+
+    run_ci
+
+    return 0
 }
 
-# Function cleanup() removes items related to nGraph, created during script execution
-function cleanup_ngraph() {
-    set -x
+function parse_arguments {
+    # Parses script arguments
+    PATTERN='[-a-zA-Z0-9_]*='
+    for i in "${@}"; do
+        case $i in
+            "--help")
+                printf ${HELP_MESSAGE}
+                exit 0
+                ;;
+            "--cleanup")
+                CLEANUP="true"
+                echo "[INFO] Performing cleanup."
+                ;;
+            "--rebuild")
+                REBUILD="true"
+                echo "[INFO] nGraph is going to be rebuilt."
+                ;;
+            "--ngraph_onnx_branch="*)
+                NGRAPH_ONNX_REPO_BRANCH="${i//${PATTERN}/}"
+                echo "[INFO] Using nGraph-ONNX branch ${NGRAPH_ONNX_REPO_BRANCH}"
+                ;;
+            "--ngraph_onnx_sha="*)
+                NGRAPH_ONNX_REPO_SHA="${i//${PATTERN}/}"
+                echo "[INFO] Using nGraph-ONNX commit ${NGRAPH_ONNX_REPO_SHA}"
+                ;;
+            "--backends="*)
+                BACKENDS="${i//${PATTERN}/}"
+                IFS="," read -ra BACKENDS <<< "${BACKENDS}"
+                BACKENDS="${BACKENDS[@]}"
+                echo "[INFO] Backends tested: ${BACKENDS}"
+                ;;
+            *)
+                echo "[ERROR] Unrecognized argument: ${i}"
+                printf ${HELP_MESSAGE}
+                exit -1
+                ;;
+        esac
+    done
 
-    docker exec "${DOCKER_CONTAINER}" bash -c 'rm -rf /root/build/* /root/ngraph_dist /root/python/dist'
+    return 0
 }
 
-# Function cleanup() removes items created during script execution
 function cleanup() {
-    set -x
+    # Performs cleanup of artifacts and containers from previous runs.
+    local container_name_pattern="${DOCKER_CONTAINER_NAME_PATTERN/<OPERATING_SYSTEM>/*}"
+    local ngraph_path="${WORKSPACE%/.ci*}"
+    docker rm -f "$(docker ps -a --format="{{.ID}}" --filter="name=${container_name_pattern}")"
+    rm -rf "${ngraph_path}/python/dist/ngraph*.whl"
+    rm -rf "${ngraph_path}/python/*.so"
+    rm -rf "${ngraph_path}/python/build"
+    rm -rf "${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}"
 
-    docker exec "${DOCKER_CONTAINER}" bash -c "rm -rf /root/ngraph_dist /root/ngraph-onnx/.tox /root/ngraph-onnx/.onnx \
-                    /root/ngraph-onnx/__pycache__ /root/ngraph-onnx/ngraph_onnx.egg-info /root/ngraph-onnx/cpu_codegen"
-    docker exec "${DOCKER_CONTAINER}" bash -c 'rm -rf $(find /root/ -user root)'
-    docker rm -f "${DOCKER_CONTAINER}"
+    return 0
 }
 
-PATTERN='[-a-zA-Z0-9_]*='
-for i in "$@"
-do
-    case $i in
-        --help*)
-            printf "Script builds nGraph and runs tox tests inside docker container.
-            Every execution after first run is going to run tox tests again.
-            To rebuild nGraph and run tests again use --rebuild parameter.
 
-            Following parameters are available:
+function check_ngraph_onnx_repo() {
+    # Verifies if nGraph-ONNX repository is present
+    local ngraph_onnx_git="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}/.git"
+    if [ -d "${ngraph_onnx_git}" ]; then
+        # 0 - true
+        return 0
+    else
+        # 0 - false
+        return 1
+    fi
+}
 
-            --help      displays this message
-            --cleanup   removes docker container and files created during script execution
-            --rebuild   rebuilds nGraph and runs tox tests
-            "
-            exit 0
-        ;;
-        --cleanup*)
-            cleanup
-            exit 0
-        ;;
-        --rebuild*)
-            cleanup_ngraph
-            BUILD="TRUE"
-        ;;
-    esac
-done
+function clone_ngraph_onnx() {
+    # Clones nGraph-ONNX repository
+    local branch="${1}"
+    git clone "${NGRAPH_ONNX_REPO_ADDRESS}" --branch "${branch}" "${NGRAPH_ONNX_REPO_DIR_NAME}"
 
-set -x
+    return 0
+}
 
-run
+function check_ngraph_onnx_rev() {
+    # Returns current nGraph-ONNX repository commit SHA
+    local previous_dir="$(pwd)"
+    local ngraph_onnx_dir="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}"
+    cd "${ngraph_onnx_dir}"
+    local sha="$(git rev-parse HEAD)"
+    cd "${previous_dir}"
+    echo "${sha}"
+
+    return 0
+}
+
+function checkout_ngraph_onnx_repo() {
+    # Switches nGraph-ONNX repository to commit SHA given as parameter
+    local sha="${1}"
+    local previous_dir="$(pwd)"
+    cd "${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}"
+    git checkout "${sha}"
+    cd "${previous_dir}"
+
+    return 0
+}
+
+function check_container_status() {
+    # Returns status of container for container name given as parameter
+    local docker_container_name="${1}"
+    local pattern="(?<=${docker_container_name}-).+"
+    local format="{{ .Names }}-{{ .Status }}"
+    echo "$(docker ps -a --format=\"${format}\" | grep -iPo \"${pattern}\")"
+
+    return 0
+}
+
+function build_docker_image() {
+    # Builds CI Docker image for operating system given as parameter
+    local operating_system="${1}"
+    local docker_image_name="${2}"
+    local dockerfiles_dir="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}/dockerfiles"
+    local postprocess_dockerfile_subpath="postprocess/append_user.dockerfile"
+    local previous_dir="$(pwd)"
+    cd "${dockerfiles_dir}"
+    # build base image
+    docker build \
+        --build-arg http_proxy="${HTTP_PROXY}" \
+        --build-arg https_proxy="${HTTPS_PROXY}" \
+        -f "./${operating_system}.dockerfile" \
+        -t "${docker_image_name}:${DOCKER_BASE_IMAGE_TAG}" .
+    # build image with appended user
+    docker build \
+        --build-arg base_image="${docker_image_name}:${base_image_tag}" \
+        --build-arg UID="$(id -u)" \
+        --build-arg GID="$(id -g)" \
+        --build-arg USERNAME="${USER}" \
+        -f "${dockerfiles_dir}/${postprocess_dockerfile_subpath}" \
+        -t "${docker_image_name}:${DOCKER_EXEC_IMAGE_TAG}" .
+    cd "${previous_dir}"
+
+    return 0
+}
+
+function run_docker_container() {
+    # Runs Docker container using image specified as parameter
+    local docker_image_name="${1}"
+    local docker_container_name="${2}"
+    # Cut off everything after and including "/.ci" in workspace path
+    local ngraph_parrent_path="$(dirname ${WORKSPACE%/.ci*})"
+    docker run -td \
+                --privileged \
+                --user "${USER}" \
+                --name "${docker_container_name}"  \
+                --volume "${ngraph_parrent_path}:${DOCKER_HOME}" \
+                ${docker_image_name}:${DOCKER_EXEC_IMAGE_TAG}
+
+    return 0
+}
+
+function prepare_environment() {
+    # Prepares environment - builds nGraph
+    local docker_container_name="${1}"
+    local ngraph_ci_dir="${2}"
+    local ngraph_onnx_ci_dir="${DOCKER_HOME}/ngraph/${ngraph_ci_dir}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}"
+    docker exec ${docker_container_name} bash -c "${ngraph_onnx_ci_dir}/prepare_environment.sh \
+                                                    --build-dir=${DOCKER_HOME} \
+                                                    --backends=${BACKENDS}"
+
+    return 0
+}
+
+function run_tox_tests() {
+    # Executes tox tests for every backend
+    local docker_container_name="${1}"
+    local ngraph_ci_dir="${2}"
+    for backend in "${BACKENDS}"; do
+        run_backend_test "${docker_container_name}" "${ngraph_ci_dir}" "${backend}"
+    done
+
+    return 0
+}
+
+function run_backend_test() {
+    # Executes single set of tox tests for backend given as parameter
+    local docker_container_name="${1}"
+    local ngraph_ci_dir="${2}"
+    local backend="${3}"
+    local ngraph_onnx_dir="${DOCKER_HOME}/ngraph/${ngraph_ci_dir}/${NGRAPH_ONNX_REPO_DIR_NAME}"
+    local backend_env="NGRAPH_BACKEND=$(printf '%s\n' "${backend}" | awk '{ print toupper($0) }')"
+    local ngraph_whl=$(docker exec ${docker_container_name} find ${DOCKER_HOME}/ngraph/python/dist/ -name 'ngraph*.whl')
+    local tox_env="TOX_INSTALL_NGRAPH_FROM=${ngraph_whl}"
+    docker exec -e "${tox_env}" -e "${backend_env}" -w "${ngraph_onnx_dir}" ${docker_container_name} tox -c .
+
+    return 0
+}
+
+function run_ci() {
+    # Builds necessary Docker images and executes CI
+    local ngraph_onnx_ci_dockerfiles_dir="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}/dockerfiles"
+    local ngraph_ci_dir="${WORKSPACE#*ngraph/}"
+    for dockerfile in "$(find ${ngraph_onnx_ci_dockerfiles_dir} -maxdepth 1 -name *.dockerfile -printf "%f")"; do
+        local operating_system="${dockerfile/.dockerfile/}"
+        local docker_container_name="${DOCKER_CONTAINER_NAME_PATTERN/<OPERATING_SYSTEM>/$operating_system}"
+        local docker_image_name="${DOCKER_IMAGE_NAME_PATTERN/<OPERATING_SYSTEM>/$operating_system}"
+        # Rebuild container if REBUILD parameter used or if there's no container present
+        if [[ "${REBUILD}" = "true" || -z "$(check_container_status "${docker_container_name}")" ]]; then
+            docker rm -f "${docker_container_name}" >/dev/null 2>&1
+            build_docker_image "${operating_system}" "${docker_image_name}"
+            run_docker_container "${docker_image_name}" "${docker_container_name}"
+        elif [[ "$(check_container_status)"=*"Exited"* ]]
+            docker start "${docker_container_name}"
+        fi
+        prepare_environment "${docker_container_name}" "${ngraph_ci_dir}"
+        run_tox_tests "${docker_container_name}" "${ngraph_ci_dir}"
+    done
+
+    return 0
+}
+
+main "$@"
