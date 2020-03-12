@@ -1357,3 +1357,16 @@ def test_transpose():
     expected = np.transpose(input_tensor, input_order)
 
     assert np.allclose(result, expected)
+
+
+@pytest.mark.skip_on_gpu
+@pytest.mark.skip_on_interpreter # unsupported op
+def test_tile():
+    input_tensor = np.arange(6).reshape((2, 1, 3))
+    repeats = np.array([2, 1])
+
+    result = test.ngraph.util.run_op_node([input_tensor, repeats], ng.ops.tile)
+
+    expected = np.array([0, 1, 2, 0, 1, 2, 3, 4, 5, 3, 4, 5]).reshape((2, 2, 3))
+
+    assert np.allclose(result, expected)

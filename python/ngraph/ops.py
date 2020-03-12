@@ -1691,3 +1691,14 @@ def transpose(data, input_order):  # type: (Node, Node) -> Node
     :return: Transpose node
     """
     return _get_node_factory().create("Transpose", [data, input_order])
+
+
+@nameable_op
+def tile(data, repeats):  # type: (Node, Node) -> Node
+    """Return a node which dynamically repeats(replicates) the input data tensor
+
+    :param data: The input tensor to be tiled
+    :param repeats: Per-dimension replication factors
+    :return: Tile node
+    """
+    return _get_node_factory().create("Tile", [data, repeats])

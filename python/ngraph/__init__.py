@@ -108,6 +108,7 @@ from ngraph.ops import subtract
 from ngraph.ops import sum
 from ngraph.ops import tan
 from ngraph.ops import tanh
+from ngraph.ops import tile
 from ngraph.ops import topk
 from ngraph.ops import transpose
 from ngraph.ops import unsqueeze
