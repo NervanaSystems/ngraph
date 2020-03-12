@@ -59,22 +59,22 @@ namespace ngraph
 
                 NodeVector reduce_l1(const Node& node)
                 {
-                    auto l1_norm_reduction = std::bind(ngraph::builder::opset1::l1_norm,
-                                                       std::placeholders::_1,
-                                                       std::placeholders::_2,
-                                                       0.f);
+                    auto l1_norm_reduction = [](const std::shared_ptr<ngraph::Node>& node,
+                                                const ngraph::AxisSet& axis_set) {
+                        return ngraph::builder::opset1::l1_norm(node, axis_set, 0.f);
+                    };
+
                     return {reduction::make_ng_reduction_op(
                         node, node.get_ng_inputs().at(0), l1_norm_reduction)};
                 }
 
                 NodeVector reduce_l2(const Node& node)
                 {
-                    auto l2_norm_reduction = std::bind(ngraph::builder::opset1::l2_norm,
-                                                       std::placeholders::_1,
-                                                       std::placeholders::_2,
-                                                       0.f,
-                                                       ngraph::builder::BiasMode::ADD,
-                                                       false);
+                    auto l2_norm_reduction = [](const std::shared_ptr<ngraph::Node>& node,
+                                                const ngraph::AxisSet& axis_set) {
+                        return ngraph::builder::opset1::l2_norm(
+                            node, axis_set, 0.f, ngraph::builder::BiasMode::ADD, false);
+                    };
                     return {reduction::make_ng_reduction_op(
                         node, node.get_ng_inputs().at(0), l2_norm_reduction)};
                 }
