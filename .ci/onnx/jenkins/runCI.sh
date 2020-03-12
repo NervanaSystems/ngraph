@@ -182,7 +182,9 @@ function checkout_ngraph_onnx_repo() {
 function run_ci() {
     # Builds necessary Docker images and executes CI
     local ngraph_onnx_ci_dockerfiles_dir="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}/dockerfiles"
-    local ngraph_ci_dir="${WORKSPACE#*ngraph/}"
+    local ngraph_path="${WORKSPACE%/.ci*}"
+    local ngraph_dir_name="${ngraph_path##*/}"
+    local ngraph_ci_dir="${WORKSPACE#*$ngraph_dir_name/}"
     for dockerfile in $(find ${ngraph_onnx_ci_dockerfiles_dir} -maxdepth 1 -name *.dockerfile -printf "%f"); do
         local operating_system="${dockerfile/.dockerfile/}"
         local docker_container_name="${DOCKER_CONTAINER_NAME_PATTERN/<OPERATING_SYSTEM>/$operating_system}"
@@ -192,11 +194,11 @@ function run_ci() {
             docker rm -f "${docker_container_name}" >/dev/null 2>&1
             build_docker_image "${operating_system}" "${docker_image_name}"
             run_docker_container "${docker_image_name}" "${docker_container_name}"
-            prepare_environment "${docker_container_name}" "${ngraph_ci_dir}"
+            prepare_environment "${docker_container_name}" "${ngraph_dir_name}"
         elif [[ "$(check_container_status)"==*"Exited"* ]]; then
             docker start "${docker_container_name}"
         fi
-        run_tox_tests "${docker_container_name}" "${ngraph_ci_dir}"
+        run_tox_tests "${docker_container_name}" "${ngraph_dir_name}"
     done
 
     return 0
@@ -256,10 +258,9 @@ function run_docker_container() {
 function prepare_environment() {
     # Prepares environment - builds nGraph
     local docker_container_name="${1}"
-    local ngraph_ci_dir="${2}"
-    local ngraph_path="${WORKSPACE%/.ci*}"
-    local ngraph_dir_name="${ngraph_path##*/}"
-    local ngraph_onnx_ci_dir="${DOCKER_HOME}/${ngraph_dir_name}/${ngraph_ci_dir}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}"
+    local ngraph_dir_name="${2}"
+    local ngraph_ci_path="${DOCKER_HOME}/${WORKSPACE#*/$ngraph_dir_name}"
+    local ngraph_onnx_ci_dir="${ngraph_ci_path}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}"
     docker exec ${docker_container_name} bash -c "${ngraph_onnx_ci_dir}/prepare_environment.sh \
                                                     --build-dir=${DOCKER_HOME} \
                                                     --backends=${BACKENDS// /,}"
@@ -270,9 +271,9 @@ function prepare_environment() {
 function run_tox_tests() {
     # Executes tox tests for every backend
     local docker_container_name="${1}"
-    local ngraph_ci_dir="${2}"
+    local ngraph_dir_name="${2}"
     for backend in ${BACKENDS}; do
-        run_backend_test "${docker_container_name}" "${ngraph_ci_dir}" "${backend}"
+        run_backend_test "${docker_container_name}" "${ngraph_dir_name}" "${backend}"
     done
 
     return 0
@@ -281,9 +282,10 @@ function run_tox_tests() {
 function run_backend_test() {
     # Executes single set of tox tests for backend given as parameter
     local docker_container_name="${1}"
-    local ngraph_ci_dir="${2}"
+    local ngraph_dir_name="${2}"
     local backend="${3}"
-    local ngraph_onnx_dir="${DOCKER_HOME}/ngraph/${ngraph_ci_dir}/${NGRAPH_ONNX_REPO_DIR_NAME}"
+    local ngraph_ci_path="${DOCKER_HOME}/${WORKSPACE#*/$ngraph_dir_name}"
+    local ngraph_onnx_dir="${ngraph_ci_path}/${NGRAPH_ONNX_REPO_DIR_NAME}"
     local backend_env="NGRAPH_BACKEND=$(printf '%s\n' "${backend}" | awk '{ print toupper($0) }')"
     local ngraph_whl=$(docker exec ${docker_container_name} find ${DOCKER_HOME}/ngraph/python/dist/ -name 'ngraph*.whl')
     local tox_env="TOX_INSTALL_NGRAPH_FROM=${ngraph_whl}"
