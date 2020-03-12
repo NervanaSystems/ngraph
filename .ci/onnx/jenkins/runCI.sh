@@ -71,7 +71,7 @@ function main() {
     cd "${WORKSPACE}"
 
     if ! check_ngraph_onnx_repo; then
-        clone_ngraph_onnx "${NGRAPH_ONNX_BRANCH}"
+        clone_ngraph_onnx
     fi
 
     local cloned_repo_sha="$(check_ngraph_onnx_rev)"
@@ -80,7 +80,7 @@ function main() {
     fi
 
     if [[ "${NGRAPH_ONNX_REPO_SHA}" != "${cloned_repo_sha}" ]]; then
-        checkout_ngraph_onnx_repo "${NGRAPH_ONNX_REPO_SHA}"
+        checkout_ngraph_onnx_repo
     fi
 
     run_ci
@@ -107,7 +107,6 @@ function parse_arguments {
                 ;;
             "--ngraph_onnx_branch="*)
                 NGRAPH_ONNX_REPO_BRANCH="${i//${PATTERN}/}"
-                echo "[INFO] Using nGraph-ONNX branch ${NGRAPH_ONNX_REPO_BRANCH}"
                 ;;
             "--ngraph_onnx_sha="*)
                 NGRAPH_ONNX_REPO_SHA="${i//${PATTERN}/}"
@@ -117,7 +116,6 @@ function parse_arguments {
                 BACKENDS="${i//${PATTERN}/}"
                 IFS="," read -ra BACKENDS <<< "${BACKENDS}"
                 BACKENDS="${BACKENDS[@]}"
-                echo "[INFO] Backends tested: ${BACKENDS}"
                 ;;
             *)
                 echo "[ERROR] Unrecognized argument: ${i}"
@@ -126,6 +124,9 @@ function parse_arguments {
                 ;;
         esac
     done
+
+    echo "[INFO] Using nGraph-ONNX branch ${NGRAPH_ONNX_REPO_BRANCH}"
+    echo "[INFO] Backends tested: ${BACKENDS}"
 
     return 0
 }
@@ -159,7 +160,7 @@ function check_ngraph_onnx_repo() {
 function clone_ngraph_onnx() {
     # Clones nGraph-ONNX repository
     local branch="${1}"
-    git clone "${NGRAPH_ONNX_REPO_ADDRESS}" --branch "${branch}" "${NGRAPH_ONNX_REPO_DIR_NAME}"
+    git clone "${NGRAPH_ONNX_REPO_ADDRESS}" --branch "${NGRAPH_ONNX_REPO_BRANCH}" "${NGRAPH_ONNX_REPO_DIR_NAME}"
 
     return 0
 }
@@ -177,11 +178,10 @@ function check_ngraph_onnx_rev() {
 }
 
 function checkout_ngraph_onnx_repo() {
-    # Switches nGraph-ONNX repository to commit SHA given as parameter
-    local sha="${1}"
+    # Switches nGraph-ONNX repository to commit SHA
     local previous_dir="$(pwd)"
     cd "${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}"
-    git checkout "${sha}"
+    git checkout "${NGRAPH_ONNX_REPO_SHA}"
     cd "${previous_dir}"
 
     return 0
@@ -193,6 +193,29 @@ function check_container_status() {
     local pattern="(?<=${docker_container_name}-).+"
     local format="{{ .Names }}-{{ .Status }}"
     echo "$(docker ps -a --format=\"${format}\" | grep -iPo \"${pattern}\")"
+
+    return 0
+}
+
+function run_ci() {
+    # Builds necessary Docker images and executes CI
+    local ngraph_onnx_ci_dockerfiles_dir="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}/dockerfiles"
+    local ngraph_ci_dir="${WORKSPACE#*ngraph/}"
+    for dockerfile in "$(find ${ngraph_onnx_ci_dockerfiles_dir} -maxdepth 1 -name *.dockerfile -printf "%f")"; do
+        local operating_system="${dockerfile/.dockerfile/}"
+        local docker_container_name="${DOCKER_CONTAINER_NAME_PATTERN/<OPERATING_SYSTEM>/$operating_system}"
+        local docker_image_name="${DOCKER_IMAGE_NAME_PATTERN/<OPERATING_SYSTEM>/$operating_system}"
+        # Rebuild container if REBUILD parameter used or if there's no container present
+        if [[ "${REBUILD}" = "true" || -z "$(check_container_status "${docker_container_name}")" ]]; then
+            docker rm -f "${docker_container_name}" >/dev/null 2>&1
+            build_docker_image "${operating_system}" "${docker_image_name}"
+            run_docker_container "${docker_image_name}" "${docker_container_name}"
+        elif [[ "$(check_container_status)"==*"Exited"* ]]; then
+            docker start "${docker_container_name}"
+        fi
+        prepare_environment "${docker_container_name}" "${ngraph_ci_dir}"
+        run_tox_tests "${docker_container_name}" "${ngraph_ci_dir}"
+    done
 
     return 0
 }
@@ -273,29 +296,6 @@ function run_backend_test() {
     local ngraph_whl=$(docker exec ${docker_container_name} find ${DOCKER_HOME}/ngraph/python/dist/ -name 'ngraph*.whl')
     local tox_env="TOX_INSTALL_NGRAPH_FROM=${ngraph_whl}"
     docker exec -e "${tox_env}" -e "${backend_env}" -w "${ngraph_onnx_dir}" ${docker_container_name} tox -c .
-
-    return 0
-}
-
-function run_ci() {
-    # Builds necessary Docker images and executes CI
-    local ngraph_onnx_ci_dockerfiles_dir="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}/dockerfiles"
-    local ngraph_ci_dir="${WORKSPACE#*ngraph/}"
-    for dockerfile in "$(find ${ngraph_onnx_ci_dockerfiles_dir} -maxdepth 1 -name *.dockerfile -printf "%f")"; do
-        local operating_system="${dockerfile/.dockerfile/}"
-        local docker_container_name="${DOCKER_CONTAINER_NAME_PATTERN/<OPERATING_SYSTEM>/$operating_system}"
-        local docker_image_name="${DOCKER_IMAGE_NAME_PATTERN/<OPERATING_SYSTEM>/$operating_system}"
-        # Rebuild container if REBUILD parameter used or if there's no container present
-        if [[ "${REBUILD}" = "true" || -z "$(check_container_status "${docker_container_name}")" ]]; then
-            docker rm -f "${docker_container_name}" >/dev/null 2>&1
-            build_docker_image "${operating_system}" "${docker_image_name}"
-            run_docker_container "${docker_image_name}" "${docker_container_name}"
-        elif [[ "$(check_container_status)"=*"Exited"* ]]
-            docker start "${docker_container_name}"
-        fi
-        prepare_environment "${docker_container_name}" "${ngraph_ci_dir}"
-        run_tox_tests "${docker_container_name}" "${ngraph_ci_dir}"
-    done
 
     return 0
 }
