@@ -41,6 +41,12 @@ from ngraph.utils.types import NumericType, NumericData, TensorShape, make_const
     NodeInput, ScalarData, as_node
 from ngraph.utils.types import get_element_type
 
+from ngraph.utils.node_factory import NodeFactory
+
+
+def _get_node_factory():
+    return NodeFactory()
+
 
 @nameable_op
 def parameter(shape, dtype=np.float32, name=None):
@@ -767,7 +773,7 @@ def subtract(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, 
 @binary_op
 def add(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies f(x) = A+B to the input nodes element-wise."""
-    return Add(left_node, right_node)
+    return _get_node_factory().create("Add", [left_node, right_node])
 
 
 @binary_op
