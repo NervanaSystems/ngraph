@@ -144,7 +144,7 @@ function cleanup() {
     rm -rf "${ngraph_path}/python/dist/ngraph*.whl"
     rm -rf "${ngraph_path}/python/*.so"
     rm -rf "${ngraph_path}/python/build"
-    rm -rf "${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}"
+    rm -rf "${ngraph_path}/${NGRAPH_ONNX_REPO_DIR_NAME}"
 
     return 0
 }
