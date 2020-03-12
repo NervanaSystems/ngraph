@@ -226,8 +226,6 @@ set (SRC
     op/experimental/layers/region_yolo.cpp
     op/experimental/layers/reorg_yolo.hpp
     op/experimental/layers/reorg_yolo.cpp
-    op/experimental/layers/roi_align.hpp
-    op/experimental/layers/roi_align.cpp
     op/experimental/layers/roi_pooling.hpp
     op/experimental/layers/roi_pooling.cpp
     op/experimental/random_uniform.hpp
@@ -303,6 +301,8 @@ set (SRC
     op/reduce_mean.hpp
     op/reduce_sum.cpp
     op/reduce_sum.hpp
+    op/roi_align.hpp
+    op/roi_align.cpp
     op/round.cpp
     op/round.hpp
     op/quantize.cpp

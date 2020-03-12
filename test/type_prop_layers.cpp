@@ -26,7 +26,6 @@
 #include "ngraph/op/experimental/layers/psroi_pooling.hpp"
 #include "ngraph/op/experimental/layers/region_yolo.hpp"
 #include "ngraph/op/experimental/layers/reorg_yolo.hpp"
-#include "ngraph/op/experimental/layers/roi_align.hpp"
 #include "ngraph/op/experimental/layers/roi_pooling.hpp"
 
 #include <memory>
@@ -182,13 +181,4 @@ TEST(type_prop_layers, roi_pooling)
     auto coords = make_shared<op::Parameter>(element::f32, Shape{150, 5});
     auto op = make_shared<op::ROIPooling>(inputs, coords, Shape{6, 6}, 0.0625, "Max");
     ASSERT_EQ(op->get_shape(), (Shape{150, 3, 6, 6}));
-}
-
-TEST(type_prop_layers, roi_align_basic_shape_inference)
-{
-    const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 5, 5});
-    const auto rois = make_shared<op::Parameter>(element::f32, Shape{7, 4});
-    const auto batch_indices = make_shared<op::Parameter>(element::i32, Shape{7});
-    const auto op = make_shared<op::ROIAlign>(data, rois, batch_indices, 2, 2, 1, 1.0f, "avg");
-    ASSERT_EQ(op->get_shape(), (Shape{7, 3, 2, 2}));
 }
