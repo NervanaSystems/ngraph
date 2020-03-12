@@ -101,13 +101,16 @@ void op::v2::ROIAlign::validate_and_infer_types()
     }
 
     PartialShape result_shape;
+    int64_t i_pooled_h = static_cast<int64_t >(m_pooled_h);
+    int64_t i_pooled_w = static_cast<int64_t >(m_pooled_w);
+
     if (rois_shape.is_static())
     {
-        result_shape = PartialShape({rois_shape[0], data_shape[1], m_pooled_h, m_pooled_w});
+        result_shape = PartialShape({rois_shape[0], data_shape[1], i_pooled_h, i_pooled_w});
     }
     else
     {
-        result_shape = PartialShape({Dimension::dynamic(), data_shape[1], m_pooled_h, m_pooled_w});
+        result_shape = PartialShape({Dimension::dynamic(), data_shape[1], i_pooled_h, i_pooled_w});
     }
     set_output_type(0, data_batch_et, result_shape);
 }
