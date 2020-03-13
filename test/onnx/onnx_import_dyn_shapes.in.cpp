@@ -38,6 +38,21 @@ using namespace ngraph::test;
 
 static std::string s_manifest = "${MANIFEST}";
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, test_slice_10)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/slice.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::STATIC);
+    test_case.add_input<float>({1,2,3,4,5,6,7,8});
+    test_case.add_input<int>({1,0});
+    test_case.add_input<int>({2,3});
+    test_case.add_input<int>({0,1});
+    test_case.add_input<int>({1,2});
+    test_case.add_expected_output<float>(Shape{1,2}, {5,7});
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, onnx_dynamic_dims_to_ngraph_dynamic_dims)
 {
     // the model represents a linear function A * x + B
@@ -547,6 +562,25 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_uint16_dyn_shape)
 
     std::vector<uint16_t> expected_values{1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2};
     test_case.add_expected_output<uint16_t>(Shape{2, 2, 2, 2}, expected_values);
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/slice.prototxt"));
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    test_case.add_input<float>(Shape{1, 2, 4}, std::vector<float>{1, 2,3,4,5,6,7,8});
+    test_case.add_input<int64_t>(Shape{2}, std::vector<int64_t>{1, 0});
+    test_case.add_input<int64_t>(Shape{2}, std::vector<int64_t>{2, 3});
+    test_case.add_input<int64_t>(Shape{2}, std::vector<int64_t>{0, 1});
+    test_case.add_input<int64_t>(Shape{2}, std::vector<int64_t>{1, 2});
+
+    std::vector<float> expected_values{5,7};
+    test_case.add_expected_output<float>(Shape{1,2}, expected_values);
 
     test_case.run();
 }
