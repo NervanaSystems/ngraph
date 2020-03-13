@@ -1286,36 +1286,44 @@ def convolution_backprop_data(data_batch_shape,                      # type: Ten
 
 
 @nameable_op
-def avg_pool(data_batch,             # type: Node
-             window_shape,           # type: TensorShape
-             window_strides=None,    # type: List[int]
-             padding_below=None,     # type: TensorShape
-             padding_above=None,     # type: TensorShape
-             include_padding=False,  # type: bool
-             name=None,              # type: str
+def avg_pool(data_batch,            # type: Node
+             strides,               # type: List[int]
+             pads_begin,            # type: TensorShape
+             pads_end,              # type: TensorShape
+             kernel_shape,          # type: TensorShape
+             exclude_pad,           # type: bool
+             rounding_type='floor',  # type: str
+             auto_pad=None,         # type: str
+             name=None,             # type: str
              ):
     # type: (...) -> Node
     """Return average pooling node.
 
-    :param data_batch: The input node providing data.
-    :param window_shape: The pooling window shape.
-    :param window_strides: The window movement strides.
-    :param padding_below: The input data optional padding below filled with zeros.
-    :param padding_above: The input data optional padding below filled with zeros.
-    :param include_padding: Whether or not to include zero padding in average computations.
-    :param name: Optional name for the new output node.
+    :param data_batch:      The input node providing data.
+    :param strides:         The window movement strides.
+    :param pads_begin:      The input data optional padding below filled with zeros.
+    :param pads_end:        The input data optional padding below filled with zeros.
+    :param kernel_shape:    The pooling window shape.
+    :param exclude_pad:     Whether or not to include zero padding in average computations.
+    :param rounding_type:   Determines used rounding schema when computing output shape. Acceptable
+                            values are: ['floor', 'ceil']
+    :param auto_pad:        Determines how the padding is calculated. Acceptable values:
+                            [None, 'same_upper', 'same_lower', 'valid']
+    :param name:            Optional name for the new output node.
+
     :return: New node with AvgPool operation applied on its data.
     """
-    spatial_dim_count = len(window_shape)
-    if window_strides is None:
-        window_strides = [1] * spatial_dim_count
-    if padding_above is None:
-        padding_above = [0] * spatial_dim_count
-    if padding_below is None:
-        padding_below = [0] * spatial_dim_count
-
-    return AvgPool(data_batch, Shape(window_shape), Strides(window_strides), Shape(padding_below),
-                   Shape(padding_above), include_padding)
+    if auto_pad is None:
+        auto_pad = 'explicit'
+    return _get_node_factory().create('AvgPool',
+                                      [data_batch],
+                                      {'strides': strides,
+                                       'pads_begin': pads_begin,
+                                       'pads_end': pads_end,
+                                       'kernel': kernel_shape,
+                                       'exclude_pad': exclude_pad,
+                                       'rounding_type': rounding_type.upper(),
+                                       'auto_pad': auto_pad.upper()})
 
 
 @nameable_op
