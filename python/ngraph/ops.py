@@ -28,7 +28,7 @@ from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
     Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, \
     Quantize, QuantizedConvolution, QuantizedDot, PRelu, Relu, RNNCell, ReplaceSlice, Reshape, \
     Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
-    Sqrt, SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh, TopK
+    Sqrt, SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh
 
 
 from typing import Callable, Iterable, List, Set, Union
@@ -1628,25 +1628,24 @@ def argmin(data,    # type: Node
 
 
 @nameable_op
-def topk(data,       # type: Node
-         k,          # type: int
-         kaxis=-1,   # type: int
-         cmax=True,  # type: bool
+def topk(data,   # type: Node
+         k,      # type: Node
+         axis,   # type: int
+         mode,   # type: string
+         sort    # type: string
          ):
     # type: (...) -> Node
     """Return a node which performs TopK.
 
     :param data: Input data.
-    :param kaxis: TopK Axis.
     :param k: K.
-    :param cmax: Compute TopK largest (True) or smallest (False)
+    :param axis: TopK Axis.
+    :param mode: Compute TopK largest ('max') or smallest ('min')
+    :param sort: Order of output elements (sort by: 'none', 'index' or 'value')
     :return: The new node which performs TopK (both indices and values)
     """
-    return TopK(data,
-                len(data.get_shape()) - 1 if kaxis == -1 else kaxis,
-                get_element_type(np.int32),
-                k,
-                cmax)
+    return _get_node_factory().create('TopK', [data, k],
+                                             {'axis': axis, 'mode': mode, 'sort': sort})
 
 
 @nameable_op

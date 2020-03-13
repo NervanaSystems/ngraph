@@ -191,7 +191,7 @@ namespace ngraph
                 uint64_t m_normalized_axis;
                 Mode m_mode;
                 SortType m_sort;
-                element::Type m_index_element_type;
+                element::Type m_index_element_type = element::i32;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

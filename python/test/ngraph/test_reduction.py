@@ -78,18 +78,21 @@ def test_topk():
                                     [12, 8, 4],
                                     [6, 1, 5],
                                     [3, 11, 7]], dtype=np.float32))
-    comp_topk = ng.topk(input_x, 4, 0)
+    K = ng.constant(4)
+    comp_topk = ng.topk(input_x, K, 0, 'max', 'SORT_VALUES')
+
     model0 = runtime.computation(ng.get_output_element(comp_topk, 0))
     result0 = model0()
     assert np.allclose(result0,
-                       np.array([[1, 3, 0],
-                                 [0, 1, 3],
-                                 [2, 0, 2],
-                                 [3, 2, 1]], dtype=np.int32))
-    model1 = runtime.computation(ng.get_output_element(comp_topk, 1))
-    result1 = model1()
-    assert np.allclose(result1,
                        np.array([[12, 11, 10],
                                  [9, 8, 7],
                                  [6, 2, 5],
                                  [3, 1, 4]], dtype=np.float32))
+
+    model1 = runtime.computation(ng.get_output_element(comp_topk, 1))
+    result1 = model1()
+    assert np.allclose(result1,
+                       np.array([[1, 3, 0],
+                                 [0, 1, 3],
+                                 [2, 0, 2],
+                                 [3, 2, 1]], dtype=np.int32))
