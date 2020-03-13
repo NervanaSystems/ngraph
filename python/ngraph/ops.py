@@ -1230,7 +1230,6 @@ def convolution(data,                           # type: Node
     :param name: The optional new name for output node.
     :return: New node performing batched convolution operation.
     """
-
     return _get_node_factory().create('Convolution',
                                       [data, filters],
                                       {'strides': strides,
@@ -1241,46 +1240,56 @@ def convolution(data,                           # type: Node
 
 
 @nameable_op
-def convolution_backprop_data(data_batch_shape,                      # type: TensorShape
-                              filters,                               # type: Node
-                              output_delta,                          # type: Node
-                              window_movement_strides_forward=None,  # type: List[int]
-                              window_dilation_strides_forward=None,  # type: List[int]
-                              padding_below_forward=None,            # type: List[int]
-                              padding_above_forward=None,            # type: List[int]
-                              data_dilation_strides_forward=None,    # type: List[int]
-                              name=None,                             # type: str
+def convolution_backprop_data(data,                 # type: Node
+                              filters,              # type: Node
+                              strides,              # type: List[int]
+                              output_shape=None,    # type: Node
+                              pads_begin=None,      # type: List[int]
+                              pads_end=None,        # type: List[int]
+                              dilations=None,       # type: List[int]
+                              auto_pad=None,        # type: str
+                              output_padding=None,  # type: List[int]
+                              name=None,            # type: str
                               ):
     # type: (...) -> Node
-    """Return node performing a batched-convolution data batch-backprop operation.
+    """Create node performing a batched-convolution backprop data operation.
 
-    :param data_batch_shape: The shape of the data batch from forward-prop.
-    :param filters: The node producing the filters from forward-prop.
-    :param output_delta: The node producing output delta.
-    :param window_movement_strides_forward: The window movement strides from forward-prop.
-    :param window_dilation_strides_forward: The window dilation strides from forward-prop.
-    :param padding_below_forward: The padding-below sizes from forward-prop.
-    :param padding_above_forward: The padding-above sizes from forward-prop.
-    :param data_dilation_strides_forward: The data dilation strides from forward-prop.
+    :param      data:         The node producing data from forward-prop
+    :param      filters:      The node producing the filters from forward-prop.
+    :param      output_shape: The node producing output delta.
+    :param      strides:      The distance (in pixels) to slide the filter on the feature map
+                              over the axes.
+    :param      pads_begin:   The number of pixels to add to the beginning along each axis.
+    :param      pads_end:     The number of pixels to add to the end along each axis.
+    :param      dilations:    The distance in width and height between elements (weights)
+                              in the filter.
+    :param      name:         The node name.
+
+    :returns:   The node object representing ConvolutionBackpropData  operation.
     """
-    spatial_dim_count = len(data_batch_shape) - 2
-    if window_movement_strides_forward is None:
-        window_movement_strides_forward = [1] * spatial_dim_count
-    if window_dilation_strides_forward is None:
-        window_dilation_strides_forward = [1] * spatial_dim_count
-    if padding_below_forward is None:
-        padding_below_forward = [0] * spatial_dim_count
-    if padding_above_forward is None:
-        padding_above_forward = [0] * spatial_dim_count
-    if data_dilation_strides_forward is None:
-        data_dilation_strides_forward = [1] * spatial_dim_count
+    spatial_dim_count = len(strides)
+    if pads_begin is None:
+        pads_begin = [0] * spatial_dim_count
+    if pads_end is None:
+        pads_end = [0] * spatial_dim_count
+    if dilations is None:
+        dilations = [1] * spatial_dim_count
+    if auto_pad is None:
+        auto_pad = 'explicit'
+    if output_padding is None:
+        output_padding = [0] * spatial_dim_count
+    args = [data, filters]
+    if output_shape is not None:
+        args.append(output_shape)
 
-    return ConvolutionBackpropData(Shape(data_batch_shape), filters, output_delta,
-                                   Strides(window_movement_strides_forward),
-                                   Strides(window_dilation_strides_forward),
-                                   CoordinateDiff(padding_below_forward),
-                                   CoordinateDiff(padding_above_forward),
-                                   Strides(data_dilation_strides_forward))
+    return _get_node_factory().create('ConvolutionBackpropData',
+                                      args,
+                                      {'strides': strides,
+                                       'pads_begin': pads_begin,
+                                       'pads_end': pads_end,
+                                       'dilations': dilations,
+                                       'auto_pad': auto_pad.upper(),
+                                       'output_padding': output_padding})
 
 
 @nameable_op
