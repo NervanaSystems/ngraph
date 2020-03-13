@@ -111,7 +111,7 @@ def parallelCCompile(
             self.compiler_so.remove('-DNDEBUG')
             self.compiler_so.remove('-O2')
         except (AttributeError, ValueError):
-                pass
+            pass
     # parallel code
     import multiprocessing.pool
 
@@ -379,19 +379,17 @@ class BuildExt(build_ext):
             return True
         return False
 
-    def add_debug_or_release_flags(self):
+    def _add_debug_or_release_flags(self):
         """Return compiler flags for Release and Debug build types."""
         if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
             return ['-O0', '-g']
         else:
             return ['-O2', '-D_FORTIFY_SOURCE=2']
 
-    def build_extensions(self):
-        """Build extension providing extra compiler flags."""
-        if sys.platform == 'win32':
-            raise RuntimeError('Unsupported platform: win32!')
-        # -Wstrict-prototypes is not a valid option for c++
+    def _customize_compiler_flags(self):
+        """Modify standard compiler flags."""
         try:
+            # -Wstrict-prototypes is not a valid option for c++
             self.compiler.compiler_so.remove('-Wstrict-prototypes')
             if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
                 # pybind11 is much more verbose without -DNDEBUG
@@ -399,6 +397,12 @@ class BuildExt(build_ext):
                 self.compiler.compiler_so.remove('-O2')
         except (AttributeError, ValueError):
             pass
+
+    def build_extensions(self):
+        """Build extension providing extra compiler flags."""
+        if sys.platform == 'win32':
+            raise RuntimeError('Unsupported platform: win32!')
+        self._customize_compiler_flags()
         for ext in self.extensions:
             ext.extra_compile_args += [cpp_flag(self.compiler)]
 
@@ -411,7 +415,7 @@ class BuildExt(build_ext):
             add_platform_specific_link_args(ext.extra_link_args)
 
             ext.extra_compile_args += ['-Wformat', '-Wformat-security']
-            ext.extra_compile_args += self.add_debug_or_release_flags()
+            ext.extra_compile_args += self._add_debug_or_release_flags()
 
             if sys.platform == 'darwin':
                 ext.extra_compile_args += ['-stdlib=libc++']

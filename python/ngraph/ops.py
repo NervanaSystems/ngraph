@@ -44,7 +44,7 @@ from ngraph.utils.types import get_element_type
 from ngraph.utils.node_factory import NodeFactory
 
 
-def _get_node_factory():
+def _get_node_factory():  # type: () -> NodeFactory
     return NodeFactory()
 
 
@@ -773,7 +773,7 @@ def subtract(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, 
 @binary_op
 def add(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies f(x) = A+B to the input nodes element-wise."""
-    return _get_node_factory().create("Add", [left_node, right_node])
+    return _get_node_factory().create('Add', [left_node, right_node])
 
 
 @binary_op
@@ -940,7 +940,7 @@ Node.__ge__ = greater_eq
 
 # Custom ops
 @nameable_op
-def broadcast(node, new_shape, broadcast_axes, auto_broadcast='numpy', name=None):
+def broadcast(node, new_shape, broadcast_axes=None, auto_broadcast='numpy', name=None):
     # type: (Node, Node, Node, str, str) -> Node
     """Create a node which broadcasts the input node's values along specified axes to a desired shape.
 
@@ -955,7 +955,7 @@ def broadcast(node, new_shape, broadcast_axes, auto_broadcast='numpy', name=None
     """
     return _get_node_factory().create('Broadcast',
                                       [node, new_shape, broadcast_axes],
-                                      {auto_broadcast: auto_broadcast})
+                                      {'auto_broadcast': auto_broadcast})
 
 
 @nameable_op
@@ -1206,88 +1206,88 @@ def dot(left_node, right_node, reduction_axes_count=None, name=None):
 
 # convpool ops
 @nameable_op
-def convolution(data_batch,                     # type: Node
-                filter_weights,                 # type: Node
-                filter_strides=None,            # type: List[int]
-                filter_dilation_strides=None,   # type: List[int]
-                padding_below=None,             # type: List[int]
-                padding_above=None,             # type: List[int]
-                data_dilation_strides=None,     # type: List[int]
+def convolution(data,                           # type: Node
+                filters,                        # type: Node
+                strides,                        # type: List[int]
+                pads_begin,                     # type: List[int]
+                pads_end,                       # type: List[int]
+                dilations,                      # type: List[int]
+                auto_pad='EXPLICIT',            # type: str
                 name=None,                      # type: str
                 ):
     # type: (...) -> Node
     """Return node performing batched convolution operation.
 
-    :param data_batch: The node providing data batch tensor.
-    :param filter_weights: The node providing filters tensor.
-    :param filter_strides: The kernel window movement strides.
-    :param filter_dilation_strides: The filters dilation strides.
-    :param padding_below: The number of zero padding elements to add on each axis below 0
-                          coordinate.
-    :param padding_above: The number of zero padding elements to add on each axis above max
-                          coordinate.
-    :param data_dilation_strides: The data batch dilation strides.
+    :param data: The node providing data batch tensor.
+    :param filter: The node providing filters tensor.
+    :param strides: The kernel window movement strides.
+    :param pads_begin: The number of zero padding elements to add on each axis below 0 coordinate.
+    :param pads_end: The number of zero padding elements to add on each axis above max coordinate
+    :param dilations: The data batch dilation strides.
+    :param auto_pad: The type of padding. Range of values: explicit, same_upper, same_lower, valid.
     :param name: The optional new name for output node.
     :return: New node performing batched convolution operation.
     """
-    spatial_dim_count = len(data_batch.shape) - 2
-    if filter_strides is None:
-        filter_strides = [1] * spatial_dim_count
-    if filter_dilation_strides is None:
-        filter_dilation_strides = [1] * spatial_dim_count
-    if padding_above is None:
-        padding_above = [0] * spatial_dim_count
-    if padding_below is None:
-        padding_below = [0] * spatial_dim_count
-    if data_dilation_strides is None:
-        data_dilation_strides = [1] * spatial_dim_count
-
-    return Convolution(data_batch, filter_weights, Strides(filter_strides),
-                       Strides(filter_dilation_strides), CoordinateDiff(padding_below),
-                       CoordinateDiff(padding_above), Strides(data_dilation_strides))
+    return _get_node_factory().create('Convolution',
+                                      [data, filters],
+                                      {'strides': strides,
+                                       'pads_begin': pads_begin,
+                                       'pads_end': pads_end,
+                                       'dilations': dilations,
+                                       'auto_pad': auto_pad})
 
 
 @nameable_op
-def convolution_backprop_data(data_batch_shape,                      # type: TensorShape
-                              filters,                               # type: Node
-                              output_delta,                          # type: Node
-                              window_movement_strides_forward=None,  # type: List[int]
-                              window_dilation_strides_forward=None,  # type: List[int]
-                              padding_below_forward=None,            # type: List[int]
-                              padding_above_forward=None,            # type: List[int]
-                              data_dilation_strides_forward=None,    # type: List[int]
-                              name=None,                             # type: str
+def convolution_backprop_data(data,                 # type: Node
+                              filters,              # type: Node
+                              strides,              # type: List[int]
+                              output_shape=None,    # type: Node
+                              pads_begin=None,      # type: List[int]
+                              pads_end=None,        # type: List[int]
+                              dilations=None,       # type: List[int]
+                              auto_pad=None,        # type: str
+                              output_padding=None,  # type: List[int]
+                              name=None,            # type: str
                               ):
     # type: (...) -> Node
-    """Return node performing a batched-convolution data batch-backprop operation.
+    """Create node performing a batched-convolution backprop data operation.
 
-    :param data_batch_shape: The shape of the data batch from forward-prop.
-    :param filters: The node producing the filters from forward-prop.
-    :param output_delta: The node producing output delta.
-    :param window_movement_strides_forward: The window movement strides from forward-prop.
-    :param window_dilation_strides_forward: The window dilation strides from forward-prop.
-    :param padding_below_forward: The padding-below sizes from forward-prop.
-    :param padding_above_forward: The padding-above sizes from forward-prop.
-    :param data_dilation_strides_forward: The data dilation strides from forward-prop.
+    :param      data:         The node producing data from forward-prop
+    :param      filters:      The node producing the filters from forward-prop.
+    :param      output_shape: The node producing output delta.
+    :param      strides:      The distance (in pixels) to slide the filter on the feature map
+                              over the axes.
+    :param      pads_begin:   The number of pixels to add to the beginning along each axis.
+    :param      pads_end:     The number of pixels to add to the end along each axis.
+    :param      dilations:    The distance in width and height between elements (weights)
+                              in the filter.
+    :param      name:         The node name.
+
+    :returns:   The node object representing ConvolutionBackpropData  operation.
     """
-    spatial_dim_count = len(data_batch_shape) - 2
-    if window_movement_strides_forward is None:
-        window_movement_strides_forward = [1] * spatial_dim_count
-    if window_dilation_strides_forward is None:
-        window_dilation_strides_forward = [1] * spatial_dim_count
-    if padding_below_forward is None:
-        padding_below_forward = [0] * spatial_dim_count
-    if padding_above_forward is None:
-        padding_above_forward = [0] * spatial_dim_count
-    if data_dilation_strides_forward is None:
-        data_dilation_strides_forward = [1] * spatial_dim_count
+    spatial_dim_count = len(strides)
+    if pads_begin is None:
+        pads_begin = [0] * spatial_dim_count
+    if pads_end is None:
+        pads_end = [0] * spatial_dim_count
+    if dilations is None:
+        dilations = [1] * spatial_dim_count
+    if auto_pad is None:
+        auto_pad = 'explicit'
+    if output_padding is None:
+        output_padding = [0] * spatial_dim_count
+    args = [data, filters]
+    if output_shape is not None:
+        args.append(output_shape)
 
-    return ConvolutionBackpropData(Shape(data_batch_shape), filters, output_delta,
-                                   Strides(window_movement_strides_forward),
-                                   Strides(window_dilation_strides_forward),
-                                   CoordinateDiff(padding_below_forward),
-                                   CoordinateDiff(padding_above_forward),
-                                   Strides(data_dilation_strides_forward))
+    return _get_node_factory().create('ConvolutionBackpropData',
+                                      args,
+                                      {'strides': strides,
+                                       'pads_begin': pads_begin,
+                                       'pads_end': pads_end,
+                                       'dilations': dilations,
+                                       'auto_pad': auto_pad.upper(),
+                                       'output_padding': output_padding})
 
 
 @nameable_op
@@ -1678,14 +1678,14 @@ def matmul(data_a, data_b, transpose_a, transpose_b):  # type: (Node, Node, bool
     :param transpose_b: should the second matrix be transposed
     :return: MatMul operation node
     """
-    print("transpose_a", transpose_a, "transpose_b", transpose_b)
+    print('transpose_a', transpose_a, 'transpose_b', transpose_b)
     return _get_node_factory().create('MatMul', [data_a, data_b],
-                                      {"transpose_a": transpose_a, "transpose_b": transpose_b})
+                                      {'transpose_a': transpose_a, 'transpose_b': transpose_b})
 
 
 @nameable_op
 def variadic_split(data, axis, split_lengths):  # type: (Node, Node, Node) -> Node
-    """Return a node which splits the input tensor into variadic length slices
+    """Return a node which splits the input tensor into variadic length slices.
 
     :param data: The input tensor to be split
     :param axis: Axis along which the input data will be split
@@ -1697,7 +1697,7 @@ def variadic_split(data, axis, split_lengths):  # type: (Node, Node, Node) -> No
 
 @nameable_op
 def transpose(data, input_order):  # type: (Node, Node) -> Node
-    """Return a node which transposes the data in the input tensor
+    """Return a node which transposes the data in the input tensor.
 
     :param data: The input tensor to be transposed
     :param input_order: Permutation of axes to be applied to the input tensor
@@ -1708,7 +1708,7 @@ def transpose(data, input_order):  # type: (Node, Node) -> Node
 
 @nameable_op
 def tile(data, repeats):  # type: (Node, Node) -> Node
-    """Return a node which dynamically repeats(replicates) the input data tensor
+    """Return a node which dynamically repeats(replicates) the input data tensor.
 
     :param data: The input tensor to be tiled
     :param repeats: Per-dimension replication factors
@@ -1729,18 +1729,20 @@ def strided_slice(data,                 # type: Node
                   ellipsis_mask=[],     # type: List[int]
                   ):
     # type: (...) -> Node
-    """Return a node which dynamically repeats(replicates) the input data tensor
+    """Return a node which dynamically repeats(replicates) the input data tensor.
 
-    :param data: The tensor to be sliced
-    :param begin: 1D tensor with begin indexes for input blob slicing
-    :param end: 1D tensor with end indexes for input blob slicing
-    :param strides: The slicing strides
-    :param begin_mask: A mask applied to the 'begin' input indicating elements that shoud be ignored
-    :param end_mask: A mask applied to the 'end' input indicating which elements shoud be ignored
-    :param new_axis_mask: A mask indicating dimensions where '1' should be inserted
-    :param shrink_axis_mask: A mask indicating which dimensions should be deleted
-    :param ellipsis_mask: Indicates positions where missing dimensions should be inserted
-    :return: StridedSlice node
+    :param      data:              The tensor to be sliced
+    :param      begin:             1D tensor with begin indexes for input blob slicing
+    :param      end:               1D tensor with end indexes for input blob slicing
+    :param      strides:           The slicing strides
+    :param      begin_mask:        A mask applied to the 'begin' input indicating which elements
+                                   shoud be ignored
+    :param      end_mask:          A mask applied to the 'end' input indicating which elements
+                                   shoud be ignored
+    :param      new_axis_mask:     A mask indicating dimensions where '1' should be inserted
+    :param      shrink_axis_mask:  A mask indicating which dimensions should be deleted
+    :param      ellipsis_mask:     Indicates positions where missing dimensions should be inserted
+    :returns:   StridedSlice node
     """
     attributes = {'begin_mask': begin_mask, 'end_mask': end_mask, 'new_axis_mask': new_axis_mask,
                   'shrink_axis_mask': shrink_axis_mask, 'ellipsis_mask': ellipsis_mask}
