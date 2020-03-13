@@ -940,7 +940,7 @@ Node.__ge__ = greater_eq
 
 # Custom ops
 @nameable_op
-def broadcast(node, new_shape, broadcast_axes, auto_broadcast='numpy', name=None):
+def broadcast(node, new_shape, broadcast_axes=None, auto_broadcast='numpy', name=None):
     # type: (Node, Node, Node, str, str) -> Node
     """Create a node which broadcasts the input node's values along specified axes to a desired shape.
 
@@ -955,7 +955,7 @@ def broadcast(node, new_shape, broadcast_axes, auto_broadcast='numpy', name=None
     """
     return _get_node_factory().create('Broadcast',
                                       [node, new_shape, broadcast_axes],
-                                      {auto_broadcast: auto_broadcast})
+                                      {'auto_broadcast': auto_broadcast})
 
 
 @nameable_op
@@ -1206,45 +1206,38 @@ def dot(left_node, right_node, reduction_axes_count=None, name=None):
 
 # convpool ops
 @nameable_op
-def convolution(data_batch,                     # type: Node
-                filter_weights,                 # type: Node
-                filter_strides=None,            # type: List[int]
-                filter_dilation_strides=None,   # type: List[int]
-                padding_below=None,             # type: List[int]
-                padding_above=None,             # type: List[int]
-                data_dilation_strides=None,     # type: List[int]
+def convolution(data,                           # type: Node
+                filters,                        # type: Node
+                strides,                        # type: List[int]
+                pads_begin,                     # type: List[int]
+                pads_end,                       # type: List[int]
+                dilations,                      # type: List[int]
+                auto_pad='EXPLICIT',            # type: str
                 name=None,                      # type: str
                 ):
     # type: (...) -> Node
     """Return node performing batched convolution operation.
 
-    :param data_batch: The node providing data batch tensor.
-    :param filter_weights: The node providing filters tensor.
-    :param filter_strides: The kernel window movement strides.
-    :param filter_dilation_strides: The filters dilation strides.
-    :param padding_below: The number of zero padding elements to add on each axis below 0
+    :param data: The node providing data batch tensor.
+    :param filter: The node providing filters tensor.
+    :param strides: The kernel window movement strides.
+    :param pads_begin: The number of zero padding elements to add on each axis below 0
                           coordinate.
-    :param padding_above: The number of zero padding elements to add on each axis above max
-                          coordinate.
-    :param data_dilation_strides: The data batch dilation strides.
+    :param pads_end: The number of zero padding elements to add on each axis above max
+                          coordinate
+    :param dilations: The data batch dilation strides.
+    :param auto_pad: The type of padding. Range of values: explicit, same_upper, same_lower, valid.
     :param name: The optional new name for output node.
     :return: New node performing batched convolution operation.
     """
-    spatial_dim_count = len(data_batch.shape) - 2
-    if filter_strides is None:
-        filter_strides = [1] * spatial_dim_count
-    if filter_dilation_strides is None:
-        filter_dilation_strides = [1] * spatial_dim_count
-    if padding_above is None:
-        padding_above = [0] * spatial_dim_count
-    if padding_below is None:
-        padding_below = [0] * spatial_dim_count
-    if data_dilation_strides is None:
-        data_dilation_strides = [1] * spatial_dim_count
 
-    return Convolution(data_batch, filter_weights, Strides(filter_strides),
-                       Strides(filter_dilation_strides), CoordinateDiff(padding_below),
-                       CoordinateDiff(padding_above), Strides(data_dilation_strides))
+    return _get_node_factory().create('Convolution',
+                                      [data, filters],
+                                      {'strides': strides,
+                                       'pads_begin': pads_begin,
+                                       'pads_end': pads_end,
+                                       'dilations': dilations,
+                                       'auto_pad': auto_pad})
 
 
 @nameable_op

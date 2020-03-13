@@ -39,7 +39,6 @@ import ngraph as ng
 
 import test
 
-import ngraph as ng
 
 def binary_op(op_str, a, b):
 
@@ -1408,5 +1407,30 @@ def test_strided_slice():
                                            ellipsis_mask)
 
     expected = np.array([12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]).reshape((1, 3, 4))
+
+    assert np.allclose(result, expected)
+
+@pytest.mark.skip_on_gpu
+def test_convolution_v1():
+    input_tensor = np.arange(-128, 128, 1, dtype=np.float32).reshape(1, 1, 16, 16)
+    filters = np.ones(9, dtype=np.float32).reshape(1, 1, 3, 3)
+    filters[0][0][0][0] = -1
+    filters[0][0][1][1] = -1
+    filters[0][0][2][2] = -1
+    filters[0][0][0][2] = -1
+    filters[0][0][2][0] = -1
+    strides = np.array([1, 1])
+    pads_begin = np.array([0, 0])
+    pads_end = np.array([0, 0])
+    dilations = np.array([1, 1])
+
+    result = test.ngraph.util.run_op_node([input_tensor, filters],
+                                           ng.ops.convolution,
+                                           strides,
+                                           pads_begin,
+                                           pads_end,
+                                           dilations)
+
+    expected = convolution2d(input_tensor[0][0], filters[0][0]).reshape(1, 1, 14, 14)
 
     assert np.allclose(result, expected)
