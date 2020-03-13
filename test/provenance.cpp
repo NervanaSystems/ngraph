@@ -445,7 +445,7 @@ TEST(provenance, fused_decomposition_tag)
         auto tags = node->get_provenance_tags();
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
-    const auto decomposed_op = f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto decomposed_op = f->get_result()->get_input_node_shared_ptr(0);
     traverse_nodes(as_node_vector(decomposed_op->outputs()), tag_check, {p1});
 }
 
@@ -560,8 +560,7 @@ TEST(provenance, opset1_upgrade_pass_topk)
     pass_manager.register_pass<pass::Opset1Upgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
     const auto topk_v1 = as_type_ptr<op::v1::TopK>(pass_replacement_node);
 
     const std::string tag = "<Opset1_Upgrade (v0 TopK)>";
@@ -593,8 +592,7 @@ TEST(provenance, opset0_downgrade_pass_topk)
     pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
     const auto topk_v0 = as_type_ptr<op::v0::TopK>(pass_replacement_node);
 
     const std::string tag = "<Opset0_Downgrade (v1 TopK)>";
