@@ -102,6 +102,16 @@ def parallelCCompile(
     macros, objects, extra_postargs, pp_opts, build = self._setup_compile(
         output_dir, macros, include_dirs, sources, depends, extra_postargs)
     cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
+
+    if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
+        try:
+            # pybind11 is much more verbose without -DNDEBUG
+            self.compiler.remove('-DNDEBUG')
+            self.compiler.remove('-O2')
+            self.compiler_so.remove('-DNDEBUG')
+            self.compiler_so.remove('-O2')
+        except (AttributeError, ValueError):
+                pass
     # parallel code
     import multiprocessing.pool
 
@@ -383,6 +393,10 @@ class BuildExt(build_ext):
         # -Wstrict-prototypes is not a valid option for c++
         try:
             self.compiler.compiler_so.remove('-Wstrict-prototypes')
+            if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
+                # pybind11 is much more verbose without -DNDEBUG
+                self.compiler.compiler_so.remove('-DNDEBUG')
+                self.compiler.compiler_so.remove('-O2')
         except (AttributeError, ValueError):
             pass
         for ext in self.extensions:
