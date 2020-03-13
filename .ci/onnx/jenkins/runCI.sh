@@ -114,11 +114,9 @@ function parse_arguments {
                 ;;
             "--cleanup")
                 CLEANUP="true"
-                echo "[INFO] Performing cleanup."
                 ;;
             "--rebuild")
                 REBUILD="true"
-                echo "[INFO] nGraph is going to be rebuilt."
                 ;;
             "--ngraph-onnx-branch="*)
                 NGRAPH_ONNX_REPO_BRANCH="${i//${PATTERN}/}"
