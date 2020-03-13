@@ -90,7 +90,7 @@ def test_fake_quantize():
     expected = np.array([[[[[2., 2., 2., 2.],
                             [6.6666669, 6.6666669, 6.6666669, 6.6666669],
                             [6.6666669, 6.6666669, 6.6666669, 6.6666669]],
-                        [[11.33333301, 11.33333301, 11.33333301, 11.33333301],
+                           [[11.33333301, 11.33333301, 11.33333301, 11.33333301],
                             [11.33333301, 11.33333301, 11.33333301, 11.33333301],
                             [16., 16., 16., 16.]]]]], dtype=np.float32)
     assert np.allclose(result, expected)
@@ -100,13 +100,13 @@ def test_depth_to_space():
     runtime = get_runtime()
 
     data_value = np.array([[[[0, 1, 2],
-                            [3, 4, 5]],
+                             [3, 4, 5]],
                             [[6, 7, 8],
-                            [9, 10, 11]],
+                             [9, 10, 11]],
                             [[12, 13, 14],
-                            [15, 16, 17]],
+                             [15, 16, 17]],
                             [[18, 19, 20],
-                            [21, 22, 23]]]], dtype=np.float32)
+                             [21, 22, 23]]]], dtype=np.float32)
     mode = 'blocks_first'
     block_size = np.float32(2)
 
@@ -118,9 +118,9 @@ def test_depth_to_space():
 
     result = computation(data_value)
     expected = np.array([[[[0, 6, 1, 7, 2, 8],
-                        [12, 18, 13, 19, 14, 20],
-                        [3, 9, 4, 10, 5, 11],
-                        [15, 21, 16, 22, 17, 23]]]], dtype=np.float32)
+                           [12, 18, 13, 19, 14, 20],
+                           [3, 9, 4, 10, 5, 11],
+                           [15, 21, 16, 22, 17, 23]]]], dtype=np.float32)
     assert np.allclose(result, expected)
 
 
@@ -441,9 +441,9 @@ def test_space_to_depth_operator():
 
     result = computation(data_value)
     expected = np.array([0, 2, 8, 10, 16, 18, 24, 26,
-                        1, 3, 9, 11, 17, 19, 25, 27,
-                        4, 6, 12, 14, 20, 22, 28, 30,
-                        5, 7, 13, 15, 21, 23, 29, 31], dtype=np.float32).reshape(1, 8, 2, 2)
+                         1, 3, 9, 11, 17, 19, 25, 27,
+                         4, 6, 12, 14, 20, 22, 28, 30,
+                         5, 7, 13, 15, 21, 23, 29, 31], dtype=np.float32).reshape(1, 8, 2, 2)
     assert np.allclose(result, expected)
 
 
@@ -516,28 +516,23 @@ def test_group_convolution_operator():
     runtime = get_runtime()
 
     data_shape = [1, 4, 2, 2]
-    filters_shape = [2, 2, 1, 1]
+    filters_shape = [2, 1, 2, 1, 1]
 
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
     parameter_filters = ng.parameter(filters_shape, name='Filters', dtype=np.float32)
 
     data_value = np.arange(start=1.0, stop=17.0, dtype=np.float32).reshape(data_shape)
     filters_value = np.arange(start=1.0, stop=5.0, dtype=np.float32).reshape(filters_shape)
-    window_movement_strides = [1, 1]
-    window_dilation_strides = [1, 1]
-    padding_below = [0, 0]
-    padding_above = [0, 0]
-    data_dilation_strides = [1, 1]
-    groups = 2
+    strides = [1, 1]
+    dilations = [1, 1]
+    pads_begin = [0, 0]
+    pads_end = [0, 0]
 
     model = ng.group_convolution(parameter_data,
                                  parameter_filters,
-                                 window_movement_strides,
-                                 window_dilation_strides,
-                                 padding_below, padding_above,
-                                 data_dilation_strides,
-                                 groups,
-                                 0)
+                                 strides,
+                                 pads_begin, pads_end,
+                                 dilations)
     computation = runtime.computation(model, parameter_data, parameter_filters)
 
     result = computation(data_value, filters_value)

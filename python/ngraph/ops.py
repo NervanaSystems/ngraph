@@ -20,15 +20,15 @@ import numpy as np
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
     Shape, Strides
 
-from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
+from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
-    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Dequantize, Divide, Dot, Elu, \
+    Cos, Cosh, DepthToSpace, Dequantize, Divide, Dot, Elu, \
     FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
-    GroupConvolution, HardSigmoid, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, \
+    HardSigmoid, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, \
     Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, \
     Quantize, QuantizedConvolution, QuantizedDot, PRelu, Relu, RNNCell, ReplaceSlice, Reshape, \
     Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
-    Sqrt, SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
+    Sqrt, SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh, TopK
 
 
 from typing import Callable, Iterable, List, Set, Union
@@ -197,53 +197,44 @@ def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
 
 
 @nameable_op
-def group_convolution(data_batch,                      # type: Node
-                      filters,                         # type: Node
-                      window_movement_strides,         # type: List[int]
-                      window_dilation_strides,         # type: List[int]
-                      padding_below,                   # type: List[int]
-                      padding_above,                   # type: List[int]
-                      data_dilation_strides,           # type: List[int]
-                      groups,                          # type: int
-                      pad_type='EXPLICIT',             # type: str
-                      name=None,                       # type: str
+def group_convolution(data,                 # type: Node
+                      filters,              # type: Node
+                      strides,              # type: List[int]
+                      pads_begin,           # type: List[int]
+                      pads_end,             # type: List[int]
+                      dilations,            # type: List[int]
+                      auto_pad='EXPLICIT',  # type: str
+                      name=None,            # type: str
                       ):
     # type: (...) -> Node
     """Perform Group Convolution operation on data from input node.
 
-    :param  data: The node producing input data.
-    :param filters: The node producing filters data.
-    :param window_movement_strides: The strides along each feature axis.
-    :param window_dilation_strides: The dilations along each feature axis.
-    :param padding_below: The padding added below each feature axis.
-    :param padding_above: The padding added above each feature axis.
-    :data_dilation_strides: The dilations along data.
-    :param groups: The number of groups the input channels and output channels
-                   are divided into.
-    :param pad_type: Name describes how to perform padding.
-                     EXPLICITI: Pad dimensions are explicity specified
-
-                     SAME_LOWER: Pad dimensions computed to match input shape
-                                 Ceil(num_dims/2) at the beginning and
-                                 Floor(num_dims/2) at the end
-
-                     SAME_UPPER: Pad dimensions computed to match input shape
-                                 Floor(num_dims/2) at the beginning and
-                                 Ceil(num_dims/2) at the end
-
-                     VALID: No padding
+    :param data:        The node producing input data.
+    :param filters:     The node producing filters data.
+    :param strides:     The distance (in pixels) to slide the filter on the feature map
+                        over the axes.
+    :param pads_begin:  The number of pixels to add at the beginning along each axis.
+    :param pads_end:    The number of pixels to add at the end along each axis.
+    :param dilations:   The distance in width and height between elements (weights) in the filter.
+    :param auto_pad:    Describes how to perform padding. Possible values:
+                        EXPLICIT:   Pad dimensions are explicity specified
+                        SAME_LOWER: Pad dimensions computed to match input shape
+                                    Ceil(num_dims/2) at the beginning and
+                                    Floor(num_dims/2) at the end
+                        SAME_UPPER: Pad dimensions computed to match input shape
+                                    Floor(num_dims/2) at the beginning and
+                                    Ceil(num_dims/2) at the end
+                        VALID:      No padding
     :param name: Optional output node name.
     :return: The new node performing a Group Convolution operation on tensor from input node.
     """
-    return GroupConvolution(data_batch,
-                            filters,
-                            Strides(window_movement_strides),
-                            Strides(window_dilation_strides),
-                            CoordinateDiff(padding_below),
-                            CoordinateDiff(padding_above),
-                            Strides(data_dilation_strides),
-                            groups,
-                            GroupConvolution.PadType(pad_type))
+    return _get_node_factory().create('GroupConvolution',
+                                      [data, filters],
+                                      {'strides': strides,
+                                       'pads_begin': pads_begin,
+                                       'pads_end': pads_end,
+                                       'dilations': dilations,
+                                       'auto_pad': auto_pad.upper()})
 
 
 @nameable_op
@@ -1748,7 +1739,7 @@ def strided_slice(data,                 # type: Node
 
 @nameable_op
 def split(data, axis, num_splits):  # type: (Node, Node, int) -> Node
-    """Return a node which splits the input tensor into same-length slices
+    """Return a node which splits the input tensor into same-length slices.
 
     :param data: The input tensor to be split
     :param axis: Axis along which the input data will be split
