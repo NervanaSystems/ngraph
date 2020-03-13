@@ -178,7 +178,7 @@ def unsqueeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
                   One of: input node or array.
     :return: The new node performing an unsqueeze operation on input tensor.
     """
-    return _get_node_factory().create("Unsqueeze", [data, as_node(axes)])
+    return _get_node_factory().create('Unsqueeze', [data, as_node(axes)])
 
 
 def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
@@ -1692,7 +1692,7 @@ def variadic_split(data, axis, split_lengths):  # type: (Node, Node, Node) -> No
     :param split_lengths: Sizes of the output tensors along the split axis
     :return: VariadicSplit node
     """
-    return _get_node_factory().create("VariadicSplit", [data, axis, split_lengths])
+    return _get_node_factory().create('VariadicSplit', [data, axis, split_lengths])
 
 
 @nameable_op
@@ -1703,7 +1703,7 @@ def transpose(data, input_order):  # type: (Node, Node) -> Node
     :param input_order: Permutation of axes to be applied to the input tensor
     :return: Transpose node
     """
-    return _get_node_factory().create("Transpose", [data, input_order])
+    return _get_node_factory().create('Transpose', [data, input_order])
 
 
 @nameable_op
@@ -1714,7 +1714,7 @@ def tile(data, repeats):  # type: (Node, Node) -> Node
     :param repeats: Per-dimension replication factors
     :return: Tile node
     """
-    return _get_node_factory().create("Tile", [data, repeats])
+    return _get_node_factory().create('Tile', [data, repeats])
 
 
 @nameable_op
@@ -1726,7 +1726,7 @@ def strided_slice(data,                 # type: Node
                   end_mask,             # type: List[int]
                   new_axis_mask=[],     # type: List[int]
                   shrink_axis_mask=[],  # type: List[int]
-                  ellipsis_mask=[]      # type: List[int]
+                  ellipsis_mask=[],     # type: List[int]
                   ):
     # type: (...) -> Node
     """Return a node which dynamically repeats(replicates) the input data tensor
@@ -1735,14 +1735,14 @@ def strided_slice(data,                 # type: Node
     :param begin: 1D tensor with begin indexes for input blob slicing
     :param end: 1D tensor with end indexes for input blob slicing
     :param strides: The slicing strides
-    :param begin_mask: A mask applied to the 'begin' input indicating which elements shoud be ignored
+    :param begin_mask: A mask applied to the 'begin' input indicating elements that shoud be ignored
     :param end_mask: A mask applied to the 'end' input indicating which elements shoud be ignored
     :param new_axis_mask: A mask indicating dimensions where '1' should be inserted
     :param shrink_axis_mask: A mask indicating which dimensions should be deleted
     :param ellipsis_mask: Indicates positions where missing dimensions should be inserted
     :return: StridedSlice node
     """
-    attributes = {"begin_mask": begin_mask, "end_mask": end_mask, "new_axis_mask": new_axis_mask,
-                  "shrink_axis_mask": shrink_axis_mask, "ellipsis_mask": ellipsis_mask}
+    attributes = {'begin_mask': begin_mask, 'end_mask': end_mask, 'new_axis_mask': new_axis_mask,
+                  'shrink_axis_mask': shrink_axis_mask, 'ellipsis_mask': ellipsis_mask}
 
-    return _get_node_factory().create("StridedSlice", [data, begin, end, strides], attributes)
+    return _get_node_factory().create('StridedSlice', [data, begin, end, strides], attributes)
