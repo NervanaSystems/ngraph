@@ -27,8 +27,8 @@ from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
     HardSigmoid, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, \
     Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, \
     Quantize, QuantizedConvolution, QuantizedDot, PRelu, Relu, RNNCell, ReplaceSlice, Reshape, \
-    Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, Softmax, SpaceToDepth, \
-    Sqrt, SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh, TopK
+    Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
+    Sqrt, SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh
 
 
 from typing import Callable, Iterable, List, Set, Union
@@ -1531,18 +1531,14 @@ def concat(nodes, axis, name=None):  # type: (List[Node], int, str) -> Node
 
 
 @nameable_op
-def softmax(node, axes, name=None):  # type: (Node, Iterable[int], str) -> Node
+def softmax(data, axis):  # type: (Node, int) -> Node
     """Apply softmax operation on each element of input tensor.
 
-    :param node: The tensor providing input data.
-    :param axes: The list of axes indices which are used to calculate divider of
-                 the softmax function.
-    :param name: The optional new name for output node.
+    :param data: The tensor providing input data.
+    :param axis: An axis along which Softmax should be calculated
     :return: The new node with softmax operation applied on each element.
     """
-    if not isinstance(axes, set):
-        axes = set(axes)
-    return Softmax(node, AxisSet(axes))
+    return _get_node_factory().create('Softmax', [data], {'axis': axis})
 
 
 @nameable_op
@@ -1695,25 +1691,24 @@ def argmin(data,    # type: Node
 
 
 @nameable_op
-def topk(data,       # type: Node
-         k,          # type: int
-         kaxis=-1,   # type: int
-         cmax=True,  # type: bool
+def topk(data,   # type: Node
+         k,      # type: Node
+         axis,   # type: int
+         mode,   # type: string
+         sort    # type: string
          ):
     # type: (...) -> Node
     """Return a node which performs TopK.
 
     :param data: Input data.
-    :param kaxis: TopK Axis.
     :param k: K.
-    :param cmax: Compute TopK largest (True) or smallest (False)
+    :param axis: TopK Axis.
+    :param mode: Compute TopK largest ('max') or smallest ('min')
+    :param sort: Order of output elements (sort by: 'none', 'index' or 'value')
     :return: The new node which performs TopK (both indices and values)
     """
-    return TopK(data,
-                len(data.get_shape()) - 1 if kaxis == -1 else kaxis,
-                get_element_type(np.int32),
-                k,
-                cmax)
+    return _get_node_factory().create('TopK', [data, k],
+                                             {'axis': axis, 'mode': mode, 'sort': sort})
 
 
 @nameable_op
