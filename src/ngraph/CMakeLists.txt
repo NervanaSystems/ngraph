@@ -607,6 +607,8 @@ set (SRC
     runtime/executable.hpp
     runtime/host_tensor.cpp
     runtime/host_tensor.hpp
+    runtime/opt_kernel/reshape_indexer.cpp
+    runtime/opt_kernel/reshape_indexer.hpp
     runtime/performance_counter.hpp
     runtime/tensor.cpp
     runtime/tensor.hpp
