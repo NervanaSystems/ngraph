@@ -35,7 +35,11 @@ from ngraph.impl.op import Concat, Select
 from ngraph.impl.op import Reverse, MaxPool, ReplaceSlice, Slice
 from ngraph.impl.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
 
+import ngraph as ng
+
 import test
+
+import ngraph as ng
 
 def binary_op(op_str, a, b):
 
@@ -1343,3 +1347,66 @@ def test_convolutionBackpropFilters():
            [ 425832,  190752,  432960.],
            [1084212,  485232, 1100250.]]]])
     assert np.allclose(result_arr, result_arr_ref)
+
+
+@pytest.mark.skip_on_gpu
+def test_broadcast_v1():
+    input_tensor = np.array([1.0, 2.0, 3.0], np.float32)
+    input_shape = np.array([3,3], np.int64)
+    input_axes = np.array([1], np.int64)
+    result = test.ngraph.util.run_op_node([input_tensor, input_shape, input_axes], ng.ops.broadcast)
+    
+    a_arr = np.array([[0], [0], [0]], dtype=np.float32)
+    b_arr = np.array([[1, 2, 3]], dtype=np.float32)
+    expected = np.add(a_arr, b_arr)
+
+    assert np.allclose(result, expected)
+
+@pytest.mark.skip_on_gpu
+def test_transpose():
+    input_tensor = np.arange(3 * 3 * 224 * 224).reshape((3, 3, 224, 224))
+    input_order = np.array([0, 2, 3, 1])
+
+    result = test.ngraph.util.run_op_node([input_tensor, input_order], ng.ops.transpose)
+
+    expected = np.transpose(input_tensor, input_order)
+
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.skip_on_gpu
+@pytest.mark.skip_on_interpreter # unsupported op
+def test_tile():
+    input_tensor = np.arange(6).reshape((2, 1, 3))
+    repeats = np.array([2, 1])
+
+    result = test.ngraph.util.run_op_node([input_tensor, repeats], ng.ops.tile)
+
+    expected = np.array([0, 1, 2, 0, 1, 2, 3, 4, 5, 3, 4, 5]).reshape((2, 2, 3))
+
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.skip_on_gpu
+def test_strided_slice():
+    input_tensor = np.arange(2 * 3 * 4).reshape((2, 3, 4))
+    begin = np.array([1, 0])
+    end = np.array([0, 0])
+    strides = np.array([1, 1])
+    begin_mask = np.array([0, 0, 0])
+    end_mask = np.array([0, 0, 0])
+    new_axis_mask = np.array([0, 1, 0])
+    shrink_axis_mask = np.array([1, 0, 0])
+    ellipsis_mask = np.array([0, 0, 0])
+
+    result = test.ngraph.util.run_op_node([input_tensor, begin, end, strides],
+                                           ng.ops.strided_slice,
+                                           begin_mask,
+                                           end_mask,
+                                           new_axis_mask,
+                                           shrink_axis_mask,
+                                           ellipsis_mask)
+
+    expected = np.array([12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]).reshape((1, 3, 4))
+
+    assert np.allclose(result, expected)

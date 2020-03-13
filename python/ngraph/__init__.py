@@ -68,6 +68,7 @@ from ngraph.ops import logical_and
 from ngraph.ops import logical_or
 from ngraph.ops import logical_not
 from ngraph.ops import lrn
+from ngraph.ops import matmul
 from ngraph.ops import max
 from ngraph.ops import max_pool
 from ngraph.ops import maximum
@@ -100,6 +101,7 @@ from ngraph.ops import sinh
 from ngraph.ops import slice
 from ngraph.ops import softmax
 from ngraph.ops import space_to_depth
+from ngraph.ops import strided_slice
 from ngraph.ops import sqrt
 from ngraph.ops import squared_difference
 from ngraph.ops import squeeze
@@ -107,8 +109,11 @@ from ngraph.ops import subtract
 from ngraph.ops import sum
 from ngraph.ops import tan
 from ngraph.ops import tanh
+from ngraph.ops import tile
 from ngraph.ops import topk
+from ngraph.ops import transpose
 from ngraph.ops import unsqueeze
+from ngraph.ops import variadic_split
 
 
 from ngraph.runtime import runtime

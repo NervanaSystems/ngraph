@@ -834,7 +834,7 @@ namespace
                      "if 'split_lengths' input is not constant. Node: ",
                      *node);
 
-        const auto splits = as_type_ptr<op::Constant>(split_lengths)->get_vector<int64_t>();
+        const auto splits = as_type_ptr<op::Constant>(split_lengths)->cast_vector<int64_t>();
         const std::vector<size_t> splits_unsigned{splits.begin(), splits.end()};
 
         auto replacement_node =

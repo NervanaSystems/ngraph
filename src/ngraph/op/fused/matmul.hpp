@@ -33,7 +33,7 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"MatMul", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 MatMul() = default;
-                /// \brief Constructs an ScaleShift operation.
+                /// \brief Constructs an Matrix Multiplication operation.
                 ///
                 /// \param A Matrix A
                 /// \param B Matrix B

@@ -61,3 +61,37 @@ def test_dot_tensor_scalar():
 
     result = run_op_node([right_input, left_input], ng.dot)
     assert np.allclose(result, expected)
+
+
+@pytest.mark.parametrize('shape_a, shape_b, transpose_a, transpose_b', [
+    # matrix, vector
+    ([2, 4], [4], False, False),
+    ([4], [4, 2], False, False),
+
+    # matrix, matrix
+    ([2, 4], [4, 2], False, False),
+
+    # tensor, vector
+    ([2, 4, 5], [5], False, False),
+
+    # # tensor, matrix
+    ([2, 4, 5], [5, 4], False, False),
+
+    # # tensor, tensor
+    ([2, 2, 4], [2, 4, 2], False, False),
+])
+@pytest.mark.skip_on_gpu
+def test_matmul(shape_a, shape_b, transpose_a, transpose_b):
+    np.random.seed(133391)
+    left_input = -100.0 + np.random.rand(*shape_a) * 200.0
+    right_input = -100.0 + np.random.rand(*shape_b) * 200.0
+
+    result = run_op_node([left_input, right_input], ng.matmul, transpose_a, transpose_b)
+
+    if transpose_a:
+        left_input = np.transpose(left_input)
+    if transpose_b:
+        right_input = np.transpose(right_input)
+
+    expected = np.matmul(left_input, right_input)
+    assert np.allclose(result, expected)
