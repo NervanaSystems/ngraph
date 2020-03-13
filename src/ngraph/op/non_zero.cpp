@@ -35,12 +35,17 @@ bool ngraph::op::v0::NonZero::visit_attributes(AttributeVisitor& visitor)
 
 void op::v0::NonZero::validate_and_infer_types()
 {
-    auto args_et_pshape = validate_and_infer_elementwise_args();
+    const PartialShape& input_shape = get_input_partial_shape(0);
 
-    element::Type& args_et = std::get<0>(args_et_pshape);
-    PartialShape& args_pshape = std::get<1>(args_et_pshape);
-
-    set_output_type(0, args_et, args_pshape);
+    if (get_input_partial_shape(i).is_dynamic())
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+    }
+    else
+    {
+        set_output_type(0, get_input_element_type(0), input_shape.to_shape());
+    }
+    set_input_is_relevant_to_shape(0);
 }
 
 shared_ptr<Node> op::v0::NonZero::copy_with_new_args(const NodeVector& new_args) const
