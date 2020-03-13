@@ -37,6 +37,8 @@ from ngraph.impl.op import Convolution, ConvolutionBackpropData, ConvolutionBack
 
 import test
 
+import ngraph as ng
+
 def binary_op(op_str, a, b):
 
     if op_str == '+':
@@ -1343,3 +1345,17 @@ def test_convolutionBackpropFilters():
            [ 425832,  190752,  432960.],
            [1084212,  485232, 1100250.]]]])
     assert np.allclose(result_arr, result_arr_ref)
+
+
+@pytest.mark.skip_on_gpu
+def test_broadcast_v1():
+    input_tensor = np.array([1.0, 2.0, 3.0], np.float32)
+    input_shape = np.array([3,3], np.int64)
+    input_axes = np.array([1], np.int64)
+    result = test.ngraph.util.run_op_node([input_tensor, input_shape, input_axes], ng.ops.broadcast)
+    
+    a_arr = np.array([[0], [0], [0]], dtype=np.float32)
+    b_arr = np.array([[1, 2, 3]], dtype=np.float32)
+    expected = np.add(a_arr, b_arr)
+
+    assert np.allclose(result, expected)

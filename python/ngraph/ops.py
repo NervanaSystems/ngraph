@@ -940,17 +940,22 @@ Node.__ge__ = greater_eq
 
 # Custom ops
 @nameable_op
-def broadcast(node, new_shape, broadcast_axes, name=None):
-    # type: (Node, TensorShape, Iterable[int], str) -> Node
+def broadcast(node, new_shape, broadcast_axes, auto_broadcast='numpy', name=None):
+    # type: (Node, Node, Node, str, str) -> Node
     """Create a node which broadcasts the input node's values along specified axes to a desired shape.
 
     :param node: The node with input tensor data.
-    :param new_shape: The new shape we want to broadcast tensor to.
-    :param broadcast_axes: The axis positions (0-based) in the result that are being broadcast.
+    :param new_shape: The node with a new shape we want to broadcast tensor to.
+    :param broadcast_axes: The node with a axis positions (0-based) in the result
+                           that are being broadcast.
+    :param auto_broadcast: The type of broadcating that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: numpy, explicit.
     :param name: Optional new name for output node.
     :return: New node with broadcast shape.
     """
-    return Broadcast(node, Shape(new_shape), AxisSet(broadcast_axes))
+    return _get_node_factory().create('Broadcast',
+                                      [node, new_shape, broadcast_axes],
+                                      {auto_broadcast: auto_broadcast})
 
 
 @nameable_op
