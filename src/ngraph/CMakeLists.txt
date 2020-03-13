@@ -658,6 +658,11 @@ else()
     add_library(ngraph SHARED ${SRC})
 endif()
 
+set_target_properties(ngraph PROPERTIES
+                      CXX_VISIBILITY_PRESET hidden
+                      C_VISIBILITY_PRESET hidden
+                      VISIBILITY_INLINES_HIDDEN hidden)
+
 if(NOT NGRAPH_JSON_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
 endif()

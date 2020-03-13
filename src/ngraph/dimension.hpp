@@ -172,5 +172,6 @@ namespace ngraph
     /// \return A reference to `str` after insertion.
     ///
     /// Inserts the string `?` if `dimension` is dynamic; else inserts `int64_t(dimension)`.
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& str, const Dimension& dimension);
 }

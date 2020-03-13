@@ -144,7 +144,7 @@ namespace ngraph
     }     // namespace runtime
 } // namespace ngraph
 
-class ngraph::runtime::interpreter::INTExecutable : public Executable
+class NGRAPH_API ngraph::runtime::interpreter::INTExecutable : public Executable
 {
     friend class INTBackend;
 

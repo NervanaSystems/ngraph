@@ -184,7 +184,7 @@ namespace ngraph
             bool m_strict_mode{false};
         };
 
-        class RecurrentMatcher
+        class NGRAPH_API RecurrentMatcher
         {
         public:
             /// \brief Constructs a RecurrentMatcher object. Reccurent Matchers are used to match
