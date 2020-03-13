@@ -60,6 +60,7 @@ from ngraph.ops import greater
 from ngraph.ops import greater_eq
 from ngraph.ops import grn
 from ngraph.ops import group_convolution
+from ngraph.ops import group_convolution_backprop_data
 from ngraph.ops import hard_sigmoid
 from ngraph.ops import less
 from ngraph.ops import less_eq

@@ -238,6 +238,69 @@ def group_convolution(data,                 # type: Node
 
 
 @nameable_op
+def group_convolution_backprop_data(data,                 # type: Node
+                                    filters,              # type: Node
+                                    strides,              # type: List[int]
+                                    output_shape=None,    # type: Node
+                                    pads_begin=None,      # type: List[int]
+                                    pads_end=None,        # type: List[int]
+                                    dilations=None,       # type: List[int]
+                                    auto_pad='EXPLICIT',  # type: str
+                                    output_padding=None,  # type: List[int]
+                                    name=None,            # type: str
+                                    ):
+    # type: (...) -> Node
+    """Perform Group Convolution operation on data from input node.
+
+    :param data:            The node producing input data.
+    :param filters:         The node producing filter data.
+    :param strides:         The distance (in pixels) to slide the filter on the feature map
+                            over the axes.
+    :param output_shape:    The node that specifies spatial shape of the output.
+    :param pads_begin:      The number of pixels to add at the beginning along each axis.
+    :param pads_end:        The number of pixels to add at the end along each axis.
+    :param dilations:       The distance in width and height between elements (weights)
+                            in the filter.
+    :param auto_pad:        Describes how to perform padding. Possible values:
+                            EXPLICIT:   Pad dimensions are explicity specified
+                            SAME_LOWER: Pad dimensions computed to match input shape
+                                        Ceil(num_dims/2) at the beginning and
+                                        Floor(num_dims/2) at the end
+                            SAME_UPPER: Pad dimensions computed to match input shape
+                                        Floor(num_dims/2) at the beginning and
+                                        Ceil(num_dims/2) at the end
+                            VALID:      No padding
+    :param output_padding:  The additional amount of paddings added per each spatial axis
+                            in the output tensor.
+    :param name: Optional output node name.
+    :return: The new node performing a Group Convolution operation on tensor from input node.
+    """
+    spatial_dim_count = len(strides)
+    if dilations is None:
+        dilations = [1] * spatial_dim_count
+    if output_padding is None:
+        output_padding = [0] * spatial_dim_count
+
+    attributes = {'strides': strides,
+                  'dilations': dilations,
+                  'auto_pad': auto_pad.upper(),
+                  'output_padding': output_padding}
+    args = [data, filters]
+
+    if output_shape is not None:
+        args.append(output_shape)
+    else:
+        if pads_begin is None:
+            pads_begin = [0] * spatial_dim_count
+        if pads_end is None:
+            pads_end = [0] * spatial_dim_count
+        attributes['pads_begin'] = pads_begin
+        attributes['pads_end'] = pads_end
+
+    return _get_node_factory().create('GroupConvolutionBackpropData', args, attributes)
+
+
+@nameable_op
 def rnn_cell(X,                      # type: Node
              H_t,                    # type: Node
              W,                      # type: Node
