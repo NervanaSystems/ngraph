@@ -333,7 +333,6 @@ namespace ngraph
         const element::Type& get_element_type() const;
 
         /// Returns the shape for output i
-        // TODO: deprecate in favor of node->output(i).get_shape()
         const Shape& get_output_shape(size_t i) const;
 
         /// Returns the partial shape for output i
@@ -343,14 +342,14 @@ namespace ngraph
                                                                bool for_get_output_element = true);
 
         /// Checks that there is exactly one output and returns its shape
-        // TODO: deprecate in favor of node->output(0).get_shape() with a suitable check in the
+        // TODO: deprecate in favor of node->get_output_shape(0) with a suitable check in the
         // calling code, or updates to the calling code if it is making an invalid assumption of
         // only one output.
         const Shape& get_shape() const;
 
-        /// Returns the tensor for output i
-        descriptor::Tensor& get_output_tensor(size_t i) const
-            NGRAPH_DEPRECATED("use node->output(i).get_tensor() instead");
+        /// Returns the tensor for output or input i
+        descriptor::Tensor& get_output_tensor(size_t i) const;
+        descriptor::Tensor& get_input_tensor(size_t i) const;
 
         /// Returns the tensor name for output i
         const std::string& get_output_tensor_name(size_t i) const;
@@ -379,15 +378,15 @@ namespace ngraph
         size_t get_input_size() const;
 
         /// Returns the element type of input i
-        // TODO: deprecate in favor of node->input(i).get_element_type()
+        // TODO: deprecate in favor of node->get_input_element_type(i)
         const element::Type& get_input_element_type(size_t i) const;
 
         /// Returns the shape of input i
-        // TODO: deprecate in favor of node->input(i).get_shape()
+        // TODO: deprecate in favor of node->get_input_shape(i)
         const Shape& get_input_shape(size_t i) const;
 
         /// Returns the partial shape of input i
-        // TODO: deprecate in favor of node->input(i).get_partial_shape()
+        // TODO: deprecate in favor of node->get_input_partial_shape(i)
         const PartialShape& get_input_partial_shape(size_t i) const;
 
         /// Returns the tensor name for input i
@@ -428,12 +427,6 @@ namespace ngraph
 
         /// Set device placement
         void set_placement(Placement placement);
-
-        /// Get device placement
-        size_t get_placement_index() const;
-
-        /// Set device placement
-        void set_placement_index(size_t placement);
 
         using RTMap = std::map<std::string, std::shared_ptr<Variant>>;
 
@@ -481,8 +474,6 @@ namespace ngraph
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
-        static const size_t placement_invalid = -1;
-
         /// \return A vector containing a handle for each of this node's inputs, in order.
         // TODO: Rename to get_inputs()?
         std::vector<Input<Node>> inputs();
@@ -548,7 +539,6 @@ namespace ngraph
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
-        size_t m_placement_index = placement_invalid;
         std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
         std::map<std::string, std::shared_ptr<Variant>> m_rt_info;
     };

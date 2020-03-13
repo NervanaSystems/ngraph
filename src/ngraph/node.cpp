@@ -341,16 +341,6 @@ void Node::set_placement(Placement placement)
     m_placement = placement;
 }
 
-size_t Node::get_placement_index() const
-{
-    return m_placement_index;
-}
-
-void Node::set_placement_index(size_t placement)
-{
-    m_placement_index = placement;
-}
-
 void Node::add_provenance_group_member(const shared_ptr<Node>& node)
 {
     m_provenance_group.insert(node);
@@ -729,6 +719,13 @@ descriptor::Tensor& Node::get_output_tensor(size_t i) const
     NGRAPH_CHECK(
         i < m_outputs.size(), "index '", i, "' out of range in get_output_tensor(size_t i)");
     return m_outputs[i].get_tensor();
+}
+
+descriptor::Tensor& Node::get_input_tensor(size_t i) const
+{
+    NGRAPH_CHECK(i < m_inputs.size(), "index '", i, "' out of range in get_input_tensor(size_t i)");
+    descriptor::Input input = m_inputs[i];
+    return input.get_tensor();
 }
 
 const string& Node::get_output_tensor_name(size_t i) const
