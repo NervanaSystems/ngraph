@@ -21,6 +21,30 @@ from test.ngraph.util import get_runtime
 
 
 @pytest.mark.skip_on_gpu
+def test_split():
+    runtime = get_runtime()
+    input_tensor = ng.constant(np.array([0, 1, 2, 3, 4, 5], dtype=np.int32))
+    axis = ng.constant(0, dtype=np.int64)
+    splits = 3
+
+    op = ng.split(input_tensor, axis, splits)
+    model0 = runtime.computation(ng.get_output_element(op, 0))
+    result0 = model0()
+    split0 = np.array([0, 1], dtype=np.int32)
+    assert np.allclose(result0, split0)
+
+    model1 = runtime.computation(ng.get_output_element(op, 1))
+    result1 = model1()
+    split1 = np.array([2, 3], dtype=np.int32)
+    assert np.allclose(result1, split1)
+
+    model2 = runtime.computation(ng.get_output_element(op, 2))
+    result2 = model2()
+    split2 = np.array([4, 5], dtype=np.int32)
+    assert np.allclose(result2, split2)
+
+
+@pytest.mark.skip_on_gpu
 def test_variadic_split():
     runtime = get_runtime()
     input_tensor = ng.constant(np.array([[0, 1, 2, 3, 4, 5], [6, 7, 8, 9, 10, 11]], dtype=np.int32))

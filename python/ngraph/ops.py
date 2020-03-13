@@ -1748,3 +1748,15 @@ def strided_slice(data,                 # type: Node
                   'shrink_axis_mask': shrink_axis_mask, 'ellipsis_mask': ellipsis_mask}
 
     return _get_node_factory().create('StridedSlice', [data, begin, end, strides], attributes)
+
+
+@nameable_op
+def split(data, axis, num_splits):  # type: (Node, Node, int) -> Node
+    """Return a node which splits the input tensor into same-length slices
+
+    :param data: The input tensor to be split
+    :param axis: Axis along which the input data will be split
+    :param num_splits: Number of the output tensors that should be produced
+    :return: Split node
+    """
+    return _get_node_factory().create('Split', [data, axis], {'num_splits': num_splits})
