@@ -159,7 +159,6 @@ function cleanup() {
     return 0
 }
 
-
 function check_ngraph_onnx_repo() {
     # Verifies if nGraph-ONNX repository is present
     local ngraph_onnx_git="${NGRAPH_ONNX_REPO_PATH}/.git"
