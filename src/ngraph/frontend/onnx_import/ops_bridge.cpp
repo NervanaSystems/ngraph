@@ -343,7 +343,7 @@ namespace ngraph
             REGISTER_OPERATOR("Reshape", 1, reshape);
             REGISTER_OPERATOR("Resize", 1, resize);
             REGISTER_OPERATOR("ReverseSequence", 1, reverse_sequence);
-            REGISTER_OPERATOR("ROIAlign", 1, roi_align);
+            REGISTER_OPERATOR("RoiAlign", 1, roi_align);
             REGISTER_OPERATOR("Round", 1, round);
             REGISTER_OPERATOR("Scatter", 1, scatter_elements);
             REGISTER_OPERATOR("ScatterElements", 1, scatter_elements);
