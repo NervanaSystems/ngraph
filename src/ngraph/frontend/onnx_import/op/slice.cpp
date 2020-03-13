@@ -106,7 +106,7 @@ namespace ngraph
                     Shape lower_bounds(data_rank);
                     Shape upper_bounds = data_shape;
 
-                    if (inputs.size() > 3 && !inputs.at(3)->is_null())
+                    if (inputs.size() == 3)
                     {
                         auto axes = inputs.at(3);
                         const auto axes_shape = axes->get_shape();
@@ -115,10 +115,10 @@ namespace ngraph
                         for (size_t idx = 0; idx < axes_shape.size(); ++idx)
                         {
                             size_t axis = axes_shape.at(idx);
-                            lower_bounds.at(idx) =
-                                get_valid_array_idx(start_shape.at(idx), data_shape.at(idx));
-                            upper_bounds.at(idx) =
-                                get_valid_array_idx(end_shape.at(idx), data_shape.at(idx));
+                            lower_bounds.at(axis) =
+                                get_valid_array_idx(start_shape.at(idx), data_shape.at(axis));
+                            upper_bounds.at(axis) =
+                                get_valid_array_idx(end_shape.at(idx), data_shape.at(axis));
                         }
                     }
 
@@ -133,7 +133,7 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> strides = default_opset::Constant::create(
                         element::i64, Shape{data_rank}, std::vector<int64_t>(data_rank, 1));
 
-                    if (inputs.size() > 4 && !inputs.at(4)->is_null())
+                    if (inputs.size() == 4)
                     {
                         strides = inputs.at(4);
                     }
