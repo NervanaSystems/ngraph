@@ -1354,7 +1354,7 @@ def test_broadcast_v1():
     input_shape = np.array([3,3], np.int64)
     input_axes = np.array([1], np.int64)
     result = test.ngraph.util.run_op_node([input_tensor, input_shape, input_axes], ng.ops.broadcast)
-    
+
     a_arr = np.array([[0], [0], [0]], dtype=np.float32)
     b_arr = np.array([[1, 2, 3]], dtype=np.float32)
     expected = np.add(a_arr, b_arr)
@@ -1432,5 +1432,18 @@ def test_convolution_v1():
                                            dilations)
 
     expected = convolution2d(input_tensor[0][0], filters[0][0]).reshape(1, 1, 14, 14)
+
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.skip_on_gpu
+def test_softmax():
+    axis = 0
+    input_tensor = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+
+    result = test.ngraph.util.run_op_node([input_tensor], ng.ops.softmax, axis)
+
+    expected = [[0.00426978, 0.01160646, 0.03154963],
+                [0.08576079, 0.23312201, 0.63369132]]
 
     assert np.allclose(result, expected)

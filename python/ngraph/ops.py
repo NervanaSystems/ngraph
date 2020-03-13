@@ -27,7 +27,7 @@ from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgP
     GroupConvolution, HardSigmoid, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, \
     Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, \
     Quantize, QuantizedConvolution, QuantizedDot, PRelu, Relu, RNNCell, ReplaceSlice, Reshape, \
-    Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, Softmax, SpaceToDepth, \
+    Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
     Sqrt, SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
 
 
@@ -1477,18 +1477,14 @@ def concat(nodes, axis, name=None):  # type: (List[Node], int, str) -> Node
 
 
 @nameable_op
-def softmax(node, axes, name=None):  # type: (Node, Iterable[int], str) -> Node
+def softmax(data, axis):  # type: (Node, int) -> Node
     """Apply softmax operation on each element of input tensor.
 
-    :param node: The tensor providing input data.
-    :param axes: The list of axes indices which are used to calculate divider of
-                 the softmax function.
-    :param name: The optional new name for output node.
+    :param data: The tensor providing input data.
+    :param axis: An axis along which Softmax should be calculated
     :return: The new node with softmax operation applied on each element.
     """
-    if not isinstance(axes, set):
-        axes = set(axes)
-    return Softmax(node, AxisSet(axes))
+    return _get_node_factory().create('Softmax', [data], {'axis': axis})
 
 
 @nameable_op
