@@ -178,7 +178,7 @@ def unsqueeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
                   One of: input node or array.
     :return: The new node performing an unsqueeze operation on input tensor.
     """
-    return Unsqueeze(data, as_node(axes))
+    return _get_node_factory().create("Unsqueeze", [data, as_node(axes)])
 
 
 def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
@@ -1673,3 +1673,68 @@ def matmul(data_a, data_b, transpose_a, transpose_b):  # type: (Node, Node, bool
     print("transpose_a", transpose_a, "transpose_b", transpose_b)
     return _get_node_factory().create('MatMul', [data_a, data_b],
                                       {"transpose_a": transpose_a, "transpose_b": transpose_b})
+
+
+@nameable_op
+def variadic_split(data, axis, split_lengths):  # type: (Node, Node, Node) -> Node
+    """Return a node which splits the input tensor into variadic length slices
+
+    :param data: The input tensor to be split
+    :param axis: Axis along which the input data will be split
+    :param split_lengths: Sizes of the output tensors along the split axis
+    :return: VariadicSplit node
+    """
+    return _get_node_factory().create("VariadicSplit", [data, axis, split_lengths])
+
+
+@nameable_op
+def transpose(data, input_order):  # type: (Node, Node) -> Node
+    """Return a node which transposes the data in the input tensor
+
+    :param data: The input tensor to be transposed
+    :param input_order: Permutation of axes to be applied to the input tensor
+    :return: Transpose node
+    """
+    return _get_node_factory().create("Transpose", [data, input_order])
+
+
+@nameable_op
+def tile(data, repeats):  # type: (Node, Node) -> Node
+    """Return a node which dynamically repeats(replicates) the input data tensor
+
+    :param data: The input tensor to be tiled
+    :param repeats: Per-dimension replication factors
+    :return: Tile node
+    """
+    return _get_node_factory().create("Tile", [data, repeats])
+
+
+@nameable_op
+def strided_slice(data,                 # type: Node
+                  begin,                # type: Node
+                  end,                  # type: Node
+                  strides,              # type: Node
+                  begin_mask,           # type: List[int]
+                  end_mask,             # type: List[int]
+                  new_axis_mask=[],     # type: List[int]
+                  shrink_axis_mask=[],  # type: List[int]
+                  ellipsis_mask=[]      # type: List[int]
+                  ):
+    # type: (...) -> Node
+    """Return a node which dynamically repeats(replicates) the input data tensor
+
+    :param data: The tensor to be sliced
+    :param begin: 1D tensor with begin indexes for input blob slicing
+    :param end: 1D tensor with end indexes for input blob slicing
+    :param strides: The slicing strides
+    :param begin_mask: A mask applied to the 'begin' input indicating which elements shoud be ignored
+    :param end_mask: A mask applied to the 'end' input indicating which elements shoud be ignored
+    :param new_axis_mask: A mask indicating dimensions where '1' should be inserted
+    :param shrink_axis_mask: A mask indicating which dimensions should be deleted
+    :param ellipsis_mask: Indicates positions where missing dimensions should be inserted
+    :return: StridedSlice node
+    """
+    attributes = {"begin_mask": begin_mask, "end_mask": end_mask, "new_axis_mask": new_axis_mask,
+                  "shrink_axis_mask": shrink_axis_mask, "ellipsis_mask": ellipsis_mask}
+
+    return _get_node_factory().create("StridedSlice", [data, begin, end, strides], attributes)
