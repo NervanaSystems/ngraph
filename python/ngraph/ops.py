@@ -1702,3 +1702,34 @@ def tile(data, repeats):  # type: (Node, Node) -> Node
     :return: Tile node
     """
     return _get_node_factory().create("Tile", [data, repeats])
+
+
+@nameable_op
+def strided_slice(data,                 # type: Node
+                  begin,                # type: Node
+                  end,                  # type: Node
+                  strides,              # type: Node
+                  begin_mask,           # type: List[int]
+                  end_mask,             # type: List[int]
+                  new_axis_mask=[],     # type: List[int]
+                  shrink_axis_mask=[],  # type: List[int]
+                  ellipsis_mask=[]      # type: List[int]
+                  ):
+    # type: (...) -> Node
+    """Return a node which dynamically repeats(replicates) the input data tensor
+
+    :param data: The tensor to be sliced
+    :param begin: 1D tensor with begin indexes for input blob slicing
+    :param end: 1D tensor with end indexes for input blob slicing
+    :param strides: The slicing strides
+    :param begin_mask: A mask applied to the 'begin' input indicating which elements shoud be ignored
+    :param end_mask: A mask applied to the 'end' input indicating which elements shoud be ignored
+    :param new_axis_mask: A mask indicating dimensions where '1' should be inserted
+    :param shrink_axis_mask: A mask indicating which dimensions should be deleted
+    :param ellipsis_mask: Indicates positions where missing dimensions should be inserted
+    :return: StridedSlice node
+    """
+    attributes = {"begin_mask": begin_mask, "end_mask": end_mask, "new_axis_mask": new_axis_mask,
+                  "shrink_axis_mask": shrink_axis_mask, "ellipsis_mask": ellipsis_mask}
+
+    return _get_node_factory().create("StridedSlice", [data, begin, end, strides], attributes)

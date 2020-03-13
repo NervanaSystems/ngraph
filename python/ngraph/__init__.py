@@ -101,6 +101,7 @@ from ngraph.ops import sinh
 from ngraph.ops import slice
 from ngraph.ops import softmax
 from ngraph.ops import space_to_depth
+from ngraph.ops import strided_slice
 from ngraph.ops import sqrt
 from ngraph.ops import squared_difference
 from ngraph.ops import squeeze
