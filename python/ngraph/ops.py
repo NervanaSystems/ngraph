@@ -1221,16 +1221,13 @@ def convolution(data,                           # type: Node
     :param data: The node providing data batch tensor.
     :param filter: The node providing filters tensor.
     :param strides: The kernel window movement strides.
-    :param pads_begin: The number of zero padding elements to add on each axis below 0
-                          coordinate.
-    :param pads_end: The number of zero padding elements to add on each axis above max
-                          coordinate
+    :param pads_begin: The number of zero padding elements to add on each axis below 0 coordinate.
+    :param pads_end: The number of zero padding elements to add on each axis above max coordinate
     :param dilations: The data batch dilation strides.
     :param auto_pad: The type of padding. Range of values: explicit, same_upper, same_lower, valid.
     :param name: The optional new name for output node.
     :return: New node performing batched convolution operation.
     """
-
     return _get_node_factory().create('Convolution',
                                       [data, filters],
                                       {'strides': strides,
