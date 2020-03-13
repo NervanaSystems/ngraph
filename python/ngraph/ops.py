@@ -1743,7 +1743,7 @@ def strided_slice(data,                 # type: Node
 
 @nameable_op
 def split(data, axis, num_splits):  # type: (Node, Node, int) -> Node
-    """Return a node which splits the input tensor into same-length slices
+    """Return a node which splits the input tensor into same-length slices.
 
     :param data: The input tensor to be split
     :param axis: Axis along which the input data will be split
