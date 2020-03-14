@@ -231,13 +231,11 @@ function build_docker_image() {
     local docker_image_name="${2}"
     local dockerfiles_dir="${WORKSPACE}/${NGRAPH_ONNX_CI_PATH}/dockerfiles"
     local postprocess_dockerfile_subpath="postprocess/append_user.dockerfile"
-    local previous_dir="$(pwd)"
-    cd "${dockerfiles_dir}"
     echo "[INFO] Building base image"
     docker build \
         --build-arg http_proxy="${HTTP_PROXY}" \
         --build-arg https_proxy="${HTTPS_PROXY}" \
-        -f "./${operating_system}.dockerfile" \
+        -f "${dockerfiles_dir}/${operating_system}.dockerfile" \
         -t "${docker_image_name}:${DOCKER_BASE_IMAGE_TAG}" .
     echo "[INFO] Building CI execution image with appended user"
     docker build \
@@ -247,7 +245,6 @@ function build_docker_image() {
         --build-arg USERNAME="${USER}" \
         -f "${dockerfiles_dir}/${postprocess_dockerfile_subpath}" \
         -t "${docker_image_name}:${DOCKER_EXEC_IMAGE_TAG}" .
-    cd "${previous_dir}"
 
     return 0
 }
