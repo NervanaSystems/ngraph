@@ -110,7 +110,7 @@ static bool cse_reshape(shared_ptr<Node> a, shared_ptr<Node> b)
 
     return (a->input(0).get_source_output() == b->input(0).get_source_output()) &&
            (reshape_a->get_input_order() == reshape_b->get_input_order()) &&
-           (reshape_a->get_output_shape() == reshape_b->get_output_shape());
+           (reshape_a->get_output_shape(0) == reshape_b->get_output_shape(0));
 }
 
 static bool cse_broadcast(shared_ptr<Node> a, shared_ptr<Node> b)

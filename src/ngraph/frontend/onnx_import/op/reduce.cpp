@@ -69,7 +69,7 @@ namespace ngraph
                                          " in the input data tensor needs to be statically "
                                          "specified to create a ReduceMean operation");
 
-                            reduced_elems_count *= static_cast<size_t>(dim_to_reduce);
+                            reduced_elems_count *= dim_to_reduce.get_length();
                         }
                     }
 
