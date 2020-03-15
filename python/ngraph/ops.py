@@ -1819,3 +1819,13 @@ def sigmoid(data):  # type: (Node) -> Node
     :return: Sigmoid node
     """
     return _get_node_factory().create('Sigmoid', [data])
+
+
+@nameable_op
+def shape_of(data):  # type: (Node) -> Node
+    """Return a node which produces a tensor containing the shape of its input data.
+
+    :param data: The tensor containing the input data
+    :return: ShapeOf node
+    """
+    return _get_node_factory().create('ShapeOf', [data])

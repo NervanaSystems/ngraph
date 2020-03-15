@@ -1447,3 +1447,12 @@ def test_softmax():
                 [0.08576079, 0.23312201, 0.63369132]]
 
     assert np.allclose(result, expected)
+
+
+@pytest.mark.skip_on_gpu
+def test_shape_of():
+    input_tensor = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=np.float32)
+
+    result = test.ngraph.util.run_op_node([input_tensor], ng.ops.shape_of)
+
+    assert np.allclose(result, [3, 3])
