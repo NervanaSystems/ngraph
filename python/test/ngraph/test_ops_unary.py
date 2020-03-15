@@ -100,3 +100,16 @@ def test_logical_not(input_data):
     assert np.array_equal(result, expected)
     result = run_op_numeric_data(input_data, ng.logical_not)[0]
     assert np.array_equal(result, expected)
+
+
+@pytest.mark.skip_on_gpu
+def test_sigmoid():
+    input_data = [-3.14, -1.0, 0.0, 2.71001, 1000.0]
+    result = run_op_node([input_data], ng.sigmoid)[0]
+
+    def sigmoid(x):
+        return 1 / (1 + np.exp(-x))
+
+    expected = np.array(list(map(sigmoid, input_data)))
+
+    assert np.allclose(result, expected)

@@ -96,6 +96,7 @@ from ngraph.ops import rnn_cell
 from ngraph.ops import scale_shift
 from ngraph.ops import select
 from ngraph.ops import shuffle_channels
+from ngraph.ops import sigmoid
 from ngraph.ops import sign
 from ngraph.ops import sin
 from ngraph.ops import sinh

@@ -1809,3 +1809,13 @@ def split(data, axis, num_splits):  # type: (Node, Node, int) -> Node
     :return: Split node
     """
     return _get_node_factory().create('Split', [data, axis], {'num_splits': num_splits})
+
+
+@nameable_op
+def sigmoid(data):  # type: (Node) -> Node
+    """Return a node which applies the sigmoid function element-wise.
+
+    :param data: The tensor containing the input data
+    :return: Sigmoid node
+    """
+    return _get_node_factory().create('Sigmoid', [data])
