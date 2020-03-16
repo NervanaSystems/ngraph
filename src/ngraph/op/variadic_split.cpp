@@ -33,6 +33,11 @@ op::v1::VariadicSplit::VariadicSplit(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::VariadicSplit::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
 {
     set_input_is_relevant_to_value(0);
@@ -44,12 +49,12 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
     if (split_lengths_pshape.is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(split_lengths_pshape.rank()) == 1,
+                              split_lengths_pshape.rank().get_length() == 1,
                               "Split lengths should be a 1-D tensor. Got ",
                               split_lengths_pshape.rank(),
                               " instead.");
 
-        auto num_outputs = static_cast<size_t>(split_lengths_pshape[0]);
+        auto num_outputs = split_lengths_pshape[0].get_length();
         auto data = input_value(0);
         auto axis_input = input_value(1).get_node_shared_ptr();
         auto split_lengths_input = input_value(2).get_node_shared_ptr();
@@ -60,12 +65,11 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
         if (data_shape.is_static() && axis_input->is_constant() &&
             split_lengths_input->is_constant())
         {
-            auto data_rank = static_cast<size_t>(data_shape.rank());
             const auto axis_input = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
             auto axis_val = axis_input->cast_vector<int64_t>()[0];
 
             // Adjust split axis in case of negatives
-            int64_t axis = ngraph::normalize_axis(this, axis_val, data_rank);
+            int64_t axis = ngraph::normalize_axis(this, axis_val, data_shape.rank());
 
             auto split_lengths =
                 as_type_ptr<op::Constant>(split_lengths_input)->cast_vector<int64_t>();
@@ -98,16 +102,16 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
 
             if (negative_one > 0)
             {
-                split_lengths[negative_one] = static_cast<size_t>(data_shape[axis]) - sum_of_splits;
+                split_lengths[negative_one] = data_shape[axis].get_length() - sum_of_splits;
                 sum_of_splits += split_lengths[negative_one];
             }
 
             NODE_VALIDATION_CHECK(this,
-                                  sum_of_splits == static_cast<size_t>(data_shape[axis]),
+                                  sum_of_splits == data_shape[axis].get_length(),
                                   "Total length of splits: ",
                                   sum_of_splits,
                                   " must match the length of the chosen axis: ",
-                                  static_cast<size_t>(data_shape[axis]));
+                                  data_shape[axis].get_length());
 
             for (size_t output{0}; output < num_outputs; ++output)
             {

@@ -46,16 +46,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/quantize_linear.prototxt"));
 
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{32.25f, 48.34f, 50.f, 83.f});
-    inputs.emplace_back(std::vector<float>{0.5f});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input(std::vector<float>{32.25f, 48.34f, 50.f, 83.f});
+    test_case.add_input(std::vector<float>{0.5f});
 
-    std::vector<std::vector<std::uint8_t>> expected_output{
-        std::vector<std::uint8_t>{64, 97, 100, 166}};
-
-    std::vector<std::vector<std::uint8_t>> outputs{
-        execute<float, std::uint8_t>(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
+    test_case.add_expected_output(std::vector<std::uint8_t>{64, 97, 100, 166});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear_zero_point)
@@ -116,13 +112,11 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dequant_lin.prototxt"));
 
-    std::vector<std::vector<std::uint8_t>> inputs;
-    inputs.emplace_back(std::vector<std::uint8_t>{19, 210, 21, 10});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input(std::vector<std::uint8_t>{19, 210, 21, 10});
 
-    Outputs expected_output{std::vector<float>{76.f, 840.f, 84.f, 40.f}};
-
-    Outputs outputs{execute<std::uint8_t, float>(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    test_case.add_expected_output(std::vector<float>{76.f, 840.f, 84.f, 40.f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear_scalar_zero_scale_uint8)

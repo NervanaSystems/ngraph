@@ -25,7 +25,6 @@
 #include "ngraph/op/parameter.hpp"
 #include "operator_set.hpp"
 #include "value_info.hpp"
-#include "weight.hpp"
 
 namespace ngraph
 {
@@ -34,7 +33,7 @@ namespace ngraph
         class Graph
         {
         public:
-            Graph(const onnx::GraphProto& proto, Model& model, const Weights& weights = {});
+            Graph(const onnx::GraphProto& proto, Model& model);
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
             const std::vector<ValueInfo>& get_outputs() const { return m_outputs; }
@@ -48,6 +47,8 @@ namespace ngraph
             NodeVector make_ng_nodes(const Node& onnx_node) const;
 
         protected:
+            void set_friendly_names(const Node& onnx_node, const NodeVector& ng_node_vector) const;
+
             void add_provenance_tag_to_initializer(
                 const Tensor& initializer, std::shared_ptr<default_opset::Constant> node) const;
 

@@ -132,6 +132,7 @@ namespace ngraph
                     const std::vector<float>& activations_beta = {},
                     float clip = 0.f);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual void pre_validate_and_infer_types() override;
                 virtual NodeVector decompose_op() const override;
                 virtual std::shared_ptr<Node>

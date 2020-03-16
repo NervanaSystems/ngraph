@@ -227,7 +227,7 @@ shared_ptr<Node> builder::opset1::expand_dims(const Output<Node>& value, size_t 
     return builder::opset1::reshape(value, output_shape);
 }
 
-shared_ptr<Node> builder::opset1::squeeze(const Output<Node>& value, vector<int64_t> axes)
+shared_ptr<Node> builder::opset1::squeeze(const Output<Node>& value, vector<size_t> axes)
 {
     if (axes.empty())
     {

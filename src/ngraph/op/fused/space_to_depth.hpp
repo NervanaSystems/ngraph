@@ -60,6 +60,7 @@ namespace ngraph
                              const std::string& mode,
                              std::size_t block_size = 1);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 std::size_t get_block_size() const { return m_blocksize; }
                 SpaceToDepthMode get_mode() const { return m_mode; }
                 virtual NodeVector decompose_op() const override;
@@ -74,5 +75,22 @@ namespace ngraph
             };
         }
         using v0::SpaceToDepth;
-    }
-}
+    } // namespace op
+
+    std::ostream& operator<<(std::ostream& s, const op::v0::SpaceToDepth::SpaceToDepthMode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v0::SpaceToDepth::SpaceToDepthMode>
+        : public EnumAttributeAdapterBase<op::v0::SpaceToDepth::SpaceToDepthMode>
+    {
+    public:
+        AttributeAdapter(op::v0::SpaceToDepth::SpaceToDepthMode& value)
+            : EnumAttributeAdapterBase<op::v0::SpaceToDepth::SpaceToDepthMode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v0::SpaceToDepth::SpaceToDepthMode>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+} // namespace ngraph

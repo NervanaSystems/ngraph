@@ -9,12 +9,12 @@ index 0bc6ea57a..4fa0a22d1 100644
 -    set(_omp_severity "FATAL_ERROR")
 +    set(_omp_severity "WARNING")
  endif()
-
+ 
  macro(forbid_link_compiler_omp_rt)
 @@ -45,6 +45,42 @@ macro(forbid_link_compiler_omp_rt)
      endif()
  endmacro()
-
+ 
 +macro(use_intel_omp_rt)
 +    # fast return
 +    if (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
@@ -69,7 +69,7 @@ index 4c774a11b..56fb4e294 100644
 @@ -78,8 +78,10 @@ endif()
  add_library(${LIB_NAME} ${DNNL_LIBRARY_TYPE}
      ${VERSION_RESOURCE_FILE} ${HEADERS} ${${LIB_NAME}_SUB_OBJS})
-
+ 
 -set_property(TARGET ${LIB_NAME} PROPERTY VERSION "${DNNL_VERSION_MAJOR}.${DNNL_VERSION_MINOR}")
 -set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "${DNNL_VERSION_MAJOR}")
 +if(MKLDNN_LIB_VERSIONING_ENABLE)
@@ -77,5 +77,5 @@ index 4c774a11b..56fb4e294 100644
 +    set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "${DNNL_VERSION_MAJOR}")
 +endif()
  set_property(TARGET ${LIB_NAME} PROPERTY PUBLIC_HEADER ${HEADERS})
-
+ 
  target_include_directories(${LIB_NAME} PUBLIC

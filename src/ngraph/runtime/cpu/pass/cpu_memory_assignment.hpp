@@ -50,22 +50,22 @@ public:
 
 private:
     // Find in-place concat ops and set appropriate memory pool offset for its arguments
-    void process_in_place_concat(std::list<std::shared_ptr<Node>> nodes);
+    void process_in_place_concat(std::vector<std::shared_ptr<Node>> nodes);
 
     // For a chain of concat ops, propagate memory pool offsets
     void propagate_in_place_concat(const ngraph::Output<ngraph::Node>& concat);
 
     // Find in-place slice ops and set appropriate memory pool offset for its output
-    void process_in_place_slice(std::list<std::shared_ptr<Node>> nodes);
+    void process_in_place_slice(std::vector<std::shared_ptr<Node>> nodes);
 
     // propagate slice when its arg comes from function input
     void propagate_in_place_slice(const ngraph::Input<ngraph::Node>& input);
 
     // build buffer sets maps
-    void build_buffer_sets_maps(std::list<std::shared_ptr<Node>>& ops);
+    void build_buffer_sets_maps(std::vector<std::shared_ptr<Node>>& ops);
 
     // liveness analysis to build new and free list for each node
-    void liveness_analysis(std::list<std::shared_ptr<Node>>& ops);
+    void liveness_analysis(std::vector<std::shared_ptr<Node>>& ops);
 
     size_t get_bufferID(descriptor::Tensor* tensor);
 
