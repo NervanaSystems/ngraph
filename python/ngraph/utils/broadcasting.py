@@ -49,7 +49,7 @@ def get_broadcast_axes(output_shape, input_shape, axis=None):
 
 
 def as_elementwise_compatible_nodes(*input_values):  # type: (*NodeInput) -> List[Node]
-    """Return all input values as ngraph Nodes with the same shape and element type.
+    """Return all input values as ngraph Nodes.
 
     Scalar values will be converted to ngraph Constant Nodes.
     """
@@ -68,17 +68,14 @@ def as_elementwise_compatible_nodes(*input_values):  # type: (*NodeInput) -> Lis
     if len(unique_types) > 1:
         log.warning('More than one different data type in input nodes %s.', input_nodes)
 
-    sorted_shapes = sorted(shapes, key=len)
-    broadcast_shape = sorted_shapes.pop()
     broadcast_dtype = get_dtype(types.pop())
 
     output_nodes = []
     for input_value in input_values:
         if issubclass(type(input_value), Node):
-            input_value = ng.broadcast_to(input_value, broadcast_shape)
             output_nodes.append(input_value)
         else:
             input_value = make_constant_node(input_value, dtype=broadcast_dtype)
-            output_nodes.append(ng.broadcast_to(input_value, broadcast_shape))
+            output_nodes.append(input_value)
 
     return output_nodes
