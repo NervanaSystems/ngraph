@@ -131,6 +131,72 @@ namespace ngraph
 
             } // namespace set_10
 
+            // // mozga implementation
+            // namespace set_10
+            // {
+            //     NodeVector slice(const Node& node)
+            //     {
+            //         const NodeVector inputs{node.get_ng_inputs()};
+
+            //         std::shared_ptr<ngraph::Node> data = inputs.at(0);
+            //         std::shared_ptr<ngraph::Node> start = inputs.at(1);
+            //         std::shared_ptr<ngraph::Node> end = inputs.at(2);
+
+            //         const auto data_shape = data->get_shape();
+            //         const auto data_rank = data_shape.size();
+
+            //         Shape lower_bounds(data_rank);
+            //         Shape upper_bounds = data_shape;
+
+            //         if (inputs.size() > 3 && !inputs.at(3)->is_null())
+            //         {
+            //             auto axes = inputs.at(3);
+            //             const auto axes_shape = axes->get_shape();
+            //             const auto start_shape = start->get_shape();
+            //             const auto end_shape = end->get_shape();
+            //             for (size_t idx = 0; idx < axes_shape.size(); ++idx)
+            //             {
+            //                 size_t axis = axes_shape.at(idx);
+            //                 lower_bounds.at(axis) =
+            //                     get_valid_array_idx(start_shape.at(idx), data_shape.at(axis));
+            //                 upper_bounds.at(axis) =
+            //                     get_valid_array_idx(end_shape.at(idx), data_shape.at(axis));
+            //             }
+            //         }
+
+            //         for (size_t idx = 0; idx < lower_bounds.size(); ++idx)
+            //         {
+            //             if (lower_bounds.at(idx) > upper_bounds.at(idx))
+            //             {
+            //                 upper_bounds.at(idx) = lower_bounds.at(idx);
+            //             }
+            //         }
+
+            //         std::shared_ptr<ngraph::Node> strides = default_opset::Constant::create(
+            //             element::i64, Shape{data_rank}, std::vector<int64_t>(data_rank, 1));
+
+            //         if (inputs.size() > 4 && !inputs.at(4)->is_null())
+            //         {
+            //             strides = inputs.at(4);
+            //         }
+
+            //         const auto begin = default_opset::Constant::create(
+            //             element::i64, Shape{lower_bounds.size()}, lower_bounds);
+            //         const auto ends = default_opset::Constant::create(
+            //             element::i64, Shape{upper_bounds.size()}, upper_bounds);
+
+            //         return {std::make_shared<default_opset::StridedSlice>(
+            //             data,
+            //             begin,
+            //             ends,
+            //             strides,
+            //             std::vector<int64_t>(data_rank, 0),
+            //             std::vector<int64_t>(data_rank, 0))};
+            //     }
+
+            // } // namespace set_10
+
+
         } // namespace op
 
     } // namespace onnx_import
