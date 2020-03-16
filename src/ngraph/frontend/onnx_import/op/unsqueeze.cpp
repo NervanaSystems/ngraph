@@ -35,9 +35,9 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
                     auto axes = node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
                     const auto data_rank = data->get_output_partial_shape(0).rank();
-                    CHECK_VALID_NODE(node,
-                                     data_rank.is_static(),
-                                     "Data rank must be static for creation of ONNX Unsqueeze op");
+                    // CHECK_VALID_NODE(node,
+                    //                  data_rank.is_static(),
+                    //                  "Data rank must be static for creation of ONNX Unsqueeze op");
                     const auto expanded_rank =
                         data->get_output_partial_shape(0).rank() + axes.size();
                     std::vector<std::size_t> normalized_axes =
