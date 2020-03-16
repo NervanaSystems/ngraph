@@ -3361,14 +3361,12 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = static_cast<const op::Constant*>(&n);
         if (tmp->get_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
         {
-            NGRAPH_INFO << "constant of size " << shape_size(tmp->outputs()[0].get_shape()) << " is uniform";
             vector<string> vs;
             vs.push_back(tmp->convert_value_to_string(0));
             node["value"] = vs;
         }
         else
         {
-            NGRAPH_INFO << "constant of size " << shape_size(tmp->outputs()[0].get_shape()) << " is NOT uniform";
             node["value"] = tmp->get_value_strings();
         }
         node["shape"] = tmp->get_shape();
