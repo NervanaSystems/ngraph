@@ -24,11 +24,11 @@ from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
     Cos, Cosh, DepthToSpace, Dequantize, Divide, Dot, Elu, \
     FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
-    HardSigmoid, Less, LessEq, Log, LRN, Max, Min, Minimum, \
-    Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, \
+    HardSigmoid, Less, LessEq, Log, LRN, Minimum, \
+    Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Power, \
     Quantize, QuantizedConvolution, QuantizedDot, PRelu, Relu, RNNCell, ReplaceSlice, Reshape, \
     Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
-    Sqrt, SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh
+    Sqrt, SquaredDifference, Squeeze, Subtract, Tan, Tanh
 
 
 from typing import Callable, Iterable, List, Set, Union
@@ -1440,40 +1440,59 @@ def max_pool(data,                    # type: Node
 
 # reduction ops
 @nameable_op
-def sum(node, reduction_axes=None, name=None):
-    # type: (Node, Iterable[int], str) -> Node
+def reduce_sum(node, reduction_axes, keep_dims=False, name=None):
+    # type: (Node, Node, bool, str) -> Node
     """Perform element-wise sums of the input tensor, eliminating the specified reduction axes.
 
-    :param node: The node providing data for operation.
+    :param node:           The node providing data for operation.
     :param reduction_axes: The axes to eliminate through summation.
-    :param name: The optional new name for ouptut node.
+    :param keep_dims:      If set to True it holds axes that are used for reduction
+    :param name:           The optional new name for ouptut node.
     :return: The new node performing summation along `reduction_axes` element-wise.
     """
-    return Sum(node, AxisSet(get_reduction_axes(node, reduction_axes)))
+    return _get_node_factory().create('ReduceSum', [node, reduction_axes], {'keep_dims': keep_dims})
 
 
 @nameable_op
-def max(node, reduction_axes=None, name=None):
-    # type: (Node, Iterable[int], str) -> Node
+def reduce_max(node, reduction_axes, keep_dims=False, name=None):
+    # type: (Node, Node, bool, str) -> Node
     """Max-reduction operation on input tensor, eliminating the specified reduction axes.
 
-    :param node: The tensor we want to max-reduce.
+    :param node:           The tensor we want to max-reduce.
     :param reduction_axes: The axes to eliminate through max operation.
+    :param keep_dims:      If set to True it holds axes that are used for reduction
     :param name: Optional name for output node.
     """
-    return Max(node, AxisSet(get_reduction_axes(node, reduction_axes)))
+    return _get_node_factory().create('ReduceMax', [node, reduction_axes], {'keep_dims': keep_dims})
 
 
 @nameable_op
-def min(node, reduction_axes=None, name=None):
-    # type: (Node, Iterable[int], str) -> Node
+def reduce_min(node, reduction_axes, keep_dims=False, name=None):
+    # type: (Node, Node, bool, str) -> Node
     """Min-reduction operation on input tensor, eliminating the specified reduction axes.
 
-    :param node: The tensor we want to min-reduce.
+    :param node:           The tensor we want to min-reduce.
     :param reduction_axes: The axes to eliminate through min operation.
-    :param name: Optional name for output node.
+    :param keep_dims:      If set to True it holds axes that are used for reduction
+    :param name:           Optional name for output node.
     """
-    return Min(node, AxisSet(get_reduction_axes(node, reduction_axes)))
+    return _get_node_factory().create('ReduceMin', [node, reduction_axes], {'keep_dims': keep_dims})
+
+
+@nameable_op
+def reduce_prod(node, reduction_axes, keep_dims=False, name=None):
+    # type: (Node, Node, bool, str) -> Node
+    """Product-reduction operation on input tensor, eliminating the specified reduction axes.
+
+    :param node:           The tensor we want to product-reduce.
+    :param reduction_axes: The axes to eliminate through product operation.
+    :param keep_dims:      If set to True it holds axes that are used for reduction
+    :param name:           Optional name for output node.
+    :return: The new node performing product-reduction operation.
+    """
+    return _get_node_factory().create('ReduceProd',
+                                      [node, reduction_axes],
+                                      {'keep_dims': keep_dims})
 
 
 @nameable_op
@@ -1514,19 +1533,6 @@ def hard_sigmoid(data, alpha, beta, name=None):  # type: (Node, float, float, st
     :return: The new node performing a Hard Sigmoid element-wise on input tensor.
     """
     return HardSigmoid(data, alpha, beta)
-
-
-@nameable_op
-def prod(node, reduction_axes=None, name=None):
-    # type: (Node, Iterable[int], str) -> Node
-    """Product-reduction operation on input tensor, eliminating the specified reduction axes.
-
-    :param node: The tensor we want to product-reduce.
-    :param reduction_axes: The axes to eliminate through product operation.
-    :param name: Optional name for output node.
-    :return: The new node performing product-reduction operation.
-    """
-    return Product(node, AxisSet(get_reduction_axes(node, reduction_axes)))
 
 
 # reshape ops

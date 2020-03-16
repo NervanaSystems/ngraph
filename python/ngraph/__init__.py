@@ -70,10 +70,8 @@ from ngraph.ops import logical_or
 from ngraph.ops import logical_not
 from ngraph.ops import lrn
 from ngraph.ops import matmul
-from ngraph.ops import max
 from ngraph.ops import max_pool
 from ngraph.ops import maximum
-from ngraph.ops import min
 from ngraph.ops import minimum
 from ngraph.ops import multiply
 from ngraph.ops import mvn
@@ -83,11 +81,14 @@ from ngraph.ops import one_hot
 from ngraph.ops import pad
 from ngraph.ops import parameter
 from ngraph.ops import power
-from ngraph.ops import prod
 from ngraph.ops import prelu
 from ngraph.ops import quantize
 from ngraph.ops import quantized_convolution
 from ngraph.ops import quantized_dot
+from ngraph.ops import reduce_max
+from ngraph.ops import reduce_min
+from ngraph.ops import reduce_prod
+from ngraph.ops import reduce_sum
 from ngraph.ops import relu
 from ngraph.ops import replace_slice
 from ngraph.ops import reshape
@@ -111,7 +112,6 @@ from ngraph.ops import sqrt
 from ngraph.ops import squared_difference
 from ngraph.ops import squeeze
 from ngraph.ops import subtract
-from ngraph.ops import sum
 from ngraph.ops import tan
 from ngraph.ops import tanh
 from ngraph.ops import tile
