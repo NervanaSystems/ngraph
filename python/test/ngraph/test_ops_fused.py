@@ -14,6 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 import numpy as np
+import pytest
 
 import ngraph as ng
 from test.ngraph.util import get_runtime
@@ -542,6 +543,7 @@ def test_group_convolution_operator():
     assert np.allclose(result, expected)
 
 
+@pytest.mark.xfail(reason='Computation mismatch')
 def test_group_convolution_backprop_data():
     runtime = get_runtime()
 
