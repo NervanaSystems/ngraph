@@ -809,7 +809,7 @@ def divide(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, st
 @binary_op
 def multiply(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies f(x) = A*B to the input nodes elementwise."""
-    return Multiply(left_node, right_node)
+    return _get_node_factory().create('Multiply', [left_node, right_node])
 
 
 @binary_op

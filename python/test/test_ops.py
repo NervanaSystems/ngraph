@@ -1456,3 +1456,13 @@ def test_shape_of():
     result = test.ngraph.util.run_op_node([input_tensor], ng.ops.shape_of)
 
     assert np.allclose(result, [3, 3])
+
+@pytest.mark.skip_on_gpu
+def test_multiply():
+    A = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=np.float32)
+    B = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=np.float32)
+    result = test.ngraph.util.run_op_node([A, B], ng.ops.multiply)
+
+    expected = np.multiply(A, B)
+
+    assert np.allclose(result, expected)
