@@ -24,7 +24,7 @@ from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
     Cos, Cosh, DepthToSpace, Dequantize, Divide, Dot, Elu, \
     FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
-    HardSigmoid, Less, LessEq, Log, LRN, Max, MaxPool, Min, Minimum, \
+    HardSigmoid, Less, LessEq, Log, LRN, Max, Min, Minimum, \
     Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, \
     Quantize, QuantizedConvolution, QuantizedDot, PRelu, Relu, RNNCell, ReplaceSlice, Reshape, \
     Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
@@ -1386,24 +1386,42 @@ def avg_pool(data_batch,            # type: Node
 
 
 @nameable_op
-def max_pool(x,                      # type: Node
-             window_shape,           # type: TensorShape
-             strides=None,           # type: List[int]
-             padding_above=None,     # type: List[int]
-             padding_below=None,     # type: List[int]
-             name=None,              # type: str
+def max_pool(data,                    # type: Node
+             strides,                 # type: List[int]
+             pads_begin,              # type: List[int]
+             pads_end,                # type: List[int]
+             kernel_shape,            # type: TensorShape
+             rounding_type='floor',   # type: str
+             auto_pad=None,           # type: str
+             name=None,               # type: str
              ):
     # type: (...) -> Node
-    """Return max pooling node."""
-    if strides is None:
-        strides = [1] * len(window_shape)  # Default to as many 1s as spatial dimensions of input.
-    if padding_above is None:
-        padding_above = [0] * len(window_shape)
-    if padding_below is None:
-        padding_below = [0] * len(window_shape)
+    """Perform max pooling operation with given parameters on provided data.
 
-    return MaxPool(x, Shape(window_shape), Strides(strides),
-                   Shape(padding_above), Shape(padding_below))
+    :param  data:           The node providing input data.
+    :param  strides:        The distance (in pixels) to slide the filter on the feature map
+                            over the axes.
+    :param  pads_begin:     The number of pixels to add at the beginning along each axis.
+    :param  pads_end:       The number of pixels to add at the end along each axis.
+    :param  kernel_shape:   The pooling operation kernel shape.
+    :param  rounding_type:  Determines used rounding schema when computing output shape. Acceptable
+                            values are: ['floor', 'ceil']
+    :param  auto_pad:       Determines how the padding is calculated. Acceptable values:
+                            [None, 'same_upper', 'same_lower', 'valid']
+    :param  name:           The optional name for the created output node.
+
+    :returns:   The new node performing max pooling operation.
+    """
+    if auto_pad is None:
+        auto_pad = 'explicit'
+    return _get_node_factory().create('MaxPool',
+                                      [data],
+                                      {'strides': strides,
+                                       'pads_begin': pads_begin,
+                                       'pads_end': pads_end,
+                                       'kernel': kernel_shape,
+                                       'rounding_type': rounding_type.upper(),
+                                       'auto_pad': auto_pad.upper()})
 
 
 # reduction ops
