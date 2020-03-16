@@ -92,7 +92,7 @@ vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
             throw runtime_error(os.str());
         }
 
-        Shape shape = node->output(0).get_shape();
+        Shape shape = node->get_output_shape(0);
         result.push_back(PerfShape(p, shape));
     }
     return result;
@@ -371,13 +371,13 @@ OPTIONS
                         total_temporary_count++;
                     }
                     string op_name = node->description();
-                    string shape_name = "{" + join(node->output(0).get_shape()) + "}";
+                    string shape_name = "{" + join(node->get_output_shape(0)) + "}";
                     op_list[op_name + shape_name]++;
 
                     if (node->is_constant())
                     {
                         total_constant_count++;
-                        const Shape& shape = node->output(0).get_shape();
+                        const Shape& shape = node->get_output_shape(0);
                         size_t const_size = node->output(0).get_element_type().size();
                         if (shape.size() == 0)
                         {
@@ -386,21 +386,21 @@ OPTIONS
                         else
                         {
                             total_constant_bytes +=
-                                (const_size * shape_size(node->output(0).get_shape()));
+                                (const_size * shape_size(node->get_output_shape(0)));
                         }
                     }
                     else if (node->is_parameter())
                     {
                         total_parameter_count++;
-                        const Shape& shape = node->output(0).get_shape();
+                        const Shape& shape = node->get_output_shape(0);
                         size_t size = node->output(0).get_element_type().size() * shape_size(shape);
                         total_parameter_bytes += size;
                     }
                     else if (is_type<op::Result>(node))
                     {
                         total_result_count++;
-                        const Shape& shape = node->input(0).get_shape();
-                        size_t size = node->input(0).get_element_type().size() * shape_size(shape);
+                        const Shape& shape = node->get_input_shape(0);
+                        size_t size = node->get_input_element_type(0).size() * shape_size(shape);
                         total_result_bytes += size;
                     }
                 }

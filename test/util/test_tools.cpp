@@ -231,7 +231,7 @@ std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
         size_t arg_count = node->get_input_size();
         for (size_t i = 0; i < arg_count; ++i)
         {
-            Node* dep = node->input(i).get_source_output().get_node();
+            Node* dep = node->get_input_node_ptr(i);
             if (seen.count(dep) == 0)
             {
                 return ::testing::AssertionFailure() << "Argument " << *dep
