@@ -24,7 +24,7 @@ from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
     Cos, Cosh, DepthToSpace, Dequantize, Divide, Dot, Elu, \
     FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
-    HardSigmoid, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, \
+    HardSigmoid, Less, LessEq, Log, LRN, Max, MaxPool, Min, Minimum, \
     Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, \
     Quantize, QuantizedConvolution, QuantizedDot, PRelu, Relu, RNNCell, ReplaceSlice, Reshape, \
     Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
@@ -839,7 +839,7 @@ def minimum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, s
 @binary_op
 def maximum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies the maximum operation to input nodes elementwise."""
-    return Maximum(left_node, right_node)
+    return _get_node_factory().create('Maximum', [left_node, right_node])
 
 
 @binary_op
@@ -1694,8 +1694,8 @@ def argmin(data,    # type: Node
 def topk(data,   # type: Node
          k,      # type: Node
          axis,   # type: int
-         mode,   # type: string
-         sort    # type: string
+         mode,   # type: str
+         sort,   # type: str
          ):
     # type: (...) -> Node
     """Return a node which performs TopK.
@@ -1708,7 +1708,7 @@ def topk(data,   # type: Node
     :return: The new node which performs TopK (both indices and values)
     """
     return _get_node_factory().create('TopK', [data, k],
-                                             {'axis': axis, 'mode': mode, 'sort': sort})
+                                      {'axis': axis, 'mode': mode, 'sort': sort})
 
 
 @nameable_op
