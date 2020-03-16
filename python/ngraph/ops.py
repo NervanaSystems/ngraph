@@ -807,9 +807,12 @@ def divide(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, st
 
 
 @binary_op
-def multiply(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def multiply(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies f(x) = A*B to the input nodes elementwise."""
-    return _get_node_factory().create('Multiply', [left_node, right_node])
+    return _get_node_factory().create('Multiply',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast})
 
 
 @binary_op
@@ -843,15 +846,20 @@ def maximum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, s
 
 
 @binary_op
-def power(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def power(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, str) -> Node
     """Return node which perform element-wise exponentiation operation.
 
     :param left_node: The node providing the base of operation.
     :param right_node: The node providing the exponent of operation.
     :param name: The optional name for the new output node.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors
     :return: The new node performing element-wise exponentiation operation on input nodes.
     """
-    return Power(left_node, right_node)
+    return _get_node_factory().create('Power',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast})
 
 
 # Logical ops

@@ -1459,10 +1459,20 @@ def test_shape_of():
 
 @pytest.mark.skip_on_gpu
 def test_multiply():
-    A = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=np.float32)
-    B = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=np.float32)
-    result = test.ngraph.util.run_op_node([A, B], ng.ops.multiply)
+    A = np.arange(48).reshape((8, 1, 6, 1))
+    B = np.arange(35).reshape((7, 1, 5))
 
     expected = np.multiply(A, B)
+    result = test.ngraph.util.run_op_node([A, B], ng.ops.multiply)
+
+    assert np.allclose(result, expected)
+
+@pytest.mark.skip_on_gpu
+def test_power_v1():
+    A = np.arange(48, dtype=np.float32).reshape((8, 1, 6, 1))
+    B = np.arange(35, dtype=np.float32).reshape((7, 1, 5))
+
+    expected = np.power(A, B)
+    result = test.ngraph.util.run_op_node([A, B], ng.ops.power)
 
     assert np.allclose(result, expected)
