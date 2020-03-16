@@ -22,4 +22,4 @@
 #endif
 
 #include "opset2_tbl.hpp"
-NGRAPH_OP(ROIAlign, ngraph::op::v0)
+NGRAPH_OP(ROIAlign, ngraph::op::v3)
