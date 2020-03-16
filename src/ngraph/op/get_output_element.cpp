@@ -40,7 +40,7 @@ void op::GetOutputElement::validate_and_infer_types()
                           get_input_size(),
                           " inputs.");
 
-    set_output_type(0, input(0).get_element_type(), input(0).get_partial_shape());
+    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
 shared_ptr<Node> op::GetOutputElement::clone_with_new_inputs(const OutputVector& inputs) const

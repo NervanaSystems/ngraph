@@ -154,7 +154,7 @@ namespace
 
         shared_ptr<Node> replacement_node;
 
-        if (arg_rank.is_static() && static_cast<size_t>(arg_rank) == 0 &&
+        if (arg_rank.is_static() && arg_rank.get_length() == 0 &&
             !target_shape_input.get_node_shared_ptr()->is_constant())
         {
             replacement_node = make_shared<op::DynBroadcast>(
@@ -173,7 +173,7 @@ namespace
             const auto& arg_shape = arg_pshape.to_shape();
 
             NGRAPH_CHECK(target_shape_input.get_node_shared_ptr()->is_constant());
-            auto target_shape = node->output(0).get_shape();
+            auto target_shape = node->get_output_shape(0);
             NGRAPH_CHECK(node->get_broadcast_axes().first);
 
             // (Re)construct axes_mapping.
@@ -249,7 +249,7 @@ namespace
                      "if data shape N and filters shape C dimensions are not static. Node: ",
                      *node);
 
-        const size_t num_spatial_dims = static_cast<size_t>(data_pshape.rank()) - 2;
+        const size_t num_spatial_dims = data_pshape.rank().get_length() - 2;
 
         const PartialShape output_pshape{node->output(0).get_partial_shape()};
         NGRAPH_CHECK(output_pshape.is_static(),
@@ -315,10 +315,8 @@ namespace
             input_rank.is_static())
         {
             const auto output_shape = node->get_output_shape(0);
-            replacement_node =
-                make_shared<op::Reshape>(node->input_value(0),
-                                         get_default_order(static_cast<size_t>(input_rank)),
-                                         output_shape);
+            replacement_node = make_shared<op::Reshape>(
+                node->input_value(0), get_default_order(input_rank.get_length()), output_shape);
         }
         else
         {
