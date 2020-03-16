@@ -91,6 +91,7 @@ from ngraph.ops import quantized_dot
 from ngraph.ops import relu
 from ngraph.ops import replace_slice
 from ngraph.ops import reshape
+from ngraph.ops import result
 from ngraph.ops import reverse
 from ngraph.ops import rnn_cell
 from ngraph.ops import scale_shift

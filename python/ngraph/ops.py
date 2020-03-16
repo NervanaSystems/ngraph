@@ -1829,3 +1829,13 @@ def shape_of(data):  # type: (Node) -> Node
     :return: ShapeOf node
     """
     return _get_node_factory().create('ShapeOf', [data])
+
+
+@nameable_op
+def result(data):  # type: (Node) -> Node
+    """Return a node which represents an output of a graph (Function).
+
+    :param data: The tensor containing the input data
+    :return: Result node
+    """
+    return _get_node_factory().create('Result', [data])
