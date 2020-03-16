@@ -52,6 +52,25 @@ bool op::v1::Convolution::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("pads_begin", m_pads_begin);
     visitor.on_attribute("pads_end", m_pads_end);
     visitor.on_attribute("auto_pad", m_auto_pad);
+
+    if (m_auto_pad != PadType::EXPLICIT)
+    {
+        NODE_VALIDATION_CHECK(this,
+                              std::all_of(m_pads_begin.begin(),
+                                          m_pads_begin.end(),
+                                          [](std::ptrdiff_t i) { return (i == 0); }),
+                              "pads_begin: (",
+                              m_pads_begin,
+                              ") Non-zero padding should not be used along with auto pad modes.");
+        NODE_VALIDATION_CHECK(this,
+                              std::all_of(m_pads_end.begin(),
+                                          m_pads_end.end(),
+                                          [](std::ptrdiff_t i) { return (i == 0); }),
+                              "pads_end: (",
+                              m_pads_end,
+                              ") Non-zero padding should not be used along with auto pad modes.");
+    }
+
     return true;
 }
 
@@ -74,7 +93,6 @@ void op::v1::Convolution::validate_and_infer_types()
                               m_pads_end,
                               ") Non-zero padding should not be used along with auto pad modes.");
     }
-
     const PartialShape& data_batch_shape = get_input_partial_shape(0);
     element::Type data_batch_et = get_input_element_type(0);
     const PartialShape& filters_shape = get_input_partial_shape(1);
