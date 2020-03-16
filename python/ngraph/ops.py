@@ -724,17 +724,23 @@ def ceiling(node, name=None):  # type: (NodeInput, str) -> Node
 
 
 @unary_op
-def reshape(node, output_shape, input_order=None, name=None):
-    # type: (Node, List[int], List[int], str) -> Node
+def reshape(node, output_shape, special_zero, name=None):
+    # type: (Node,Node, bool, str) -> Node
     """Return reshaped node according to provided parameters.
 
     :param node: The tensor we want to reshape.
-    :param input_order: The order in which to iterate over input axes of input tensor.
-    :param output_shape: The new shape for input tensor.
+    :param output_shape: The node with a new shape for input tensor.
+    :param special_zero: The boolean variable that controls how zero values in shape are
+                         interpreted. If special_zero is false, then 0 is interpreted as-is
+                         which means that output shape will contain a zero dimension at the
+                         specified location. Input and output tensors are empty in this case.
+                         If special_zero is true, then all zeros in shape implies the copying
+                         of corresponding dimensions from data.shape into the output shape.
+                         Range of values: False or True
     """
-    if input_order is None:
-        input_order = list(range(len(node.shape)))
-    return Reshape(node, AxisVector(input_order), Shape(output_shape))
+    return _get_node_factory().create('Reshape',
+                                      [node, output_shape],
+                                      {'special_zero': special_zero})
 
 
 @unary_op
