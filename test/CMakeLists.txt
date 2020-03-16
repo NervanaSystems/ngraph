@@ -104,6 +104,7 @@ set(SRC
     provenance.cpp
     replace_node.cpp
     reshape_elimination.cpp
+    reshape_indexer.cpp
     reshape_sinking.cpp
     shape.cpp
     specialize_function.cpp

@@ -19,222 +19,225 @@
 using namespace ngraph;
 using namespace std;
 
-namespace
+// void runtime::opt_kernel::ReshapeIndexer::indexer_0(const Shape& in_shape,
+//                                                     const AxisVector& in_axis_order,
+//                                                     const Shape& out_shape)
+// {
+//     *out = *in;
+// }
+
+// void runtime::opt_kernel::ReshapeIndexer::indexer_1(const Shape& in_shape,
+//                                                     const AxisVector& in_axis_order,
+//                                                     const Shape& out_shape)
+// {
+//     size_t size[1];
+//     size_t in_index[1];
+//     size_t* map_index[1];
+//     for (size_t i = 0; i < 1; i++)
+//     {
+//         size[i] = in_shape[in_axis_order[i]];
+//         map_index[in_axis_order[i]] = &in_index[i];
+//     }
+//     for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
+//     {
+//         *out++ = in[*map_index[0]];
+//     }
+// }
+
+class Indexer_2 : public runtime::opt_kernel::ReshapeIndexer::Indexer
 {
-    template <typename T>
-    void reshape_in0(const T* in,
-                     T* out,
-                     const Shape& in_shape,
-                     const AxisVector& in_axis_order,
-                     const Shape& out_shape)
+public:
+    Indexer_2(const Shape& in_shape, const AxisVector& in_axis_order)
+        : Indexer(), m_in_shape{in_shape}
     {
-        *out = *in;
-    }
-
-    template <typename T>
-    void reshape_in1(const T* in,
-                     T* out,
-                     const Shape& in_shape,
-                     const AxisVector& in_axis_order,
-                     const Shape& out_shape)
-    {
-        size_t size[1];
-        size_t in_index[1];
-        size_t* map_index[1];
-        for (size_t i = 0; i < 1; i++)
-        {
-            size[i] = in_shape[in_axis_order[i]];
-            map_index[in_axis_order[i]] = &in_index[i];
-        }
-        for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
-        {
-            *out++ = in[*map_index[0]];
-        }
-    }
-
-    template <typename T>
-    void reshape_in2(const T* in,
-                     T* out,
-                     const Shape& in_shape,
-                     const AxisVector& in_axis_order,
-                     const Shape& out_shape)
-    {
-        size_t size[2];
-        size_t in_index[2];
-        size_t* map_index[2];
         for (size_t i = 0; i < 2; i++)
         {
-            size[i] = in_shape[in_axis_order[i]];
-            map_index[in_axis_order[i]] = &in_index[i];
+            m_size[i] = in_shape[in_axis_order[i]];
+            m_in_index[i] = 0;
+            m_map_index[in_axis_order[i]] = &m_in_index[i];
         }
-        for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
+    }
+    size_t next() override
+    {
+        size_t rc = *m_map_index[0] * m_in_shape[1] + *m_map_index[1];
+        m_in_index[1]++;
+        if (m_in_index[1] == m_size[1])
         {
-            for (in_index[1] = 0; in_index[1] < size[1]; ++in_index[1])
-            {
-                *out++ = in[*map_index[0] * in_shape[1] + *map_index[1]];
-            }
+            m_in_index[1] = 0;
+            m_in_index[0]++;
         }
+        return rc;
     }
 
-    template <typename T>
-    void reshape_in3(const T* in,
-                     T* out,
-                     const Shape& in_shape,
-                     const AxisVector& in_axis_order,
-                     const Shape& out_shape)
-    {
-        size_t size[3];
-        size_t in_index[3];
-        size_t* map_index[3];
-        for (size_t i = 0; i < 3; i++)
-        {
-            size[i] = in_shape[in_axis_order[i]];
-            map_index[in_axis_order[i]] = &in_index[i];
-        }
-        for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
-        {
-            for (in_index[1] = 0; in_index[1] < size[1]; ++in_index[1])
-            {
-                for (in_index[2] = 0; in_index[2] < size[2]; ++in_index[2])
-                {
-                    *out++ = in[*map_index[0] * in_shape[1] * in_shape[2] +
-                                *map_index[1] * in_shape[2] + *map_index[2]];
-                }
-            }
-        }
-    }
+private:
+    const Shape& m_in_shape;
+    size_t m_size[2];
+    size_t m_in_index[2];
+    size_t* m_map_index[2];
+};
 
-    template <typename T>
-    void reshape_in4(const T* in,
-                     T* out,
-                     const Shape& in_shape,
-                     const AxisVector& in_axis_order,
-                     const Shape& out_shape)
-    {
-        size_t size[4];
-        size_t in_index[4];
-        size_t* map_index[4];
-        for (size_t i = 0; i < 4; i++)
-        {
-            size[i] = in_shape[in_axis_order[i]];
-            map_index[in_axis_order[i]] = &in_index[i];
-        }
-        for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
-        {
-            for (in_index[1] = 0; in_index[1] < size[1]; ++in_index[1])
-            {
-                for (in_index[2] = 0; in_index[2] < size[2]; ++in_index[2])
-                {
-                    for (in_index[3] = 0; in_index[3] < size[3]; ++in_index[3])
-                    {
-                        *out++ = in[*map_index[0] * in_shape[1] * in_shape[2] * in_shape[3] +
-                                    *map_index[1] * in_shape[2] * in_shape[3] +
-                                    *map_index[2] * in_shape[3] + *map_index[3]];
-                    }
-                }
-            }
-        }
-    }
+// void runtime::opt_kernel::ReshapeIndexer::indexer_2(const Shape& in_shape,
+//                                                     const AxisVector& in_axis_order,
+//                                                     const Shape& out_shape)
+// {
+//     size_t size[2];
+//     size_t in_index[2];
+//     size_t* map_index[2];
+//     for (size_t i = 0; i < 2; i++)
+//     {
+//         size[i] = in_shape[in_axis_order[i]];
+//         map_index[in_axis_order[i]] = &in_index[i];
+//     }
+//     for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
+//     {
+//         for (in_index[1] = 0; in_index[1] < size[1]; ++in_index[1])
+//         {
+//             *out++ = in[*map_index[0] * in_shape[1] + *map_index[1]];
+//         }
+//     }
+// }
 
-    template <typename T>
-    void reshape_in5(const T* in,
-                     T* out,
-                     const Shape& in_shape,
-                     const AxisVector& in_axis_order,
-                     const Shape& out_shape)
-    {
-        size_t size[5];
-        size_t in_index[5];
-        size_t* map_index[5];
-        for (size_t i = 0; i < 5; i++)
-        {
-            size[i] = in_shape[in_axis_order[i]];
-            map_index[in_axis_order[i]] = &in_index[i];
-        }
-        for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
-        {
-            for (in_index[1] = 0; in_index[1] < size[1]; ++in_index[1])
-            {
-                for (in_index[2] = 0; in_index[2] < size[2]; ++in_index[2])
-                {
-                    for (in_index[3] = 0; in_index[3] < size[3]; ++in_index[3])
-                    {
-                        for (in_index[4] = 0; in_index[4] < size[4]; ++in_index[4])
-                        {
-                            *out++ = in[*map_index[0] * in_shape[1] * in_shape[2] * in_shape[3] *
-                                            in_shape[4] +
-                                        *map_index[1] * in_shape[2] * in_shape[3] * in_shape[4] +
-                                        *map_index[2] * in_shape[3] * in_shape[4] +
-                                        *map_index[3] * in_shape[4] + *map_index[4]];
-                        }
-                    }
-                }
-            }
-        }
-    }
+// void runtime::opt_kernel::ReshapeIndexer::indexer_3(const Shape& in_shape,
+//                                                     const AxisVector& in_axis_order,
+//                                                     const Shape& out_shape)
+// {
+//     size_t size[3];
+//     size_t in_index[3];
+//     size_t* map_index[3];
+//     for (size_t i = 0; i < 3; i++)
+//     {
+//         size[i] = in_shape[in_axis_order[i]];
+//         map_index[in_axis_order[i]] = &in_index[i];
+//     }
+//     for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
+//     {
+//         for (in_index[1] = 0; in_index[1] < size[1]; ++in_index[1])
+//         {
+//             for (in_index[2] = 0; in_index[2] < size[2]; ++in_index[2])
+//             {
+//                 *out++ = in[*map_index[0] * in_shape[1] * in_shape[2] +
+//                             *map_index[1] * in_shape[2] + *map_index[2]];
+//             }
+//         }
+//     }
+// }
 
-    template <typename T>
-    void reshape_in6(const T* in,
-                     T* out,
-                     const Shape& in_shape,
-                     const AxisVector& in_axis_order,
-                     const Shape& out_shape)
-    {
-        size_t size[6];
-        size_t in_index[6];
-        size_t* map_index[6];
-        for (size_t i = 0; i < 6; i++)
-        {
-            size[i] = in_shape[in_axis_order[i]];
-            map_index[in_axis_order[i]] = &in_index[i];
-        }
-        for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
-        {
-            for (in_index[1] = 0; in_index[1] < size[1]; ++in_index[1])
-            {
-                for (in_index[2] = 0; in_index[2] < size[2]; ++in_index[2])
-                {
-                    for (in_index[3] = 0; in_index[3] < size[3]; ++in_index[3])
-                    {
-                        for (in_index[4] = 0; in_index[4] < size[4]; ++in_index[4])
-                        {
-                            for (in_index[5] = 0; in_index[5] < size[5]; ++in_index[5])
-                            {
-                                *out++ =
-                                    in[*map_index[0] * in_shape[1] * in_shape[2] * in_shape[3] *
-                                           in_shape[4] * in_shape[5] +
-                                       *map_index[1] * in_shape[2] * in_shape[3] * in_shape[4] *
-                                           in_shape[5] +
-                                       *map_index[2] * in_shape[3] * in_shape[4] * in_shape[5] +
-                                       *map_index[3] * in_shape[4] * in_shape[5] +
-                                       *map_index[4] * in_shape[5] + *map_index[5]];
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+// void runtime::opt_kernel::ReshapeIndexer::indexer_4(const Shape& in_shape,
+//                                                     const AxisVector& in_axis_order,
+//                                                     const Shape& out_shape)
+// {
+//     size_t size[4];
+//     size_t in_index[4];
+//     size_t* map_index[4];
+//     for (size_t i = 0; i < 4; i++)
+//     {
+//         size[i] = in_shape[in_axis_order[i]];
+//         map_index[in_axis_order[i]] = &in_index[i];
+//     }
+//     for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
+//     {
+//         for (in_index[1] = 0; in_index[1] < size[1]; ++in_index[1])
+//         {
+//             for (in_index[2] = 0; in_index[2] < size[2]; ++in_index[2])
+//             {
+//                 for (in_index[3] = 0; in_index[3] < size[3]; ++in_index[3])
+//                 {
+//                     *out++ = in[*map_index[0] * in_shape[1] * in_shape[2] * in_shape[3] +
+//                                 *map_index[1] * in_shape[2] * in_shape[3] +
+//                                 *map_index[2] * in_shape[3] + *map_index[3]];
+//                 }
+//             }
+//         }
+//     }
+// }
+
+// void runtime::opt_kernel::ReshapeIndexer::indexer_5(const Shape& in_shape,
+//                                                     const AxisVector& in_axis_order,
+//                                                     const Shape& out_shape)
+// {
+//     size_t size[5];
+//     size_t in_index[5];
+//     size_t* map_index[5];
+//     for (size_t i = 0; i < 5; i++)
+//     {
+//         size[i] = in_shape[in_axis_order[i]];
+//         map_index[in_axis_order[i]] = &in_index[i];
+//     }
+//     for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
+//     {
+//         for (in_index[1] = 0; in_index[1] < size[1]; ++in_index[1])
+//         {
+//             for (in_index[2] = 0; in_index[2] < size[2]; ++in_index[2])
+//             {
+//                 for (in_index[3] = 0; in_index[3] < size[3]; ++in_index[3])
+//                 {
+//                     for (in_index[4] = 0; in_index[4] < size[4]; ++in_index[4])
+//                     {
+//                         *out++ = in[*map_index[0] * in_shape[1] * in_shape[2] * in_shape[3] *
+//                                         in_shape[4] +
+//                                     *map_index[1] * in_shape[2] * in_shape[3] * in_shape[4] +
+//                                     *map_index[2] * in_shape[3] * in_shape[4] +
+//                                     *map_index[3] * in_shape[4] + *map_index[4]];
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
+
+// void runtime::opt_kernel::ReshapeIndexer::indexer_6(const Shape& in_shape,
+//                                                     const AxisVector& in_axis_order,
+//                                                     const Shape& out_shape)
+// {
+//     size_t size[6];
+//     size_t in_index[6];
+//     size_t* map_index[6];
+//     for (size_t i = 0; i < 6; i++)
+//     {
+//         size[i] = in_shape[in_axis_order[i]];
+//         map_index[in_axis_order[i]] = &in_index[i];
+//     }
+//     for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
+//     {
+//         for (in_index[1] = 0; in_index[1] < size[1]; ++in_index[1])
+//         {
+//             for (in_index[2] = 0; in_index[2] < size[2]; ++in_index[2])
+//             {
+//                 for (in_index[3] = 0; in_index[3] < size[3]; ++in_index[3])
+//                 {
+//                     for (in_index[4] = 0; in_index[4] < size[4]; ++in_index[4])
+//                     {
+//                         for (in_index[5] = 0; in_index[5] < size[5]; ++in_index[5])
+//                         {
+//                             *out++ = in[*map_index[0] * in_shape[1] * in_shape[2] * in_shape[3] *
+//                                             in_shape[4] * in_shape[5] +
+//                                         *map_index[1] * in_shape[2] * in_shape[3] * in_shape[4] *
+//                                             in_shape[5] +
+//                                         *map_index[2] * in_shape[3] * in_shape[4] * in_shape[5] +
+//                                         *map_index[3] * in_shape[4] * in_shape[5] +
+//                                         *map_index[4] * in_shape[5] + *map_index[5]];
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
 
 runtime::opt_kernel::ReshapeIndexer::ReshapeIndexer(const Shape& in_shape,
                                                     const AxisVector& in_axis_order,
                                                     const Shape& out_shape)
-    : m_in_shape(in_shape)
-    , m_in_axis_order(in_axis_order)
-    , m_out_shape(out_shape)
-    , m_current_input_index{0}
 {
     switch (in_shape.size())
     {
-        // case 0: reshape_in0<T>(in, out, in_shape, in_axis_order, out_shape); break;
-        // case 1: reshape_in1<T>(in, out, in_shape, in_axis_order, out_shape); break;
-        // case 2: reshape_in2<T>(in, out, in_shape, in_axis_order, out_shape); break;
-        // case 3: reshape_in3<T>(in, out, in_shape, in_axis_order, out_shape); break;
-        // case 4: reshape_in4<T>(in, out, in_shape, in_axis_order, out_shape); break;
-        // case 5: reshape_in5<T>(in, out, in_shape, in_axis_order, out_shape); break;
-        // case 6: reshape_in6<T>(in, out, in_shape, in_axis_order, out_shape); break;
-        // default: reference::reshape(in, out, in_shape, in_axis_order, out_shape); break;
+    case 0: break;
+    case 1: break;
+    case 2: m_indexer.reset(new Indexer_2(in_shape, in_axis_order)); break;
+    case 3: break;
+    case 4: break;
+    case 5: break;
+    case 6: break;
+    default: throw runtime_error("Unsupported dimention in ReshapeIndexer");
     }
 }
 

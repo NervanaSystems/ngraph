@@ -28,18 +28,21 @@ namespace ngraph
             class ReshapeIndexer
             {
             public:
+                class Indexer
+                {
+                public:
+                    virtual ~Indexer(){}
+                    virtual size_t next() = 0;
+                };
+
                 ReshapeIndexer(const Shape& in_shape,
                                const AxisVector& in_axis_order,
                                const Shape& out_shape);
                 size_t next();
 
             private:
-                const Shape& m_in_shape;
-                const AxisVector& m_in_axis_order;
-                const Shape& m_out_shape;
-                size_t m_current_input_index;
+                std::unique_ptr<Indexer> m_indexer;
             };
-
 
             // template <typename T>
             // void reshape(const T* in,
