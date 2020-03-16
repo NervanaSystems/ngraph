@@ -96,3 +96,23 @@ def test_topk():
                                  [0, 1, 3],
                                  [2, 0, 2],
                                  [3, 2, 1]], dtype=np.int32))
+
+
+@pytest.mark.parametrize('ng_api_helper, numpy_function, reduction_axes', [
+    (ng.reduce_mean, np.mean, [0, 1, 2, 3]),
+    (ng.reduce_mean, np.mean, [0]),
+    (ng.reduce_mean, np.mean, [0, 2]),
+])
+@pytest.mark.skip_on_gpu
+@pytest.mark.skip_on_cpu
+@pytest.mark.skip_on_interpreter
+@pytest.mark.skip_on_plaidml
+@pytest.mark.skip_on_intelgpu
+def test_reduce_mean_op(ng_api_helper, numpy_function, reduction_axes):
+    shape = [2, 4, 3, 2]
+    np.random.seed(133391)
+    input_data = np.random.randn(*shape).astype(np.float32)
+
+    expected = numpy_function(input_data, axis=tuple(reduction_axes))
+    result = run_op_node([input_data, reduction_axes], ng_api_helper)
+    assert np.allclose(result, expected)

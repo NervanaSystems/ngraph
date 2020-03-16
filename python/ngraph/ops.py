@@ -808,7 +808,7 @@ def divide(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, st
 
 @binary_op
 def multiply(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str) -> Node
+    # type: (NodeInput, NodeInput, str, str) -> Node
     """Return node which applies f(x) = A*B to the input nodes elementwise."""
     return _get_node_factory().create('Multiply',
                                       [left_node, right_node],
@@ -1485,6 +1485,22 @@ def reduce_prod(node, reduction_axes, keep_dims=False, name=None):
     :return: The new node performing product-reduction operation.
     """
     return _get_node_factory().create('ReduceProd',
+                                      [node, reduction_axes],
+                                      {'keep_dims': keep_dims})
+
+
+@nameable_op
+def reduce_mean(node, reduction_axes, keep_dims=False, name=None):
+    # type: (Node, Node, bool, str) -> Node
+    """Mean-reduction operation on input tensor, eliminating the specified reduction axes.
+
+    :param node:           The tensor we want to mean-reduce.
+    :param reduction_axes: The axes to eliminate through mean operation.
+    :param keep_dims:      If set to True it holds axes that are used for reduction
+    :param name:           Optional name for output node.
+    :return: The new node performing mean-reduction operation.
+    """
+    return _get_node_factory().create('ReduceMean',
                                       [node, reduction_axes],
                                       {'keep_dims': keep_dims})
 

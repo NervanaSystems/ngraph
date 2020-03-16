@@ -86,6 +86,7 @@ from ngraph.ops import quantize
 from ngraph.ops import quantized_convolution
 from ngraph.ops import quantized_dot
 from ngraph.ops import reduce_max
+from ngraph.ops import reduce_mean
 from ngraph.ops import reduce_min
 from ngraph.ops import reduce_prod
 from ngraph.ops import reduce_sum
