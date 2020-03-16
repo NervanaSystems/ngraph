@@ -41,17 +41,17 @@ op::v3::ROIAlign::ROIAlign(const Output<Node>& input,
 
 void op::v3::ROIAlign::validate_and_infer_types()
 {
-    NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(0) == element::f32 &&
-                              get_input_element_type(1) == element::f32,
-                          "The data type for input and ROIs is expected to be float32. Got: ",
-                          get_input_element_type(0),
-                          " and: ",
-                          get_input_element_type(1));
+    NODE_VALIDATION_CHECK(
+        this,
+        get_input_element_type(0).is_real() && get_input_element_type(1).is_real(),
+        "The data type for input and ROIs is expected to be a floating point type. Got: ",
+        get_input_element_type(0),
+        " and: ",
+        get_input_element_type(1));
 
     NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(2) == element::i32,
-                          "The data type for batch indices is expected to be int32. Got: ",
+                          get_input_element_type(2).is_integral_number(),
+                          "The data type for batch indices is expected to be an integer. Got: ",
                           get_input_element_type(2));
 
     const auto& input_ps = get_input_partial_shape(0);
