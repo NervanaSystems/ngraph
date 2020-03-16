@@ -53,7 +53,8 @@ op::v1::Convolution::Convolution(const Output<Node>& data_batch,
                               "pads_begin: (",
                               pads_begin,
                               ") Non-zero padding should not be used along with auto pad modes.",
-                              " Depth", m_depth);
+                              " Depth",
+                              m_depth);
         NODE_VALIDATION_CHECK(this,
                               std::all_of(pads_end.begin(),
                                           pads_end.end(),
@@ -61,7 +62,8 @@ op::v1::Convolution::Convolution(const Output<Node>& data_batch,
                               "pads_end: (",
                               pads_end,
                               ") Non-zero padding should not be used along with auto pad modes.",
-                              " Depth", m_depth);
+                              " Depth",
+                              m_depth);
     }
 
     constructor_validate_and_infer_types();
