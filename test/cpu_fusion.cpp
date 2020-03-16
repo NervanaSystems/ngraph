@@ -60,7 +60,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -1491,7 +1491,7 @@ TEST(cpu_fusion, weight_fusion)
     auto reshape_conv =
         std::make_shared<ngraph::op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto data_conv = std::make_shared<op::Parameter>(element::f32, Shape{16, 4, 7, 7});
-    auto tvt = &reshape_conv->output(0).get_tensor();
+    auto tvt = &reshape_conv->get_output_tensor(0);
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
     auto cvt_lt_conv = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv, lt_desc);
     auto conv = std::make_shared<ngraph::op::Convolution>(
@@ -1500,7 +1500,7 @@ TEST(cpu_fusion, weight_fusion)
     auto reshape_conv_bprop =
         std::make_shared<op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto dummy_arg_conv_bprop = std::make_shared<op::Parameter>(element::f32, Shape{1, 16, 7, 7});
-    auto tvt_bprop = &reshape_conv_bprop->output(0).get_tensor();
+    auto tvt_bprop = &reshape_conv_bprop->get_output_tensor(0);
     auto lt_desc_bprop = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt_bprop);
     auto cvt_lt_conv_bprop =
         std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv_bprop, lt_desc_bprop);
@@ -2029,7 +2029,7 @@ TEST(batch_fusion, group_convolution)
     auto b_ = rng.initialize(backend->create_tensor(element::f32, shape_b));
 
     vector<float> rv(shape_size(shape_r), 0);
-    auto group_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
+    auto group_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensor>(
         backend->create_tensor(element::f32, shape_r, rv.data()));
 
     auto av = read_vector<float>(a_);
@@ -2045,9 +2045,9 @@ TEST(batch_fusion, group_convolution)
     Shape shape_ur{1, 1, 2, 2};
     // allocate a contigious storage for both lower and upper halves.
     vector<float> erv(shape_size(shape_r), 0);
-    auto lower_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
+    auto lower_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensor>(
         backend->create_tensor(element::f32, shape_ur, erv.data()));
-    auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
+    auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensor>(
         backend->create_tensor(element::f32, shape_ur, erv.data() + erv.size() / 2));
     auto handle = backend->compile(f);
     handle->call_with_validate({group_result, lower_result, upper_result},

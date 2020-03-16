@@ -67,6 +67,7 @@ namespace ngraph
                              const AutoBroadcastSpec& auto_broadcast =
                                  AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual NodeVector decompose_op() const override;
                 virtual void validate_and_infer_types() override;
 

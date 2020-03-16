@@ -25,6 +25,7 @@
 #include "cpu_layout.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
@@ -342,13 +343,8 @@ void set_layouts_binaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* exter
     {
         vector<memory::desc> i_mds;
         vector<memory::desc> o_mds;
-        int select = 0;
-        char* ngraph_pass_cpu_layout_eltwise = std::getenv("NGRAPH_PASS_CPU_LAYOUT_ELTWISE");
-        if (ngraph_pass_cpu_layout_eltwise != nullptr)
-        {
-            const int user_select = std::atoi(ngraph_pass_cpu_layout_eltwise);
-            select = (user_select == 0 || user_select == 1) ? user_select : select;
-        }
+        const int32_t user_select = getenv_int("NGRAPH_PASS_CPU_LAYOUT_ELTWISE");
+        int select = (user_select == 0 || user_select == 1) ? user_select : 0;
         i_mds.push_back(arg_mds[select]);
         i_mds.push_back(arg_mds[select]);
         o_mds.push_back(arg_mds[select]);
@@ -1867,7 +1863,7 @@ namespace ngraph
                     (void)md;
                     auto axis_order = reshape->get_input_order();
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->get_output_shape(0);
                     if (input_shape.size() != output_shape.size())
                         return false;
 
@@ -1888,7 +1884,7 @@ namespace ngraph
                                             AxisVector& squeezed_axis)
                 {
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->get_output_shape(0);
 
                     if (input_shape.size() <= output_shape.size())
                         return false;
@@ -1924,7 +1920,7 @@ namespace ngraph
                                             AxisVector& expanded_axis)
                 {
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->get_output_shape(0);
 
                     if (input_shape.size() >= output_shape.size())
                         return false;
@@ -1963,7 +1959,7 @@ namespace ngraph
                     {
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         auto input_shape = reshape->get_input_shape(0);
-                        auto output_shape = reshape->get_output_shape();
+                        auto output_shape = reshape->get_output_shape(0);
                         AxisVector squeezed_axis;
                         AxisVector expanded_axis;
 

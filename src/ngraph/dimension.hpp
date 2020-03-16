@@ -59,6 +59,7 @@ namespace ngraph
             }
             return m_dimension;
         }
+
         /// \brief Convert this dimension to `size_t`. This dimension must be static and
         ///        non-negative.
         /// \throws std::invalid_argument If this dimension is dynamic or negative.

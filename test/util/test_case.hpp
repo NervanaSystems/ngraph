@@ -84,7 +84,7 @@ namespace ngraph
                              "Input data shape must be provided, if shape defined in Functions is "
                              "not fully known.");
 
-                return add_input<T>(input_pshape.to_shape(), values);
+                add_input<T>(input_pshape.to_shape(), values);
             }
 
             template <typename T>
@@ -242,6 +242,7 @@ namespace ngraph
                 REGISTER_COMPARATOR(u16, uint16_t),
                 REGISTER_COMPARATOR(u32, uint32_t),
                 REGISTER_COMPARATOR(u64, uint64_t),
+                REGISTER_COMPARATOR(boolean, char),
             };
 #undef REGISTER_COMPARATOR
 

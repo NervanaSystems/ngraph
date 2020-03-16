@@ -95,7 +95,7 @@ namespace ngraph
                 const AxisVector& get_input_order() const { return m_input_order; }
                 void set_input_order(const AxisVector& input_order) { m_input_order = input_order; }
                 /// \return The shape of the output tensor.
-                const Shape& get_output_shape() const { return m_output_shape; }
+                const Shape& get_reshape_output_shape() const { return m_output_shape; }
                 void set_output_shape(const Shape& output_shape) { m_output_shape = output_shape; }
                 bool get_is_transpose() const { return m_is_transpose; }
                 void set_is_transpose(bool is_transpose) { m_is_transpose = is_transpose; }
@@ -137,6 +137,7 @@ namespace ngraph
                 /// from input shape at the same index.
                 Reshape(const Output<Node>& arg, const Output<Node>& pattern, bool special_zero);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 size_t get_version() const override { return 1; }

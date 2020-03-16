@@ -68,6 +68,7 @@ namespace ngraph
                                   const BoxEncodingType box_encoding = BoxEncodingType::CORNER,
                                   const bool sort_result_descending = true);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
@@ -93,4 +94,22 @@ namespace ngraph
             };
         }
     }
+
+    std::ostream& operator<<(std::ostream& s,
+                             const op::v1::NonMaxSuppression::BoxEncodingType& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v1::NonMaxSuppression::BoxEncodingType>
+        : public EnumAttributeAdapterBase<op::v1::NonMaxSuppression::BoxEncodingType>
+    {
+    public:
+        AttributeAdapter(op::v1::NonMaxSuppression::BoxEncodingType& value)
+            : EnumAttributeAdapterBase<op::v1::NonMaxSuppression::BoxEncodingType>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v1::NonMaxSuppression::BoxEncodingType>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

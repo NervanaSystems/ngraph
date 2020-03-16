@@ -18,6 +18,7 @@
 
 #include "group_conv.hpp"
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
@@ -55,6 +56,16 @@ op::v1::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
     , m_auto_pad(auto_pad)
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v1::GroupConvolution::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("dilations", m_dilations);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    return true;
 }
 
 void op::v1::GroupConvolution::validate_and_infer_types()
@@ -219,6 +230,17 @@ op::v1::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::GroupConvolutionBackpropData::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("dilations", m_dilations);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    visitor.on_attribute("output_padding", m_output_padding);
+    return true;
+}
+
 bool op::v1::GroupConvolutionBackpropData::is_dynamic() const
 {
     bool is_dynamic = Node::is_dynamic();
@@ -229,14 +251,14 @@ bool op::v1::GroupConvolutionBackpropData::is_dynamic() const
     return is_dynamic;
 }
 
-const PartialShape op::v1::GroupConvolutionBackpropData::get_output_shape() const
+const PartialShape op::v1::GroupConvolutionBackpropData::get_convolution_output_shape() const
 {
-    auto data_pshape = input(0).get_partial_shape();
+    auto data_pshape = get_input_partial_shape(0);
 
     PartialShape shape;
     if (data_pshape.rank().is_static())
     {
-        shape = PartialShape{vector<Dimension>(static_cast<size_t>(data_pshape.rank() - 2))};
+        shape = PartialShape{vector<Dimension>(data_pshape.rank().get_length() - 2)};
     }
     else
     {
@@ -266,11 +288,11 @@ void op::v1::GroupConvolutionBackpropData::set_output_shape(const Shape& shape)
 
 void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
 {
-    const auto& data_pshape = input(0).get_partial_shape();
-    element::Type data_et = input(0).get_element_type();
+    const auto& data_pshape = get_input_partial_shape(0);
+    element::Type data_et = get_input_element_type(0);
 
-    const auto& filters_pshape = input(1).get_partial_shape();
-    element::Type filters_et = input(1).get_element_type();
+    const auto& filters_pshape = get_input_partial_shape(1);
+    element::Type filters_et = get_input_element_type(1);
 
     element::Type result_et;
     NODE_VALIDATION_CHECK(
@@ -342,7 +364,7 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
     // and infer them.
     if (is_output_shape_present)
     {
-        output_pshape = get_output_shape();
+        output_pshape = get_convolution_output_shape();
 
         if (output_pshape.is_static() && data_pshape.is_static() && filters_pshape.is_static())
         {
@@ -570,7 +592,7 @@ void op::v0::GroupConvolution::pre_validate_and_infer_types()
         // Update groups
         if (m_groups_in_filters)
         {
-            m_groups = static_cast<size_t>(get_input_partial_shape(1)[0]);
+            m_groups = get_input_partial_shape(1)[0].get_length();
         }
 
         // Data channels
@@ -742,8 +764,8 @@ op::v0::GroupConvolutionBackpropData::GroupConvolutionBackpropData(
 
 void op::v0::GroupConvolutionBackpropData::pre_validate_and_infer_types()
 {
-    element::Type data_element_type = input(2).get_element_type();
-    element::Type filters_elem_type = input(1).get_element_type();
+    element::Type data_element_type = get_input_element_type(2);
+    element::Type filters_elem_type = get_input_element_type(1);
 
     NODE_VALIDATION_CHECK(this,
                           data_element_type.is_dynamic() || data_element_type.is_real(),
@@ -756,9 +778,9 @@ void op::v0::GroupConvolutionBackpropData::pre_validate_and_infer_types()
                           filters_elem_type,
                           ").");
 
-    PartialShape data_pshape = input(0).get_partial_shape();
-    PartialShape filters_pshape = input(1).get_partial_shape();
-    PartialShape delta_pshape = input(2).get_partial_shape();
+    PartialShape data_pshape = get_input_partial_shape(0);
+    PartialShape filters_pshape = get_input_partial_shape(1);
+    PartialShape delta_pshape = get_input_partial_shape(2);
 
     if (data_pshape.is_dynamic() || filters_pshape.is_dynamic() || delta_pshape.is_dynamic())
     {

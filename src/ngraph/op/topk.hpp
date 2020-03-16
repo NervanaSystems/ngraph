@@ -155,14 +155,20 @@ namespace ngraph
                      const SortType sort,
                      const element::Type& index_element_type = element::i32);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual size_t get_version() const override { return 1; }
-                size_t get_axis() const { return m_axis; }
-                void set_axis(const size_t axis) { m_axis = axis; }
+                /// \brief Returns axis value after normalization
+                /// \note If input rank required to normalization is dynamic, the exception is
+                /// thrown
+                uint64_t get_axis() const;
+                /// \brief Returns axis value before normalization
+                int64_t get_provided_axis() const { return m_axis; }
+                void set_axis(const int64_t axis);
                 Mode get_mode() const { return m_mode; }
                 void set_mode(const Mode mode) { m_mode = mode; }
                 SortType get_sort_type() const { return m_sort; }
@@ -182,6 +188,7 @@ namespace ngraph
 
             protected:
                 int64_t m_axis;
+                uint64_t m_normalized_axis;
                 Mode m_mode;
                 SortType m_sort;
                 element::Type m_index_element_type;
@@ -202,4 +209,20 @@ namespace ngraph
 
         using v0::TopK;
     } // op
+
+    std::ostream& operator<<(std::ostream& s, const op::v1::TopK::Mode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v1::TopK::Mode>
+        : public EnumAttributeAdapterBase<op::v1::TopK::Mode>
+    {
+    public:
+        AttributeAdapter(op::v1::TopK::Mode& value)
+            : EnumAttributeAdapterBase<op::v1::TopK::Mode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::v1::TopK::Mode>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 } // ngraph
