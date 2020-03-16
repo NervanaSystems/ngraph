@@ -558,6 +558,7 @@ namespace ngraph
         }
         RawNodeOutput(const RawNodeOutput&) = default;
         RawNodeOutput() = default;
+        RawNodeOutput& operator=(const RawNodeOutput&) = default;
 
         Node* node;
         size_t index{0};
