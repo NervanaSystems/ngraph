@@ -1694,8 +1694,8 @@ def argmin(data,    # type: Node
 def topk(data,   # type: Node
          k,      # type: Node
          axis,   # type: int
-         mode,   # type: string
-         sort    # type: string
+         mode,   # type: str
+         sort,   # type: str
          ):
     # type: (...) -> Node
     """Return a node which performs TopK.
@@ -1708,7 +1708,7 @@ def topk(data,   # type: Node
     :return: The new node which performs TopK (both indices and values)
     """
     return _get_node_factory().create('TopK', [data, k],
-                                             {'axis': axis, 'mode': mode, 'sort': sort})
+                                      {'axis': axis, 'mode': mode, 'sort': sort})
 
 
 @nameable_op
