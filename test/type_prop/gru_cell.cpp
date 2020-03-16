@@ -36,8 +36,8 @@ TEST(type_prop, gru_cell)
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
     const auto gru_cell = make_shared<op::GRUCell>(X, W, R, H_t, hidden_size);
-    EXPECT_EQ(gru_cell->output(0).get_element_type(), element::f32);
-    EXPECT_EQ(gru_cell->output(0).get_shape(), (Shape{batch_size, hidden_size}));
+    EXPECT_EQ(gru_cell->get_output_element_type(0), element::f32);
+    EXPECT_EQ(gru_cell->get_output_shape(0), (Shape{batch_size, hidden_size}));
 }
 
 TEST(type_prop, gru_cell_invalid_input)
