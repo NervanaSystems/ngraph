@@ -65,8 +65,8 @@ function main() {
     # Calculate necessary paths
     NGRAPH_CI_ABS_PATH="$(pwd)/$( dirname "${BASH_SOURCE[0]}" )"
     NGRAPH_ROOT_ABS_PATH="${NGRAPH_CI_ABS_PATH%/.ci*}"
-    local ngraph_parrent_path="$(dirname ${NGRAPH_ROOT_ABS_PATH})"
-    WORKSPACE="${ngraph_parrent_path}"
+    local ngraph_parent_path="$(dirname ${NGRAPH_ROOT_ABS_PATH})"
+    WORKSPACE="${ngraph_parent_path}"
     NGRAPH_ONNX_REPO_PATH="${WORKSPACE}/${NGRAPH_ONNX_REPO_DIR_NAME}"
     NGRAPH_ONNX_CI_PATH="${NGRAPH_ONNX_REPO_DIR_NAME}/${NGRAPH_ONNX_CI_DIR}"
 
@@ -197,7 +197,7 @@ function checkout_ngraph_onnx_repo() {
 
 function run_ci() {
     # Builds necessary Docker images and executes CI
-    for dockerfile in $(find ${WORKSPACE}/${NGRAPH_ONNX_CI_PATH}/dockerfiles -maxdepth 1 -name *.dockerfile -printf "%f"); do
+    for dockerfile in $(find ${WORKSPACE}/${NGRAPH_ONNX_CI_PATH}/dockerfiles -maxdepth 1 -name *.dockerfile -exec basename {} \;); do
         local operating_system="${dockerfile/.dockerfile/}"
         echo "[INFO] Running CI for operating system ${operating_system}"
         local docker_container_name="${DOCKER_CONTAINER_NAME_PATTERN/<OPERATING_SYSTEM>/$operating_system}"
