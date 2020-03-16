@@ -34,13 +34,15 @@ op::v1::Convolution::Convolution(const Output<Node>& data_batch,
                                  const CoordinateDiff& pads_begin,
                                  const CoordinateDiff& pads_end,
                                  const Strides& dilations,
-                                 const PadType& auto_pad)
+                                 const PadType& auto_pad,
+                                 const int depth)
     : Op({data_batch, filters})
     , m_strides(strides)
     , m_dilations(dilations)
     , m_pads_begin(pads_begin)
     , m_pads_end(pads_end)
     , m_auto_pad(auto_pad)
+    , m_depth(depth)
 {
     if (auto_pad != PadType::EXPLICIT)
     {
@@ -50,14 +52,16 @@ op::v1::Convolution::Convolution(const Output<Node>& data_batch,
                                           [](std::ptrdiff_t i) { return (i == 0); }),
                               "pads_begin: (",
                               pads_begin,
-                              ") Non-zero padding should not be used along with auto pad modes.");
+                              ") Non-zero padding should not be used along with auto pad modes.",
+                              " Depth", m_depth);
         NODE_VALIDATION_CHECK(this,
                               std::all_of(pads_end.begin(),
                                           pads_end.end(),
                                           [](std::ptrdiff_t i) { return (i == 0); }),
                               "pads_end: (",
                               pads_end,
-                              ") Non-zero padding should not be used along with auto pad modes.");
+                              ") Non-zero padding should not be used along with auto pad modes.",
+                              " Depth", m_depth);
     }
 
     constructor_validate_and_infer_types();
@@ -153,7 +157,8 @@ shared_ptr<Node> op::v1::Convolution::copy_with_new_args(const NodeVector& new_a
                                             m_pads_begin,
                                             m_pads_end,
                                             m_dilations,
-                                            m_auto_pad);
+                                            m_auto_pad,
+                                            m_depth + 1);
     }
     else
     { // Discard old inferred pad values for auto pad mode
@@ -163,7 +168,8 @@ shared_ptr<Node> op::v1::Convolution::copy_with_new_args(const NodeVector& new_a
                                             CoordinateDiff(0, 0),
                                             CoordinateDiff(0, 0),
                                             m_dilations,
-                                            m_auto_pad);
+                                            m_auto_pad,
+                                            m_depth + 1);
     }
 }
 
