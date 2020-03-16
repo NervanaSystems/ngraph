@@ -19,9 +19,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v0::ROIAlign::type_info;
+constexpr NodeTypeInfo op::v3::ROIAlign::type_info;
 
-op::v0::ROIAlign::ROIAlign(const Output<Node>& input,
+op::v3::ROIAlign::ROIAlign(const Output<Node>& input,
                            const Output<Node>& rois,
                            const Output<Node>& batch_indices,
                            const size_t pooled_h,
@@ -39,19 +39,19 @@ op::v0::ROIAlign::ROIAlign(const Output<Node>& input,
     constructor_validate_and_infer_types();
 }
 
-void op::v0::ROIAlign::validate_and_infer_types()
+void op::v3::ROIAlign::validate_and_infer_types()
 {
-    NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(0) == element::f32 &&
-                              get_input_element_type(1) == element::f32,
-                          "The data type for input and ROIs is expected to be float32. Got: ",
-                          get_input_element_type(0),
-                          " and: ",
-                          get_input_element_type(1));
+    NODE_VALIDATION_CHECK(
+        this,
+        get_input_element_type(0).is_real() && get_input_element_type(1).is_real(),
+        "The data type for input and ROIs is expected to be a floating point type. Got: ",
+        get_input_element_type(0),
+        " and: ",
+        get_input_element_type(1));
 
     NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(2) == element::i32,
-                          "The data type for batch indices is expected to be int32. Got: ",
+                          get_input_element_type(2).is_integral_number(),
+                          "The data type for batch indices is expected to be an integer. Got: ",
                           get_input_element_type(2));
 
     const auto& input_ps = get_input_partial_shape(0);
@@ -128,7 +128,7 @@ void op::v0::ROIAlign::validate_and_infer_types()
     }
 }
 
-bool op::v0::ROIAlign::visit_attributes(AttributeVisitor& visitor)
+bool op::v3::ROIAlign::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("pooled_h", m_pooled_h);
     visitor.on_attribute("pooled_w", m_pooled_w);
@@ -139,7 +139,7 @@ bool op::v0::ROIAlign::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::v0::ROIAlign::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v3::ROIAlign::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ROIAlign>(new_args.at(0),

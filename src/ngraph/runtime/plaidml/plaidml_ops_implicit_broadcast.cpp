@@ -42,7 +42,7 @@ ngraph::runtime::plaidml::op::ImplicitBroadcast::ImplicitBroadcast(const Output<
 
 void ngraph::runtime::plaidml::op::ImplicitBroadcast::validate_and_infer_types()
 {
-    set_output_type(0, input(0).get_element_type(), m_shape);
+    set_output_type(0, get_input_element_type(0), m_shape);
 }
 
 std::shared_ptr<ngraph::Node> ngraph::runtime::plaidml::op::ImplicitBroadcast::copy_with_new_args(

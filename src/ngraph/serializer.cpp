@@ -4359,7 +4359,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::Reshape*>(&n);
         node["input_order"] = tmp->get_input_order();
-        node["output_shape"] = tmp->get_output_shape();
+        node["output_shape"] = tmp->get_output_shape(0);
         break;
     }
     case OP_TYPEID::Result:

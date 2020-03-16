@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v3
         {
             class NGRAPH_API ROIAlign : public Op
             {
@@ -69,6 +69,6 @@ namespace ngraph
                 std::string m_mode;
             };
         }
-        using v0::ROIAlign;
+        using v3::ROIAlign;
     }
 }
