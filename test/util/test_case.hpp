@@ -84,7 +84,7 @@ namespace ngraph
                              "Input data shape must be provided, if shape defined in Functions is "
                              "not fully known.");
 
-                return add_input<T>(input_pshape.to_shape(), values);
+                add_input<T>(input_pshape.to_shape(), values);
             }
 
             template <typename T>
