@@ -1476,3 +1476,15 @@ def test_power_v1():
     result = test.ngraph.util.run_op_node([A, B], ng.ops.power)
 
     assert np.allclose(result, expected)
+
+@pytest.mark.skip_on_gpu
+def test_reshape_v1():
+    A = np.arange(1200, dtype=np.float32).reshape((2, 5, 5, 24))
+    shape = np.array([0, -1, 4])
+    special_zero=True
+
+    expected_shape = np.array([2, 150, 4])
+    expected = np.reshape(A, expected_shape)
+    result = test.ngraph.util.run_op_node([A, shape], ng.ops.reshape, special_zero)
+
+    assert np.allclose(result, expected)

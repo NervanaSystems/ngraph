@@ -291,5 +291,3 @@ def test_max_pool_same_lower_auto_pads():
                            [8.5, 9.5, 10.5, 11.5],
                            [12.5, 13.5, 14.5, 15.5]]]], dtype=np.float32)
     assert np.allclose(result, expected)
-
-
