@@ -318,10 +318,6 @@ namespace
             replacement_node = make_shared<op::Reshape>(
                 node->input_value(0), get_default_order(input_rank.get_length()), output_shape);
         }
-        else
-        {
-            return false;
-        }
 
         replace_node(node, replacement_node);
         return replacement_node;
