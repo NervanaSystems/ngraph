@@ -118,7 +118,7 @@ TEST(copy, concat)
                         make_shared<op::Parameter>(element::f32, shape)};
     size_t axis = 0;
     auto node = make_shared<op::Concat>(NodeVector{arg0, arg1}, axis);
-    auto new_node = node->copy_with_new_args(new_args);
+    auto new_node = node->clone_with_new_inputs(new_args);
     auto node_cast = as_type_ptr<op::Concat>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
@@ -133,7 +133,7 @@ TEST(copy, constant)
     vector<float> c{2.4f};
     auto& et = element::f32;
     auto node = op::Constant::create(et, shape, c);
-    auto new_node = node->copy_with_new_args(NodeVector{});
+    auto new_node = node->clone_with_new_inputs(NodeVector{});
     auto node_cast = as_type_ptr<op::Constant>(new_node);
     ASSERT_NE(node_cast, nullptr);
     ASSERT_TRUE(nullptr != new_node);
@@ -151,7 +151,7 @@ TEST(copy, convert)
     NodeVector new_args{make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<op::Convert>(arg0, et);
-    auto new_node = node->copy_with_new_args(new_args);
+    auto new_node = node->clone_with_new_inputs(new_args);
     auto node_cast = as_type_ptr<op::Convert>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
@@ -249,7 +249,7 @@ TEST(copy, parameter)
 {
     Shape shape{1};
     auto node = make_shared<op::Parameter>(element::f32, shape);
-    auto new_node = node->copy_with_new_args({});
+    auto new_node = node->clone_with_new_inputs({});
     auto node_cast = as_type_ptr<op::Parameter>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
@@ -273,7 +273,7 @@ TEST(copy, reshape)
     NodeVector new_args{make_shared<op::Parameter>(element::f32, shape_in)};
 
     auto node = make_shared<op::Reshape>(arg0, axes, shape_out);
-    auto new_node = node->copy_with_new_args(new_args);
+    auto new_node = node->clone_with_new_inputs(new_args);
     auto node_cast = as_type_ptr<op::Reshape>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
@@ -294,7 +294,7 @@ TEST(copy, select)
                         make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<op::Select>(arg0, arg1, arg2);
-    auto new_node = node->copy_with_new_args(new_args);
+    auto new_node = node->clone_with_new_inputs(new_args);
     auto node_cast = as_type_ptr<op::Select>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
@@ -328,7 +328,7 @@ TEST(copy, slice)
     NodeVector new_args{make_shared<op::Parameter>(element::f32, shape_in)};
 
     auto node = make_shared<op::Slice>(arg0, lower, upper, strides);
-    auto new_node = node->copy_with_new_args(new_args);
+    auto new_node = node->clone_with_new_inputs(new_args);
     auto node_cast = as_type_ptr<op::Slice>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
@@ -352,7 +352,7 @@ TEST(copy, sum)
 
     auto node = make_shared<op::Sum>(arg0, axes);
     NodeVector new_args{make_shared<op::Parameter>(element::f32, shape), node->get_argument(1)};
-    auto new_node = node->copy_with_new_args(new_args);
+    auto new_node = node->clone_with_new_inputs(new_args);
     auto node_cast = as_type_ptr<op::Sum>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
