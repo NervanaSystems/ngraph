@@ -20,24 +20,24 @@
 using namespace ngraph;
 using namespace std;
 
-constexpr NodeTypeInfo op::v0::NonZero::type_info;
+constexpr NodeTypeInfo op::v3::NonZero::type_info;
 
-op::v0::NonZero::NonZero(const Output<Node>& arg)
+op::v3::NonZero::NonZero(const Output<Node>& arg)
     : Op({arg})
 {
     constructor_validate_and_infer_types();
 }
 
-bool ngraph::op::v0::NonZero::visit_attributes(AttributeVisitor& visitor)
+bool ngraph::op::v3::NonZero::visit_attributes(AttributeVisitor& visitor)
 {
     return true;
 }
 
-void op::v0::NonZero::validate_and_infer_types()
+void op::v3::NonZero::validate_and_infer_types()
 {
     const PartialShape& input_shape = get_input_partial_shape(0);
 
-    if (get_input_partial_shape(i).is_dynamic())
+    if (input_shape.is_dynamic())
     {
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
     }
@@ -48,8 +48,8 @@ void op::v0::NonZero::validate_and_infer_types()
     set_input_is_relevant_to_shape(0);
 }
 
-shared_ptr<Node> op::v0::NonZero::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v3::NonZero::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v0::NonZero>(new_args.at(0));
+    return make_shared<v3::NonZero>(new_args.at(0));
 }
