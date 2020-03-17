@@ -55,7 +55,7 @@ TEST(opset_transform, opset1_convolution_downgrade_pass)
     op::PadType pad_type = op::PadType::EXPLICIT;
 
     auto convolution_v1 = make_shared<op::v1::Convolution>(
-        data, filters, strides, pads_begin, pads_end, dilations, pad_type);
+        data, filters, strides, pads_begin, pads_end, dilations, "test", pad_type);
     auto result = make_shared<op::Result>(convolution_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, filters});
 

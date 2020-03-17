@@ -1121,8 +1121,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
             op::PadType auto_pad = read_pad_type(node_js);
 
-            node = make_shared<op::v1::Convolution>(
-                args[0], args[1], strides, pads_begin, pads_end, dilations, auto_pad);
+            node = make_shared<op::v1::Convolution>(args[0],
+                                                    args[1],
+                                                    strides,
+                                                    pads_begin,
+                                                    pads_end,
+                                                    dilations,
+                                                    "deserialize",
+                                                    auto_pad);
 
             break;
         }

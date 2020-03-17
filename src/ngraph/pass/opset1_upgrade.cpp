@@ -139,6 +139,7 @@ namespace
                                                                  pads_begin,
                                                                  pads_end,
                                                                  dilations,
+                                                                 "upgrade",
                                                                  auto_pad);
         replace_node(node, replacement_node);
         return replacement_node;

@@ -34,6 +34,7 @@ op::v1::Convolution::Convolution(const Output<Node>& data_batch,
                                  const CoordinateDiff& pads_begin,
                                  const CoordinateDiff& pads_end,
                                  const Strides& dilations,
+                                 const string& source,
                                  const PadType& auto_pad)
     : Op({data_batch, filters})
     , m_strides(strides)
@@ -41,6 +42,8 @@ op::v1::Convolution::Convolution(const Output<Node>& data_batch,
     , m_pads_begin(pads_begin)
     , m_pads_end(pads_end)
     , m_auto_pad(auto_pad)
+    , m_source(source)
+
 {
     constructor_validate_and_infer_types();
 }
@@ -52,7 +55,7 @@ bool op::v1::Convolution::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("pads_begin", m_pads_begin);
     visitor.on_attribute("pads_end", m_pads_end);
     visitor.on_attribute("auto_pad", m_auto_pad);
-
+    m_source += " visitor";
     return true;
 }
 
@@ -60,22 +63,13 @@ void op::v1::Convolution::validate_and_infer_types()
 {
     if (m_auto_pad != PadType::EXPLICIT)
     {
-        char* die = nullptr;
-        if (!std::all_of(m_pads_begin.begin(), m_pads_begin.end(), [](std::ptrdiff_t i) {
-                return (i == 0);
-            }))
-        {
-            cerr << *die;
-        }
-        if (!std::all_of(
-                m_pads_end.begin(), m_pads_end.end(), [](std::ptrdiff_t i) { return (i == 0); }))
-        {
-            cerr << *die;
-        }
         NODE_VALIDATION_CHECK(this,
                               std::all_of(m_pads_begin.begin(),
                                           m_pads_begin.end(),
                                           [](std::ptrdiff_t i) { return (i == 0); }),
+                              "Source: ",
+                              m_source,
+                              " ",
                               "pads_begin: (",
                               m_pads_begin,
                               ") Non-zero padding should not be used along with auto pad modes.");
@@ -83,6 +77,9 @@ void op::v1::Convolution::validate_and_infer_types()
                               std::all_of(m_pads_end.begin(),
                                           m_pads_end.end(),
                                           [](std::ptrdiff_t i) { return (i == 0); }),
+                              "Source: ",
+                              m_source,
+                              " ",
                               "pads_end: (",
                               m_pads_end,
                               ") Non-zero padding should not be used along with auto pad modes.");
@@ -164,6 +161,7 @@ shared_ptr<Node> op::v1::Convolution::copy_with_new_args(const NodeVector& new_a
                                         m_pads_begin,
                                         m_pads_end,
                                         m_dilations,
+                                        m_source + " cloned ",
                                         m_auto_pad);
 }
 
@@ -458,7 +456,7 @@ void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
     const auto f_shape = f.get_shape();
 
     auto data_conv = make_shared<op::v1::Convolution>(
-        delta, f, m_strides, m_pads_begin, m_pads_end, m_dilations, m_auto_pad);
+        delta, f, m_strides, m_pads_begin, m_pads_end, m_dilations, "adjoints1", m_auto_pad);
 
     adjoints.add_delta(x, data_conv);
 
@@ -500,8 +498,15 @@ void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
     delta = swap_NC(delta);
     x = swap_NC(x);
 
-    shared_ptr<Node> filter_deconv_bprop = make_shared<op::v1::Convolution>(
-        x, delta, strides, pads_begin, pads_end, Strides(x.get_shape().size() - 2, 1), m_auto_pad);
+    shared_ptr<Node> filter_deconv_bprop =
+        make_shared<op::v1::Convolution>(x,
+                                         delta,
+                                         strides,
+                                         pads_begin,
+                                         pads_end,
+                                         Strides(x.get_shape().size() - 2, 1),
+                                         "adjoints2",
+                                         m_auto_pad);
     AxisSet axes;
     for (size_t i = 2; i < filter_deconv_bprop->get_shape().size(); ++i)
     {

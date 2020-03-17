@@ -2858,7 +2858,8 @@ TEST(type_prop, conv_v1_partial_rank)
                                                  window_movement_strides,
                                                  padding_below,
                                                  padding_above,
-                                                 window_dilation_strides);
+                                                 window_dilation_strides,
+                                                 "type_prop");
 
     ASSERT_TRUE(conv->get_output_partial_shape(0).is_dynamic());
 }
@@ -2884,6 +2885,7 @@ TEST(type_prop, conv_v1_incorrect_auto_pad)
                                                      CoordinateDiff{1, 0},
                                                      pads_end,
                                                      window_dilation_strides,
+                                                     "type_prop",
                                                      op::PadType::VALID);
 
         FAIL() << "Incorrect padding not detected";
@@ -2907,6 +2909,7 @@ TEST(type_prop, conv_v1_incorrect_auto_pad)
                                                      pads_begin,
                                                      CoordinateDiff{0, -1},
                                                      window_dilation_strides,
+                                                     "type_prop",
                                                      op::PadType::VALID);
 
         FAIL() << "Incorrect padding not detected";

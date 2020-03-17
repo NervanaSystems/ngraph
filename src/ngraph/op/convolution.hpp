@@ -60,6 +60,7 @@ namespace ngraph
                             const CoordinateDiff& pads_begin,
                             const CoordinateDiff& pads_end,
                             const Strides& dilations,
+                            const std::string& source,
                             const PadType& auto_pad = PadType::EXPLICIT);
 
                 void validate_and_infer_types() override;
@@ -94,6 +95,7 @@ namespace ngraph
                 CoordinateDiff m_pads_begin;
                 CoordinateDiff m_pads_end;
                 PadType m_auto_pad;
+                std::string m_source{"Default"};
             };
 
             /// \brief Data batch backprop for batched convolution operation.
