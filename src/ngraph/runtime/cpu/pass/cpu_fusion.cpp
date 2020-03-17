@@ -792,7 +792,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
         }
 
         std::vector<size_t> vec{0};
-        for (size_t i = 2; i < pattern_map[input]->output(0).get_shape().size(); i++)
+        for (size_t i = 2; i < pattern_map[input]->get_output_shape(0).size(); i++)
         {
             vec.push_back(i);
         }

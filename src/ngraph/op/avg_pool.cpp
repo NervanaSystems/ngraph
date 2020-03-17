@@ -228,7 +228,7 @@ void op::v0::AvgPool::set_ceil_mode(bool ceil_mode)
     m_ceil_mode = ceil_mode;
 }
 
-shared_ptr<Node> op::v0::AvgPool::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::AvgPool::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::AvgPool>(new_args.at(0),
@@ -372,7 +372,7 @@ void op::v0::AvgPoolBackprop::set_include_padding_in_avg_computation(
     m_include_padding_in_avg_computation = include_padding_in_avg_computation;
 }
 
-shared_ptr<Node> op::v0::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::AvgPoolBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::AvgPoolBackprop>(m_forward_arg_shape,
@@ -581,7 +581,7 @@ void op::v1::AvgPool::set_rounding_type(op::RoundingType rounding_type)
     m_rounding_type = rounding_type;
 }
 
-shared_ptr<Node> op::v1::AvgPool::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::AvgPool::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::AvgPool>(new_args.at(0),
@@ -716,7 +716,7 @@ void op::v1::AvgPoolBackprop::set_exclude_pad(bool exclude_pad)
     m_exclude_pad = exclude_pad;
 }
 
-shared_ptr<Node> op::v1::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::AvgPoolBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::AvgPoolBackprop>(new_args.at(0),

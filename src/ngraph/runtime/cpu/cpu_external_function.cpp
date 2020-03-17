@@ -173,7 +173,7 @@
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
@@ -457,11 +457,10 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::GeluBackprop), &runtime::cpu::CPU_Emitter::emit<op::GeluBackprop>},
     {TI(ngraph::op::Round), &runtime::cpu::CPU_Emitter::emit<op::Round>}};
 
-static void
-    generate_isnan_isinf_check(CodeWriter& writer,
-                               std::shared_ptr<Node> node,
-                               const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& out,
-                               const char* funcname)
+static void generate_isnan_isinf_check(CodeWriter& writer,
+                                       std::shared_ptr<Node> node,
+                                       const std::vector<ngraph::runtime::cpu::TensorWrapper>& out,
+                                       const char* funcname)
 {
     auto ctype = node->get_element_type().c_type_string();
     writer << "{   // A " << funcname << " for" << node->get_name() << "\n";
@@ -879,7 +878,7 @@ using namespace ngraph::runtime;
         {
             throw unsupported_op(node->description());
         }
-        vector<TensorViewWrapper> in;
+        vector<TensorWrapper> in;
         vector<string> node_input_names;
         vector<string> node_output_names;
         vector<TensorTracerAttributes> t_in_attrs;
@@ -888,16 +887,16 @@ using namespace ngraph::runtime;
         {
             const descriptor::Output& output = input.get_output();
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-            in.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
+            in.push_back(TensorWrapper(tv, m_variable_name_map[tv->get_name()]));
             node_input_names.emplace_back(tv->get_name());
             t_in_attrs.push_back(TensorTracerAttributes(
                 in.back().get_size(), in.back().get_shape(), in.back().get_element_type()));
         }
-        vector<TensorViewWrapper> out;
+        vector<TensorWrapper> out;
         for (const descriptor::Output& output : node->get_outputs())
         {
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-            out.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
+            out.push_back(TensorWrapper(tv, m_variable_name_map[tv->get_name()]));
             node_output_names.emplace_back(tv->get_name());
             t_out_attrs.push_back(TensorTracerAttributes(
                 out.back().get_size(), out.back().get_shape(), out.back().get_element_type()));
@@ -987,11 +986,11 @@ using namespace ngraph::runtime;
             string func_name =
                 ngraph::pass::CommonFunctionCollection::create_function_name(*it->second);
             vector<string> names;
-            for (const TensorViewWrapper& tv : in)
+            for (const TensorWrapper& tv : in)
             {
                 names.push_back(tv.get_name());
             }
-            for (const TensorViewWrapper& tv : out)
+            for (const TensorWrapper& tv : out)
             {
                 names.push_back(tv.get_name());
             }
@@ -1612,26 +1611,26 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         {
             throw unsupported_op(node->description());
         }
-        vector<TensorViewWrapper> in;
+        vector<TensorWrapper> in;
         vector<string> in_names;
         vector<TensorTracerAttributes> t_in_attrs;
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-            in.push_back(TensorViewWrapper(tv, tv->get_name()));
+            in.push_back(TensorWrapper(tv, tv->get_name()));
             in_names.push_back(tv->get_name());
             t_in_attrs.push_back(TensorTracerAttributes(
                 in.back().get_size(), in.back().get_shape(), in.back().get_element_type()));
         }
-        vector<TensorViewWrapper> out;
+        vector<TensorWrapper> out;
         vector<string> out_names;
         vector<TensorTracerAttributes> t_out_attrs;
 
         for (const descriptor::Output& output : node->get_outputs())
         {
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-            out.push_back(TensorViewWrapper(tv, tv->get_name()));
+            out.push_back(TensorWrapper(tv, tv->get_name()));
             out_names.push_back(tv->get_name());
             t_out_attrs.push_back(TensorTracerAttributes(
                 out.back().get_size(), out.back().get_shape(), out.back().get_element_type()));
@@ -2173,8 +2172,8 @@ void runtime::cpu::CPU_ExternalFunction::write_to_file(const std::string& code,
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     CodeWriter& writer,
     Node* node,
-    const std::vector<TensorViewWrapper>& /* in */,
-    const std::vector<TensorViewWrapper>& /* out */)
+    const std::vector<TensorWrapper>& /* in */,
+    const std::vector<TensorWrapper>& /* out */)
 {
     if (m_emit_timing)
     {
@@ -2185,8 +2184,8 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
     CodeWriter& writer,
     Node* node,
-    const std::vector<TensorViewWrapper>& /* in */,
-    const std::vector<TensorViewWrapper>& /* out */)
+    const std::vector<TensorWrapper>& /* in */,
+    const std::vector<TensorWrapper>& /* out */)
 {
     if (m_emit_timing)
     {
@@ -2213,14 +2212,14 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     {
         throw unsupported_op(node.description());
     }
-    vector<TensorViewWrapper> in;
+    vector<TensorWrapper> in;
     size_t arg_index = 0;
     set<string> arg_names;
     for (const descriptor::Input& input : node.get_inputs())
     {
         const descriptor::Output& output = input.get_output();
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-        TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
+        TensorWrapper tvw{tv, "_arg" + to_string(arg_index)};
         if (arg_names.find(tvw.get_name()) == arg_names.end())
         {
             arg_names.insert(tvw.get_name());
@@ -2233,11 +2232,11 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
         }
         in.push_back(tvw);
     }
-    vector<TensorViewWrapper> out;
+    vector<TensorWrapper> out;
     for (const descriptor::Output& output : node.get_outputs())
     {
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-        TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
+        TensorWrapper tvw{tv, "_out" + to_string(arg_index)};
         if (arg_index++ > 0)
         {
             writer << ",";
