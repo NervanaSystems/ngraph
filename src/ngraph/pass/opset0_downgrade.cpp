@@ -173,7 +173,7 @@ namespace
             const auto& arg_shape = arg_pshape.to_shape();
 
             NGRAPH_CHECK(target_shape_input.get_node_shared_ptr()->is_constant());
-            auto target_shape = node->output(0).get_shape();
+            auto target_shape = node->get_output_shape(0);
             NGRAPH_CHECK(node->get_broadcast_axes().first);
 
             // (Re)construct axes_mapping.

@@ -237,7 +237,7 @@ bool op::v1::ConvolutionBackpropData::is_dynamic() const
 
 const PartialShape op::v1::ConvolutionBackpropData::get_output_shape() const
 {
-    auto data_pshape = input(0).get_partial_shape();
+    auto data_pshape = get_input_partial_shape(0);
 
     PartialShape shape;
     if (data_pshape.rank().is_static())
@@ -272,10 +272,10 @@ void op::v1::ConvolutionBackpropData::set_output_shape(const Shape& shape)
 
 void op::v1::ConvolutionBackpropData::validate_and_infer_types()
 {
-    auto data_pshape = input(0).get_partial_shape();
-    element::Type delta_et = input(0).get_element_type();
-    const PartialShape& filters_pshape = input(1).get_partial_shape();
-    element::Type filters_et = input(1).get_element_type();
+    auto data_pshape = get_input_partial_shape(0);
+    element::Type delta_et = get_input_element_type(0);
+    const PartialShape& filters_pshape = get_input_partial_shape(1);
+    element::Type filters_et = get_input_element_type(1);
 
     bool is_output_shape_present = get_inputs().size() == 3;
     PartialShape output_pshape = get_output_shape();

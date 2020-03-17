@@ -65,9 +65,9 @@ void op::HardSigmoid::pre_validate_and_infer_types()
                               beta_shape);
     }
 
-    const auto& data_et = input(0).get_element_type();
-    const auto& alpha_et = input(1).get_element_type();
-    const auto& beta_et = input(2).get_element_type();
+    const auto& data_et = get_input_element_type(0);
+    const auto& alpha_et = get_input_element_type(1);
+    const auto& beta_et = get_input_element_type(2);
 
     NODE_VALIDATION_CHECK(
         this,

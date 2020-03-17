@@ -315,12 +315,12 @@ NodeVector op::LSTMCell::decompose_op() const
 Output<Node> op::LSTMCell::get_default_bias_input() const
 {
     return Output<Node>{op::Constant::create(
-        input(0).get_element_type(), Shape{s_gates_count * get_hidden_size()}, vector<float>{0.f})};
+        get_input_element_type(0), Shape{s_gates_count * get_hidden_size()}, vector<float>{0.f})};
 }
 
 Output<Node> op::LSTMCell::get_default_peepholes_input() const
 {
-    return Output<Node>{op::Constant::create(input(0).get_element_type(),
+    return Output<Node>{op::Constant::create(get_input_element_type(0),
                                              Shape{s_peepholes_count * get_hidden_size()},
                                              vector<float>{0.f})};
 }

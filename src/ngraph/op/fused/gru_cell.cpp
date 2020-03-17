@@ -273,7 +273,7 @@ NodeVector op::GRUCell::decompose_op() const
 void op::GRUCell::add_default_bias_input()
 {
     Output<Node> B =
-        op::Constant::create(input(0).get_element_type(),
+        op::Constant::create(get_input_element_type(0),
                              Shape{2 * s_gates_count * get_hidden_size()},
                              vector<float>(2 * s_gates_count * get_hidden_size(), 0.f));
     set_argument(4, B);

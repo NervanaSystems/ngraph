@@ -135,7 +135,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
         }
         else if (auto replace_slice = as_type_ptr<op::ReplaceSlice>(n))
         {
-            const Shape& replacement_shape = replace_slice->input(1).get_shape();
+            const Shape& replacement_shape = replace_slice->get_input_shape(1);
             if (shape_size(replacement_shape) == 0)
             {
                 // Op is a noop

@@ -14,24 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include <functional>
-#include <string>
-#include <unordered_map>
-
-#include "ngraph/node.hpp"
-#include "node.hpp"
+#include "onnx_utils.hpp"
+#include "ops_bridge.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        /// \brief      Function which transforms single ONNX operator to nGraph sub-graph.
-        using Operator = std::function<NodeVector(const Node&)>;
-
-        /// \brief      Map which contains ONNX operators accessible by std::string value as a key.
-        using OperatorSet = std::unordered_map<std::string, std::reference_wrapper<const Operator>>;
+        void register_operator(const std::string& name,
+                               std::int64_t version,
+                               const std::string& domain,
+                               Operator fn)
+        {
+            OperatorsBridge::register_operator(name, version, domain, std::move(fn));
+        }
 
     } // namespace onnx_import
 
