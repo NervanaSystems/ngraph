@@ -1707,7 +1707,7 @@ TEST(constant_folding, constant_dyn_reshape_shape_not_originally_constant)
         make_shared<op::v1::Reshape>(constant_in, constant_shape_a + constant_shape_b, false);
     auto f = make_shared<Function>(dyn_reshape, ParameterVector{});
 
-    ASSERT_TRUE(dyn_reshape->output(0).get_partial_shape().is_dynamic());
+    ASSERT_TRUE(dyn_reshape->get_output_partial_shape(0).is_dynamic());
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
