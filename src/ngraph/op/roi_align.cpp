@@ -120,7 +120,7 @@ void op::v3::ROIAlign::validate_and_infer_types()
 
     // if either of those 2 dimensions is static its value will be used
     // for the first dimension of the output shape - 'NUM_ROIS'
-    if (rois_ps.rank().is_static() && [0].is_static())
+    if (rois_ps.rank().is_static() && rois_ps[0].is_static())
     {
         output_shape[0] = rois_ps[0];
     }
