@@ -84,26 +84,33 @@ void op::v3::ROIAlign::validate_and_infer_types()
                           "Expected a 2D tensor for the ROIs input. Got: ",
                           rois_ps);
 
-    const auto rois_second_dim = rois_ps[1];
-    NODE_VALIDATION_CHECK(this,
-                          rois_second_dim.compatible(4),
-                          "The second dimension of ROIs input should contain box coordinates. ",
-                          "This dimension is expected to be equal to 4. Got: ",
-                          rois_second_dim);
-
     const auto& batch_indices_ps = get_input_partial_shape(2);
     NODE_VALIDATION_CHECK(this,
                           batch_indices_ps.rank().compatible(1),
                           "Expected a 1D tensor for the batch indices input. Got: ",
                           batch_indices_ps);
 
-    NODE_VALIDATION_CHECK(this,
-                          rois_ps[0].same_scheme(batch_indices_ps[0]),
-                          "The first dimension of ROIs input must be equal to the first dimension ",
-                          "of the batch indices input. Got: ",
-                          rois_ps[0],
-                          " and: ",
-                          batch_indices_ps[0]);
+    if (rois_ps.rank().is_static())
+    {
+        const auto rois_second_dim = rois_ps[1];
+        NODE_VALIDATION_CHECK(this,
+                              rois_second_dim.compatible(4),
+                              "The second dimension of ROIs input should contain box coordinates. ",
+                              "This dimension is expected to be equal to 4. Got: ",
+                              rois_second_dim);
+
+        if (batch_indices_ps.is_static())
+        {
+            NODE_VALIDATION_CHECK(
+                this,
+                rois_ps[0].same_scheme(batch_indices_ps[0]),
+                "The first dimension of ROIs input must be equal to the first dimension ",
+                "of the batch indices input. Got: ",
+                rois_ps[0],
+                " and: ",
+                batch_indices_ps[0]);
+        }
+    }
 
     // the output shape should have the following format [NUM_ROIS, C, pooled_h, pooled_w]
     auto output_shape = PartialShape{{Dimension::dynamic(),
