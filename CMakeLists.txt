@@ -384,7 +384,6 @@ if (WIN32)
 else()
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
     set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
-    # These can be uncommented once we have visibility fully in place
     set(CMAKE_CXX_VISIBILITY_PRESET default)
     set(CMAKE_C_VISIBILITY_PRESET default)
     set(CMAKE_VISIBILITY_INLINES_HIDDEN default)
