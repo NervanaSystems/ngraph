@@ -60,7 +60,7 @@ void descriptor::Input::replace_output(Output& new_output)
 
     if (getenv_bool("NGRAPH_ENABLE_REPLACE_CHECK"))
     {
-        // the result of copy_with_new_args will be thrown away or
+        // the result of clone_with_new_inputs will be thrown away or
         // an exception will be thrown by `m_node`'s class c-tor
         // if a new input violates one of the type checks in the c-tor.
         (m_node->clone_with_new_inputs(as_output_vector(m_node->get_arguments())));
