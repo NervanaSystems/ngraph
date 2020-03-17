@@ -28,7 +28,25 @@ op::v3::ROIAlign::ROIAlign(const Output<Node>& input,
                            const size_t pooled_w,
                            const size_t sampling_ratio,
                            const float spatial_scale,
-                           const std::string& mode)
+                           const string& mode)
+    : Op{{input, rois, batch_indices}}
+    , m_pooled_h{pooled_h}
+    , m_pooled_w{pooled_w}
+    , m_sampling_ratio{sampling_ratio}
+    , m_spatial_scale{spatial_scale}
+    , m_mode{EnumNames<ROIAlign::PoolingMode>::as_enum(mode)}
+{
+    constructor_validate_and_infer_types();
+}
+
+op::v3::ROIAlign::ROIAlign(const Output<Node>& input,
+                           const Output<Node>& rois,
+                           const Output<Node>& batch_indices,
+                           const size_t pooled_h,
+                           const size_t pooled_w,
+                           const size_t sampling_ratio,
+                           const float spatial_scale,
+                           const PoolingMode mode)
     : Op{{input, rois, batch_indices}}
     , m_pooled_h{pooled_h}
     , m_pooled_w{pooled_w}
@@ -66,31 +84,33 @@ void op::v3::ROIAlign::validate_and_infer_types()
                           "Expected a 2D tensor for the ROIs input. Got: ",
                           rois_ps);
 
-    const auto rois_second_dim = rois_ps[1];
-    NODE_VALIDATION_CHECK(this,
-                          rois_second_dim.compatible(4),
-                          "The second dimension of ROIs input should contain box coordinates. ",
-                          "This dimension is expected to be equal to 4. Got: ",
-                          rois_second_dim);
-
     const auto& batch_indices_ps = get_input_partial_shape(2);
     NODE_VALIDATION_CHECK(this,
                           batch_indices_ps.rank().compatible(1),
                           "Expected a 1D tensor for the batch indices input. Got: ",
                           batch_indices_ps);
 
-    NODE_VALIDATION_CHECK(this,
-                          rois_ps[0].same_scheme(batch_indices_ps[0]),
-                          "The first dimension of ROIs input must be equal to the first dimension ",
-                          "of the batch indices input. Got: ",
-                          rois_ps[0],
-                          " and: ",
-                          batch_indices_ps[0]);
+    if (rois_ps.rank().is_static())
+    {
+        const auto rois_second_dim = rois_ps[1];
+        NODE_VALIDATION_CHECK(this,
+                              rois_second_dim.compatible(4),
+                              "The second dimension of ROIs input should contain box coordinates. ",
+                              "This dimension is expected to be equal to 4. Got: ",
+                              rois_second_dim);
 
-    NODE_VALIDATION_CHECK(this,
-                          m_mode == "avg" || m_mode == "max",
-                          "The ROIAlign supports 'avg' and 'max' modes. Got: ",
-                          m_mode);
+        if (batch_indices_ps.is_static())
+        {
+            NODE_VALIDATION_CHECK(
+                this,
+                rois_ps[0].same_scheme(batch_indices_ps[0]),
+                "The first dimension of ROIs input must be equal to the first dimension ",
+                "of the batch indices input. Got: ",
+                rois_ps[0],
+                " and: ",
+                batch_indices_ps[0]);
+        }
+    }
 
     // the output shape should have the following format [NUM_ROIS, C, pooled_h, pooled_w]
     auto output_shape = PartialShape{{Dimension::dynamic(),
@@ -150,4 +170,24 @@ shared_ptr<Node> op::v3::ROIAlign::copy_with_new_args(const NodeVector& new_args
                                  m_sampling_ratio,
                                  m_spatial_scale,
                                  m_mode);
+}
+
+namespace ngraph
+{
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v3::ROIAlign::PoolingMode>::type_info;
+
+    template <>
+    EnumNames<op::v3::ROIAlign::PoolingMode>& EnumNames<op::v3::ROIAlign::PoolingMode>::get()
+    {
+        static auto enum_names =
+            EnumNames<op::v3::ROIAlign::PoolingMode>("op::v3::ROIAlign::PoolingMode",
+                                                     {{"avg", op::v3::ROIAlign::PoolingMode::AVG},
+                                                      {"max", op::v3::ROIAlign::PoolingMode::MAX}});
+        return enum_names;
+    }
+
+    std::ostream& operator<<(std::ostream& s, const op::v3::ROIAlign::PoolingMode& type)
+    {
+        return s << as_string(type);
+    }
 }
