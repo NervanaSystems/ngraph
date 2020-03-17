@@ -36,8 +36,7 @@ namespace ngraph
                 };
 
                 ReshapeIndexer(const Shape& in_shape,
-                               const AxisVector& in_axis_order,
-                               const Shape& out_shape);
+                               const AxisVector& in_axis_order);
                 size_t next();
 
             private:

@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/opt_kernel/reshape_indexer.hpp"
+#include "ngraph/log.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -225,8 +226,7 @@ private:
 // }
 
 runtime::opt_kernel::ReshapeIndexer::ReshapeIndexer(const Shape& in_shape,
-                                                    const AxisVector& in_axis_order,
-                                                    const Shape& out_shape)
+                                                    const AxisVector& in_axis_order)
 {
     switch (in_shape.size())
     {
@@ -243,4 +243,5 @@ runtime::opt_kernel::ReshapeIndexer::ReshapeIndexer(const Shape& in_shape,
 
 size_t runtime::opt_kernel::ReshapeIndexer::next()
 {
+    return m_indexer->next();
 }
