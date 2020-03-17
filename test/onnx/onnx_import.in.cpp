@@ -36,6 +36,7 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
+#include "ngraph/frontend/onnx_import/onnx_utils.hpp"
 #include "ngraph/ngraph.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
