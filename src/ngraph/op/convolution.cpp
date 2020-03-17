@@ -48,6 +48,25 @@ op::v1::Convolution::Convolution(const Output<Node>& data_batch,
     constructor_validate_and_infer_types();
 }
 
+op::v1::Convolution::Convolution(const Output<Node>& data_batch,
+                                 const Output<Node>& filters,
+                                 const Strides& strides,
+                                 const CoordinateDiff& pads_begin,
+                                 const CoordinateDiff& pads_end,
+                                 const Strides& dilations,
+                                 const PadType& auto_pad)
+    : Op({data_batch, filters})
+    , m_strides(strides)
+    , m_dilations(dilations)
+    , m_pads_begin(pads_begin)
+    , m_pads_end(pads_end)
+    , m_auto_pad(auto_pad)
+    , m_source("DLDT")
+
+{
+    constructor_validate_and_infer_types();
+}
+
 bool op::v1::Convolution::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("strides", m_strides);

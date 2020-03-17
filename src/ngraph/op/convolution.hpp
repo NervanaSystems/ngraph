@@ -63,6 +63,14 @@ namespace ngraph
                             const std::string& source,
                             const PadType& auto_pad = PadType::EXPLICIT);
 
+                Convolution(const Output<Node>& data_batch,
+                            const Output<Node>& filters,
+                            const Strides& strides,
+                            const CoordinateDiff& pads_begin,
+                            const CoordinateDiff& pads_end,
+                            const Strides& dilations,
+                            const PadType& auto_pad = PadType::EXPLICIT);
+
                 void validate_and_infer_types() override;
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
