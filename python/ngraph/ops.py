@@ -1821,15 +1821,15 @@ def tile(data, repeats):  # type: (Node, Node) -> Node
 
 
 @nameable_op
-def strided_slice(data,                 # type: Node
-                  begin,                # type: Node
-                  end,                  # type: Node
-                  strides,              # type: Node
-                  begin_mask,           # type: List[int]
-                  end_mask,             # type: List[int]
-                  new_axis_mask=[],     # type: List[int]
-                  shrink_axis_mask=[],  # type: List[int]
-                  ellipsis_mask=[],     # type: List[int]
+def strided_slice(data,                   # type: Node
+                  begin,                  # type: Node
+                  end,                    # type: Node
+                  strides,                # type: Node
+                  begin_mask,             # type: List[int]
+                  end_mask,               # type: List[int]
+                  new_axis_mask=None,     # type: List[int]
+                  shrink_axis_mask=None,  # type: List[int]
+                  ellipsis_mask=None,     # type: List[int]
                   ):
     # type: (...) -> Node
     """Return a node which dynamically repeats(replicates) the input data tensor.
@@ -1847,6 +1847,12 @@ def strided_slice(data,                 # type: Node
     :param      ellipsis_mask:     Indicates positions where missing dimensions should be inserted
     :returns:   StridedSlice node
     """
+    if new_axis_mask is None:
+        new_axis_mask = []
+    if shrink_axis_mask is None:
+        shrink_axis_mask = []
+    if ellipsis_mask is None:
+        ellipsis_mask = []
     attributes = {'begin_mask': begin_mask, 'end_mask': end_mask, 'new_axis_mask': new_axis_mask,
                   'shrink_axis_mask': shrink_axis_mask, 'ellipsis_mask': ellipsis_mask}
 
