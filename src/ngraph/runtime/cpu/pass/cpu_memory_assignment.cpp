@@ -296,7 +296,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_slice(const Inp
             {
                 if (oi_pair.input == in.get_index())
                 {
-                    auto input_tensor = &node->input(oi_pair.input).get_tensor();
+                    auto input_tensor = &node->get_input_tensor(oi_pair.input);
                     auto input_bufferID = get_bufferID(input_tensor);
                     size_t output_index = oi_pair.output;
                     auto output_tensor = &node->output(output_index).get_tensor();
@@ -356,7 +356,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(vector<shar
         else if (node->is_output())
         {
             auto output_tensor = &node->output(0).get_tensor();
-            auto input_tensor = &node->input(0).get_tensor();
+            auto input_tensor = &node->get_input_tensor(0);
             auto bufferID = get_bufferID(input_tensor);
             NGRAPH_CHECK(bufferID <= count);
 

@@ -1863,7 +1863,7 @@ namespace ngraph
                     (void)md;
                     auto axis_order = reshape->get_input_order();
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->get_output_shape(0);
                     if (input_shape.size() != output_shape.size())
                         return false;
 
@@ -1884,7 +1884,7 @@ namespace ngraph
                                             AxisVector& squeezed_axis)
                 {
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->get_output_shape(0);
 
                     if (input_shape.size() <= output_shape.size())
                         return false;
@@ -1920,7 +1920,7 @@ namespace ngraph
                                             AxisVector& expanded_axis)
                 {
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->get_output_shape(0);
 
                     if (input_shape.size() >= output_shape.size())
                         return false;
@@ -1959,7 +1959,7 @@ namespace ngraph
                     {
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         auto input_shape = reshape->get_input_shape(0);
-                        auto output_shape = reshape->get_output_shape();
+                        auto output_shape = reshape->get_output_shape(0);
                         AxisVector squeezed_axis;
                         AxisVector expanded_axis;
 

@@ -75,7 +75,7 @@ void op::v0::DynReshape::validate_and_infer_types()
         }
         else
         {
-            std::vector<Dimension> partial_shape(static_cast<size_t>(output_rank));
+            std::vector<Dimension> partial_shape(output_rank.get_length());
             // Replace zeros and negatives with Dynamic dimensions as needed
             std::transform(out_shape_val.begin(),
                            out_shape_val.end(),
@@ -93,7 +93,7 @@ void op::v0::DynReshape::validate_and_infer_types()
 
                 auto input_shape = get_input_partial_shape(0).to_shape();
                 size_t input_elements = shape_size(input_shape);
-                for (size_t i = 0; i < static_cast<size_t>(output_rank); i++)
+                for (size_t i = 0; i < output_rank.get_length(); i++)
                 {
                     if (out_shape_val[i] == 0 && m_zero_flag)
                     {

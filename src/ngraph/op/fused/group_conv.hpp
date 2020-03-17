@@ -200,7 +200,7 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 /// \return The spatial shape of the output.
-                const PartialShape get_output_shape() const;
+                const PartialShape get_convolution_output_shape() const;
                 void set_output_shape(const Shape& output_shape);
                 /// \return The strides from the forward prop.
                 const Strides& get_strides() const { return m_strides; }

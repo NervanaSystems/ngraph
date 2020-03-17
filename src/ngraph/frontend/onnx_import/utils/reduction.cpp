@@ -49,7 +49,7 @@ namespace ngraph
                                      node.get_description());
 
                         normalized_axes = onnx_import::common::get_monotonic_range<size_t>(
-                            static_cast<size_t>(input_rank));
+                            input_rank.get_length());
                     }
                     return AxisSet{normalized_axes};
                 }
@@ -95,7 +95,7 @@ namespace ngraph
                 NGRAPH_CHECK(data_ps.rank().is_static(),
                              "Reduction operations input rank is required to be static");
 
-                const auto data_rank = static_cast<size_t>(data_ps.rank());
+                const auto data_rank = data_ps.rank().get_length();
 
                 const auto reduction_axes = detail::get_reduction_axes(node);
 
