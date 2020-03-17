@@ -34,6 +34,24 @@ op::v3::ROIAlign::ROIAlign(const Output<Node>& input,
     , m_pooled_w{pooled_w}
     , m_sampling_ratio{sampling_ratio}
     , m_spatial_scale{spatial_scale}
+    , m_mode{mode_from_string(mode)}
+{
+    constructor_validate_and_infer_types();
+}
+
+op::v3::ROIAlign::ROIAlign(const Output<Node>& input,
+                           const Output<Node>& rois,
+                           const Output<Node>& batch_indices,
+                           const size_t pooled_h,
+                           const size_t pooled_w,
+                           const size_t sampling_ratio,
+                           const float spatial_scale,
+                           const PoolingMode mode)
+    : Op{{input, rois, batch_indices}}
+    , m_pooled_h{pooled_h}
+    , m_pooled_w{pooled_w}
+    , m_sampling_ratio{sampling_ratio}
+    , m_spatial_scale{spatial_scale}
     , m_mode{mode}
 {
     constructor_validate_and_infer_types();
@@ -86,11 +104,6 @@ void op::v3::ROIAlign::validate_and_infer_types()
                           rois_ps[0],
                           " and: ",
                           batch_indices_ps[0]);
-
-    NODE_VALIDATION_CHECK(this,
-                          m_mode == "avg" || m_mode == "max",
-                          "The ROIAlign supports 'avg' and 'max' modes. Got: ",
-                          m_mode);
 
     // the output shape should have the following format [NUM_ROIS, C, pooled_h, pooled_w]
     auto output_shape = PartialShape{{Dimension::dynamic(),
@@ -150,4 +163,35 @@ shared_ptr<Node> op::v3::ROIAlign::copy_with_new_args(const NodeVector& new_args
                                  m_sampling_ratio,
                                  m_spatial_scale,
                                  m_mode);
+}
+
+op::v3::ROIAlign::PoolingMode op::v3::ROIAlign::mode_from_string(const std::string& mode) const
+{
+    static const std::map<std::string, op::v3::ROIAlign::PoolingMode> allowed_values = {
+        {"avg", PoolingMode::AVG}, {"max", PoolingMode::MAX}};
+
+    NODE_VALIDATION_CHECK(
+        this, allowed_values.count(mode) > 0, "Invalid pooling mode for ROIAlign.");
+
+    return allowed_values.at(mode);
+}
+
+namespace ngraph
+{
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v3::ROIAlign::PoolingMode>::type_info;
+
+    template <>
+    EnumNames<op::v3::ROIAlign::PoolingMode>& EnumNames<op::v3::ROIAlign::PoolingMode>::get()
+    {
+        static auto enum_names =
+            EnumNames<op::v3::ROIAlign::PoolingMode>("op::v3::ROIAlign::PoolingMode",
+                                                     {{"avg", op::v3::ROIAlign::PoolingMode::AVG},
+                                                      {"max", op::v3::ROIAlign::PoolingMode::MAX}});
+        return enum_names;
+    }
+
+    std::ostream& operator<<(std::ostream& s, const op::v3::ROIAlign::PoolingMode& type)
+    {
+        return s << as_string(type);
+    }
 }
