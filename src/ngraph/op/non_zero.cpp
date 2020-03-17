@@ -38,7 +38,7 @@ void op::v2::NonZero::validate_and_infer_types()
     const auto data_ps = get_input_partial_shape(0);
 
     // NonZero produces tuples of size equal to input tensor rank
-    PartialShape out_shape = {Dimension::dynamic(), data_ps.rank()};
+    PartialShape out_shape = {data_ps.rank(), Dimension::dynamic()};
     set_output_size(1);
     set_output_type(0, element::i64, out_shape);
 }
