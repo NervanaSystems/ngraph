@@ -120,11 +120,11 @@ void op::v3::ROIAlign::validate_and_infer_types()
 
     // if either of those 2 dimensions is static its value will be used
     // for the first dimension of the output shape - 'NUM_ROIS'
-    if (rois_ps[0].is_static())
+    if (rois_ps.rank().is_static() && [0].is_static())
     {
         output_shape[0] = rois_ps[0];
     }
-    else if (batch_indices_ps[0].is_static())
+    else if (batch_indices_ps.rank().is_static() && batch_indices_ps[0].is_static())
     {
         output_shape[0] = batch_indices_ps[0];
     }
@@ -134,7 +134,7 @@ void op::v3::ROIAlign::validate_and_infer_types()
 
     // if the channels dimension is not known
     // the first input should be used during the function specialization
-    if (input_ps[1].is_dynamic())
+    if (input_ps.rank().is_static() && input_ps[1].is_dynamic())
     {
         set_input_is_relevant_to_shape(0);
     }
