@@ -33,6 +33,11 @@ void op::ShapeOf::validate_and_infer_types()
     set_output_type(0, element::i64, PartialShape{get_input_partial_shape(0).rank()});
 }
 
+bool ngraph::op::v0::ShapeOf::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 shared_ptr<Node> op::ShapeOf::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);

@@ -31,8 +31,11 @@ op::Result::Result(const Output<Node>& arg, bool needs_default_layout)
     , m_needs_default_layout(needs_default_layout)
 {
     constructor_validate_and_infer_types();
-    // always borrow the placement conf even the default one
-    set_placement_index(input_value(0).get_node()->get_placement_index());
+}
+
+bool ngraph::op::v0::Result::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
 }
 
 void op::Result::validate_and_infer_types()

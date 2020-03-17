@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <iterator>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/constant.hpp"
@@ -39,6 +40,13 @@ op::NormalizeL2::NormalizeL2(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::NormalizeL2::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("eps", m_eps);
+    visitor.on_attribute("eps_mode", m_eps_mode);
+    return true;
+}
+
 void op::NormalizeL2::pre_validate_and_infer_types()
 {
     auto axes_node = input_value(1).get_node_shared_ptr();
@@ -52,7 +60,7 @@ void op::NormalizeL2::pre_validate_and_infer_types()
     if (axes_rank.is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(axes_rank) <= 1,
+                              axes_rank.get_length() <= 1,
                               "Input axes must be scalar or have rank equal to 1 (axes rank: ",
                               axes_rank,
                               ").");
@@ -63,7 +71,7 @@ void op::NormalizeL2::pre_validate_and_infer_types()
             for (auto axis : reduction_axes)
             {
                 NODE_VALIDATION_CHECK(this,
-                                      axis < size_t(input_rank),
+                                      axis < input_rank.get_length(),
                                       "Reduction axis (",
                                       axis,
                                       ") is out of bounds ",

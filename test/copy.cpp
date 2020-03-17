@@ -45,13 +45,13 @@ bool check_binary()
     Shape shape{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape);
-    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape),
-                        make_shared<op::Parameter>(element::f32, shape)};
+    OutputVector new_args{make_shared<op::Parameter>(element::f32, shape),
+                          make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<OP>(arg0, arg1);
-    auto new_node = node->copy_with_new_args(new_args);
+    auto new_node = node->copy_with_new_inputs(new_args);
 
-    return (nullptr != new_node) && (new_args == new_node->get_arguments());
+    return (nullptr != new_node) && (new_args == new_node->input_values());
 }
 
 TEST(copy, abs)
@@ -88,18 +88,18 @@ TEST(copy, broadcast)
 {
     Shape shape1{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape1);
-    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape1)};
+    OutputVector new_args{make_shared<op::Parameter>(element::f32, shape1)};
 
     Shape shape{4, 1, 3};
     AxisSet axes{0, 2};
 
     auto node = make_shared<op::Broadcast>(arg0, shape, axes);
-    auto new_node = node->copy_with_new_args(new_args);
+    auto new_node = node->copy_with_new_inputs(new_args);
     auto node_cast = as_type_ptr<op::Broadcast>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(new_args == new_node->input_values());
     ASSERT_TRUE(shape == node_cast->get_broadcast_shape());
     ASSERT_TRUE(axes == node_cast->get_broadcast_axes());
 }
@@ -280,7 +280,7 @@ TEST(copy, reshape)
     ASSERT_TRUE(nullptr != new_node);
     ASSERT_TRUE(new_args == new_node->get_arguments());
     ASSERT_TRUE(axes == node_cast->get_input_order());
-    ASSERT_TRUE(shape_out == node_cast->get_output_shape());
+    ASSERT_TRUE(shape_out == node_cast->get_output_shape(0));
 }
 
 TEST(copy, select)

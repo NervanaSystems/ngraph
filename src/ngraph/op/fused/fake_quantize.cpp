@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "fake_quantize.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
@@ -78,6 +79,13 @@ void op::FakeQuantize::validate_and_infer_types()
         }
     }
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
+}
+
+bool ngraph::op::v0::FakeQuantize::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("levels", m_levels);
+    visitor.on_attribute("auto_broadcast", m_auto_broadcast);
+    return true;
 }
 
 NodeVector op::FakeQuantize::decompose_op() const

@@ -20,6 +20,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -34,18 +35,21 @@ op::Unsqueeze::Unsqueeze(const Output<Node>& data, const Output<Node>& axes)
 
 void op::Unsqueeze::pre_validate_and_infer_types()
 {
-    auto data = input_value(0);
-    auto axes_node = input_value(1).get_node_shared_ptr();
+    const auto data = input_value(0);
+    const auto axes_node = input_value(1).get_node_shared_ptr();
+    const auto data_rank = data.get_partial_shape().rank();
 
-    if (data.get_partial_shape().rank().is_dynamic() || !axes_node->is_constant())
+    if (data_rank.is_dynamic() || !axes_node->is_constant())
     {
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
         return;
     }
 
     // Get value of axes from Constant
-    auto axes_constant = as_type_ptr<op::Constant>(axes_node);
-    auto axes = axes_constant->cast_vector<size_t>();
+    const auto axes_constant = as_type_ptr<op::Constant>(axes_node);
+    const auto axes_values = axes_constant->cast_vector<int64_t>();
+    const auto expanded_rank = data_rank.get_length() + axes_values.size();
+    auto axes = normalize_axes(this->description(), axes_values, expanded_rank);
 
     NODE_VALIDATION_CHECK(this, !axes.empty(), "'axes' input is mandatory.");
     NODE_VALIDATION_CHECK(this,
@@ -61,7 +65,6 @@ void op::Unsqueeze::pre_validate_and_infer_types()
     }
 
     auto data_shape = data.get_shape();
-
     sort(begin(axes), end(axes), less<int64_t>());
 
     AxisVector input_order{ngraph::get_default_order(data_shape.size())};
@@ -87,6 +90,11 @@ NodeVector op::Unsqueeze::decompose_op() const
     auto output_shape = get_output_shape(0);
     AxisVector input_order{ngraph::get_default_order(data_shape.size())};
     return {make_shared<ngraph::op::Reshape>(data, input_order, output_shape)};
+}
+
+bool ngraph::op::v0::Unsqueeze::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
 }
 
 shared_ptr<Node> op::Unsqueeze::copy_with_new_args(const NodeVector& new_args) const
