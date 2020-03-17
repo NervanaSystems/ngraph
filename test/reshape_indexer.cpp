@@ -424,82 +424,45 @@ TEST(reshape_indexer, reshape_3d_transpose_120)
 TEST(reshape_indexer, reshape_4d_transpose)
 {
     Shape shape_a{2, 2, 5, 5};
-    Shape shape_r{2, 5, 5, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto r = make_shared<op::Reshape>(A, AxisVector{0, 2, 3, 1}, shape_r);
-    auto f = make_shared<Function>(r, ParameterVector{A});
-
-    vector<float> a_data(shape_size(shape_a));
-    iota(a_data.begin(), a_data.end(), 1.f);
-
-    auto backend = runtime::Backend::create("INTERPRETER");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, a_data);
-    auto result = backend->create_tensor(element::f32, shape_r);
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.,  26., 2.,  27., 3.,  28., 4.,  29., 5.,  30., 6.,  31., 7.,  32., 8.,
-                       33., 9.,  34., 10., 35., 11., 36., 12., 37., 13., 38., 14., 39., 15., 40.,
-                       16., 41., 17., 42., 18., 43., 19., 44., 20., 45., 21., 46., 22., 47., 23.,
-                       48., 24., 49., 25., 50., 51., 76., 52., 77., 53., 78., 54., 79., 55., 80.,
-                       56., 81., 57., 82., 58., 83., 59., 84., 60., 85., 61., 86., 62., 87., 63.,
-                       88., 64., 89., 65., 90., 66., 91., 67., 92., 68., 93., 69., 94., 70., 95.,
-                       71., 96., 72., 97., 73., 98., 74., 99., 75., 100.}),
-        read_vector<float>(result),
-        MIN_FLOAT_TOLERANCE_BITS));
+    runtime::opt_kernel::ReshapeIndexer indexer{shape_a, {0, 2, 3, 1}};
+    vector<int32_t> input(shape_size(shape_a));
+    iota(input.begin(), input.end(), 1.f);
+    vector<int32_t> expected{1,  26, 2,  27, 3,  28, 4,  29, 5,  30, 6,  31, 7,  32, 8,
+                       33, 9,  34, 10, 35, 11, 36, 12, 37, 13, 38, 14, 39, 15, 40,
+                       16, 41, 17, 42, 18, 43, 19, 44, 20, 45, 21, 46, 22, 47, 23,
+                       48, 24, 49, 25, 50, 51, 76, 52, 77, 53, 78, 54, 79, 55, 80,
+                       56, 81, 57, 82, 58, 83, 59, 84, 60, 85, 61, 86, 62, 87, 63,
+                       88, 64, 89, 65, 90, 66, 91, 67, 92, 68, 93, 69, 94, 70, 95,
+                       71, 96, 72, 97, 73, 98, 74, 99, 75, 100};
+    vector<int32_t> actual;
+    for (size_t i=0; i<shape_size(shape_a); i++)
+    {
+        actual.push_back(input[indexer.next()]);
+    }
+    EXPECT_EQ(expected, actual);
 }
 
 TEST(reshape_indexer, reshape_4d_no_transpose)
 {
     Shape shape_a{2, 2, 5, 5};
-    Shape shape_r{2, 5, 5, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_r);
-    auto f = make_shared<Function>(r, ParameterVector{A});
-
-    vector<float> a_data(shape_size(shape_a));
-    iota(a_data.begin(), a_data.end(), 1.f);
-
-    auto backend = runtime::Backend::create("INTERPRETER");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, a_data);
-    auto result = backend->create_tensor(element::f32, shape_r);
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(a_data, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+    runtime::opt_kernel::ReshapeIndexer indexer{shape_a, {0, 1, 2, 3}};
+    vector<int32_t> input(shape_size(shape_a));
+    iota(input.begin(), input.end(), 1.f);
+    vector<int32_t> expected = input;
+    vector<int32_t> actual;
+    for (size_t i=0; i<shape_size(shape_a); i++)
+    {
+        actual.push_back(input[indexer.next()]);
+    }
+    EXPECT_EQ(expected, actual);
 }
 
 TEST(reshape_indexer, reshape_transposed_shape_change)
 {
     Shape shape_a{2, 6};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_r{12};
-    auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
-    auto f = make_shared<Function>(r, ParameterVector{A});
-
-    auto backend = runtime::Backend::create("INTERPRETER");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
-    auto result = backend->create_tensor(element::f32, shape_r);
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{1, 7, 2, 8, 3, 9, 4, 10, 5, 11, 6, 12}),
-                                  read_vector<float>(result),
-                                  MIN_FLOAT_TOLERANCE_BITS));
-
-    vector<float> input{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-    vector<float> expected{1, 7, 2, 8, 3, 9, 4, 10, 5, 11, 6, 12};
-    vector<float> actual;
+    vector<int32_t> input{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+    vector<int32_t> expected{1, 7, 2, 8, 3, 9, 4, 10, 5, 11, 6, 12};
+    vector<int32_t> actual;
     runtime::opt_kernel::ReshapeIndexer indexer{shape_a, {1, 0}};
     for (size_t i=0; i<shape_size(shape_a); i++)
     {
