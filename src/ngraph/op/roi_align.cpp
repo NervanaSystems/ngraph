@@ -34,7 +34,7 @@ op::v3::ROIAlign::ROIAlign(const Output<Node>& input,
     , m_pooled_w{pooled_w}
     , m_sampling_ratio{sampling_ratio}
     , m_spatial_scale{spatial_scale}
-    , m_mode{mode_from_string(mode)}
+    , m_mode{EnumNames<ROIAlign::PoolingMode>::as_enum(mode)}
 {
     constructor_validate_and_infer_types();
 }
@@ -163,17 +163,6 @@ shared_ptr<Node> op::v3::ROIAlign::copy_with_new_args(const NodeVector& new_args
                                  m_sampling_ratio,
                                  m_spatial_scale,
                                  m_mode);
-}
-
-op::v3::ROIAlign::PoolingMode op::v3::ROIAlign::mode_from_string(const std::string& mode) const
-{
-    static const std::map<std::string, op::v3::ROIAlign::PoolingMode> allowed_values = {
-        {"avg", PoolingMode::AVG}, {"max", PoolingMode::MAX}};
-
-    NODE_VALIDATION_CHECK(
-        this, allowed_values.count(mode) > 0, "Invalid pooling mode for ROIAlign.");
-
-    return allowed_values.at(mode);
 }
 
 namespace ngraph
