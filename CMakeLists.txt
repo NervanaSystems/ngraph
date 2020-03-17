@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-cmake_minimum_required (VERSION 3.4)
+cmake_minimum_required (VERSION 3.11)
 
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -569,7 +569,7 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     endif()
     include(cmake/external_onnx.cmake)
     if (TARGET ext_protobuf)
-        add_dependencies(ext_onnx ext_protobuf)
+        add_dependencies(onnx ext_protobuf)
     endif()
 endif()
 
