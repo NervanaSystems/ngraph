@@ -115,7 +115,7 @@ TEST(copy, concat)
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape);
     OutputVector new_args{make_shared<op::Parameter>(element::f32, shape),
-                        make_shared<op::Parameter>(element::f32, shape)};
+                          make_shared<op::Parameter>(element::f32, shape)};
     size_t axis = 0;
     auto node = make_shared<op::Concat>(NodeVector{arg0, arg1}, axis);
     auto new_node = node->clone_with_new_inputs(new_args);
@@ -290,8 +290,8 @@ TEST(copy, select)
     auto arg1 = make_shared<op::Parameter>(element::f32, shape);
     auto arg2 = make_shared<op::Parameter>(element::f32, shape);
     OutputVector new_args{make_shared<op::Parameter>(element::boolean, shape),
-                        make_shared<op::Parameter>(element::f32, shape),
-                        make_shared<op::Parameter>(element::f32, shape)};
+                          make_shared<op::Parameter>(element::f32, shape),
+                          make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<op::Select>(arg0, arg1, arg2);
     auto new_node = node->clone_with_new_inputs(new_args);
