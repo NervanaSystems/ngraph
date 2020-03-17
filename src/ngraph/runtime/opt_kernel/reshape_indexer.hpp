@@ -31,12 +31,11 @@ namespace ngraph
                 class Indexer
                 {
                 public:
-                    virtual ~Indexer(){}
+                    virtual ~Indexer() {}
                     virtual size_t next() = 0;
                 };
 
-                ReshapeIndexer(const Shape& in_shape,
-                               const AxisVector& in_axis_order);
+                ReshapeIndexer(const Shape& in_shape, const AxisVector& in_axis_order);
                 size_t next();
 
             private:

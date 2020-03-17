@@ -45,11 +45,26 @@ using namespace std;
 //     }
 // }
 
+class Indexer_0 : public runtime::opt_kernel::ReshapeIndexer::Indexer
+{
+public:
+    Indexer_0(const Shape& in_shape, const AxisVector& in_axis_order)
+        : Indexer()
+    {
+    }
+    size_t next() override
+    {
+        NGRAPH_INFO;
+        return 0;
+    }
+};
+
 class Indexer_1 : public runtime::opt_kernel::ReshapeIndexer::Indexer
 {
 public:
     Indexer_1(const Shape& in_shape, const AxisVector& in_axis_order)
-        : Indexer(), m_in_shape{in_shape}
+        : Indexer()
+        , m_in_shape{in_shape}
     {
         for (size_t i = 0; i < 1; i++)
         {
@@ -60,13 +75,8 @@ public:
     }
     size_t next() override
     {
-        size_t rc = *m_map_index[0] * m_in_shape[1] + *m_map_index[1];
-        m_in_index[1]++;
-        if (m_in_index[1] == m_size[1])
-        {
-            m_in_index[1] = 0;
-            m_in_index[0]++;
-        }
+        size_t rc = *m_map_index[0];
+        m_in_index[0]++;
         return rc;
     }
 
@@ -81,7 +91,8 @@ class Indexer_2 : public runtime::opt_kernel::ReshapeIndexer::Indexer
 {
 public:
     Indexer_2(const Shape& in_shape, const AxisVector& in_axis_order)
-        : Indexer(), m_in_shape{in_shape}
+        : Indexer()
+        , m_in_shape{in_shape}
     {
         for (size_t i = 0; i < 2; i++)
         {
@@ -113,7 +124,8 @@ class Indexer_3 : public runtime::opt_kernel::ReshapeIndexer::Indexer
 {
 public:
     Indexer_3(const Shape& in_shape, const AxisVector& in_axis_order)
-        : Indexer(), m_in_shape{in_shape}
+        : Indexer()
+        , m_in_shape{in_shape}
     {
         for (size_t i = 0; i < 3; i++)
         {
@@ -145,7 +157,8 @@ class Indexer_4 : public runtime::opt_kernel::ReshapeIndexer::Indexer
 {
 public:
     Indexer_4(const Shape& in_shape, const AxisVector& in_axis_order)
-        : Indexer(), m_in_shape{in_shape}
+        : Indexer()
+        , m_in_shape{in_shape}
     {
         for (size_t i = 0; i < 4; i++)
         {
@@ -177,7 +190,8 @@ class Indexer_5 : public runtime::opt_kernel::ReshapeIndexer::Indexer
 {
 public:
     Indexer_5(const Shape& in_shape, const AxisVector& in_axis_order)
-        : Indexer(), m_in_shape{in_shape}
+        : Indexer()
+        , m_in_shape{in_shape}
     {
         for (size_t i = 0; i < 5; i++)
         {
@@ -209,7 +223,8 @@ class Indexer_6 : public runtime::opt_kernel::ReshapeIndexer::Indexer
 {
 public:
     Indexer_6(const Shape& in_shape, const AxisVector& in_axis_order)
-        : Indexer(), m_in_shape{in_shape}
+        : Indexer()
+        , m_in_shape{in_shape}
     {
         for (size_t i = 0; i < 6; i++)
         {
@@ -388,9 +403,10 @@ private:
 runtime::opt_kernel::ReshapeIndexer::ReshapeIndexer(const Shape& in_shape,
                                                     const AxisVector& in_axis_order)
 {
+    NGRAPH_INFO << in_shape.size();
     switch (in_shape.size())
     {
-    case 0: break;
+    case 0: m_indexer.reset(new Indexer_0(in_shape, in_axis_order)); break;
     case 1: m_indexer.reset(new Indexer_1(in_shape, in_axis_order)); break;
     case 2: m_indexer.reset(new Indexer_2(in_shape, in_axis_order)); break;
     case 3: m_indexer.reset(new Indexer_3(in_shape, in_axis_order)); break;
@@ -399,6 +415,7 @@ runtime::opt_kernel::ReshapeIndexer::ReshapeIndexer(const Shape& in_shape,
     case 6: m_indexer.reset(new Indexer_6(in_shape, in_axis_order)); break;
     default: throw runtime_error("Unsupported dimention in ReshapeIndexer");
     }
+    NGRAPH_INFO;
 }
 
 size_t runtime::opt_kernel::ReshapeIndexer::next()
