@@ -34,12 +34,15 @@ namespace ngraph
                 {
                     NodeVector inputs{node.get_ng_inputs()};
                     std::int64_t axis = node.get_attribute_value<std::int64_t>("axis");
-                    const auto normalized_axis =
-                        ngraph::normalize_axis(node.get_description(),
-                                               axis,
-                                               inputs.at(0)->get_output_partial_shape(0).rank());
+                    if (axis < 0)
+                    {
+                        axis = ngraph::normalize_axis(
+                            node.get_description(),
+                            axis,
+                            inputs.at(0)->get_output_partial_shape(0).rank());
+                    }
 
-                    return {std::make_shared<default_opset::Concat>(inputs, normalized_axis)};
+                    return {std::make_shared<default_opset::Concat>(inputs, axis)};
                 }
 
             } // namespace set_1

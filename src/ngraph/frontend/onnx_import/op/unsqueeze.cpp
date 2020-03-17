@@ -34,16 +34,25 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
                     auto axes = node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
-                    const auto data_rank = data->get_output_partial_shape(0).rank();
-                    CHECK_VALID_NODE(node,
-                                     data_rank.is_static(),
-                                     "Data rank must be static for creation of ONNX Unsqueeze op");
-                    const auto expanded_rank =
-                        data->get_output_partial_shape(0).rank() + axes.size();
-                    std::vector<std::size_t> normalized_axes =
-                        ngraph::normalize_axes(node.get_description(), axes, expanded_rank);
+                    if (std::find_if(axes.begin(), axes.end(), [](const std::int64_t i) -> bool {
+                            return i < 0;
+                        }) != axes.end())
+                    {
+                        const auto data_rank = data->get_output_partial_shape(0).rank();
+                        CHECK_VALID_NODE(
+                            node,
+                            data_rank.is_static(),
+                            "Data rank must be static for creation of ONNX Unsqueeze op");
+                        const auto expanded_rank =
+                            data->get_output_partial_shape(0).rank() + axes.size();
+                        std::vector<std::size_t> normalized_axes =
+                            ngraph::normalize_axes(node.get_description(), axes, expanded_rank);
+                        axes = std::vector<std::int64_t>(normalized_axes.begin(),
+                                                         normalized_axes.end());
+                    }
+
                     auto axes_node = std::make_shared<default_opset::Constant>(
-                        element::i64, Shape{normalized_axes.size()}, normalized_axes);
+                        element::i64, Shape{axes.size()}, axes);
                     return {std::make_shared<default_opset::Unsqueeze>(data, axes_node)};
                 }
 
