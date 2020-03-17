@@ -28,7 +28,7 @@ op::v3::ROIAlign::ROIAlign(const Output<Node>& input,
                            const size_t pooled_w,
                            const size_t sampling_ratio,
                            const float spatial_scale,
-                           const std::string& mode)
+                           const string& mode)
     : Op{{input, rois, batch_indices}}
     , m_pooled_h{pooled_h}
     , m_pooled_w{pooled_w}
