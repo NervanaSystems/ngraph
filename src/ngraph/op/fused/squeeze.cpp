@@ -52,7 +52,7 @@ void op::Squeeze::pre_validate_and_infer_types()
         return;
     }
 
-    auto data_rank = data.get_partial_shape().rank().get_length();
+    uint64_t data_rank = data.get_partial_shape().rank().get_length();
     auto data_partial_shape = data.get_partial_shape();
 
     // Get value of axes from Constant
@@ -96,7 +96,7 @@ void op::Squeeze::pre_validate_and_infer_types()
     }
 
     std::vector<Dimension> output_data_shape;
-    for (size_t idx = 0; idx < data_rank; ++idx)
+    for (uint64_t idx = 0; idx < data_rank; ++idx)
     {
         if (axes_to_squeeze.at(idx) == 0)
         {
