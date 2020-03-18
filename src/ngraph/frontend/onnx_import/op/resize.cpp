@@ -35,7 +35,21 @@ namespace ngraph
                     const auto data_shape = data->get_output_partial_shape(0);
                     const auto scales_shape = scales->get_output_partial_shape(0);
 
-                    auto mode = node.get_attribute_value<std::string>("mode", "nearest");
+                    const auto mode = node.get_attribute_value<std::string>("mode", "nearest");
+
+                    std::unordered_set<std::string> supported_modes = {
+                        "nearest", "linear", "cubic", "area"};
+                    bool is_mode_supported =
+                        (std::find(supported_modes.begin(), supported_modes.end(), mode) !=
+                         supported_modes.end());
+
+                    if (!is_mode_supported)
+                    {
+                        throw error::NotSupported("ResizeOp: " + mode +
+                                                  " - this type of interpolation mode is not "
+                                                  "supported. Choose one of the following modes: "
+                                                  "'nearest', 'linear', 'cubic', 'area'.");
+                    }
 
                     auto attrs = ngraph::op::InterpolateAttrs();
                     attrs.mode = mode;
@@ -52,7 +66,7 @@ namespace ngraph
                     else
                     {
                         throw error::NotSupported(
-                            "ResizeOp: Dynamic rank of Scales input is not supported");
+                            "ResizeOp: Dynamic rank of Scales input is not supported.");
                     }
 
                     auto shape_of_data = std::make_shared<default_opset::Convert>(

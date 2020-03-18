@@ -25,7 +25,7 @@ graph {
     op_type: "Resize"
     attribute {
       name: "mode"
-      s: "nearset"
+      s: "nearest"
       type: STRING
     }
   }
