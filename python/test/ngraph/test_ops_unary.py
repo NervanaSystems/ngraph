@@ -113,3 +113,16 @@ def test_sigmoid():
     expected = np.array(list(map(sigmoid, input_data)))
 
     assert np.allclose(result, expected)
+
+
+@pytest.mark.skip_on_gpu
+def test_softmax():
+    axis = 0
+    input_tensor = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+
+    result = run_op_node([input_tensor], ng.ops.softmax, axis)
+
+    expected = [[0.00426978, 0.01160646, 0.03154963],
+                [0.08576079, 0.23312201, 0.63369132]]
+
+    assert np.allclose(result, expected)
