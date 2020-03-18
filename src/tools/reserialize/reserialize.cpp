@@ -109,7 +109,7 @@ int main(int argc, char** argv)
         }
 
         timer.start();
-        ngraph::serialize(output, function, 2);
+        ngraph::serialize(output, function);
         timer.stop();
         cout << "serialize took   " << timer.get_milliseconds() << "ms\n";
     }

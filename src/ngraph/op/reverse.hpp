@@ -137,6 +137,7 @@ namespace ngraph
         using v0::Reverse;
     }
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const op::v1::Reverse::Mode& type);
 
     template <>
