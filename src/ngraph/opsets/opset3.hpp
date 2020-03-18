@@ -14,29 +14,16 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
+#pragma once
 
-#include "ngraph/opsets/opset3.hpp"
-#include "non_zero.hpp"
+#include "ngraph/ops.hpp"
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace opset3
     {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector non_zero(const Node& node)
-                {
-                    const Output<ngraph::Node> data = node.get_ng_inputs().at(0);
-                    return {std::make_shared<ngraph::opset3::NonZero>(data)};
-                }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+#define NGRAPH_OP(a, b) using b::a;
+#include "ngraph/opsets/opset3_tbl.hpp"
+#undef NGRAPH_OP
+    }
+}
