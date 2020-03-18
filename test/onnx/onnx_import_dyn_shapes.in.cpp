@@ -55,11 +55,11 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, onnx_dynamic_dims_to_ngraph_dynamic
         EXPECT_TRUE(input_ps.is_dynamic());
 
         ASSERT_TRUE(input_ps.rank().is_static());
-        EXPECT_EQ(static_cast<size_t>(input_ps.rank()), 2);
+        EXPECT_EQ(input_ps.rank().get_length(), 2);
 
         EXPECT_TRUE(input_ps[0].is_dynamic());
         ASSERT_TRUE(input_ps[1].is_static());
-        EXPECT_EQ(static_cast<size_t>(input_ps[1]), 2);
+        EXPECT_EQ(input_ps[1].get_length(), 2);
     }
 
     const auto& graph_outputs = function->get_results();
@@ -68,11 +68,11 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, onnx_dynamic_dims_to_ngraph_dynamic
     const auto out = *(graph_outputs.cbegin());
     const auto& out_ps = out->get_output_partial_shape(0);
     ASSERT_TRUE(out_ps.rank().is_static());
-    EXPECT_EQ(static_cast<size_t>(out_ps.rank()), 2);
+    EXPECT_EQ(out_ps.rank().get_length(), 2);
 
     EXPECT_TRUE(out_ps[0].is_dynamic());
     ASSERT_TRUE(out_ps[1].is_static());
-    EXPECT_EQ(static_cast<size_t>(out_ps[1]), 2);
+    EXPECT_EQ(out_ps[1].get_length(), 2);
 }
 
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, ab_plus_c_inference)

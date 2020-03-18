@@ -317,7 +317,7 @@ static void sink_reshape(shared_ptr<op::Reshape> reshape,
     NGRAPH_DEBUG << "Sinking Reshape :" << describe_reshape(reshape);
     auto orig_reshape = reorders.at(reshape->get_argument(0));
     // 1) Not a Transpose or 2) Rank changing operation.
-    if ((reshape->get_output_shape().size() != reshape->get_input_order().size()) ||
+    if ((reshape->get_output_shape(0).size() != reshape->get_input_order().size()) ||
         (!reshape->get_is_transpose()))
     {
         NGRAPH_DEBUG << "Materializing " << describe_reshape(orig_reshape) << " for reshape "

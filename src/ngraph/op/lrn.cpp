@@ -81,7 +81,7 @@ void op::LRN::validate_and_infer_types()
     NODE_VALIDATION_CHECK(
         this,
         axes_shape.is_dynamic() || input_shape_rank.is_dynamic() ||
-            static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape_rank),
+            axes_shape[0].get_length() <= input_shape_rank.get_length(),
         "Number of elements of axes must be >= 0 and <= argument rank (axes_shape[0]: ",
         axes_shape[0],
         ").");
@@ -92,7 +92,7 @@ void op::LRN::validate_and_infer_types()
         for (auto axis : reduction_axes)
         {
             NODE_VALIDATION_CHECK(this,
-                                  axis < size_t(input_shape_rank),
+                                  axis < input_shape_rank.get_length(),
                                   "Reduction axis (",
                                   axis,
                                   ") is out of bounds ",
