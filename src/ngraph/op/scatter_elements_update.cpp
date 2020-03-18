@@ -30,7 +30,7 @@ op::v3::ScatterElementsUpdate::ScatterElementsUpdate(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-bool ngraph::op::v3::ScatterElementsUpdate::visit_attributes(AttributeVisitor& visitor)
+bool op::v3::ScatterElementsUpdate::visit_attributes(AttributeVisitor& visitor)
 {
     return true;
 }

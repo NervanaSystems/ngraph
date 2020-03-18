@@ -27,7 +27,7 @@ namespace ngraph
             class NGRAPH_API ScatterElementsUpdate : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"ScatterElementsUpdate", 0};
+                static constexpr NodeTypeInfo type_info{"ScatterElementsUpdate", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ScatterElementsUpdate() = default;
                 /// \brief Constructs a ScatterElementsUpdate node
