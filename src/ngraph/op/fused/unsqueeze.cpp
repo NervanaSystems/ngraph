@@ -47,8 +47,8 @@ void op::Unsqueeze::pre_validate_and_infer_types()
 
     // Get value of axes from Constant
     const auto axes_constant = as_type_ptr<op::Constant>(axes_node);
-    const auto axes_values = axes_constant->cast_vector<int64_t>();
-    const auto expanded_rank = data_rank.get_length() + axes_values.size();
+    const auto axes_values = axes_constant->cast_vector<n_axis_t>();
+    axis_t expanded_rank = data_rank.get_length() + axes_values.size();
     auto axes = normalize_axes(this->description(), axes_values, expanded_rank);
 
     NODE_VALIDATION_CHECK(this, !axes.empty(), "'axes' input is mandatory.");
@@ -67,12 +67,12 @@ void op::Unsqueeze::pre_validate_and_infer_types()
     auto data_shape = data.get_shape();
     sort(begin(axes), end(axes), less<int64_t>());
 
-    AxisVector input_order{ngraph::get_default_order(data_shape.size())};
+    AxisVector input_order{ngraph::get_default_order(data_shape.get_rank())};
 
     for (auto axis : axes)
     {
         NODE_VALIDATION_CHECK(
-            this, axis <= data_shape.size(), "provided 'axes' value ", axis, " is not valid.");
+            this, axis <= data_shape.get_rank(), "provided 'axes' value ", axis, " is not valid.");
 
         data_shape.insert(next(begin(data_shape), axis), 1);
     }
@@ -88,7 +88,7 @@ NodeVector op::Unsqueeze::decompose_op() const
     auto data = input_value(0);
     auto data_shape = data.get_shape();
     auto output_shape = get_output_shape(0);
-    AxisVector input_order{ngraph::get_default_order(data_shape.size())};
+    AxisVector input_order{ngraph::get_default_order(data_shape.get_rank())};
     return {make_shared<ngraph::op::Reshape>(data, input_order, output_shape)};
 }
 

@@ -1289,9 +1289,9 @@ namespace ngraph
                     }
                     catch (const mkldnn::error& e)
                     {
-                        if (arg0_shape.size() == 4 || arg0_shape.size() == 5)
+                        if (arg0_shape.get_rank() == 4 || arg0_shape.get_rank() == 5)
                         {
-                            auto default_format = arg0_shape.size() == 4
+                            auto default_format = arg0_shape.get_rank() == 4
                                                       ? mkldnn::memory::FORMAT::nchw
                                                       : mkldnn::memory::FORMAT::ncdhw;
                             auto default_desc_i = mkldnn_utils::create_default_mkldnn_md(
@@ -1481,9 +1481,9 @@ namespace ngraph
                     }
                     catch (const mkldnn::error& e)
                     {
-                        if (arg0_shape.size() == 4 || arg0_shape.size() == 5)
+                        if (arg0_shape.get_rank() == 4 || arg0_shape.get_rank() == 5)
                         {
-                            auto default_format = arg0_shape.size() == 4
+                            auto default_format = arg0_shape.get_rank() == 4
                                                       ? mkldnn::memory::FORMAT::nchw
                                                       : mkldnn::memory::FORMAT::ncdhw;
                             auto default_desc_i = mkldnn_utils::create_default_mkldnn_md(
@@ -1739,12 +1739,13 @@ namespace ngraph
                     memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
 
-                    if (arg0_shape.size() != 4 && arg0_shape.size() != 5)
+                    if (arg0_shape.get_rank() != 4 && arg0_shape.get_rank() != 5)
                     {
                         throw ngraph_error("MKLDNN Unsupported pooling layout");
                     }
-                    auto default_format = arg0_shape.size() == 4 ? mkldnn::memory::FORMAT::nchw
-                                                                 : mkldnn::memory::FORMAT::ncdhw;
+                    auto default_format = arg0_shape.get_rank() == 4
+                                              ? mkldnn::memory::FORMAT::nchw
+                                              : mkldnn::memory::FORMAT::ncdhw;
                     auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, default_format);
                     auto diff_src_desc = memory::desc(mkldnn_arg0_shape, et, default_format);
 
@@ -1864,13 +1865,13 @@ namespace ngraph
                     auto axis_order = reshape->get_input_order();
                     auto input_shape = reshape->get_input_shape(0);
                     auto output_shape = reshape->get_output_shape(0);
-                    if (input_shape.size() != output_shape.size())
+                    if (input_shape.get_rank() != output_shape.get_rank())
                         return false;
 
                     if ((shape_size(input_shape)) == 1)
                         return false;
 
-                    for (size_t i = 0; i < output_shape.size(); i++)
+                    for (size_t i = 0; i < output_shape.get_rank(); i++)
                     {
                         if (input_shape[axis_order[i]] != output_shape[i])
                             return false;
@@ -1886,15 +1887,15 @@ namespace ngraph
                     auto input_shape = reshape->get_input_shape(0);
                     auto output_shape = reshape->get_output_shape(0);
 
-                    if (input_shape.size() <= output_shape.size())
+                    if (input_shape.get_rank() <= output_shape.get_rank())
                         return false;
 
                     if ((shape_size(input_shape)) == 1)
                         return false;
 
-                    for (size_t i = 0, j = 0; i < input_shape.size(); i++)
+                    for (size_t i = 0, j = 0; i < input_shape.get_rank(); i++)
                     {
-                        if (j >= output_shape.size() || input_shape[i] != output_shape[j])
+                        if (j >= output_shape.get_rank() || input_shape[i] != output_shape[j])
                         {
                             // Squeezed axis
                             if (input_shape[i] != 1)
@@ -1922,15 +1923,15 @@ namespace ngraph
                     auto input_shape = reshape->get_input_shape(0);
                     auto output_shape = reshape->get_output_shape(0);
 
-                    if (input_shape.size() >= output_shape.size())
+                    if (input_shape.get_rank() >= output_shape.get_rank())
                         return false;
 
                     if ((shape_size(input_shape)) == 1)
                         return false;
 
-                    for (size_t i = 0, j = 0; j < output_shape.size(); j++)
+                    for (size_t i = 0, j = 0; j < output_shape.get_rank(); j++)
                     {
-                        if (i >= input_shape.size() || input_shape[i] != output_shape[j])
+                        if (i >= input_shape.get_rank() || input_shape[i] != output_shape[j])
                         {
                             // Expanded axis
                             if (output_shape[j] != 1)
@@ -2004,8 +2005,8 @@ namespace ngraph
                         {
                             auto input_strides = cpu_tvl->get_strides();
                             auto axis_order = reshape->get_input_order();
-                            Strides output_strides(input_strides.size());
-                            for (size_t i = 0; i < input_strides.size(); i++)
+                            Strides output_strides(input_strides.get_rank());
+                            for (size_t i = 0; i < input_strides.get_rank(); i++)
                             {
                                 output_strides[i] = input_strides[axis_order[i]];
                             }

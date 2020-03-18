@@ -21,24 +21,25 @@
 #include <vector>
 
 #include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
     /// \brief A vector of axes.
-    class AxisVector : public std::vector<size_t>
+    class AxisVector : public std::vector<axis_t>
     {
     public:
-        NGRAPH_API AxisVector(const std::initializer_list<size_t>& axes);
+        NGRAPH_API AxisVector(const std::initializer_list<axis_t>& axes);
 
-        NGRAPH_API AxisVector(const std::vector<size_t>& axes);
+        NGRAPH_API AxisVector(const std::vector<axis_t>& axes);
 
         NGRAPH_API AxisVector(const AxisVector& axes);
 
-        NGRAPH_API explicit AxisVector(size_t n);
+        NGRAPH_API explicit AxisVector(axis_t n);
 
         template <class InputIterator>
         AxisVector(InputIterator first, InputIterator last)
-            : std::vector<size_t>(first, last)
+            : std::vector<axis_t>(first, last)
         {
         }
 
@@ -49,6 +50,8 @@ namespace ngraph
         NGRAPH_API AxisVector& operator=(const AxisVector& v);
 
         NGRAPH_API AxisVector& operator=(AxisVector&& v) noexcept;
+
+        NGRAPH_API size_t get_rank() const { return size(); }
     };
 
     std::ostream& operator<<(std::ostream& s, const AxisVector& axis_vector);

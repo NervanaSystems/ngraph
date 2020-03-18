@@ -35,7 +35,7 @@ op::v0::GenerateMask::GenerateMask(const Output<Node>& training,
     , m_seed(seed)
     , m_probability(prob)
 {
-    set_argument(1, make_shared<op::Constant>(element::u64, Shape{shape.size()}, shape));
+    set_argument(1, make_shared<op::Constant>(element::u64, Shape{shape.get_rank()}, shape));
     set_argument(2,
                  make_shared<op::Constant>(element::i32, Shape{}, std::vector<int32_t>{use_seed}));
     set_argument(3, make_shared<op::Constant>(element::u64, Shape{}, std::vector<uint64_t>{seed}));

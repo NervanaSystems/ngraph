@@ -48,7 +48,7 @@ ngraph::Strides::Strides(const Strides& axis_strides)
 {
 }
 
-ngraph::Strides::Strides(size_t n, size_t initial_value)
+ngraph::Strides::Strides(axis_t n, size_t initial_value)
     : std::vector<size_t>(n, initial_value)
 {
 }

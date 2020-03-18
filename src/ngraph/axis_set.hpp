@@ -23,20 +23,21 @@
 
 #include "ngraph/attribute_adapter.hpp"
 #include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
     /// \brief A set of axes.
-    class AxisSet : public std::set<size_t>
+    class AxisSet : public std::set<axis_t>
     {
     public:
         NGRAPH_API AxisSet();
 
-        NGRAPH_API AxisSet(const std::initializer_list<size_t>& axes);
+        NGRAPH_API AxisSet(const std::initializer_list<axis_t>& axes);
 
-        NGRAPH_API AxisSet(const std::set<size_t>& axes);
+        NGRAPH_API AxisSet(const std::set<axis_t>& axes);
 
-        NGRAPH_API AxisSet(const std::vector<size_t>& axes);
+        NGRAPH_API AxisSet(const std::vector<axis_t>& axes);
 
         NGRAPH_API AxisSet(const AxisSet& axes);
 

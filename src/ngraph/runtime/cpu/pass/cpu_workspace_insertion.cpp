@@ -108,8 +108,8 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
     auto m_max_pool = std::static_pointer_cast<op::MaxPool>(pattern_map[max_pool]);
     auto m_max_pool_bprop = std::static_pointer_cast<op::MaxPoolBackprop>(m.get_match_root());
 
-    if (m_max_pool_bprop->get_shape().size() != 4 ||
-        m_max_pool_bprop->get_window_shape().size() != 2 ||
+    if (m_max_pool_bprop->get_shape().get_rank() != 4 ||
+        m_max_pool_bprop->get_window_shape().get_rank() != 2 ||
         m_max_pool_bprop->get_input_element_type(0) != element::f32)
     {
         NGRAPH_DEBUG << "MKLDNN doesn't support inputs of given shape type";

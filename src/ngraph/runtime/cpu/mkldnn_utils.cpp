@@ -117,7 +117,7 @@ bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
                                                       const ngraph::element::Type type)
 {
     auto it = get_mkldnn_data_type_map().find(type);
-    if (dims.size() == 0)
+    if (dims.get_rank() == 0)
     {
         return false;
     }
@@ -126,7 +126,7 @@ bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
     {
         return false;
     }
-    if (dims.size() > TENSOR_MAX_DIMS)
+    if (dims.get_rank() > TENSOR_MAX_DIMS)
     {
         return false;
     }
@@ -139,7 +139,7 @@ bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
 
 bool runtime::cpu::mkldnn_utils::is_perm_sorted(const Strides& a, const AxisVector& perm)
 {
-    for (size_t i = 0; i < a.size() - 1; i++)
+    for (size_t i = 0; i < a.get_rank() - 1; i++)
     {
         if (a[perm[i]] < a[perm[i + 1]])
             return false;
@@ -150,18 +150,19 @@ bool runtime::cpu::mkldnn_utils::is_perm_sorted(const Strides& a, const AxisVect
 mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
     const Shape& dims, const Strides& strides, const ngraph::element::Type type)
 {
-    if (dims.size() > TENSOR_MAX_DIMS || strides.size() > TENSOR_MAX_DIMS)
+    if (dims.get_rank() > TENSOR_MAX_DIMS || strides.get_rank() > TENSOR_MAX_DIMS)
     {
-        throw ngraph_error("In create_blocked_mkldnn_md: Dimensions (dims, stride): (" +
-                           std::to_string(dims.size()) + ", " + std::to_string(strides.size()) +
-                           ") exceed maximum supported by MKLDNN " +
-                           std::to_string(TENSOR_MAX_DIMS));
+        throw ngraph_error(
+            "In create_blocked_mkldnn_md: Dimensions (dims, stride): (" +
+            std::to_string(dims.get_rank()) + ", " + std::to_string(strides.get_rank()) +
+            ") exceed maximum supported by MKLDNN " + std::to_string(TENSOR_MAX_DIMS));
     }
 
-    if (dims.size() != strides.size())
+    if (dims.get_rank() != strides.get_rank())
     {
         throw ngraph_error("In create_blocked_mkldnn_md: Rank mismatch between shape and strides " +
-                           std::to_string(dims.size()) + " " + std::to_string(strides.size()));
+                           std::to_string(dims.get_rank()) + " " +
+                           std::to_string(strides.get_rank()));
     }
 
     memory::dims dim(dims.begin(), dims.end());
@@ -212,7 +213,7 @@ void runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(Node* node)
 
 bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node)
 {
-    auto input_rank = node->get_input_shape(2).size();
+    auto input_rank = node->get_input_shape(2).get_rank();
     auto input_element_type = node->get_input_element_type(2);
 
     if (((input_rank == 4 || input_rank == 5) && input_element_type == element::f32))
@@ -248,9 +249,9 @@ mkldnn::algorithm runtime::cpu::mkldnn_utils::get_conv_algo()
 
 bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node)
 {
-    auto input_rank = node->get_input_shape(2).size();
+    auto input_rank = node->get_input_shape(2).get_rank();
     auto input_element_type = node->get_input_element_type(2);
-    auto delta_rank = node->get_input_shape(5).size();
+    auto delta_rank = node->get_input_shape(5).get_rank();
     auto delta_element_type = node->get_input_element_type(5);
 
     if (((input_rank == 4 && delta_rank == 4) || (input_rank == 5 && delta_rank == 5)) &&
@@ -429,7 +430,7 @@ mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
 
 mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(const Shape& shape)
 {
-    switch (shape.size())
+    switch (shape.get_rank())
     {
     case 1: return mkldnn::memory::format::x;
     case 2: return mkldnn::memory::format::nc;
@@ -566,10 +567,10 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
 memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& in,
                                                             AxisVector& axis_list)
 {
-    if (in.data.ndims <= static_cast<int64_t>(axis_list.size()))
+    if (in.data.ndims <= static_cast<int64_t>(axis_list.get_rank()))
     {
         throw ngraph_error("Squeezing too many axes: input " + to_string(in.data.ndims) +
-                           " , removing " + to_string(axis_list.size()));
+                           " , removing " + to_string(axis_list.get_rank()));
     }
     for (auto axis : axis_list)
     {
@@ -582,14 +583,14 @@ memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& 
 
     mkldnn_memory_desc_t md;
     md.primitive_kind = in.data.primitive_kind;
-    md.ndims = in.data.ndims - static_cast<int>(axis_list.size());
+    md.ndims = in.data.ndims - static_cast<int>(axis_list.get_rank());
     md.format = mkldnn_blocked;
     md.data_type = in.data.data_type;
 
     size_t k = 0;
     for (int64_t i = 0, j = 0; i < in.data.ndims; i++)
     {
-        if (k < axis_list.size() && i == static_cast<int64_t>(axis_list[k]))
+        if (k < axis_list.get_rank() && i == static_cast<int64_t>(axis_list[k]))
         {
             k++;
             continue;
@@ -615,14 +616,14 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
 {
     mkldnn_memory_desc_t md;
     md.primitive_kind = in.data.primitive_kind;
-    md.ndims = in.data.ndims + static_cast<int>(axis_list.size());
+    md.ndims = in.data.ndims + static_cast<int>(axis_list.get_rank());
     md.format = mkldnn_blocked;
     md.data_type = in.data.data_type;
 
     size_t k = 0;
     for (int64_t i = 0, j = 0; j < md.ndims; j++)
     {
-        if (k < axis_list.size() && j == static_cast<int64_t>(axis_list[k]))
+        if (k < axis_list.get_rank() && j == static_cast<int64_t>(axis_list[k]))
         {
             k++;
             md.dims[j] = 1;
@@ -716,18 +717,18 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md_helper
     const mkldnn::memory::dims& stride,
     const mkldnn::memory::data_type dtype)
 {
-    if (dim.size() == 1)
+    if (dim.get_rank() == 1)
     {
         return memory::desc(dim, dtype, memory::format::x);
     }
-    if (dim.size() == 2)
+    if (dim.get_rank() == 2)
     {
         if (is_perm_sorted(strides, {0, 1}))
         {
             return memory::desc(dim, dtype, memory::format::nc);
         }
     }
-    if (dim.size() == 3)
+    if (dim.get_rank() == 3)
     {
         if (is_perm_sorted(strides, {0, 1, 2}))
         {
@@ -738,7 +739,7 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md_helper
             return memory::desc(dim, dtype, memory::format::ntc);
         }
     }
-    if (dim.size() == 4)
+    if (dim.get_rank() == 4)
     {
         if (is_perm_sorted(strides, {0, 1, 2, 3}))
         {
@@ -749,7 +750,7 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md_helper
             return memory::desc(dim, dtype, memory::format::nhwc);
         }
     }
-    if (dim.size() == 5)
+    if (dim.get_rank() == 5)
     {
         if (is_perm_sorted(strides, {0, 1, 2, 3, 4}))
         {
@@ -763,11 +764,11 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md_helper
 
     mkldnn_memory_desc_t md;
     md.primitive_kind = mkldnn_memory;
-    md.ndims = static_cast<int>(dim.size());
+    md.ndims = static_cast<int>(dim.get_rank());
     md.format = mkldnn_blocked;
     md.data_type = mkldnn::memory::convert_to_c(dtype);
 
-    for (size_t i = 0; i < dim.size(); i++)
+    for (size_t i = 0; i < dim.get_rank(); i++)
     {
         md.layout_desc.blocking.block_dims[i] = 1;
         md.layout_desc.blocking.strides[1][i] = 1;
@@ -1189,7 +1190,7 @@ mkldnn::memory::format_tag runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
 
 mkldnn::memory::format_tag runtime::cpu::mkldnn_utils::CreateNativeDataFormat(const Shape& shape)
 {
-    switch (shape.size())
+    switch (shape.get_rank())
     {
     case 1: return mkldnn::memory::format_tag::x;
     case 2: return mkldnn::memory::format_tag::nc;
@@ -1378,10 +1379,10 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
 memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& in,
                                                             AxisVector& axis_list)
 {
-    if (in.data.ndims <= axis_list.size())
+    if (in.data.ndims <= axis_list.get_rank())
     {
         throw ngraph_error("Squeezing too many axes: input " + to_string(in.data.ndims) +
-                           " , removing " + to_string(axis_list.size()));
+                           " , removing " + to_string(axis_list.get_rank()));
     }
     for (auto axis : axis_list)
     {
@@ -1393,7 +1394,7 @@ memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& 
     }
 
     mkldnn_memory_desc_t md;
-    md.ndims = in.data.ndims - static_cast<int>(axis_list.size());
+    md.ndims = in.data.ndims - static_cast<int>(axis_list.get_rank());
     md.format_kind = mkldnn_blocked;
     md.data_type = in.data.data_type;
     md.format_desc.blocking.inner_nblks = in.data.format_desc.blocking.inner_nblks;

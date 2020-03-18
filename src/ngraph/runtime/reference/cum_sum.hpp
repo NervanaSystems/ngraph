@@ -43,7 +43,7 @@ namespace ngraph
                 }
 
                 P axis = axis_tensor[0];
-                P rank = tensor_shape.size();
+                P rank = tensor_shape.get_rank();
 
                 if (axis < -rank || axis > rank)
                 {
@@ -52,10 +52,10 @@ namespace ngraph
                 axis = axis < 0 ? rank + axis : axis;
 
                 auto get_key = [&, axis](const Coordinate& coord) -> Coordinate {
-                    Coordinate result(coord.size(), 0);
+                    Coordinate result(coord.get_rank(), 0);
                     result[axis] = coord[axis];
 
-                    for (size_t i = 0; i < coord.size(); i++)
+                    for (size_t i = 0; i < coord.get_rank(); i++)
                     {
                         result[i] = coord[i] - result[i];
                     }

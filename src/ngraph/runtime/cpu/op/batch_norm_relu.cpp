@@ -33,7 +33,7 @@ ngraph::op::BatchNormTrainingRelu::BatchNormTrainingRelu(double eps,
 
     auto bn_input_shape = get_input_shape(INPUT);
 
-    if (bn_input_shape.size() != 4 && bn_input_shape.size() != 5)
+    if (bn_input_shape.get_rank() != 4 && bn_input_shape.get_rank() != 5)
     {
         throw ngraph_error("input tensor to batchnorm must have rank 4/rank5");
     }
@@ -59,12 +59,12 @@ ngraph::op::BatchNormTrainingRelu::BatchNormTrainingRelu(double eps,
         }
     }
 
-    if ((gamma.get_shape().size() != 1) || (beta.get_shape().size() != 1))
+    if ((gamma.get_shape().get_rank() != 1) || (beta.get_shape().get_rank() != 1))
     {
         throw ngraph_error("gamma and beta should have rank 1");
     }
 
-    if (gamma.get_shape().size() != beta.get_shape().size())
+    if (gamma.get_shape().get_rank() != beta.get_shape().get_rank())
     {
         throw ngraph_error("gamma and beta rank does not match");
     }
@@ -94,7 +94,7 @@ ngraph::op::BatchNormInferenceRelu::BatchNormInferenceRelu(double eps,
     constructor_validate_and_infer_types();
     auto bn_input_shape = get_input_shape(INPUT);
 
-    if (bn_input_shape.size() != 4 && bn_input_shape.size() != 5)
+    if (bn_input_shape.get_rank() != 4 && bn_input_shape.get_rank() != 5)
     {
         throw ngraph_error("input tensor to batchnorm must have rank 4/rank5");
     }
@@ -118,12 +118,12 @@ ngraph::op::BatchNormInferenceRelu::BatchNormInferenceRelu(double eps,
         }
     }
 
-    if ((gamma.get_shape().size() != 1) || (beta.get_shape().size() != 1))
+    if ((gamma.get_shape().get_rank() != 1) || (beta.get_shape().get_rank() != 1))
     {
         throw ngraph_error("gamma and beta should have rank 1");
     }
 
-    if (gamma.get_shape().size() != beta.get_shape().size())
+    if (gamma.get_shape().get_rank() != beta.get_shape().get_rank())
     {
         throw ngraph_error("gamma and beta rank does not match");
     }

@@ -41,7 +41,7 @@ namespace ngraph
                 // Copy inputs to out
                 memcpy(out, inputs, sizeof(T) * shape_size(inputs_shape));
                 // Create a CoordinateTransform for "indices"
-                size_t indices_ndim = static_cast<size_t>(indices_shape.size());
+                size_t indices_ndim = static_cast<size_t>(indices_shape.get_rank());
                 Coordinate indices_start_corner(indices_ndim, 0);
                 Coordinate indices_end_corner(indices_shape);
                 Strides indices_strides(indices_ndim, 1);
@@ -53,7 +53,7 @@ namespace ngraph
                                                       indices_strides,
                                                       indices_axis_order);
                 // Create an outer CoordinateTransform for "update"
-                size_t updates_ndim = static_cast<size_t>(updates_shape.size());
+                size_t updates_ndim = static_cast<size_t>(updates_shape.get_rank());
                 Coordinate updates_outer_start_corner(updates_ndim, 0);
                 Coordinate updates_outer_end_corner(updates_shape);
                 for (size_t i = indices_ndim; i < updates_ndim; i++)
@@ -69,7 +69,7 @@ namespace ngraph
                                                             updates_strides,
                                                             updates_axis_order);
                 // Common vars for out
-                size_t out_ndim = static_cast<size_t>(out_shape.size());
+                size_t out_ndim = static_cast<size_t>(out_shape.get_rank());
                 Strides out_strides(out_ndim, 1);
                 AxisVector out_axis_order(out_ndim);
                 iota(out_axis_order.begin(), out_axis_order.end(), 0);

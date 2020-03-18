@@ -43,7 +43,7 @@ struct CollapsedShape
 // Shape{3, 3, 2}, AxisSet{0, 1} -> Shape{9, 2}, AxisSet{0}
 // Shape{2, 4, 6, 6}, AxisSet{2, 3} -> Shape{8, 36}, AxisSet{1}
 static void collapse_dims(std::vector<size_t>& shape,
-                          std::set<size_t> operated_axes,
+                          std::set<axis_t> operated_axes,
                           struct CollapsedShape& cshape,
                           bool skip_unit_size = true)
 {
@@ -103,7 +103,7 @@ static bool collapse_broadcast(std::shared_ptr<Node> n)
 
     collapse_dims(output_shape, operated_axes, cshape);
 
-    if (cshape.axis_set.size() == 0)
+    if (cshape.axis_set.get_rank() == 0)
     {
         // Null broadcast operation, replace with reshape
         AxisVector axis_order = ngraph::get_default_order(input_shape);
@@ -112,7 +112,7 @@ static bool collapse_broadcast(std::shared_ptr<Node> n)
         ngraph::replace_node(n, reshape);
         replaced = true;
     }
-    else if (output_shape.size() != cshape.fshape.size())
+    else if (output_shape.get_rank() != cshape.fshape.get_rank())
     {
         // Reshape arg to collapsed input_shape
         AxisVector input_axis_order = ngraph::get_default_order(input_shape);
@@ -152,7 +152,7 @@ static bool collapse_reduction(std::shared_ptr<Node> n)
 
     collapse_dims(input_shape, operated_axes, cshape);
 
-    if (cshape.axis_set.size() == 0)
+    if (cshape.axis_set.get_rank() == 0)
     {
         // Null reduction operation
         AxisVector axis_order = ngraph::get_default_order(input_shape);
@@ -161,7 +161,7 @@ static bool collapse_reduction(std::shared_ptr<Node> n)
         ngraph::replace_node(n, reshape);
         replaced = true;
     }
-    else if (input_shape.size() != cshape.fshape.size())
+    else if (input_shape.get_rank() != cshape.fshape.get_rank())
     {
         // Reshape arg to collapsed input_shape
         AxisVector input_axis_order = ngraph::get_default_order(input_shape);
@@ -200,7 +200,7 @@ static bool collapse_dot(std::shared_ptr<Node> n)
 
     for (size_t i = 0; i < reduction_count; i++)
     {
-        operated_axes_A.insert(A_shape.size() - i - 1);
+        operated_axes_A.insert(A_shape.get_rank() - i - 1);
         operated_axes_B.insert(i);
     }
 

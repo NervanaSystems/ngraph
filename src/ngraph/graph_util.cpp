@@ -574,10 +574,10 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
 std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)
 {
     std::shared_ptr<Node> zero = op::Constant::create(element_type, Shape{}, {0.0});
-    if (shape.size() > 0)
+    if (shape.get_rank() > 0)
     {
         AxisSet axes;
-        for (size_t i = 0; i < shape.size(); i++)
+        for (size_t i = 0; i < shape.get_rank(); i++)
         {
             axes.insert(i);
         }
@@ -716,7 +716,7 @@ bool ngraph::is_strided(const Strides& strides)
 
 bool ngraph::is_valid_rank(const std::shared_ptr<Node>& node, std::vector<size_t> valid_ranks)
 {
-    auto node_rank = node->get_shape().size();
+    auto node_rank = node->get_shape().get_rank();
     for (auto rank : valid_ranks)
     {
         if (rank == node_rank)

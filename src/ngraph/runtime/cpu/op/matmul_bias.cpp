@@ -78,13 +78,13 @@ void op::MatmulBias::validate_and_infer_types()
         throw ngraph_error("Broadcasting to > 2D tensor");
     }
 
-    if (m_shape_w.size() != 2)
+    if (m_shape_w.get_rank() != 2)
     {
         NGRAPH_DEBUG << "W shape = " << vector_to_string(m_shape_w);
         throw ngraph_error("W.shape.rank != 2 while creating MatmulBias");
     }
 
-    if (m_shape_x.size() != 2)
+    if (m_shape_x.get_rank() != 2)
     {
         NGRAPH_DEBUG << "x shape = " << vector_to_string(m_shape_x);
         throw ngraph_error("x.shape.rank != 2 while creating MatmulBias");

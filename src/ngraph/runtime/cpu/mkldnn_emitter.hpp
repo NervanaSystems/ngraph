@@ -1263,7 +1263,7 @@ namespace ngraph
                         }
                     };
 
-                    if (out[0].get_shape().size() == 2 &&
+                    if (out[0].get_shape().get_rank() == 2 &&
                         (out[0].get_shape()[1] != direction * feature_size))
                     {
                         throw ngraph_error(
@@ -1271,7 +1271,8 @@ namespace ngraph
                             "size ");
                     }
 
-                    if (out[1].get_shape().size() == 2 && (out[1].get_shape()[1] != feature_size) &&
+                    if (out[1].get_shape().get_rank() == 2 &&
+                        (out[1].get_shape()[1] != feature_size) &&
                         rnn_node->get_num_timesteps() != 1)
                     {
                         throw ngraph_error(
@@ -1541,7 +1542,7 @@ namespace ngraph
                         }
                     };
 
-                    if (out[0].get_shape().size() == 2 &&
+                    if (out[0].get_shape().get_rank() == 2 &&
                         (out[0].get_shape()[1] != direction * feature_size))
                     {
                         throw ngraph_error(
@@ -1549,7 +1550,8 @@ namespace ngraph
                             "size ");
                     }
 
-                    if (out[1].get_shape().size() == 2 && (out[1].get_shape()[1] != feature_size) &&
+                    if (out[1].get_shape().get_rank() == 2 &&
+                        (out[1].get_shape()[1] != feature_size) &&
                         rnn_node->get_num_timesteps() != 1)
                     {
                         throw ngraph_error(

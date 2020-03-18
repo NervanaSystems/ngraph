@@ -49,7 +49,7 @@ namespace ngraph
                 {
                     SELECT_KERNEL_ET_RANK(kernel,
                                           args[0].get_element_type(),
-                                          arg_shape.size(),
+                                          arg_shape.get_rank(),
                                           runtime::cpu::kernel::reverse_sequence_sli32)
                 }
                 else

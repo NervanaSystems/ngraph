@@ -46,7 +46,7 @@ namespace ngraph
 
                     const Shape& data_shape = data->get_shape();
                     const Shape& weights_shape = filters->get_shape();
-                    int num_spatial_dims = data_shape.size() - 2;
+                    int num_spatial_dims = data_shape.get_rank() - 2;
 
                     auto strides = convpool::get_strides(node);
                     auto dilations = convpool::get_dilations(node);
@@ -138,13 +138,13 @@ namespace ngraph
 
                     auto bias = inputs.at(2);
                     // Prepare bias shape [1, C, 1, 1]
-                    Shape new_shape(conv_node->get_shape().size(), 1);
+                    Shape new_shape(conv_node->get_shape().get_rank(), 1);
                     new_shape[1] = conv_node->get_shape()[1];
 
                     auto reshaped_bias = std::make_shared<default_opset::Reshape>(
                         bias,
                         default_opset::Constant::create(
-                            element::i64, Shape{new_shape.size()}, new_shape),
+                            element::i64, Shape{new_shape.get_rank()}, new_shape),
                         true);
 
                     return {std::make_shared<default_opset::Add>(conv_node, reshaped_bias)};

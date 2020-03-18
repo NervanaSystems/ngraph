@@ -53,7 +53,7 @@ void op::GRN::pre_validate_and_infer_types()
 
         // Input data must be 2, 3 or 4D tensor.
         NODE_VALIDATION_CHECK(this,
-                              (data_shape.size() >= 2 && data_shape.size() <= 4),
+                              (data_shape.get_rank() >= 2 && data_shape.get_rank() <= 4),
                               "Input tensor rank must be 2, 3 or 4 dimensional (actual input "
                               "shape: ",
                               data_shape,
@@ -67,9 +67,9 @@ NodeVector op::GRN::decompose_op() const
     const Shape& input_shape{data.get_shape()};
 
     // Reshape to 4D tensor.
-    if (input_shape.size() != 4)
+    if (input_shape.get_rank() != 4)
     {
-        Shape data_shape(4 - input_shape.size(), 1);
+        Shape data_shape(4 - input_shape.get_rank(), 1);
         copy(begin(input_shape), end(input_shape), back_inserter(data_shape));
         data = builder::reshape(data, data_shape);
     }
@@ -81,7 +81,7 @@ NodeVector op::GRN::decompose_op() const
     data = data / norm;
 
     // get back original input tensor rank
-    if (input_shape.size() != 4)
+    if (input_shape.get_rank() != 4)
     {
         data = builder::reshape(data, input_shape);
     }

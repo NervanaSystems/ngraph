@@ -268,8 +268,8 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             }
 
             auto product = 1;
-            int axis = in_shape.size() - 1;
-            for (int i = in_shape.size() - 1; i >= 0; i--)
+            int axis = in_shape.get_rank() - 1;
+            for (int i = in_shape.get_rank() - 1; i >= 0; i--)
             {
                 if (in_shape[i] != out_shape[i])
                 {

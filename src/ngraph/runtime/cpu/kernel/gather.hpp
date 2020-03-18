@@ -85,7 +85,7 @@ namespace ngraph
                         static_cast<ElementType*>(inputs), in_dims);
 
                     auto indices_ptr = static_cast<IndicesType*>(indices);
-                    auto indices_rank = indices_shape.size();
+                    auto indices_rank = indices_shape.get_rank();
                     auto outer_loop_num = 1;
                     for (size_t i = 0; i < axis; i++)
                     {

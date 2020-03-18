@@ -37,7 +37,7 @@ using namespace std;
 
 shared_ptr<Node> builder::reshape(const Output<Node>& value, const Shape& shape)
 {
-    return make_shared<op::Reshape>(value, get_default_order(value.get_shape().size()), shape)
+    return make_shared<op::Reshape>(value, get_default_order(value.get_shape().get_rank()), shape)
         ->add_provenance_group_members_above({value});
 }
 
@@ -46,7 +46,7 @@ shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t>
     Shape out_shape = value.get_shape();
     if (axes_order.empty())
     {
-        axes_order.resize(out_shape.size());
+        axes_order.resize(out_shape.get_rank());
         iota(begin(axes_order), end(axes_order), 0);
     }
     else
@@ -64,7 +64,7 @@ shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t>
 
 shared_ptr<Node> builder::transpose(const Output<Node>& value)
 {
-    vector<size_t> axes_order(value.get_shape().size());
+    vector<size_t> axes_order(value.get_shape().get_rank());
     iota(begin(axes_order), end(axes_order), 0);
     reverse(begin(axes_order), end(axes_order));
     return builder::reorder_axes(value, axes_order);
@@ -83,8 +83,9 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, int axis)
     size_t last_dim_size =
         accumulate(next(begin(data_shape), axis), end(data_shape), 1UL, multiplies<size_t>());
 
-    return make_shared<op::Reshape>(
-               value, get_default_order(data_shape.size()), Shape{first_dim_size, last_dim_size})
+    return make_shared<op::Reshape>(value,
+                                    get_default_order(data_shape.get_rank()),
+                                    Shape{first_dim_size, last_dim_size})
         ->add_provenance_group_members_above({value});
 }
 
@@ -172,14 +173,14 @@ shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
     advance(empty_axis_it, axis);
     output_shape.insert(empty_axis_it, 1);
     return make_shared<op::Reshape>(
-               value, get_default_order(value.get_shape().size()), output_shape)
+               value, get_default_order(value.get_shape().get_rank()), output_shape)
         ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::opset1::reshape(const Output<Node>& value, const Shape& shape)
 {
     const auto out_pattern = op::Constant::create(
-        element::i64, Shape{shape.size()}, vector<int64_t>(shape.begin(), shape.end()));
+        element::i64, Shape{shape.get_rank()}, vector<int64_t>(shape.begin(), shape.end()));
     const bool special_zero = false;
     return make_shared<ngraph::opset1::Reshape>(value, out_pattern, special_zero)
         ->add_provenance_group_members_above({value});
@@ -197,7 +198,7 @@ shared_ptr<Node> builder::opset1::reorder_axes(const Output<Node>& value, vector
 
 shared_ptr<Node> builder::opset1::transpose(const Output<Node>& value)
 {
-    vector<size_t> axes_order(value.get_shape().size());
+    vector<size_t> axes_order(value.get_shape().get_rank());
     iota(begin(axes_order), end(axes_order), 0);
     reverse(begin(axes_order), end(axes_order));
     return builder::opset1::reorder_axes(value, axes_order);

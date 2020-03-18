@@ -57,7 +57,7 @@ shared_ptr<op::Constant> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
     runtime::reference::reshape<T>(slice_out_data,
                                    reshape_out_data,
                                    plan.reshape_in_shape,
-                                   get_default_order(plan.reshape_in_shape.size()),
+                                   get_default_order(plan.reshape_in_shape.get_rank()),
                                    plan.reshape_out_shape);
 
     runtime::AlignedBuffer reverse_out_buffer(shape_size(plan.reshape_out_shape) * sizeof(T));

@@ -83,8 +83,8 @@ namespace ngraph
                     (void)external_function;
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg1_shape = node->get_input_shape(1);
-                    auto arg0_rank = arg0_shape.size();
-                    auto arg1_rank = arg1_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
+                    auto arg1_rank = arg1_shape.get_rank();
 
                     auto src_size = shape_size(arg0_shape);
 
@@ -106,8 +106,8 @@ namespace ngraph
                     if ((node->get_input_element_type(0) == element::f32 ||
                          node->get_input_element_type(0) == element::i8 ||
                          node->get_input_element_type(0) == element::u8) &&
-                        ((node->get_input_shape(0)).size() == 4 ||
-                         (node->get_input_shape(0)).size() == 2))
+                        ((node->get_input_shape(0)).get_rank() == 4 ||
+                         (node->get_input_shape(0)).get_rank() == 2))
                     {
                         // MKLDNN seems to throw an exception when given tensors with 0-length
                         // dimensions, so don't assign it in such cases.
@@ -246,9 +246,9 @@ namespace ngraph
                     auto arg1_shape = node->get_input_shape(1);
                     auto arg2_shape = node->get_input_shape(2);
                     auto result_shape = node->get_output_shape(0);
-                    auto arg0_rank = arg0_shape.size();
-                    auto arg1_rank = arg1_shape.size();
-                    auto arg2_rank = arg2_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
+                    auto arg1_rank = arg1_shape.get_rank();
+                    auto arg2_rank = arg2_shape.get_rank();
 
                     bool data_dilated = false;
                     for (size_t s : convolution->get_data_dilation_strides_forward())
@@ -280,8 +280,8 @@ namespace ngraph
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg1_shape = node->get_input_shape(1);
                     auto result_shape = node->get_output_shape(0);
-                    auto arg0_rank = arg0_shape.size();
-                    auto arg1_rank = arg1_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
+                    auto arg1_rank = arg1_shape.get_rank();
 
                     bool data_dilated = false;
                     for (size_t s : convolution->get_data_dilation_strides_forward())
@@ -306,8 +306,8 @@ namespace ngraph
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg1_shape = node->get_input_shape(1);
                     auto result_shape = node->get_output_shape(0);
-                    auto arg0_rank = arg0_shape.size();
-                    auto arg1_rank = arg1_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
+                    auto arg1_rank = arg1_shape.get_rank();
 
                     bool data_dilated = false;
                     for (size_t s : convolution->get_data_dilation_strides_forward())
@@ -342,8 +342,8 @@ namespace ngraph
 
                     auto data_shape = node->get_input_shape(0);
                     auto delta_shape = node->get_input_shape(1);
-                    auto data_rank = data_shape.size();
-                    auto delta_rank = delta_shape.size();
+                    auto data_rank = data_shape.get_rank();
+                    auto delta_rank = delta_shape.get_rank();
 
                     bool data_dilated = false;
                     for (size_t s : convolution->get_data_dilation_strides_forward())
@@ -366,11 +366,11 @@ namespace ngraph
                     auto avg_pool = static_cast<ngraph::op::AvgPool*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
-                    auto arg0_rank = arg0_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
                     auto result_shape = node->get_output_shape(0);
 
-                    if (((arg0_rank == 4 && avg_pool->get_window_shape().size() == 2) ||
-                         (arg0_rank == 5 && avg_pool->get_window_shape().size() == 3)) &&
+                    if (((arg0_rank == 4 && avg_pool->get_window_shape().get_rank() == 2) ||
+                         (arg0_rank == 5 && avg_pool->get_window_shape().get_rank() == 3)) &&
                         (node->get_input_element_type(0) == element::f32 ||
                          node->get_input_element_type(0) == element::u8 ||
                          node->get_input_element_type(0) == element::i8))
@@ -386,11 +386,11 @@ namespace ngraph
                     auto avg_pool = static_cast<ngraph::op::AvgPoolBackprop*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
-                    auto arg0_rank = arg0_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
                     auto result_shape = node->get_output_shape(0);
 
-                    if (((arg0_rank == 4 && avg_pool->get_window_shape().size() == 2) ||
-                         (arg0_rank == 5 && avg_pool->get_window_shape().size() == 3)) &&
+                    if (((arg0_rank == 4 && avg_pool->get_window_shape().get_rank() == 2) ||
+                         (arg0_rank == 5 && avg_pool->get_window_shape().get_rank() == 3)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -404,11 +404,11 @@ namespace ngraph
                     auto max_pool = static_cast<ngraph::op::MaxPool*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
-                    auto arg0_rank = arg0_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
                     auto result_shape = node->get_output_shape(0);
 
-                    if (((arg0_rank == 4 && max_pool->get_window_shape().size() == 2) ||
-                         (arg0_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
+                    if (((arg0_rank == 4 && max_pool->get_window_shape().get_rank() == 2) ||
+                         (arg0_rank == 5 && max_pool->get_window_shape().get_rank() == 3)) &&
                         (node->get_input_element_type(0) == element::f32 ||
                          node->get_input_element_type(0) == element::u8 ||
                          node->get_input_element_type(0) == element::i8 ||
@@ -426,10 +426,10 @@ namespace ngraph
                     auto max_pool = static_cast<ngraph::op::MaxPoolWithIndices*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
-                    auto arg0_rank = arg0_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
                     auto result_shape = node->get_output_shape(0);
 
-                    if (arg0_rank == 4 && max_pool->get_window_shape().size() == 2 &&
+                    if (arg0_rank == 4 && max_pool->get_window_shape().get_rank() == 2 &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -443,11 +443,11 @@ namespace ngraph
                     auto max_pool = static_cast<ngraph::op::MaxPoolBackprop*>(node);
 
                     auto arg1_shape = node->get_input_shape(1);
-                    auto arg1_rank = arg1_shape.size();
+                    auto arg1_rank = arg1_shape.get_rank();
                     auto result_shape = node->get_output_shape(0);
 
-                    if (((arg1_rank == 4 && max_pool->get_window_shape().size() == 2) ||
-                         (arg1_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
+                    if (((arg1_rank == 4 && max_pool->get_window_shape().get_rank() == 2) ||
+                         (arg1_rank == 5 && max_pool->get_window_shape().get_rank() == 3)) &&
                         node->get_input_element_type(1) == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -461,10 +461,10 @@ namespace ngraph
                     auto max_pool = static_cast<ngraph::op::MaxPoolWithIndicesBackprop*>(node);
 
                     auto arg1_shape = node->get_input_shape(1);
-                    auto arg1_rank = arg1_shape.size();
+                    auto arg1_rank = arg1_shape.get_rank();
                     auto result_shape = node->get_output_shape(0);
 
-                    if (arg1_rank == 4 && max_pool->get_window_shape().size() == 2 &&
+                    if (arg1_rank == 4 && max_pool->get_window_shape().get_rank() == 2 &&
                         node->get_input_element_type(1) == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -478,7 +478,7 @@ namespace ngraph
                     auto relu = static_cast<ngraph::op::Relu*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
-                    auto arg0_rank = arg0_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
                     auto result_shape = node->get_output_shape(0);
 
                     if ((arg0_rank == 4 || arg0_rank == 3 || arg0_rank == 2) &&
@@ -552,7 +552,7 @@ namespace ngraph
                     auto lrn = static_cast<ngraph::op::LRN*>(node);
                     AxisSet axes = lrn->get_reduction_axes();
                     auto arg0_shape = node->get_input_shape(0);
-                    auto arg0_rank = arg0_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
                     auto result_shape = node->get_output_shape(0);
 
                     if ((arg0_rank == 4) && node->get_input_element_type(0) == element::f32 &&
@@ -587,7 +587,7 @@ namespace ngraph
                 {
                     (void)external_function;
                     auto arg0_shape = node->get_input_shape(0);
-                    auto arg0_rank = arg0_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
                     auto result_shape = node->get_output_shape(0);
 
                     if ((arg0_rank == 4 || arg0_rank == 2) &&
@@ -631,12 +631,12 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Lstm)
                 {
                     (void)external_function;
-                    auto src_layer_rank = node->get_input_shape(0).size();
-                    auto src_iter_rank = node->get_input_shape(1).size();
+                    auto src_layer_rank = node->get_input_shape(0).get_rank();
+                    auto src_iter_rank = node->get_input_shape(1).get_rank();
 #if MKLDNN_VERSION_MAJOR < 1
-                    auto weights_layer_rank = node->get_input_shape(2).size();
-                    auto weights_iter_rank = node->get_input_shape(3).size();
-                    auto bias_rank = node->get_input_shape(4).size();
+                    auto weights_layer_rank = node->get_input_shape(2).get_rank();
+                    auto weights_iter_rank = node->get_input_shape(3).get_rank();
+                    auto bias_rank = node->get_input_shape(4).get_rank();
                     if ((src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
                          weights_iter_rank == 2 && bias_rank == 1 &&
                          node->get_input_element_type(0) == element::f32 &&
@@ -645,10 +645,10 @@ namespace ngraph
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
 #else
-                    auto src_iter_c_rank = node->get_input_shape(2).size();
-                    auto weights_layer_rank = node->get_input_shape(3).size();
-                    auto weights_iter_rank = node->get_input_shape(4).size();
-                    auto bias_rank = node->get_input_shape(5).size();
+                    auto src_iter_c_rank = node->get_input_shape(2).get_rank();
+                    auto weights_layer_rank = node->get_input_shape(3).get_rank();
+                    auto weights_iter_rank = node->get_input_shape(4).get_rank();
+                    auto bias_rank = node->get_input_shape(5).get_rank();
                     if ((src_layer_rank == 2 && src_iter_rank == 2 && src_iter_c_rank == 2 &&
                          weights_layer_rank == 2 && weights_iter_rank == 2 && bias_rank == 1 &&
                          node->get_input_element_type(0) == element::f32 &&
@@ -663,12 +663,12 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Rnn)
                 {
                     (void)external_function;
-                    auto src_layer_rank = node->get_input_shape(0).size();
-                    auto src_iter_rank = node->get_input_shape(1).size();
+                    auto src_layer_rank = node->get_input_shape(0).get_rank();
+                    auto src_iter_rank = node->get_input_shape(1).get_rank();
 #if MKLDNN_VERSION_MAJOR < 1
-                    auto weights_layer_rank = node->get_input_shape(2).size();
-                    auto weights_iter_rank = node->get_input_shape(3).size();
-                    auto bias_rank = node->get_input_shape(4).size();
+                    auto weights_layer_rank = node->get_input_shape(2).get_rank();
+                    auto weights_iter_rank = node->get_input_shape(3).get_rank();
+                    auto bias_rank = node->get_input_shape(4).get_rank();
                     if ((src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
                          weights_iter_rank == 2 && bias_rank == 1 &&
                          node->get_input_element_type(0) == element::f32 &&
@@ -677,10 +677,10 @@ namespace ngraph
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
 #else
-                    auto src_iter_c_rank = node->get_input_shape(2).size();
-                    auto weights_layer_rank = node->get_input_shape(3).size();
-                    auto weights_iter_rank = node->get_input_shape(4).size();
-                    auto bias_rank = node->get_input_shape(5).size();
+                    auto src_iter_c_rank = node->get_input_shape(2).get_rank();
+                    auto weights_layer_rank = node->get_input_shape(3).get_rank();
+                    auto weights_iter_rank = node->get_input_shape(4).get_rank();
+                    auto bias_rank = node->get_input_shape(5).get_rank();
                     if ((src_layer_rank == 2 && src_iter_rank == 2 && src_iter_c_rank == 2 &&
                          weights_layer_rank == 2 && weights_iter_rank == 2 && bias_rank == 1 &&
                          node->get_input_element_type(0) == element::f32 &&
@@ -698,7 +698,7 @@ namespace ngraph
                     auto softmax = static_cast<ngraph::op::Softmax*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
-                    auto arg0_rank = arg0_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
                     auto result_shape = node->get_output_shape(0);
 
                     if ((arg0_rank == 4 || arg0_rank == 2) &&
@@ -728,7 +728,7 @@ namespace ngraph
                     auto bounded_relu = static_cast<ngraph::op::BoundedRelu*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
-                    auto arg0_rank = arg0_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
                     auto result_shape = node->get_output_shape(0);
 
                     if ((arg0_rank == 4 || arg0_rank == 2) &&
@@ -795,7 +795,7 @@ namespace ngraph
                     auto leaky_relu = static_cast<ngraph::op::CPULeakyRelu*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
-                    auto arg0_rank = arg0_shape.size();
+                    auto arg0_rank = arg0_shape.get_rank();
                     auto result_shape = node->get_output_shape(0);
 
                     if ((arg0_rank == 4 || arg0_rank == 2) &&

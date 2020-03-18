@@ -48,10 +48,10 @@ namespace ngraph
                 auto shape = get_shape();
                 size_t s = 1;
 
-                for (size_t i = 0; i < shape.size(); i++)
+                for (size_t i = 0; i < shape.get_rank(); i++)
                 {
                     m_strides.emplace_back(s);
-                    s *= shape[shape.size() - (i + 1)];
+                    s *= shape[shape.get_rank() - (i + 1)];
                 }
                 std::reverse(m_strides.begin(), m_strides.end());
                 m_buffer_size = shape_size(tv.get_shape()) * tv.get_element_type().size();
@@ -59,7 +59,7 @@ namespace ngraph
 
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
             {
-                if (indices.size() != m_strides.size())
+                if (indices.size() != m_strides.get_rank())
                 {
                     throw ngraph_error("Indices have incorrect rank");
                 }

@@ -62,7 +62,7 @@ namespace ngraph
                         }
 
                         bool done = false;
-                        for (size_t i = 0; i < out_shape.size(); i++)
+                        for (size_t i = 0; i < out_shape.get_rank(); i++)
                         {
                             if (!broadcast_axes.count(i))
                             {
@@ -86,7 +86,7 @@ namespace ngraph
                 // Ex. [2, 1, 1, 2] -> [2, 2]
 
                 auto squeezed_out_shape = Shape{};
-                for (size_t i = 0; i < out_shape.size(); i++)
+                for (size_t i = 0; i < out_shape.get_rank(); i++)
                 {
                     if (out_shape[i] != 1)
                     {
@@ -113,7 +113,7 @@ namespace ngraph
 
                 // Squeeze input shape
                 auto squeezed_arg_shape = Shape{};
-                for (size_t i = 0; i < arg_shape.size(); i++)
+                for (size_t i = 0; i < arg_shape.get_rank(); i++)
                 {
                     if (arg_shape[i] != 1)
                     {
@@ -122,8 +122,8 @@ namespace ngraph
                 }
                 arg_shape = squeezed_arg_shape;
 
-                auto arg_rank = arg_shape.size();
-                auto out_rank = out_shape.size();
+                auto arg_rank = arg_shape.get_rank();
+                auto out_rank = out_shape.get_rank();
 
                 if (broadcast_axes.empty())
                 {

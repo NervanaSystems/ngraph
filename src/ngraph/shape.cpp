@@ -48,7 +48,7 @@ ngraph::Shape::Shape(const Shape& axis_lengths)
 {
 }
 
-ngraph::Shape::Shape(size_t n, size_t initial_value)
+ngraph::Shape::Shape(axis_t n, size_t initial_value)
     : std::vector<size_t>(n, initial_value)
 {
 }

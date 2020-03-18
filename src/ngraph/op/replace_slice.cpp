@@ -43,7 +43,7 @@ op::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
     : Op({arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
-    , m_strides(Strides(lower_bounds.size(), 1))
+    , m_strides(Strides(lower_bounds.get_rank(), 1))
 {
     constructor_validate_and_infer_types();
 }
@@ -52,9 +52,9 @@ void op::ReplaceSlice::validate_and_infer_types()
 {
     // An empty stride vector with lower_bounds/upper_bounds filled in means that we need to
     // construct the default value.
-    if (m_strides.size() == 0)
+    if (m_strides.get_rank() == 0)
     {
-        m_strides = Strides(m_lower_bounds.size(), 1);
+        m_strides = Strides(m_lower_bounds.get_rank(), 1);
     }
 
     const PartialShape& arg0_shape = get_input_partial_shape(0);
@@ -82,8 +82,8 @@ void op::ReplaceSlice::validate_and_infer_types()
                           ").");
 
     NODE_VALIDATION_CHECK(this,
-                          m_lower_bounds.size() == m_upper_bounds.size() &&
-                              m_lower_bounds.size() == m_strides.size(),
+                          m_lower_bounds.get_rank() == m_upper_bounds.get_rank() &&
+                              m_lower_bounds.get_rank() == m_strides.get_rank(),
                           "Ranks of lower bounds (",
                           m_lower_bounds,
                           "), upper bounds (",
@@ -92,7 +92,7 @@ void op::ReplaceSlice::validate_and_infer_types()
                           m_strides,
                           ") do not match.");
 
-    size_t output_rank = m_upper_bounds.size();
+    size_t output_rank = m_upper_bounds.get_rank();
 
     for (size_t i = 0; i < output_rank; i++)
     {

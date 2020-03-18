@@ -147,6 +147,23 @@ uint64_t Dimension::get_length() const
     return m_dimension;
 }
 
+axis_t Dimension::get_rank() const
+{
+    if (is_dynamic())
+    {
+        throw std::invalid_argument("Cannot get rank of dynamic dimension");
+    }
+    if (m_dimension < 0)
+    {
+        throw std::invalid_argument("Cannot get rank of negative dimension");
+    }
+    if (m_dimension >= sizeof(axis_t))
+    {
+        throw std::invalid_argument("Rank value out of bounds");
+    }
+    return m_dimension;
+}
+
 Dimension::operator size_t() const
 {
     if (is_dynamic())

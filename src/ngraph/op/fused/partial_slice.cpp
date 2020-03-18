@@ -62,7 +62,7 @@ NodeVector op::PartialSlice::decompose_op() const
 
     Coordinate ng_start, ng_end;
     int axis_length, start, end;
-    for (size_t i = 0; i < data_shape.size(); ++i)
+    for (size_t i = 0; i < data_shape.get_rank(); ++i)
     {
         ng_start.push_back(0);
         ng_end.push_back(data_shape[i]);
@@ -96,7 +96,7 @@ NodeVector op::PartialSlice::decompose_op() const
             new_out_shape[idx] = 0;
         }
 
-        for (size_t i = 0; i < out_shape.size(); ++i)
+        for (size_t i = 0; i < out_shape.get_rank(); ++i)
         {
             if (new_out_shape[i] != 0)
             {
@@ -104,7 +104,7 @@ NodeVector op::PartialSlice::decompose_op() const
             }
         }
 
-        if (out_reshape_shape.size() == 0)
+        if (out_reshape_shape.get_rank() == 0)
         {
             out_reshape_shape.push_back(1);
         }
@@ -184,7 +184,7 @@ NodeVector op::PartialSliceBackprop::decompose_op() const
     int axis_length, start, end;
 
     auto reshape = data_shape;
-    for (size_t i = 0; i < data_shape.size(); ++i)
+    for (size_t i = 0; i < data_shape.get_rank(); ++i)
     {
         ng_start.push_back(0);
         ng_end.push_back(data_shape[i]);

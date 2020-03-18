@@ -45,7 +45,7 @@ namespace ngraph
                 }
                 // Remove 1s from out_shape
                 AxisSet adjusted_axes(broadcast_axes);
-                for (uint64_t axis = 0; axis < out_shape.size(); ++axis)
+                for (uint64_t axis = 0; axis < out_shape.get_rank(); ++axis)
                 {
                     auto length = out_shape.at(axis);
                     if (length == 1)

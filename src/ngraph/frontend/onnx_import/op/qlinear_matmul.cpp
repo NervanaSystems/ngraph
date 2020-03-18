@@ -31,8 +31,8 @@ namespace ngraph
                     auto ng_inputs = node.get_ng_inputs();
                     auto factory = builder::QLinearMatmulFactory(
                         (OutputVector(std::begin(ng_inputs), std::end(ng_inputs))));
-                    std::size_t left_rank{ng_inputs.at(0)->get_shape().size()};
-                    std::size_t right_rank{ng_inputs.at(1)->get_shape().size()};
+                    std::size_t left_rank{ng_inputs.at(0)->get_shape().get_rank()};
+                    std::size_t right_rank{ng_inputs.at(1)->get_shape().get_rank()};
 
                     if (left_rank == 0 || right_rank == 0)
                     {

@@ -24,7 +24,7 @@ Strides ngraph::conv_default_strides(const Node* /* node */,
                                      const PartialShape& data_batch_shape,
                                      const PartialShape& filters_shape)
 {
-    size_t rank;
+    axis_t rank;
 
     if (data_batch_shape.rank().is_static() && data_batch_shape.rank().get_length() >= 2)
     {
@@ -46,7 +46,7 @@ CoordinateDiff ngraph::conv_default_padding(const Node* /* node */,
                                             const PartialShape& data_batch_shape,
                                             const PartialShape& filters_shape)
 {
-    size_t rank;
+    axis_t rank;
 
     if (data_batch_shape.rank().is_static() && data_batch_shape.rank().get_length() >= 2)
     {
@@ -86,12 +86,12 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
 
     NODE_VALIDATION_CHECK(node,
                           data_shape_merged.merge_rank(data_shape.rank()) &&
-                              data_shape_merged.merge_rank(data_dilation.size()) &&
-                              data_shape_merged.merge_rank(data_padding_below.size()) &&
-                              data_shape_merged.merge_rank(data_padding_above.size()) &&
+                              data_shape_merged.merge_rank(data_dilation.get_rank()) &&
+                              data_shape_merged.merge_rank(data_padding_below.get_rank()) &&
+                              data_shape_merged.merge_rank(data_padding_above.get_rank()) &&
                               data_shape_merged.merge_rank(window_shape.rank()) &&
-                              data_shape_merged.merge_rank(window_strides.size()) &&
-                              data_shape_merged.merge_rank(window_dilation.size()),
+                              data_shape_merged.merge_rank(window_strides.get_rank()) &&
+                              data_shape_merged.merge_rank(window_dilation.get_rank()),
                           "Ranks for data shape (",
                           data_shape,
                           "), data dilation (",
@@ -112,7 +112,7 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
 
     if (output_shape.rank().is_static())
     {
-        for (size_t i = 0; i < output_shape.rank().get_length(); i++)
+        for (axis_t i = 0; i < output_shape.rank().get_length(); i++)
         {
             NODE_VALIDATION_CHECK(node,
                                   data_dilation[i] > 0,
@@ -255,32 +255,33 @@ PartialShape ngraph::infer_convolution_forward(const Node* node,
                           ").");
 
     Rank spatial_rank{Rank::dynamic()};
-    NODE_VALIDATION_CHECK(node,
-                          Rank::merge(spatial_rank, spatial_rank, data_batch_filters_rank - 2) &&
-                              Rank::merge(spatial_rank, spatial_rank, data_dilation.size()) &&
-                              Rank::merge(spatial_rank, spatial_rank, data_padding_below.size()) &&
-                              Rank::merge(spatial_rank, spatial_rank, data_padding_above.size()) &&
-                              Rank::merge(spatial_rank, spatial_rank, filter_strides.size()) &&
-                              Rank::merge(spatial_rank, spatial_rank, filter_dilation.size()),
-                          "Ranks for data item shape/filters shape (data batch has shape ",
-                          data_batch_shape,
-                          ", so data item rank is ",
-                          (data_batch_shape.rank() - 2),
-                          " and filters have shape ",
-                          filters_shape,
-                          ", so filters spatial rank is ",
-                          (filters_shape.rank() - 2),
-                          "), data dilation (",
-                          data_dilation,
-                          "), padding below (",
-                          data_padding_below,
-                          "), padding above (",
-                          data_padding_above,
-                          "), filter strides (",
-                          filter_strides,
-                          "), and filter dilation (",
-                          filter_dilation,
-                          ") do not match.");
+    NODE_VALIDATION_CHECK(
+        node,
+        Rank::merge(spatial_rank, spatial_rank, data_batch_filters_rank - 2) &&
+            Rank::merge(spatial_rank, spatial_rank, data_dilation.get_rank()) &&
+            Rank::merge(spatial_rank, spatial_rank, data_padding_below.get_rank()) &&
+            Rank::merge(spatial_rank, spatial_rank, data_padding_above.get_rank()) &&
+            Rank::merge(spatial_rank, spatial_rank, filter_strides.get_rank()) &&
+            Rank::merge(spatial_rank, spatial_rank, filter_dilation.get_rank()),
+        "Ranks for data item shape/filters shape (data batch has shape ",
+        data_batch_shape,
+        ", so data item rank is ",
+        (data_batch_shape.rank() - 2),
+        " and filters have shape ",
+        filters_shape,
+        ", so filters spatial rank is ",
+        (filters_shape.rank() - 2),
+        "), data dilation (",
+        data_dilation,
+        "), padding below (",
+        data_padding_below,
+        "), padding above (",
+        data_padding_above,
+        "), filter strides (",
+        filter_strides,
+        "), and filter dilation (",
+        filter_dilation,
+        ") do not match.");
 
     Dimension batch_size =
         (data_batch_shape.rank().is_static() ? data_batch_shape[0] : Dimension::dynamic());
@@ -298,7 +299,7 @@ PartialShape ngraph::infer_convolution_forward(const Node* node,
     // Note: spatial_rank is definitely static at this point.
     //
 
-    for (size_t i = 0; i < spatial_rank.get_length(); i++)
+    for (axis_t i = 0; i < spatial_rank.get_length(); i++)
     {
         if (data_batch_shape.rank().is_static())
         {
@@ -350,7 +351,7 @@ PartialShape ngraph::infer_convolution_forward(const Node* node,
     batch_output_shape[0] = batch_size;
     batch_output_shape[1] = filter_output_channel_count;
 
-    for (size_t i = 0; i < spatial_rank.get_length(); i++)
+    for (axis_t i = 0; i < spatial_rank.get_length(); i++)
     {
         batch_output_shape[i + 2] = data_output_shape[i];
     }
@@ -383,10 +384,10 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
 
     NODE_VALIDATION_CHECK(node,
                           data_spatial_shape.merge_rank(data_batch_shape.rank() - 2) &&
-                              data_spatial_shape.merge_rank(data_padding_below.size()) &&
-                              data_spatial_shape.merge_rank(data_padding_above.size()) &&
+                              data_spatial_shape.merge_rank(data_padding_below.get_rank()) &&
+                              data_spatial_shape.merge_rank(data_padding_above.get_rank()) &&
                               data_spatial_shape.merge_rank(window_shape.rank()) &&
-                              data_spatial_shape.merge_rank(window_strides.size()),
+                              data_spatial_shape.merge_rank(window_strides.get_rank()),
                           "Ranks for data item shape (data batch has shape ",
                           data_batch_shape,
                           ", so data item rank is ",
@@ -410,7 +411,7 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
         batch_size = data_batch_shape[0];
         channel_count = data_batch_shape[1];
 
-        for (size_t i = 0; i < data_spatial_shape.rank().get_length(); i++)
+        for (axis_t i = 0; i < data_spatial_shape.rank().get_length(); i++)
         {
             data_spatial_shape[i] = data_batch_shape[i + 2];
         }
@@ -444,7 +445,7 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
     data_batch_output_shape[0] = batch_size;
     data_batch_output_shape[1] = channel_count;
 
-    for (size_t i = 0; i < data_spatial_shape.rank().get_length(); i++)
+    for (axis_t i = 0; i < data_spatial_shape.rank().get_length(); i++)
     {
         data_batch_output_shape[i + 2] = data_output_spatial_shape[i];
     }
@@ -598,7 +599,7 @@ void ngraph::infer_auto_padding(const Shape& image_shape,
                                 CoordinateDiff& padding_below)
 {
     NGRAPH_CHECK(pad_type == op::PadType::SAME_UPPER || pad_type == op::PadType::SAME_LOWER);
-    for (size_t i = 0; i < static_cast<size_t>(filter_shape.size()); i++)
+    for (axis_t i = 0; i < filter_shape.get_rank(); i++)
     {
         int64_t image_size = static_cast<int64_t>(image_shape[i + 2]);
         int64_t filter_size = (static_cast<int64_t>(filter_shape[i]) - 1) * filter_dilations[i] + 1;
@@ -651,8 +652,8 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
 
     std::vector<Dimension> dim;
 
-    size_t input_shape_idx = 0;
-    for (size_t axis = 0; axis < begin.size(); ++axis)
+    axis_t input_shape_idx = 0;
+    for (axis_t axis = 0; axis < begin.size(); ++axis)
     {
         // add all dimensions hidden under the ellipsis mask if ellipsis mask is set
         if (ellipsis_mask.count(axis))
@@ -660,14 +661,14 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
             // only one bit in ellipsis mask is allowed
             int num_new_axis_after_ellipses = 0;
             int num_input_axis_before_ellipses = 0;
-            for (size_t i = 0; i < axis; ++i)
+            for (axis_t i = 0; i < axis; ++i)
             {
                 if (!new_axis_mask.count(i))
                 {
                     num_input_axis_before_ellipses++;
                 }
             }
-            for (size_t i = axis + 1; i < begin.size(); ++i)
+            for (axis_t i = axis + 1; i < begin.size(); ++i)
             {
                 if (new_axis_mask.count(i))
                 {
@@ -793,11 +794,11 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
     return dim;
 }
 
-std::vector<size_t> ngraph::normalize_axes(const std::string& node_description,
-                                           const std::vector<int64_t>& axes,
+std::vector<axis_t> ngraph::normalize_axes(const std::string& node_description,
+                                           const std::vector<n_axis_t>& axes,
                                            const Rank& tensor_rank)
 {
-    std::vector<size_t> new_axes;
+    std::vector<axis_t> new_axes;
 
     for (const auto& axis : axes)
     {
@@ -807,7 +808,7 @@ std::vector<size_t> ngraph::normalize_axes(const std::string& node_description,
     return new_axes;
 }
 
-int64_t ngraph::normalize_axis(const Node* node, std::int64_t axis, const Rank& tensor_rank)
+axis_t ngraph::normalize_axis(const Node* node, n_axis_t axis, const Rank& tensor_rank)
 {
     return normalize_axis(node->description(), axis, tensor_rank);
 }
@@ -878,14 +879,15 @@ void ngraph::opset1::infer_conv_backprop_output_spatial_shape(const Shape& input
                                                               const CoordinateDiff& output_padding,
                                                               Shape& output_spatial_shape)
 {
-    size_t num_spatial_dims = input_data_shape.size();
-    NGRAPH_CHECK(filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
-                 dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
-                 pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
+    axis_t num_spatial_dims = input_data_shape.get_rank();
+    NGRAPH_CHECK(
+        filters_shape.get_rank() == num_spatial_dims && strides.get_rank() == num_spatial_dims &&
+        dilations.get_rank() == num_spatial_dims && pads_begin.get_rank() == num_spatial_dims &&
+        pads_end.get_rank() == num_spatial_dims && output_padding.get_rank() == num_spatial_dims);
 
-    for (size_t i = 0; i < num_spatial_dims; ++i)
+    for (axis_t i = 0; i < num_spatial_dims; ++i)
     {
-        size_t val = strides[i] * (input_data_shape[i] - 1) +
+        axis_t val = strides[i] * (input_data_shape[i] - 1) +
                      dilations[i] * (filters_shape[i] - 1) + 1 - pads_begin[i] - pads_end[i] +
                      output_padding[i];
         output_spatial_shape.push_back(val);
@@ -905,10 +907,11 @@ void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_sh
     NGRAPH_CHECK(auto_pad_type == op::PadType::SAME_UPPER ||
                  auto_pad_type == op::PadType::SAME_LOWER);
 
-    size_t num_spatial_dims = input_data_shape.size();
-    NGRAPH_CHECK(filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
-                 dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
-                 pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
+    axis_t num_spatial_dims = input_data_shape.get_rank();
+    NGRAPH_CHECK(
+        filters_shape.get_rank() == num_spatial_dims && strides.get_rank() == num_spatial_dims &&
+        dilations.get_rank() == num_spatial_dims && pads_begin.get_rank() == num_spatial_dims &&
+        pads_end.get_rank() == num_spatial_dims && output_padding.get_rank() == num_spatial_dims);
 
     pads_begin = CoordinateDiff(num_spatial_dims);
     pads_end = CoordinateDiff(num_spatial_dims);

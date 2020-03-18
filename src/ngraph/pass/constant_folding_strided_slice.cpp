@@ -34,7 +34,7 @@ shared_ptr<op::Constant> fold_constant_strided_slice(shared_ptr<op::Constant> da
 {
     auto convert_mask_to_axis_set = [](const std::vector<int64_t>& mask) {
         AxisSet axis_set{};
-        for (size_t i = 0; i < static_cast<size_t>(mask.size()); ++i)
+        for (axis_t i = 0; i < static_cast<size_t>(mask.size()); ++i)
         {
             if (mask[i] == 1)
             {
@@ -67,7 +67,7 @@ shared_ptr<op::Constant> fold_constant_strided_slice(shared_ptr<op::Constant> da
     runtime::reference::reshape<T>(slice_out_buffer.get_ptr<T>(),
                                    reshape_out_buffer.get_ptr<T>(),
                                    plan.reshape_in_shape,
-                                   get_default_order(plan.reshape_in_shape.size()),
+                                   get_default_order(plan.reshape_in_shape.get_rank()),
                                    plan.reshape_out_shape);
 
     runtime::AlignedBuffer reverse_out_buffer(shape_size(plan.reshape_out_shape) * sizeof(T));

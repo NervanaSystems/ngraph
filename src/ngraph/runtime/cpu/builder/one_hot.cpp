@@ -35,7 +35,7 @@ namespace ngraph
                 auto arg_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
                 auto out_strides = out[0].get_strides();
-                auto arg_rank = arg_shape.size();
+                auto arg_rank = arg_shape.get_rank();
 
                 auto& functors = external_function->get_functors();
 

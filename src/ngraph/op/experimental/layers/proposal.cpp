@@ -49,21 +49,21 @@ void op::Proposal::validate_and_infer_types()
 
         NODE_VALIDATION_CHECK(
             this,
-            class_probs_shape.size() == 4,
+            class_probs_shape.get_rank() == 4,
             "Proposal layer shape class_probs input must have rank 4 (class_probs_shape: ",
             class_probs_shape,
             ").");
 
         NODE_VALIDATION_CHECK(
             this,
-            class_logits_shape.size() == 4,
+            class_logits_shape.get_rank() == 4,
             "Proposal layer shape class_logits_shape input must have rank 4 (class_logits_shape: ",
             class_logits_shape,
             ").");
 
         NODE_VALIDATION_CHECK(
             this,
-            image_shape_shape.size() == 1,
+            image_shape_shape.get_rank() == 1,
             "Proposal layer image_shape input must have rank 1 (image_shape_shape: ",
             image_shape_shape,
             ").");

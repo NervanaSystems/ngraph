@@ -162,13 +162,13 @@ shared_ptr<op::Reshape> make_reshape_axes_to_front(const Output<Node>& n,
     AxisVector input_order;
     Shape output_shape;
 
-    for (size_t i = 0; i < back_shape.size(); i++)
+    for (size_t i = 0; i < back_shape.get_rank(); i++)
     {
-        input_order.push_back(front_shape.size() + i);
+        input_order.push_back(front_shape.get_rank() + i);
         output_shape.push_back(back_shape[i]);
     }
 
-    for (size_t i = 0; i < front_shape.size(); i++)
+    for (size_t i = 0; i < front_shape.get_rank(); i++)
     {
         input_order.push_back(i);
         output_shape.push_back(front_shape[i]);
@@ -193,14 +193,16 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector
     Shape K_shape;
     I_shape.insert(I_shape.begin(), x_shape.begin(), x_shape.end() - m_reduction_axes_count);
     J_shape.insert(J_shape.begin(), y_shape.begin(), y_shape.begin() + m_reduction_axes_count);
-    K_shape.insert(K_shape.begin(), y_shape.begin() + J_shape.size(), y_shape.end());
+    K_shape.insert(K_shape.begin(), y_shape.begin() + J_shape.get_rank(), y_shape.end());
 
-    auto y_reshaped = make_reshape_axes_to_front(y, J_shape, K_shape);               // KJ
-    auto delta_dot_y_reshaped = make_shared<Dot>(delta, y_reshaped, K_shape.size()); // IK.KJ->IJ
+    auto y_reshaped = make_reshape_axes_to_front(y, J_shape, K_shape); // KJ
+    auto delta_dot_y_reshaped =
+        make_shared<Dot>(delta, y_reshaped, K_shape.get_rank()); // IK.KJ->IJ
     adjoints.add_delta(x, delta_dot_y_reshaped);
 
-    auto x_reshaped = make_reshape_axes_to_front(x, I_shape, J_shape);               // JI
-    auto x_reshaped_dot_delta = make_shared<Dot>(x_reshaped, delta, I_shape.size()); // JI.IK->JK
+    auto x_reshaped = make_reshape_axes_to_front(x, I_shape, J_shape); // JI
+    auto x_reshaped_dot_delta =
+        make_shared<Dot>(x_reshaped, delta, I_shape.get_rank()); // JI.IK->JK
     adjoints.add_delta(y, x_reshaped_dot_delta);
 }
 

@@ -51,18 +51,19 @@ namespace ngraph
 
                     CHECK_VALID_NODE(
                         node,
-                        (scale_shape.size() == 1 && scale_shape[0] == data_shape.at(1)),
+                        (scale_shape.get_rank() == 1 && scale_shape[0] == data_shape.at(1)),
                         "Scale input must be one dimensional vector of number of "
                         "input data channels size.");
 
-                    CHECK_VALID_NODE(node,
-                                     (bias_shape.size() == 1 && bias_shape[0] == data_shape.at(1)),
-                                     "Bias input must be one dimensional vector of number of "
-                                     "input data channels size.");
+                    CHECK_VALID_NODE(
+                        node,
+                        (bias_shape.get_rank() == 1 && bias_shape[0] == data_shape.at(1)),
+                        "Bias input must be one dimensional vector of number of "
+                        "input data channels size.");
 
                     // all dimensions except spatial/feature
                     const AxisSet reduction_axes{
-                        common::get_monotonic_range<std::size_t>(data_shape.size(), 2)};
+                        common::get_monotonic_range<axis_t>(data_shape.get_rank(), 2)};
 
                     const std::shared_ptr<ngraph::Node> eps_node =
                         std::make_shared<default_opset::Constant>(

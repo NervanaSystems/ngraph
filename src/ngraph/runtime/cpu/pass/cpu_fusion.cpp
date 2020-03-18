@@ -99,7 +99,7 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
 
     if (!r_w)
     {
-        if (arg->get_shape().size() != 2)
+        if (arg->get_shape().get_rank() != 2)
         {
             NGRAPH_DEBUG << arg->get_name() << " 's rank != 2 "
                          << ngraph::vector_to_string(arg->get_shape());
@@ -108,7 +108,7 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
         return true; // nth to do; reshape isn't a reshape
     }
 
-    if (r_w->get_shape().size() != 2)
+    if (r_w->get_shape().get_rank() != 2)
     {
         NGRAPH_DEBUG << "Reshape for " << reshape->get_name() << " doesn't reshape into matrix"
                      << ngraph::vector_to_string(r_w->get_shape());
@@ -116,9 +116,9 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
     }
 
     auto io = r_w->get_input_order();
-    if (r_w->get_shape().size() != arg->get_shape().size()) // reshape
+    if (r_w->get_shape().get_rank() != arg->get_shape().get_rank()) // reshape
     {
-        auto dio = ngraph::get_default_order(io);
+        auto dio = ngraph::get_default_order(io.get_rank());
         if (io != dio) // we can't reshape and transpose at the same time
         {
             NGRAPH_DEBUG << "Reshape for " << reshape->get_name() << " is not in default order "
@@ -219,7 +219,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
             return false;
         }
 
-        if (dot->get_shape().size() != 2)
+        if (dot->get_shape().get_rank() != 2)
         {
             NGRAPH_DEBUG << "dot = " << dot->get_name() << " shape is not equal to 2!";
             return false;
@@ -320,17 +320,17 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
         // TODO - add assert's based on the matched node
         auto pattern_map = m.get_pattern_map();
         NGRAPH_DEBUG << "Input: " << pattern_map[input]->get_name() << " "
-                     << pattern_map[input]->get_shape().size();
+                     << pattern_map[input]->get_shape().get_rank();
         NGRAPH_DEBUG << "Variance: " << pattern_map[variance_label]->get_name() << " "
-                     << pattern_map[variance_label]->get_shape().size();
+                     << pattern_map[variance_label]->get_shape().get_rank();
         NGRAPH_DEBUG << "Mean: " << pattern_map[mean_label]->get_name() << " "
-                     << pattern_map[mean_label]->get_shape().size();
+                     << pattern_map[mean_label]->get_shape().get_rank();
         NGRAPH_DEBUG << "eps: " << pattern_map[eps_label]->get_name() << " "
-                     << pattern_map[eps_label]->get_shape().size();
+                     << pattern_map[eps_label]->get_shape().get_rank();
         NGRAPH_DEBUG << "gamma: " << pattern_map[gamma_label]->get_name() << " "
-                     << pattern_map[gamma_label]->get_shape().size();
+                     << pattern_map[gamma_label]->get_shape().get_rank();
         NGRAPH_DEBUG << "beta: " << pattern_map[beta_label]->get_name() << " "
-                     << pattern_map[beta_label]->get_shape().size();
+                     << pattern_map[beta_label]->get_shape().get_rank();
 
         Shape bn_output_shape{m.get_match_root()->get_shape()};
         Shape m_bn_mean_shape{pattern_map[mean_label]->get_shape()};
@@ -403,7 +403,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
         // Except for the 2nd axis (channel dimension), we should either be broadcasting
         // to it or the dimension size should be 1.
         auto bcast_axes = bcast_m->get_broadcast_axes();
-        for (size_t i = 0; i < bcast_m->get_shape().size(); i++)
+        for (size_t i = 0; i < bcast_m->get_shape().get_rank(); i++)
         {
             if (i != 1 && bcast_axes.find(i) == bcast_axes.end() && bcast_m->get_shape()[i] != 1)
             {
@@ -413,7 +413,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
 
         auto bias = bcast_m->get_argument(0);
         auto bias_shape = bias->get_shape();
-        if (bias_shape.size() > 1)
+        if (bias_shape.get_rank() > 1)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << "conv_bias bias shape != 1, requires reshape to match filter count.";
@@ -459,8 +459,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
         auto conv_bprop =
             std::static_pointer_cast<ngraph::op::ConvolutionBackpropFilters>(m.get_match_root());
 
-        if (conv_bprop->get_input_shape(0).size() == 4 &&
-            conv_bprop->get_input_shape(1).size() == 4 &&
+        if (conv_bprop->get_input_shape(0).get_rank() == 4 &&
+            conv_bprop->get_input_shape(1).get_rank() == 4 &&
             conv_bprop->get_input_element_type(0) == element::f32)
         {
             for (auto delta_user : pattern_map[delta]->get_users())
@@ -470,7 +470,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                     auto bias = as_type_ptr<ngraph::op::Sum>(delta_user);
                     auto bias_shape = bias->get_shape();
                     bool flag = false;
-                    if (bias_shape.size() > 1)
+                    if (bias_shape.get_rank() > 1)
                     {
                         NGRAPH_DEBUG
                             << "mpattern = " << m.get_match_root()->get_name()
@@ -791,8 +791,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
             return false;
         }
 
-        std::vector<size_t> vec{0};
-        for (size_t i = 2; i < pattern_map[input]->get_output_shape(0).size(); i++)
+        std::vector<axis_t> vec{0};
+        for (size_t i = 2; i < pattern_map[input]->get_output_shape(0).get_rank(); i++)
         {
             vec.push_back(i);
         }
@@ -1530,7 +1530,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
             return false;
         }
 
-        if (m_conv->get_shape().size() != 4)
+        if (m_conv->get_shape().get_rank() != 4)
         {
             return false;
         }
@@ -1612,7 +1612,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
             return false;
         }
 
-        if (conv_m->get_shape().size() != 4)
+        if (conv_m->get_shape().get_rank() != 4)
         {
             return false;
         }
@@ -1627,17 +1627,17 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
         // Check if values are being broadcast along channel (2nd) dimension
         auto is_channel_bcast = [](const std::shared_ptr<ngraph::op::Broadcast>& bcast) {
             auto input_shape = bcast->get_argument(0)->get_shape();
-            if (input_shape.size() == 0 || shape_size(input_shape) == 1)
+            if (input_shape.get_rank() == 0 || shape_size(input_shape) == 1)
             {
                 return true;
             }
 
-            if (input_shape.size() == 1 && bcast->get_broadcast_axes() == AxisSet{0, 2, 3})
+            if (input_shape.get_rank() == 1 && bcast->get_broadcast_axes() == AxisSet{0, 2, 3})
             {
                 return true;
             }
 
-            if (input_shape.size() == 2)
+            if (input_shape.get_rank() == 2)
             {
                 if (input_shape[0] == 1 && bcast->get_broadcast_axes() == AxisSet{2, 3})
                     return true;
@@ -1652,7 +1652,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
 
         auto get_bcast_input = [](const std::shared_ptr<ngraph::op::Broadcast>& bcast) {
             auto input_shape = bcast->get_argument(0)->get_shape();
-            if (input_shape.size() == 0)
+            if (input_shape.get_rank() == 0)
             {
                 Shape bshape{bcast->get_shape()[1]};
                 return std::static_pointer_cast<ngraph::Node>(
@@ -1669,11 +1669,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
                         bshape,
                         AxisSet{0}));
             }
-            if (input_shape.size() == 1)
+            if (input_shape.get_rank() == 1)
             {
                 return bcast->get_argument(0);
             }
-            if (input_shape.size() == 2)
+            if (input_shape.get_rank() == 2)
             {
                 Shape bshape{input_shape[1]};
                 return std::static_pointer_cast<ngraph::Node>(std::make_shared<ngraph::op::Reshape>(
@@ -1757,7 +1757,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
             return false;
         }
 
-        if (conv_m->get_shape().size() != 4)
+        if (conv_m->get_shape().get_rank() != 4)
         {
             return false;
         }
@@ -1921,7 +1921,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
             return false;
         }
 
-        if (conv_m->get_shape().size() != 4)
+        if (conv_m->get_shape().get_rank() != 4)
         {
             return false;
         }
@@ -2673,7 +2673,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
         auto scale_output = pattern_map[output_scale];
         auto scale_new = input_0_scale * input_1_scale / scale_output;
 
-        if (input_0->get_shape().size() != 2 || input_1->get_shape().size() != 2)
+        if (input_0->get_shape().get_rank() != 2 || input_1->get_shape().get_rank() != 2)
         {
             return false;
         }

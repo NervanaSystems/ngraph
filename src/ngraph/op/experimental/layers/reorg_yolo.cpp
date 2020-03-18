@@ -36,7 +36,7 @@ void op::ReorgYolo::validate_and_infer_types()
         auto input_shape = get_input_partial_shape(0).to_shape();
         Shape output_shape{input_shape[0], input_shape[1]};
 
-        for (size_t i = 2; i < input_shape.size(); i++)
+        for (size_t i = 2; i < input_shape.get_rank(); i++)
         {
             output_shape.push_back(input_shape[i] / m_strides[0]);
             output_shape[1] *= m_strides[0];

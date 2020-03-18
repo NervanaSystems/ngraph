@@ -48,9 +48,9 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const
     const auto& data_shape = data.get_shape();
 
     NODE_VALIDATION_CHECK(this,
-                          (data_shape.size() >= 2),
+                          (data_shape.get_rank() >= 2),
                           "The data tensor with rank lower than 2 is not supported (data rank: ",
-                          data_shape.size(),
+                          data_shape.get_rank(),
                           ")");
 
     const auto block_const = as_type_ptr<op::Constant>(block.get_node_shared_ptr());

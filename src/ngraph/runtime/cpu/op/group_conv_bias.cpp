@@ -38,7 +38,7 @@ static void validate_groupconvbias_shapes(const Shape& input_shape,
     const size_t FILTER_IC = 1;
     const size_t OUTPUT_C = 1;
 
-    if (bias_shape.size() != 1)
+    if (bias_shape.get_rank() != 1)
     {
         throw ngraph_error("GroupConvolutionBias bias is expected to be 1D, but has shape: " +
                            vector_to_string(bias_shape));

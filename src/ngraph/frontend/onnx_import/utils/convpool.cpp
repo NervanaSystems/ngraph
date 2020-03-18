@@ -112,10 +112,10 @@ namespace ngraph
                     pads = CoordinateDiff{std::begin(pads_int64), std::end(pads_int64)};
                 }
 
-                if (pads.size() == kernel_rank * 2)
+                if (pads.get_rank() == kernel_rank * 2)
                 {
-                    return {{std::begin(pads), std::begin(pads) + pads.size() / 2},
-                            {std::begin(pads) + pads.size() / 2, std::end(pads)}};
+                    return {{std::begin(pads), std::begin(pads) + pads.get_rank() / 2},
+                            {std::begin(pads) + pads.get_rank() / 2, std::end(pads)}};
                 }
                 else
                 {

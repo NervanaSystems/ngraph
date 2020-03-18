@@ -38,8 +38,8 @@ namespace ngraph
                 NodeVector global_lp_pool(const Node& node)
                 {
                     const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
-                    const std::size_t channel_axis{1};
-                    const std::size_t channels_count = data->get_shape().at(channel_axis);
+                    const axis_t channel_axis{1};
+                    const axis_t channels_count = data->get_shape().at(channel_axis);
                     const std::int64_t p_norm{node.get_attribute_value<std::int64_t>("p", 2)};
 
                     ASSERT_VALID_ARGUMENT(node, p_norm >= 0)
@@ -53,17 +53,17 @@ namespace ngraph
                         const Shape& orig_shape = data->get_shape();
                         // all dimensions except spatial/feature
                         AxisSet reduction_axes{
-                            common::get_monotonic_range<std::size_t>(orig_shape.size(), 2)};
+                            common::get_monotonic_range<axis_t>(orig_shape.get_rank(), 2)};
 
                         slice = ngraph::builder::opset1::lp_norm(
                             slice, reduction_axes, static_cast<std::size_t>(p_norm));
 
                         // output shape is all ones except N channel
-                        Shape output_shape(orig_shape.size(), 1);
+                        Shape output_shape(orig_shape.get_rank(), 1);
                         output_shape.at(0) = orig_shape.at(0);
 
                         const auto reshape_pattern = default_opset::Constant::create(
-                            element::i64, Shape{output_shape.size()}, output_shape);
+                            element::i64, Shape{output_shape.get_rank()}, output_shape);
 
                         slice =
                             std::make_shared<default_opset::Reshape>(slice, reshape_pattern, false);

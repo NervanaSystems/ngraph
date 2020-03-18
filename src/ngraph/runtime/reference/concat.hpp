@@ -48,7 +48,7 @@ namespace ngraph
 
                     // The start coordinate for the copy is (0,...,0) except at the concatenation
                     // axis.
-                    Coordinate out_start_coord(out_shape.size(), 0);
+                    Coordinate out_start_coord(out_shape.get_rank(), 0);
                     out_start_coord[concatenation_axis] = concatenation_pos;
 
                     // The end coordinate for the copy is the same as the output shape except at the

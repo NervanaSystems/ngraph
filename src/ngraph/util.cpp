@@ -513,13 +513,13 @@ bool ngraph::is_valid_permutation(ngraph::AxisVector permutation, ngraph::Rank r
 template <typename T>
 T ngraph::apply_permutation(T input, AxisVector order)
 {
-    NGRAPH_CHECK(is_valid_permutation(order, input.size()),
+    NGRAPH_CHECK(is_valid_permutation(order, input.get_rank()),
                  "Permutation ",
                  order,
                  " is not valid for ",
                  input);
 
-    T output(input.size());
+    T output(input.get_rank());
 
     for (size_t i = 0; i < order.size(); i++)
     {
@@ -570,10 +570,10 @@ namespace ngraph
 
 AxisVector ngraph::get_default_order(const Shape& shape)
 {
-    return get_default_order(shape.size());
+    return get_default_order(shape.get_rank());
 }
 
-AxisVector ngraph::get_default_order(size_t rank)
+AxisVector ngraph::get_default_order(axis_t rank)
 {
     AxisVector default_order(rank);
     std::iota(begin(default_order), end(default_order), 0);

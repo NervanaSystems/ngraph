@@ -88,13 +88,13 @@ namespace ngraph
                 }
                 else if (is_optimized_et(args[0].get_element_type()))
                 {
-                    if (axes.size() == arg_shape.size())
+                    if (axes.size() == arg_shape.get_rank())
                     {
                         std::function<decltype(runtime::cpu::kernel::softmax_all<float, 1>)> kernel;
 
                         SELECT_ETS_AND_RANK7(kernel,
                                              args[0].get_element_type(),
-                                             args[0].get_shape().size(),
+                                             args[0].get_shape().get_rank(),
                                              runtime::cpu::kernel::softmax_all);
 
                         auto functor = [&, kernel, arg_shape, arg_buffer_index, out_buffer_index](
@@ -109,7 +109,7 @@ namespace ngraph
                     }
                     else if (axes.size() == 1)
                     {
-                        if (*axes.begin() == (arg_shape.size() - 1))
+                        if (*axes.begin() == (arg_shape.get_rank() - 1))
                         {
                             std::function<decltype(
                                 runtime::cpu::kernel::softmax_innermost_1rd<float, 1>)>
@@ -117,7 +117,7 @@ namespace ngraph
 
                             SELECT_ETS_AND_RANK7(kernel,
                                                  args[0].get_element_type(),
-                                                 args[0].get_shape().size(),
+                                                 args[0].get_shape().get_rank(),
                                                  runtime::cpu::kernel::softmax_innermost_1rd);
 
                             auto functor =
@@ -138,7 +138,7 @@ namespace ngraph
 
                             SELECT_ETS_AND_RANK7(kernel,
                                                  args[0].get_element_type(),
-                                                 args[0].get_shape().size(),
+                                                 args[0].get_shape().get_rank(),
                                                  runtime::cpu::kernel::softmax_1rd);
 
                             auto functor =
@@ -154,7 +154,7 @@ namespace ngraph
                             return;
                         }
                     }
-                    else if (arg_shape.size() == 3 && axes.size() == 2)
+                    else if (arg_shape.get_rank() == 3 && axes.size() == 2)
                     {
                         std::function<decltype(runtime::cpu::kernel::softmax_3d_2rd<float>)> kernel;
 
@@ -174,7 +174,7 @@ namespace ngraph
                         functors.emplace_back(functor);
                         return;
                     }
-                    else if (arg_shape.size() == 4 && axes.size() == 3)
+                    else if (arg_shape.get_rank() == 4 && axes.size() == 3)
                     {
                         std::function<decltype(runtime::cpu::kernel::softmax_4d_3rd<float>)> kernel;
 

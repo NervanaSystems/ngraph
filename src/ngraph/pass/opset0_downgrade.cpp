@@ -177,7 +177,7 @@ namespace
 
             // (Re)construct axes_mapping.
             AxisSet broadcast_axes = node->get_broadcast_axes().second;
-            std::vector<size_t> axes_mapping{
+            std::vector<axis_t> axes_mapping{
                 ngraph::builder::opset1::get_axes_mapping(target_shape, broadcast_axes)};
 
             Output<Node> squeezed_arg = arg;
@@ -194,9 +194,9 @@ namespace
             // Check if arg_shape contains some more empty dimensions marked to broadcast.
             // If axes_mapping size is less than arg_shape size, then some of arg dimensions may
             // be equal to one and marked to broadcast.
-            if (axes_mapping.size() < arg_shape.size())
+            if (axes_mapping.size() < arg_shape.get_rank())
             {
-                for (size_t a{axes_mapping.size()}; a < arg_shape.size(); ++a)
+                for (size_t a{axes_mapping.size()}; a < arg_shape.get_rank(); ++a)
                 {
                     if (arg_shape.at(a) == 1)
                     {
@@ -221,7 +221,7 @@ namespace
         const auto data_arg = node->input_value(0);
         const auto filters_arg = node->input_value(1);
         const auto strides = node->get_strides();
-        const size_t num_spatial_dims = strides.size();
+        const size_t num_spatial_dims = strides.get_rank();
         auto replacement_node = make_shared<op::v0::Convolution>(data_arg,
                                                                  filters_arg,
                                                                  node->get_strides(),
@@ -279,7 +279,7 @@ namespace
         const auto data_arg = node->input_value(0);
         const auto delta_arg = node->input_value(1);
         const auto strides = node->get_strides();
-        const size_t num_spatial_dims = strides.size();
+        const size_t num_spatial_dims = strides.get_rank();
         auto replacement_node =
             make_shared<op::v0::ConvolutionBackpropFilters>(data_arg,
                                                             filters_shape,
@@ -386,7 +386,7 @@ namespace
         const auto data_arg = node->input_value(0);
         const auto filters_arg = node->input_value(1);
         const auto strides = node->get_strides();
-        const size_t num_spatial_dims = strides.size();
+        const size_t num_spatial_dims = strides.get_rank();
         auto replacement_node = make_shared<op::GroupConvolution>(data_arg,
                                                                   filters_arg,
                                                                   node->get_strides(),
@@ -776,7 +776,7 @@ namespace
         auto axis = node->get_axis();
         auto data = node->input(0);
         auto data_shape = data.get_shape();
-        std::vector<size_t> axes(data_shape.size() - axis);
+        std::vector<axis_t> axes(data_shape.get_rank() - axis);
         std::iota(std::begin(axes), std::end(axes), axis);
         auto replacement_node = make_shared<op::v0::Softmax>(node->input_value(0), axes);
         replace_node(node, replacement_node);
@@ -847,7 +847,7 @@ namespace
         Shape out_shape = data_shape;
         if (order.empty())
         {
-            order.resize(out_shape.size());
+            order.resize(out_shape.get_rank());
             iota(begin(order), end(order), 0);
         }
         else

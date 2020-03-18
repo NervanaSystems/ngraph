@@ -88,17 +88,18 @@ NodeVector op::LayerNorm::decompose_op() const
 
     // Compute real axis
     auto shape = data_shape.to_shape();
-    int64_t n_axis = m_begin_norm_axis >= 0 ? m_begin_norm_axis : shape.size() + m_begin_norm_axis;
+    int64_t n_axis =
+        m_begin_norm_axis >= 0 ? m_begin_norm_axis : shape.get_rank() + m_begin_norm_axis;
 
     // Get input data
     auto data = input_value(0);
 
     // Compute mean
-    std::vector<size_t> post_reduction_axes(shape.size() - n_axis);
+    std::vector<axis_t> post_reduction_axes(shape.get_rank() - n_axis);
     std::iota(post_reduction_axes.begin(), post_reduction_axes.end(), n_axis);
     auto mean = builder::mean(data, post_reduction_axes);
     AxisSet post_axis_set;
-    for (size_t i = static_cast<size_t>(n_axis); i < shape.size(); i++)
+    for (size_t i = static_cast<size_t>(n_axis); i < shape.get_rank(); i++)
     {
         post_axis_set.insert(i);
     }
@@ -126,7 +127,7 @@ NodeVector op::LayerNorm::decompose_op() const
         auto scale = input_value(1);
         auto bias = input_value(2);
         auto scale_shape = get_input_partial_shape(1).to_shape();
-        if (shape.size() - n_axis != scale_shape.size())
+        if (shape.get_rank() - n_axis != scale_shape.get_rank())
         {
             Shape reshape_shape(shape.begin() + m_begin_norm_axis, shape.end());
             scale = make_shared<op::Reshape>(scale, AxisVector{0}, reshape_shape);
@@ -374,7 +375,8 @@ NodeVector op::LayerNormBackprop::decompose_op() const
 
     // Compute real axis
     auto shape = data_shape.to_shape();
-    int64_t n_axis = m_begin_norm_axis >= 0 ? m_begin_norm_axis : shape.size() + m_begin_norm_axis;
+    int64_t n_axis =
+        m_begin_norm_axis >= 0 ? m_begin_norm_axis : shape.get_rank() + m_begin_norm_axis;
 
     // Get input data
     auto data = input_value(0);
@@ -383,13 +385,13 @@ NodeVector op::LayerNormBackprop::decompose_op() const
     auto delta = input_value(1);
 
     // Get mean
-    std::vector<size_t> post_reduction_axes(shape.size() - n_axis);
+    std::vector<axis_t> post_reduction_axes(shape.get_rank() - n_axis);
     std::iota(post_reduction_axes.begin(), post_reduction_axes.end(), n_axis);
     auto mean =
         m_use_stats ? input_value(2) : builder::mean(data, post_reduction_axes)->outputs()[0];
 
     AxisSet post_axis_set;
-    for (size_t i = static_cast<size_t>(n_axis); i < shape.size(); i++)
+    for (size_t i = static_cast<size_t>(n_axis); i < shape.get_rank(); i++)
     {
         post_axis_set.insert(i);
     }
@@ -422,7 +424,7 @@ NodeVector op::LayerNormBackprop::decompose_op() const
         size_t scale_idx = m_use_stats ? 4 : 2;
         auto scale = input_value(scale_idx);
         auto scale_shape = get_input_partial_shape(scale_idx).to_shape();
-        if (shape.size() - n_axis != scale_shape.size())
+        if (shape.get_rank() - n_axis != scale_shape.get_rank())
         {
             scale_flattened = true;
             Shape reshape_shape(shape.begin() + m_begin_norm_axis, shape.end());
@@ -444,13 +446,13 @@ NodeVector op::LayerNormBackprop::decompose_op() const
     // Get gradients for affine
     if (m_use_affine)
     {
-        std::vector<size_t> pre_reduction_axes(n_axis);
+        std::vector<axis_t> pre_reduction_axes(n_axis);
         std::iota(pre_reduction_axes.begin(), pre_reduction_axes.end(), 0);
         auto d_bias = make_shared<op::Sum>(delta, pre_reduction_axes);
         auto d_scale = make_shared<op::Sum>(delta * norm, pre_reduction_axes);
         if (scale_flattened)
         {
-            std::vector<size_t> flatten_axes_vector(shape.size() - n_axis);
+            std::vector<axis_t> flatten_axes_vector(shape.get_rank() - n_axis);
             std::iota(flatten_axes_vector.begin(), flatten_axes_vector.end(), 0);
             AxisVector flatten_axes = AxisVector(flatten_axes_vector);
             Shape reshape_shape(shape.begin() + m_begin_norm_axis, shape.end());

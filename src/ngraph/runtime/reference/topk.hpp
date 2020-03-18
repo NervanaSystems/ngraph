@@ -82,7 +82,7 @@ namespace ngraph
             {
                 using namespace std;
                 // reorder source axis visit order and make "axis" inner most
-                size_t ndim = static_cast<size_t>(in_shape.size());
+                size_t ndim = static_cast<size_t>(in_shape.get_rank());
                 Coordinate start_corner(ndim, 0);
                 Coordinate end_corner(in_shape);
                 end_corner[axis] = 1;

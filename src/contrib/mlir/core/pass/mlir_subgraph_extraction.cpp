@@ -450,7 +450,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     // Dot is 2D only
     if (is_type<ngraph::op::Dot>(node))
     {
-        if (node->get_input_shape(0).size() != 2 || node->get_input_shape(1).size() != 2)
+        if (node->get_input_shape(0).get_rank() != 2 || node->get_input_shape(1).get_rank() != 2)
         {
             return false;
         }
@@ -483,7 +483,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
             return false;
         }
         auto arg0_shape = node->get_input_shape(0);
-        auto arg0_rank = arg0_shape.size();
+        auto arg0_rank = arg0_shape.get_rank();
 
         return (arg0_rank == 4 || arg0_rank == 2) &&
                node->get_input_element_type(0) == element::f32 && softmax->get_axes().size() == 1;
@@ -497,10 +497,10 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
             return false;
         }
         auto arg0_shape = node->get_input_shape(0);
-        auto arg0_rank = arg0_shape.size();
+        auto arg0_rank = arg0_shape.get_rank();
 
-        return ((arg0_rank == 4 && avg_pool->get_window_shape().size() == 2) ||
-                (arg0_rank == 5 && avg_pool->get_window_shape().size() == 3)) &&
+        return ((arg0_rank == 4 && avg_pool->get_window_shape().get_rank() == 2) ||
+                (arg0_rank == 5 && avg_pool->get_window_shape().get_rank() == 3)) &&
                node->get_input_element_type(0) == element::f32;
     }
 
@@ -512,10 +512,10 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
             return false;
         }
         auto arg0_shape = node->get_input_shape(0);
-        auto arg0_rank = arg0_shape.size();
+        auto arg0_rank = arg0_shape.get_rank();
 
-        return ((arg0_rank == 4 && avg_pool_backprop->get_window_shape().size() == 2) ||
-                (arg0_rank == 5 && avg_pool_backprop->get_window_shape().size() == 3)) &&
+        return ((arg0_rank == 4 && avg_pool_backprop->get_window_shape().get_rank() == 2) ||
+                (arg0_rank == 5 && avg_pool_backprop->get_window_shape().get_rank() == 3)) &&
                node->get_input_element_type(0) == element::f32;
     }
 
@@ -527,10 +527,10 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
             return false;
         }
         auto arg0_shape = node->get_input_shape(0);
-        auto arg0_rank = arg0_shape.size();
+        auto arg0_rank = arg0_shape.get_rank();
 
-        return ((arg0_rank == 4 && max_pool_backprop->get_window_shape().size() == 2) ||
-                (arg0_rank == 5 && max_pool_backprop->get_window_shape().size() == 3)) &&
+        return ((arg0_rank == 4 && max_pool_backprop->get_window_shape().get_rank() == 2) ||
+                (arg0_rank == 5 && max_pool_backprop->get_window_shape().get_rank() == 3)) &&
                node->get_input_element_type(0) == element::f32;
     }
 
@@ -542,10 +542,10 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
             return false;
         }
         auto arg0_shape = node->get_input_shape(0);
-        auto arg0_rank = arg0_shape.size();
+        auto arg0_rank = arg0_shape.get_rank();
 
-        return ((arg0_rank == 4 && max_pool->get_window_shape().size() == 2) ||
-                (arg0_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
+        return ((arg0_rank == 4 && max_pool->get_window_shape().get_rank() == 2) ||
+                (arg0_rank == 5 && max_pool->get_window_shape().get_rank() == 3)) &&
                node->get_input_element_type(0) == element::f32;
     }
 

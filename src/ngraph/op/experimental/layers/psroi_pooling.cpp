@@ -60,15 +60,15 @@ void op::PSROIPooling::validate_and_infer_types()
         Shape input_shape = get_input_partial_shape(0).to_shape();
         Shape coords_shape = get_input_partial_shape(1).to_shape();
         NODE_VALIDATION_CHECK(this,
-                              input_shape.size() >= 3,
+                              input_shape.get_rank() >= 3,
                               "PSROIPooling expects 3 or higher dimensions for input. Got ",
-                              input_shape.size());
+                              input_shape.get_rank());
         NODE_VALIDATION_CHECK(this,
-                              coords_shape.size() == 2,
+                              coords_shape.get_rank() == 2,
                               "PSROIPooling expects 2 dimensions for box coordinates. Got ",
-                              coords_shape.size());
+                              coords_shape.get_rank());
         Shape output_shape{coords_shape[0], m_output_dim};
-        for (size_t i = 2; i < input_shape.size(); i++)
+        for (size_t i = 2; i < input_shape.get_rank(); i++)
         {
             output_shape.push_back(m_group_size);
         }

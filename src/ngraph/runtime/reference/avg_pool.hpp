@@ -57,7 +57,7 @@ namespace ngraph
                     size_t img_index = delta_coord[0];
                     size_t channel = delta_coord[1];
 
-                    size_t n_image_dimensions = out_shape.size() - 2;
+                    size_t n_image_dimensions = out_shape.get_rank() - 2;
                     Coordinate source_window_transform_start(2 + n_image_dimensions);
                     Coordinate source_window_transform_end(2 + n_image_dimensions);
                     Strides source_window_transform_source_strides(2 + n_image_dimensions, 1);
@@ -161,7 +161,7 @@ namespace ngraph
                     // We iterate this over the *padded* data, so below we will need to check for
                     // coordinates that fall in the padding area.
 
-                    size_t n_spatial_dimensions = arg_shape.size() - 2;
+                    size_t n_spatial_dimensions = arg_shape.get_rank() - 2;
 
                     Coordinate input_batch_transform_start(2 + n_spatial_dimensions);
                     Coordinate input_batch_transform_end(2 + n_spatial_dimensions);
@@ -191,7 +191,7 @@ namespace ngraph
                         input_batch_transform_padding_above[i] = padding_above[i - 2];
                     }
 
-                    for (size_t i = 0; i < arg_shape.size(); i++)
+                    for (size_t i = 0; i < arg_shape.get_rank(); i++)
                     {
                         input_batch_transform_source_axis_order[i] = i;
                     }

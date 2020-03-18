@@ -48,7 +48,7 @@ namespace ngraph
                     const std::int64_t p_norm{node.get_attribute_value<std::int64_t>("p", 2)};
 
                     const std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
-                    const size_t normalize_axis =
+                    const axis_t normalize_axis =
                         ngraph::normalize_axis(node.get_description(), axis, data_rank);
 
                     ASSERT_VALID_ARGUMENT(node, p_norm == 1 || p_norm == 2)

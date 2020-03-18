@@ -64,11 +64,11 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
         const auto shape = get_input_shape(0);
 
         NODE_VALIDATION_CHECK(
-            this, shape.size() >= 1, "The input tensor's shape is expected to be at least 1D.");
+            this, shape.get_rank() >= 1, "The input tensor's shape is expected to be at least 1D.");
         size_t axis_zb = get_zero_based_axis();
 
         NODE_VALIDATION_CHECK(this,
-                              axis_zb < shape.size(),
+                              axis_zb < shape.get_rank(),
                               "The 'axis' parameter for ShuffleChannels has to point to one of the "
                               "input tensor's shape dimensions.");
 
@@ -110,7 +110,8 @@ Shape op::ShuffleChannels::get_pre_shuffle_shape(const Shape& data_shape) const
     // [0]: ds[0] * ds[1] * ... * ds[m_axis-1] (or 1 if m_axis == 0)
     // [1]: m_groups
     // [2]: ds[axis] / m_groups
-    // [3]: ds[axis+1] * ds[axis+2] * ... * ds[ds.size()-1] (or 1 if m_axis points to the last elem
+    // [3]: ds[axis+1] * ds[axis+2] * ... * ds[ds.get_rank()-1] (or 1 if m_axis points to the last
+    // elem
     //                                                       of ds)
     Shape res(4, 1);
 
@@ -123,7 +124,7 @@ Shape op::ShuffleChannels::get_pre_shuffle_shape(const Shape& data_shape) const
     res[1] = m_groups;
     res[2] = ds[axis_zb] / m_groups;
 
-    for (size_t i = axis_zb + 1; i < ds.size(); ++i)
+    for (size_t i = axis_zb + 1; i < ds.get_rank(); ++i)
     {
         res[3] *= ds[i];
     }

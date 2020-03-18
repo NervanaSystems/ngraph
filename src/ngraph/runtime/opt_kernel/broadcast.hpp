@@ -153,17 +153,17 @@ namespace ngraph
                            const Shape& out_shape,
                            const AxisSet& broadcast_axes)
             {
-                if (in_shape.size() == 0)
+                if (in_shape.get_rank() == 0)
                 {
                     for (size_t i = 0; i < shape_size(out_shape); ++i)
                     {
                         out[i] = in[0];
                     }
                 }
-                else if (in_shape.size() == 1)
+                else if (in_shape.get_rank() == 1)
                 {
                     size_t output_axis = 0;
-                    for (size_t i = 0; i < out_shape.size(); i++)
+                    for (size_t i = 0; i < out_shape.get_rank(); i++)
                     {
                         if (broadcast_axes.count(i) == 0)
                         {
@@ -171,7 +171,7 @@ namespace ngraph
                             break;
                         }
                     }
-                    switch (out_shape.size())
+                    switch (out_shape.get_rank())
                     {
                     case 2: broadcast_2d<T>(in, out, in_shape, out_shape, output_axis); break;
                     case 3: broadcast_3d<T>(in, out, in_shape, out_shape, output_axis); break;

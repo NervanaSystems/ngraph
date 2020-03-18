@@ -42,7 +42,7 @@ namespace ngraph
                 memcpy(out, inputs, sizeof(T) * shape_size(inputs_shape));
                 // Create a CoordinateTransform for "indices" that visits only the first element
                 // along inner most axis
-                size_t indices_ndim = static_cast<size_t>(indices_shape.size());
+                size_t indices_ndim = static_cast<size_t>(indices_shape.get_rank());
                 Coordinate indices_outer_start_corner(indices_ndim, 0);
                 Coordinate indices_outer_end_corner(indices_shape);
                 size_t slice_rank = indices_shape[indices_ndim - 1];
@@ -58,7 +58,7 @@ namespace ngraph
 
                 // Create a matching CoordinateTransform for "updates" that visits the same outer
                 // coordinates
-                size_t updates_ndim = static_cast<size_t>(updates_shape.size());
+                size_t updates_ndim = static_cast<size_t>(updates_shape.get_rank());
                 Strides updates_strides(updates_ndim, 1);
                 AxisVector updates_axis_order(updates_ndim);
                 std::iota(updates_axis_order.begin(), updates_axis_order.end(), 0);
@@ -75,7 +75,7 @@ namespace ngraph
                                                             updates_axis_order);
 
                 // Add an updates slice to a slice on out indexed by innermost dim ofindices
-                size_t out_ndim = static_cast<size_t>(out_shape.size());
+                size_t out_ndim = static_cast<size_t>(out_shape.get_rank());
                 Strides out_strides(out_ndim, 1);
                 AxisVector out_axis_order(out_ndim);
                 std::iota(out_axis_order.begin(), out_axis_order.end(), 0);

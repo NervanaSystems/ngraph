@@ -57,7 +57,7 @@ namespace ngraph
                 params_prime_shape.erase(params_prime_shape.begin(),
                                          params_prime_shape.begin() + axis);
                 // prepare shape of indices_prime
-                size_t indices_ndim = static_cast<size_t>(indices_shape.size());
+                size_t indices_ndim = static_cast<size_t>(indices_shape.get_rank());
                 Shape indices_prime_shape;
                 // prepare shape of out_prime (same as params_prime except for first dim)
                 Shape out_prime_shape(params_prime_shape);
@@ -73,7 +73,7 @@ namespace ngraph
                 indices_prime_shape.emplace_back(1);
 
                 // Create a CoordinateTransform for "out" that visits the outer "axis" dimensions
-                size_t out_ndim = static_cast<size_t>(out_shape.size());
+                size_t out_ndim = static_cast<size_t>(out_shape.get_rank());
                 Coordinate out_outer_start_corner(out_ndim, 0);
                 Coordinate out_outer_end_corner(out_shape);
                 for (size_t i = axis; i < out_ndim; i++)
@@ -90,7 +90,7 @@ namespace ngraph
                                                         out_outer_axis_order);
 
                 // Create a CoordinateTransform for "params" that visits the outer "axis" dimensions
-                size_t params_ndim = static_cast<size_t>(params_shape.size());
+                size_t params_ndim = static_cast<size_t>(params_shape.get_rank());
                 Coordinate params_outer_start_corner(params_ndim, 0);
                 Coordinate params_outer_end_corner(params_shape);
                 for (size_t i = axis; i < params_ndim; i++)

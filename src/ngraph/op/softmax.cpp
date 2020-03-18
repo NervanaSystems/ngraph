@@ -107,7 +107,7 @@ void op::v0::Softmax::validate_and_infer_types()
             // empty axes == all axes
             if (m_axes.size() == 0)
             {
-                for (size_t i = 0; i < get_shape().size(); ++i)
+                for (size_t i = 0; i < get_shape().get_rank(); ++i)
                 {
                     m_axes.insert(i);
                 }
@@ -135,7 +135,7 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
     auto zsum = make_shared<op::Sum>(z, axes);
 
     Shape shape;
-    for (size_t i = 0; i < get_shape().size(); ++i)
+    for (size_t i = 0; i < get_shape().get_rank(); ++i)
     {
         if (axes.find(i) == axes.end())
         {
@@ -204,14 +204,14 @@ void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 
     auto z = delta * shared_from_this();
 
-    std::vector<size_t> axes(get_shape().size() - m_axis);
+    std::vector<size_t> axes(get_shape().get_rank() - m_axis);
     std::iota(std::begin(axes), std::end(axes), m_axis);
     AxisSet axes_set{axes};
 
     auto zsum = make_shared<op::Sum>(z, axes_set);
 
     Shape shape;
-    for (size_t i = 0; i < get_shape().size(); ++i)
+    for (size_t i = 0; i < get_shape().get_rank(); ++i)
     {
         if (axes_set.find(i) == axes_set.end())
         {

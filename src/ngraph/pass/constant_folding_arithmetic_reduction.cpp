@@ -54,7 +54,7 @@ static shared_ptr<op::Constant>
         auto reduction_axes = reduce_max->get_reduction_axes();
         auto input_shape = reduce_max->get_input_shape(0);
         Shape shape_no_keep_dims;
-        for (size_t i = 0; i < input_shape.size(); i++)
+        for (size_t i = 0; i < input_shape.get_rank(); i++)
         {
             if (reduction_axes.count(i) == 0)
             {
@@ -80,7 +80,7 @@ static shared_ptr<op::Constant>
         auto reduction_axes = reduce_min->get_reduction_axes();
         auto input_shape = reduce_min->get_input_shape(0);
         Shape shape_no_keep_dims;
-        for (size_t i = 0; i < input_shape.size(); i++)
+        for (size_t i = 0; i < input_shape.get_rank(); i++)
         {
             if (reduction_axes.count(i) == 0)
             {
@@ -106,7 +106,7 @@ static shared_ptr<op::Constant>
         auto reduction_axes = reduce_prod->get_reduction_axes();
         auto input_shape = reduce_prod->get_input_shape(0);
         Shape shape_no_keep_dims;
-        for (size_t i = 0; i < input_shape.size(); i++)
+        for (size_t i = 0; i < input_shape.get_rank(); i++)
         {
             if (reduction_axes.count(i) == 0)
             {
@@ -132,7 +132,7 @@ static shared_ptr<op::Constant>
         auto reduction_axes = reduce_sum->get_reduction_axes();
         auto input_shape = reduce_sum->get_input_shape(0);
         Shape shape_no_keep_dims;
-        for (size_t i = 0; i < input_shape.size(); i++)
+        for (size_t i = 0; i < input_shape.get_rank(); i++)
         {
             if (reduction_axes.count(i) == 0)
             {
@@ -150,7 +150,7 @@ static shared_ptr<op::Constant>
         auto reduction_axes = reduce_mean->get_reduction_axes();
         auto input_shape = reduce_mean->get_input_shape(0);
         Shape shape_no_keep_dims;
-        for (size_t i = 0; i < input_shape.size(); i++)
+        for (size_t i = 0; i < input_shape.get_rank(); i++)
         {
             if (reduction_axes.count(i) == 0)
             {

@@ -87,22 +87,22 @@ void op::v1::GroupConvolution::validate_and_infer_types()
         auto data_batch_shape = data_batch_pshape.to_shape();
         data_batch_shape[1] /= groups;
 
-        if (m_strides.size() == 0)
+        if (m_strides.get_rank() == 0)
         {
             m_strides = conv_default_strides(this, data_batch_shape, filters_shape);
         }
 
-        if (m_dilations.size() == 0)
+        if (m_dilations.get_rank() == 0)
         {
             m_dilations = conv_default_strides(this, data_batch_shape, filters_shape);
         }
 
-        if (m_pads_begin.size() == 0)
+        if (m_pads_begin.get_rank() == 0)
         {
             m_pads_begin = conv_default_padding(this, data_batch_shape, filters_shape);
         }
 
-        if (m_pads_end.size() == 0)
+        if (m_pads_end.get_rank() == 0)
         {
             m_pads_end = conv_default_padding(this, data_batch_shape, filters_shape);
         }
@@ -124,7 +124,7 @@ void op::v1::GroupConvolution::validate_and_infer_types()
         result_shape =
             infer_convolution_forward(this,
                                       data_batch_shape,
-                                      Strides(m_strides.size(), 1), // dummy data dilations
+                                      Strides(m_strides.get_rank(), 1), // dummy data dilations
                                       m_pads_begin,
                                       m_pads_end,
                                       filters_shape,
@@ -262,7 +262,7 @@ const PartialShape op::v1::GroupConvolutionBackpropData::get_convolution_output_
     }
     else
     {
-        shape = PartialShape{vector<Dimension>(m_strides.size())};
+        shape = PartialShape{vector<Dimension>(m_strides.get_rank())};
     }
     bool is_output_shape_present = get_inputs().size() == 3;
     if (is_output_shape_present)
@@ -282,7 +282,7 @@ const PartialShape op::v1::GroupConvolutionBackpropData::get_convolution_output_
 void op::v1::GroupConvolutionBackpropData::set_output_shape(const Shape& shape)
 {
     this->input(2).replace_source_output(
-        op::Constant::create(this->get_input_element_type(2), Shape{shape.size()}, shape)
+        op::Constant::create(this->get_input_element_type(2), Shape{shape.get_rank()}, shape)
             ->output(0));
 }
 
@@ -320,39 +320,39 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
                               "Data second dimension has incompatible value "
                               "with number of input channels.");
 
-        if (m_pads_begin.size() == 0)
+        if (m_pads_begin.get_rank() == 0)
         {
             m_pads_begin = conv_default_padding(this, data_pshape, filters_pshape);
         }
-        if (m_pads_end.size() == 0)
+        if (m_pads_end.get_rank() == 0)
         {
             m_pads_end = conv_default_padding(this, data_pshape, filters_pshape);
         }
-        if (m_output_padding.size() == 0)
+        if (m_output_padding.get_rank() == 0)
         {
             m_output_padding = conv_default_padding(this, data_pshape, filters_pshape);
         }
-        if (m_strides.size() == 0)
+        if (m_strides.get_rank() == 0)
         {
             m_strides = conv_default_strides(this, data_pshape, filters_pshape);
         }
-        if (m_dilations.size() == 0)
+        if (m_dilations.get_rank() == 0)
         {
             m_dilations = conv_default_strides(this, data_pshape, filters_pshape);
         }
 
-        const size_t num_spatial_dims = data_shape.size() - 2;
+        const size_t num_spatial_dims = data_shape.get_rank() - 2;
 
         NODE_VALIDATION_CHECK(this,
-                              m_strides.size() == num_spatial_dims,
+                              m_strides.get_rank() == num_spatial_dims,
                               "Strides should be defined for all and only spatial features.");
 
         NODE_VALIDATION_CHECK(this,
-                              m_dilations.size() == num_spatial_dims,
+                              m_dilations.get_rank() == num_spatial_dims,
                               "Dilations should be defined for all and only spatial features.");
 
         NODE_VALIDATION_CHECK(this,
-                              m_output_padding.size() == num_spatial_dims,
+                              m_output_padding.get_rank() == num_spatial_dims,
                               "Output padding should be defined for all and only "
                               "spatial features.");
     }
@@ -371,9 +371,9 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
             Shape output_shape = output_pshape.to_shape();
             const Shape& data_shape = data_pshape.to_shape();
             const Shape& filters_shape = filters_pshape.to_shape();
-            const size_t num_spatial_dims = data_shape.size() - 2;
+            const size_t num_spatial_dims = data_shape.get_rank() - 2;
             NODE_VALIDATION_CHECK(this,
-                                  output_shape.size() == num_spatial_dims,
+                                  output_shape.get_rank() == num_spatial_dims,
                                   "Output shape should be specified only and for "
                                   "all spatial dimensions.");
 
@@ -714,7 +714,7 @@ NodeVector op::v0::GroupConvolution::decompose_op() const
             // Remove group dimmension after slicing
             sliced_filter = make_shared<op::Reshape>(
                 sliced_filters[group],
-                get_default_order(sliced_filters[group]->get_shape().size()),
+                get_default_order(sliced_filters[group]->get_shape().get_rank()),
                 Shape(std::next(std::begin(filters_shape), 1), std::end(filters_shape)));
         }
         convolution_nodes.push_back(
@@ -822,7 +822,7 @@ NodeVector op::v0::GroupConvolutionBackpropData::decompose_op() const
     // slice filters
     auto sliced_filters = builder::split(filters, groups, 0);
 
-    auto num_spatials = get_window_movement_strides().size();
+    auto num_spatials = get_window_movement_strides().get_rank();
 
     for (size_t i = 0; i < groups; ++i)
     {

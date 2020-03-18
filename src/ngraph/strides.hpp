@@ -22,6 +22,7 @@
 
 #include "ngraph/attribute_adapter.hpp"
 #include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
@@ -37,7 +38,7 @@ namespace ngraph
 
         NGRAPH_API Strides(const Strides& axis_strides);
 
-        NGRAPH_API explicit Strides(size_t n, size_t initial_value = 0);
+        NGRAPH_API explicit Strides(axis_t n, size_t initial_value = 0);
 
         template <class InputIterator>
         Strides(InputIterator first, InputIterator last)
@@ -48,6 +49,13 @@ namespace ngraph
         NGRAPH_API Strides& operator=(const Strides& v);
 
         NGRAPH_API Strides& operator=(Strides&& v) noexcept;
+
+        NGRAPH_API axis_t get_rank() const { return std::vector<size_t>::size(); }
+    private:
+        friend std::vector<int64_t> ngraph::copy_from<std::vector<int64_t>>(Strides&);
+        friend Strides ngraph::copy_from<Strides>(std::vector<int64_t>&);
+        friend Strides ngraph::copy_from<Strides>(Strides&);
+        NGRAPH_API size_t size() const { return get_rank(); }
     };
 
     template <>

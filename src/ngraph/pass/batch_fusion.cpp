@@ -111,7 +111,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
 
         sconv = std::static_pointer_cast<op::Convolution>(arg);
 
-        if (arg->get_input_shape(0).size() != 4)
+        if (arg->get_input_shape(0).get_rank() != 4)
         {
             NGRAPH_DEBUG << "convolution data's rank isn't equal to 4";
             return {nullptr};

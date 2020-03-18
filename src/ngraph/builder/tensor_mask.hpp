@@ -47,12 +47,12 @@ namespace ngraph
                                           ngraph::Shape mask_shape,
                                           uint32_t sequence_begin)
         {
-            if (sequence_axis >= mask_shape.size())
+            if (sequence_axis >= mask_shape.get_rank())
             {
                 throw ngraph_error("Sequence axis must be in range 0..mask_shape rank");
             }
 
-            if (batch_axis >= mask_shape.size())
+            if (batch_axis >= mask_shape.get_rank())
             {
                 throw ngraph_error("Sequence axis must be in range 0..mask_shape rank");
             }
@@ -62,7 +62,7 @@ namespace ngraph
             // all axes except the batch axis
             ngraph::AxisSet non_batch_axes;
 
-            for (size_t axis = 0; axis < mask_shape.size(); ++axis)
+            for (size_t axis = 0; axis < mask_shape.get_rank(); ++axis)
             {
                 if (axis != sequence_axis)
                 {

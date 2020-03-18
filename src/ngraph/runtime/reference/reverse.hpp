@@ -42,7 +42,7 @@ namespace ngraph
                 {
                     Coordinate arg_coord = out_coord;
 
-                    for (size_t i = 0; i < arg_coord.size(); i++)
+                    for (size_t i = 0; i < arg_coord.get_rank(); i++)
                     {
                         if (reversed_axes.count(i) != 0)
                         {

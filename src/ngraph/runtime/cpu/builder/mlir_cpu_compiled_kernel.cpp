@@ -51,15 +51,15 @@ namespace ngraph
                     buffer_indices.push_back(buffer_index);
                     // Get shape and strides
                     auto tensor_shape = arg.get_shape();
-                    std::vector<size_t> shape(tensor_shape.size());
-                    for (auto i = 0; i < tensor_shape.size(); i++)
+                    std::vector<size_t> shape(tensor_shape.get_rank());
+                    for (auto i = 0; i < tensor_shape.get_rank(); i++)
                     {
                         shape[i] = tensor_shape[i];
                     }
                     shape_vec.push_back(shape);
                     auto tensor_strides = arg.get_strides();
-                    std::vector<size_t> strides(tensor_strides.size());
-                    for (auto i = 0; i < tensor_strides.size(); i++)
+                    std::vector<size_t> strides(tensor_strides.get_rank());
+                    for (auto i = 0; i < tensor_strides.get_rank(); i++)
                     {
                         strides[i] = tensor_strides[i];
                     }
@@ -72,15 +72,15 @@ namespace ngraph
                     buffer_indices.push_back(buffer_index);
                     // Get shape and strides
                     auto tensor_shape = result.get_shape();
-                    std::vector<size_t> shape(tensor_shape.size());
-                    for (auto i = 0; i < tensor_shape.size(); i++)
+                    std::vector<size_t> shape(tensor_shape.get_rank());
+                    for (auto i = 0; i < tensor_shape.get_rank(); i++)
                     {
                         shape[i] = tensor_shape[i];
                     }
                     shape_vec.push_back(shape);
                     auto tensor_strides = result.get_strides();
-                    std::vector<size_t> strides(tensor_strides.size());
-                    for (auto i = 0; i < tensor_strides.size(); i++)
+                    std::vector<size_t> strides(tensor_strides.get_rank());
+                    for (auto i = 0; i < tensor_strides.get_rank(); i++)
                     {
                         strides[i] = tensor_strides[i];
                     }

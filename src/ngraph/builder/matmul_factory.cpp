@@ -41,12 +41,12 @@ using namespace std;
 static Output<Node> get_sub_matrix(const Output<Node>& node, size_t idx)
 {
     const Shape& shape{node.get_shape()};
-    if (shape.size() < 3)
+    if (shape.get_rank() < 3)
     {
         return node.get_node_shared_ptr();
     }
     // Below bounds defines the sub_matrix through ranges for each input node axis.
-    Coordinate lower_bounds(shape.size());
+    Coordinate lower_bounds(shape.get_rank());
     Coordinate upper_bounds = shape;
     // We assume `node` tensor is of rank equal 3, thus we slice the sub-matrix lying in the last
     // two dimensions at index `idx` of first axis.
@@ -73,8 +73,8 @@ NodeVector builder::MatmulFactory::make_matmul_op()
     auto left = get_left();
     auto right = get_right();
 
-    size_t left_rank{left.get_shape().size()};
-    size_t right_rank{right.get_shape().size()};
+    size_t left_rank{left.get_shape().get_rank()};
+    size_t right_rank{right.get_shape().get_rank()};
 
     // First (easy) case that is already internally handled by Ngraph Dot operator.
     // Multiply two tensors where both of them has rank lower equal 2.
@@ -102,20 +102,20 @@ NodeVector builder::MatmulFactory::make_matmul_op()
 
     // Collapse both tensors _stack of matrices_ axes (all except the last two).
     // This will make easier further dot product calculations.
-    if (left_shape.size() > 3)
+    if (left_shape.get_rank() > 3)
     {
-        left = builder::collapse(left, 0, left_shape.size() - 3);
+        left = builder::collapse(left, 0, left_shape.get_rank() - 3);
     }
-    if (right_shape.size() > 3)
+    if (right_shape.get_rank() > 3)
     {
-        right = builder::collapse(right, 0, right_shape.size() - 3);
+        right = builder::collapse(right, 0, right_shape.get_rank() - 3);
     }
 
     // Perform multiple small dot products
     size_t groups = left.get_shape().at(0);
     // If we haven't broadcast earlier this means that one of the inputs is a vector,
     // thus the number of groups is defined by the shape of the bigger tensor.
-    if (right.get_shape().size() > left.get_shape().size())
+    if (right.get_shape().get_rank() > left.get_shape().get_rank())
     {
         groups = right.get_shape().at(0);
     }
@@ -135,7 +135,7 @@ NodeVector builder::MatmulFactory::make_matmul_op()
     // Concatenate sub_dots on groups axis.
     auto result = make_shared<op::Concat>(small_dots, 0);
 
-    if (left_shape.size() <= 3 && right_shape.size() <= 3)
+    if (left_shape.get_rank() <= 3 && right_shape.get_rank() <= 3)
     {
         return {result->add_provenance_group_members_above(m_inputs)};
     }
@@ -144,9 +144,10 @@ NodeVector builder::MatmulFactory::make_matmul_op()
     {
         const Shape& shape{result->get_shape()};
         Shape result_shape(next(begin(shape)), end(shape));
-        result_shape.insert(
-            begin(result_shape), begin(left_shape), next(begin(left_shape), left_shape.size() - 2));
-        return {make_shared<op::Reshape>(result, get_default_order(shape.size()), result_shape)
+        result_shape.insert(begin(result_shape),
+                            begin(left_shape),
+                            next(begin(left_shape), left_shape.get_rank() - 2));
+        return {make_shared<op::Reshape>(result, get_default_order(shape.get_rank()), result_shape)
                     ->add_provenance_group_members_above(m_inputs)};
     }
 }

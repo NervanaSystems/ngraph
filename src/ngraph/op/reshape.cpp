@@ -119,7 +119,7 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
     auto delta = deltas.at(0);
 
     auto x_shape = get_input_shape(0);
-    auto x_rank = x_shape.size();
+    auto x_rank = x_shape.get_rank();
     Shape permuted_x_shape(x_rank);
     AxisVector x_input_order(x_rank);
     bool is_permuted = false;
@@ -133,8 +133,8 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
         permuted_x_shape[i] = x_shape[permuted_i];
         x_input_order[permuted_i] = i;
     }
-    AxisVector input_order(m_output_shape.size());
-    for (size_t i = 0; i < m_output_shape.size(); i++)
+    AxisVector input_order(m_output_shape.get_rank());
+    for (size_t i = 0; i < m_output_shape.get_rank(); i++)
     {
         input_order[i] = i;
     }
@@ -229,7 +229,7 @@ void op::v1::Reshape::validate_and_infer_types()
                     {
                         // Copy input_shape[i] for zero values
                         NODE_VALIDATION_CHECK(
-                            this, i < input_shape.size(), "'0' dimension is out of range");
+                            this, i < input_shape.get_rank(), "'0' dimension is out of range");
                         partial_shape[i] = Dimension(input_shape[i]);
                         output_elements *= input_shape[i];
                     }

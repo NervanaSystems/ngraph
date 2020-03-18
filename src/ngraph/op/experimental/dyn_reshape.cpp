@@ -99,7 +99,7 @@ void op::v0::DynReshape::validate_and_infer_types()
                     {
                         // Copy input_shape[i] for zero values
                         NODE_VALIDATION_CHECK(
-                            this, i < input_shape.size(), "'0' dimension is out of range");
+                            this, i < input_shape.get_rank(), "'0' dimension is out of range");
                         partial_shape[i] = Dimension(input_shape[i]);
                         output_elements *= input_shape[i];
                     }

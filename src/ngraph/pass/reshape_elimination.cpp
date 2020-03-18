@@ -171,14 +171,14 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
         }
 
         auto mdot = mtranspose->get_argument(0);
-        if (mdot->get_shape().size() != 2)
+        if (mdot->get_shape().get_rank() != 2)
         {
             NGRAPH_DEBUG << "Dot has the wrong shape. " << vector_to_string(mdot->get_shape());
             return false;
         }
 
         auto arg0 = mdot->get_argument(0);
-        if (arg0->get_shape().size() != 2)
+        if (arg0->get_shape().get_rank() != 2)
         {
             NGRAPH_DEBUG << "Arg0 has the wrong shape. " << vector_to_string(arg0->get_shape());
             return false;
@@ -187,7 +187,7 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
         auto reshape0 = make_shared<op::Reshape>(arg0, AxisVector{1, 0}, reshape0_shape);
 
         auto arg1 = mdot->get_argument(1);
-        if (arg1->get_shape().size() != 2)
+        if (arg1->get_shape().get_rank() != 2)
         {
             NGRAPH_DEBUG << "Arg1 has the wrong shape. " << vector_to_string(arg1->get_shape());
             return false;

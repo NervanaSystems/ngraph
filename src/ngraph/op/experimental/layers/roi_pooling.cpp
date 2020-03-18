@@ -42,19 +42,19 @@ void op::ROIPooling::validate_and_infer_types()
         Shape input_shape = get_input_partial_shape(0).to_shape();
         Shape coords_shape = get_input_partial_shape(1).to_shape();
         NODE_VALIDATION_CHECK(this,
-                              input_shape.size() >= 3,
+                              input_shape.get_rank() >= 3,
                               "ROIPooling expects 3 or higher dimensions for input. Got ",
-                              input_shape.size());
+                              input_shape.get_rank());
         NODE_VALIDATION_CHECK(this,
-                              coords_shape.size() == 2,
+                              coords_shape.get_rank() == 2,
                               "ROIPooling expects 2 dimensions for box coordinates. Got ",
-                              coords_shape.size());
+                              coords_shape.get_rank());
         NODE_VALIDATION_CHECK(this,
-                              input_shape.size() - 2 == m_output_size.size(),
+                              input_shape.get_rank() - 2 == m_output_size.get_rank(),
                               "Spatial dimensions on input: ",
-                              input_shape.size() - 2,
+                              input_shape.get_rank() - 2,
                               " doesn't match dimensions on requested output_size: ",
-                              m_output_size.size());
+                              m_output_size.get_rank());
         Shape output_shape{coords_shape[0], input_shape[1]};
         output_shape.insert(output_shape.end(), m_output_size.begin(), m_output_size.end());
         set_output_type(0, input_et, output_shape);

@@ -43,7 +43,7 @@ ngraph::CoordinateDiff::CoordinateDiff(const CoordinateDiff& diffs)
 {
 }
 
-ngraph::CoordinateDiff::CoordinateDiff(size_t n, std::ptrdiff_t initial_value)
+ngraph::CoordinateDiff::CoordinateDiff(axis_t n, std::ptrdiff_t initial_value)
     : std::vector<std::ptrdiff_t>(n, initial_value)
 {
 }

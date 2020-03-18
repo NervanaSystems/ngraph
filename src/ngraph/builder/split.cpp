@@ -92,7 +92,7 @@ NodeVector builder::split(const Output<Node>& value, size_t split_parts, int axi
     size_t axis_to_split{static_cast<size_t>(axis)};
     if (axis < 0)
     {
-        axis_to_split = value.get_shape().size() + axis;
+        axis_to_split = value.get_shape().get_rank() + axis;
     }
 
     size_t length_axis_to_split{value.get_shape().at(axis_to_split)};

@@ -53,7 +53,7 @@ void op::Atan::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVecto
     auto one = make_shared<op::Constant>(x.get_element_type(), Shape{}, vector<string>{"1"});
 
     AxisSet axes;
-    for (size_t i = 0; i < x.get_shape().size(); i++)
+    for (size_t i = 0; i < x.get_shape().get_rank(); i++)
         axes.insert(i);
     auto ones = make_shared<op::Broadcast>(one, x.get_shape(), axes);
 

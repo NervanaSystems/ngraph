@@ -25,7 +25,7 @@ namespace ngraph
     {
         AXIS_VALUES result;
 
-        for (size_t i = 0; i < axis_values.size(); i++)
+        for (size_t i = 0; i < axis_values.get_rank(); i++)
         {
             if (axes.find(i) != axes.end())
             {
@@ -45,7 +45,7 @@ namespace ngraph
     {
         AxisSet axes;
 
-        for (size_t i = 0; i < axis_values.size(); i++)
+        for (size_t i = 0; i < axis_values.get_rank(); i++)
         {
             if (deleted_axes.find(i) == deleted_axes.end())
             {
@@ -60,7 +60,7 @@ namespace ngraph
     PartialShape reduce(const PartialShape& shape, const AxisSet& deleted_axes);
 
     // TODO: check validity, i.e. that the new axis indices are all less than
-    // axis_values.size()+num_new_axes.
+    // axis_values.get_rank()+num_new_axes.
     // Add new values at particular axis positions
     template <typename AXIS_VALUES, typename AXIS_VALUE>
     AXIS_VALUES inject_pairs(const AXIS_VALUES& axis_values,
@@ -71,7 +71,7 @@ namespace ngraph
         size_t original_pos = 0;
 
         for (size_t result_pos = 0;
-             result_pos < axis_values.size() + new_axis_pos_value_pairs.size();
+             result_pos < axis_values.get_rank() + new_axis_pos_value_pairs.size();
              result_pos++)
         {
             // Would be nice to use std::find_if here but would rather not #include <algorithm> in

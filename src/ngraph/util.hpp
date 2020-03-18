@@ -207,7 +207,7 @@ namespace ngraph
     template <typename T>
     T apply_permutation(T input, ngraph::AxisVector order);
 
-    AxisVector get_default_order(size_t rank);
+    AxisVector get_default_order(axis_t rank);
     NGRAPH_API
     AxisVector get_default_order(const Shape& shape);
 

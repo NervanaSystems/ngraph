@@ -22,6 +22,7 @@
 
 #include "ngraph/deprecated.hpp"
 #include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
@@ -69,6 +70,11 @@ namespace ngraph
         ///        non-negative.
         /// \throws std::invalid_argument If this dimension is dynamic or negative.
         uint64_t get_length() const;
+
+        /// \brief Convert this dimension to `axis_t`. This dimension must be static and
+        ///        non-negative and in range.
+        /// \throws std::invalid_argument If this dimension is dynamic or negative.
+        axis_t get_rank() const;
 
         /// \brief Check whether this dimension represents the same scheme as the argument (both
         ///        dynamic, or equal).

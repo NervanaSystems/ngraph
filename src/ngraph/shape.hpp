@@ -23,6 +23,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
@@ -38,7 +39,7 @@ namespace ngraph
 
         NGRAPH_API Shape(const Shape& axis_lengths);
 
-        NGRAPH_API explicit Shape(size_t n, size_t initial_value = 0);
+        NGRAPH_API explicit Shape(axis_t n, size_t initial_value = 0);
 
         NGRAPH_API ~Shape();
 
@@ -50,6 +51,13 @@ namespace ngraph
 
         NGRAPH_API Shape& operator=(const Shape& v);
         NGRAPH_API Shape& operator=(Shape&& v) noexcept;
+
+        NGRAPH_API axis_t get_rank() const { return std::vector<size_t>::size(); }
+    private:
+        friend std::vector<int64_t> ngraph::copy_from<std::vector<int64_t>>(Shape&);
+        friend Shape ngraph::copy_from<Shape>(std::vector<int64_t>&);
+        friend Shape ngraph::copy_from<Shape>(Shape&);
+        NGRAPH_API size_t size() const { return get_rank(); }
     };
 
     template <>
@@ -83,8 +91,8 @@ namespace ngraph
     template <typename SHAPE_TYPE>
     std::vector<size_t> row_major_strides(const SHAPE_TYPE& shape)
     {
-        std::vector<size_t> strides(shape.size());
-        size_t s = 1;
+        std::vector<size_t> strides(shape.get_rank());
+        axis_t s = 1;
         auto st = strides.rbegin();
         for (auto d = shape.rbegin(); d != shape.rend(); d++, st++)
         {
@@ -97,13 +105,13 @@ namespace ngraph
     template <typename SHAPE_TYPE>
     inline bool is_scalar(const SHAPE_TYPE& shape)
     {
-        return 0 == shape.size();
+        return 0 == shape.get_rank();
     }
 
     template <typename SHAPE_TYPE>
     inline bool is_vector(const SHAPE_TYPE& shape)
     {
-        return 1 == shape.size();
+        return 1 == shape.get_rank();
     }
 
     NGRAPH_API

@@ -177,7 +177,7 @@ namespace ngraph
                 bool can_use_mkldnn_conv(ngraph::Node* node)
                 {
                     auto convolution = static_cast<const T*>(node);
-                    auto arg0_rank = node->get_input_shape(0).size();
+                    auto arg0_rank = node->get_input_shape(0).get_rank();
 
                     for (size_t s : convolution->get_data_dilation_strides())
                     {

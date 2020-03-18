@@ -52,7 +52,7 @@ ngraph::Coordinate::Coordinate(const Coordinate& axes)
 {
 }
 
-ngraph::Coordinate::Coordinate(size_t n, size_t initial_value)
+ngraph::Coordinate::Coordinate(axis_t n, size_t initial_value)
     : std::vector<size_t>(n, initial_value)
 {
 }

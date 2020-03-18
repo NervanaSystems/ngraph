@@ -79,7 +79,7 @@ namespace ngraph
                 // The start and end points for the channel axis are modified in the loop.
                 Coordinate start_corner;
                 Coordinate end_corner;
-                for (size_t i = 0; i < input_shape.size(); i++)
+                for (size_t i = 0; i < input_shape.get_rank(); i++)
                 {
                     start_corner.push_back(0);
                     end_corner.push_back(input_shape[i]);
@@ -145,7 +145,7 @@ namespace ngraph
 
                 Coordinate start_corner;
                 Coordinate end_corner;
-                for (size_t i = 0; i < input_shape.size(); i++)
+                for (size_t i = 0; i < input_shape.get_rank(); i++)
                 {
                     start_corner.push_back(0);
                     end_corner.push_back(input_shape[i]);

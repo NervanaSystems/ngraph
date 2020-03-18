@@ -57,12 +57,12 @@ NodeVector op::DepthToSpace::decompose_op() const
     auto data_shape = data.get_shape();
 
     NODE_VALIDATION_CHECK(this,
-                          (data_shape.size() >= 3),
+                          (data_shape.get_rank() >= 3),
                           "The input tensor with rank lower than 3 is not supported (input rank: ",
-                          data_shape.size(),
+                          data_shape.get_rank(),
                           ")");
 
-    if (data_shape.size() == 3)
+    if (data_shape.get_rank() == 3)
     {
         // Insert batch axis
         data_shape.insert(data_shape.begin(), 1);
@@ -71,7 +71,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     const size_t n_dim = data_shape.at(0);
     const size_t c_dim = data_shape.at(1);
     const size_t spatial_dim_index = 2;
-    const size_t spatial_dims = data_shape.size() - spatial_dim_index;
+    const size_t spatial_dims = data_shape.get_rank() - spatial_dim_index;
     const auto c_dim_divider = static_cast<int>(std::pow(m_blocksize, spatial_dims));
 
     NODE_VALIDATION_CHECK(this,
@@ -112,7 +112,7 @@ NodeVector op::DepthToSpace::decompose_op() const
         flat_node = builder::opset1::reshape(data, dispersed_shape);
 
         axes_order.push_back(1);
-        for (int i = spatial_dim_index; i < data_shape.size(); ++i)
+        for (int i = spatial_dim_index; i < data_shape.get_rank(); ++i)
         {
             axes_order.push_back(spatial_dims + i);
             axes_order.push_back(i);
@@ -133,7 +133,7 @@ NodeVector op::DepthToSpace::decompose_op() const
         flat_node = builder::opset1::reshape(data, dispersed_shape);
 
         axes_order.push_back(spatial_dims + 1);
-        for (int i = 2; i < data_shape.size(); ++i)
+        for (int i = 2; i < data_shape.get_rank(); ++i)
         {
             axes_order.push_back(spatial_dims + i);
             axes_order.push_back(i - 1);
@@ -142,7 +142,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     }
     }
     Shape squeezed_shape{n_dim, c_flat};
-    for (int i = spatial_dim_index; i < data_shape.size(); ++i)
+    for (int i = spatial_dim_index; i < data_shape.get_rank(); ++i)
     {
         squeezed_shape.push_back(data_shape.at(i) * bs);
     }

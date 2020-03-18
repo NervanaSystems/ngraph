@@ -89,9 +89,9 @@ NodeVector op::Stack::decompose_op() const
     {
         auto data = input_value(i);
         auto data_shape = data.get_shape();
-        axis = (axis < 0) ? axis + data_shape.size() + 1 : axis;
+        axis = (axis < 0) ? axis + data_shape.get_rank() + 1 : axis;
         data_shape.insert(data_shape.begin() + axis, 1);
-        std::vector<size_t> input_order(data_shape.size() - 1);
+        std::vector<axis_t> input_order(data_shape.get_rank() - 1);
         std::iota(std::begin(input_order), std::end(input_order), 0);
         args.push_back(std::make_shared<op::Reshape>(data, AxisVector(input_order), data_shape));
     }

@@ -168,7 +168,7 @@ namespace
             node->input_value(0), // filters
             op::Constant::create(
                 element::i64,
-                Shape{data_batch_shape.size() - 2},
+                Shape{static_cast<axis_t>(data_batch_shape.get_rank() - 2)},
                 vector<size_t>(data_batch_shape.begin() + 2, data_batch_shape.end())),
             strides,
             pads_begin,
@@ -344,7 +344,8 @@ namespace
         auto replacement_node = make_shared<op::v1::GroupConvolutionBackpropData>(
             node->input_value(2),
             reshaped_filters,
-            op::Constant::create(element::i64, Shape{data_batch_shape.size()}, data_batch_shape),
+            op::Constant::create(
+                element::i64, Shape{data_batch_shape.get_rank()}, data_batch_shape),
             strides,
             pads_begin,
             pads_end,
@@ -492,10 +493,10 @@ namespace
     {
         auto padding_below = node->get_padding_below();
         auto pads_begin_node =
-            make_shared<op::Constant>(element::i64, Shape{padding_below.size()}, padding_below);
+            make_shared<op::Constant>(element::i64, Shape{padding_below.get_rank()}, padding_below);
         auto padding_above = node->get_padding_above();
         auto pads_end_node =
-            make_shared<op::Constant>(element::i64, Shape{padding_above.size()}, padding_above);
+            make_shared<op::Constant>(element::i64, Shape{padding_above.get_rank()}, padding_above);
 
         auto replacement_node = make_shared<op::v1::Pad>(node->input_value(0),
                                                          pads_begin_node,
@@ -569,12 +570,12 @@ namespace
     {
         const auto data = node->input_value(0);
         const auto begin = op::Constant::create(
-            element::i64, Shape{node->get_lower_bounds().size()}, node->get_lower_bounds());
+            element::i64, Shape{node->get_lower_bounds().get_rank()}, node->get_lower_bounds());
         const auto end = op::Constant::create(
-            element::i64, Shape{node->get_upper_bounds().size()}, node->get_upper_bounds());
+            element::i64, Shape{node->get_upper_bounds().get_rank()}, node->get_upper_bounds());
         const auto strides = op::Constant::create(
-            element::i64, Shape{node->get_strides().size()}, node->get_strides());
-        int64_t input_size = node->get_lower_bounds().size();
+            element::i64, Shape{node->get_strides().get_rank()}, node->get_strides());
+        int64_t input_size = node->get_lower_bounds().get_rank();
 
         auto replacement_node = make_shared<op::v1::StridedSlice>(data,
                                                                   begin,

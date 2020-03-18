@@ -26,7 +26,7 @@ namespace ngraph
         {
             inline void shape_of(const Shape& arg_shape, uint64_t* out)
             {
-                for (size_t i = 0; i < arg_shape.size(); i++)
+                for (size_t i = 0; i < arg_shape.get_rank(); i++)
                 {
                     out[i] = static_cast<uint64_t>(arg_shape[i]);
                 }

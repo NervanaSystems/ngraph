@@ -516,7 +516,7 @@ OutputVector JSONDeserializer::deserialize_output_vector(json j)
 
 json JSONSerializer::serialize_axis_set(const AxisSet& axis_set)
 {
-    return static_cast<set<size_t>>(axis_set);
+    return static_cast<set<axis_t>>(axis_set);
 }
 
 AxisSet JSONDeserializer::deserialize_axis_set(json j)
@@ -524,7 +524,7 @@ AxisSet JSONDeserializer::deserialize_axis_set(json j)
     AxisSet result;
     if (j.is_array())
     {
-        result = j.get<set<size_t>>();
+        result = j.get<set<axis_t>>();
     }
     return result;
 }
@@ -1495,11 +1495,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::DynReplaceSlice:
         {
-            auto lower_bounds_mask = node_js.at("lower_bounds_mask").get<set<size_t>>();
-            auto upper_bounds_mask = node_js.at("upper_bounds_mask").get<set<size_t>>();
-            auto new_axis = node_js.at("new_axis").get<set<size_t>>();
-            auto shrink_axis = node_js.at("shrink_axis").get<set<size_t>>();
-            auto ellipsis_mask = node_js.at("ellipsis_mask").get<set<size_t>>();
+            auto lower_bounds_mask = node_js.at("lower_bounds_mask").get<set<axis_t>>();
+            auto upper_bounds_mask = node_js.at("upper_bounds_mask").get<set<axis_t>>();
+            auto new_axis = node_js.at("new_axis").get<set<axis_t>>();
+            auto shrink_axis = node_js.at("shrink_axis").get<set<axis_t>>();
+            auto ellipsis_mask = node_js.at("ellipsis_mask").get<set<axis_t>>();
             node = make_shared<op::DynReplaceSlice>(args[0],
                                                     args[1],
                                                     args[2],
@@ -1526,11 +1526,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::DynSlice:
         {
-            auto lower_bounds_mask = node_js.at("lower_bounds_mask").get<set<size_t>>();
-            auto upper_bounds_mask = node_js.at("upper_bounds_mask").get<set<size_t>>();
-            auto new_axis = node_js.at("new_axis").get<set<size_t>>();
-            auto shrink_axis = node_js.at("shrink_axis").get<set<size_t>>();
-            auto ellipsis_mask = node_js.at("ellipsis_mask").get<set<size_t>>();
+            auto lower_bounds_mask = node_js.at("lower_bounds_mask").get<set<axis_t>>();
+            auto upper_bounds_mask = node_js.at("upper_bounds_mask").get<set<axis_t>>();
+            auto new_axis = node_js.at("new_axis").get<set<axis_t>>();
+            auto shrink_axis = node_js.at("shrink_axis").get<set<axis_t>>();
+            auto ellipsis_mask = node_js.at("ellipsis_mask").get<set<axis_t>>();
             node = make_shared<op::DynSlice>(args[0],
                                              args[1],
                                              args[2],
@@ -2347,17 +2347,17 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::PartialSlice:
         {
-            auto axes = node_js.at("axes").get<vector<size_t>>();
+            auto axes = node_js.at("axes").get<vector<axis_t>>();
             auto lower_bounds = node_js.at("lower_bounds").get<vector<int64_t>>();
             auto upper_bounds = node_js.at("upper_bounds").get<vector<int64_t>>();
-            auto decrease_axes = node_js.at("decrease_axes").get<vector<size_t>>();
+            auto decrease_axes = node_js.at("decrease_axes").get<vector<axis_t>>();
             node = make_shared<op::PartialSlice>(
                 args[0], axes, lower_bounds, upper_bounds, decrease_axes);
             break;
         }
         case OP_TYPEID::PartialSliceBackprop:
         {
-            auto axes = node_js.at("axes").get<vector<size_t>>();
+            auto axes = node_js.at("axes").get<vector<axis_t>>();
             auto lower_bounds = node_js.at("lower_bounds").get<vector<int64_t>>();
             auto upper_bounds = node_js.at("upper_bounds").get<vector<int64_t>>();
             node = make_shared<op::PartialSliceBackprop>(
@@ -2401,8 +2401,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Product:
         {
-            set<size_t> reduction_axes =
-                get_or_default<set<size_t>>(node_js, "reduction_axes", set<size_t>());
+            set<axis_t> reduction_axes =
+                get_or_default<set<axis_t>>(node_js, "reduction_axes", set<axis_t>());
             if (reduction_axes.empty())
             {
                 node = make_shared<op::v0::Product>(args[0], args[1]);
@@ -2454,9 +2454,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
             auto data_dilation_strides = node_js["data_dilation_strides"];
             auto output_type = read_element_type(node_js.at("output_type"));
-            auto input_axes = node_js.at("input_axes").get<set<size_t>>();
-            auto filter_axes = node_js.at("filter_axes").get<set<size_t>>();
-            auto output_axes = node_js.at("output_axes").get<set<size_t>>();
+            auto input_axes = node_js.at("input_axes").get<set<axis_t>>();
+            auto filter_axes = node_js.at("filter_axes").get<set<axis_t>>();
+            auto output_axes = node_js.at("output_axes").get<set<axis_t>>();
             node = make_shared<op::QuantizedConvolution>(
                 args[0],
                 args[1],
@@ -2484,9 +2484,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             size_t reduction_axes_count = node_js["reduction_axes_count"].get<size_t>();
             auto output_type = read_element_type(node_js.at("output_type"));
-            auto input0_axes = node_js.at("input0_axes").get<set<size_t>>();
-            auto input1_axes = node_js.at("input1_axes").get<set<size_t>>();
-            auto output_axes = node_js.at("output_axes").get<set<size_t>>();
+            auto input0_axes = node_js.at("input0_axes").get<set<axis_t>>();
+            auto input1_axes = node_js.at("input1_axes").get<set<axis_t>>();
+            auto output_axes = node_js.at("output_axes").get<set<axis_t>>();
 
             node = make_shared<op::QuantizedDot>(args[0],
                                                  args[1],
@@ -2561,7 +2561,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Reshape:
         {
-            auto input_order = node_js.at("input_order").get<vector<size_t>>();
+            auto input_order = node_js.at("input_order").get<vector<axis_t>>();
             auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
             node = make_shared<op::Reshape>(args[0], input_order, output_shape);
             break;
@@ -2859,8 +2859,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Sum:
         {
-            set<size_t> reduction_axes =
-                get_or_default<set<size_t>>(node_js, "reduction_axes", set<size_t>());
+            set<axis_t> reduction_axes =
+                get_or_default<set<axis_t>>(node_js, "reduction_axes", set<axis_t>());
             if (reduction_axes.empty())
             {
                 node = make_shared<op::v0::Sum>(args[0], args[1]);

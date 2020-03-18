@@ -111,7 +111,7 @@ namespace ngraph
         Strides m_target_dilation_strides;
 
         Shape m_target_shape;
-        size_t m_n_axes;
+        axis_t m_n_axes;
         Iterator m_end_iterator;
     };
 }

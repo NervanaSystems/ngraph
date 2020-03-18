@@ -65,7 +65,7 @@ SlicePlan ngraph::make_slice_plan(const Shape& input_shape,
         }
     }
 
-    NGRAPH_CHECK(num_real_axes <= input_shape.size(),
+    NGRAPH_CHECK(num_real_axes <= input_shape.get_rank(),
                  "num_real_axes=",
                  num_real_axes,
                  ", input_shape=",
@@ -73,7 +73,7 @@ SlicePlan ngraph::make_slice_plan(const Shape& input_shape,
 
     // Figure out how many axes need to be inserted when the ellipsis (which
     // may be an implicit ellipsis at the end) is expanded.
-    size_t ellipsis_size = input_shape.size() - num_real_axes;
+    size_t ellipsis_size = input_shape.get_rank() - num_real_axes;
 
     // Initialize our slice plan.
     SlicePlan p;

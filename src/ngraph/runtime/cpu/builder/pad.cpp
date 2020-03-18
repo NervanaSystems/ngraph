@@ -58,7 +58,7 @@ namespace ngraph
 
                     SELECT_ETS_AND_RANK7(kernel,
                                          args[0].get_element_type(),
-                                         arg_shape.size(),
+                                         arg_shape.get_rank(),
                                          runtime::cpu::kernel::pad_and_slice);
 
                     auto functor = [&,
@@ -134,7 +134,7 @@ namespace ngraph
 
                     SELECT_ETS_AND_RANK7(kernel,
                                          pad->get_input_element_type(0),
-                                         arg_shape.size(),
+                                         arg_shape.get_rank(),
                                          runtime::cpu::kernel::pad_and_slice);
 
                     auto functor =

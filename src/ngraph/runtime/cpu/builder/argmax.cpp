@@ -57,8 +57,11 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::argmax<float, int64_t, 1>)>
                             kernel;
 
-                        SELECT_KERNEL_RANK(
-                            kernel, float, int64_t, in_shape.size(), runtime::cpu::kernel::argmax);
+                        SELECT_KERNEL_RANK(kernel,
+                                           float,
+                                           int64_t,
+                                           in_shape.get_rank(),
+                                           runtime::cpu::kernel::argmax);
 
                         functor = [&,
                                    kernel,
@@ -81,7 +84,7 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::argmax<float, int, 1>)> kernel;
 
                         SELECT_KERNEL_RANK(
-                            kernel, float, int, in_shape.size(), runtime::cpu::kernel::argmax);
+                            kernel, float, int, in_shape.get_rank(), runtime::cpu::kernel::argmax);
 
                         functor = [&,
                                    kernel,
@@ -107,8 +110,11 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::argmax<double, int64_t, 1>)>
                             kernel;
 
-                        SELECT_KERNEL_RANK(
-                            kernel, double, int64_t, in_shape.size(), runtime::cpu::kernel::argmax);
+                        SELECT_KERNEL_RANK(kernel,
+                                           double,
+                                           int64_t,
+                                           in_shape.get_rank(),
+                                           runtime::cpu::kernel::argmax);
 
                         functor = [&,
                                    kernel,
@@ -132,7 +138,7 @@ namespace ngraph
                             kernel;
 
                         SELECT_KERNEL_RANK(
-                            kernel, double, int, in_shape.size(), runtime::cpu::kernel::argmax);
+                            kernel, double, int, in_shape.get_rank(), runtime::cpu::kernel::argmax);
 
                         functor = [&,
                                    kernel,
@@ -158,8 +164,11 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::argmax<int, int64_t, 1>)>
                             kernel;
 
-                        SELECT_KERNEL_RANK(
-                            kernel, int, int64_t, in_shape.size(), runtime::cpu::kernel::argmax);
+                        SELECT_KERNEL_RANK(kernel,
+                                           int,
+                                           int64_t,
+                                           in_shape.get_rank(),
+                                           runtime::cpu::kernel::argmax);
 
                         functor = [&,
                                    kernel,
@@ -182,7 +191,7 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::argmax<int, int, 1>)> kernel;
 
                         SELECT_KERNEL_RANK(
-                            kernel, int, int, in_shape.size(), runtime::cpu::kernel::argmax);
+                            kernel, int, int, in_shape.get_rank(), runtime::cpu::kernel::argmax);
 
                         functor = [&,
                                    kernel,

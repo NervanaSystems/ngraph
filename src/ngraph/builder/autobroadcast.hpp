@@ -170,7 +170,7 @@ namespace ngraph
         ///
         OutputVector legacy_broadcast_for_binary_operation(const Output<Node>& left,
                                                            const Output<Node>& right,
-                                                           size_t start_match_axis);
+                                                           axis_t start_match_axis);
 
         /// \brief      Broadcast shape of two nodes to make them compatible for a matrix
         ///             multiplication.
@@ -216,7 +216,7 @@ namespace ngraph
         /// \return The indices of added axes.
         AxisSet calculate_broadcast_axes(const Shape& output_shape,
                                          const Shape& input_shape,
-                                         std::size_t start_match_axis);
+                                         axis_t start_match_axis);
 
         /// \brief Generate a list of broadcast along axes.
         ///
@@ -235,7 +235,7 @@ namespace ngraph
         inline AxisSet calculate_broadcast_axes(const Shape& output_shape, const Shape& input_shape)
         {
             return calculate_broadcast_axes(
-                output_shape, input_shape, output_shape.size() - input_shape.size());
+                output_shape, input_shape, output_shape.get_rank() - input_shape.get_rank());
         }
 
         inline std::shared_ptr<Node> make_broadcast_node(const Output<Node>& output,
@@ -247,7 +247,7 @@ namespace ngraph
 
         inline std::shared_ptr<Node> make_broadcast_node(const Output<Node>& value,
                                                          const Shape& new_shape,
-                                                         std::size_t start_match_axis)
+                                                         axis_t start_match_axis)
         {
             return std::make_shared<op::Broadcast>(
                 value,
@@ -270,7 +270,7 @@ namespace ngraph
             ///
             Output<Node> legacy_broadcast_for_binary_operation(const Output<Node>& left,
                                                                const Output<Node>& right,
-                                                               size_t start_match_axis);
+                                                               axis_t start_match_axis);
 
             ///
             /// \brief      Reconstructs axes mapping vector for Broadcast:v1 operation.
@@ -280,8 +280,8 @@ namespace ngraph
             ///
             /// \return     The vector with axes indexes mapping .
             ///
-            std::vector<std::size_t> get_axes_mapping(const Shape& output_shape,
-                                                      const AxisSet& broadcast_axes);
+            std::vector<axis_t> get_axes_mapping(const Shape& output_shape,
+                                                 const AxisSet& broadcast_axes);
 
             ///
             /// \brief      Creates Node returning the axes mapping for Broadcast:v1 operation.
@@ -295,7 +295,7 @@ namespace ngraph
             ///
             Output<Node> get_axes_mapping_output(const Shape& output_shape,
                                                  const Shape& input_shape,
-                                                 std::size_t start_match_axis);
+                                                 axis_t start_match_axis);
 
             ///
             /// \brief      Creates Node returning the axes mapping for Broadcast:v1 operation.
@@ -314,7 +314,7 @@ namespace ngraph
 
             Output<Node> make_broadcast(const Output<Node>& node,
                                         const Shape& target_shape,
-                                        std::size_t start_match_axis);
+                                        axis_t start_match_axis);
 
         } // namespace opset1
     }     // namespace builder

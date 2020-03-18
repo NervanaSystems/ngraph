@@ -156,7 +156,7 @@ namespace ngraph
 
                     SELECT_KERNEL_ET_RANK(kernel,
                                           out[0].get_element_type(),
-                                          out[0].get_shape().size(),
+                                          out[0].get_shape().get_rank(),
                                           runtime::cpu::kernel::concat)
 
                     auto functor = [&,

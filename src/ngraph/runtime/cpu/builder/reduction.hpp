@@ -23,7 +23,7 @@
     auto op = static_cast<const ngraph::op::OP*>(node);                                            \
                                                                                                    \
     auto arg_shape = args[0].get_shape();                                                          \
-    auto arg_rank = arg_shape.size();                                                              \
+    auto arg_rank = arg_shape.get_rank();                                                          \
                                                                                                    \
     auto result_shape = out[0].get_shape();                                                        \
     auto& result_element_type = out[0].get_element_type();                                         \

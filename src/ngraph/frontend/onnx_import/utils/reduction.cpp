@@ -33,12 +33,12 @@ namespace ngraph
                 AxisSet get_reduction_axes(const Node& node)
                 {
                     auto reduction_axes =
-                        node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
+                        node.get_attribute_value<std::vector<n_axis_t>>("axes", {});
 
                     const auto input_rank =
                         node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
 
-                    std::vector<std::size_t> normalized_axes =
+                    std::vector<axis_t> normalized_axes =
                         ngraph::normalize_axes(node.get_description(), reduction_axes, input_rank);
 
                     if (reduction_axes.empty())
@@ -48,8 +48,8 @@ namespace ngraph
                                      "'axes' attribute is not specified. Node: ",
                                      node.get_description());
 
-                        normalized_axes = onnx_import::common::get_monotonic_range<size_t>(
-                            input_rank.get_length());
+                        normalized_axes =
+                            onnx_import::common::get_monotonic_range<axis_t>(input_rank.get_rank());
                     }
                     return AxisSet{normalized_axes};
                 }
@@ -64,9 +64,9 @@ namespace ngraph
 
                 auto reduction_axes = detail::get_reduction_axes(node);
 
-                ASSERT_VALID_ARGUMENT(node, reduction_axes.size() <= data_shape.size())
+                ASSERT_VALID_ARGUMENT(node, reduction_axes.size() <= data_shape.get_rank())
                     << "provided reduction axes count (" << reduction_axes.size()
-                    << ") is larger than input tensor rank (" << data_shape.size() << ")";
+                    << ") is larger than input tensor rank (" << data_shape.get_rank() << ")";
 
                 std::shared_ptr<ngraph::Node> op_node =
                     reduction_function(ng_input, reduction_axes);

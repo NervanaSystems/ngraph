@@ -55,14 +55,14 @@ NodeVector op::SpaceToDepth::decompose_op() const
     auto data_shape = data.get_shape();
 
     NODE_VALIDATION_CHECK(this,
-                          (data_shape.size() >= 3),
+                          (data_shape.get_rank() >= 3),
                           "The input tensor with rank lower than 3 is not supported (input rank: ",
-                          data_shape.size(),
+                          data_shape.get_rank(),
                           ")");
 
     NODE_VALIDATION_CHECK(this, m_blocksize > 0, "m_blocksize must be greater than 0");
 
-    if (data_shape.size() == 3)
+    if (data_shape.get_rank() == 3)
     {
         // Insert batch axis
         data_shape.insert(data_shape.begin(), 1);
@@ -72,9 +72,9 @@ NodeVector op::SpaceToDepth::decompose_op() const
     const size_t n_dim = data_shape.at(0);
     const size_t c_dim = data_shape.at(1);
     const size_t spatial_dim_index = 2;
-    const size_t spatial_dims = data_shape.size() - spatial_dim_index;
+    const size_t spatial_dims = data_shape.get_rank() - spatial_dim_index;
 
-    for (int i = spatial_dim_index; i < data_shape.size(); ++i)
+    for (int i = spatial_dim_index; i < data_shape.get_rank(); ++i)
     {
         NODE_VALIDATION_CHECK(this,
                               m_blocksize > 0 && data_shape.at(i) % m_blocksize == 0,

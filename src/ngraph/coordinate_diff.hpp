@@ -22,6 +22,7 @@
 
 #include "ngraph/attribute_adapter.hpp"
 #include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
@@ -35,7 +36,7 @@ namespace ngraph
 
         NGRAPH_API CoordinateDiff(const CoordinateDiff& diffs);
 
-        NGRAPH_API explicit CoordinateDiff(size_t n, std::ptrdiff_t initial_value = 0);
+        NGRAPH_API explicit CoordinateDiff(axis_t n, std::ptrdiff_t initial_value = 0);
 
         template <class InputIterator>
         CoordinateDiff(InputIterator first, InputIterator last)
@@ -50,6 +51,13 @@ namespace ngraph
         NGRAPH_API CoordinateDiff& operator=(const CoordinateDiff& v);
 
         NGRAPH_API CoordinateDiff& operator=(CoordinateDiff&& v) noexcept;
+
+        NGRAPH_API axis_t get_rank() const { return std::vector<std::ptrdiff_t>::size(); }
+    private:
+        friend std::vector<int64_t> ngraph::copy_from<std::vector<int64_t>>(CoordinateDiff&);
+        friend CoordinateDiff ngraph::copy_from<CoordinateDiff>(std::vector<int64_t>&);
+        friend CoordinateDiff ngraph::copy_from<CoordinateDiff>(CoordinateDiff&);
+        NGRAPH_API size_t size() const { return get_rank(); }
     };
 
     template <>

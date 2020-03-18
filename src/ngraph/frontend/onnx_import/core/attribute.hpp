@@ -173,11 +173,57 @@ namespace ngraph
                 }
 
                 template <>
+                inline int8_t get_value(const onnx::AttributeProto& attribute)
+                {
+                    if (attribute.type() != onnx::AttributeProto_AttributeType_INT)
+                    {
+                        throw error::attribute::InvalidData{attribute.type()};
+                    }
+                    return attribute.i();
+                }
+
+                template <>
+                inline uint8_t get_value(const onnx::AttributeProto& attribute)
+                {
+                    if (attribute.type() != onnx::AttributeProto_AttributeType_INT)
+                    {
+                        throw error::attribute::InvalidData{attribute.type()};
+                    }
+                    return attribute.i();
+                }
+
+                template <>
                 inline std::vector<int64_t> get_value(const onnx::AttributeProto& attribute)
                 {
                     switch (attribute.type())
                     {
                     case onnx::AttributeProto_AttributeType_INT: return {attribute.i()};
+                    case onnx::AttributeProto_AttributeType_INTS:
+                        return {std::begin(attribute.ints()), std::end(attribute.ints())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
+                    }
+                }
+
+                template <>
+                inline std::vector<int8_t> get_value(const onnx::AttributeProto& attribute)
+                {
+                    switch (attribute.type())
+                    {
+                    case onnx::AttributeProto_AttributeType_INT:
+                        return {static_cast<int8_t>(attribute.i())};
+                    case onnx::AttributeProto_AttributeType_INTS:
+                        return {std::begin(attribute.ints()), std::end(attribute.ints())};
+                    default: throw error::attribute::InvalidData{attribute.type()};
+                    }
+                }
+
+                template <>
+                inline std::vector<uint8_t> get_value(const onnx::AttributeProto& attribute)
+                {
+                    switch (attribute.type())
+                    {
+                    case onnx::AttributeProto_AttributeType_INT:
+                        return {static_cast<uint8_t>(attribute.i())};
                     case onnx::AttributeProto_AttributeType_INTS:
                         return {std::begin(attribute.ints()), std::end(attribute.ints())};
                     default: throw error::attribute::InvalidData{attribute.type()};

@@ -42,13 +42,13 @@ namespace ngraph
                 {
                     std::shared_ptr<ngraph::Node> data = node.get_ng_inputs().at(0);
                     Shape data_shape = data->get_shape();
-                    const auto data_rank = data_shape.size();
+                    const auto data_rank = data_shape.get_rank();
 
                     auto starts = node.get_attribute_value<std::vector<int64_t>>("starts");
                     auto ends = node.get_attribute_value<std::vector<int64_t>>("ends");
 
                     auto axes = node.get_attribute_value<std::vector<int64_t>>(
-                        "axes", common::get_monotonic_range<int64_t>(data_shape.size()));
+                        "axes", common::get_monotonic_range<int64_t>(data_shape.get_rank()));
 
                     Shape lower_bounds(data_rank);
                     Shape upper_bounds = data_shape;
@@ -64,7 +64,7 @@ namespace ngraph
 
                     // Check for cases when start is greater than end and change them to "empty"
                     // slice.
-                    for (size_t idx = 0; idx < lower_bounds.size(); ++idx)
+                    for (size_t idx = 0; idx < lower_bounds.get_rank(); ++idx)
                     {
                         if (lower_bounds.at(idx) > upper_bounds.at(idx))
                         {
@@ -73,9 +73,9 @@ namespace ngraph
                     }
 
                     const auto begin = default_opset::Constant::create(
-                        element::i64, Shape{lower_bounds.size()}, lower_bounds);
+                        element::i64, Shape{lower_bounds.get_rank()}, lower_bounds);
                     const auto end = default_opset::Constant::create(
-                        element::i64, Shape{upper_bounds.size()}, upper_bounds);
+                        element::i64, Shape{upper_bounds.get_rank()}, upper_bounds);
                     const auto strides = default_opset::Constant::create(
                         element::i64, Shape{data_rank}, std::vector<int64_t>(data_rank, 1));
 

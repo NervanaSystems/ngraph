@@ -32,7 +32,7 @@ namespace ngraph
             {
                 (void)node;
                 auto arg_shape = args[0].get_shape();
-                auto arg_rank = arg_shape.size();
+                auto arg_rank = arg_shape.get_rank();
 
                 auto& functors = external_function->get_functors();
 
@@ -59,7 +59,7 @@ namespace ngraph
                 }
                 else
                 {
-                    auto out_rank = out_shape.size();
+                    auto out_rank = out_shape.get_rank();
                     arg_shape.insert(arg_shape.begin(), out_rank - arg_rank, 1);
                     std::function<decltype(runtime::cpu::kernel::tile<float, 2>)> kernel;
                     SELECT_KERNEL_ET_RANK(

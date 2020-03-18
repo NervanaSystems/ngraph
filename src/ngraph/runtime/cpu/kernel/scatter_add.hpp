@@ -35,7 +35,7 @@ namespace ngraph
                 static void
                     get_leading_indices(const Shape& shape, int index, std::vector<int>& indices)
                 {
-                    auto rank = shape.size();
+                    auto rank = shape.get_rank();
                     std::vector<int> partial_sum(rank);
 
                     partial_sum[rank - 1] = 1;
@@ -99,7 +99,7 @@ namespace ngraph
                     }
 
                     auto indices_ptr = static_cast<IndicesType*>(indices);
-                    auto indices_rank = indices_shape.size();
+                    auto indices_rank = indices_shape.get_rank();
                     if (indices_rank == 0)
                     {
                         in_offsets[0] = indices_ptr[0];

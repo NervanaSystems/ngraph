@@ -233,7 +233,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                 return;
             }
             auto& w_shape = weights->get_shape();
-            if (w_shape.size() != 2)
+            if (w_shape.get_rank() != 2)
             {
                 NGRAPH_DEBUG << "weights shape for linear transformation of input is not 2D";
                 return;
@@ -256,12 +256,12 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
             // insert reshape on the concated data to make it 2D, if its 3D
             std::shared_ptr<Node> input_reshape_node = nullptr;
-            if (data_shape.size() == 3)
+            if (data_shape.get_rank() == 3)
             {
                 input_reshape_node = std::make_shared<op::Reshape>(
                     concated_data, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
             }
-            auto new_input_node = data_shape.size() == 2 ? concated_data : input_reshape_node;
+            auto new_input_node = data_shape.get_rank() == 2 ? concated_data : input_reshape_node;
             NGRAPH_CHECK(new_input_node);
             auto w_reshape_node = std::make_shared<op::Reshape>(
                 weights, AxisVector{1, 0}, Shape{w_shape[1], w_shape[0]});
@@ -280,9 +280,9 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                 std::shared_ptr<Node> slice_node = std::make_shared<op::Slice>(
                     new_add_bias, Coordinate{start_index, 0}, Coordinate{end_index, shape_axis_1});
 
-                if (matched_root_node->get_shape().size() != 2)
+                if (matched_root_node->get_shape().get_rank() != 2)
                 {
-                    NGRAPH_CHECK(matched_root_node->get_shape().size() == 3);
+                    NGRAPH_CHECK(matched_root_node->get_shape().get_rank() == 3);
                     slice_node = std::make_shared<op::Reshape>(
                         slice_node, AxisVector{0, 1}, matched_root_node->get_shape());
                 }

@@ -29,7 +29,7 @@ static Shape get_shape_no_keep_dims(const AxisSet& reduction_axes, const Shape& 
 {
     Shape shape_no_keep_dims;
 
-    for (size_t i = 0; i < input_shape.size(); i++)
+    for (size_t i = 0; i < input_shape.get_rank(); i++)
     {
         if (reduction_axes.count(i) == 0)
         {

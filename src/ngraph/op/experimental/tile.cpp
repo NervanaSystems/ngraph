@@ -58,9 +58,9 @@ void op::Tile::validate_and_infer_types()
         if (arg_shape.is_static())
         {
             auto data_shape = arg_shape.to_shape();
-            auto data_rank = data_shape.size();
+            auto data_rank = data_shape.get_rank();
             auto repeats_val = const_repeats->get_vector<int64_t>();
-            auto repeats_rank = repeats_val.size();
+            auto repeats_rank = static_cast<axis_t>(repeats_val.size());
             auto output_rank = std::max(data_rank, repeats_rank);
 
             // expand data shape and repeats to output rank

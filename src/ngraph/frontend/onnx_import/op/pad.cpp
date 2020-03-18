@@ -84,9 +84,9 @@ namespace ngraph
                     return {std::make_shared<default_opset::Pad>(
                         data,
                         std::make_shared<default_opset::Constant>(
-                            element::i64, ngraph::Shape{padding_below.size()}, padding_below),
+                            element::i64, ngraph::Shape{padding_below.get_rank()}, padding_below),
                         std::make_shared<default_opset::Constant>(
-                            element::i64, ngraph::Shape{padding_above.size()}, padding_above),
+                            element::i64, ngraph::Shape{padding_above.get_rank()}, padding_above),
                         std::make_shared<default_opset::Constant>(
                             data->get_element_type(), ngraph::Shape{}, std::vector<double>{value}),
                         pad_mode)};

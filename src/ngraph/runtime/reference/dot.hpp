@@ -70,8 +70,8 @@ namespace ngraph
                 CoordinateTransform output_transform(out_shape);
 
                 // Create coordinate transforms for arg0 and arg1 that throw away the dotted axes.
-                size_t arg0_projected_rank = arg0_shape.size() - reduction_axes_count;
-                size_t arg1_projected_rank = arg1_shape.size() - reduction_axes_count;
+                size_t arg0_projected_rank = arg0_shape.get_rank() - reduction_axes_count;
+                size_t arg1_projected_rank = arg1_shape.get_rank() - reduction_axes_count;
 
                 Shape arg0_projected_shape(arg0_projected_rank);
                 std::copy(arg0_shape.begin(),
@@ -96,8 +96,8 @@ namespace ngraph
                     {
                         // The output coordinate is just the concatenation of the projected
                         // coordinates.
-                        Coordinate out_coord(arg0_projected_coord.size() +
-                                             arg1_projected_coord.size());
+                        Coordinate out_coord(arg0_projected_coord.get_rank() +
+                                             arg1_projected_coord.get_rank());
 
                         auto out_coord_it = std::copy(arg0_projected_coord.begin(),
                                                       arg0_projected_coord.end(),
@@ -111,8 +111,8 @@ namespace ngraph
                         size_t out_index = output_transform.index(out_coord);
 
                         // Walk along the dotted axes.
-                        Coordinate arg0_coord(arg0_shape.size());
-                        Coordinate arg1_coord(arg1_shape.size());
+                        Coordinate arg0_coord(arg0_shape.get_rank());
+                        Coordinate arg1_coord(arg1_shape.get_rank());
                         auto arg0_it = std::copy(arg0_projected_coord.begin(),
                                                  arg0_projected_coord.end(),
                                                  arg0_coord.begin());

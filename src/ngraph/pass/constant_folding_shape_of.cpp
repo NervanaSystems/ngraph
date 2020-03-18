@@ -40,8 +40,8 @@ void pass::ConstantFolding::construct_constant_shape_of()
             NGRAPH_CHECK(revalidate_and_ensure_static(m.get_match_root()));
 
             auto arg_shape = arg_match->get_output_shape(0);
-            auto replacement =
-                make_shared<op::Constant>(element::i64, Shape{arg_shape.size()}, arg_shape.data());
+            auto replacement = make_shared<op::Constant>(
+                element::i64, Shape{arg_shape.get_rank()}, arg_shape.data());
 
             replace_node(m.get_match_root(), replacement);
 

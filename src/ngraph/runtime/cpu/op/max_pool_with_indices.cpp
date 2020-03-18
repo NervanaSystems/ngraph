@@ -44,7 +44,7 @@ op::MaxPoolWithIndices::MaxPoolWithIndices(const Output<Node>& arg,
     //
     // Make sure arg: NCDi for some Di of rank>0, N != 0, C != 0.
     //
-    if (arg_shape.size() < 3)
+    if (arg_shape.get_rank() < 3)
     {
         throw ngraph_error(
             "Max-pool data batch input must have rank of at least 3 (one batch axis, one "
@@ -63,31 +63,31 @@ op::MaxPoolWithIndices::MaxPoolWithIndices(const Output<Node>& arg,
         throw ngraph_error("Max-pool requires at least one feature channel.");
     }
 
-    size_t spatial_dimension_count = arg_shape.size() - 2;
+    size_t spatial_dimension_count = arg_shape.get_rank() - 2;
 
     //
     // Make sure window shape, window movement strides, and padding have same rank as Di.
     //
-    if (window_shape.size() != spatial_dimension_count)
+    if (window_shape.get_rank() != spatial_dimension_count)
     {
         throw ngraph_error(
             "Max-pool window shape rank does not match number of spatial dimensions.");
     }
 
-    if (window_movement_strides.size() != spatial_dimension_count)
+    if (window_movement_strides.get_rank() != spatial_dimension_count)
     {
         throw ngraph_error(
             "Max-pool window movement stride rank does not match number of spatial "
             "dimensions.");
     }
 
-    if (padding_below.size() != spatial_dimension_count)
+    if (padding_below.get_rank() != spatial_dimension_count)
     {
         throw ngraph_error(
             "Max-pool below-padding rank does not match number of spatial dimensions.");
     }
 
-    if (padding_above.size() != spatial_dimension_count)
+    if (padding_above.get_rank() != spatial_dimension_count)
     {
         throw ngraph_error(
             "Max-pool above-padding rank does not match number of spatial dimensions.");
@@ -215,7 +215,7 @@ op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const Output<Node>& a
     //
     // Make sure arg: NCDi for some Di of rank>0, N != 0, C != 0.
     //
-    if (arg_forward_shape.size() < 3)
+    if (arg_forward_shape.get_rank() < 3)
     {
         throw ngraph_error(
             "Max-pool backprop: data batch shape must have rank of at least 3 (one batch axis, "
@@ -234,33 +234,33 @@ op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const Output<Node>& a
         throw ngraph_error("Max-pool backprop: requires at least one feature channel.");
     }
 
-    size_t spatial_dimension_count = arg_forward_shape.size() - 2;
+    size_t spatial_dimension_count = arg_forward_shape.get_rank() - 2;
 
     //
     // Make sure window shape, window movement strides, and padding have same rank as Di.
     //
-    if (window_shape.size() != spatial_dimension_count)
+    if (window_shape.get_rank() != spatial_dimension_count)
     {
         throw ngraph_error(
             "Max-pool backprop: window shape rank does not match number of spatial "
             "dimensions.");
     }
 
-    if (window_movement_strides.size() != spatial_dimension_count)
+    if (window_movement_strides.get_rank() != spatial_dimension_count)
     {
         throw ngraph_error(
             "Max-pool backprop: window movement stride rank does not match number of spatial "
             "dimensions.");
     }
 
-    if (padding_below.size() != spatial_dimension_count)
+    if (padding_below.get_rank() != spatial_dimension_count)
     {
         throw ngraph_error(
             "Max-pool backprop: below-padding rank does not match number of spatial "
             "dimensions.");
     }
 
-    if (padding_above.size() != spatial_dimension_count)
+    if (padding_above.get_rank() != spatial_dimension_count)
     {
         throw ngraph_error(
             "Max-pool backprop: above-padding rank does not match number of spatial "

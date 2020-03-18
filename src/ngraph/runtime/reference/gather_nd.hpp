@@ -40,7 +40,7 @@ namespace ngraph
                 using namespace std;
                 // Create a CoordinateTransform for "indices" that visits only the first element
                 // along inner most axis
-                size_t indices_ndim = static_cast<size_t>(indices_shape.size());
+                size_t indices_ndim = static_cast<size_t>(indices_shape.get_rank());
                 Coordinate indices_outer_start_corner(indices_ndim, 0);
                 Coordinate indices_outer_end_corner(indices_shape);
                 size_t slice_rank = indices_shape[indices_ndim - 1];
@@ -56,7 +56,7 @@ namespace ngraph
 
                 // Create a matching CoordinateTransform for "out" that visits the same outer
                 // coordinates
-                size_t out_ndim = static_cast<size_t>(out_shape.size());
+                size_t out_ndim = static_cast<size_t>(out_shape.get_rank());
                 Coordinate out_start_corner(out_ndim, 0);
                 Coordinate out_end_corner(out_shape);
                 for (size_t i = indices_ndim - 1; i < out_ndim; i++)
@@ -68,7 +68,7 @@ namespace ngraph
                 std::iota(out_axis_order.begin(), out_axis_order.end(), 0);
                 CoordinateTransform out_transform(
                     out_shape, out_start_corner, out_end_corner, out_strides, out_axis_order);
-                size_t params_ndim = static_cast<size_t>(params_shape.size());
+                size_t params_ndim = static_cast<size_t>(params_shape.get_rank());
                 Strides params_strides(params_ndim, 1);
                 AxisVector params_axis_order(params_ndim);
                 std::iota(params_axis_order.begin(), params_axis_order.end(), 0);

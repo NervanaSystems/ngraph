@@ -25,23 +25,23 @@ std::ostream& ngraph::operator<<(std::ostream& s, const AxisVector& axis_vector)
     return s;
 }
 
-ngraph::AxisVector::AxisVector(const std::initializer_list<size_t>& axes)
-    : std::vector<size_t>(axes)
+ngraph::AxisVector::AxisVector(const std::initializer_list<axis_t>& axes)
+    : std::vector<axis_t>(axes)
 {
 }
 
-ngraph::AxisVector::AxisVector(const std::vector<size_t>& axes)
-    : std::vector<size_t>(axes)
+ngraph::AxisVector::AxisVector(const std::vector<axis_t>& axes)
+    : std::vector<axis_t>(axes)
 {
 }
 
 ngraph::AxisVector::AxisVector(const AxisVector& axes)
-    : std::vector<size_t>(axes)
+    : std::vector<axis_t>(axes)
 {
 }
 
-ngraph::AxisVector::AxisVector(size_t n)
-    : std::vector<size_t>(n)
+ngraph::AxisVector::AxisVector(axis_t n)
+    : std::vector<axis_t>(n)
 {
 }
 
@@ -55,12 +55,12 @@ ngraph::AxisVector::~AxisVector()
 
 ngraph::AxisVector& ngraph::AxisVector::operator=(const AxisVector& v)
 {
-    static_cast<std::vector<size_t>*>(this)->operator=(v);
+    static_cast<std::vector<axis_t>*>(this)->operator=(v);
     return *this;
 }
 
 ngraph::AxisVector& ngraph::AxisVector::operator=(AxisVector&& v) noexcept
 {
-    static_cast<std::vector<size_t>*>(this)->operator=(v);
+    static_cast<std::vector<axis_t>*>(this)->operator=(v);
     return *this;
 }

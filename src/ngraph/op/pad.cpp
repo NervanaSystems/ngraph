@@ -32,7 +32,7 @@ op::v0::Pad::Pad(const Output<Node>& arg,
     : Op({arg, arg_pad_value})
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
-    , m_padding_interior_fake(padding_below.size())
+    , m_padding_interior_fake(padding_below.get_rank())
     , m_pad_mode(pad_mode)
 {
     constructor_validate_and_infer_types();
@@ -60,14 +60,14 @@ void op::v0::Pad::validate_and_infer_types()
     auto arg_shape = get_input_partial_shape(0);
 
     NODE_VALIDATION_CHECK(this,
-                          m_padding_below.size() == m_padding_above.size(),
+                          m_padding_below.get_rank() == m_padding_above.get_rank(),
                           "Ranks for padding below (",
                           m_padding_below,
                           ") and padding above (",
                           m_padding_above,
                           ") do not match.");
 
-    size_t implied_rank = m_padding_below.size();
+    size_t implied_rank = m_padding_below.get_rank();
 
     NODE_VALIDATION_CHECK(this,
                           arg_shape.rank().compatible(implied_rank),
@@ -170,7 +170,7 @@ void op::v0::Pad::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 std::shared_ptr<Node> op::Pad::get_default_value() const
 {
     AxisSet axes{};
-    for (size_t i = 0; i < get_shape().size(); i++)
+    for (size_t i = 0; i < get_shape().get_rank(); i++)
     {
         axes.insert(i);
     }
@@ -314,7 +314,7 @@ void op::v1::Pad::validate_and_infer_types()
     if (arg_shape_rank.is_static() && pads_begin_node->is_constant() &&
         pads_end_node->is_constant())
     {
-        const auto implied_rank = pads_begin_coord.size();
+        const auto implied_rank = pads_begin_coord.get_rank();
         std::vector<Dimension> result_dims(implied_rank, Dimension::dynamic());
         for (size_t i = 0; i < implied_rank; i++)
         {

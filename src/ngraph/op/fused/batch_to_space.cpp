@@ -49,9 +49,9 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
     const auto& data_shape = data.get_shape();
 
     NODE_VALIDATION_CHECK(this,
-                          (data_shape.size() >= 2),
+                          (data_shape.get_rank() >= 2),
                           "The data tensor with rank lower than 2 is not supported (data rank: ",
-                          data_shape.size(),
+                          data_shape.get_rank(),
                           ")");
 
     const auto block_const = as_type_ptr<op::Constant>(block.get_node_shared_ptr());
@@ -87,7 +87,7 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
     //      where B_i = block_shape[i]
     dispersed_shape.insert(dispersed_shape.begin(), block_values.begin() + 1, block_values.end());
     dispersed_shape.push_back(data_shape.at(0) / b_dim_divider);
-    for (size_t i = 1; i < data_shape.size(); ++i)
+    for (size_t i = 1; i < data_shape.get_rank(); ++i)
     {
         dispersed_shape.push_back(data_shape.at(i));
     }
@@ -130,15 +130,15 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
     //          crop(D_{N - 1} * B_{N - 1}, crops_begin[N - 1], crops_end[N - 1])]`
     vector<int64_t> upperbounds_values;
     auto flat_node_shape = flat_node->get_shape();
-    for (size_t i = 0; i < flat_node_shape.size(); ++i)
+    for (size_t i = 0; i < flat_node_shape.get_rank(); ++i)
     {
         upperbounds_values.push_back(flat_node_shape.at(i) - crops_end_values.at(i));
     }
     const auto upperbounds = op::Constant::create(
         crops_end.get_element_type(), Shape{upperbounds_values.size()}, upperbounds_values);
 
-    vector<int64_t> begin_mask(data_shape.size(), 0);
-    vector<int64_t> end_mask(data_shape.size(), 0);
+    vector<int64_t> begin_mask(data_shape.get_rank(), 0);
+    vector<int64_t> end_mask(data_shape.get_rank(), 0);
     flat_node = make_shared<op::v1::StridedSlice>(
         flat_node, crops_begin_const, upperbounds, begin_mask, end_mask);
     return NodeVector{flat_node};

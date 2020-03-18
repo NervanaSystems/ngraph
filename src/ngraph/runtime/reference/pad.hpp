@@ -39,14 +39,14 @@ namespace ngraph
                      const CoordinateDiff& padding_above,
                      op::PadMode pad_mode)
             {
-                Coordinate input_start(arg0_shape.size(), 0); // start at (0,0,...,0)
+                Coordinate input_start(arg0_shape.get_rank(), 0); // start at (0,0,...,0)
                 Coordinate input_end = out_shape; // end at (d'0,d'1,...,d'n), the outer corner of
                                                   // the post-padding shape
 
-                Strides input_strides(arg0_shape.size(), 1);
+                Strides input_strides(arg0_shape.get_rank(), 1);
 
-                AxisVector input_axis_order(arg0_shape.size());
-                for (size_t i = 0; i < arg0_shape.size(); i++)
+                AxisVector input_axis_order(arg0_shape.get_rank());
+                for (size_t i = 0; i < arg0_shape.get_rank(); i++)
                 {
                     input_axis_order[i] = i;
                 }
@@ -84,7 +84,7 @@ namespace ngraph
                         Coordinate c = in_coord; // have to copy because in_coord is const
 
                         // Truncate each out-of-bound dimension.
-                        for (size_t i = 0; i < c.size(); i++)
+                        for (size_t i = 0; i < c.get_rank(); i++)
                         {
                             if (static_cast<ptrdiff_t>(c[i]) < padding_below[i])
                             {
@@ -131,7 +131,7 @@ namespace ngraph
                         // clang-format on
                         Coordinate c = in_coord; // have to copy because in_coord is const
 
-                        for (size_t i = 0; i < c.size(); i++)
+                        for (size_t i = 0; i < c.get_rank(); i++)
                         {
                             ptrdiff_t new_dim = c[i];
                             bool done_reflecting = false;
@@ -167,7 +167,7 @@ namespace ngraph
                     case op::PadMode::SYMMETRIC:
                     {
                         Coordinate c = in_coord; // have to copy because in_coord is const
-                        for (size_t i = 0; i < c.size(); i++)
+                        for (size_t i = 0; i < c.get_rank(); i++)
                         {
                             ptrdiff_t pos = padding_below[i] - (c[i] + 1);
                             if (pos >= 0)

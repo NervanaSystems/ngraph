@@ -68,17 +68,17 @@ op::Rnn::Rnn(const Output<Node>& src_layer,
     , m_rnntype(rnn_type)
 {
     constructor_validate_and_infer_types();
-    if (src_layer.get_shape().size() != weights_layer.get_shape().size())
+    if (src_layer.get_shape().get_rank() != weights_layer.get_shape().get_rank())
     {
         throw ngraph_error("src_layer and i2h weights size dont match");
     }
 
-    if (src_iter.get_shape().size() != weights_iter.get_shape().size())
+    if (src_iter.get_shape().get_rank() != weights_iter.get_shape().get_rank())
     {
         throw ngraph_error("src_iter and h2h weights size dont match");
     }
 
-    if (src_layer.get_shape().size() == 2)
+    if (src_layer.get_shape().get_rank() == 2)
     {
         m_batch_size = src_layer.get_shape()[0] / m_num_timesteps;
     }
@@ -170,17 +170,17 @@ op::Rnn::Rnn(const Output<Node>& src_layer,
     , m_rnntype(rnn_type)
 {
     constructor_validate_and_infer_types();
-    if (src_layer.get_shape().size() != weights_layer.get_shape().size())
+    if (src_layer.get_shape().get_rank() != weights_layer.get_shape().get_rank())
     {
         throw ngraph_error("src_layer and i2h weights size dont match");
     }
 
-    if (src_iter.get_shape().size() != weights_iter.get_shape().size())
+    if (src_iter.get_shape().get_rank() != weights_iter.get_shape().get_rank())
     {
         throw ngraph_error("src_iter and h2h weights size dont match");
     }
 
-    if (src_layer.get_shape().size() == 2)
+    if (src_layer.get_shape().get_rank() == 2)
     {
         m_batch_size = src_layer.get_shape()[0] / m_num_timesteps;
     }

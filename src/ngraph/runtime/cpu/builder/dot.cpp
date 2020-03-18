@@ -101,7 +101,7 @@ namespace ngraph
                     return;
                 }
 
-                if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1) &&
+                if ((arg0_shape.get_rank() == 1) && (arg1_shape.get_rank() == 1) &&
                     reduction_axes_count == 1 && is_optimized_et(args[0].get_element_type()) &&
                     is_optimized_et(args[1].get_element_type()))
                 {
@@ -131,7 +131,7 @@ namespace ngraph
                     return;
                 }
 
-                if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
+                if ((arg0_shape.get_rank() == 2) && (arg1_shape.get_rank() == 1) &&
                     reduction_axes_count == 1 && is_optimized_et(args[0].get_element_type()) &&
                     is_optimized_et(args[1].get_element_type()))
                 {
@@ -161,7 +161,7 @@ namespace ngraph
                     return;
                 }
 
-                if ((arg0_shape.size() == 1) && (arg1_shape.size() == 2) &&
+                if ((arg0_shape.get_rank() == 1) && (arg1_shape.get_rank() == 2) &&
                     reduction_axes_count == 1 && is_optimized_et(args[0].get_element_type()) &&
                     is_optimized_et(args[1].get_element_type()))
                 {
@@ -191,8 +191,8 @@ namespace ngraph
                     return;
                 }
 
-                if (out[0].get_element_type() == element::f32 && (arg0_shape.size() == 2) &&
-                    (arg1_shape.size() == 2) && reduction_axes_count == 1)
+                if (out[0].get_element_type() == element::f32 && (arg0_shape.get_rank() == 2) &&
+                    (arg1_shape.get_rank() == 2) && reduction_axes_count == 1)
                 {
                     auto m = arg0_shape[0];
                     auto n = arg1_shape[1];

@@ -43,17 +43,17 @@ namespace ngraph
             // default, reverse the order of the axes
             if (order.size() == 0)
             {
-                auto n = in_shape.size();
+                auto n = in_shape.get_rank();
                 order = AxisVector(n);
                 std::generate(order.begin(), order.end(), [&n]() { return --n; });
             }
-            else if (order.size() == in_shape.size())
+            else if (order.size() == in_shape.get_rank())
             {
                 // validate that the axes order is valid, i.e., unique and the right size
                 std::unordered_set<ngraph::AxisVector::value_type> axes;
                 for (auto o : order)
                 {
-                    if (o < in_shape.size() && !axes.count(o))
+                    if (o < in_shape.get_rank() && !axes.count(o))
                     {
                         axes.insert(o);
                     }
@@ -70,7 +70,7 @@ namespace ngraph
 
             // create output shape
             Shape out_shape;
-            for (size_t i = 0; i < in_shape.size(); ++i)
+            for (size_t i = 0; i < in_shape.get_rank(); ++i)
                 out_shape.push_back(in_shape[order[i]]);
 
             // do the reshaping with the order

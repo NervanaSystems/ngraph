@@ -229,7 +229,7 @@ namespace ngraph
                          const AxisVector& in_axis_order,
                          const Shape& out_shape)
             {
-                switch (in_shape.size())
+                switch (in_shape.get_rank())
                 {
                 case 0: reshape_in0<T>(in, out, in_shape, in_axis_order, out_shape); break;
                 case 1: reshape_in1<T>(in, out, in_shape, in_axis_order, out_shape); break;

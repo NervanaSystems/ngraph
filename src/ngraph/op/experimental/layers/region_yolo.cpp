@@ -67,7 +67,7 @@ void op::RegionYolo::validate_and_infer_types()
         int end_axis = m_end_axis;
         if (m_end_axis < 0)
         {
-            m_end_axis += input_shape.size();
+            m_end_axis += input_shape.get_rank();
         }
 
         if (m_do_softmax)
@@ -82,7 +82,7 @@ void op::RegionYolo::validate_and_infer_types()
                 flat_dim *= input_shape[i];
             }
             output_shape.push_back(flat_dim);
-            for (size_t i = end_axis + 1; i < input_shape.size(); i++)
+            for (size_t i = end_axis + 1; i < input_shape.get_rank(); i++)
             {
                 output_shape.push_back(input_shape[i]);
             }

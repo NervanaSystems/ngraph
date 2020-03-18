@@ -48,7 +48,7 @@ namespace ngraph
                 auto lower_bounds = update_slice->get_lower_bounds();
                 auto upper_bounds = update_slice->get_upper_bounds();
 
-                if (!arg0_shape.size())
+                if (!arg0_shape.get_rank())
                 {
                     size_t size = args[0].get_element_type().size();
                     auto functor = [&, size, arg1_buffer_index, out_buffer_index](
@@ -68,7 +68,7 @@ namespace ngraph
 
                     SELECT_KERNEL_ET_RANK(kernel,
                                           args[0].get_element_type(),
-                                          arg0_shape.size(),
+                                          arg0_shape.get_rank(),
                                           runtime::cpu::kernel::strided_update_slice)
 
                     auto functor = [&,
@@ -100,7 +100,7 @@ namespace ngraph
 
                     SELECT_KERNEL_ET_RANK(kernel,
                                           args[0].get_element_type(),
-                                          arg0_shape.size(),
+                                          arg0_shape.get_rank(),
                                           runtime::cpu::kernel::update_slice)
 
                     auto functor = [&,

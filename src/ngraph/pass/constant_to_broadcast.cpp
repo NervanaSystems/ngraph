@@ -37,7 +37,7 @@ bool pass::ConstantToBroadcast::run_on_node(shared_ptr<Node> node)
                 auto scalar_constant = make_shared<op::Constant>(
                     constant->get_element_type(), Shape{}, constant->get_data_ptr());
                 AxisSet broadcast_axes;
-                for (size_t i = 0; i < constant->get_output_shape(0).size(); i++)
+                for (size_t i = 0; i < constant->get_output_shape(0).get_rank(); i++)
                 {
                     broadcast_axes.insert(i);
                 }

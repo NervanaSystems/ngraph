@@ -63,15 +63,15 @@ namespace ngraph
 
                 if (is_int64 && is_optimized_et(args[0].get_element_type()))
                 {
-                    if (inputs_shape.size() <= 3 && updates_shape.size() <= 5)
+                    if (inputs_shape.get_rank() <= 3 && updates_shape.get_rank() <= 5)
                     {
                         std::function<decltype(runtime::cpu::kernel::scatter_add_i64<float, 2, 2>)>
                             kernel;
 
                         SELECT_RANK35_ET4(kernel,
                                           args[0].get_element_type(),
-                                          inputs_shape.size(),
-                                          updates_shape.size(),
+                                          inputs_shape.get_rank(),
+                                          updates_shape.get_rank(),
                                           runtime::cpu::kernel::scatter_add_i64);
 
                         auto functor = [&,
@@ -102,15 +102,15 @@ namespace ngraph
                 }
                 else if (is_optimized_et(args[0].get_element_type()))
                 {
-                    if (inputs_shape.size() <= 3 && updates_shape.size() <= 5)
+                    if (inputs_shape.get_rank() <= 3 && updates_shape.get_rank() <= 5)
                     {
                         std::function<decltype(runtime::cpu::kernel::scatter_add_i32<float, 2, 2>)>
                             kernel;
 
                         SELECT_RANK35_ET4(kernel,
                                           args[0].get_element_type(),
-                                          inputs_shape.size(),
-                                          updates_shape.size(),
+                                          inputs_shape.get_rank(),
+                                          updates_shape.get_rank(),
                                           runtime::cpu::kernel::scatter_add_i32);
 
                         auto functor = [&,

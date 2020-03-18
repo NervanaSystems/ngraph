@@ -49,14 +49,14 @@ void op::Squeeze::pre_validate_and_infer_types()
     // Get value of axes from Constant
     auto axes_constant = as_type_ptr<op::Constant>(axes_node);
     auto axes = normalize_axes(
-        this->description(), axes_constant->cast_vector<int64_t>(), data_shape.size());
+        this->description(), axes_constant->cast_vector<n_axis_t>(), data_shape.get_rank());
 
     // Prepare set of unique axes marked to be removed from input data.
-    std::vector<uint64_t> axes_to_squeeze(data_shape.size());
+    std::vector<uint64_t> axes_to_squeeze(data_shape.get_rank());
     if (axes.empty())
     {
         // Default behaviour is to remove all single dimension axes.
-        for (size_t idx = 0; idx < data_shape.size(); ++idx)
+        for (size_t idx = 0; idx < data_shape.get_rank(); ++idx)
         {
             if (data_shape.at(idx) == 1)
             {
@@ -82,7 +82,7 @@ void op::Squeeze::pre_validate_and_infer_types()
     }
 
     Shape output_data_shape;
-    for (size_t idx = 0; idx < data_shape.size(); ++idx)
+    for (size_t idx = 0; idx < data_shape.get_rank(); ++idx)
     {
         if (axes_to_squeeze.at(idx) == 0)
         {
@@ -107,7 +107,7 @@ NodeVector op::Squeeze::decompose_op() const
     auto data = input_value(0);
     auto data_shape = data.get_shape();
     auto output_data_shape = get_output_shape(0);
-    AxisVector input_order{get_default_order(data_shape.size())};
+    AxisVector input_order{get_default_order(data_shape.get_rank())};
     return {make_shared<op::Reshape>(data, input_order, output_data_shape)};
 }
 

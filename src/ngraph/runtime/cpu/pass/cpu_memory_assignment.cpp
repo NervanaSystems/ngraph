@@ -242,7 +242,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(
                         auto lower_bounds = slice->get_lower_bounds();
                         auto start = 0, accumulated = 1;
                         auto in_shape = slice->get_input_shape(0);
-                        for (int i = in_shape.size() - 1; i >= 0; i--)
+                        for (int i = in_shape.get_rank() - 1; i >= 0; i--)
                         {
                             start += lower_bounds[i] * accumulated;
                             accumulated *= in_shape[i];

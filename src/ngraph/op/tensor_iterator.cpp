@@ -314,7 +314,7 @@ void op::TensorIterator::validate_and_infer_types()
                 {
                     // validate
                     auto body_param_shape = body_param_partial_shape.to_shape();
-                    for (auto i = 0; i < input_shape.size(); i++)
+                    for (auto i = 0; i < input_shape.get_rank(); i++)
                     {
                         if (i != axis)
                         {

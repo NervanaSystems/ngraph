@@ -103,10 +103,10 @@ namespace ngraph
 #pragma GCC diagnostic pop
 #endif
 
-            if (shape.size() > 0)
+            if (shape.get_rank() > 0)
             {
                 ngraph::AxisSet axes;
-                for (size_t i = 0; i < shape.size(); i++)
+                for (axis_t i = 0; i < shape.get_rank(); i++)
                 {
                     axes.insert(i);
                 }

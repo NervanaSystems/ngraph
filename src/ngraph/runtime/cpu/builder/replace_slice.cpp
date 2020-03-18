@@ -59,7 +59,7 @@ namespace ngraph
                     }
                 }
 
-                if (!arg0_shape.size())
+                if (!arg0_shape.get_rank())
                 {
                     size_t size = args[0].get_element_type().size();
                     auto functor = [&, size, arg1_buffer_index, out_buffer_index](
@@ -79,7 +79,7 @@ namespace ngraph
 
                     SELECT_ETS_AND_RANK7(kernel,
                                          args[0].get_element_type(),
-                                         arg0_shape.size(),
+                                         arg0_shape.get_rank(),
                                          runtime::cpu::kernel::strided_replace_slice);
 
                     auto functor = [&,
@@ -111,7 +111,7 @@ namespace ngraph
 
                     SELECT_ETS_AND_RANK7(kernel,
                                          args[0].get_element_type(),
-                                         arg0_shape.size(),
+                                         arg0_shape.get_rank(),
                                          runtime::cpu::kernel::replace_slice);
 
                     auto functor = [&,

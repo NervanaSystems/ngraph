@@ -48,7 +48,7 @@ NodeVector op::PRelu::decompose_op() const
     slope = std::make_shared<op::Convert>(slope, data.get_element_type());
     auto slope_shape = slope.get_shape();
 
-    if ((slope_shape.size() == 1) && (slope_shape.at(0) != 1))
+    if ((slope_shape.get_rank() == 1) && (slope_shape.at(0) != 1))
     {
         auto it = std::find(std::begin(data_shape), std::end(data_shape), slope_shape.at(0));
         auto index = std::distance(std::begin(data_shape), it);

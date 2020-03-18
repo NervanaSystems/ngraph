@@ -77,22 +77,22 @@ void op::v1::BinaryConvolution::validate_and_infer_types()
     const PartialShape& filters_shape = get_input_partial_shape(1);
     element::Type filters_et = get_input_element_type(1);
 
-    if (m_strides.size() == 0)
+    if (m_strides.get_rank() == 0)
     {
         m_strides = conv_default_strides(this, data_batch_shape, filters_shape);
     }
 
-    if (m_dilations.size() == 0)
+    if (m_dilations.get_rank() == 0)
     {
         m_dilations = conv_default_strides(this, data_batch_shape, filters_shape);
     }
 
-    if (m_pads_begin.size() == 0)
+    if (m_pads_begin.get_rank() == 0)
     {
         m_pads_begin = conv_default_padding(this, data_batch_shape, filters_shape);
     }
 
-    if (m_pads_end.size() == 0)
+    if (m_pads_end.get_rank() == 0)
     {
         m_pads_end = conv_default_padding(this, data_batch_shape, filters_shape);
     }

@@ -29,7 +29,7 @@ descriptor::layout::DenseTensorLayout::DenseTensorLayout(const Tensor& tensor)
 size_t descriptor::layout::DenseTensorLayout::get_index_offset(const std::vector<size_t>& indices)
 {
     auto strides = get_strides();
-    if (indices.size() != strides.size())
+    if (indices.size() != strides.get_rank())
     {
         throw ngraph_error("Indices have the incorrect rank.");
     }

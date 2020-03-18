@@ -192,14 +192,15 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
             auto broadcast_axes = old_broadcast->get_broadcast_axes();
             auto broadcast_reshape = csw.reshape;
             // swimming can only handle 1 dim change
-            if (broadcast_reshape->get_shape().size() - old_broadcast->get_shape().size() > 1)
+            if (broadcast_reshape->get_shape().get_rank() - old_broadcast->get_shape().get_rank() >
+                1)
             {
                 materialize();
                 continue;
             }
             bool in_order = true;
             AxisSet new_broadcast_axes;
-            vector<size_t> new_source_axes;
+            vector<axis_t> new_source_axes;
             auto input_order = broadcast_reshape->get_input_order();
             for (size_t i = 0; i < input_order.size(); i++)
             {
@@ -317,7 +318,7 @@ static void sink_reshape(shared_ptr<op::Reshape> reshape,
     NGRAPH_DEBUG << "Sinking Reshape :" << describe_reshape(reshape);
     auto orig_reshape = reorders.at(reshape->get_argument(0));
     // 1) Not a Transpose or 2) Rank changing operation.
-    if ((reshape->get_output_shape(0).size() != reshape->get_input_order().size()) ||
+    if ((reshape->get_output_shape(0).get_rank() != reshape->get_input_order().size()) ||
         (!reshape->get_is_transpose()))
     {
         NGRAPH_DEBUG << "Materializing " << describe_reshape(orig_reshape) << " for reshape "

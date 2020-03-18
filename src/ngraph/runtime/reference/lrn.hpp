@@ -31,8 +31,8 @@ namespace ngraph
         {
             template <typename T>
             void sum_region_across_axes(const T* arg,
-                                        size_t current_axis_index,
-                                        const std::vector<size_t>& axes,
+                                        axis_t current_axis_index,
+                                        const std::vector<axis_t>& axes,
                                         Coordinate& sum_coord,
                                         T& square_sum,
                                         const std::vector<size_t>& begin_area,
@@ -77,8 +77,8 @@ namespace ngraph
                 T beta = static_cast<T>(dbeta);
                 T bias = static_cast<T>(dbias);
 
-                std::vector<size_t> begin_area(arg_shape.size());
-                std::vector<size_t> end_area(arg_shape.size());
+                std::vector<size_t> begin_area(arg_shape.get_rank());
+                std::vector<size_t> end_area(arg_shape.get_rank());
 
                 CoordinateTransform input_transform(arg_shape);
                 for (const Coordinate& in_coord : input_transform)
@@ -94,7 +94,7 @@ namespace ngraph
 
                     T square_sum = 0;
                     auto sum_coord = in_coord;
-                    auto axes_vec = std::vector<size_t>(axes.begin(), axes.end());
+                    auto axes_vec = std::vector<axis_t>(axes.begin(), axes.end());
                     sum_region_across_axes(arg,
                                            0,
                                            axes_vec,

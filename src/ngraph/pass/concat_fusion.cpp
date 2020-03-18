@@ -76,9 +76,9 @@ namespace
         return true;
     }
 
-    std::vector<size_t> get_concatenation_axis_vector(const NodeVector& bounded_concat_ops)
+    std::vector<axis_t> get_concatenation_axis_vector(const NodeVector& bounded_concat_ops)
     {
-        std::vector<size_t> concat_axis_vec;
+        std::vector<axis_t> concat_axis_vec;
         for (auto iter : bounded_concat_ops)
         {
             auto concat_op = std::static_pointer_cast<op::Concat>(iter);
@@ -246,11 +246,11 @@ void ngraph::pass::SelfConcatFusion::remove_single_concat_op_pattern()
 
 bool ngraph::pass::SelfConcatFusion::replace_patterns(const NodeVector& bounded_concat_ops)
 {
-    auto scalarize_dim = [](std::vector<size_t> concat_axis_vector,
+    auto scalarize_dim = [](std::vector<axis_t> concat_axis_vector,
                             const Shape& input_shape) -> Shape {
 
         Shape scalarized_shape;
-        for (size_t i = 0; i < input_shape.size(); i++)
+        for (size_t i = 0; i < input_shape.get_rank(); i++)
         {
             auto it = std::find(concat_axis_vector.begin(), concat_axis_vector.end(), i);
             if (it == concat_axis_vector.end())

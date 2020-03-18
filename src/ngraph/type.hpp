@@ -28,6 +28,11 @@
 
 namespace ngraph
 {
+    /// Absolute axis (non-negative)
+    using axis_t = uint64_t;
+    /// NumPy axis (negative means from end)
+    using n_axis_t = int64_t;
+
     /// Supports three functions, is_type<Type>, as_type<Type>, and as_type_ptr<Type> for type-safe
     /// dynamic conversions via static_cast/static_ptr_cast without using C++ RTTI.
     /// Type must have a static constexpr type_info member and a virtual get_type_info() member that

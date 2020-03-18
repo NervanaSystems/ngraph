@@ -131,27 +131,27 @@ void op::ConvolutionBias::validate_and_infer_types()
 
     validate_convbias_shapes(this, filters_et, bias_et, filters_shape, bias_shape);
 
-    if (m_data_dilation_strides.size() == 0)
+    if (m_data_dilation_strides.get_rank() == 0)
     {
         m_data_dilation_strides = conv_default_strides(this, data_batch_shape, filters_shape);
     }
 
-    if (m_window_movement_strides.size() == 0)
+    if (m_window_movement_strides.get_rank() == 0)
     {
         m_window_movement_strides = conv_default_strides(this, data_batch_shape, filters_shape);
     }
 
-    if (m_window_dilation_strides.size() == 0)
+    if (m_window_dilation_strides.get_rank() == 0)
     {
         m_window_dilation_strides = conv_default_strides(this, data_batch_shape, filters_shape);
     }
 
-    if (m_padding_below.size() == 0)
+    if (m_padding_below.get_rank() == 0)
     {
         m_padding_below = conv_default_padding(this, data_batch_shape, filters_shape);
     }
 
-    if (m_padding_above.size() == 0)
+    if (m_padding_above.get_rank() == 0)
     {
         m_padding_above = conv_default_padding(this, data_batch_shape, filters_shape);
     }
@@ -208,7 +208,7 @@ NodeVector op::ConvolutionBias::decompose_op() const
                                              m_data_dilation_strides);
     AxisSet bcast_axes;
     bcast_axes.insert(0);
-    for (size_t i = 2; i < conv->get_shape().size(); i++)
+    for (size_t i = 2; i < conv->get_shape().get_rank(); i++)
     {
         bcast_axes.insert(i);
     }
@@ -302,7 +302,7 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     //                                                       % q
     // Data dilation strides        p_x                   p_x
 
-    for (size_t i = 0; i < filters_shape.size() - 2; i++)
+    for (size_t i = 0; i < filters_shape.get_rank() - 2; i++)
     {
         m_window_movement_strides_backward.push_back(window_dilation_strides_forward[i]);
         m_window_dilation_strides_backward.push_back(window_movement_strides_forward[i]);
@@ -351,7 +351,7 @@ NodeVector op::ConvolutionBiasBackpropFiltersBias::decompose_op() const
 
     AxisSet reduce_axes;
     reduce_axes.insert(0);
-    for (size_t i = 2; i < conv_bprop->get_shape().size(); i++)
+    for (size_t i = 2; i < conv_bprop->get_shape().get_rank(); i++)
     {
         reduce_axes.insert(i);
     }
@@ -467,7 +467,7 @@ NodeVector op::ConvolutionBiasAdd::decompose_op() const
                                              m_data_dilation_strides);
     AxisSet bcast_axes;
     bcast_axes.insert(0);
-    for (size_t i = 2; i < conv->get_shape().size(); i++)
+    for (size_t i = 2; i < conv->get_shape().get_rank(); i++)
     {
         bcast_axes.insert(i);
     }

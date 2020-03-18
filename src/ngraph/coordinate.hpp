@@ -38,7 +38,7 @@ namespace ngraph
 
         NGRAPH_API Coordinate(const Coordinate& axes);
 
-        NGRAPH_API Coordinate(size_t n, size_t initial_value = 0);
+        NGRAPH_API Coordinate(axis_t n, size_t initial_value = 0);
 
         NGRAPH_API ~Coordinate();
 
@@ -51,6 +51,13 @@ namespace ngraph
         NGRAPH_API Coordinate& operator=(const Coordinate& v);
 
         NGRAPH_API Coordinate& operator=(Coordinate&& v) noexcept;
+
+        NGRAPH_API axis_t get_rank() const { return std::vector<size_t>::size(); }
+    private:
+        friend std::vector<uint64_t> ngraph::copy_from<std::vector<uint64_t>>(Coordinate&);
+        friend Coordinate ngraph::copy_from<Coordinate>(std::vector<uint64_t>&);
+        friend Coordinate ngraph::copy_from<Coordinate>(Coordinate&);
+        NGRAPH_API size_t size() const { return get_rank(); }
     };
 
     template <>

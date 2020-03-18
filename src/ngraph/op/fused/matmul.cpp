@@ -72,8 +72,8 @@ NodeVector op::MatMul::decompose_op() const
     auto A = input_value(0);
     auto B = input_value(1);
 
-    const auto a_rank = A.get_shape().size();
-    const auto b_rank = B.get_shape().size();
+    const auto a_rank = A.get_shape().get_rank();
+    const auto b_rank = B.get_shape().get_rank();
 
     if (m_transpose_a && a_rank >= 2)
     {

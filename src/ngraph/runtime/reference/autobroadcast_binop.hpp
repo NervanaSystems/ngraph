@@ -88,12 +88,12 @@ namespace ngraph
                         Shape arg0_padded_shape = arg0_shape;
                         Shape arg1_padded_shape = arg1_shape;
 
-                        while (arg0_padded_shape.size() < arg1_padded_shape.size())
+                        while (arg0_padded_shape.get_rank() < arg1_padded_shape.get_rank())
                         {
                             arg0_padded_shape.insert(arg0_padded_shape.begin(), 1);
                         }
 
-                        while (arg1_padded_shape.size() < arg0_padded_shape.size())
+                        while (arg1_padded_shape.get_rank() < arg0_padded_shape.get_rank())
                         {
                             arg1_padded_shape.insert(arg1_padded_shape.begin(), 1);
                         }
@@ -104,7 +104,7 @@ namespace ngraph
                         AxisSet arg1_squeezed_axes;
                         Shape output_shape;
 
-                        for (size_t i = 0; i < arg0_padded_shape.size(); i++)
+                        for (size_t i = 0; i < arg0_padded_shape.get_rank(); i++)
                         {
                             if (arg0_padded_shape[i] == 1)
                             {
@@ -172,12 +172,12 @@ namespace ngraph
                         int64_t axis = broadcast_spec.m_axis;
                         if (axis == -1)
                         {
-                            axis = arg0_shape.size() - arg1_shape.size();
+                            axis = arg0_shape.get_rank() - arg1_shape.get_rank();
                         }
 
                         Shape arg1_padded_shape = arg1_shape;
                         // Trim trailing ones
-                        while (arg1_padded_shape.size() > 0 && arg1_padded_shape.back() == 1)
+                        while (arg1_padded_shape.get_rank() > 0 && arg1_padded_shape.back() == 1)
                         {
                             arg1_padded_shape.pop_back();
                         }
@@ -187,7 +187,7 @@ namespace ngraph
                             arg1_padded_shape.insert(arg1_padded_shape.begin(), 1);
                         }
 
-                        while (arg1_padded_shape.size() < arg0_shape.size())
+                        while (arg1_padded_shape.get_rank() < arg0_shape.get_rank())
                         {
                             arg1_padded_shape.insert(arg1_padded_shape.end(), 1);
                         }
@@ -195,7 +195,7 @@ namespace ngraph
                         Shape arg1_squeezed_shape;
                         AxisSet arg1_squeezed_axes;
 
-                        for (size_t i = 0; i < arg0_shape.size(); i++)
+                        for (size_t i = 0; i < arg0_shape.get_rank(); i++)
                         {
                             if (arg1_padded_shape[i] == 1)
                             {
@@ -268,17 +268,17 @@ namespace ngraph
                         Shape arg1_padded_shape = arg1_shape;
                         Shape arg2_padded_shape = arg2_shape;
 
-                        while (arg1_padded_shape.size() < arg2_padded_shape.size())
+                        while (arg1_padded_shape.get_rank() < arg2_padded_shape.get_rank())
                         {
                             arg1_padded_shape.insert(arg1_padded_shape.begin(), 1);
                         }
 
-                        while (arg2_padded_shape.size() < arg1_padded_shape.size())
+                        while (arg2_padded_shape.get_rank() < arg1_padded_shape.get_rank())
                         {
                             arg2_padded_shape.insert(arg2_padded_shape.begin(), 1);
                         }
 
-                        while (arg0_padded_shape.size() < arg1_padded_shape.size())
+                        while (arg0_padded_shape.get_rank() < arg1_padded_shape.get_rank())
                         {
                             arg0_padded_shape.insert(arg0_padded_shape.begin(), 1);
                         }
@@ -291,7 +291,7 @@ namespace ngraph
                         AxisSet arg2_squeezed_axes;
                         Shape output_shape;
 
-                        for (size_t i = 0; i < arg1_padded_shape.size(); i++)
+                        for (size_t i = 0; i < arg1_padded_shape.get_rank(); i++)
                         {
                             if (arg1_padded_shape[i] == 1)
                             {
@@ -348,13 +348,13 @@ namespace ngraph
                     int64_t axis = broadcast_spec.m_axis;
                     if (axis == -1)
                     {
-                        axis = arg1_shape.size() - arg2_shape.size();
+                        axis = arg1_shape.get_rank() - arg2_shape.get_rank();
                     }
 
                     Shape arg0_padded_shape = arg0_shape;
                     Shape arg2_padded_shape = arg2_shape;
                     // Trim trailing ones
-                    while (arg0_padded_shape.size() > 0 && arg0_padded_shape.back() == 1)
+                    while (arg0_padded_shape.get_rank() > 0 && arg0_padded_shape.back() == 1)
                     {
                         arg0_padded_shape.pop_back();
                     }
@@ -364,12 +364,12 @@ namespace ngraph
                         arg0_padded_shape.insert(arg0_padded_shape.begin(), 1);
                     }
 
-                    while (arg0_padded_shape.size() < arg1_shape.size())
+                    while (arg0_padded_shape.get_rank() < arg1_shape.get_rank())
                     {
                         arg0_padded_shape.insert(arg0_padded_shape.end(), 1);
                     }
 
-                    while (arg2_padded_shape.size() > 0 && arg2_padded_shape.back() == 1)
+                    while (arg2_padded_shape.get_rank() > 0 && arg2_padded_shape.back() == 1)
                     {
                         arg2_padded_shape.pop_back();
                     }
@@ -379,7 +379,7 @@ namespace ngraph
                         arg2_padded_shape.insert(arg2_padded_shape.begin(), 1);
                     }
 
-                    while (arg2_padded_shape.size() < arg1_shape.size())
+                    while (arg2_padded_shape.get_rank() < arg1_shape.get_rank())
                     {
                         arg2_padded_shape.insert(arg2_padded_shape.end(), 1);
                     }
@@ -389,7 +389,7 @@ namespace ngraph
                     Shape arg2_squeezed_shape;
                     AxisSet arg2_squeezed_axes;
 
-                    for (size_t i = 0; i < arg1_shape.size(); i++)
+                    for (size_t i = 0; i < arg1_shape.get_rank(); i++)
                     {
                         if (arg0_padded_shape[i] == 1)
                         {

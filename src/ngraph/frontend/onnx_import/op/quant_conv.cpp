@@ -90,10 +90,11 @@ namespace ngraph
                             NodeVector convolution_nodes;
 
                             // initial bounds for splice
-                            std::vector<std::size_t> data_lower_bounds(data->get_shape().size());
+                            std::vector<std::size_t> data_lower_bounds(
+                                data->get_shape().get_rank());
                             std::vector<std::size_t> data_upper_bounds{data->get_shape()};
                             std::vector<std::size_t> filters_lower_bounds(
-                                filters->get_shape().size());
+                                filters->get_shape().get_rank());
                             std::vector<std::size_t> filters_upper_bounds{filters->get_shape()};
 
                             for (int64_t group{0}; group < groups; ++group)
@@ -219,7 +220,8 @@ namespace ngraph
 
                     Strides strides = convpool::get_strides(node);
                     Strides filter_dilations = convpool::get_dilations(node);
-                    Strides data_dilations = Strides(convpool::get_kernel_shape(node).size(), 1UL);
+                    Strides data_dilations =
+                        Strides(convpool::get_kernel_shape(node).get_rank(), 1UL);
                     auto paddings = convpool::get_pads(node);
                     ngraph::op::PadType auto_pad_type = convpool::get_auto_pad(node);
                     CoordinateDiff& padding_below = paddings.first;

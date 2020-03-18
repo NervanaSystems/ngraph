@@ -67,12 +67,12 @@ static Shape get_result_shape(Shape& target_shape, int start, int end)
 
 static Output<Node> get_2d_tensor(Output<Node> node)
 {
-    if (node.get_shape().size() == 2)
+    if (node.get_shape().get_rank() == 2)
     {
         return node;
     }
     Shape node_shape = node.get_shape();
-    size_t rank = node_shape.size();
+    size_t rank = node_shape.get_rank();
     Shape result_shape{(shape_size(node_shape) / node_shape[rank - 1]), node_shape[rank - 1]};
 
     auto reshape = std::make_shared<ngraph::op::Reshape>(node, get_axis_vector(rank), result_shape);
@@ -84,12 +84,12 @@ static std::shared_ptr<Node> expand_shape(std::shared_ptr<Node> result, Output<N
     Shape result_shape = result->get_shape();
     Shape original_shape = original.get_shape();
 
-    if (result_shape == original_shape && result_shape.size() == 2)
+    if (result_shape == original_shape && result_shape.get_rank() == 2)
     {
         return result;
     }
-    size_t original_rank = original_shape.size();
-    size_t result_rank = result_shape.size();
+    size_t original_rank = original_shape.get_rank();
+    size_t result_rank = result_shape.get_rank();
 
     // expand the first dimension of the computed result to match the original tensor shape
     Shape new_shape = get_result_shape(original_shape, 0, original_rank - 1);
@@ -97,7 +97,7 @@ static std::shared_ptr<Node> expand_shape(std::shared_ptr<Node> result, Output<N
     // restore the last dimension of computed result
     new_shape.push_back(result_shape[result_rank - 1]);
 
-    if (new_shape.size() != original_shape.size())
+    if (new_shape.get_rank() != original_shape.get_rank())
     {
         throw ngraph_error(
             "CrossEntropy shape size mismatch in restoring the original tensor shape");
@@ -122,13 +122,12 @@ NodeVector op::CrossEntropy::decompose_op() const
     // we will reshape the labels and input tensor to 2d
     auto input_to_normalize = get_2d_tensor(input_value(0));
     auto labels = get_2d_tensor(input_value(1));
-    auto reduction_axis = input_to_normalize.get_shape().size() - 1;
+    axis_t reduction_axis = input_to_normalize.get_shape().get_rank() - 1;
 
     auto create_xe = [&](const Output<Node>& one_hot, const Output<Node>& input) {
         auto node_log = std::make_shared<ngraph::op::Log>(input);
         auto node_mul = one_hot * node_log;
-        auto node_sum = std::make_shared<ngraph::op::Sum>(
-            node_mul, AxisSet{static_cast<size_t>(reduction_axis)});
+        auto node_sum = std::make_shared<ngraph::op::Sum>(node_mul, AxisSet{reduction_axis});
         return -node_sum;
     };
 
@@ -151,7 +150,7 @@ NodeVector op::CrossEntropy::decompose_op() const
             labels = std::make_shared<ngraph::op::Broadcast>(
                 reshape_labels,
                 input_to_normalize.get_shape(),
-                AxisSet{input_to_normalize.get_shape().size() - 1});
+                AxisSet{static_cast<axis_t>(input_to_normalize.get_shape().get_rank() - 1)});
         }
         auto xe = create_xe(labels, input_to_normalize);
         auto reshape_xe = std::make_shared<ngraph::op::Reshape>(
@@ -161,7 +160,7 @@ NodeVector op::CrossEntropy::decompose_op() const
     else
     {
         // we will have one_hot encoding on labels if softmax_labels = false
-        size_t one_hot_axis = input_to_normalize.get_shape().size() - 1;
+        size_t one_hot_axis = input_to_normalize.get_shape().get_rank() - 1;
         auto reshape_labels =
             make_shared<op::Reshape>(labels, AxisVector{0, 1}, Shape{labels.get_shape().at(0)});
         auto one_hot_labels = std::make_shared<ngraph::op::OneHot>(
@@ -242,12 +241,12 @@ NodeVector op::CrossEntropyBackprop::decompose_op() const
     auto input = get_2d_tensor(input_value(0));
     auto labels = get_2d_tensor(input_value(1));
     auto delta = get_2d_tensor(input_value(2));
-    auto rank = input.get_shape().size();
+    auto rank = input.get_shape().get_rank();
 
-    size_t one_hot_axis = delta.get_shape().size() - 1;
+    size_t one_hot_axis = delta.get_shape().get_rank() - 1;
 
     // always reduces the sum on the last axis
-    auto reduction_axis = delta.get_shape().size() - 1;
+    auto reduction_axis = delta.get_shape().get_rank() - 1;
 
     // mask
     std::shared_ptr<ngraph::Node> mask = nullptr;
@@ -256,7 +255,7 @@ NodeVector op::CrossEntropyBackprop::decompose_op() const
     auto delta_reshape = std::make_shared<ngraph::op::Reshape>(
         delta, AxisVector{0, 1}, Shape{delta.get_shape().at(0)});
     auto delta_bcast = std::make_shared<ngraph::op::Broadcast>(
-        delta_reshape, input.get_shape(), AxisSet{rank - 1});
+        delta_reshape, input.get_shape(), AxisSet{static_cast<axis_t>(rank - 1)});
 
     if (!m_soft_label)
     {
@@ -266,8 +265,8 @@ NodeVector op::CrossEntropyBackprop::decompose_op() const
             mask = create_mask(labels, input, m_ignore_index);
             mask = std::make_shared<ngraph::op::Reshape>(
                 mask, AxisVector{0, 1}, Shape{mask->get_shape().at(0)});
-            mask =
-                std::make_shared<ngraph::op::Broadcast>(mask, input.get_shape(), AxisSet{rank - 1});
+            mask = std::make_shared<ngraph::op::Broadcast>(
+                mask, input.get_shape(), AxisSet{static_cast<axis_t>(rank - 1)});
         }
         if (labels.get_shape()[reduction_axis] == 1)
         {

@@ -44,10 +44,10 @@ namespace ngraph
                 auto reshape = static_cast<const ngraph::op::Reshape*>(node);
 
                 arg_shape = reshape->get_argument(0)->get_shape();
-                auto arg_rank = arg_shape.size();
+                auto arg_rank = arg_shape.get_rank();
 
                 result_shape = reshape->get_output_shape(0);
-                auto result_rank = result_shape.size();
+                auto result_rank = result_shape.get_rank();
                 auto& result_element_type = reshape->get_element_type();
 
                 input_order = reshape->get_input_order();

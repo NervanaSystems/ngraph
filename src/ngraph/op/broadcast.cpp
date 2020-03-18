@@ -63,7 +63,7 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
             input_value(2).get_node_shared_ptr()->is_constant())
         {
             auto target_shape = get_input_shape(1);
-            NGRAPH_CHECK(target_shape.size() == 1);
+            NGRAPH_CHECK(target_shape.get_rank() == 1);
             auto axes_mapping_val =
                 static_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr())
                     ->get_axis_vector_val();
@@ -87,9 +87,9 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
             auto result_shape = get_output_shape(0);
             auto start_axis = (m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
                                   ? m_broadcast_spec.m_axis
-                                  : result_shape.size() - arg_shape.size();
+                                  : result_shape.get_rank() - arg_shape.get_rank();
             NGRAPH_CHECK(start_axis >= 0);
-            for (size_t i = 0; i < result_shape.size(); i++)
+            for (size_t i = 0; i < result_shape.get_rank(); i++)
             {
                 if (i < start_axis || result_shape[i] != arg_shape[i - start_axis])
                 {
@@ -156,11 +156,11 @@ void op::v1::Broadcast::validate_and_infer_types()
 
             // Rank(arg_shape) == shape_size(axes_mapping)
             NODE_VALIDATION_CHECK(this,
-                                  shape_size(axes_shape) == arg_shape.size(),
+                                  shape_size(axes_shape) == arg_shape.get_rank(),
                                   "Broadcast axes_mapping shape ",
                                   axes_shape,
                                   " doesn't match rank of input tensor ",
-                                  arg_shape.size());
+                                  arg_shape.get_rank());
 
             if (input_value(1).get_node_shared_ptr()->is_constant() &&
                 input_value(2).get_node_shared_ptr()->is_constant())
@@ -182,13 +182,13 @@ void op::v1::Broadcast::validate_and_infer_types()
                 for (size_t i = 0; i < axes_mapping_val.size(); i++)
                 {
                     NODE_VALIDATION_CHECK(this,
-                                          axes_mapping_val[i] < target_shape.size(),
+                                          axes_mapping_val[i] < target_shape.get_rank(),
                                           "Broadcast axes_mapping[",
                                           i,
                                           "]: ",
                                           axes_mapping_val[i],
                                           " exceeds target rank ",
-                                          target_shape.size());
+                                          target_shape.get_rank());
 
                     NODE_VALIDATION_CHECK(this,
                                           target_shape[axes_mapping_val[i]] == arg_shape[i],
@@ -217,14 +217,14 @@ void op::v1::Broadcast::validate_and_infer_types()
                         ->get_shape_val();
                 auto start_axis = (m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
                                       ? m_broadcast_spec.m_axis
-                                      : target_shape.size() - arg_shape.size();
+                                      : target_shape.get_rank() - arg_shape.get_rank();
                 NODE_VALIDATION_CHECK(this,
                                       start_axis >= 0,
                                       "Broadcast target_shape has smaller rank ",
-                                      target_shape.size(),
+                                      target_shape.get_rank(),
                                       " than arg shape ",
-                                      arg_shape.size());
-                for (auto i = start_axis; i < target_shape.size(); i++)
+                                      arg_shape.get_rank());
+                for (auto i = start_axis; i < target_shape.get_rank(); i++)
                 {
                     NODE_VALIDATION_CHECK(
                         this,
@@ -303,7 +303,7 @@ void op::v0::Broadcast::validate_and_infer_types()
     for (auto axis : m_broadcast_axes)
     {
         NODE_VALIDATION_CHECK(this,
-                              axis < m_shape.size(),
+                              axis < m_shape.get_rank(),
                               "Broadcast axis index (",
                               axis,
                               ") exceeds specified output shape rank ",
@@ -389,9 +389,9 @@ void op::v0::BroadcastLike::infer_shape()
     m_broadcast_axes = m_initial_broadcast_axes;
     if (m_broadcast_axes.size() == 0)
     {
-        for (size_t i = 0; i < m_shape.size(); ++i)
+        for (size_t i = 0; i < m_shape.get_rank(); ++i)
         {
-            if (i < in_shape.size())
+            if (i < in_shape.get_rank())
             {
                 if (in_shape.at(i) == 1 && m_shape.at(i) > 1)
                 {

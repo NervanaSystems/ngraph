@@ -70,19 +70,19 @@ op::v0::MaxPool::MaxPool(const Output<Node>& arg,
 
 void op::v0::MaxPool::validate_and_infer_types()
 {
-    if (0 == m_window_movement_strides.size())
+    if (0 == m_window_movement_strides.get_rank())
     {
-        m_window_movement_strides = Strides(m_window_shape.size(), 1);
+        m_window_movement_strides = Strides(m_window_shape.get_rank(), 1);
     }
 
-    if (0 == m_padding_below.size())
+    if (0 == m_padding_below.get_rank())
     {
-        m_padding_below = Shape(m_window_shape.size(), 0);
+        m_padding_below = Shape(m_window_shape.get_rank(), 0);
     }
 
-    if (0 == m_padding_above.size())
+    if (0 == m_padding_above.get_rank())
     {
-        m_padding_above = Shape(m_window_shape.size(), 0);
+        m_padding_above = Shape(m_window_shape.get_rank(), 0);
     }
 
     const PartialShape& arg_shape = get_input_partial_shape(0);
@@ -95,7 +95,7 @@ void op::v0::MaxPool::validate_and_infer_types()
             infer_auto_padding(arg_shape.to_shape(),
                                m_window_shape,
                                m_window_movement_strides,
-                               Strides(m_window_shape.size(), 1), // No dilation
+                               Strides(m_window_shape.get_rank(), 1), // No dilation
                                m_pad_type,
                                padding_above,
                                padding_below);
@@ -317,19 +317,19 @@ bool ngraph::op::v1::MaxPool::visit_attributes(AttributeVisitor& visitor)
 
 void op::v1::MaxPool::validate_and_infer_types()
 {
-    if (0 == m_strides.size())
+    if (0 == m_strides.get_rank())
     {
-        m_strides = Strides(m_kernel.size(), 1);
+        m_strides = Strides(m_kernel.get_rank(), 1);
     }
 
-    if (0 == m_pads_begin.size())
+    if (0 == m_pads_begin.get_rank())
     {
-        m_pads_begin = Shape(m_kernel.size(), 0);
+        m_pads_begin = Shape(m_kernel.get_rank(), 0);
     }
 
-    if (0 == m_pads_end.size())
+    if (0 == m_pads_end.get_rank())
     {
-        m_pads_end = Shape(m_kernel.size(), 0);
+        m_pads_end = Shape(m_kernel.get_rank(), 0);
     }
 
     const PartialShape& arg_shape = get_input_partial_shape(0);
@@ -342,7 +342,7 @@ void op::v1::MaxPool::validate_and_infer_types()
             infer_auto_padding(arg_shape.to_shape(),
                                m_kernel,
                                m_strides,
-                               Strides(m_kernel.size(), 1), // No dilation
+                               Strides(m_kernel.get_rank(), 1), // No dilation
                                m_auto_pad,
                                pads_end,
                                pads_begin);

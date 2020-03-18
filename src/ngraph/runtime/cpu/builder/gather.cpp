@@ -57,7 +57,7 @@ namespace ngraph
                              args[0].get_element_type() == element::f64 ||
                              args[0].get_element_type() == element::u8 ||
                              args[0].get_element_type() == element::i8) &&
-                            params_shape.size() <= 3 && out_shape.size() <= 5 &&
+                            params_shape.get_rank() <= 3 && out_shape.get_rank() <= 5 &&
                             is_optimized_et(args[0].get_element_type()))
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i64<float, 2, 2>)>
@@ -65,8 +65,8 @@ namespace ngraph
 
                             SELECT_RANK35_ET4(kernel,
                                               args[0].get_element_type(),
-                                              params_shape.size(),
-                                              out_shape.size(),
+                                              params_shape.get_rank(),
+                                              out_shape.get_rank(),
                                               runtime::cpu::kernel::gather_i64);
 
                             return [&,
@@ -118,7 +118,7 @@ namespace ngraph
                              args[0].get_element_type() == element::f64 ||
                              args[0].get_element_type() == element::u8 ||
                              args[0].get_element_type() == element::i8) &&
-                            params_shape.size() <= 3 && out_shape.size() <= 5 &&
+                            params_shape.get_rank() <= 3 && out_shape.get_rank() <= 5 &&
                             is_optimized_et(args[0].get_element_type()))
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i32<float, 2, 2>)>
@@ -126,8 +126,8 @@ namespace ngraph
 
                             SELECT_RANK35_ET4(kernel,
                                               args[0].get_element_type(),
-                                              params_shape.size(),
-                                              out_shape.size(),
+                                              params_shape.get_rank(),
+                                              out_shape.get_rank(),
                                               runtime::cpu::kernel::gather_i32);
 
                             return [&,

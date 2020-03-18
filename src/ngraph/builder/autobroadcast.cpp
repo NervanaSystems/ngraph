@@ -67,8 +67,8 @@ namespace ngraph
         static Shape calculate_broadcast_shape(Shape lhs_shape, Shape rhs_shape)
         {
             Shape result;
-            auto lhs_rank = lhs_shape.size();
-            auto rhs_rank = rhs_shape.size();
+            auto lhs_rank = lhs_shape.get_rank();
+            auto rhs_rank = rhs_shape.get_rank();
             auto max_rank = max(lhs_rank, rhs_rank);
 
             // left-pad the lhs_shape with ones
@@ -76,10 +76,10 @@ namespace ngraph
             // left-pad the rhs_shape with ones
             rhs_shape.insert(begin(rhs_shape), max_rank - rhs_rank, 1);
 
-            for (size_t index = 0; index < max_rank; ++index)
+            for (axis_t index = 0; index < max_rank; ++index)
             {
-                size_t lhs_dim = lhs_shape.at(index);
-                size_t rhs_dim = rhs_shape.at(index);
+                axis_t lhs_dim = lhs_shape.at(index);
+                axis_t rhs_dim = rhs_shape.at(index);
 
                 if (lhs_dim != rhs_dim && lhs_dim != 1 && rhs_dim != 1)
                 {
@@ -119,7 +119,7 @@ namespace ngraph
             {
                 Shape padded_shape{input};
                 padded_shape.insert(
-                    begin(padded_shape), target_shape.size() - padded_shape.size(), 1);
+                    begin(padded_shape), target_shape.get_rank() - padded_shape.get_rank(), 1);
                 full_shapes.push_back(move(padded_shape));
             }
 
@@ -163,18 +163,18 @@ namespace ngraph
                 return broadcasted_node;
             }
 
-            NGRAPH_CHECK(source_shape.size() == output_shape.size(),
+            NGRAPH_CHECK(source_shape.get_rank() == output_shape.get_rank(),
                          "Ranks of source_shape and output_shape dont match: ",
-                         source_shape.size(),
+                         source_shape.get_rank(),
                          " vs ",
-                         output_shape.size());
+                         output_shape.get_rank());
 
             AxisVector broadcast_axes;
             Shape squeezed_shape;
             // Positions of axes which have length of 1 are needed to calculate broadcast_axes
             // for nGraph broadcast operation. We need to remove ones from source shape
             // to avoid broadcasting axis conflict.
-            for (size_t index = 0; index < output_shape.size(); ++index)
+            for (axis_t index = 0; index < output_shape.get_rank(); ++index)
             {
                 if (source_shape.at(index) == 1 && output_shape.at(index) != 1)
                 {
@@ -222,11 +222,11 @@ namespace ngraph
 
             if (axis == -1)
             {
-                axis = output_shape.size() - value_shape.size();
+                axis = output_shape.get_rank() - value_shape.get_rank();
             }
 
             auto trimmed_value_shape = value_shape;
-            while (trimmed_value_shape.size() > 0 && trimmed_value_shape.back() == 1)
+            while (trimmed_value_shape.get_rank() > 0 && trimmed_value_shape.back() == 1)
             {
                 trimmed_value_shape.pop_back();
             }
@@ -234,10 +234,10 @@ namespace ngraph
             AxisSet axes;
             for (int64_t i = 0; i < axis; ++i)
             {
-                axes.insert(static_cast<size_t>(i));
+                axes.insert(static_cast<axis_t>(i));
             }
 
-            for (size_t i = axis + trimmed_value_shape.size(); i < output_shape.size(); ++i)
+            for (axis_t i = axis + trimmed_value_shape.get_rank(); i < output_shape.get_rank(); ++i)
             {
                 axes.insert(i);
             }
@@ -287,7 +287,7 @@ namespace ngraph
             auto bcast_shapes = get_numpy_broadcast_shapes(values);
 
             OutputVector broadcasted_inputs;
-            for (size_t i = 0; i < values.size(); ++i)
+            for (axis_t i = 0; i < values.size(); ++i)
             {
                 broadcasted_inputs.push_back(
                     numpy_broadcast_node(values[i], bcast_shapes.first, bcast_shapes.second[i]));
@@ -316,20 +316,20 @@ namespace ngraph
             auto right_output_shape = numpy_shapes.first;
             // Append the last two axes original dimensions.
             left_output_shape.insert(end(left_output_shape),
-                                     next(begin(left_shape), left_shape.size() - 2),
+                                     next(begin(left_shape), left_shape.get_rank() - 2),
                                      end(left_shape));
             right_output_shape.insert(end(right_output_shape),
-                                      next(begin(right_shape), right_shape.size() - 2),
+                                      next(begin(right_shape), right_shape.get_rank() - 2),
                                       end(right_shape));
 
             auto left_full_shape = numpy_shapes.second.at(0);
             auto right_full_shape = numpy_shapes.second.at(1);
             // Append the last two axes original dimensions.
             left_full_shape.insert(end(left_full_shape),
-                                   next(begin(left_shape), left_shape.size() - 2),
+                                   next(begin(left_shape), left_shape.get_rank() - 2),
                                    end(left_shape));
             right_full_shape.insert(end(right_full_shape),
-                                    next(begin(right_shape), right_shape.size() - 2),
+                                    next(begin(right_shape), right_shape.get_rank() - 2),
                                     end(right_shape));
 
             return {numpy_broadcast_node(left, left_output_shape, left_full_shape),
@@ -338,7 +338,7 @@ namespace ngraph
 
         OutputVector legacy_broadcast_for_binary_operation(const Output<Node>& left,
                                                            const Output<Node>& right,
-                                                           size_t start_match_axis)
+                                                           axis_t start_match_axis)
         {
             const auto& left_shape = left.get_shape();
             const auto& right_shape = right.get_shape();
@@ -352,7 +352,7 @@ namespace ngraph
             // Prepare new shape of right operand for broadcasting
             // Remove dimensions with length=1 from back
             auto new_right_shape = right_shape;
-            for (int dimension = new_right_shape.size() - 1; dimension >= 0; --dimension)
+            for (int dimension = new_right_shape.get_rank() - 1; dimension >= 0; --dimension)
             {
                 if (new_right_shape[dimension] == 1)
                 {
@@ -366,7 +366,7 @@ namespace ngraph
 
             // Find first dimensions at front with length different from 1
             size_t num_ones = 0;
-            for (size_t dimension : new_right_shape)
+            for (axis_t dimension : new_right_shape)
             {
                 if (dimension == 1)
                 {
@@ -413,16 +413,16 @@ namespace ngraph
 
         AxisSet calculate_broadcast_axes(const Shape& output_shape,
                                          const Shape& input_shape,
-                                         size_t start_match_axis)
+                                         axis_t start_match_axis)
         {
-            vector<size_t> result(output_shape.size() - input_shape.size());
+            vector<axis_t> result(output_shape.get_rank() - input_shape.get_rank());
             // Populate the result vector with monotonic increasing series from 0 until
             // output_shape_size, excluding values in range:
-            // [start_match_axis, start_match_axis + input_shape.size()]
+            // [start_match_axis, start_match_axis + input_shape.get_rank()]
             iota(begin(result), begin(result) + start_match_axis, 0);
             iota(begin(result) + start_match_axis,
                  end(result),
-                 start_match_axis + input_shape.size());
+                 start_match_axis + input_shape.get_rank());
             return result;
         }
 
@@ -430,7 +430,7 @@ namespace ngraph
         {
             Output<Node> legacy_broadcast_for_binary_operation(const Output<Node>& left,
                                                                const Output<Node>& right,
-                                                               size_t start_match_axis)
+                                                               axis_t start_match_axis)
             {
                 const auto& left_shape = left.get_shape();
                 const auto& right_shape = right.get_shape();
@@ -444,7 +444,7 @@ namespace ngraph
                 // Prepare new shape of right operand for broadcasting
                 // Remove dimensions with length=1 from back
                 auto new_right_shape = right_shape;
-                for (int dimension = new_right_shape.size() - 1; dimension >= 0; --dimension)
+                for (int dimension = new_right_shape.get_rank() - 1; dimension >= 0; --dimension)
                 {
                     if (new_right_shape.at(dimension) == 1)
                     {
@@ -458,7 +458,7 @@ namespace ngraph
 
                 // Find first dimensions at front with length different from 1
                 size_t num_ones = 0;
-                for (size_t dimension : new_right_shape)
+                for (axis_t dimension : new_right_shape)
                 {
                     if (dimension == 1)
                     {
@@ -482,11 +482,11 @@ namespace ngraph
                 return make_broadcast(reshape_right, left_shape, start_match_axis);
             }
 
-            vector<size_t> get_axes_mapping(const Shape& output_shape,
+            vector<axis_t> get_axes_mapping(const Shape& output_shape,
                                             const AxisSet& broadcast_axes)
             {
-                NGRAPH_CHECK((broadcast_axes.size() <= output_shape.size()));
-                vector<size_t> axes_mapping(output_shape.size());
+                NGRAPH_CHECK((broadcast_axes.size() <= output_shape.get_rank()));
+                vector<axis_t> axes_mapping(output_shape.get_rank());
                 iota(axes_mapping.begin(), axes_mapping.end(), 0);
                 for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); ++i)
                 {
@@ -497,10 +497,11 @@ namespace ngraph
 
             Output<Node> get_axes_mapping_output(const Shape& output_shape,
                                                  const Shape& input_shape,
-                                                 size_t start_match_axis)
+                                                 axis_t start_match_axis)
             {
-                NGRAPH_CHECK((input_shape.size() + start_match_axis <= output_shape.size()));
-                vector<size_t> mapping(input_shape.size());
+                NGRAPH_CHECK(
+                    (input_shape.get_rank() + start_match_axis <= output_shape.get_rank()));
+                vector<axis_t> mapping(input_shape.get_rank());
                 iota(begin(mapping), end(mapping), start_match_axis);
 
                 return op::Constant::create(element::i64, Shape{mapping.size()}, mapping);
@@ -509,7 +510,7 @@ namespace ngraph
             Output<Node> get_axes_mapping_output(const Shape& output_shape,
                                                  const AxisSet& broadcast_axes)
             {
-                vector<size_t> axes_mapping{get_axes_mapping(output_shape, broadcast_axes)};
+                vector<axis_t> axes_mapping{get_axes_mapping(output_shape, broadcast_axes)};
                 return op::Constant::create(element::i64, Shape{axes_mapping.size()}, axes_mapping);
             }
 
@@ -519,17 +520,19 @@ namespace ngraph
             {
                 return make_shared<op::v1::Broadcast>(
                     node,
-                    op::Constant::create(element::i64, Shape{target_shape.size()}, target_shape),
+                    op::Constant::create(
+                        element::i64, Shape{target_shape.get_rank()}, target_shape),
                     get_axes_mapping_output(target_shape, broadcast_axes));
             }
 
             Output<Node> make_broadcast(const Output<Node>& node,
                                         const Shape& target_shape,
-                                        size_t start_match_axis)
+                                        axis_t start_match_axis)
             {
                 return make_shared<op::v1::Broadcast>(
                     node,
-                    op::Constant::create(element::i64, Shape{target_shape.size()}, target_shape),
+                    op::Constant::create(
+                        element::i64, Shape{target_shape.get_rank()}, target_shape),
                     get_axes_mapping_output(target_shape, node.get_shape(), start_match_axis));
             }
 

@@ -186,7 +186,7 @@ static bool simplify_concat(shared_ptr<Node> n)
         return false;
     }
 
-    for (size_t i = 0; i < btip_shape.size(); i++)
+    for (size_t i = 0; i < btip_shape.get_rank(); i++)
     {
         if (btip_shape[i] != slice_shape[i])
         {
@@ -217,7 +217,7 @@ static bool simplify_concat(shared_ptr<Node> n)
             // axis reordering required
             auto transposed_shape = n->get_shape();
 
-            if (btip_shape.size() >= transposed_shape.size())
+            if (btip_shape.get_rank() >= transposed_shape.get_rank())
             {
                 AxisVector order = get_default_order(btip_shape);
                 auto ax = order[slice_axis];
@@ -225,7 +225,7 @@ static bool simplify_concat(shared_ptr<Node> n)
                 order[concat_axis] = ax;
                 replacement = make_shared<op::Reshape>(branch_tip, order, transposed_shape);
             }
-            else if (btip_shape.size() < transposed_shape.size())
+            else if (btip_shape.get_rank() < transposed_shape.get_rank())
             {
                 // intermediate logical reshape
                 AxisVector order = get_default_order(transposed_shape);
@@ -516,7 +516,7 @@ static bool simplify_reduction(shared_ptr<Node> n)
     }
 
     auto cnst = as_type_ptr<op::Constant>(broadcast->input_value(0).get_node_shared_ptr());
-    if (!cnst || cnst->get_shape().size() > 0 /*not a scalar*/)
+    if (!cnst || cnst->get_shape().get_rank() > 0 /*not a scalar*/)
     {
         NGRAPH_DEBUG << broadcast->get_argument(0)->get_name() << " isn't a scalar constant";
         return false;
@@ -532,10 +532,10 @@ static bool simplify_reduction(shared_ptr<Node> n)
         return false;
     }
 
-    if (reduction->get_shape().size() > 0)
+    if (reduction->get_shape().get_rank() > 0)
     {
         AxisSet axes{};
-        for (size_t i = 0; i < reduction->get_shape().size(); i++)
+        for (size_t i = 0; i < reduction->get_shape().get_rank(); i++)
         {
             axes.insert(i);
         }

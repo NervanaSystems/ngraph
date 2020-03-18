@@ -139,7 +139,7 @@ bool runtime::dynamic::DynamicExecutable::call(
         else
         {
             // Caching on all remaining shapes
-            for (int i = 0; i < input->get_shape().size(); i++)
+            for (int i = 0; i < input->get_shape().get_rank(); i++)
             {
                 merged_input_shapes.emplace_back(input->get_shape()[i]);
             }

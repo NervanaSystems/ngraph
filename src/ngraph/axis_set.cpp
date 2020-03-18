@@ -18,39 +18,39 @@
 #include "ngraph/util.hpp"
 
 ngraph::AxisSet::AxisSet()
-    : std::set<size_t>()
+    : std::set<axis_t>()
 {
 }
 
-ngraph::AxisSet::AxisSet(const std::initializer_list<size_t>& axes)
-    : std::set<size_t>(axes)
+ngraph::AxisSet::AxisSet(const std::initializer_list<axis_t>& axes)
+    : std::set<axis_t>(axes)
 {
 }
 
-ngraph::AxisSet::AxisSet(const std::set<size_t>& axes)
-    : std::set<size_t>(axes)
+ngraph::AxisSet::AxisSet(const std::set<axis_t>& axes)
+    : std::set<axis_t>(axes)
 {
 }
 
-ngraph::AxisSet::AxisSet(const std::vector<size_t>& axes)
-    : std::set<size_t>(axes.begin(), axes.end())
+ngraph::AxisSet::AxisSet(const std::vector<axis_t>& axes)
+    : std::set<axis_t>(axes.begin(), axes.end())
 {
 }
 
 ngraph::AxisSet::AxisSet(const AxisSet& axes)
-    : std::set<size_t>(axes)
+    : std::set<axis_t>(axes)
 {
 }
 
 ngraph::AxisSet& ngraph::AxisSet::operator=(const AxisSet& v)
 {
-    static_cast<std::set<size_t>*>(this)->operator=(v);
+    static_cast<std::set<axis_t>*>(this)->operator=(v);
     return *this;
 }
 
 ngraph::AxisSet& ngraph::AxisSet::operator=(AxisSet&& v) noexcept
 {
-    static_cast<std::set<size_t>*>(this)->operator=(v);
+    static_cast<std::set<axis_t>*>(this)->operator=(v);
     return *this;
 }
 

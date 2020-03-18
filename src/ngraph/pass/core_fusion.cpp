@@ -344,7 +344,8 @@ void pass::CoreFusion::construct_sigmoid_bprop()
             return false;
         }
 
-        if (m.get_match_root()->get_shape().size() != pattern_map[input]->get_shape().size())
+        if (m.get_match_root()->get_shape().get_rank() !=
+            pattern_map[input]->get_shape().get_rank())
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << "input= " << pattern_map[input]->get_name() << "size dont match!";
@@ -397,7 +398,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
             return false;
         }
 
-        if (m_conv->get_shape().size() != 4)
+        if (m_conv->get_shape().get_rank() != 4)
         {
             return false;
         }
@@ -476,7 +477,7 @@ void pass::CoreFusion::construct_conv_affine_folding()
             return false;
         }
 
-        if (conv_m->get_shape().size() != 4)
+        if (conv_m->get_shape().get_rank() != 4)
         {
             return false;
         }
@@ -487,13 +488,13 @@ void pass::CoreFusion::construct_conv_affine_folding()
         // Check if values are being broadcast along channel (2nd) dimension
         auto is_channel_bcast = [](const shared_ptr<op::Broadcast>& bcast) {
 
-            if (bcast->get_argument(0)->get_shape().size() == 1 &&
+            if (bcast->get_argument(0)->get_shape().get_rank() == 1 &&
                 bcast->get_broadcast_axes() == AxisSet{0, 2, 3})
             {
                 return true;
             }
 
-            if (bcast->get_argument(0)->get_shape().size() == 2)
+            if (bcast->get_argument(0)->get_shape().get_rank() == 2)
             {
                 auto input_shape = bcast->get_argument(0)->get_shape();
                 if (input_shape[0] == 1 && bcast->get_broadcast_axes() == AxisSet{2, 3})
@@ -508,11 +509,11 @@ void pass::CoreFusion::construct_conv_affine_folding()
         }
 
         auto get_bcast_input = [](const shared_ptr<op::Broadcast>& bcast) {
-            if (bcast->get_argument(0)->get_shape().size() == 1)
+            if (bcast->get_argument(0)->get_shape().get_rank() == 1)
             {
                 return bcast->get_argument(0);
             }
-            if (bcast->get_argument(0)->get_shape().size() == 2)
+            if (bcast->get_argument(0)->get_shape().get_rank() == 2)
             {
                 Shape bshape{bcast->get_argument(0)->get_shape()[1]};
                 return static_pointer_cast<Node>(
@@ -561,7 +562,7 @@ static bool is_trivial_convolution(shared_ptr<op::Convolution> conv, bool skip_p
 
 static bool are_img_dims_equal(Shape conv_shape, Shape image_shape)
 {
-    if (conv_shape.size() != 4)
+    if (conv_shape.get_rank() != 4)
     {
         return false;
     }
@@ -586,7 +587,7 @@ static shared_ptr<Node> reduce_broadcast(shared_ptr<Node> broadcast)
 
 static size_t shape_to_index(Shape shape)
 {
-    if (shape.size() != 4)
+    if (shape.get_rank() != 4)
     {
         return 0;
     }
@@ -624,7 +625,7 @@ void pass::CoreFusion::construct_reshape_broadcast()
         auto input_m = m.get_pattern_map()[input];
 
         // it doesn't seem to make sense to support shapes : [0] or [1]
-        if (input_m->get_shape().size() != 1 || input_m->get_shape().at(0) < 2)
+        if (input_m->get_shape().get_rank() != 1 || input_m->get_shape().at(0) < 2)
         {
             NGRAPH_DEBUG << "input_m isn't a scalar or contains zero dimension";
             return false;
@@ -652,7 +653,7 @@ void pass::CoreFusion::construct_reshape_broadcast()
 
         AxisSet new_axes = broadcast_m->get_broadcast_axes();
         auto broadcast_shape = broadcast_m->get_shape();
-        for (size_t i = 0; i < broadcast_shape.size(); i++)
+        for (size_t i = 0; i < broadcast_shape.get_rank(); i++)
         {
             if (broadcast_shape[i] == 1)
             {
@@ -933,7 +934,7 @@ static bool
     }
 
     // Only match 4D tensors
-    if (pad_input->get_shape().size() != 4)
+    if (pad_input->get_shape().get_rank() != 4)
     {
         return false;
     }
@@ -1215,7 +1216,7 @@ void pass::CoreFusion::construct_conv_bias()
             auto oshape = reshape->get_shape();
             // Callback will check that broadcast happens along channel (1) dimension.
             // Reshape should not alter that
-            if (!reshape->get_is_transpose() && ishape.size() > 1 && oshape.size() > 1 &&
+            if (!reshape->get_is_transpose() && ishape.get_rank() > 1 && oshape.get_rank() > 1 &&
                 ishape[0] == oshape[0] && ishape[1] == oshape[1])
             {
                 return true;
@@ -1246,7 +1247,7 @@ void pass::CoreFusion::construct_conv_bias()
             conv_m = static_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(1));
         }
 
-        if (conv_m->get_shape().size() > 5 || conv_m->get_element_type() != element::f32)
+        if (conv_m->get_shape().get_rank() > 5 || conv_m->get_element_type() != element::f32)
         {
             // Most backends are unlikely to efficiently support these convolutions. Skip fusion
             return false;
@@ -1256,7 +1257,7 @@ void pass::CoreFusion::construct_conv_bias()
         // Except for the 2nd axis (channel dimension), we should either be broadcasting
         // to it or the dimension size should be 1.
         auto bcast_axes = bcast_m->get_broadcast_axes();
-        for (size_t i = 0; i < bcast_m->get_shape().size(); i++)
+        for (size_t i = 0; i < bcast_m->get_shape().get_rank(); i++)
         {
             if (i != 1 && bcast_axes.find(i) == bcast_axes.end() && bcast_m->get_shape()[i] != 1)
             {
@@ -1265,7 +1266,7 @@ void pass::CoreFusion::construct_conv_bias()
         }
 
         auto bias = bcast_m->get_argument(0);
-        if (bias->get_shape().size() > 1)
+        if (bias->get_shape().get_rank() > 1)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << "conv_bias bias shape != 1, requires reshape to match filter count.";

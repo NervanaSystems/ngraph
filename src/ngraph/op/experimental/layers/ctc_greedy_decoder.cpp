@@ -37,9 +37,9 @@ void op::CTCGreedyDecoder::validate_and_infer_types()
     {
         Shape input_shape = get_input_partial_shape(0).to_shape();
         NODE_VALIDATION_CHECK(this,
-                              input_shape.size() >= 3,
+                              input_shape.get_rank() >= 3,
                               "CTCGreedyDecoder expects 3 or more dimensions for input. Got ",
-                              input_shape.size());
+                              input_shape.get_rank());
         // TODO: Add more validation checks for seq_len
 
         set_output_type(0, input_et, Shape{input_shape[1], input_shape[0], 1, 1});

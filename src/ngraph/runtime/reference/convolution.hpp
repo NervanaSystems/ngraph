@@ -130,7 +130,7 @@ namespace ngraph
                     // further down we must check the current coordinate is in the pad or dilation
                     // gap.
 
-                    size_t n_spatial_dimensions = in_shape.size() - 2;
+                    size_t n_spatial_dimensions = in_shape.get_rank() - 2;
                     size_t n_in_channels = in_shape[in_channel_axis];
 
                     Coordinate in_transform_start(2 + n_spatial_dimensions);
@@ -367,7 +367,7 @@ namespace ngraph
                 // starts at 2)
                 std::vector<INPUT> reversed(shape_size(filter_shape));
                 AxisSet reverse_axes;
-                for (size_t i = 2; i < filter_shape.size(); ++i)
+                for (size_t i = 2; i < filter_shape.get_rank(); ++i)
                 {
                     reverse_axes.insert(i);
                 }

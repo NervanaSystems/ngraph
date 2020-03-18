@@ -18,6 +18,7 @@
 #include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/type.hpp"
 #include "ngraph/validation_util.hpp"
 #include "squeeze.hpp"
 
@@ -32,11 +33,11 @@ namespace ngraph
                 NodeVector squeeze(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
-                    std::vector<std::int64_t> axes =
-                        node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
+                    std::vector<n_axis_t> axes =
+                        node.get_attribute_value<std::vector<n_axis_t>>("axes", {});
                     const auto data_rank = data->get_output_partial_shape(0).rank();
 
-                    std::vector<std::size_t> normalized_axes =
+                    std::vector<axis_t> normalized_axes =
                         ngraph::normalize_axes(node.get_description(), axes, data_rank);
                     auto axes_node = std::make_shared<default_opset::Constant>(
                         element::u64, Shape{normalized_axes.size()}, normalized_axes);

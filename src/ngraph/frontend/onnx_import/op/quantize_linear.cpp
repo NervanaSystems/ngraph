@@ -54,7 +54,7 @@ namespace ngraph
                         // negative axis
                         else if (axis_0 < 0)
                         {
-                            axes.insert(x->get_shape().size() + axis_0);
+                            axes.insert(x->get_shape().get_rank() + axis_0);
                         }
                     }
 

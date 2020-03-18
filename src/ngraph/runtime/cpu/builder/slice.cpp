@@ -55,7 +55,7 @@ namespace ngraph
                     {
                         auto element_size = slice->get_input_element_type(0).size();
                         auto start = 0, accumulated = 1;
-                        for (int i = arg_shape.size() - 1; i >= 0; i--)
+                        for (int i = arg_shape.get_rank() - 1; i >= 0; i--)
                         {
                             start += lower_bounds[i] * accumulated;
                             accumulated *= arg_shape[i];
@@ -145,7 +145,7 @@ namespace ngraph
 
                         SELECT_ETS_AND_RANK7(kernel,
                                              args[0].get_element_type(),
-                                             arg_shape.size(),
+                                             arg_shape.get_rank(),
                                              runtime::cpu::kernel::strided_slice);
 
                         auto functor = [&,
@@ -175,7 +175,7 @@ namespace ngraph
 
                         SELECT_ETS_AND_RANK7(kernel,
                                              args[0].get_element_type(),
-                                             arg_shape.size(),
+                                             arg_shape.get_rank(),
                                              runtime::cpu::kernel::slice);
 
                         auto functor = [&,
