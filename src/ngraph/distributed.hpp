@@ -36,11 +36,13 @@ namespace ngraph
             MAX,
         };
 
+        NGRAPH_API
         std::ostream& operator<<(std::ostream& out, const Type& obj);
     }
 
     template <>
-    class AttributeAdapter<reduction::Type> : public EnumAttributeAdapterBase<reduction::Type>
+    class NGRAPH_API AttributeAdapter<reduction::Type>
+        : public EnumAttributeAdapterBase<reduction::Type>
     {
     public:
         AttributeAdapter(reduction::Type& value)
@@ -48,7 +50,6 @@ namespace ngraph
         {
         }
 
-        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<reduction::Type>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
@@ -74,5 +75,7 @@ namespace ngraph
     };
 
     void set_distributed_interface(std::unique_ptr<DistributedInterface> distributed_interface);
+
+    NGRAPH_API
     DistributedInterface* get_distributed_interface();
 }
