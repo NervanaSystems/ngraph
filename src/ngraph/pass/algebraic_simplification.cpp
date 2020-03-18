@@ -52,7 +52,6 @@ bool is_uniform_constant(const Input<Node>& input)
     return rc;
 }
 
-extern template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
 template <typename T>
 static shared_ptr<pattern::Matcher>
     create_binary_matcher(shared_ptr<pattern::op::Label> label,
