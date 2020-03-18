@@ -40,7 +40,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::interpreter::INTBackend : public Backend
+class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTBackend : public Backend
 {
 public:
     INTBackend();

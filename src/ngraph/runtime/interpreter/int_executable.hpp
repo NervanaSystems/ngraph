@@ -30,6 +30,7 @@
 #ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
 #endif
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
@@ -144,7 +145,7 @@ namespace ngraph
     }     // namespace runtime
 } // namespace ngraph
 
-class ngraph::runtime::interpreter::INTExecutable : public Executable
+class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTExecutable : public Executable
 {
     friend class INTBackend;
 
