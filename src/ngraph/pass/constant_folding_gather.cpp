@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <ops.hpp>
 #include "constant_folding.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/runtime/reference/gather.hpp"
@@ -192,4 +193,63 @@ void pass::ConstantFolding::construct_constant_gather()
         make_shared<pattern::Matcher>(gather_v1, "ConstantFolding.ConstantGatherV1");
     this->add_matcher(
         gather_matcher_v1, constant_gather_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+}
+
+void pass::ConstantFolding::construct_constant_gather_with_subgraph()
+{
+    auto concat_label = make_shared<pattern::op::Label>(
+        element::f32, Shape{2, 3, 4}, pattern::has_class<op::Concat>());
+    auto indices_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{5}, pattern::has_class<op::Constant>());
+    auto axis_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
+    auto gather_v1 = make_shared<op::v1::Gather>(concat_label, indices_label, axis_label);
+
+    auto concat_gather_callback = [concat_label, indices_label, axis_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_constant_gather_with_subgraph against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto concat = static_pointer_cast<op::Concat>(pattern_map[concat_label]);
+
+        auto indices = static_pointer_cast<op::Constant>(pattern_map[indices_label]);
+        auto axis = static_pointer_cast<op::Constant>(pattern_map[axis_label]);
+        auto gather = m.get_match_root();
+
+        // gather takes exactly one element out of the Concat output
+        if (axis->get_axis_vector_val().size() != 1)
+            return false;
+        if (axis->cast_vector<int64_t>()[0] != 0)
+            return false;
+        if (indices->get_shape().size() == 1)
+            return false;
+        // concat inputs are 1D and their count is equal to Concat output shape
+        if (concat->get_output_partial_shape(0).is_dynamic())
+            return false;
+        if (concat->get_shape().size() != 1)
+            return false;
+        auto concat_inputs = concat->inputs();
+        if (concat_inputs.size() != shape_size(concat->get_shape()))
+            return false;
+
+        int64_t rank = concat->get_shape()[0];
+        int64_t raw_index = indices->cast_vector<int64_t>()[0];
+        int64_t positive_index = raw_index < 0 ? rank + raw_index : raw_index;
+        auto gathered = concat_inputs[positive_index].get_source_output().get_node_shared_ptr();
+        if (!gathered->is_constant())
+            return false;
+
+        auto gathered_const = dynamic_pointer_cast<op::Constant>(gathered);
+        auto replacement = make_shared<op::Constant>(
+            gathered->get_element_type(), indices->get_shape(), gathered_const->get_data_ptr());
+
+        replace_node(m.get_match_root(), replacement);
+        return true;
+    };
+
+    auto gather_matcher_v1 = make_shared<pattern::Matcher>(
+        gather_v1, "ConstantFolding.ConstantGatherV1WithDynamicSubgraph");
+    this->add_matcher(
+        gather_matcher_v1, concat_gather_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
