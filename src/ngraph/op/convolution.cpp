@@ -382,15 +382,13 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
                               "> Expected: ",
                               PadType::VALID);
 
-        if (data_pshape.is_static() && filters_pshape.is_static())
+        if (data_pshape.rank().is_static() && filters_pshape.is_static())
         {
-            const Shape& filters_shape = filters_pshape.to_shape();
-            const Shape& data_shape = data_pshape.to_shape();
+            vector<Dimension> data_shape{data_pshape}, filters_shape{filters_pshape}, output_shape;
 
-            Shape output_shape;
             opset1::infer_conv_backprop_output_spatial_shape(
-                Shape{std::next(data_shape.begin(), 2), std::end(data_shape)},
-                Shape{std::next(filters_shape.begin(), 2), std::end(filters_shape)},
+                vector<Dimension>{std::next(data_shape.begin(), 2), std::end(data_shape)},
+                vector<Dimension>{std::next(filters_shape.begin(), 2), std::end(filters_shape)},
                 m_strides,
                 m_dilations,
                 m_pads_begin,
@@ -402,7 +400,7 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
             output_shape.insert(output_shape.begin(), filters_shape.at(1));
             // N
             output_shape.insert(output_shape.begin(), data_shape.at(0));
-            output_pshape = output_shape;
+            output_pshape = PartialShape{output_shape};
         }
         else
         {
