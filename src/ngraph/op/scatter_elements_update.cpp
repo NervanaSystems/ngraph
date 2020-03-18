@@ -58,21 +58,35 @@ void op::v3::ScatterElementsUpdate::validate_and_infer_types()
                           axis_et);
 
     NODE_VALIDATION_CHECK(this,
+                          data_et == updates_et,
+                          "Data type and updates type are required to be the same. ",
+                          "Got: ",
+                          data_et,
+                          " and: ",
+                          updates_et);
+
+    NODE_VALIDATION_CHECK(this,
                           axis_shape.compatible(PartialShape{}) ||
                               axis_shape.compatible(PartialShape{1}),
-                          "Axis input shape are required to be scalar or 1D tensor ",
+                          "Axis input shape are required to be scalar or 1D tensor. ",
                           "Got: ",
-                          axis_shape,
-                          " and: ",
                           axis_shape);
 
     NODE_VALIDATION_CHECK(this,
                           indices_shape.compatible(updates_shape),
-                          "Indices and updates input shapes are required to be the same ",
+                          "Indices and updates input shapes are required to be equal. ",
                           "Got: ",
                           indices_shape,
                           " and: ",
                           updates_shape);
+
+    NODE_VALIDATION_CHECK(this,
+                          indices_shape.rank().compatible(data_shape.rank()),
+                          "Indices rank and data rank are required to be equal. ",
+                          "Got: ",
+                          indices_shape.rank(),
+                          " and: ",
+                          data_shape.rank());
 
     set_output_size(1);
     set_output_type(0, data_et, data_shape);
