@@ -50,8 +50,9 @@ namespace ngraph
                          const std::string& mode);
 
                 virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                    copy_with_new_args(const NodeVector& new_args) const override;
                 void validate_and_infer_types() override;
+
             protected:
                 size_t m_pooled_h;
                 size_t m_pooled_w;

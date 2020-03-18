@@ -63,11 +63,11 @@ void pass::ConstantFolding::construct_constant_shape_of()
                 }
                 else
                 {
-                    auto index = make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{static_cast<int64_t>(i)});
-                    auto axis = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{0});
-                    dimensions.push_back(
-                            make_shared<op::v1::Gather>(shape_of, index, axis)
-                            );
+                    auto index = make_shared<op::Constant>(
+                        element::i64, Shape{1}, vector<int64_t>{static_cast<int64_t>(i)});
+                    auto axis =
+                        make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{0});
+                    dimensions.push_back(make_shared<op::v1::Gather>(shape_of, index, axis));
                     dimensions[i]->set_friendly_name("DynDim/" + dimensions[i]->get_name());
                 }
             }

@@ -22,7 +22,7 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::v2::NonZero::type_info;
 
 op::v2::NonZero::NonZero(const Output<Node>& data)
-        : Op({data})
+    : Op({data})
 {
     constructor_validate_and_infer_types();
 }

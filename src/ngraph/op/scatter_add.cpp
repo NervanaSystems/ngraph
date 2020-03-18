@@ -29,7 +29,8 @@ constexpr NodeTypeInfo op::ScatterAdd::type_info;
 shared_ptr<Node> op::v0::ScatterAdd::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v0::ScatterAdd>(new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
+    return make_shared<v0::ScatterAdd>(
+        new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
 }
 
 void op::v0::ScatterAdd::validate_and_infer_types()
@@ -47,7 +48,7 @@ void op::v0::ScatterAdd::validate_and_infer_types()
                           "Indices element type must be i64 or i32");
 
     NODE_VALIDATION_CHECK(
-            this, updates_et == inputs_et, "Updates element type must be the same as Inputs");
+        this, updates_et == inputs_et, "Updates element type must be the same as Inputs");
 
     // updates rank must be at indices rank + inputs rank - 1
     NODE_VALIDATION_CHECK(this,
@@ -74,7 +75,7 @@ void op::v0::ScatterAdd::validate_and_infer_types()
     }
 
     NODE_VALIDATION_CHECK(
-            this, compatible, "Updates shape must be indices_shape + inputs_shape[1:]");
+        this, compatible, "Updates shape must be indices_shape + inputs_shape[1:]");
 
     set_output_type(0, inputs_et, inputs_shape);
 }
@@ -91,8 +92,7 @@ op::v2::ScatterAdd::ScatterAdd(const Output<Node>& inputs,
                                const Output<Node>& indices,
                                const Output<Node>& updates,
                                const int32_t axis)
-                               : util::Scatter(inputs, indices, updates, axis)
+    : util::Scatter(inputs, indices, updates, axis)
 {
     constructor_validate_and_infer_types();
 }
-

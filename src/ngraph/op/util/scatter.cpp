@@ -39,16 +39,17 @@ void op::util::Scatter::validate_and_infer_types()
                           "Indices element type must be i64 or i32");
 
     NODE_VALIDATION_CHECK(
-            this, updates_et == inputs_et, "Updates element type must be the same as Inputs");
+        this, updates_et == inputs_et, "Updates element type must be the same as Inputs");
 
     // updates rank must be at indices rank + inputs rank - 1
-/*    NODE_VALIDATION_CHECK(this,
-                          inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
-                          updates_shape.rank().is_dynamic() ||
-                          static_cast<size_t>(updates_shape.rank()) ==
-                          static_cast<size_t>(indices_shape.rank()) +
-                          static_cast<size_t>(inputs_shape.rank()) - 1,
-                          "Updates rank is expected to be indices rank + inputs rank - 1");*/
+    /*    NODE_VALIDATION_CHECK(this,
+                              inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic()
+       ||
+                              updates_shape.rank().is_dynamic() ||
+                              static_cast<size_t>(updates_shape.rank()) ==
+                              static_cast<size_t>(indices_shape.rank()) +
+                              static_cast<size_t>(inputs_shape.rank()) - 1,
+                              "Updates rank is expected to be indices rank + inputs rank - 1");*/
 
     bool compatible = true;
     if (inputs_shape.is_static() && indices_shape.is_static() && updates_shape.is_static())
@@ -60,14 +61,14 @@ void op::util::Scatter::validate_and_infer_types()
         for (size_t i = 1; i < static_cast<size_t>(inputs_shape.rank()); i++)
         {
             compatible =
-                    compatible &&
-                    updates_shape[static_cast<size_t>(indices_shape.rank()) + i - 1].same_scheme(
-                            inputs_shape[i]);
+                compatible &&
+                updates_shape[static_cast<size_t>(indices_shape.rank()) + i - 1].same_scheme(
+                    inputs_shape[i]);
         }
     }
 
     NODE_VALIDATION_CHECK(
-            this, compatible, "Updates shape must be indices_shape + inputs_shape[1:]");
+        this, compatible, "Updates shape must be indices_shape + inputs_shape[1:]");
 
     set_output_type(0, inputs_et, inputs_shape);
 }

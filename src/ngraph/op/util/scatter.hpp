@@ -33,23 +33,25 @@ namespace ngraph
                 /// \param inputs Tensor
                 /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
                 /// \param updates Tensor: Must have same type as inputs
-                Scatter(const Output <Node> &inputs,
-                        const Output <Node> &indices,
-                        const Output <Node> &updates,
+                Scatter(const Output<Node>& inputs,
+                        const Output<Node>& indices,
+                        const Output<Node>& updates,
                         const int32_t axis = 0)
-                        : Op({inputs, indices, updates}), m_axis(axis)
+                    : Op({inputs, indices, updates})
+                    , m_axis(axis)
                 {
                     constructor_validate_and_infer_types();
                 }
 
                 void validate_and_infer_types() override;
 
-                void generate_adjoints(autodiff::Adjoints & /* adjoints */,
-                                       const OutputVector & /* deltas */) override
+                void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                       const OutputVector& /* deltas */) override
                 {
                     throw ngraph_error("Not yet implemented");
                 }
                 int32_t get_axis() const;
+
             protected:
                 int32_t m_axis;
             };

@@ -32,8 +32,7 @@ op::v2::ScatterUpdate::ScatterUpdate(const Output<Node>& inputs,
                                      const Output<Node>& indices,
                                      const Output<Node>& updates,
                                      const int32_t axis)
-        : util::Scatter(inputs, indices, updates, axis)
+    : util::Scatter(inputs, indices, updates, axis)
 {
     constructor_validate_and_infer_types();
 }
-

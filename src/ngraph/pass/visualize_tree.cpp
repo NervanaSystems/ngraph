@@ -427,12 +427,14 @@ string pass::VisualizeTree::get_node_name(shared_ptr<Node> node)
         rc += "}\\n";
     }
     size_t i = 0;
-    for (const auto & output : node->outputs()) {
+    for (const auto& output : node->outputs())
+    {
         rc += "\\n" + to_string(i) + ":" + pretty_partial_shape(output.get_partial_shape());
         i++;
     }
     rc += "\\n";
-    if (node->is_constant() && ngraph::shape_size(node->get_shape()) <= 7) {
+    if (node->is_constant() && ngraph::shape_size(node->get_shape()) <= 7)
+    {
         const auto constant_match = as_type_ptr<op::Constant>(node);
         auto value = constant_match->cast_vector<float>();
         rc += "value: [";
