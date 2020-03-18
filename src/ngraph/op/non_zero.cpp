@@ -37,14 +37,7 @@ void op::v3::NonZero::validate_and_infer_types()
 {
     const PartialShape& input_shape = get_input_partial_shape(0);
 
-    if (input_shape.is_dynamic())
-    {
-        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
-    }
-    else
-    {
-        set_output_type(0, get_input_element_type(0), input_shape.to_shape());
-    }
+    set_output_type(0, element::i64, PartialShape{input_shape.rank(), Dimension::dynamic()});
     set_input_is_relevant_to_shape(0);
 }
 
