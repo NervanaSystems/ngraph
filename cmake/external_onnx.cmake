@@ -31,12 +31,6 @@ set(ONNX_GIT_BRANCH rel-${ONNX_VERSION})
 
 add_definitions(-DONNX_BUILD_SHARED_LIBS=ON)
 
-if (WIN32)
-    string(REPLACE "/W3" "/W0" CMAKE_ORIGINAL_CXX_FLAGS "${CMAKE_ORIGINAL_CXX_FLAGS}")
-else()
-    string(REPLACE "-Werror" "" CMAKE_CXX_FLAGS "${CMAKE_ORIGINAL_CXX_FLAGS}")
-endif()
-
 FetchContent_Declare(
     ext_onnx
     GIT_REPOSITORY ${ONNX_GIT_REPO_URL}
