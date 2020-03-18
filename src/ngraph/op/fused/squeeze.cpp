@@ -52,7 +52,7 @@ void op::Squeeze::pre_validate_and_infer_types()
         return;
     }
 
-    auto data_rank = static_cast<int64_t>(data.get_partial_shape().rank());
+    auto data_rank = data.get_partial_shape().rank().get_length();
     auto data_partial_shape = data.get_partial_shape();
 
     // Get value of axes from Constant
@@ -66,7 +66,7 @@ void op::Squeeze::pre_validate_and_infer_types()
     {
         auto data_shape = data.get_shape();
         // Default behaviour is to remove all single dimension axes.
-        for (size_t idx = 0; idx < data_rank; ++idx)
+        for (uint64_t idx = 0; idx < data_rank; ++idx)
         {
             if (data_shape.at(idx) == 1)
             {
