@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v3
         {
             class NGRAPH_API ScatterElementsUpdate : public Op
             {
@@ -48,6 +48,6 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
             };
         }
-        using v0::ScatterElementsUpdate;
+        using v3::ScatterElementsUpdate;
     }
 }

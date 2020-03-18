@@ -19,9 +19,9 @@
 using namespace ngraph;
 using namespace std;
 
-constexpr NodeTypeInfo op::v0::ScatterElementsUpdate::type_info;
+constexpr NodeTypeInfo op::v3::ScatterElementsUpdate::type_info;
 
-op::v0::ScatterElementsUpdate::ScatterElementsUpdate(const Output<Node>& data,
+op::v3::ScatterElementsUpdate::ScatterElementsUpdate(const Output<Node>& data,
                                                      const Output<Node>& indices,
                                                      const Output<Node>& updates,
                                                      const Output<Node>& axis)
@@ -30,12 +30,12 @@ op::v0::ScatterElementsUpdate::ScatterElementsUpdate(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-bool ngraph::op::v0::ScatterElementsUpdate::visit_attributes(AttributeVisitor& visitor)
+bool ngraph::op::v3::ScatterElementsUpdate::visit_attributes(AttributeVisitor& visitor)
 {
     return true;
 }
 
-void op::v0::ScatterElementsUpdate::validate_and_infer_types()
+void op::v3::ScatterElementsUpdate::validate_and_infer_types()
 {
     element::Type data_et = get_input_element_type(0);
     element::Type indices_et = get_input_element_type(1);
@@ -76,9 +76,9 @@ void op::v0::ScatterElementsUpdate::validate_and_infer_types()
     set_output_type(0, data_et, data_shape);
 }
 
-shared_ptr<Node> op::v0::ScatterElementsUpdate::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v3::ScatterElementsUpdate::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v0::ScatterElementsUpdate>(
+    return make_shared<v3::ScatterElementsUpdate>(
         new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }
