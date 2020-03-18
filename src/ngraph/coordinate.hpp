@@ -69,5 +69,6 @@ namespace ngraph
         void set(const std::vector<uint64_t>& value) override;
     };
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const Coordinate& coordinate);
 }
