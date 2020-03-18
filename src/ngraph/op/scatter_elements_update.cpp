@@ -99,8 +99,11 @@ void op::v3::ScatterElementsUpdate::validate_and_infer_types()
                           "Axis value has to be in range [-r, r-1] where r = rank(data). ",
                           "Got: ",
                           axis);
-
-        axis = ngraph::normalize_axis(this, axis, data_shape.rank());
+        if (axis < 0)
+        {
+            axis = ngraph::normalize_axis(this, axis, data_shape.rank());
+            set_axis(axis);
+        }
     }
 
     set_output_size(1);
