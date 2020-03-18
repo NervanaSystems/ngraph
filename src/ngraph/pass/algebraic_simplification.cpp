@@ -573,7 +573,7 @@ bool pass::AlgebraicSimplification::run_on_function(shared_ptr<Function> f)
         auto eh = ops_to_simplifiers.find(n->get_type_info());
         if (eh != ops_to_simplifiers.end())
         {
-            replaced |= eh->second(n);
+            replaced = eh->second(n) || replaced;
         }
     }
     return replaced;

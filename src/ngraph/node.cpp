@@ -143,7 +143,6 @@ std::shared_ptr<Node> Node::copy_with_new_args(const NodeVector& args) const
 {
     NODE_VALIDATION_CHECK(
         this, false, "Internal error: copy_with_new_args not replaced by clone_with_new_inputs");
-    return nullptr;
 }
 
 std::shared_ptr<Node> Node::clone_with_new_inputs(const OutputVector& inputs) const
