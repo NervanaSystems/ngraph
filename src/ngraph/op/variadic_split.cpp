@@ -62,7 +62,7 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
         auto data_type = data.get_element_type();
 
         set_output_size(num_outputs);
-        if (data_shape.is_static() && axis_input->is_constant() &&
+        if (data_shape.rank().is_static() && axis_input->is_constant() &&
             split_lengths_input->is_constant())
         {
             const auto axis_input = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
@@ -99,25 +99,29 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
                     sum_of_splits += split_lengths[i];
                 }
             }
-
-            if (negative_one > 0)
+            auto data_shape_dims = vector<Dimension>{data.get_partial_shape()};
+            if (negative_one > 0 && data_shape_dims[axis].is_static())
             {
                 split_lengths[negative_one] = data_shape[axis].get_length() - sum_of_splits;
                 sum_of_splits += split_lengths[negative_one];
             }
-
-            NODE_VALIDATION_CHECK(this,
-                                  sum_of_splits == data_shape[axis].get_length(),
-                                  "Total length of splits: ",
-                                  sum_of_splits,
-                                  " must match the length of the chosen axis: ",
-                                  data_shape[axis].get_length());
+            if (data_shape[axis].is_static())
+            {
+                NODE_VALIDATION_CHECK(this,
+                                      sum_of_splits == data_shape[axis].get_length(),
+                                      "Total length of splits: ",
+                                      sum_of_splits,
+                                      " must match the length of the chosen axis: ",
+                                      data_shape[axis]);
+            }
 
             for (size_t output{0}; output < num_outputs; ++output)
             {
-                auto tmp_shape = data_shape.to_shape();
-                tmp_shape.at(axis) = split_lengths.at(output);
-                set_output_type(output, data_type, tmp_shape);
+                auto output_split_dim = split_lengths.at(output) == -1 ? Dimension::dynamic()
+                                                                       : split_lengths.at(output);
+                auto tmp_shape = data_shape_dims;
+                tmp_shape.at(axis) = output_split_dim;
+                set_output_type(output, data_type, PartialShape{tmp_shape});
             }
         }
         else
