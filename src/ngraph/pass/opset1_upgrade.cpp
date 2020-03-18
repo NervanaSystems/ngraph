@@ -318,8 +318,8 @@ namespace
         const auto pads_begin = node->get_padding_below();
         const auto pads_end = node->get_padding_above();
 
-        const auto data_batch_pshape = node->input(0).get_partial_shape();
-        const auto filters_pshape = node->input(1).get_partial_shape();
+        const auto data_batch_pshape = node->get_input_partial_shape(0);
+        const auto filters_pshape = node->get_input_partial_shape(1);
 
         NGRAPH_CHECK(data_batch_pshape.is_static(),
                      "Unable to convert GroupConvolutionBackpropData:0 to "
