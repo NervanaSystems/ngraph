@@ -340,22 +340,22 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_squeeze)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_unsqueeze)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_unsqueeze_negative_axes)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/unsqueeze.prototxt"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/unsqueeze_negative_axes.prototxt"));
 
-    auto input = test::NDArray<float, 3>(
-                     {{{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
-                      {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
-                      {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}})
+    auto input = test::NDArray<float, 4>(
+                     {{{{-1.8427763f, -1.0467733f, 0.50550157f, 1.4897262f, 0.33057404f}},
+                       {{1.9244908f, -0.3804572f, 0.76275414f, -0.8183123f, 0.93889356f}},
+                       {{-0.05270234f, 0.7113202f, -0.45783648f, -1.3378475f, 0.26926285f}}}})
                      .get_vector();
 
     auto expected_output =
-        test::NDArray<float, 4>(
-            {{{{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
-              {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}},
-              {{1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}}}})
+        test::NDArray<float, 5>(
+            {{{{{-1.8427763f, -1.0467733f, 0.50550157f, 1.4897262f, 0.33057404f}}},
+              {{{1.9244908f, -0.3804572f, 0.76275414f, -0.8183123f, 0.93889356f}}},
+              {{{-0.05270234f, 0.7113202f, -0.45783648f, -1.3378475f, 0.26926285f}}}}})
             .get_vector();
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
