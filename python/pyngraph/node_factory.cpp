@@ -18,7 +18,6 @@
 #include <string>
 #include <vector>
 
-#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 #include "ngraph/attribute_visitor.hpp"
@@ -26,7 +25,6 @@
 #include "ngraph/except.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/opsets/opset.hpp"
-#include "ngraph/output_vector.hpp"
 #include "ngraph/util.hpp"
 #include "node_factory.hpp"
 
@@ -56,16 +54,6 @@ public:
     {
         if (m_attributes.contains(name))
         {
-            // if (auto a = as_type<AttributeAdapter<ngraph::element::Type>>(&adapter))
-            // {
-            //     static_cast<ngraph::element::Type&>(*a) =
-            //     m_attributes[name.c_str()].cast<ngraph::element::Type>();
-            // }
-            // else if (auto a = as_type<AttributeAdapter<ngraph::PartialShape>>(&adapter))
-            // {
-            //     static_cast<ngraph::PartialShape&>(*a) =
-            //     m_attributes[name.c_str()].cast<ngraph::PartialShape>();
-            // }
             NGRAPH_CHECK(
                 false, "No AttributeVisitor support for accessing attribute named: ", name);
         }
@@ -120,15 +108,6 @@ public:
     }
 
 protected:
-    // template <typename T>
-    // void set_adapter_value(const std::string& key, ngraph::ValueAccessor<T>& adapter)
-    // {
-    //     if (m_attributes.contains(key))
-    //     {
-    //         adapter.set(m_attributes[key.c_str()]).cast<T&>();
-    //     }
-    // }
-
     const py::dict& m_attributes;
 };
 
