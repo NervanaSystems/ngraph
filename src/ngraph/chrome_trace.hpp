@@ -31,6 +31,8 @@
 #include <unistd.h>
 #endif
 
+#include <ngraph/ngraph_visibility.hpp>
+
 namespace ngraph
 {
     namespace event
@@ -99,7 +101,7 @@ private:
     static bool s_tracing_enabled;
 };
 
-class ngraph::event::Duration
+class NGRAPH_API ngraph::event::Duration
 {
 public:
     explicit Duration(const std::string& name,

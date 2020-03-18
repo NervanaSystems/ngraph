@@ -50,7 +50,7 @@ TEST(dyn_elimination, transpose)
     ASSERT_TRUE(new_reshape);
 
     ASSERT_EQ(new_reshape->get_input_order(), (AxisVector{2, 3, 1, 0}));
-    ASSERT_EQ(new_reshape->output(0).get_shape(), (Shape{6, 8, 4, 2}));
+    ASSERT_EQ(new_reshape->get_output_shape(0), (Shape{6, 8, 4, 2}));
     ASSERT_EQ(new_reshape->get_output_element_type(0), element::boolean);
 }
 

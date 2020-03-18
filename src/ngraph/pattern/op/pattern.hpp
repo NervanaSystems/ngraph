@@ -54,6 +54,7 @@ namespace ngraph
             using NodePredicate = std::function<bool(std::shared_ptr<Node>)>;
             using ValuePredicate = std::function<bool(const Output<Node>& value)>;
 
+            NGRAPH_API
             ValuePredicate as_value_predicate(NodePredicate pred);
 
             class NGRAPH_API Pattern : public Node

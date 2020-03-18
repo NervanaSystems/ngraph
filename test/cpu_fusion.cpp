@@ -831,6 +831,7 @@ static void test_batchnorm_fprop_relu(Shape input_shape)
 
 TEST(cpu_fusion, batchnorm_fprop_relu)
 {
+    DisableRemoveGOE nogoe;
     test_batchnorm_fprop_relu(Shape{1, 2, 2, 2});
     test_batchnorm_fprop_relu(Shape{1, 2, 2, 2, 2});
     test_batchnorm_fprop_relu(Shape{2, 2, 2, 4, 4});
@@ -1211,6 +1212,7 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
 
 TEST(cpu_fusion, fuse_deconv)
 {
+    DisableRemoveGOE nogoe;
     bool use_deconv_fuse = (getenv_bool("NGRAPH_DECONV_FUSE"));
     if (!use_deconv_fuse)
     {
@@ -1491,7 +1493,7 @@ TEST(cpu_fusion, weight_fusion)
     auto reshape_conv =
         std::make_shared<ngraph::op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto data_conv = std::make_shared<op::Parameter>(element::f32, Shape{16, 4, 7, 7});
-    auto tvt = &reshape_conv->output(0).get_tensor();
+    auto tvt = &reshape_conv->get_output_tensor(0);
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
     auto cvt_lt_conv = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv, lt_desc);
     auto conv = std::make_shared<ngraph::op::Convolution>(
@@ -1500,7 +1502,7 @@ TEST(cpu_fusion, weight_fusion)
     auto reshape_conv_bprop =
         std::make_shared<op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto dummy_arg_conv_bprop = std::make_shared<op::Parameter>(element::f32, Shape{1, 16, 7, 7});
-    auto tvt_bprop = &reshape_conv_bprop->output(0).get_tensor();
+    auto tvt_bprop = &reshape_conv_bprop->get_output_tensor(0);
     auto lt_desc_bprop = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt_bprop);
     auto cvt_lt_conv_bprop =
         std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv_bprop, lt_desc_bprop);
@@ -3762,6 +3764,7 @@ TEST(cpu_fusion, fuse_rnn_across_layer_2layer_3timestep)
 
 TEST(cpu_fusion, fuse_bi_directional_rnn)
 {
+    DisableRemoveGOE nogoe;
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
@@ -3829,6 +3832,7 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
 
 TEST(cpu_fusion, fuse_lstm_cells)
 {
+    DisableRemoveGOE nogoe;
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     const string json_path =
@@ -3866,6 +3870,7 @@ TEST(cpu_fusion, fuse_2_layer_rnn)
 
 TEST(cpu_fusion, fuse_1_layer_rnn)
 {
+    DisableRemoveGOE nogoe;
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
@@ -3934,6 +3939,7 @@ TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
 
 TEST(cpu_fusion, lstm_cell)
 {
+    DisableRemoveGOE nogoe;
     auto make_function = []() {
         const size_t batch_size = 3;
         const size_t input_size = 4;

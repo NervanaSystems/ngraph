@@ -48,7 +48,7 @@ size_t op::ShuffleChannels::get_zero_based_axis() const
     {
         if (!get_input_partial_shape(0).rank().is_dynamic())
         {
-            return m_axis + static_cast<size_t>(get_input_partial_shape(0).rank());
+            return m_axis + get_input_partial_shape(0).rank().get_length();
         }
         else
         {
@@ -61,7 +61,7 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
 {
     if (get_input_partial_shape(0).is_static())
     {
-        const auto shape = input(0).get_shape();
+        const auto shape = get_input_shape(0);
 
         NODE_VALIDATION_CHECK(
             this, shape.size() >= 1, "The input tensor's shape is expected to be at least 1D.");
