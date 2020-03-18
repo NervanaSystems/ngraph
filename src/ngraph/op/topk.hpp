@@ -211,6 +211,7 @@ namespace ngraph
         using v0::TopK;
     } // op
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const op::v1::TopK::Mode& type);
 
     template <>
