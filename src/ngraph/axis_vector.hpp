@@ -54,5 +54,6 @@ namespace ngraph
         NGRAPH_API size_t get_rank() const { return size(); }
     };
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const AxisVector& axis_vector);
 }

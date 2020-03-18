@@ -622,16 +622,16 @@ void pass::CoreFusion::construct_reshape_broadcast()
         auto pattern_map = m.get_pattern_map();
         auto broadcast_m = static_pointer_cast<op::Broadcast>(m.get_match_root());
         auto reshape1_m = static_pointer_cast<op::Reshape>(broadcast_m->get_argument(0));
-        auto input_m = m.get_pattern_map()[input];
+        auto input_m = m.get_pattern_value_map()[input];
 
         // it doesn't seem to make sense to support shapes : [0] or [1]
-        if (input_m->get_shape().get_rank() != 1 || input_m->get_shape().at(0) < 2)
+        if (input_m.get_shape().get_rank() != 1 || input_m.get_shape().at(0) < 2)
         {
             NGRAPH_DEBUG << "input_m isn't a scalar or contains zero dimension";
             return false;
         }
 
-        size_t dim = input_m->get_shape().at(0);
+        size_t dim = input_m.get_shape().at(0);
 
         // We are going to support the most common case where broadcast doesn't add 1-dimensions
         // since it's also very simple to implement

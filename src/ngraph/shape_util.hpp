@@ -37,7 +37,7 @@ namespace ngraph
     }
 
     template <>
-    PartialShape project(const PartialShape& shape, const AxisSet& axes);
+    NGRAPH_API PartialShape project(const PartialShape& shape, const AxisSet& axes);
 
     // Removes some values from a vector of axis values
     template <typename AXIS_VALUES>
@@ -57,7 +57,7 @@ namespace ngraph
     }
 
     template <>
-    PartialShape reduce(const PartialShape& shape, const AxisSet& deleted_axes);
+    NGRAPH_API PartialShape reduce(const PartialShape& shape, const AxisSet& deleted_axes);
 
     // TODO: check validity, i.e. that the new axis indices are all less than
     // axis_values.get_rank()+num_new_axes.
@@ -101,8 +101,9 @@ namespace ngraph
     }
 
     template <>
-    PartialShape inject_pairs(const PartialShape& shape,
-                              std::vector<std::pair<size_t, Dimension>> new_axis_pos_value_pairs);
+    NGRAPH_API PartialShape
+        inject_pairs(const PartialShape& shape,
+                     std::vector<std::pair<size_t, Dimension>> new_axis_pos_value_pairs);
 
     // Add a new value at a particular axis position
     template <typename AXIS_VALUES, typename AXIS_VALUE>

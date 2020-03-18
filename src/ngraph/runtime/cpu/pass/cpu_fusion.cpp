@@ -87,9 +87,6 @@
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/util.hpp"
 
-extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
-                                                                       ngraph::AxisVector order);
-
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
                            std::shared_ptr<ngraph::Node> arg,
                            bool& transpose_w,
