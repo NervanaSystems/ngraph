@@ -46,36 +46,3 @@ def get_broadcast_axes(output_shape, input_shape, axis=None):
     for index in reversed(right_axes_indexes):
         del axes_indexes[index]
     return AxisSet(set(axes_indexes))
-
-
-def as_elementwise_compatible_nodes(*input_values):  # type: (*NodeInput) -> List[Node]
-    """Return all input values as ngraph Nodes.
-
-    Scalar values will be converted to ngraph Constant Nodes.
-    """
-    input_nodes = [node for node in input_values
-                   if issubclass(type(node), Node)]  # type: List[Node]
-
-    if not input_nodes:
-        raise NotImplementedError('Operations on scalars only are not supported.')
-
-    shapes = {tuple(node.shape) for node in input_nodes}
-    if len(shapes) > 1:
-        log.warning('More than one different shape in input nodes %s.', input_nodes)
-
-    types = [node.get_element_type() for node in input_nodes]
-    unique_types = {repr(type) for type in types}
-    if len(unique_types) > 1:
-        log.warning('More than one different data type in input nodes %s.', input_nodes)
-
-    broadcast_dtype = get_dtype(types.pop())
-
-    output_nodes = []
-    for input_value in input_values:
-        if issubclass(type(input_value), Node):
-            output_nodes.append(input_value)
-        else:
-            input_value = make_constant_node(input_value, dtype=broadcast_dtype)
-            output_nodes.append(input_value)
-
-    return output_nodes
