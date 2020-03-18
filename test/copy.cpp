@@ -123,7 +123,7 @@ TEST(copy, concat)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == as_output_vector(new_node->get_arguments()));
+    ASSERT_TRUE(new_args == new_node->input_values());
     ASSERT_TRUE(node_cast->get_concatenation_axis() == axis);
 }
 
@@ -299,7 +299,7 @@ TEST(copy, select)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == as_output_vector(new_node->get_arguments()));
+    ASSERT_TRUE(new_args == new_node->input_values());
 }
 
 TEST(copy, sign)
