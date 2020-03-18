@@ -48,12 +48,14 @@ void op::v3::ScatterElementsUpdate::validate_and_infer_types()
     const PartialShape& axis_shape = get_input_partial_shape(3);
 
     NODE_VALIDATION_CHECK(this,
-                          indices_et == element::i32 || indices_et == element::i64,
-                          "Indices element type must be i64 or i32");
+                          indices_et.is_integral(),
+                          "Indices element type must be integral_number, but is: ",
+                          indices_et);
 
     NODE_VALIDATION_CHECK(this,
-                          axis_et == element::i32 || axis_et == element::i64,
-                          "Axis element type must be i64 or i32");
+                          axis_et.is_integral(),
+                          "Axis element type must be integral_number, but is: ",
+                          axis_et);
 
     NODE_VALIDATION_CHECK(this,
                           axis_shape.compatible(PartialShape{}) ||
