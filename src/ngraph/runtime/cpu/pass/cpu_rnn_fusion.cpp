@@ -64,7 +64,7 @@
     }
 
 #define CHECK_VALUE_RANK(X, RANK)                                                                  \
-    if (X.get_shape().size() != RANK)                                                              \
+    if (X.get_shape().get_rank() != RANK)                                                          \
     {                                                                                              \
         NGRAPH_DEBUG << STR(X) << " does not have rank " << RANK;                                  \
         return false;                                                                              \
