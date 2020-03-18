@@ -187,6 +187,7 @@ namespace ngraph
         using v0::LSTMSequence;
     } // namespace op
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const op::v0::LSTMSequence::direction& type);
 
     template <>
