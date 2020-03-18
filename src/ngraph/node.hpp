@@ -60,6 +60,13 @@ namespace ngraph
 
     class Function;
 
+    // Intermal, controls whether GetOutputElement nodes are elided
+    // Defaults to being elided. Transformer should set to false if
+    // it has passes that depend on GetOutputElement.
+    NGRAPH_API void set_remove_goe(bool value)
+        NGRAPH_DEPRECATED("Remove dependencies on GetOrderedOutput");
+    NGRAPH_API bool get_remove_goe() NGRAPH_DEPRECATED("Remove dependencies on GetOrderedOutput");
+
     namespace op
     {
         struct AutoBroadcastSpec;
@@ -339,8 +346,20 @@ namespace ngraph
         /// Returns the partial shape for output i
         const PartialShape& get_output_partial_shape(size_t i) const;
 
-        std::shared_ptr<Node> get_output_as_single_output_node(size_t i,
-                                                               bool for_get_output_element = true);
+        /// Second argument is ignored
+        /// Returns the node if i=0 and the node has 1 output, otherwise a GetOutputElement
+        /// If the node is a GetOutputElement, applies to the underlying node
+        std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
+
+        /// Return the output to use when converting to an Output<Node> with no index specified.
+        /// Throws when not supported.
+        Output<const Node> get_default_output() const;
+        Output<Node> get_default_output();
+
+        /// Returns the output of the default output, or throws if there is none
+        virtual size_t get_default_output_index() const;
+        /// Throws no default
+        size_t no_default_index() const;
 
         /// Checks that there is exactly one output and returns its shape
         // TODO: deprecate in favor of node->get_output_shape(0) with a suitable check in the
@@ -522,6 +541,8 @@ namespace ngraph
         virtual bool match_value(pattern::Matcher* matcher,
                                  const Output<Node>& pattern_value,
                                  const Output<Node>& graph_value);
+
+        virtual bool match_node(pattern::Matcher* matcher, const Output<Node>& graph_value);
 
     private:
         descriptor::Input& get_input_descriptor(size_t position);

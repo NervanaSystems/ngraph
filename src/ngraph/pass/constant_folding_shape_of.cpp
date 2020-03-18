@@ -32,16 +32,16 @@ void pass::ConstantFolding::construct_constant_shape_of()
         NGRAPH_DEBUG << "In callback for constant_shape_of_callback against node = "
                      << m.get_match_root()->get_name();
 
-        auto pattern_map = m.get_pattern_map();
+        auto pattern_value_map = m.get_pattern_value_map();
 
-        auto arg_match = pattern_map[arg_label];
+        auto arg_match = pattern_value_map[arg_label];
 
-        auto partial_shape = arg_match->get_output_partial_shape(0);
+        auto partial_shape = arg_match.get_partial_shape().;
         if (partial_shape.is_static())
         {
             NGRAPH_CHECK(revalidate_and_ensure_static(m.get_match_root()));
 
-            auto arg_shape = arg_match->get_output_shape(0);
+            auto arg_shape = arg_match.get_shape();
             auto replacement =
                 make_shared<op::Constant>(element::i64, Shape{arg_shape.size()}, arg_shape.data());
 
@@ -53,12 +53,12 @@ void pass::ConstantFolding::construct_constant_shape_of()
         {
             auto shape_of = make_shared<op::ShapeOf>(arg_match);
             auto dimensions = NodeVector{};
-            auto output_dimensions = vector<Dimension>(arg_match->get_output_partial_shape(0));
+            auto output_dimensions = vector<Dimension>(partial_shape);
             for (size_t i = 0; i < output_dimensions.size(); ++i)
             {
                 if (output_dimensions[i].is_static())
                 {
-                    auto value = std::vector<int64_t>{static_cast<int64_t>(output_dimensions[i])};
+                    auto value = std::vector<int64_t>{output_dimensions[i].get_length()};
                     dimensions.push_back(make_shared<op::Constant>(element::i64, Shape{1}, value));
                     dimensions[i]->set_friendly_name("ConstDim/" + dimensions[i]->get_name());
                 }
