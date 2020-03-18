@@ -27,11 +27,7 @@ public:
         : Indexer()
     {
     }
-    size_t next() override
-    {
-        NGRAPH_INFO;
-        return 0;
-    }
+    size_t next() override { return 0; }
 };
 
 class Indexer_1 : public runtime::opt_kernel::ReshapeIndexer::Indexer
@@ -302,7 +298,6 @@ private:
 runtime::opt_kernel::ReshapeIndexer::ReshapeIndexer(const Shape& in_shape,
                                                     const AxisVector& in_axis_order)
 {
-    NGRAPH_INFO << in_shape.size();
     switch (in_shape.size())
     {
     case 0: m_indexer.reset(new Indexer_0(in_shape, in_axis_order)); break;
@@ -314,7 +309,6 @@ runtime::opt_kernel::ReshapeIndexer::ReshapeIndexer(const Shape& in_shape,
     case 6: m_indexer.reset(new Indexer_6(in_shape, in_axis_order)); break;
     default: throw runtime_error("Unsupported dimention in ReshapeIndexer");
     }
-    NGRAPH_INFO;
 }
 
 size_t runtime::opt_kernel::ReshapeIndexer::next()

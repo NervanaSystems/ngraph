@@ -29,29 +29,6 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(reshape_indexer, dim_2)
-{
-    {
-        Shape shape{2, 3};
-        runtime::opt_kernel::ReshapeIndexer indexer{shape, {0, 1}};
-
-        for (size_t i = 0; i < shape_size(shape); i++)
-        {
-            NGRAPH_INFO << i << " -> " << indexer.next();
-        }
-    }
-
-    {
-        Shape shape{2, 3};
-        runtime::opt_kernel::ReshapeIndexer indexer{shape, {1, 0}};
-
-        for (size_t i = 0; i < shape_size(shape); i++)
-        {
-            NGRAPH_INFO << i << " -> " << indexer.next();
-        }
-    }
-}
-
 TEST(reshape_indexer, reshape_t2v_012)
 {
     Shape shape_a{2, 2, 3};
@@ -406,33 +383,3 @@ TEST(reshape_indexer, reshape_6d)
     }
     EXPECT_EQ(expected, actual);
 }
-
-// TEST(reshape_indexer, reshape_shufflenet_5d)
-// {
-//     Shape shape_a{1, 112, 56, 56};
-//     auto A = make_shared<op::Parameter>(element::i32, shape_a);
-//     Shape shape_b{1, 4, 28, 56, 56};
-//     auto B = make_shared<op::Parameter>(element::i32, shape_b);
-//     Shape shape_c{1, 28, 4, 56, 56};
-//     auto C = make_shared<op::Parameter>(element::i32, shape_c);
-//     Shape shape_r{1, 112, 56, 56};
-
-//     vector<int32_t> input(shape_size(shape_a));
-//     iota(input.begin(), input.end(), 1.f);
-
-//     auto r0 = make_shared<op::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_b);
-//     auto r1 = make_shared<op::Reshape>(r0, AxisVector{0, 2, 1, 3, 4}, shape_c);
-//     auto r2 = make_shared<op::Reshape>(r1, AxisVector{0, 1, 2, 3, 4}, shape_r);
-//     auto f = make_shared<Function>(r2, ParameterVector{A});
-
-//     auto ref_func = clone_function(*f);
-//     auto bk_func = clone_function(*f);
-
-//     vector<vector<int32_t>> args;
-//     args.push_back(input);
-
-//     auto ref_results = execute(ref_func, args, "INTERPRETER");
-//     auto bk_results = execute(bk_func, args, "INTERPRETER");
-
-//     EXPECT_TRUE(test::all_close_f(ref_results.at(0), bk_results.at(0), MIN_FLOAT_TOLERANCE_BITS));
-// }

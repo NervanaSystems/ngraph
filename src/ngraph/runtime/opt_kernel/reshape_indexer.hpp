@@ -41,26 +41,6 @@ namespace ngraph
             private:
                 std::unique_ptr<Indexer> m_indexer;
             };
-
-            // template <typename T>
-            // void reshape(const T* in,
-            //              T* out,
-            //              const Shape& in_shape,
-            //              const AxisVector& in_axis_order,
-            //              const Shape& out_shape)
-            // {
-            //     switch (in_shape.size())
-            //     {
-            //     case 0: reshape_in0<T>(in, out, in_shape, in_axis_order, out_shape); break;
-            //     case 1: reshape_in1<T>(in, out, in_shape, in_axis_order, out_shape); break;
-            //     case 2: reshape_in2<T>(in, out, in_shape, in_axis_order, out_shape); break;
-            //     case 3: reshape_in3<T>(in, out, in_shape, in_axis_order, out_shape); break;
-            //     case 4: reshape_in4<T>(in, out, in_shape, in_axis_order, out_shape); break;
-            //     case 5: reshape_in5<T>(in, out, in_shape, in_axis_order, out_shape); break;
-            //     case 6: reshape_in6<T>(in, out, in_shape, in_axis_order, out_shape); break;
-            //     default: reference::reshape(in, out, in_shape, in_axis_order, out_shape); break;
-            //     }
-            // }
         }
     }
 }
