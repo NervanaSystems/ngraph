@@ -193,7 +193,7 @@ TEST(partial_shape, from_shape)
     PartialShape ps1{s};
 
     ASSERT_TRUE(ps1.rank().is_static());
-    ASSERT_EQ(ps1.rank().get_length(), s.size());
+    ASSERT_EQ(ps1.rank().get_length(), s.get_rank());
     ASSERT_TRUE(ps1.is_static());
     ASSERT_EQ(ps1[0].get_length(), 2);
     ASSERT_EQ(ps1[1].get_length(), 4);

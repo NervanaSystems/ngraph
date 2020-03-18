@@ -42,7 +42,7 @@ size_t accuracy_count(const std::shared_ptr<runtime::Tensor>& t_softmax,
     size_t batch_size = softmax_shape.at(0);
     size_t label_count = softmax_shape.at(1);
     const Shape& Y_shape = t_Y->get_shape();
-    if (Y_shape.size() != 1 || Y_shape.at(0) != batch_size)
+    if (Y_shape.get_rank() != 1 || Y_shape.at(0) != batch_size)
     {
         throw std::invalid_argument(
             "Y and softmax shapes are incompatible");

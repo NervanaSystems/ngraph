@@ -75,10 +75,10 @@ void set_scalar(const std::shared_ptr<ngraph::runtime::Tensor>& t,
 std::ostream& operator<<(std::ostream& s, const ngraph::Shape& shape)
 {
     s << "Shape{";
-    for (size_t i = 0; i < shape.size(); ++i)
+    for (size_t i = 0; i < shape.get_rank(); ++i)
     {
         s << shape.at(i);
-        if (i + 1 < shape.size())
+        if (i + 1 < shape.get_rank())
         {
             s << ", ";
         }
@@ -163,17 +163,17 @@ public:
         std::shared_ptr<ngraph::runtime::Tensor> t{get_tensor()};
         const ngraph::Shape& shape = t->get_shape();
         s << "Tensor<" << get_name() << ": ";
-        for (size_t i = 0; i < shape.size(); ++i)
+        for (size_t i = 0; i < shape.get_rank(); ++i)
         {
             s << shape.at(i);
-            if (i + 1 < shape.size())
+            if (i + 1 < shape.get_rank())
             {
                 s << ", ";
             }
         }
         size_t pos = 0;
         s << ">{";
-        size_t rank = shape.size();
+        size_t rank = shape.get_rank();
         if (rank == 0)
         {
             s << get_scalar<float>(t, pos++);

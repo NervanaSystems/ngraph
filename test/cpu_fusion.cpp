@@ -597,8 +597,8 @@ static void test_batchnorm_multiply_add_relu(Shape input_shape)
         auto bn =
             std::make_shared<ngraph::op::BatchNormInference>(eps, gamma, beta, input, mean, var);
 
-        std::vector<size_t> vec{0};
-        for (size_t i = 2; i < input_shape.size(); i++)
+        std::vector<axis_t> vec{0};
+        for (size_t i = 2; i < input_shape.get_rank(); i++)
         {
             vec.push_back(i);
         }
@@ -666,8 +666,8 @@ TEST(cpu_fusion, batchnorm_multiply_add_relu_no_fusion)
         auto bn =
             std::make_shared<ngraph::op::BatchNormInference>(eps, gamma, beta, input, mean, var);
 
-        std::vector<size_t> vec;
-        for (size_t i = 1; i < input_shape.size(); i++)
+        std::vector<axis_t> vec;
+        for (size_t i = 1; i < input_shape.get_rank(); i++)
         {
             vec.push_back(i);
         }

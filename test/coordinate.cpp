@@ -116,12 +116,12 @@ TEST(coordinate, corner)
     Shape source_shape{10, 10};
     Coordinate source_start_corner = Coordinate{3, 3};
     Coordinate source_end_corner{6, 6};
-    Strides source_strides = Strides(source_shape.size(), 1);
-    AxisVector source_axis_order(source_shape.size());
+    Strides source_strides = Strides(source_shape.get_rank(), 1);
+    AxisVector source_axis_order(source_shape.get_rank());
     iota(source_axis_order.begin(), source_axis_order.end(), 0);
-    CoordinateDiff target_padding_below = CoordinateDiff(source_shape.size(), 0);
-    CoordinateDiff target_padding_above = CoordinateDiff(source_shape.size(), 0);
-    Strides source_dilation_strides = Strides(source_shape.size(), 1);
+    CoordinateDiff target_padding_below = CoordinateDiff(source_shape.get_rank(), 0);
+    CoordinateDiff target_padding_above = CoordinateDiff(source_shape.get_rank(), 0);
+    Strides source_dilation_strides = Strides(source_shape.get_rank(), 1);
 
     auto ct = CoordinateTransform(source_shape,
                                   source_start_corner,
@@ -152,11 +152,11 @@ TEST(coordinate, strides)
     Coordinate source_start_corner = Coordinate{0, 0};
     Coordinate source_end_corner{source_shape};
     Strides source_strides = Strides({2, 3});
-    AxisVector source_axis_order(source_shape.size());
+    AxisVector source_axis_order(source_shape.get_rank());
     iota(source_axis_order.begin(), source_axis_order.end(), 0);
-    CoordinateDiff target_padding_below = CoordinateDiff(source_shape.size(), 0);
-    CoordinateDiff target_padding_above = CoordinateDiff(source_shape.size(), 0);
-    Strides source_dilation_strides = Strides(source_shape.size(), 1);
+    CoordinateDiff target_padding_below = CoordinateDiff(source_shape.get_rank(), 0);
+    CoordinateDiff target_padding_above = CoordinateDiff(source_shape.get_rank(), 0);
+    Strides source_dilation_strides = Strides(source_shape.get_rank(), 1);
 
     auto ct = CoordinateTransform(source_shape,
                                   source_start_corner,
@@ -197,11 +197,11 @@ TEST(coordinate, axis_order)
     Shape source_shape{3, 2, 4};
     Coordinate source_start_corner = Coordinate{0, 0, 0};
     Coordinate source_end_corner{source_shape};
-    Strides source_strides = Strides(source_shape.size(), 1);
+    Strides source_strides = Strides(source_shape.get_rank(), 1);
     AxisVector source_axis_order({1, 2, 0});
-    CoordinateDiff target_padding_below = CoordinateDiff(source_shape.size(), 0);
-    CoordinateDiff target_padding_above = CoordinateDiff(source_shape.size(), 0);
-    Strides source_dilation_strides = Strides(source_shape.size(), 1);
+    CoordinateDiff target_padding_below = CoordinateDiff(source_shape.get_rank(), 0);
+    CoordinateDiff target_padding_above = CoordinateDiff(source_shape.get_rank(), 0);
+    Strides source_dilation_strides = Strides(source_shape.get_rank(), 1);
 
     auto ct = CoordinateTransform(source_shape,
                                   source_start_corner,
@@ -246,12 +246,12 @@ TEST(DISABLED_coordinate, padding)
     Shape source_shape{10, 10};
     Coordinate source_start_corner = Coordinate{0, 0};
     Coordinate source_end_corner{source_shape};
-    Strides source_strides = Strides(source_shape.size(), 1);
-    AxisVector source_axis_order(source_shape.size());
+    Strides source_strides = Strides(source_shape.get_rank(), 1);
+    AxisVector source_axis_order(source_shape.get_rank());
     iota(source_axis_order.begin(), source_axis_order.end(), 0);
-    CoordinateDiff target_padding_below = CoordinateDiff(source_shape.size(), 0);
-    CoordinateDiff target_padding_above = CoordinateDiff(source_shape.size(), 0);
-    Strides source_dilation_strides = Strides(source_shape.size(), 1);
+    CoordinateDiff target_padding_below = CoordinateDiff(source_shape.get_rank(), 0);
+    CoordinateDiff target_padding_above = CoordinateDiff(source_shape.get_rank(), 0);
+    Strides source_dilation_strides = Strides(source_shape.get_rank(), 1);
 
     auto ct = CoordinateTransform(source_shape,
                                   source_start_corner,
@@ -278,12 +278,12 @@ TEST(DISABLED_coordinate, dilation)
     Shape source_shape{10, 10};
     Coordinate source_start_corner = Coordinate{0, 0};
     Coordinate source_end_corner{source_shape};
-    Strides source_strides = Strides(source_shape.size(), 1);
-    AxisVector source_axis_order(source_shape.size());
+    Strides source_strides = Strides(source_shape.get_rank(), 1);
+    AxisVector source_axis_order(source_shape.get_rank());
     iota(source_axis_order.begin(), source_axis_order.end(), 0);
-    CoordinateDiff target_padding_below = CoordinateDiff(source_shape.size(), 0);
-    CoordinateDiff target_padding_above = CoordinateDiff(source_shape.size(), 0);
-    Strides source_dilation_strides = Strides(source_shape.size(), 1);
+    CoordinateDiff target_padding_below = CoordinateDiff(source_shape.get_rank(), 0);
+    CoordinateDiff target_padding_above = CoordinateDiff(source_shape.get_rank(), 0);
+    Strides source_dilation_strides = Strides(source_shape.get_rank(), 1);
 
     auto ct = CoordinateTransform(source_shape,
                                   source_start_corner,
@@ -310,12 +310,12 @@ TEST(benchmark, coordinate)
     Shape source_shape{128, 3, 2000, 1000};
     Coordinate source_start_corner = Coordinate{0, 0, 0, 0};
     Coordinate source_end_corner{source_shape};
-    Strides source_strides = Strides(source_shape.size(), 1);
-    AxisVector source_axis_order(source_shape.size());
+    Strides source_strides = Strides(source_shape.get_rank(), 1);
+    AxisVector source_axis_order(source_shape.get_rank());
     iota(source_axis_order.begin(), source_axis_order.end(), 0);
-    CoordinateDiff target_padding_below = CoordinateDiff(source_shape.size(), 0);
-    CoordinateDiff target_padding_above = CoordinateDiff(source_shape.size(), 0);
-    Strides source_dilation_strides = Strides(source_shape.size(), 1);
+    CoordinateDiff target_padding_below = CoordinateDiff(source_shape.get_rank(), 0);
+    CoordinateDiff target_padding_above = CoordinateDiff(source_shape.get_rank(), 0);
+    Strides source_dilation_strides = Strides(source_shape.get_rank(), 1);
 
     stopwatch timer;
     timer.start();
