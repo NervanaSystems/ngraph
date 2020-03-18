@@ -14,8 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-// This collection contains one entry for each new op on top of the opset2.
-
 #ifndef NGRAPH_OP
 #warning "NGRAPH_OP not defined"
 #define NGRAPH_OP(x, y)
