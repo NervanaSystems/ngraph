@@ -49,6 +49,7 @@
 
 #include "header_resource.hpp"
 #include "ngraph/codegen/compiler.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
@@ -156,9 +157,9 @@ static std::string GetExecutablePath(const char* Argv0)
 }
 
 codegen::CompilerCore::CompilerCore()
-    : m_debuginfo_enabled((std::getenv("NGRAPH_COMPILER_DEBUGINFO_ENABLE") != nullptr))
-    , m_enable_diag_output((std::getenv("NGRAPH_COMPILER_DIAG_ENABLE") != nullptr))
-    , m_enable_pass_report((std::getenv("NGRAPH_COMPILER_REPORT_ENABLE") != nullptr))
+    : m_debuginfo_enabled(getenv_bool("NGRAPH_COMPILER_DEBUGINFO_ENABLE"))
+    , m_enable_diag_output(getenv_bool("NGRAPH_COMPILER_DIAG_ENABLE"))
+    , m_enable_pass_report(getenv_bool("NGRAPH_COMPILER_REPORT_ENABLE"))
     , m_source_name("code.cpp")
 {
     initialize();
@@ -440,12 +441,9 @@ void codegen::CompilerCore::configure_search_path()
     add_header_search_path("/Library/Developer/CommandLineTools/usr/include/c++/v1");
     add_header_search_path("/usr/local/include");
     add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
-    std::string mojave_isysroot = file_util::path_join(
-        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs",
-        "MacOSX10.14.sdk");
-    if (file_util::exists(mojave_isysroot))
+    if (file_util::exists(CMAKE_OSX_SYSROOT))
     {
-        add_header_search_path(file_util::path_join(mojave_isysroot, "usr/include"));
+        add_header_search_path(file_util::path_join(CMAKE_OSX_SYSROOT, "usr/include"));
     }
     else
     {

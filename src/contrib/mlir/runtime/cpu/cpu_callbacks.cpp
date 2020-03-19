@@ -636,7 +636,7 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
                        matOut,
                        std::max<size_t>(1, ldc));
 
-    if (broadcastHint == 0)
+    if (broadcastHint == BroadcastType::ROW)
     {
         std::vector<float> ones(m, 1.0f);
         cblas::cblas_sgemm(cblas::Layout::RowMajor,
@@ -654,7 +654,7 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
                            matOut,
                            std::max<size_t>(1, ldc));
     }
-    else if (broadcastHint == 1)
+    else if (broadcastHint == BroadcastType::COLUMN)
     {
         std::vector<float> ones(n, 1.0f);
         cblas::cblas_sgemm(cblas::Layout::RowMajor,
@@ -672,7 +672,7 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
                            matOut,
                            std::max<size_t>(1, ldc));
     }
-    else if (broadcastHint == 2)
+    else if (broadcastHint == BroadcastType::ROWCOLUMN)
     {
         std::vector<float> ones(m, 1.0f);
         std::vector<float> bias(n, *matC);
@@ -691,7 +691,7 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
                            matOut,
                            std::max<size_t>(1, ldc));
     }
-    else
+    else if (broadcastHint == BroadcastType::NONE)
     {
         std::vector<float> identity(n * n, 0.0f);
         for (auto i = 0; i < n * n; i += n + 1)
@@ -713,9 +713,13 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
                            matOut,
                            std::max<size_t>(1, ldc));
     }
+    else
+    {
+        NGRAPH_UNREACHABLE("Unsupported broadcast");
+    }
 }
 
-extern "C" void __mlir_callback_1_input(void* input, void* output, size_t index, OpType type)
+extern "C" void _mlir_ciface_callback_1_input(void* input, void* output, size_t index, OpType type)
 {
     auto unrankedMemRefInput = reinterpret_cast<UnrankedMemRef*>(input);
     auto unrankedMemRefOutput = reinterpret_cast<UnrankedMemRef*>(output);
@@ -748,8 +752,8 @@ extern "C" void __mlir_callback_1_input(void* input, void* output, size_t index,
     }
 }
 
-extern "C" void
-    __mlir_callback_2_inputs(void* input0, void* input1, void* output, size_t index, OpType type)
+extern "C" void _mlir_ciface_callback_2_inputs(
+    void* input0, void* input1, void* output, size_t index, OpType type)
 {
     auto unrankedMemRefInput0 = reinterpret_cast<UnrankedMemRef*>(input0);
     auto unrankedMemRefInput1 = reinterpret_cast<UnrankedMemRef*>(input1);
@@ -776,7 +780,7 @@ extern "C" void
     }
 }
 
-extern "C" void __mlir_callback_3_inputs(
+extern "C" void _mlir_ciface_callback_3_inputs(
     void* input0, void* input1, void* input2, void* output, size_t index, OpType type)
 {
     auto unrankedMemRefInput0 = reinterpret_cast<UnrankedMemRef*>(input0);

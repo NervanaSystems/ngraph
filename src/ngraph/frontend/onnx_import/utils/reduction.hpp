@@ -42,9 +42,11 @@ namespace ngraph
 
             } // namespace  detail
 
+            // An overload for reduction operators that take reduction axes as input
             using RuntimeReductionFunction = std::function<std::shared_ptr<ngraph::Node>(
                 const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&, bool)>;
 
+            // An overload for reduction operators that take reduction axes as an attribute
             using ReductionFunction = std::function<std::shared_ptr<ngraph::Node>(
                 const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&)>;
 
@@ -77,37 +79,6 @@ namespace ngraph
                 make_ng_reduction_op(const Node& node,
                                      const std::shared_ptr<ngraph::Node>& ng_input,
                                      RuntimeReductionFunction reduction_function);
-
-            template <class IndexReduction>
-            std::shared_ptr<ngraph::Node> make_ng_index_reduction_op(const Node& node)
-            {
-                auto axis = node.get_attribute_value<std::int64_t>("axis", 0);
-                auto keepdims = node.get_attribute_value<std::int64_t>("keepdims", 1);
-                auto input_node = node.get_ng_inputs().at(0);
-                const auto normalized_axis = ngraph::normalize_axis(
-                    node.get_description(), axis, input_node->get_shape().size());
-
-                auto op_node =
-                    std::make_shared<IndexReduction>(input_node, normalized_axis, element::i64);
-
-                if (keepdims == 0)
-                {
-                    return std::move(op_node);
-                }
-
-                // WORKAROUND FOR PROBLEMS WITH RESHAPE ON i64 @TODO: remove
-                auto convert_node = std::make_shared<ngraph::op::Convert>(op_node, element::f32);
-
-                auto output_shape = input_node->get_shape();
-                output_shape.at(normalized_axis) = 1;
-                auto reshape_node = builder::opset1::reshape(op_node, output_shape);
-
-                // WORKAROUND FOR PROBLEMS WITH RESHAPE ON i64 @TODO: remove
-                auto reconvert_node =
-                    std::make_shared<ngraph::op::Convert>(reshape_node, element::i64);
-
-                return std::move(reconvert_node);
-            }
 
         } // namespace  reduction
     }     // namespace onnx_import

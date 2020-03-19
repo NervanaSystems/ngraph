@@ -18,6 +18,7 @@
 #include <iterator>
 #include <memory>
 
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/matmul_factory.hpp"
 #include "ngraph/builder/reshape.hpp"
@@ -26,7 +27,6 @@
 #include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -91,8 +91,8 @@ NodeVector builder::MatmulFactory::make_matmul_op()
     // Broadcast input arguments only if both of them are not vectors.
     if (left_rank > 1 && right_rank > 1)
     {
-        const NodeVector& broadcasted_nodes = op::numpy_style_broadcast_for_matmul_operation(
-            left.get_node_shared_ptr(), right.get_node_shared_ptr());
+        const OutputVector& broadcasted_nodes =
+            builder::numpy_broadcast_for_matmul_operation(left, right);
 
         left = broadcasted_nodes.at(0);
         right = broadcasted_nodes.at(1);

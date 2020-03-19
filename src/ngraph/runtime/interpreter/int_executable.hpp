@@ -30,6 +30,7 @@
 #ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
 #endif
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
@@ -144,7 +145,7 @@ namespace ngraph
     }     // namespace runtime
 } // namespace ngraph
 
-class ngraph::runtime::interpreter::INTExecutable : public Executable
+class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTExecutable : public Executable
 {
     friend class INTBackend;
 
@@ -1189,8 +1190,8 @@ protected:
             reference::pad(args[0]->get_data_ptr<const T>(),
                            args[1]->get_data_ptr<const T>(),
                            out[0]->get_data_ptr<T>(),
-                           node.input(0).get_shape(),
-                           node.output(0).get_shape(),
+                           node.get_input_shape(0),
+                           node.get_output_shape(0),
                            pad->get_padding_below(),
                            pad->get_padding_above(),
                            pad->get_pad_mode());
@@ -1861,7 +1862,6 @@ protected:
         case OP_TYPEID::Gelu:
         case OP_TYPEID::GeluBackpropFactor:
         case OP_TYPEID::Gemm:
-        case OP_TYPEID::GroupConvolutionTranspose:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::Interpolate:
         case OP_TYPEID::LayerNorm:

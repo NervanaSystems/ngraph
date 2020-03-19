@@ -18,14 +18,12 @@
 
 #include <onnx/onnx_pb.h>
 
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/parameter.hpp"
-#include "ngraph/shape.hpp"
+#include "default_opset.hpp"
+#include "ngraph/partial_shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "node.hpp"
 #include "tensor.hpp"
 #include "utils/common.hpp"
-#include "weight.hpp"
 
 namespace ngraph
 {
@@ -57,9 +55,15 @@ namespace ngraph
             {
                 if (value_info_proto.type().has_tensor_type())
                 {
-                    for (const auto& dim : value_info_proto.type().tensor_type().shape().dim())
+                    const auto& onnx_tensor = value_info_proto.type().tensor_type();
+
+                    if (onnx_tensor.has_shape())
                     {
-                        m_shape.emplace_back(static_cast<Shape::value_type>(dim.dim_value()));
+                        m_partial_shape = to_ng_shape(onnx_tensor.shape());
+                    }
+                    else
+                    {
+                        m_partial_shape = PartialShape::dynamic();
                     }
                 }
             }
@@ -68,7 +72,7 @@ namespace ngraph
             ValueInfo& operator=(ValueInfo&&) = delete;
 
             const std::string& get_name() const { return m_value_info_proto->name(); }
-            const Shape& get_shape() const { return m_shape; }
+            const PartialShape& get_shape() const { return m_partial_shape; }
             const element::Type& get_element_type() const
             {
                 if (!m_value_info_proto->type().tensor_type().has_elem_type())
@@ -81,21 +85,12 @@ namespace ngraph
 
             std::shared_ptr<ngraph::Node>
                 get_ng_node(ParameterVector& parameters,
-                            const std::map<std::string, Tensor>& initializers,
-                            const Weights& weights = {}) const
+                            const std::map<std::string, Tensor>& initializers) const
             {
                 const auto it = initializers.find(get_name());
                 if (it != std::end(initializers))
                 {
                     return get_ng_constant(it->second);
-                }
-                else
-                {
-                    const auto pt = weights.find(get_name());
-                    if (pt != std::end(weights))
-                    {
-                        return get_ng_constant(pt->second);
-                    }
                 }
                 parameters.push_back(get_ng_parameter());
                 return parameters.back();
@@ -107,19 +102,36 @@ namespace ngraph
                 return std::make_shared<op::Parameter>(get_element_type(), get_shape());
             }
 
-            std::shared_ptr<op::Constant> get_ng_constant(const Weight& weight) const
-            {
-                return std::make_shared<op::Constant>(weight.type(), weight.shape(), weight.data());
-            }
-
             std::shared_ptr<op::Constant> get_ng_constant(const Tensor& tensor) const
             {
                 return tensor.get_ng_constant();
             }
 
+            PartialShape to_ng_shape(const onnx::TensorShapeProto& onnx_shape) const
+            {
+                if (onnx_shape.dim_size() == 0)
+                {
+                    return Shape{}; // empty list of dimensions denotes a scalar
+                }
+
+                std::vector<Dimension> dims;
+                for (const auto& onnx_dim : onnx_shape.dim())
+                {
+                    if (onnx_dim.has_dim_value())
+                    {
+                        dims.emplace_back(onnx_dim.dim_value());
+                    }
+                    else if (onnx_dim.has_dim_param())
+                    {
+                        dims.push_back(Dimension::dynamic());
+                    }
+                }
+                return PartialShape{dims};
+            }
+
         private:
             const onnx::ValueInfoProto* m_value_info_proto;
-            Shape m_shape;
+            PartialShape m_partial_shape;
         };
 
         inline std::ostream& operator<<(std::ostream& outs, const ValueInfo& info)

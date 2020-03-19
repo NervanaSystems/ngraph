@@ -16,6 +16,7 @@
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -59,14 +60,12 @@ void descriptor::Input::replace_output(Output& new_output)
     m_cached_output_element_type = new_output.get_element_type();
     m_src_node = std::shared_ptr<Node>(new_output.get_node());
 
-    static const auto nerc = std::getenv("NGRAPH_ENABLE_REPLACE_CHECK");
-
-    if (nerc)
+    if (getenv_bool("NGRAPH_ENABLE_REPLACE_CHECK"))
     {
-        // the result of copy_with_new_args will be thrown away or
+        // the result of clone_with_new_inputs will be thrown away or
         // an exception will be thrown by `m_node`'s class c-tor
         // if a new input violates one of the type checks in the c-tor.
-        (this->m_node->copy_with_new_args(this->m_node->get_arguments()));
+        m_node->clone_with_new_inputs(m_node->input_values());
     }
 }
 

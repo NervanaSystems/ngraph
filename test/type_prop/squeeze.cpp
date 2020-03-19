@@ -37,3 +37,21 @@ TEST(type_prop, squeeze)
     ASSERT_EQ(squeeze_default_axes->get_element_type(), element::f32);
     ASSERT_EQ(squeeze_default_axes->get_shape(), (Shape{4, 4, 8}));
 }
+
+TEST(type_prop, squeeze_dynamic)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape::dynamic(6));
+    auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{0, 2});
+    auto squeeze = make_shared<op::Squeeze>(param, axes_node);
+
+    ASSERT_EQ(squeeze->get_element_type(), element::f32);
+    EXPECT_TRUE(squeeze->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+
+    axes_node = make_shared<ngraph::op::Constant>(element::u64, Shape{0}, vector<int64_t>{});
+    auto squeeze_default_axes = make_shared<op::Squeeze>(param, axes_node);
+
+    ASSERT_EQ(squeeze_default_axes->get_element_type(), element::f32);
+    EXPECT_TRUE(
+        squeeze_default_axes->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}

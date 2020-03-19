@@ -81,7 +81,6 @@ mlir::Type NGraphOpsDialect::parseEltType(mlir::DialectAsmParser& parser) const
 {
     // Process nGraph integer element types.
     MLIRContext* context = getContext();
-    int width = 0;
     bool isSigned = false;
     llvm::SMLoc loc = parser.getCurrentLocation();
 
