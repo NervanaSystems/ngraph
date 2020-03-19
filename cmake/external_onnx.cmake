@@ -39,7 +39,7 @@ if (WIN32)
     string(REPLACE "/W3" "/W0" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 else()
     # -Wno-unknown-warning-option is needed for clang version 6.0.0+
-    set(ONNX_IGNORED_WARNINGS -Wno-extended-offsetof -Wno-unknown-warning-option)
+    set(ONNX_IGNORED_WARNINGS -Wno-extended-offsetof -Wno-unknown-warning-option -Wrange-loop-construct)
 endif()
 
 FetchContent_Declare(
