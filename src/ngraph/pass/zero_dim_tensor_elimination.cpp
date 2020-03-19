@@ -115,7 +115,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
 
         if (auto concat = as_type_ptr<op::Concat>(n))
         {
-            NodeVector non_zero_dim_args;
+            OutputVector non_zero_dim_args;
             for (auto arg : concat->get_arguments())
             {
                 if (!has_zero_dim(arg))
@@ -126,7 +126,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
 
             if (non_zero_dim_args.size() < concat->get_input_size())
             {
-                auto new_concat = concat->copy_with_new_args(non_zero_dim_args);
+                auto new_concat = concat->clone_with_new_inputs(non_zero_dim_args);
                 NGRAPH_DEBUG << " Replacing " << n->get_name() << " with "
                              << new_concat->get_name();
                 replace_node(concat, new_concat);
