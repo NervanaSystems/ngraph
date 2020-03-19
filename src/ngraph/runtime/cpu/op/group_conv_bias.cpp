@@ -120,11 +120,8 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
         throw ngraph_error("GroupConvolution's element type isn't equal to bias!");
     }
 
-    validate_groupconvbias_shapes(conv->input(0).get_shape(),
-                                  conv->input(1).get_shape(),
-                                  bias.get_shape(),
-                                  output_shape,
-                                  groups);
+    validate_groupconvbias_shapes(
+        conv->get_input_shape(0), conv->get_input_shape(1), bias.get_shape(), output_shape, groups);
 
     set_output_type(0, conv->get_element_type(), output_shape);
 }
