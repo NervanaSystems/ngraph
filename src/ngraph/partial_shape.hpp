@@ -79,6 +79,10 @@ namespace ngraph
         PartialShape(const Shape& shape);
 
         bool operator==(const PartialShape& partial_shape) const;
+        bool operator!=(const PartialShape& partial_shape) const
+        {
+            return !this->operator==(partial_shape);
+        };
 
         /// \brief Check if this shape is static.
         /// \return `true` if this shape is static, else `false`.
