@@ -38,8 +38,7 @@ add_definitions(-DONNX_BUILD_SHARED_LIBS=ON)
 if (WIN32)
     string(REPLACE "/W3" "/W0" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 else()
-    # -Wno-unknown-warning-option is needed for clang version 6.0.0+
-    set(ONNX_IGNORED_WARNINGS -Wno-extended-offsetof -Wno-unknown-warning-option -Wrange-loop-construct)
+    string(REPLACE "-pedantic-errors" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 endif()
 
 FetchContent_Declare(
@@ -58,9 +57,6 @@ if(NOT ext_onnx_POPULATED)
     add_subdirectory(${ext_onnx_SOURCE_DIR} ${ext_onnx_BINARY_DIR})
 endif()
 
-if(NOT WIN32)
-    set_target_properties(onnx onnx_proto PROPERTIES COMPILE_OPTIONS "${ONNX_IGNORED_WARNINGS}")
-endif()
 target_include_directories(onnx PRIVATE "${Protobuf_INCLUDE_DIR}")
 target_include_directories(onnx_proto PRIVATE "${Protobuf_INCLUDE_DIR}")
 
