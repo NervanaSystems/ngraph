@@ -54,8 +54,8 @@ namespace ngraph
             {
             public:
                 OnnxNodeValidationFailure(const CheckLocInfo& check_loc_info,
-                                      const Node& node,
-                                      const std::string& explanation)
+                                          const Node& node,
+                                          const std::string& explanation)
                     : CheckFailure(check_loc_info, detail::get_error_msg_prefix(node), explanation)
                 {
                 }
