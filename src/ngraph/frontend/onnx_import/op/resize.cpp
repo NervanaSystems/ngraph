@@ -47,7 +47,7 @@ namespace ngraph
                         throw error::NotSupported("ResizeOp: " + mode +
                                                   " - this type of interpolation mode is not "
                                                   "supported. Choose one of the following modes: "
-                                                  "'nearest', 'linear', 'cubic', 'area'.");
+                                                  "'nearest', 'linear'.");
                     }
 
                     auto attrs = ngraph::op::InterpolateAttrs();
