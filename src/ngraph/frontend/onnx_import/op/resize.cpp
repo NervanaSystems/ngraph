@@ -37,8 +37,7 @@ namespace ngraph
 
                     const auto mode = node.get_attribute_value<std::string>("mode", "nearest");
 
-                    std::unordered_set<std::string> supported_modes = {
-                        "nearest", "linear", "cubic", "area"};
+                    std::unordered_set<std::string> supported_modes = {"nearest", "linear"};
                     bool is_mode_supported =
                         (std::find(supported_modes.begin(), supported_modes.end(), mode) !=
                          supported_modes.end());
