@@ -59,7 +59,7 @@ if(NOT ext_onnx_POPULATED)
 endif()
 
 if(NOT WIN32)
-    set_target_properties(onnx onnx_proto PROPERTIES COMPILE_OPTIONS ${ONNX_IGNORED_WARNINGS})
+    set_target_properties(onnx onnx_proto PROPERTIES COMPILE_OPTIONS "${ONNX_IGNORED_WARNINGS}")
 endif()
 target_include_directories(onnx PRIVATE "${Protobuf_INCLUDE_DIR}")
 target_include_directories(onnx_proto PRIVATE "${Protobuf_INCLUDE_DIR}")
