@@ -36,12 +36,18 @@ bool ngraph::op::v3::NonZero::visit_attributes(AttributeVisitor& visitor)
 void op::v3::NonZero::validate_and_infer_types()
 {
     const PartialShape& input_shape = get_input_partial_shape(0);
+    const auto input_et = get_input_element_type(0);
+
+    NODE_VALIDATION_CHECK(this,
+                          input_et.is_integral_number() || input_et.is_real(),
+                          "NonZero input data type needs to be a numeric type. Got: ",
+                          input_et);
 
     set_output_type(0, element::i64, PartialShape{input_shape.rank(), Dimension::dynamic()});
     set_input_is_relevant_to_shape(0);
 }
 
-shared_ptr<Node> op::v3::NonZero::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v3::NonZero::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v3::NonZero>(new_args.at(0));
