@@ -2376,3 +2376,73 @@ TEST(constant_folding, pass_property)
     ASSERT_FALSE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
     ASSERT_TRUE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }
+
+TEST(constant_folding, constant_non_zero_1D)
+{
+    vector<int> values_in{0, 1, 0, 1};
+    auto data = make_shared<op::Constant>(element::i32, Shape{4}, values_in);
+    auto non_zero = make_shared<op::v2::NonZero>(data);
+    auto f = make_shared<Function>(non_zero, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v2::NonZero>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int64_t>();
+
+    vector<int64_t> values_expected{1, 3};
+    ASSERT_EQ(values_expected, values_out);
+    ASSERT_EQ((Shape{1, 2}), new_const->get_shape());
+}
+
+TEST(constant_folding, constant_non_zero_2D)
+{
+    vector<int> values_in{1, 0, 0, 0, 1, 0, 1, 1, 0};
+    auto data = make_shared<op::Constant>(element::i32, Shape{3, 3}, values_in);
+    auto non_zero = make_shared<op::v2::NonZero>(data);
+    auto f = make_shared<Function>(non_zero, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v2::NonZero>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int64_t>();
+
+    vector<int64_t> values_expected{0, 1, 2, 2, 0, 1, 0, 1};
+    ASSERT_EQ(values_expected, values_out);
+    ASSERT_EQ((Shape{2, 4}), new_const->get_shape());
+}
+
+TEST(constant_folding, constant_non_zero_3D)
+{
+    vector<int> values_in{1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0};
+    auto data = make_shared<op::Constant>(element::i32, Shape{2, 3, 3}, values_in);
+    auto non_zero = make_shared<op::v2::NonZero>(data);
+    auto f = make_shared<Function>(non_zero, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v2::NonZero>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int64_t>();
+
+    vector<int64_t> values_expected{0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 2, 2, 2,
+                                    0, 0, 0, 1, 1, 2, 0, 2, 1, 0, 1, 2, 0, 1, 2, 0, 2, 1};
+    ASSERT_EQ(values_expected, values_out);
+    ASSERT_EQ((Shape{3, 12}), new_const->get_shape());
+}
