@@ -35,7 +35,11 @@ set(ONNX_GIT_BRANCH rel-${ONNX_VERSION})
 
 add_definitions(-DONNX_BUILD_SHARED_LIBS=ON)
 
-set(CMAKE_CXX_FLAGS ${CMAKE_ORIGINAL_CXX_FLAGS})
+if (WIN32)
+    string(REPLACE "/W3" "/W0" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+else()
+    set(ONNX_IGNORED_WARNINGS -Wno-extended-offsetof)
+endif()
 
 FetchContent_Declare(
     ext_onnx
@@ -53,6 +57,7 @@ if(NOT ext_onnx_POPULATED)
     add_subdirectory(${ext_onnx_SOURCE_DIR} ${ext_onnx_BINARY_DIR})
 endif()
 
+set_target_properties(onnx onnx_proto PROPERTIES COMPILE_OPTIONS ${ONNX_IGNORED_WARNINGS})
 target_include_directories(onnx PRIVATE "${Protobuf_INCLUDE_DIR}")
 target_include_directories(onnx_proto PRIVATE "${Protobuf_INCLUDE_DIR}")
 
