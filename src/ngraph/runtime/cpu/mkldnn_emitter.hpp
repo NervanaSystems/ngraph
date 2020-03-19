@@ -1591,7 +1591,8 @@ namespace ngraph
                     auto dst_iter_desc = build_memory_descriptor(
                         dst_iter_tz, out[1].get_element_type(), mkldnn::memory::FORMAT::ldsnc);
 
-                    mkldnn::rnn_cell::desc rnn_cell_desc(get_mkldnn_rnn_cell_type());
+                    mkldnn::rnn_cell::desc rnn_cell_desc(get_mkldnn_rnn_cell_type(),
+                                                         mkldnn::algorithm::eltwise_tanh);
                     return mkldnn::rnn_forward::desc(mkldnn::prop_kind::forward_training,
                                                      rnn_cell_desc,
                                                      get_mkldnn_rnn_direction(),

@@ -1262,6 +1262,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(VanillaRNNFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(RNNFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(AlgebraicSimplification, true, ngraph::pass)

@@ -3997,6 +3997,28 @@ TEST(cpu_fusion, fuse_vanilla_rnn_cells)
     EXPECT_EQ(lstm_ops.size(), 3);
 }
 
+TEST(cpu_fusion, vanilla_rnn_cpu_vs_inter)
+{
+    const std::string file_name("tensorflow/vanilla_rnn_3_time_step.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
 TEST(cpu_fusion, validate_fuse_gru_inputs)
 {
     const std::string file_name("mxnet/gru_debug.json");
