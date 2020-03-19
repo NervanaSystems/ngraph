@@ -201,6 +201,21 @@ void op::v1::Reshape::validate_and_infer_types()
 
         if (!(zero_dims && m_special_zero) && !negative_dims)
         {
+            if (get_input_partial_shape(0).is_static())
+            {
+                auto input_shape = get_input_partial_shape(0).to_shape();
+                auto output_shape = const_shape->get_shape_val();
+                NODE_VALIDATION_CHECK(
+                    this,
+                    shape_size(input_shape) == shape_size(output_shape),
+                    "Product of output shape dimensions does not match product of argument shape "
+                    "dimensions ",
+                    "(output shape: ",
+                    output_shape,
+                    ", argument shape: ",
+                    input_shape,
+                    ").");
+            }
             set_output_type(0, get_input_element_type(0), const_shape->get_shape_val());
         }
         else
