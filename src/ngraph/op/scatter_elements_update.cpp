@@ -110,9 +110,16 @@ void op::v3::ScatterElementsUpdate::validate_and_infer_types()
     set_output_type(0, data_et, data_shape);
 }
 
-shared_ptr<Node> op::v3::ScatterElementsUpdate::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::v3::ScatterElementsUpdate::clone_with_new_inputs(const OutputVector& inputs) const
 {
-    check_new_args_count(this, new_args);
+    NODE_VALIDATION_CHECK(this,
+                          inputs.size() == get_input_size(),
+                          "clone_with_new_inputs() required inputs size: ",
+                          get_input_size(),
+                          "Got: ",
+                          inputs.size());
+
     return make_shared<v3::ScatterElementsUpdate>(
-        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
+        inputs.at(0), inputs.at(1), inputs.at(2), inputs.at(3));
 }
