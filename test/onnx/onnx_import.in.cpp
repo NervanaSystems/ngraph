@@ -2055,30 +2055,44 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_round)
     test_case.run();
 }
 
+namespace
+{
+    void test_non_zero_constant_folding(std::shared_ptr<ngraph::Function> function,
+                                        const std::vector<int64_t> expected_output,
+                                        const PartialShape expected_shape = PartialShape::dynamic())
+    {
+        ngraph::pass::Manager pass_manager;
+        pass_manager.register_pass<pass::ConstantFolding>();
+        pass_manager.run_passes(function);
+
+        for (auto ng_node : function->get_ordered_ops())
+        {
+            if (as_type_ptr<op::Constant>(ng_node))
+            {
+                const auto folded_non_zero = as_type_ptr<op::Constant>(ng_node);
+                const auto values = folded_non_zero->cast_vector<int64_t>();
+
+                EXPECT_TRUE(ngraph::test::all_close(expected_output, values));
+
+                if (expected_shape.is_static())
+                {
+                    EXPECT_EQ(folded_non_zero->get_output_shape(0), expected_shape.to_shape());
+                }
+
+                return;
+            }
+        }
+
+        FAIL() << "NonZero constant folding failed.";
+    }
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_scalar)
 {
     const auto fn = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/non_zero_scalar.prototxt"));
 
-    ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::ConstantFolding>();
-    pass_manager.run_passes(fn);
-
-    const std::vector<int64_t> expected_output{0};
-    const Shape expected_output_shape{1, 1};
-    for (auto ng_node : fn->get_ordered_ops())
-    {
-        if (as_type_ptr<op::Constant>(ng_node))
-        {
-            const auto folded_non_zero = as_type_ptr<op::Constant>(ng_node);
-            const auto values = folded_non_zero->cast_vector<int64_t>();
-            EXPECT_TRUE(ngraph::test::all_close(expected_output, values));
-            EXPECT_EQ(folded_non_zero->get_output_shape(0), expected_output_shape);
-            return;
-        }
-    }
-
-    FAIL() << "NonZero constant folding failed.";
+    test_non_zero_constant_folding(fn, {0}, Shape{1, 1});
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_1d)
@@ -2090,19 +2104,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_1d)
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(fn);
 
-    const std::vector<int64_t> expected_output{1, 2, 4};
-    for (auto ng_node : fn->get_ordered_ops())
-    {
-        if (as_type_ptr<op::Constant>(ng_node))
-        {
-            const auto folded_non_zero = as_type_ptr<op::Constant>(ng_node);
-            const auto values = folded_non_zero->cast_vector<int64_t>();
-            EXPECT_TRUE(ngraph::test::all_close(expected_output, values));
-            return;
-        }
-    }
-
-    FAIL() << "NonZero constant folding failed.";
+    test_non_zero_constant_folding(fn, {1, 2, 4}, Shape{1, 3});
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_3d)
@@ -2110,26 +2112,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_3d)
     const auto fn = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/non_zero_3d.prototxt"));
 
-    ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::ConstantFolding>();
-    pass_manager.run_passes(fn);
-
     // Vertical slices are 3D indices of non-zero elements in the input tensor
     // {0, 0, 0, 1, 1, 2, 2}
     // {0, 0, 1, 0, 1, 0, 1}
     // {0, 1, 1, 1, 0, 0, 1}
-    const std::vector<int64_t> expected_output{0, 0, 0, 1, 1, 2, 2, 0, 0, 1, 0,
-                                               1, 0, 1, 0, 1, 1, 1, 0, 0, 1};
-    for (auto ng_node : fn->get_ordered_ops())
-    {
-        if (as_type_ptr<op::Constant>(ng_node))
-        {
-            const auto folded_non_zero = as_type_ptr<op::Constant>(ng_node);
-            const auto values = folded_non_zero->cast_vector<int64_t>();
-            EXPECT_TRUE(ngraph::test::all_close(expected_output, values));
-            return;
-        }
-    }
-
-    FAIL() << "NonZero constant folding failed.";
+    test_non_zero_constant_folding(fn,
+                                   {0, 0, 0, 1, 1, 2, 2, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1});
 }

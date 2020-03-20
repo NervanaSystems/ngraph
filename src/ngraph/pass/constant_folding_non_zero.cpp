@@ -123,7 +123,7 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
         }
 
         indices.shrink_to_fit();
-        return op::Constant::create(element::i64, Shape{indices.size()}, indices);
+        return op::Constant::create(element::i64, Shape{1, indices.size()}, indices);
     }
     else
     {
