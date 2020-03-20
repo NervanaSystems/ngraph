@@ -105,7 +105,7 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
                      "It's not possible to constant fold a NonZero op for a scalar equal to zero.");
 
         // return 0(the only index) if the data input contains a scalar different than zero
-        return op::Constant::create(element::i64, Shape{}, {0});
+        return op::Constant::create(element::i64, Shape{1, 1}, {0});
     }
     else if (is_vector(input_shape))
     {

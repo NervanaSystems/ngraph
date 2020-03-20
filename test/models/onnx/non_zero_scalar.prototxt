@@ -14,9 +14,6 @@ graph {
       tensor_type {
         elem_type: 6
         shape {
-          dim {
-            dim_value: 5
-          }
         }
       }
     }
@@ -24,12 +21,7 @@ graph {
   initializer {
     data_type: 6
     name: "A"
-    dims: 5
-    int32_data: 0
-    int32_data: 1
-    int32_data: 2
-    int32_data: 0
-    int32_data: 3
+    int32_data: 777
   }
   output {
     name: "out"

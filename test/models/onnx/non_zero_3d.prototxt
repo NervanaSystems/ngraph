@@ -28,23 +28,23 @@ graph {
     }
   }
   initializer {
-    data_type: 7
+    data_type: 6
     name: "A"
     dims: 3
     dims: 2
     dims: 2
-    int64_data: 1
-    int64_data: 1
-    int64_data: 0
-    int64_data: 1
-    int64_data: 0
-    int64_data: 1
-    int64_data: 1
-    int64_data: 0
-    int64_data: 1
-    int64_data: 0
-    int64_data: 0
-    int64_data: 1
+    int32_data: 1
+    int32_data: 1
+    int32_data: 0
+    int32_data: 1
+    int32_data: 0
+    int32_data: 1
+    int32_data: 1
+    int32_data: 0
+    int32_data: 1
+    int32_data: 0
+    int32_data: 0
+    int32_data: 1
   }
   output {
     name: "out"
