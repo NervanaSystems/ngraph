@@ -66,7 +66,6 @@ TEST(type_prop, scatter_elements_update_axis_validation)
     }
 }
 
-
 TEST(type_prop, scatter_elements_updates_indices_shape)
 {
     Shape data_shape{2, 4, 5, 7};
@@ -86,7 +85,8 @@ TEST(type_prop, scatter_elements_updates_indices_shape)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices and updates input shapes are required to be equal"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("Indices and updates input shapes are required to be equal"));
     }
     catch (...)
     {
@@ -113,7 +113,8 @@ TEST(type_prop, scatter_elements_updates_indices_rank)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices and updates input shapes are required to be equal"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("Indices and updates input shapes are required to be equal"));
     }
     catch (...)
     {
@@ -140,7 +141,8 @@ TEST(type_prop, scatter_elements_data_indices_rank)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices rank and data rank are required to be equal"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Indices rank and data rank are required to be equal"));
     }
     catch (...)
     {

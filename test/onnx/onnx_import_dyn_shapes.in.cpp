@@ -555,5 +555,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, scatter_elements_import_only)
 {
     const auto scatter_elements = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/scatter_elements.prototxt"));
-    auto test_case = ngraph::test::NgraphTestCase(scatter_elements, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+    auto test_case =
+        ngraph::test::NgraphTestCase(scatter_elements, "${BACKEND_NAME}", BackendMode::DYNAMIC);
 }
