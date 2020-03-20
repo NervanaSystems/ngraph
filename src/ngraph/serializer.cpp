@@ -2255,7 +2255,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::NonZero:
         {
-            node = make_shared<op::v0::NonZero>(args[0]);
+            node = make_shared<op::v3::NonZero>(args[0]);
 
             break;
         }

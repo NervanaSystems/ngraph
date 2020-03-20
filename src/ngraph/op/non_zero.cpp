@@ -20,31 +20,35 @@
 using namespace ngraph;
 using namespace std;
 
-constexpr NodeTypeInfo op::v0::NonZero::type_info;
+constexpr NodeTypeInfo op::v3::NonZero::type_info;
 
-op::v0::NonZero::NonZero(const Output<Node>& arg)
+op::v3::NonZero::NonZero(const Output<Node>& arg)
     : Op({arg})
 {
     constructor_validate_and_infer_types();
 }
 
-bool ngraph::op::v0::NonZero::visit_attributes(AttributeVisitor& visitor)
+bool ngraph::op::v3::NonZero::visit_attributes(AttributeVisitor& visitor)
 {
     return true;
 }
 
-void op::v0::NonZero::validate_and_infer_types()
+void op::v3::NonZero::validate_and_infer_types()
 {
-    auto args_et_pshape = validate_and_infer_elementwise_args();
+    const PartialShape& input_shape = get_input_partial_shape(0);
+    const auto input_et = get_input_element_type(0);
 
-    element::Type& args_et = std::get<0>(args_et_pshape);
-    PartialShape& args_pshape = std::get<1>(args_et_pshape);
+    NODE_VALIDATION_CHECK(this,
+                          input_et.is_integral_number() || input_et.is_real(),
+                          "NonZero input data type needs to be a numeric type. Got: ",
+                          input_et);
 
-    set_output_type(0, args_et, args_pshape);
+    set_output_type(0, element::i64, PartialShape{input_shape.rank(), Dimension::dynamic()});
+    set_input_is_relevant_to_shape(0);
 }
 
-shared_ptr<Node> op::v0::NonZero::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v3::NonZero::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v0::NonZero>(new_args.at(0));
+    return make_shared<v3::NonZero>(new_args.at(0));
 }
