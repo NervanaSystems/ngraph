@@ -50,6 +50,7 @@ public:
         LOGICAL_REDUCTION,
         CONCAT,
         GATHER,
+        SCATTER,
         SLICE,
         DYN_SLICE,
         STRIDED_SLICE,
@@ -88,6 +89,7 @@ public:
         construct_constant_logical_reduction();
         construct_constant_concat();
         construct_constant_gather();
+        construct_constant_scatter_elements_update();
         construct_constant_slice();
         construct_constant_dyn_slice();
         construct_constant_strided_slice();
@@ -131,6 +133,7 @@ public:
                 break;
             case CFTransformations::CONCAT: construct_constant_concat(); break;
             case CFTransformations::GATHER: construct_constant_gather(); break;
+            case CFTransformations::SCATTER: construct_constant_scatter_elements_update(); break;
             case CFTransformations::SLICE: construct_constant_slice(); break;
             case CFTransformations::DYN_SLICE: construct_constant_dyn_slice(); break;
             case CFTransformations::STRIDED_SLICE: construct_constant_strided_slice(); break;
@@ -164,6 +167,7 @@ private:
     void construct_constant_logical_reduction();
     void construct_constant_concat();
     void construct_constant_gather();
+    void construct_constant_scatter_elements_update();
     void construct_constant_slice();
     void construct_constant_dyn_slice();
     void construct_constant_strided_slice();

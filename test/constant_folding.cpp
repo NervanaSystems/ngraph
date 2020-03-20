@@ -24,6 +24,30 @@
 using namespace ngraph;
 using namespace std;
 
+template <typename T>
+static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
+{
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(pos)->get_argument(0));
+    return new_const->cast_vector<T>();
+}
+
+void range_test_check(const vector<double>& values_out, const vector<double>& values_expected)
+{
+    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+void range_test_check(const vector<float>& values_out, const vector<float>& values_expected)
+{
+    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+template <typename T>
+typename std::enable_if<std::is_integral<T>::value>::type
+    range_test_check(const vector<T>& values_out, const vector<T>& values_expected)
+{
+    ASSERT_EQ(values_out, values_expected);
+}
+
 TEST(constant_folding, constant_squeeze)
 {
     Shape shape_in{2, 4, 1};
@@ -281,13 +305,6 @@ TEST(constant_folding, constant_pad_exterior)
 
     vector<int> padded_values{111, 777, 888, 111, 111};
     ASSERT_EQ(padded_values, values_out);
-}
-
-template <typename T>
-static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
-{
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(pos)->get_argument(0));
-    return new_const->get_vector<T>();
 }
 
 TEST(constant_folding, constant_unary_binary)
@@ -1751,23 +1768,6 @@ TEST(constant_folding, constant_transpose)
     ASSERT_TRUE(test::all_close_f(values_permute, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
-void range_test_check(const vector<double>& values_out, const vector<double>& values_expected)
-{
-    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
-}
-
-void range_test_check(const vector<float>& values_out, const vector<float>& values_expected)
-{
-    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
-}
-
-template <typename T>
-typename std::enable_if<std::is_integral<T>::value>::type
-    range_test_check(const vector<T>& values_out, const vector<T>& values_expected)
-{
-    ASSERT_EQ(values_out, values_expected);
-}
-
 template <typename T>
 void range_test(T start, T stop, T step, const vector<T>& values_expected)
 {
@@ -2375,4 +2375,35 @@ TEST(constant_folding, pass_property)
     auto pass = std::make_shared<ngraph::pass::ConstantFolding>();
     ASSERT_FALSE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
     ASSERT_TRUE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+}
+
+TEST(constant_folding, constant_scatter_elements_update_basic)
+{
+    const Shape data_shape{3, 3};
+    const Shape indices_shape{2, 3};
+
+    const auto data_const = op::Constant::create(
+        element::f32, data_shape, std::vector<float>(shape_size(data_shape), 0.f));
+    const auto indices_const =
+        op::Constant::create(element::i32, indices_shape, {1, 0, 2, 0, 2, 1});
+    const auto updates_const =
+        op::Constant::create(element::f32, indices_shape, {1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f});
+    const auto axis_const = op::Constant::create(element::i64, Shape{}, {0});
+
+    auto scatter_elem_updt = make_shared<op::v3::ScatterElementsUpdate>(
+        data_const, indices_const, updates_const, axis_const);
+    auto f = make_shared<Function>(scatter_elem_updt, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::ScatterElementsUpdate>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto result_node = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(result_node);
+    ASSERT_EQ(data_shape, result_node->get_output_shape(0));
+    std::vector<float> expected{2.f, 1.1f, 0.0f, 1.f, 0.0f, 2.2f, 0.f, 2.1f, 1.2f};
+    range_test_check(result_node->cast_vector<float>(), expected);
 }

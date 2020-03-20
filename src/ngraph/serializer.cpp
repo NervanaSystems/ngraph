@@ -57,6 +57,7 @@ namespace
     {
 #define VSUF0(NAME) NAME
 #define VSUF1(NAME) NAME##_v1
+#define VSUF3(NAME) NAME##_v3
 #define NGRAPH_OP(NAME, NAMESPACE, VERSION) VSUF##VERSION(NAME),
 #include "ngraph/op/op_version_tbl.hpp"
 #undef NGRAPH_OP
@@ -2661,6 +2662,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::ScatterAdd>(args[0], args[1], args[2]);
             break;
         }
+        case OP_TYPEID::ScatterElementsUpdate_v3:
+        {
+            node = make_shared<op::v3::ScatterElementsUpdate>(args[0], args[1], args[2], args[3]);
+            break;
+        }
         case OP_TYPEID::ScatterND:
         {
             node = make_shared<op::ScatterND>(args[0], args[1], args[2]);
@@ -4408,6 +4414,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::ScaleShift: { break;
     }
     case OP_TYPEID::ScatterAdd: { break;
+    }
+    case OP_TYPEID::ScatterElementsUpdate_v3: { break;
     }
     case OP_TYPEID::ScatterND: { break;
     }

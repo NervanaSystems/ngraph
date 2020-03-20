@@ -22,12 +22,12 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v3
         {
             class NGRAPH_API ScatterElementsUpdate : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"ScatterElementsUpdate", 0};
+                static constexpr NodeTypeInfo type_info{"ScatterElementsUpdate", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ScatterElementsUpdate() = default;
                 /// \brief Constructs a ScatterElementsUpdate node
@@ -45,9 +45,9 @@ namespace ngraph
                 virtual bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& inputs) const override;
             };
         }
-        using v0::ScatterElementsUpdate;
+        using v3::ScatterElementsUpdate;
     }
 }
