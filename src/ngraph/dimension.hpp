@@ -21,6 +21,7 @@
 #include <stdexcept>
 
 #include "ngraph/deprecated.hpp"
+#include "ngraph/interval.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
@@ -30,8 +31,6 @@ namespace ngraph
     ///
     /// Static dimensions may be implicitly converted from int64_t. A dynamic dimension is
     /// constructed with Dimension() or Dimension::dynamic().
-    ///
-    /// XXX: THIS CLASS IS NOT IN USE YET AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
     class NGRAPH_API Dimension
     {
     public:
@@ -39,16 +38,19 @@ namespace ngraph
         /// \param dimension Value of the dimension. Must not be equal to
         ///                  Dimension::s_dynamic_val.
         /// \throws std::invalid_argument If `dimension` == Dimension::s_dynamic_val.
-        Dimension(int64_t dimension);
+        Dimension(int64_t dimension)
+            : m_dimension(dimension)
+        {
+        }
 
         /// \brief Construct a dynamic dimension.
-        Dimension() { m_dimension = s_dynamic_val; }
+        Dimension() = default;
         /// \brief Check whether this dimension is static.
         /// \return `true` if the dimension is static, else `false`.
-        bool is_static() const { return m_dimension != s_dynamic_val; }
+        bool is_static() const { return m_dimension.size() == 1; }
         /// \brief Check whether this dimension is dynamic.
         /// \return `false` if the dimension is static, else `true`.
-        bool is_dynamic() const { return !is_static(); }
+        bool is_dynamic() const { return m_dimension.size() != 1; }
         /// \brief Convert this dimension to `int64_t`. This dimension must be static.
         /// \throws std::invalid_argument If this dimension is dynamic.
         explicit operator int64_t() const
@@ -57,7 +59,7 @@ namespace ngraph
             {
                 throw std::invalid_argument("Cannot convert dynamic dimension to int64_t");
             }
-            return m_dimension;
+            return m_dimension.get_min_val();
         }
 
         /// \brief Convert this dimension to `size_t`. This dimension must be static and
@@ -75,12 +77,7 @@ namespace ngraph
         /// \param dim The other dimension to compare this dimension to.
         /// \return `true` if this dimension and `dim` are both dynamic, or if they are both
         ///         static and equal; otherwise, `false`.
-        bool same_scheme(const Dimension& dim) const
-        {
-            return (is_dynamic() && dim.is_dynamic()) ||
-                   (is_static() && dim.is_static() && m_dimension == int64_t(dim));
-        }
-
+        bool same_scheme(const Dimension& dim) const;
         /// \brief Try to merge two Dimension objects together.
         /// \param[out] dst Reference to write the merged Dimension into.
         /// \param d1 First dimension to merge.
@@ -161,9 +158,14 @@ namespace ngraph
         /// \return A reference to `*this`, after updating `*this` to the value `*this * dim`.
         Dimension& operator*=(const Dimension& dim) { return (*this = *this * dim); }
     private:
+        Dimension(const Interval& interval)
+            : m_dimension(interval)
+        {
+        }
+
         // The actual numerical value of the dimension. s_dynamic_val is a special case,
         // representing a dynamic dimension.
-        int64_t m_dimension;
+        Interval m_dimension{0, Interval::Extent::Above};
     };
 
     /// \brief Insert a human-readable representation of a dimension into an output stream.
