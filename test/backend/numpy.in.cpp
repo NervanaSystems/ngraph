@@ -41,7 +41,6 @@
 
 #include <pybind11/embed.h>
 
-
 using namespace std;
 using namespace ngraph;
 
@@ -56,10 +55,12 @@ NGRAPH_TEST(${BACKEND_NAME}, numpy_abc)
 
     int a = 3, b = 4;
 
-    auto locals = py::dict("a"_a=a, "b"_a=b);
+    auto locals = py::dict("a"_a = a, "b"_a = b);
     py::exec(R"(
         c = a + b
-    )", py::globals(), locals);
+    )",
+             py::globals(),
+             locals);
 
     auto sum = locals["c"].cast<int>();
 
