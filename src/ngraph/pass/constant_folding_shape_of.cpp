@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <ops.hpp>
 #include "constant_folding.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 
@@ -35,7 +36,8 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
         auto arg_match = pattern_value_map[arg_label];
 
-        if (arg_match.get_partial_shape().is_static())
+        auto partial_shape = arg_match.get_partial_shape().;
+        if (partial_shape.is_static())
         {
             NGRAPH_CHECK(revalidate_and_ensure_static(m.get_match_root()));
 
@@ -45,6 +47,34 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
             replace_node(m.get_match_root(), replacement);
 
+            return true;
+        }
+        else if (partial_shape.rank().is_static())
+        {
+            auto shape_of = make_shared<op::ShapeOf>(arg_match);
+            auto dimensions = NodeVector{};
+            auto output_dimensions = vector<Dimension>(partial_shape);
+            for (size_t i = 0; i < output_dimensions.size(); ++i)
+            {
+                if (output_dimensions[i].is_static())
+                {
+                    auto value = std::vector<int64_t>{output_dimensions[i].get_length()};
+                    dimensions.push_back(make_shared<op::Constant>(element::i64, Shape{1}, value));
+                    dimensions[i]->set_friendly_name("ConstDim/" + dimensions[i]->get_name());
+                }
+                else
+                {
+                    auto index = make_shared<op::Constant>(
+                        element::i64, Shape{1}, vector<int64_t>{static_cast<int64_t>(i)});
+                    auto axis =
+                        make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{0});
+                    dimensions.push_back(make_shared<op::v1::Gather>(shape_of, index, axis));
+                    dimensions[i]->set_friendly_name("DynDim/" + dimensions[i]->get_name());
+                }
+            }
+
+            auto replacement = std::make_shared<op::Concat>(dimensions, 0);
+            replace_node(m.get_match_root(), replacement);
             return true;
         }
         else
