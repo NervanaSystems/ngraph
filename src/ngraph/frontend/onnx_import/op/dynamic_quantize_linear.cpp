@@ -121,10 +121,11 @@ namespace ngraph
                     // Delete parameters and outputs
                     for (int i = nodes.size() - 1; i >= 0; --i)
                     {
-                        std::cout << nodes.at(i)->get_name() << std::endl;
                         if (nodes.at(i)->is_output() || nodes.at(i)->is_parameter())
-                        {
+                        {   
+                            std::cout <<"Removed: "<< nodes.at(i)->get_name() << std::endl;
                             nodes.erase(nodes.begin() + i);
+                             
                         }
                     }
                     return NodeVector{nodes};

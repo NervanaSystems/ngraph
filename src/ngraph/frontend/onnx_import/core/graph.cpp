@@ -166,7 +166,7 @@ namespace ngraph
                          "nGraph does not support the following ONNX operations: ",
                          detail::to_string(unknown_operators));
 
-            // Process ONNX graph nodes, convert to nGraph nodes
+            std::cout<<" Process ONNX graph nodes, convert to nGraph nodes" <<std::endl;
             for (const auto& node_proto : m_graph_proto->node())
             {
                 m_nodes.emplace_back(node_proto, *this);
@@ -179,6 +179,7 @@ namespace ngraph
                 for (std::size_t i{0}; i < node.get_outputs_size(); ++i)
                 {
                     m_ng_node_cache[node.output(i)] = ng_nodes.at(i);
+                    std::cout<<i <<" "<<ng_nodes.at(i)->get_type_name()<<std::endl;
                 }
             }
         }
