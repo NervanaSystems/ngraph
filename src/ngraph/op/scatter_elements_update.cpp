@@ -103,7 +103,9 @@ void op::v3::ScatterElementsUpdate::validate_and_infer_types()
             "Data rank: ",
             data_rank_length,
             ", range:[",
-            -data_rank_length, ", ", data_rank_length-1,
+            -data_rank_length,
+            ", ",
+            data_rank_length - 1,
             "]. Got axis value: ",
             axis);
     }
