@@ -185,6 +185,7 @@ shared_ptr<Node> builder::opset1::reshape(const Output<Node>& value, const Shape
         ->add_provenance_group_members_above({value});
 }
 
+NGRAPH_API
 shared_ptr<Node> builder::opset1::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
 {
     const auto axes_order_const =
