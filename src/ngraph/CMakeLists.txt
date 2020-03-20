@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 set (SRC
+    assertion.cpp
     assertion.hpp
     attribute_adapter.cpp
     attribute_adapter.hpp
