@@ -31,7 +31,7 @@ ExternalProject_Add(
 ExternalProject_Get_Property(ext_pybind11 SOURCE_DIR)
 add_library(libpybind11 INTERFACE)
 if(CMAKE_VERSION VERSION_LESS 3.12)
-    find_package(PythonLib REQUIRED)
+    find_package(PythonLibs REQUIRED)
     target_include_directories(libpybind11 SYSTEM INTERFACE ${PYTHON_INCLUDE_DIRS} ${SOURCE_DIR}/include)
     target_link_libraries(libpybind11 INTERFACE ${PYTHON_LIBRARIES})
 else()
