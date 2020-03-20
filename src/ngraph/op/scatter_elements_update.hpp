@@ -26,19 +26,19 @@ namespace ngraph
         namespace v2
         {
             /// \brief Set new values to slices from inputs addressed by indices
-            class NGRAPH_API ScatterUpdate : public util::Scatter
+            class NGRAPH_API ScatterElementsUpdate : public util::Scatter
             {
             public:
-                static constexpr NodeTypeInfo type_info{"ScatterUpdate", 2};
+                static constexpr NodeTypeInfo type_info{"ScatterElementsUpdate", 2};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                ScatterUpdate() = default;
+                ScatterElementsUpdate() = default;
                 /// \param inputs Tensor
                 /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
                 /// \param updates Tensor: Must have same type as inputs
-                ScatterUpdate(const Output<Node>& inputs,
-                              const Output<Node>& indices,
-                              const Output<Node>& updates,
-                              const Output<Node>& axis);
+                ScatterElementsUpdate(const Output<Node>& inputs,
+                                      const Output<Node>& indices,
+                                      const Output<Node>& updates,
+                                      const Output<Node>& axis);
 
                 void generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                        const OutputVector& /* deltas */) override
@@ -51,6 +51,6 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
             };
         }
-        using v2::ScatterUpdate;
+        using v2::ScatterElementsUpdate;
     }
 }

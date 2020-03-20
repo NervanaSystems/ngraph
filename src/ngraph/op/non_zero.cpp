@@ -42,3 +42,8 @@ void op::v2::NonZero::validate_and_infer_types()
     set_output_size(1);
     set_output_type(0, element::i64, out_shape);
 }
+
+bool ngraph::op::v2::NonZero::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}

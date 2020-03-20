@@ -122,3 +122,13 @@ void op::v2::ROIAlign::validate_and_infer_types()
     }
     set_output_type(0, data_batch_et, result_shape);
 }
+
+bool ngraph::op::v2::ROIAlign::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("pooled_h", m_pooled_h);
+    visitor.on_attribute("pooled_w", m_pooled_w);
+    visitor.on_attribute("sampling_ratio", m_sampling_ratio);
+    visitor.on_attribute("spatial_scale", m_spatial_scale);
+    visitor.on_attribute("mode", m_mode);
+    return true;
+}

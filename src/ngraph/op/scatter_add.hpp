@@ -72,7 +72,7 @@ namespace ngraph
                 ScatterAdd(const Output<Node>& inputs,
                            const Output<Node>& indices,
                            const Output<Node>& updates,
-                           const int32_t axis = 0);
+                           const Output<Node>& axis);
 
                 void generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                        const OutputVector& /* deltas */) override

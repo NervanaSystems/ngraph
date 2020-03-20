@@ -38,6 +38,7 @@ namespace ngraph
                 /// \param data Output that produces a tensor with input data.
                 explicit NonZero(const Output<Node>& data);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;

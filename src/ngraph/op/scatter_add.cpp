@@ -85,13 +85,13 @@ constexpr NodeTypeInfo op::v2::ScatterAdd::type_info;
 shared_ptr<Node> op::v2::ScatterAdd::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<ScatterAdd>(new_args.at(0), new_args.at(1), new_args.at(2));
+    return make_shared<ScatterAdd>(new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }
 
 op::v2::ScatterAdd::ScatterAdd(const Output<Node>& inputs,
                                const Output<Node>& indices,
                                const Output<Node>& updates,
-                               const int32_t axis)
+                               const Output<Node>& axis)
     : util::Scatter(inputs, indices, updates, axis)
 {
     constructor_validate_and_infer_types();

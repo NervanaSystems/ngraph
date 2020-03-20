@@ -23,6 +23,7 @@ using namespace ngraph;
 static int INPUTS = 0;
 static int INDICES = 1;
 static int UPDATES = 2;
+static int AXIS = 3;
 
 void op::util::Scatter::validate_and_infer_types()
 {
@@ -71,9 +72,4 @@ void op::util::Scatter::validate_and_infer_types()
         this, compatible, "Updates shape must be indices_shape + inputs_shape[1:]");
 
     set_output_type(0, inputs_et, inputs_shape);
-}
-
-int32_t op::util::Scatter::get_axis() const
-{
-    return m_axis;
 }
