@@ -95,8 +95,8 @@ void op::v2::ROIAlign::validate_and_infer_types()
                               batch_indices_shape.rank());
     }
 
-    if (rois_shape.rank().is_static() and batch_indices_shape.is_static() and
-        rois_shape[0].is_static() and batch_indices_shape[0].is_static())
+    if (rois_shape.rank().is_static() && batch_indices_shape.is_static() &&
+        rois_shape[0].is_static() && batch_indices_shape[0].is_static())
     {
         NODE_VALIDATION_CHECK(this,
                               static_cast<size_t>(batch_indices_shape[0]) ==
