@@ -17,18 +17,31 @@
 
 include(ExternalProject)
 
-set(UT_PYBIND11_DIR = ${CMAKE_CURRENT_BINARY_DIR}/pybind11)
-
 ExternalProject_Add(
-        ut_pybind11
+        ext_pybind11
+        PREFIX ut_pybind11
         GIT_REPOSITORY "https://github.com/pybind/pybind11.git"
         GIT_TAG "v2.4.3"
-        SOURCE_DIR "${UT_PYBIND11_DIR}"
+        UPDATE_COMMAND ""
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
 )
 
+ExternalProject_Get_Property(ext_pybind11 SOURCE_DIR)
+add_library(libpybind11 INTERFACE)
+if(CMAKE_VERSION VERSION_LESS 3.12)
+    find_package(PythonLib REQUIRED)
+    target_include_directories(libpybind11 SYSTEM INTERFACE ${PYTHON_INCLUDE_DIRS} ${SOURCE_DIR}/include)
+    target_link_libraries(libpybind11 INTERFACE ${PYTHON_LIBRARIES})
+else()
+    find_package(Python REQUIRED COMPONENTS Development)
+    #message(STATUS "A:${Python_INCLUDE_DIRS} B:${Python_LIBRARY_DIRS} C:${Python_LIBRARIES}")
+    target_include_directories(libpybind11 SYSTEM INTERFACE ${Python_INCLUDE_DIRS} ${SOURCE_DIR}/include)
+    target_link_libraries(libpybind11 INTERFACE ${Python_LIBRARIES})
+endif()
+
+add_dependencies(libpybind11 ext_pybind11)
 
 add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
 
@@ -549,7 +562,6 @@ endforeach()
 add_executable(unit-test ${SRC})
 
 target_include_directories(unit-test PRIVATE ".")
-target_include_directories(unit-test SYSTEM PRIVATE ${UT_PYBIND11_DIR})
 
 add_definitions("-DCURDIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
 add_definitions("-DJSON_INCLUDES=\"${JSON_INCLUDE_DIR}\"")
@@ -560,6 +572,7 @@ endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
+target_link_libraries(unit-test PRIVATE ngraph libpybind11)
 
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
