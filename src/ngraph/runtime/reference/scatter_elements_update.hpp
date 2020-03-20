@@ -50,7 +50,7 @@ namespace ngraph
 
                 for (const Coordinate& indices_cord : indices_transform)
                 {
-                    const auto indices_idx{indices_transform.index(indices_cord)};
+                    const size_t indices_idx = indices_transform.index(indices_cord);
                     Coordinate out_cord(indices_cord);
                     out_cord.at(axis) = indices[indices_idx];
                     NGRAPH_CHECK(data_transform.has_source_coordinate(out_cord),
