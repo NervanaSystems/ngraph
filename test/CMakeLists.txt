@@ -14,6 +14,22 @@
 # limitations under the License.
 # ******************************************************************************
 
+
+include(ExternalProject)
+
+set(UT_PYBIND11_DIR = ${CMAKE_CURRENT_BINARY_DIR}/pybind11)
+
+ExternalProject_Add(
+        ut_pybind11
+        GIT_REPOSITORY "https://github.com/pybind/pybind11.git"
+        GIT_TAG "v2.4.3"
+        SOURCE_DIR "${UT_PYBIND11_DIR}"
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+)
+
+
 add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
 
 if(NOT NGRAPH_UNIT_TEST_ENABLE)
@@ -334,6 +350,7 @@ set(MULTI_TEST_SRC
     backend/node_name.in.cpp
     backend/not.in.cpp
     backend/numeric.in.cpp
+    backend/numpy.in.cpp
     backend/one_hot.in.cpp
     backend/pad.in.cpp
     backend/parameter_as_output.in.cpp
@@ -532,6 +549,7 @@ endforeach()
 add_executable(unit-test ${SRC})
 
 target_include_directories(unit-test PRIVATE ".")
+target_include_directories(unit-test SYSTEM PRIVATE ${UT_PYBIND11_DIR})
 
 add_definitions("-DCURDIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
 add_definitions("-DJSON_INCLUDES=\"${JSON_INCLUDE_DIR}\"")

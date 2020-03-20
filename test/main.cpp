@@ -27,7 +27,11 @@
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
 
+#include <pybind11/embed.h>
+
 using namespace std;
+
+namespace py = pybind11;
 
 int main(int argc, char** argv)
 {
@@ -62,6 +66,9 @@ int main(int argc, char** argv)
     // Initialize MLIR
     ngraph::runtime::ngmlir::initializeNGraphMLIR();
 #endif
+
+    // Setup python interpreter.
+    py::scoped_interpreter guard{};
 
     int rc = RUN_ALL_TESTS();
 
