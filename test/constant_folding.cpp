@@ -2407,3 +2407,128 @@ TEST(constant_folding, constant_scatter_elements_update_basic)
     std::vector<float> expected{2.f, 1.1f, 0.0f, 1.f, 0.0f, 2.2f, 0.f, 2.1f, 1.2f};
     range_test_check(result_node->cast_vector<float>(), expected);
 }
+
+TEST(constant_folding, constant_scatter_elements_update_negative_axis)
+{
+    const Shape data_shape{3, 3};
+    const Shape indices_shape{2, 3};
+
+    const auto data_const = op::Constant::create(
+        element::f32, data_shape, std::vector<float>(shape_size(data_shape), 0.f));
+    const auto indices_const =
+        op::Constant::create(element::i32, indices_shape, {1, 0, 2, 0, 2, 1});
+    const auto updates_const =
+        op::Constant::create(element::f32, indices_shape, {1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f});
+    const auto axis_const = op::Constant::create(element::i64, Shape{}, {-1});
+
+    auto scatter_elem_updt = make_shared<op::v3::ScatterElementsUpdate>(
+        data_const, indices_const, updates_const, axis_const);
+    auto f = make_shared<Function>(scatter_elem_updt, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::ScatterElementsUpdate>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto result_node = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(result_node);
+    ASSERT_EQ(data_shape, result_node->get_output_shape(0));
+    std::vector<float> expected{1.1f, 1.0f, 1.2f, 2.0f, 2.2f, 2.1f, 0.0f, 0.0f, 0.0f};
+    range_test_check(result_node->cast_vector<float>(), expected);
+}
+
+TEST(constant_folding, constant_scatter_elements_update_1d_axis)
+{
+    const Shape data_shape{3, 3};
+    const Shape indices_shape{2, 3};
+
+    const auto data_const = op::Constant::create(
+        element::f32, data_shape, std::vector<float>(shape_size(data_shape), 0.f));
+    const auto indices_const =
+        op::Constant::create(element::i32, indices_shape, {1, 0, 2, 0, 2, 1});
+    const auto updates_const =
+        op::Constant::create(element::f32, indices_shape, {1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f});
+    const auto axis_const = op::Constant::create(element::i64, Shape{1}, {0});
+
+    auto scatter_elem_updt = make_shared<op::v3::ScatterElementsUpdate>(
+        data_const, indices_const, updates_const, axis_const);
+    auto f = make_shared<Function>(scatter_elem_updt, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::ScatterElementsUpdate>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto result_node = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(result_node);
+    ASSERT_EQ(data_shape, result_node->get_output_shape(0));
+    std::vector<float> expected{2.f, 1.1f, 0.0f, 1.f, 0.0f, 2.2f, 0.f, 2.1f, 1.2f};
+    range_test_check(result_node->cast_vector<float>(), expected);
+}
+
+TEST(constant_folding, constant_scatter_elements_update_3d_i16)
+{
+    const Shape data_shape{3, 3, 3};
+    const Shape indices_shape{2, 2, 3};
+
+    const auto data_const = op::Constant::create(
+        element::i16, data_shape, std::vector<int16_t>(shape_size(data_shape), 0));
+    const auto indices_const =
+        op::Constant::create(element::i16, indices_shape, {1, 0, 2, 0, 2, 1, 2, 2, 2, 0, 1, 0});
+    const auto updates_const =
+        op::Constant::create(element::i16, indices_shape, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
+    const auto axis_const = op::Constant::create(element::i64, Shape{}, {1});
+
+    auto scatter_elem_updt = make_shared<op::v3::ScatterElementsUpdate>(
+        data_const, indices_const, updates_const, axis_const);
+    auto f = make_shared<Function>(scatter_elem_updt, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::ScatterElementsUpdate>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto result_node = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(result_node);
+    ASSERT_EQ(data_shape, result_node->get_output_shape(0));
+    std::vector<int16_t> expected{4, 2, 0, 1, 0, 6, 0, 5, 3, 10, 0, 12, 0, 11,
+                                  0, 7, 8, 9, 0, 0, 0, 0, 0, 0,  0, 0,  0};
+    range_test_check(result_node->cast_vector<int16_t>(), expected);
+}
+
+TEST(constant_folding, constant_scatter_elements_update_one_elem)
+{
+    const Shape data_shape{3, 3, 3};
+    const Shape indices_shape{1, 1, 1};
+    const auto input_data = std::vector<int32_t>(shape_size(data_shape), 0);
+
+    const auto data_const = op::Constant::create(element::i32, data_shape, input_data);
+    const auto indices_const = op::Constant::create(element::i32, indices_shape, {1});
+    const auto updates_const = op::Constant::create(element::i32, indices_shape, {2});
+    const auto axis_const = op::Constant::create(element::i64, Shape{}, {0});
+
+    auto scatter_elem_updt = make_shared<op::v3::ScatterElementsUpdate>(
+        data_const, indices_const, updates_const, axis_const);
+    auto f = make_shared<Function>(scatter_elem_updt, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::ScatterElementsUpdate>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto result_node = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(result_node);
+    ASSERT_EQ(data_shape, result_node->get_output_shape(0));
+    std::vector<int32_t> expected{input_data};
+    // we have updated coordinate (1, 0, 0)
+    expected.at(9) = 2;
+    range_test_check(result_node->cast_vector<int32_t>(), expected);
+}
