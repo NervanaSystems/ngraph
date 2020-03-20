@@ -75,14 +75,6 @@ void op::v3::ScatterElementsUpdate::validate_and_infer_types()
                           axis_shape);
 
     NODE_VALIDATION_CHECK(this,
-                          indices_shape.compatible(updates_shape),
-                          "Indices and updates input shapes are required to be equal. ",
-                          "Got: ",
-                          indices_shape,
-                          " and: ",
-                          updates_shape);
-
-    NODE_VALIDATION_CHECK(this,
                           indices_shape.rank().compatible(data_shape.rank()),
                           "Indices rank and data rank are required to be equal. ",
                           "Got: ",
@@ -90,19 +82,27 @@ void op::v3::ScatterElementsUpdate::validate_and_infer_types()
                           " and: ",
                           data_shape.rank());
 
+    NODE_VALIDATION_CHECK(this,
+                          indices_shape.compatible(updates_shape),
+                          "Indices and updates input shapes are required to be equal. ",
+                          "Got: ",
+                          indices_shape,
+                          " and: ",
+                          updates_shape);
+
     if (input_value(3).get_node_shared_ptr()->is_constant() && data_shape.rank().is_static())
     {
         const auto axis_input = as_type_ptr<op::v0::Constant>(input_value(3).get_node_shared_ptr());
         auto axis = axis_input->cast_vector<int64_t>().at(0);
 
-        const auto data_rank_length = data_shape.rank().get_length();
+        int64_t data_rank_length = data_shape.rank().get_length();
         NODE_VALIDATION_CHECK(
             this,
-            (-data_rank_length < axis) && (axis < data_rank_length - 1),
+            (-data_rank_length <= axis) && (axis <= data_rank_length - 1),
             "Axis value has to be in range [-r, r-1] where r is rank of data shape. ",
-            "Data rank: ",
+            " Data rank: ",
             data_rank_length,
-            "Got axis value: ",
+            " Got axis value: ",
             axis);
     }
 
