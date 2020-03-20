@@ -36,7 +36,7 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
         auto arg_match = pattern_value_map[arg_label];
 
-        auto partial_shape = arg_match.get_partial_shape().;
+        auto partial_shape = arg_match.get_partial_shape();
         if (partial_shape.is_static())
         {
             NGRAPH_CHECK(revalidate_and_ensure_static(m.get_match_root()));
