@@ -576,3 +576,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_tile_static)
         Shape{4, 6}, {0, 1, 2, 0, 1, 2, 3, 4, 5, 3, 4, 5, 0, 1, 2, 0, 1, 2, 3, 4, 5, 3, 4, 5});
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, scatter_elements_import_only)
+{
+    const auto scatter_elements = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/scatter_elements.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(scatter_elements, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+}
