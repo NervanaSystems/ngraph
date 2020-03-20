@@ -5,6 +5,11 @@ graph {
     input: "A"
     output: "B"
     op_type: "ReduceMean"
+    attribute {
+      name: "keepdims"
+      i: 0
+      type: INT
+    }
   }
   name: "compute_graph"
   input {
@@ -36,7 +41,6 @@ graph {
         elem_type: 1
         shape {
           dim {
-            dim_value: 1
           }
         }
       }

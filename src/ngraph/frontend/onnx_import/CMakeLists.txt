@@ -21,7 +21,9 @@ add_library(onnx_import_interface OBJECT
         core/node.hpp
         core/operator_set.hpp
         onnx.cpp
-        onnx.hpp)
+        onnx.hpp
+        onnx_utils.hpp
+        onnx_utils.cpp)
 
 add_library(onnx_import STATIC
         core/attribute.cpp

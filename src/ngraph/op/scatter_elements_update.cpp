@@ -75,20 +75,20 @@ void op::v3::ScatterElementsUpdate::validate_and_infer_types()
                           axis_shape);
 
     NODE_VALIDATION_CHECK(this,
-                          indices_shape.compatible(updates_shape),
-                          "Indices and updates input shapes are required to be equal. ",
-                          "Got: ",
-                          indices_shape,
-                          " and: ",
-                          updates_shape);
-
-    NODE_VALIDATION_CHECK(this,
                           indices_shape.rank().compatible(data_shape.rank()),
                           "Indices rank and data rank are required to be equal. ",
                           "Got: ",
                           indices_shape.rank(),
                           " and: ",
                           data_shape.rank());
+
+    NODE_VALIDATION_CHECK(this,
+                          indices_shape.compatible(updates_shape),
+                          "Indices and updates input shapes are required to be equal. ",
+                          "Got: ",
+                          indices_shape,
+                          " and: ",
+                          updates_shape);
 
     if (input_value(3).get_node_shared_ptr()->is_constant() && data_shape.rank().is_static())
     {
@@ -98,9 +98,9 @@ void op::v3::ScatterElementsUpdate::validate_and_infer_types()
         const auto data_rank_length = static_cast<int64_t>(data_shape.rank());
         NODE_VALIDATION_CHECK(
             this,
-            (-data_rank_length < axis) && (axis < data_rank_length - 1),
+            (-data_rank_length <= axis) && (axis <= data_rank_length - 1),
             "Axis value has to be in range [-r, r-1] where r is rank of data shape. ",
-            "Data rank: ",
+            " Data rank: ",
             data_rank_length,
             ", range:[",
             -data_rank_length,
@@ -114,9 +114,16 @@ void op::v3::ScatterElementsUpdate::validate_and_infer_types()
     set_output_type(0, data_et, data_shape);
 }
 
-shared_ptr<Node> op::v3::ScatterElementsUpdate::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::v3::ScatterElementsUpdate::clone_with_new_inputs(const OutputVector& inputs) const
 {
-    check_new_args_count(this, new_args);
+    NODE_VALIDATION_CHECK(this,
+                          inputs.size() == get_input_size(),
+                          "clone_with_new_inputs() required inputs size: ",
+                          get_input_size(),
+                          "Got: ",
+                          inputs.size());
+
     return make_shared<v3::ScatterElementsUpdate>(
-        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
+        inputs.at(0), inputs.at(1), inputs.at(2), inputs.at(3));
 }

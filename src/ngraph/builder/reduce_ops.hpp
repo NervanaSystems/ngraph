@@ -45,6 +45,7 @@ namespace ngraph
         /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
         // clang-format on
+        NGRAPH_API
         std::shared_ptr<Node> l2_norm(const Output<Node>& value, const AxisSet& reduction_axes);
 
         // clang-format off
@@ -69,6 +70,7 @@ namespace ngraph
         /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
         // clang-format on
+        NGRAPH_API
         std::shared_ptr<Node> mean(const Output<Node>& node, const AxisSet& reduction_axes);
 
         // clang-format off
@@ -98,6 +100,7 @@ namespace ngraph
         /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
         // clang-format on
+        NGRAPH_API
         std::shared_ptr<Node> std_dev(const Output<Node>& value,
                                       const AxisSet& reduction_axes,
                                       const bool bessel_correction = false);
@@ -129,6 +132,7 @@ namespace ngraph
         /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
         // clang-format on
+        NGRAPH_API
         std::shared_ptr<Node> variance(const Output<Node>& value,
                                        const AxisSet& reduction_axes,
                                        const bool bessel_correction = false);
@@ -158,6 +162,7 @@ namespace ngraph
             /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
             /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
             // clang-format on
+            NGRAPH_API
             std::shared_ptr<Node> mean(const Output<Node>& node,
                                        const AxisSet& reduction_axes,
                                        bool keep_dims = false);
@@ -189,6 +194,7 @@ namespace ngraph
             /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
             /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
             // clang-format on
+            NGRAPH_API
             std::shared_ptr<Node> variance(const Output<Node>& value,
                                            const AxisSet& reduction_axes,
                                            const bool bessel_correction = false);

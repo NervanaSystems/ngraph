@@ -45,7 +45,7 @@ namespace ngraph
                 virtual bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& inputs) const override;
             };
         }
         using v3::ScatterElementsUpdate;

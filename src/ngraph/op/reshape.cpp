@@ -118,7 +118,7 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
 {
     auto delta = deltas.at(0);
 
-    auto x_shape = input(0).get_shape();
+    auto x_shape = get_input_shape(0);
     auto x_rank = x_shape.size();
     Shape permuted_x_shape(x_rank);
     AxisVector x_input_order(x_rank);
