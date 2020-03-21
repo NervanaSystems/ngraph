@@ -140,8 +140,8 @@ Interval::value_type Interval::clip_times(value_type a, value_type b)
         return a * b;
 }
 
-Interval::value_type Interval::s_min;
-Interval::value_type Interval::s_max;
+constexpr Interval::value_type Interval::s_min;
+constexpr Interval::value_type Interval::s_max;
 
 namespace ngraph
 {
