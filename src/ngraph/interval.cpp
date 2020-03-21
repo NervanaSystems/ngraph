@@ -140,6 +140,9 @@ Interval::value_type Interval::clip_times(value_type a, value_type b)
         return a * b;
 }
 
+Interval::value_type Interval::s_min;
+Interval::value_type Interval::s_max;
+
 namespace ngraph
 {
     std::ostream& operator<<(std::ostream& str, const Interval& interval)
