@@ -168,11 +168,8 @@ void pass::ConstantFolding::construct_constant_non_zero()
         std::shared_ptr<Node> replacement;
         switch (data->get_element_type())
         {
-        // case element::Type_t::boolean: replacement = fold_constant_non_zero<char>(data, tile);
-        // break;
-        // case element::Type_t::bf16: replacement = fold_constant_tile<bfloat16>(data, tile);
-        // break;
-        // case element::Type_t::f16: replacement = fold_constant_tile<float16>(data, tile); break;
+        case element::Type_t::bf16: replacement = fold_constant_non_zero<bfloat16>(data); break;
+        case element::Type_t::f16: replacement = fold_constant_non_zero<float16>(data); break;
         case element::Type_t::f32: replacement = fold_constant_non_zero<float>(data); break;
         case element::Type_t::f64: replacement = fold_constant_non_zero<double>(data); break;
         case element::Type_t::i8: replacement = fold_constant_non_zero<int8_t>(data); break;
@@ -183,12 +180,10 @@ void pass::ConstantFolding::construct_constant_non_zero()
         case element::Type_t::u16: replacement = fold_constant_non_zero<uint16_t>(data); break;
         case element::Type_t::u32: replacement = fold_constant_non_zero<uint32_t>(data); break;
         case element::Type_t::u64: replacement = fold_constant_non_zero<uint64_t>(data); break;
+        case element::Type_t::u1:
         case element::Type_t::boolean:
-        case element::Type_t::bf16:
-        case element::Type_t::f16:
         case element::Type_t::dynamic:
         case element::Type_t::undefined:
-        case element::Type_t::u1:
             NGRAPH_CHECK(false, "Unsupported data type in NonZero constant folding");
             break;
         }
