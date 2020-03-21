@@ -2107,6 +2107,18 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_1d)
     test_non_zero_constant_folding(fn, {1, 2, 4}, Shape{1, 3});
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_1d_float)
+{
+    const auto fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/non_zero_1d_float.prototxt"));
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(fn);
+
+    test_non_zero_constant_folding(fn, {0, 1, 3, 4, 5, 6, 7, 8, 9});
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_3d)
 {
     const auto fn = onnx_import::import_onnx_model(
