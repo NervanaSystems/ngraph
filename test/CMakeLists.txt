@@ -157,6 +157,7 @@ set(SRC
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
     type_prop/non_max_suppression.cpp
+    type_prop/non_zero.cpp
     type_prop/normalize.cpp
     type_prop/one_hot.cpp
     type_prop/pad.cpp
