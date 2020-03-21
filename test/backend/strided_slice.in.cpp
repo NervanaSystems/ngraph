@@ -210,3 +210,48 @@ NGRAPH_TEST(${BACKEND_NAME}, strided_slice_stride_optional)
                                                           Shape{1, 4},
                                                           std::vector<uint32_t>{20, 21, 22, 23});
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, _strided_slice_test__)
+{
+    const Shape input_shape{5, 6, 7};
+    std::vector<float> input_values(shape_size(input_shape));
+    std::iota(input_values.begin(), input_values.end(), 0);
+
+    vector<int64_t> begin_vec{1, 3};
+    vector<int64_t> end_vec{3, 4};
+
+    vector<int64_t> begin_mask{1, 0, 0};
+    vector<int64_t> end_mask{1, 0, 0};
+
+    auto arg = std::make_shared<op::Parameter>(element::f32, input_shape);
+    auto begin_op = make_shared<ngraph::op::Parameter>(element::i64, Shape{begin_vec.size()});
+    auto end_op = make_shared<ngraph::op::Parameter>(element::i64, Shape{end_vec.size()});
+
+    auto strided_slice =
+        std::make_shared<op::v1::StridedSlice>(arg, begin_op, end_op, begin_mask, end_mask);
+
+    auto f = std::make_shared<Function>(NodeVector{strided_slice},
+                                        ParameterVector{arg, begin_op, end_op});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+    auto ex = backend->compile(f);
+
+    auto arg_tensor = backend->create_tensor(element::f32, input_shape);
+    auto begin_tensor = backend->create_tensor(element::i64, Shape{begin_vec.size()});
+    auto end_tensor = backend->create_tensor(element::i64, Shape{end_vec.size()});
+
+    copy_data(arg_tensor, input_values);
+    copy_data(begin_tensor, begin_vec);
+    copy_data(end_tensor, end_vec);
+
+    auto output = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+
+    ex->call_with_validate({output}, {arg_tensor, begin_tensor, end_tensor});
+
+    auto output_values = read_vector<float>(output);
+    for (int i = 0; i < output_values.size(); ++i)
+    {
+        std::cout << output_values[i] << " ";
+    }
+    std::cout << "/n Shape: " << output->get_shape() << "/n";
+}

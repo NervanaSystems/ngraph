@@ -45,6 +45,19 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+namespace
+{
+    shared_ptr<Node> get_default_strides(const Output<Node>& begin, const Output<Node>& end)
+    {
+        // TODO SHAPE ASSERT
+        // TODO CHECK END
+        const auto strides_length = begin.get_partial_shape()[0].get_length();
+
+        return op::Constant::create(
+            element::i64, Shape{strides_length}, vector<int64_t>(strides_length, 1));
+    }
+}
+
 op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
                                    const Output<Node>& begin,
                                    const Output<Node>& end,
@@ -56,9 +69,7 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     : StridedSlice(data,
                    begin,
                    end,
-                   op::Constant::create(element::i64,
-                                        Shape{begin_mask.size()},
-                                        vector<int64_t>(begin_mask.size(), 1)),
+                   get_default_strides(begin, end),
                    begin_mask,
                    end_mask,
                    new_axis_mask,
@@ -139,17 +150,39 @@ void op::v1::StridedSlice::validate_and_infer_types()
 
     auto begin_const = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
     auto end_const = as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
-    auto strides = as_type_ptr<op::Constant>(input_value(3).get_node_shared_ptr());
+    auto strides_const = as_type_ptr<op::Constant>(input_value(3).get_node_shared_ptr());
 
-    if (begin_const && end_const && strides)
+    if (begin_const && end_const && strides_const && data_rank.is_static())
     {
+        auto begin = begin_const->get_vector<int64_t>();
+        auto end = end_const->get_vector<int64_t>();
+        auto strides = strides_const->get_vector<int64_t>();
+        const auto begin_mask = convert_mask_to_axis_set(get_begin_mask());
+        const auto end_mask = convert_mask_to_axis_set(get_end_mask());
+
+        for (const auto& mask_axis : begin_mask)
+        {
+            if (begin.size() < data_rank.get_length())
+            {
+                begin.insert(std::next(begin.begin(), mask_axis), 0);
+                strides.insert(std::next(strides.begin(), mask_axis), 1);
+            }
+        }
+
+        for (const auto& mask_axis : end_mask)
+        {
+            if (end.size() < data_rank.get_length())
+            {
+                end.insert(std::next(end.begin(), mask_axis), 0);
+            }
+        }
         set_output_type(0,
                         get_input_element_type(0),
                         infer_slice_shape(this,
                                           get_input_partial_shape(0),
-                                          begin_const->cast_vector<int64_t>(),
-                                          end_const->cast_vector<int64_t>(),
-                                          strides->cast_vector<int64_t>(),
+                                          begin,
+                                          end,
+                                          strides,
                                           convert_mask_to_axis_set(get_begin_mask()),
                                           convert_mask_to_axis_set(get_end_mask()),
                                           convert_mask_to_axis_set(get_new_axis_mask()),

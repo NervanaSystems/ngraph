@@ -20,6 +20,7 @@
 
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
 #include "utils/common.hpp"
 
 namespace
@@ -36,6 +37,61 @@ namespace ngraph
     {
         namespace op
         {
+            namespace set_10
+            {
+                namespace
+                {
+                    std::vector<int64_t> axes_to_mask(const std::vector<int64_t>& axes)
+                    {
+                        std::vector<int64_t> mask(
+                            *std::max_element(std::begin(axes), std::end(axes)) + 1, 1);
+                        for (int i = 0; i < axes.size(); ++i)
+                        {
+                            mask[axes[i]] = 0;
+                        }
+                        return mask;
+                    }
+                }
+
+                NodeVector slice(const Node& node)
+                {
+                    NodeVector inputs{node.get_ng_inputs()};
+                    const auto data = inputs.at(0);
+                    const size_t data_rank = data->get_output_partial_shape(0).rank().get_length();
+
+                    const auto starts = inputs.at(1);
+                    const auto ends = inputs.at(2);
+
+                    // Slice is calculated over all axes as default
+                    std::shared_ptr<ngraph::Node> axes;
+                    if (inputs.size() == 4) // axes input provided
+                    {
+                        axes = inputs.at(3);
+                        NGRAPH_CHECK(axes->is_constant(), "Axes input must be constant");
+                    }
+                    else
+                    {
+                        axes = default_opset::Constant::create(
+                            element::i64,
+                            {data_rank},
+                            common::get_monotonic_range<int64_t>(data_rank));
+                    }
+                    const auto axes_const = as_type_ptr<default_opset::Constant>(axes);
+                    const auto begin_end_mask = axes_to_mask(axes_const->get_vector<int64_t>());
+
+                    if (inputs.size() == 5) // steps input provided
+                    {
+                        const auto steps = inputs.at(4);
+                        return {std::make_shared<default_opset::StridedSlice>(
+                            data, starts, ends, steps, begin_end_mask, begin_end_mask)};
+                    }
+                    else
+                    {
+                        return {std::make_shared<default_opset::StridedSlice>(
+                            data, starts, ends, begin_end_mask, begin_end_mask)};
+                    }
+                }
+            } // namespace set_10
             namespace set_1
             {
                 NodeVector slice(const Node& node)
