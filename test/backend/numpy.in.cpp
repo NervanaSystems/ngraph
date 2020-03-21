@@ -40,6 +40,7 @@
 #include "util/test_tools.hpp"
 
 #include <pybind11/embed.h>
+#include <pybind11/numpy.h>
 
 using namespace std;
 using namespace ngraph;
@@ -66,3 +67,46 @@ NGRAPH_TEST(${BACKEND_NAME}, numpy_abc)
 
     EXPECT_TRUE(sum == a + b);
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, numpy_add_abc)
+{
+    Shape shape{3,3};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, shape);
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    shared_ptr<runtime::Tensor> t_a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> t_b = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> t_result = backend->create_tensor(element::i32, shape);
+
+    test::NDArray<int32_t,2> a = {{1,1,1},{2,2,2},{3,3,3}};
+    test::NDArray<int32_t,2> b = {{3,3,3},{2,2,2},{1,1,1}};
+
+    copy_data(t_a, a.get_vector());
+    copy_data(t_b, b.get_vector());
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({t_result}, {t_a, t_b});
+
+    // auto locals = py::dict("a"_a = a, "b"_a = b);
+    auto locals = py::dict();
+    py::exec(R"(
+import numpy as np
+
+a = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]], dtype=np.int32)
+b = np.array([[3, 3, 3], [2, 2, 2], [1, 1, 1]], dtype=np.int32)
+c = a + b
+result = c.flatten();
+    )",
+             py::globals(),
+             locals);
+
+    auto sum = locals["result"].cast<py::array_t<int32_t>>();
+    auto buf = sum.request();
+    vector<int32_t> n_result;
+    n_result.assign((int32_t*)buf.ptr, (int32_t*)buf.ptr + buf.size);
+    EXPECT_TRUE(test::all_close(read_vector<int32_t>(t_result), n_result));
+}
+
