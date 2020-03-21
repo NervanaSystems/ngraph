@@ -70,7 +70,7 @@ NGRAPH_TEST(${BACKEND_NAME}, numpy_abc)
 
 NGRAPH_TEST(${BACKEND_NAME}, numpy_add_abc)
 {
-    Shape shape{3,3};
+    Shape shape{3, 3};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
     auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
@@ -81,8 +81,8 @@ NGRAPH_TEST(${BACKEND_NAME}, numpy_add_abc)
     shared_ptr<runtime::Tensor> t_b = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> t_result = backend->create_tensor(element::i32, shape);
 
-    test::NDArray<int32_t,2> a = {{1,1,1},{2,2,2},{3,3,3}};
-    test::NDArray<int32_t,2> b = {{3,3,3},{2,2,2},{1,1,1}};
+    test::NDArray<int32_t, 2> a = {{1, 1, 1}, {2, 2, 2}, {3, 3, 3}};
+    test::NDArray<int32_t, 2> b = {{3, 3, 3}, {2, 2, 2}, {1, 1, 1}};
 
     copy_data(t_a, a.get_vector());
     copy_data(t_b, b.get_vector());
@@ -109,4 +109,3 @@ result = c.flatten();
     n_result.assign((int32_t*)buf.ptr, (int32_t*)buf.ptr + buf.size);
     EXPECT_TRUE(test::all_close(read_vector<int32_t>(t_result), n_result));
 }
-
