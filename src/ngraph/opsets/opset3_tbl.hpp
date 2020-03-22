@@ -22,3 +22,4 @@
 #endif
 
 #include "opset2_tbl.hpp"
+NGRAPH_OP(NonZero, ngraph::op::v3)
