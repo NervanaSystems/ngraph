@@ -14,26 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pattern/op/skip.hpp"
+#include "ngraph/pattern/op/any_output.hpp"
 #include "ngraph/pattern/matcher.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo pattern::op::Skip::type_info;
+constexpr NodeTypeInfo pattern::op::AnyOutput::type_info;
 
-const NodeTypeInfo& pattern::op::Skip::get_type_info() const
+const NodeTypeInfo& pattern::op::AnyOutput::get_type_info() const
 {
     return type_info;
 }
 
-bool pattern::op::Skip::match_value(Matcher* matcher,
-                                    const Output<Node>& pattern_value,
-                                    const Output<Node>& graph_value)
+bool pattern::op::AnyOutput::match_value(Matcher* matcher,
+                                         const Output<Node>& pattern_value,
+                                         const Output<Node>& graph_value)
 {
-    matcher->add_node(graph_value);
-    return m_predicate(graph_value)
-               ? matcher->match_arguments(pattern_value.get_node(),
-                                          graph_value.get_node_shared_ptr())
-               : matcher->match_value(input_value(0), graph_value);
+    return input_value(0).get_node()->match_node(matcher, graph_value);
 }

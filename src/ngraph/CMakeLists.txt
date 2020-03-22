@@ -572,6 +572,8 @@ set (SRC
     pattern/matcher.hpp
     pattern/op/any.cpp
     pattern/op/any.hpp
+    pattern/op/any_output.cpp
+    pattern/op/any_output.hpp
     pattern/op/any_of.cpp
     pattern/op/any_of.hpp
     pattern/op/branch.cpp
