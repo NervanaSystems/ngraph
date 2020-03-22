@@ -79,7 +79,7 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
     const auto scores_ps = get_input_partial_shape(1);
     if (boxes_ps.is_dynamic() || scores_ps.is_dynamic())
     {
-        set_output_type(0, get_input_element_type(0), PartialShape{Dimension::dynamic(), 3});
+        set_output_type(0, element::i64, PartialShape{Dimension::dynamic(), 3});
         return;
     }
 
