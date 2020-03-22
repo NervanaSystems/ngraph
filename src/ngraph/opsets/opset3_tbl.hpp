@@ -14,13 +14,15 @@
 // limitations under the License.
 //*****************************************************************************
 
+// This collection contains one entry for each new op on top of the opset1.
+
 #ifndef NGRAPH_OP
 #warning "NGRAPH_OP not defined"
 #define NGRAPH_OP(x, y)
 #endif
 
-#include "opset1_tbl.hpp"
-NGRAPH_OP(Gelu, ngraph::op::v0)
-NGRAPH_OP(BatchToSpace, ngraph::op::v1)
-NGRAPH_OP(SpaceToBatch, ngraph::op::v1)
-
+#include "opset2_tbl.hpp"
+NGRAPH_OP(NonZero, ngraph::op::v3)
+NGRAPH_OP(ScatterUpdate, ngraph::op::v3)
+NGRAPH_OP(ScatterElementsUpdate, ngraph::op::v3)
+NGRAPH_OP(ROIAlign, ngraph::op::v3)

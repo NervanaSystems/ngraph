@@ -69,7 +69,7 @@ void pass::ConstantFolding::construct_constant_non_zero()
 {
     auto const_op = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
-    auto non_zero_op = make_shared<op::v2::NonZero>(const_op);
+    auto non_zero_op = make_shared<op::v3::NonZero>(const_op);
 
     auto constant_non_zero_callback = [const_op](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_non_zero_callback against node = "
@@ -77,7 +77,7 @@ void pass::ConstantFolding::construct_constant_non_zero()
 
         auto pattern_map = m.get_pattern_map();
         auto constant_node = static_pointer_cast<op::Constant>(pattern_map[const_op]);
-        auto non_zero_node = static_pointer_cast<op::v2::NonZero>(m.get_match_root());
+        auto non_zero_node = static_pointer_cast<op::v3::NonZero>(m.get_match_root());
 
         std::shared_ptr<op::Constant> replacement;
 

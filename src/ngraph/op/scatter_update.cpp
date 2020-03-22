@@ -20,16 +20,16 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v2::ScatterUpdate::type_info;
+constexpr NodeTypeInfo op::v3::ScatterUpdate::type_info;
 
-shared_ptr<Node> op::v2::ScatterUpdate::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v3::ScatterUpdate::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ScatterUpdate>(
         new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }
 
-op::v2::ScatterUpdate::ScatterUpdate(const Output<Node>& inputs,
+op::v3::ScatterUpdate::ScatterUpdate(const Output<Node>& inputs,
                                      const Output<Node>& indices,
                                      const Output<Node>& updates,
                                      const Output<Node>& axis)
@@ -38,7 +38,7 @@ op::v2::ScatterUpdate::ScatterUpdate(const Output<Node>& inputs,
     constructor_validate_and_infer_types();
 }
 
-bool ngraph::op::v2::ScatterUpdate::visit_attributes(AttributeVisitor& visitor)
+bool ngraph::op::v3::ScatterUpdate::visit_attributes(AttributeVisitor& visitor)
 {
     return true;
 }

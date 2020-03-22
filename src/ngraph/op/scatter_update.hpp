@@ -23,13 +23,13 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v2
+        namespace v3
         {
             /// \brief Set new values to slices from inputs addressed by indices
             class NGRAPH_API ScatterUpdate : public util::Scatter
             {
             public:
-                static constexpr NodeTypeInfo type_info{"ScatterUpdate", 2};
+                static constexpr NodeTypeInfo type_info{"ScatterUpdate", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ScatterUpdate() = default;
                 /// \param inputs Tensor
@@ -51,6 +51,6 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
             };
         }
-        using v2::ScatterUpdate;
+        using v3::ScatterUpdate;
     }
 }

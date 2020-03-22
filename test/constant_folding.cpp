@@ -2381,14 +2381,14 @@ TEST(constant_folding, constant_non_zero_1D)
 {
     vector<int> values_in{0, 1, 0, 1};
     auto data = make_shared<op::Constant>(element::i32, Shape{4}, values_in);
-    auto non_zero = make_shared<op::v2::NonZero>(data);
+    auto non_zero = make_shared<op::v3::NonZero>(data);
     auto f = make_shared<Function>(non_zero, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::v2::NonZero>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
@@ -2404,14 +2404,14 @@ TEST(constant_folding, constant_non_zero_2D)
 {
     vector<int> values_in{1, 0, 0, 0, 1, 0, 1, 1, 0};
     auto data = make_shared<op::Constant>(element::i32, Shape{3, 3}, values_in);
-    auto non_zero = make_shared<op::v2::NonZero>(data);
+    auto non_zero = make_shared<op::v3::NonZero>(data);
     auto f = make_shared<Function>(non_zero, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::v2::NonZero>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
@@ -2427,14 +2427,14 @@ TEST(constant_folding, constant_non_zero_3D)
 {
     vector<int> values_in{1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0};
     auto data = make_shared<op::Constant>(element::i32, Shape{2, 3, 3}, values_in);
-    auto non_zero = make_shared<op::v2::NonZero>(data);
+    auto non_zero = make_shared<op::v3::NonZero>(data);
     auto f = make_shared<Function>(non_zero, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::v2::NonZero>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));

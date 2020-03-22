@@ -24,13 +24,13 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v2
+        namespace v3
         {
             /// \brief ROIAlign operation.
             class NGRAPH_API ROIAlign : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"ROIAlign", 2};
+                static constexpr NodeTypeInfo type_info{"ROIAlign", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a ROIAlign operation.
                 ROIAlign() = default;
@@ -62,6 +62,6 @@ namespace ngraph
                 std::string m_mode;
             };
         }
-        using v2::ROIAlign;
+        using v3::ROIAlign;
     }
 }

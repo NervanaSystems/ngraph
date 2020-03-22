@@ -20,9 +20,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v2::ROIAlign::type_info;
+constexpr NodeTypeInfo op::v3::ROIAlign::type_info;
 
-shared_ptr<Node> op::v2::ROIAlign::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v3::ROIAlign::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ROIAlign>(new_args.at(0),
@@ -35,7 +35,7 @@ shared_ptr<Node> op::v2::ROIAlign::copy_with_new_args(const NodeVector& new_args
                                  m_mode);
 }
 
-op::v2::ROIAlign::ROIAlign(const Output<Node>& data,
+op::v3::ROIAlign::ROIAlign(const Output<Node>& data,
                            const Output<Node>& rois,
                            const Output<Node>& batch_indices,
                            const size_t pooled_h,
@@ -53,7 +53,7 @@ op::v2::ROIAlign::ROIAlign(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-void op::v2::ROIAlign::validate_and_infer_types()
+void op::v3::ROIAlign::validate_and_infer_types()
 {
     const PartialShape& data_shape = get_input_partial_shape(0);
     const PartialShape& rois_shape = get_input_partial_shape(1);
@@ -123,7 +123,7 @@ void op::v2::ROIAlign::validate_and_infer_types()
     set_output_type(0, data_batch_et, result_shape);
 }
 
-bool ngraph::op::v2::ROIAlign::visit_attributes(AttributeVisitor& visitor)
+bool ngraph::op::v3::ROIAlign::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("pooled_h", m_pooled_h);
     visitor.on_attribute("pooled_w", m_pooled_w);

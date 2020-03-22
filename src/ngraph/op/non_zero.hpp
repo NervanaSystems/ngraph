@@ -22,14 +22,14 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v2
+        namespace v3
         {
             /// \brief Determine indices of non-zero input elements.
             ///
             class NGRAPH_API NonZero : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"NonZero", 2};
+                static constexpr NodeTypeInfo type_info{"NonZero", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 NonZero() = default;
 
