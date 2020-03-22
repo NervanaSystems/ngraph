@@ -81,3 +81,20 @@ const ngraph::OpSet& ngraph::get_opset2()
     }
     return opset;
 }
+
+const ngraph::OpSet& ngraph::get_opset3()
+{
+    static std::mutex init_mutex;
+    static OpSet opset;
+    if (opset.size() == 0)
+    {
+        std::lock_guard<std::mutex> guard(init_mutex);
+        if (opset.size() == 0)
+        {
+#define NGRAPH_OP(NAME, NAMESPACE) opset.insert<NAMESPACE::NAME>();
+#include "ngraph/opsets/opset3_tbl.hpp"
+#undef NGRAPH_OP
+        }
+    }
+    return opset;
+}
