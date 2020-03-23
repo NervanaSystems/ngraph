@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <ngraph/ngraph_visibility.hpp>
+
 namespace ngraph
 {
     class State
