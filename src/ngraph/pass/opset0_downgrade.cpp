@@ -319,8 +319,7 @@ namespace
         }
         else
         {
-            NGRAPH_CHECK(replacement_node,
-                         "Unable to convert Reshape:v1 with dynamic shape.");
+            NGRAPH_CHECK(replacement_node, "Unable to convert Reshape:v1 with dynamic shape.");
         }
 
         replace_node(node, replacement_node);
