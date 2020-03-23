@@ -2855,7 +2855,6 @@ TEST(type_prop, conv_bprop_data_v1_output_partial_shape_dynamic_static_rank)
     auto conv1 = make_shared<op::v1::ConvolutionBackpropData>(
         deltas, filters, strides, padding_begin, padding_end, dilations);
 
-    std::cout << "Shape: " << conv1->get_output_partial_shape(0) << std::endl;
     ASSERT_TRUE(conv1->get_output_partial_shape(0).rank().is_static());
     ASSERT_TRUE(conv1->get_output_partial_shape(0).rank().same_scheme(Rank{4}));
     ASSERT_TRUE(conv1->get_output_partial_shape(0).is_dynamic());
