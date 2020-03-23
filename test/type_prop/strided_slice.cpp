@@ -167,7 +167,7 @@ TEST(type_prop, strided_slice_default_stride)
     auto begin = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
     auto end = make_shared<op::Parameter>(element::i64, Shape{2});
     auto strided_slice = make_shared<op::v1::StridedSlice>(
-        data, begin, end, vector<int64_t>{1, 0, 1, 0}, vector<int64_t>{1, 0, 1, 0});
+        data, begin, end, vector<int64_t>{0, 0}, vector<int64_t>{0, 0});
 
     ASSERT_TRUE(strided_slice->input_value(3).get_partial_shape().compatible(PartialShape{2}));
 
@@ -175,11 +175,11 @@ TEST(type_prop, strided_slice_default_stride)
     {
         end = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
         strided_slice = make_shared<op::v1::StridedSlice>(
-            data, begin, end, vector<int64_t>{1, 0, 1, 0}, vector<int64_t>{1, 0, 1, 0});
+            data, begin, end, vector<int64_t>{0, 0}, vector<int64_t>{0, 0});
         // Should have thrown, so fail if it didn't
         FAIL() << "Unknown data to calculate default strides exception not thrown.";
     }
-    catch (const NodeValidationFailure& error)
+    catch (const CheckFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("First dimension of begin or end inputs must be static in "

@@ -45,36 +45,41 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v1::StridedSlice::calculate_default_strides(const Output<Node>& begin,
-                                                                 const Output<Node>& end) const
+namespace
 {
-    const auto begin_pshape = begin.get_partial_shape();
-    const auto end_pshape = end.get_partial_shape();
-    const bool is_begin_length_static =
-        begin_pshape.rank().is_static() && begin_pshape.rank().get_length() == 1
-            ? begin_pshape[0].is_static()
-            : false;
-    const bool is_end_length_static =
-        end_pshape.rank().is_static() && end_pshape.rank().get_length() == 1
-            ? end_pshape[0].is_static()
-            : false;
-    NODE_VALIDATION_CHECK(this,
-                          is_begin_length_static || is_end_length_static,
-                          "First dimension of begin or end inputs must be static in order to "
-                          "calculate default strides value");
-
-    size_t strides_length = 0;
-    if (is_begin_length_static)
+    shared_ptr<Node> calculate_default_strides(const Output<Node>& begin, const Output<Node>& end)
     {
-        strides_length = begin_pshape[0].get_length();
-    }
-    else if (is_end_length_static)
-    {
-        strides_length = end_pshape[0].get_length();
-    }
+        const auto begin_pshape = begin.get_partial_shape();
+        bool is_begin_length_static = false;
+        if (begin_pshape.rank().is_static() && begin_pshape.rank().get_length() == 1)
+        {
+            is_begin_length_static = begin_pshape[0].is_static();
+        }
 
-    return op::Constant::create(
-        element::i64, Shape{strides_length}, vector<int64_t>(strides_length, 1));
+        const auto end_pshape = end.get_partial_shape();
+        bool is_end_length_static = false;
+        if (end_pshape.rank().is_static() && end_pshape.rank().get_length() == 1)
+        {
+            is_end_length_static = end_pshape[0].is_static();
+        }
+
+        NGRAPH_CHECK(is_begin_length_static || is_end_length_static,
+                     "First dimension of begin or end inputs must be static in order to "
+                     "calculate default strides value");
+
+        size_t strides_length = 0;
+        if (is_begin_length_static)
+        {
+            strides_length = begin_pshape[0].get_length();
+        }
+        else if (is_end_length_static)
+        {
+            strides_length = end_pshape[0].get_length();
+        }
+
+        return op::Constant::create(
+            element::i64, Shape{strides_length}, vector<int64_t>(strides_length, 1));
+    }
 }
 
 op::v1::StridedSlice::StridedSlice(const Output<Node>& data,

@@ -108,8 +108,6 @@ namespace ngraph
 
             private:
                 AxisSet convert_mask_to_axis_set(const std::vector<int64_t>& mask) const;
-                std::shared_ptr<Node> calculate_default_strides(const Output<Node>& begin,
-                                                                const Output<Node>& end) const;
 
                 std::vector<int64_t> m_begin_mask;
                 std::vector<int64_t> m_end_mask;
