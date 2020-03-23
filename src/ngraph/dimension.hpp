@@ -165,7 +165,7 @@ namespace ngraph
 
         // The actual numerical value of the dimension. s_dynamic_val is a special case,
         // representing a dynamic dimension.
-        Interval m_dimension{0, Interval::Extent::Above};
+        Interval m_dimension{0, Interval::s_max};
     };
 
     /// \brief Insert a human-readable representation of a dimension into an output stream.

@@ -26,6 +26,12 @@
 
 namespace ngraph
 {
+    /// \brief Interval arithmetic
+    ///
+    /// An interval is a set of contiguous intgers. The values s_min and s_max act like negative and
+    /// positive infinity. The addition, subtraction, or multiplication of intervals is the interval
+    /// of the sums, differences, or products of the two intervals. An empty interval is
+    /// canonicalized to [s_max, s_min].
     class NGRAPH_API Interval
     {
     public:
@@ -40,15 +46,8 @@ namespace ngraph
         /// \brief Closed interval {x|min_val <= x <= max_val}
         Interval(value_type min_val, value_type max_val);
 
-        enum class Extent
-        {
-            Exact,
-            Below,
-            Above
-        };
-
         /// \brief One-value interval
-        Interval(value_type val, Extent extent = Extent::Exact);
+        Interval(value_type val);
 
         Interval& operator=(const Interval& interval) = default;
 
@@ -90,15 +89,16 @@ namespace ngraph
         /// \bried True if this interval includes all the values in interval
         bool contains(const Interval& interval) const;
 
-    protected:
-        static value_type clip(value_type value);
-        static value_type clip_times(value_type a, value_type b);
-
-    private:
-        // Give ourselves a little room for overflow
-        static constexpr value_type s_max{static_cast<value_type>(1) << 60};
+        static constexpr value_type s_max{std::numeric_limits<value_type>::max()};
         static constexpr value_type s_min{-s_max};
 
+    protected:
+        void canonicalize();
+        static value_type clip(value_type value);
+        static value_type clip_times(value_type a, value_type b);
+        static value_type clip_add(value_type a, value_type b);
+
+    private:
         value_type m_min_val{s_min};
         value_type m_max_val{s_max};
     };
