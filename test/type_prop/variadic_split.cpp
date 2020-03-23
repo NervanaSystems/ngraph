@@ -28,10 +28,10 @@ TEST(type_prop, variadic_split)
     const auto splits = op::Constant::create<int64_t>(element::i64, Shape{2}, {2, 4});
     const auto split = make_shared<op::v1::VariadicSplit>(data, axis, splits);
     EXPECT_EQ(split->outputs().size(), 2);
-    EXPECT_EQ(split->output(0).get_shape(), (Shape{2, 2}));
-    EXPECT_EQ(split->output(1).get_shape(), (Shape{2, 4}));
-    EXPECT_EQ(split->output(0).get_element_type(), element::i32);
-    EXPECT_EQ(split->output(1).get_element_type(), element::i32);
+    EXPECT_EQ(split->get_output_shape(0), (Shape{2, 2}));
+    EXPECT_EQ(split->get_output_shape(1), (Shape{2, 4}));
+    EXPECT_EQ(split->get_output_element_type(0), element::i32);
+    EXPECT_EQ(split->get_output_element_type(1), element::i32);
 
     EXPECT_EQ(make_shared<op::v1::VariadicSplit>(
                   make_shared<op::Parameter>(element::i32, Shape{12, 6}),

@@ -87,9 +87,6 @@
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/util.hpp"
 
-extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
-                                                                       ngraph::AxisVector order);
-
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
                            std::shared_ptr<ngraph::Node> arg,
                            bool& transpose_w,
@@ -792,7 +789,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
         }
 
         std::vector<size_t> vec{0};
-        for (size_t i = 2; i < pattern_map[input]->output(0).get_shape().size(); i++)
+        for (size_t i = 2; i < pattern_map[input]->get_output_shape(0).size(); i++)
         {
             vec.push_back(i);
         }

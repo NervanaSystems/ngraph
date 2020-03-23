@@ -247,7 +247,7 @@ size_t Function::get_graph_size() const
         total_size += sizeof(*node);
         if (node->description() == "Constant")
         {
-            const Shape& shape = node->output(0).get_shape();
+            const Shape& shape = node->get_output_shape(0);
             size_t const_size = node->output(0).get_element_type().size();
             if (shape.size() == 0)
             {
@@ -255,7 +255,7 @@ size_t Function::get_graph_size() const
             }
             else
             {
-                total_size += (const_size * shape_size(node->output(0).get_shape()));
+                total_size += (const_size * shape_size(node->get_output_shape(0)));
             }
         }
     }
