@@ -85,6 +85,8 @@ namespace ngraph
 
         using v0::Subtract;
     } // namespace op
+
+    NGRAPH_API
     std::shared_ptr<ngraph::Node> operator-(const Output<ngraph::Node> arg0,
                                             const Output<ngraph::Node> arg1);
 } // namespace ngraph

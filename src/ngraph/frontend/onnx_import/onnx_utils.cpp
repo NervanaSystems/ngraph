@@ -14,41 +14,21 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include <sstream>
-#include <stdexcept>
-
-#include <ngraph/ngraph_visibility.hpp>
+#include "onnx_utils.hpp"
+#include "ops_bridge.hpp"
 
 namespace ngraph
 {
-    /// Base error for ngraph runtime errors.
-    class NGRAPH_API ngraph_error : public std::runtime_error
+    namespace onnx_import
     {
-    public:
-        explicit ngraph_error(const std::string& what_arg)
-            : std::runtime_error(what_arg)
+        void register_operator(const std::string& name,
+                               std::int64_t version,
+                               const std::string& domain,
+                               Operator fn)
         {
+            OperatorsBridge::register_operator(name, version, domain, std::move(fn));
         }
 
-        explicit ngraph_error(const char* what_arg)
-            : std::runtime_error(what_arg)
-        {
-        }
+    } // namespace onnx_import
 
-        explicit ngraph_error(const std::stringstream& what_arg)
-            : std::runtime_error(what_arg.str())
-        {
-        }
-    };
-
-    class NGRAPH_API unsupported_op : public std::runtime_error
-    {
-    public:
-        unsupported_op(const std::string& what_arg)
-            : std::runtime_error(what_arg)
-        {
-        }
-    };
-}
+} // namespace ngraph

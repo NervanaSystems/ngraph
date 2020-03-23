@@ -574,6 +574,8 @@ set (SRC
     pattern/matcher.hpp
     pattern/op/any.cpp
     pattern/op/any.hpp
+    pattern/op/any_output.cpp
+    pattern/op/any_output.hpp
     pattern/op/any_of.cpp
     pattern/op/any_of.hpp
     pattern/op/branch.cpp
@@ -659,6 +661,11 @@ if (NGRAPH_STATIC_LIB_ENABLE)
 else()
     add_library(ngraph SHARED ${SRC})
 endif()
+
+set_target_properties(ngraph PROPERTIES
+                      CXX_VISIBILITY_PRESET hidden
+                      C_VISIBILITY_PRESET hidden
+                      VISIBILITY_INLINES_HIDDEN ON)
 
 if(NOT NGRAPH_JSON_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
