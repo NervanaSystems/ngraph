@@ -45,17 +45,36 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-namespace
+shared_ptr<Node> op::v1::StridedSlice::calculate_default_strides(const Output<Node>& begin,
+                                                                 const Output<Node>& end) const
 {
-    shared_ptr<Node> get_default_strides(const Output<Node>& begin, const Output<Node>& end)
-    {
-        // TODO SHAPE ASSERT
-        // TODO CHECK END
-        const auto strides_length = begin.get_partial_shape()[0].get_length();
+    const auto begin_pshape = begin.get_partial_shape();
+    const auto end_pshape = end.get_partial_shape();
+    const bool is_begin_length_static =
+        begin_pshape.rank().is_static() && begin_pshape.rank().get_length() == 1
+            ? begin_pshape[0].is_static()
+            : false;
+    const bool is_end_length_static =
+        end_pshape.rank().is_static() && end_pshape.rank().get_length() == 1
+            ? end_pshape[0].is_static()
+            : false;
+    NODE_VALIDATION_CHECK(this,
+                          is_begin_length_static || is_end_length_static,
+                          "First dimension of begin or end inputs must be static in order to "
+                          "calculate default strides value");
 
-        return op::Constant::create(
-            element::i64, Shape{strides_length}, vector<int64_t>(strides_length, 1));
+    size_t strides_length = 0;
+    if (is_begin_length_static)
+    {
+        strides_length = begin_pshape[0].get_length();
     }
+    else if (is_end_length_static)
+    {
+        strides_length = end_pshape[0].get_length();
+    }
+
+    return op::Constant::create(
+        element::i64, Shape{strides_length}, vector<int64_t>(strides_length, 1));
 }
 
 op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
@@ -69,7 +88,7 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     : StridedSlice(data,
                    begin,
                    end,
-                   get_default_strides(begin, end),
+                   calculate_default_strides(begin, end),
                    begin_mask,
                    end_mask,
                    new_axis_mask,
@@ -160,6 +179,16 @@ void op::v1::StridedSlice::validate_and_infer_types()
         const auto begin_mask = convert_mask_to_axis_set(get_begin_mask());
         const auto end_mask = convert_mask_to_axis_set(get_end_mask());
 
+        // Handle a case when begin/end/stride size is less than data rank
+        // and begin/end mask are passed
+        // Example:
+        // data_shape: {3, 3, 3, 3}
+        // begin_values: [1, 1] - after extending --> [0, 0, 1, 1]
+        // end_values: [2, 2] - after extending --> [0, 0, 2, 2]
+        // strides : [0, 1] - after extending --> [1, 1, 0, 1] (`1` is neutral as a strides value)
+        // begin_mask: [0, 1] - ignore 0 and 1 axes (apply begin slice values to 2 and 3 axes)
+        // end_mask: [0, 1] - ignore 0 and 1 axes (apply end slice values to 2 and 3 axes)
+        // expected_output_shape: {3, 3, 1, 1}
         for (const auto& mask_axis : begin_mask)
         {
             if (begin.size() < data_rank.get_length())
@@ -168,7 +197,6 @@ void op::v1::StridedSlice::validate_and_infer_types()
                 strides.insert(std::next(strides.begin(), mask_axis), 1);
             }
         }
-
         for (const auto& mask_axis : end_mask)
         {
             if (end.size() < data_rank.get_length())
@@ -176,6 +204,7 @@ void op::v1::StridedSlice::validate_and_infer_types()
                 end.insert(std::next(end.begin(), mask_axis), 0);
             }
         }
+
         set_output_type(0,
                         get_input_element_type(0),
                         infer_slice_shape(this,
@@ -183,8 +212,8 @@ void op::v1::StridedSlice::validate_and_infer_types()
                                           begin,
                                           end,
                                           strides,
-                                          convert_mask_to_axis_set(get_begin_mask()),
-                                          convert_mask_to_axis_set(get_end_mask()),
+                                          begin_mask,
+                                          end_mask,
                                           convert_mask_to_axis_set(get_new_axis_mask()),
                                           convert_mask_to_axis_set(get_shrink_axis_mask()),
                                           convert_mask_to_axis_set(get_ellipsis_mask())));

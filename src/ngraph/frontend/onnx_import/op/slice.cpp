@@ -64,7 +64,7 @@ namespace ngraph
 
                     // Slice is calculated over all axes as default
                     std::shared_ptr<ngraph::Node> axes;
-                    if (inputs.size() == 4) // axes input provided
+                    if (inputs.size() >= 4) // axes input provided
                     {
                         axes = inputs.at(3);
                         NGRAPH_CHECK(axes->is_constant(), "Axes input must be constant");
