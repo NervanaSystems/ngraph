@@ -317,6 +317,11 @@ namespace
             replacement_node = make_shared<op::Reshape>(
                 node->input_value(0), get_default_order(input_rank.get_length()), output_shape);
         }
+        else
+        {
+            NGRAPH_CHECK(replacement_node,
+                         "Unable to convert Reshape:v1 with dynamic shape.");
+        }
 
         replace_node(node, replacement_node);
         return replacement_node;
