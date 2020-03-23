@@ -99,7 +99,7 @@ void op::v3::ROIAlign::validate_and_infer_types()
                               "This dimension is expected to be equal to 4. Got: ",
                               rois_second_dim);
 
-        if (batch_indices_ps.is_static())
+        if (batch_indices_ps.rank().is_static())
         {
             NODE_VALIDATION_CHECK(
                 this,
