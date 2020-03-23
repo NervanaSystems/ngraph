@@ -49,7 +49,7 @@ namespace ngraph
 
                 /// \return The index of the tuple element to get.
                 size_t get_n() const { return m_n; }
-                virtual NodeVector get_arguments() const override;
+                NodeVector get_arguments() const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -60,20 +60,13 @@ namespace ngraph
         using v0::GetOutputElement;
     }
 
-    inline std::shared_ptr<Node> get_output_element(const Output<Node>& output,
-                                                    bool for_get_output_element = false)
+    inline std::shared_ptr<Node> get_output_element(const Output<Node>& output)
     {
-        return (for_get_output_element ||
-                (output.get_index() == 0 && output.get_node()->get_output_size() == 1))
-                   ? output.get_node_shared_ptr()
-                   : std::make_shared<op::GetOutputElement>(output.get_node_shared_ptr(),
-                                                            output.get_index());
+        return output.get_node_shared_ptr()->get_output_as_single_output_node(output.get_index());
     }
 
-    inline std::shared_ptr<Node> get_output_element(const std::shared_ptr<Node> node, size_t i = 0)
+    inline std::shared_ptr<Node> get_output_element(std::shared_ptr<Node> node, size_t i = 0)
     {
-        return ((i == 0) && node->get_output_size() == 1)
-                   ? node
-                   : std::make_shared<op::GetOutputElement>(node, i);
+        return node->get_output_as_single_output_node(i);
     }
 }
