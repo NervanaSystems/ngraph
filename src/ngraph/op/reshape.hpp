@@ -133,11 +133,9 @@ namespace ngraph
                 ///        A value of -1 is allowed for at most one dimension, in which case the
                 ///        dimension size is inferred based on element count of input tensor.
                 /// \param special_zero Treats zeros in `pattern` as wildcard flags indicating a
-                /// copy
-                /// from input shape at the same index.
-                Reshape(const Output<Node>& arg,
-                        const Output<Node>& pattern,
-                        bool special_zero = true);
+                ///        copy from input shape at the same index.
+                ///
+                Reshape(const Output<Node>& arg, const Output<Node>& pattern, bool special_zero);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;

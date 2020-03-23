@@ -115,6 +115,7 @@ namespace ngraph
         }
     } // namespace op
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s,
                              const op::v1::BinaryConvolution::BinaryConvolutionMode& type);
 

@@ -2,18 +2,18 @@ ir_version: 3
 producer_name: "nGraph ONNX Importer"
 graph {
   node {
-    input: "A"
-    output: "B"
-    op_type: "ReduceMean"
+    input: "x"
+    output: "y"
+    op_type: "Unsqueeze"
     attribute {
-      name: "keepdims"
-      i: 0
-      type: INT
+      name: "axes"
+      ints: -2
+      type: INTS
     }
   }
-  name: "compute_graph"
+  name: "test_unsqueeze"
   input {
-    name: "A"
+    name: "x"
     type {
       tensor_type {
         elem_type: 1
@@ -22,25 +22,38 @@ graph {
             dim_value: 1
           }
           dim {
+            dim_value: 3
+          }
+          dim {
             dim_value: 1
           }
           dim {
-            dim_value: 4
-          }
-          dim {
-            dim_value: 4
+            dim_value: 5
           }
         }
       }
     }
   }
   output {
-    name: "B"
+    name: "y"
     type {
       tensor_type {
         elem_type: 1
         shape {
           dim {
+            dim_value: 1
+          }
+          dim {
+            dim_value: 3
+          }
+          dim {
+            dim_value: 1
+          }
+          dim {
+            dim_value: 1
+          }
+          dim {
+            dim_value: 5
           }
         }
       }
@@ -48,5 +61,5 @@ graph {
   }
 }
 opset_import {
-  version: 1
+  version: 7
 }

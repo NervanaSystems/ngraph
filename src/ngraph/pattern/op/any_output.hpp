@@ -14,35 +14,34 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
+#pragma once
 
-#include "default_opset.hpp"
-#include "exceptions.hpp"
-#include "ngraph/shape.hpp"
-#include "ngraph/validation_util.hpp"
-#include "unsqueeze.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/pattern/op/pattern.hpp"
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace pattern
     {
         namespace op
         {
-            namespace set_1
+            /// Matches any output of a node
+            class NGRAPH_API AnyOutput : public Pattern
             {
-                NodeVector unsqueeze(const Node& node)
+            public:
+                static constexpr NodeTypeInfo type_info{"patternAnyOutput", 0};
+                const NodeTypeInfo& get_type_info() const override;
+                /// \brief creates an AnyOutput node matching any output of a node
+                /// \param node The node to match
+                AnyOutput(const std::shared_ptr<Node>& pattern)
+                    : Pattern({pattern->output(0)})
                 {
-                    auto data = node.get_ng_inputs().at(0);
-                    auto axes = node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
-                    auto axes_node = std::make_shared<default_opset::Constant>(
-                        element::i64, Shape{axes.size()}, axes);
-                    return {std::make_shared<default_opset::Unsqueeze>(data, axes_node)};
                 }
 
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+                bool match_value(pattern::Matcher* matcher,
+                                 const Output<Node>& pattern_value,
+                                 const Output<Node>& graph_value) override;
+            };
+        }
+    }
+}
