@@ -188,7 +188,7 @@ TEST(build_graph, function_revalidate_and_infer)
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
     auto pattern = op::Constant::create(element::i64, Shape{6}, {1, 3, 16, 2, 2, 2});
 
-    auto r = make_shared<op::v1::Reshape>(arg, pattern);
+    auto r = make_shared<op::v1::Reshape>(arg, pattern, true);
     auto relu = make_shared<op::Relu>(r);
     auto f = make_shared<Function>(relu, ParameterVector{arg});
 

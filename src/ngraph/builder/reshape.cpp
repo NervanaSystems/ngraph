@@ -103,7 +103,7 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>&
     // row_dims := value_shape[0:axis]
     auto row_dims_slice_start =
         make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{0});
-    auto row_dims_slice_end = make_shared<op::v1::Reshape>(axis, shape_1_vector);
+    auto row_dims_slice_end = make_shared<op::v1::Reshape>(axis, shape_1_vector, true);
     auto row_dims = make_shared<op::DynSlice>(
         value_shape, row_dims_slice_start, row_dims_slice_end, unit_strides);
 
@@ -121,7 +121,7 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>&
     // flattened_dims := Concat({row_dims_prod, col_dims_prod})
     auto flattened_dims = make_shared<op::Concat>(NodeVector{row_dims_prod, col_dims_prod}, 0);
 
-    return make_shared<op::v1::Reshape>(value, flattened_dims)
+    return make_shared<op::v1::Reshape>(value, flattened_dims, true)
         ->add_provenance_group_members_above({value});
 }
 
