@@ -29,6 +29,11 @@ std::ostream& ngraph::operator<<(std::ostream& str, const Dimension& dimension)
     {
         return str << dimension.get_length();
     }
+    else if (dimension.get_interval().has_upper_bound())
+    {
+        return str << "[" << dimension.get_interval().get_min_val() << ", "
+                   << dimension.get_interval().get_max_val() << "]";
+    }
     else
     {
         return str << "?";
@@ -103,6 +108,16 @@ uint64_t Dimension::get_length() const
     {
         throw std::invalid_argument("Cannot get length of dynamic dimension");
     }
+    return m_dimension.get_min_val();
+}
+
+int64_t Dimension::get_max_length() const
+{
+    return m_dimension.get_max_val();
+}
+
+int64_t Dimension::get_min_length() const
+{
     return m_dimension.get_min_val();
 }
 

@@ -186,6 +186,12 @@ namespace ngraph
         explicit operator std::vector<Dimension>() const { return m_dimensions; }
         friend NGRAPH_API std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
         friend PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
+        bool operator==(const PartialShape& partial_shape) const;
+        bool operator!=(const PartialShape& partial_shape) const;
+        /// Get the max bounding shape
+        Shape get_max_shape() const;
+        /// Get the min bounding shape
+        Shape get_min_shape() const;
 
         /// \brief Try to merge one shape into another.
         /// \param[in,out] dst The shape that `src` will be merged into.

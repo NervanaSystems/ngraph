@@ -43,8 +43,25 @@ namespace ngraph
         {
         }
 
-        /// \brief Construct a dynamic dimension.
+        /// \brief Construct a dynamic dimension with bounded range
+        /// \param min_dimension The lower inclusive limit for the dimension
+        /// \param mas_dimension The upper inclusive limit for the dimension
+        Dimension(int64_t min_dimension, int64_t mas_dimension)
+            : m_dimension(min_dimension, mas_dimension)
+        {
+        }
+
+        /// \brief Construct a dynamic dimension with range [0, ...]
         Dimension() = default;
+
+        bool operator==(const Dimension& dimension) const
+        {
+            return m_dimension == dimension.m_dimension;
+        }
+        bool operator!=(const Dimension& dimension) const
+        {
+            return m_dimension != dimension.m_dimension;
+        }
         /// \brief Check whether this dimension is static.
         /// \return `true` if the dimension is static, else `false`.
         bool is_static() const { return m_dimension.size() == 1; }
@@ -72,6 +89,12 @@ namespace ngraph
         /// \throws std::invalid_argument If this dimension is dynamic or negative.
         uint64_t get_length() const;
 
+        int64_t get_min_length() const;
+        int64_t get_max_length() const;
+
+        /// \brief Return the interval of valid lengths
+        const Interval& get_interval() const { return m_dimension; }
+        Interval& get_interval() { return m_dimension; }
         /// \brief Check whether this dimension represents the same scheme as the argument (both
         ///        dynamic, or equal).
         /// \param dim The other dimension to compare this dimension to.

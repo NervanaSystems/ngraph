@@ -24,8 +24,12 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Range::type_info;
 
-op::Range::Range(const Output<Node>& start, const Output<Node>& stop, const Output<Node>& step)
+op::Range::Range(const Output<Node>& start,
+                 const Output<Node>& stop,
+                 const Output<Node>& step,
+                 int64_t max_output_length)
     : Op({start, stop, step})
+    , m_max_output_length(max_output_length)
 {
     constructor_validate_and_infer_types();
 }
@@ -184,6 +188,7 @@ static PartialShape infer_output_shape(const op::Range* node, const element::Typ
 
 bool ngraph::op::v0::Range::visit_attributes(AttributeVisitor& visitor)
 {
+    visitor.on_attribute("max_output_length", m_max_output_length);
     return true;
 }
 
@@ -245,12 +250,13 @@ void op::Range::validate_and_infer_types()
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
-
+    result_shape[0].get_interval().set_max_val(m_max_output_length == -1 ? Interval::s_max
+                                                                         : m_max_output_length);
     set_output_type(0, result_et, result_shape);
 }
 
 shared_ptr<Node> op::Range::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Range>(new_args.at(0), new_args.at(1), new_args.at(2));
+    return make_shared<Range>(new_args.at(0), new_args.at(1), new_args.at(2), m_max_output_length);
 }

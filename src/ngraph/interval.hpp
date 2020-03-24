@@ -55,8 +55,19 @@ namespace ngraph
         size_type size() const;
         /// \brief Returns true if the interval has no elements
         bool empty() const;
+        /// \brief the inclusive lower bound of the interval
         value_type get_min_val() const { return m_min_val; }
+        /// \brief Set the inclusive lower bound of the interval
+        void set_min_val(value_type val) { m_min_val = val; }
+        /// \brief the inclusive upper bound of the interval
         value_type get_max_val() const { return m_max_val; }
+        /// \brief Set the inclusive upper bound of the interval
+        void set_max_val(value_type val) { m_max_val = val; }
+        /// \brief True if the upper bound is finite
+        bool has_upper_bound() const { return m_max_val != s_max; }
+        /// \brief True if the lower bound is finite
+        bool has_lower_bound() const { return m_min_val != s_min; }
+        /// \brief True if min and max bounds match
         bool operator==(const Interval& interval) const;
         bool operator!=(const Interval& interval) const;
 
@@ -86,10 +97,12 @@ namespace ngraph
 
         /// \brief True if this interval includes value
         bool contains(value_type value) const;
-        /// \bried True if this interval includes all the values in interval
+        /// \brief True if this interval includes all the values in interval
         bool contains(const Interval& interval) const;
 
+        /// \brief The value used for no upper bound
         static constexpr value_type s_max{std::numeric_limits<value_type>::max()};
+        /// \brief The value used for no lower bound
         static constexpr value_type s_min{-s_max};
 
     protected:
