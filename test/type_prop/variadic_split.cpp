@@ -42,6 +42,14 @@ TEST(type_prop, variadic_split)
               (Shape{3, 6}));
 
     EXPECT_EQ(make_shared<op::v1::VariadicSplit>(
+                  make_shared<op::Parameter>(element::i32, Shape{12, 6}),
+                  op::Constant::create<int64_t>(element::i64, Shape{}, {-2}),
+                  op::Constant::create<int64_t>(element::i64, Shape{3}, {-1, 7, 2}))
+                  ->output(0)
+                  .get_shape(),
+              (Shape{3, 6}));
+
+    EXPECT_EQ(make_shared<op::v1::VariadicSplit>(
                   make_shared<op::Parameter>(element::i32, Shape{12, 1, 6}),
                   op::Constant::create<int64_t>(element::i64, Shape{1}, {2}),
                   op::Constant::create<int64_t>(element::i64, Shape{3}, {3, 1, 2}))

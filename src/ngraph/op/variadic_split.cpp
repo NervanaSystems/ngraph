@@ -102,7 +102,7 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
             auto data_shape_dims = vector<Dimension>{data.get_partial_shape()};
             auto dimension_at_axis = data_shape_dims.at(axis);
 
-            if (negative_one > 0 && dimension_at_axis.is_static())
+            if (negative_one >= 0 && dimension_at_axis.is_static())
             {
                 split_lengths[negative_one] = dimension_at_axis.get_length() - sum_of_splits;
                 sum_of_splits += split_lengths[negative_one];
