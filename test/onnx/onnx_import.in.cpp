@@ -2067,7 +2067,7 @@ namespace
 
         for (auto ng_node : function->get_ordered_ops())
         {
-            if (as_type_ptr<op::Constant>(ng_node))
+            if (ng_node->is_constant())
             {
                 const auto folded_non_zero = as_type_ptr<op::Constant>(ng_node);
                 const auto values = folded_non_zero->cast_vector<int64_t>();
