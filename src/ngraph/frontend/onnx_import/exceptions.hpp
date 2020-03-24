@@ -50,12 +50,12 @@ namespace ngraph
                 }
             };
 
-            class NodeValidationFailure : public CheckFailure
+            class OnnxNodeValidationFailure : public CheckFailure
             {
             public:
-                NodeValidationFailure(const CheckLocInfo& check_loc_info,
-                                      const Node& node,
-                                      const std::string& explanation)
+                OnnxNodeValidationFailure(const CheckLocInfo& check_loc_info,
+                                          const Node& node,
+                                          const std::string& explanation)
                     : CheckFailure(check_loc_info, detail::get_error_msg_prefix(node), explanation)
                 {
                 }
@@ -77,4 +77,4 @@ namespace ngraph
 
 #define CHECK_VALID_NODE(node_, cond_, ...)                                                        \
     NGRAPH_CHECK_HELPER(                                                                           \
-        ::ngraph::onnx_import::error::NodeValidationFailure, (node_), (cond_), ##__VA_ARGS__)
+        ::ngraph::onnx_import::error::OnnxNodeValidationFailure, (node_), (cond_), ##__VA_ARGS__)
