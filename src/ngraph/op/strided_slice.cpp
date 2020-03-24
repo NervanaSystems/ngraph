@@ -17,6 +17,7 @@
 #include "ngraph/op/strided_slice.hpp"
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 #include <algorithm>
@@ -194,21 +195,10 @@ void op::v1::StridedSlice::validate_and_infer_types()
         // begin_mask: [0, 1] - ignore 0 and 1 axes (apply begin slice values to 2 and 3 axes)
         // end_mask: [0, 1] - ignore 0 and 1 axes (apply end slice values to 2 and 3 axes)
         // expected_output_shape: {3, 3, 1, 1}
-        for (const auto& mask_axis : begin_mask)
-        {
-            if (begin.size() < data_rank.get_length())
-            {
-                begin.insert(std::next(begin.begin(), mask_axis), 0);
-                strides.insert(std::next(strides.begin(), mask_axis), 1);
-            }
-        }
-        for (const auto& mask_axis : end_mask)
-        {
-            if (end.size() < data_rank.get_length())
-            {
-                end.insert(std::next(end.begin(), mask_axis), 0);
-            }
-        }
+        const auto data_rank_value = data_rank.get_length();
+        begin = extend_vector_by_value(begin, begin_mask, data_rank_value, 0);
+        strides = extend_vector_by_value(strides, begin_mask, data_rank_value, 1);
+        end = extend_vector_by_value(end, end_mask, data_rank_value, 0);
 
         set_output_type(0,
                         get_input_element_type(0),

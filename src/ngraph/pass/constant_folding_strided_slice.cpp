@@ -21,6 +21,7 @@
 #include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -44,34 +45,25 @@ shared_ptr<op::Constant> fold_constant_strided_slice(shared_ptr<op::Constant> da
         return axis_set;
     };
 
-    auto begin_ext = begin->get_vector<int64_t>();
-    auto end_ext = end->get_vector<int64_t>();
-    auto strides_ext = strides->get_vector<int64_t>();
+    auto begin_vec = begin->get_vector<int64_t>();
+    auto end_vec = end->get_vector<int64_t>();
+    auto strides_vec = strides->get_vector<int64_t>();
     const auto begin_mask = convert_mask_to_axis_set(slice->get_begin_mask());
     const auto end_mask = convert_mask_to_axis_set(slice->get_end_mask());
 
-    for (const auto& mask_axis : begin_mask)
-    {
-        if (begin_ext.size() < data->get_shape().size())
-        {
-            begin_ext.insert(std::next(begin_ext.begin(), mask_axis), 0);
-            strides_ext.insert(std::next(strides_ext.begin(), mask_axis), 1);
-        }
-    }
-    for (const auto& mask_axis : end_mask)
-    {
-        if (end_ext.size() < data->get_shape().size())
-        {
-            end_ext.insert(std::next(end_ext.begin(), mask_axis), 0);
-        }
-    }
+    // Handle a case when begin/end/stride size is less than data rank
+    // and begin/end mask are passed
+    const auto data_rank_value = data->get_shape().size();
+    begin_vec = extend_vector_by_value(begin_vec, begin_mask, data_rank_value, 0);
+    strides_vec = extend_vector_by_value(strides_vec, begin_mask, data_rank_value, 0);
+    end_vec = extend_vector_by_value(end_vec, end_mask, data_rank_value, 1);
 
     SlicePlan plan = make_slice_plan(data->get_shape(),
-                                     begin_ext,
-                                     end_ext,
-                                     strides_ext,
-                                     convert_mask_to_axis_set(slice->get_begin_mask()),
-                                     convert_mask_to_axis_set(slice->get_end_mask()),
+                                     begin_vec,
+                                     end_vec,
+                                     strides_vec,
+                                     begin_mask,
+                                     end_mask,
                                      convert_mask_to_axis_set(slice->get_new_axis_mask()),
                                      convert_mask_to_axis_set(slice->get_shrink_axis_mask()),
                                      convert_mask_to_axis_set(slice->get_ellipsis_mask()));
