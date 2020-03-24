@@ -30,6 +30,7 @@
 #include "ngraph/provenance.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/type.hpp"
+#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -745,21 +746,10 @@ namespace
         const auto begin_mask = convert_mask_to_axes(node->get_begin_mask());
         const auto end_mask = convert_mask_to_axes(node->get_end_mask());
 
-        for (const auto& mask_axis : begin_mask)
-        {
-            if (begins.size() < input_data_pshape.rank().get_length())
-            {
-                begins.insert(std::next(begins.begin(), mask_axis), 0);
-                strides.insert(std::next(strides.begin(), mask_axis), 1);
-            }
-        }
-        for (const auto& mask_axis : end_mask)
-        {
-            if (ends.size() < input_data_pshape.rank().get_length())
-            {
-                ends.insert(std::next(ends.begin(), mask_axis), 0);
-            }
-        }
+        const auto data_rank_value = input_data_pshape.rank().get_length();
+        begins = extend_vector_by_value(begins, begin_mask, data_rank_value, 0);
+        strides = extend_vector_by_value(strides, begin_mask, data_rank_value, 1);
+        ends = extend_vector_by_value(ends, end_mask, data_rank_value, 0);
 
         SlicePlan p = make_slice_plan(input_data_pshape.to_shape(),
                                       begins,
