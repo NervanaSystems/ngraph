@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -383,7 +383,7 @@ shared_ptr<Node> op::v0::AvgPoolBackprop::copy_with_new_args(const NodeVector& n
                                             m_include_padding_in_avg_computation);
 }
 
-void op::v0::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (m_ceil_mode)
     {
@@ -727,7 +727,7 @@ shared_ptr<Node> op::v1::AvgPoolBackprop::copy_with_new_args(const NodeVector& n
                                             m_exclude_pad);
 }
 
-void op::v1::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (m_rounding_type == op::RoundingType::CEIL)
     {

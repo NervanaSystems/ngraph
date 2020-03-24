@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,8 +57,7 @@ static void test_allreduce_common(reduction::Type reduce_type)
         {
         case reduction::Type::SUM:
             copy_data(a, v);
-            std::transform(
-                v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
+            std::transform(v.begin(), v.end(), v.begin(), [=](float x) { return x * comm_size; });
             break;
         case reduction::Type::PROD:
             copy_data(a, v);

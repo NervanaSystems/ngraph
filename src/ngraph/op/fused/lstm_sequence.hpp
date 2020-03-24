@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -162,11 +162,11 @@ namespace ngraph
                 ///
                 /// \return     The masked value.
                 ///
-                std::shared_ptr<Node> get_masked_node(const std::shared_ptr<Node>& data,
-                                                      std::int32_t time_step,
-                                                      std::size_t batch_axis = 0,
-                                                      const std::shared_ptr<Node>& default_value = {
-                                                          nullptr}) const;
+                std::shared_ptr<Node>
+                    get_masked_node(const Output<Node>& data,
+                                    std::int32_t time_step,
+                                    std::size_t batch_axis = 0,
+                                    const Output<Node>& default_value = Output<Node>()) const;
 
                 NodeVector lstm_pass(bool is_reverse = false) const;
 

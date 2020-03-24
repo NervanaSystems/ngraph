@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1743,22 +1743,14 @@ namespace ngraph
                     memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
 
-                    auto fprop_input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-
-#if MKLDNN_VERSION_MAJOR < 1
-                    auto fprop_input_layout =
-                        static_cast<memory::format>(fprop_input_md.data.format);
-                    auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, fprop_input_layout);
-#else
-                    auto strides = fprop_input_md.data.format_desc.blocking.strides;
-                    memory::dims strides_arg;
-                    for (auto i = 0; i < fprop_input_md.data.ndims; i++)
+                    if (arg0_shape.size() != 4 && arg0_shape.size() != 5)
                     {
-                        strides_arg.push_back(strides[i]);
+                        throw ngraph_error("MKLDNN Unsupported pooling layout");
                     }
-                    auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, strides_arg);
-#endif
-                    auto diff_src_desc = memory::desc(mkldnn_arg0_shape, et, memory::FORMAT::any);
+                    auto default_format = arg0_shape.size() == 4 ? mkldnn::memory::FORMAT::nchw
+                                                                 : mkldnn::memory::FORMAT::ncdhw;
+                    auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, default_format);
+                    auto diff_src_desc = memory::desc(mkldnn_arg0_shape, et, default_format);
 
                     try
                     {
@@ -1784,7 +1776,8 @@ namespace ngraph
 
                         auto prim_desc = pooling_backward::primitive_desc(
                             bwd_desc, executor::global_cpu_engine, fwd_prim_desc);
-                        i_mds.push_back(fprop_input_md);
+
+                        i_mds.push_back(diff_src_desc);
                         i_mds.push_back(diff_dst_desc);
 
                         if (with_indices)
@@ -1799,22 +1792,12 @@ namespace ngraph
                         {
                             i_mds.push_back(diff_dst_desc);
                         }
-#if MKLDNN_VERSION_MAJOR < 1
-                        o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
-#else
-                        o_mds.push_back(prim_desc.diff_src_desc());
-#endif
+                        o_mds.push_back(diff_src_desc);
                     }
                     catch (const mkldnn::error& e)
                     {
-#if MKLDNN_VERSION_MAJOR < 1
-                        throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                           to_string(fprop_input_md.data.format) +
-                                           MKLDNN_ERROR_MESSAGE);
-#else
                         throw ngraph_error("MKLDNN Unsupported pooling layout" +
                                            MKLDNN_ERROR_MESSAGE);
-#endif
                     }
                 }
 

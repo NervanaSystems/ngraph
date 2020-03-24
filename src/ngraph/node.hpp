@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/op_annotations.hpp"
+#include "ngraph/output_vector.hpp"
 #include "ngraph/placement.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type.hpp"
@@ -53,19 +54,20 @@ namespace ngraph
     class AttributeVisitor;
     class Variant;
     class Node;
-    using NodeVector = std::vector<std::shared_ptr<Node>>;
-    using OutputVector = std::vector<Output<Node>>;
 
     class Function;
 
     namespace op
     {
         struct AutoBroadcastSpec;
-        class Constant;
-        class Result;
+
+        namespace v0
+        {
+            class Result;
+        }
     } // namespace op
 
-    using ResultVector = std::vector<std::shared_ptr<op::Result>>;
+    using ResultVector = std::vector<std::shared_ptr<op::v0::Result>>;
 
     namespace autodiff
     {
@@ -92,8 +94,6 @@ namespace ngraph
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
-    using NodeTypeInfo = DiscreteTypeInfo;
-
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
@@ -119,6 +119,8 @@ namespace ngraph
 
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
+
+        using type_info_t = DiscreteTypeInfo;
 
     protected:
         std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(
@@ -147,17 +149,17 @@ namespace ngraph
         /// \param output_size Number of outputs for this node
         Node(const NodeVector& arguments, size_t output_size = 1);
 
-        virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const NodeVector& /* deltas */)
+        // For back-compatibility
+        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
+        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
         {
+            generate_adjoints(adjoints, as_node_vector(deltas));
         }
         /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows
         /// on deep networks.
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
-        static constexpr NodeTypeInfo type_info{"Node", 0};
-
         virtual ~Node();
 
         virtual bool visit_attributes(AttributeVisitor& visitor) { return false; }
@@ -179,17 +181,8 @@ namespace ngraph
         /// Returns the NodeTypeInfo for the node's class.
         /// During transition to type_info, returns a dummy type_info for Node if the class
         /// has not been updated yet.
-        virtual const NodeTypeInfo& get_type_info() const = 0;
-        virtual const char* get_type_name() const
-        {
-            auto& info = get_type_info();
-            if (is_type<Node>(this))
-            {
-                // Transitional definition
-                return description().c_str();
-            }
-            return info.name;
-        }
+        virtual const type_info_t& get_type_info() const = 0;
+        const char* get_type_name() const { return get_type_info().name; }
         /// Sets/replaces the arguments with new arguments.
         void set_arguments(const NodeVector& arguments);
         /// Sets/replaces the arguments with new arguments.
@@ -228,7 +221,7 @@ namespace ngraph
         /// graph against the graph.
         bool is_same_op_type(const std::shared_ptr<Node>& node) const
         {
-            return description() == node->description();
+            return get_type_info() == node->get_type_info();
         }
 
         /// \brief Marks an input as being relevant or irrelevant to the output shapes of this
@@ -530,6 +523,8 @@ namespace ngraph
         std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
         std::map<std::string, std::shared_ptr<Variant>> m_rt_info;
     };
+
+    using NodeTypeInfo = Node::type_info_t;
 
     template <typename NodeType>
     class Input
@@ -894,51 +889,6 @@ namespace ngraph
         size_t m_index{0};
     };
 
-    inline Input<Node> Node::input(size_t input_index)
-    {
-        if (input_index >= m_inputs.size())
-        {
-            throw std::out_of_range("node input index is out of range");
-        }
-
-        return Input<Node>(this, input_index);
-    }
-
-    inline Output<Node> Node::input_value(size_t input_index) const
-    {
-        return input(input_index).get_source_output();
-    }
-
-    inline Input<const Node> Node::input(size_t input_index) const
-    {
-        if (input_index >= m_inputs.size())
-        {
-            throw std::out_of_range("node input index is out of range");
-        }
-
-        return Input<const Node>(this, input_index);
-    }
-
-    inline Output<Node> Node::output(size_t output_index)
-    {
-        if (output_index >= m_outputs.size())
-        {
-            throw std::out_of_range("node output index is out of range");
-        }
-
-        return Output<Node>(this, output_index);
-    }
-
-    inline Output<const Node> Node::output(size_t output_index) const
-    {
-        if (output_index >= m_outputs.size())
-        {
-            throw std::out_of_range("node output index is out of range");
-        }
-
-        return Output<const Node>(this, output_index);
-    }
-
     inline Output<Node> Input<Node>::get_source_output() const
     {
         auto& output_descriptor = m_node->m_inputs.at(m_index).get_output();
@@ -985,66 +935,6 @@ namespace ngraph
     {
         m_node->m_outputs.at(m_index).remove_input(
             &(target_input.get_node()->m_inputs.at(target_input.get_index())));
-    }
-
-    inline std::vector<Input<Node>> Node::inputs()
-    {
-        std::vector<Input<Node>> result;
-
-        for (size_t i = 0; i < get_input_size(); i++)
-        {
-            result.emplace_back(this, i);
-        }
-
-        return result;
-    }
-
-    inline std::vector<Output<Node>> Node::input_values() const
-    {
-        std::vector<Output<Node>> result;
-
-        for (size_t i = 0; i < get_input_size(); i++)
-        {
-            result.emplace_back(input(i).get_source_output());
-        }
-
-        return result;
-    }
-
-    inline std::vector<Input<const Node>> Node::inputs() const
-    {
-        std::vector<Input<const Node>> result;
-
-        for (size_t i = 0; i < get_input_size(); i++)
-        {
-            result.emplace_back(this, i);
-        }
-
-        return result;
-    }
-
-    inline std::vector<Output<Node>> Node::outputs()
-    {
-        std::vector<Output<Node>> result;
-
-        for (size_t i = 0; i < get_output_size(); i++)
-        {
-            result.emplace_back(shared_from_this(), i);
-        }
-
-        return result;
-    }
-
-    inline std::vector<Output<const Node>> Node::outputs() const
-    {
-        std::vector<Output<const Node>> result;
-
-        for (size_t i = 0; i < get_output_size(); i++)
-        {
-            result.emplace_back(shared_from_this(), i);
-        }
-
-        return result;
     }
 
     class NodeValidationFailure : public CheckFailure

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -736,11 +736,11 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_bprop_n4c3h2w2)
     ngraph::autodiff::Adjoints adjoints(OutputVector{bn_dx, bn_dgamma, bn_dbeta},
                                         OutputVector{C, zero, zero});
 
-    auto dinput = adjoints.backprop_node(input);
-    auto dgamma = adjoints.backprop_node(gamma);
-    auto dbeta = adjoints.backprop_node(beta);
+    auto dinput = adjoints.backprop_output(input);
+    auto dgamma = adjoints.backprop_output(gamma);
+    auto dbeta = adjoints.backprop_output(beta);
 
-    auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
+    auto df = make_shared<Function>(OutputVector{dinput, dgamma, dbeta},
                                     ParameterVector{mean, var, input, gamma, beta, C});
 
 #ifndef NGRAPH_JSON_DISABLE

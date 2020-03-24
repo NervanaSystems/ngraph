@@ -73,7 +73,7 @@ and by two scaling attributes: :math:`\gamma` and :math:`\beta`.
 C++ Interface
 ==============
 
-.. doxygenclass:: ngraph::op::BatchNormInference
+.. doxygenclass:: ngraph::op::v0::BatchNormInference
    :project: ngraph
    :members:
 

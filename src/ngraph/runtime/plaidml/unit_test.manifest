@@ -253,6 +253,10 @@ model_cum_sum_2d_axis_input
 model_cum_sum_2d_dynamic_axis_input
 model_cum_sum_3d_exclusive_reverse
 
+# unsupported op: `Round`
+round
+round_2D
+
 # onnx tests
 model_quant_conv_linear_2d
 model_quant_conv_linear_3d
@@ -263,10 +267,13 @@ model_lstm_fwd_hardsigmoid_activation
 model_lstm_fwd_with_clip
 model_lstm_fwd_mixed_seq
 model_lstm_fwd_large_batch_no_clip
+model_gatherND_int32
+model_gatherND_float
 model_global_lp_pool_p3
 model_argmin_no_keepdims
 model_reduce_log_sum_exp
 model_elu
+model_scatterND
 model_selu
 model_sigmoid
 model_softplus
@@ -316,6 +323,7 @@ random_uniform_dynamic_shapes
 layer_norm_affine_stats
 layer_norm_bprop_affine_stats
 layer_norm_bprop_affine
+layer_norm_bprop_4d_input
 
 # Another fused op decomposition pass required after the downgrade pass
 model_split_equal_parts_default

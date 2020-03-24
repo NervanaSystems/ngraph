@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@
 
 #include "group_conv.hpp"
 
-#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/validation_util.hpp"
 
@@ -142,7 +142,7 @@ shared_ptr<Node> op::v1::GroupConvolution::copy_with_new_args(const NodeVector& 
 }
 
 void op::v1::GroupConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                 const NodeVector& deltas)
+                                                 const OutputVector& deltas)
 {
     ngraph_error("Not Yet Implemented");
 }
@@ -307,7 +307,7 @@ void op::v1::GroupConvolutionBackpropData::validate_and_infer_types()
 }
 
 void op::v1::GroupConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                             const NodeVector& deltas)
+                                                             const OutputVector& deltas)
 {
     ngraph_error("Not Yet Implemented");
 }
@@ -516,8 +516,9 @@ NodeVector op::v0::GroupConvolution::decompose_op() const
         if (m_groups_in_filters)
         {
             // Remove group dimmension after slicing
-            sliced_filter = builder::reshape(
+            sliced_filter = make_shared<op::Reshape>(
                 sliced_filters[group],
+                get_default_order(sliced_filters[group]->get_shape().size()),
                 Shape(std::next(std::begin(filters_shape), 1), std::end(filters_shape)));
         }
         convolution_nodes.push_back(
@@ -534,8 +535,8 @@ NodeVector op::v0::GroupConvolution::decompose_op() const
     return {std::make_shared<ngraph::op::Concat>(convolution_nodes, concatenation_axis)};
 }
 
-void op::v0::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                                 const NodeVector& /* deltas */)
+void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                             const OutputVector& /* deltas */)
 {
     throw ngraph_error("NYI");
 }
@@ -600,49 +601,34 @@ shared_ptr<Node>
 
 NodeVector op::v0::GroupConvolutionBackpropData::decompose_op() const
 {
-    auto data_batch = input_value(0);
     auto filters = input_value(1);
     auto output_delta = input_value(2);
 
     auto data_shape = get_input_shape(0);
-    auto filters_shape = get_input_shape(1);
-    auto delta_shape = get_input_shape(2);
 
     NodeVector sliced_inputs;
 
-    for (size_t i = 0; i < get_groups(); ++i)
+    auto groups = get_groups();
+    // slice data shape
+    data_shape[1] /= groups;
+    // slice delta
+    auto sliced_delta = builder::split(output_delta, groups, 1);
+    // slice filters
+    auto sliced_filters = builder::split(filters, groups, 0);
+
+    auto num_spatials = get_window_movement_strides().size();
+
+    for (size_t i = 0; i < groups; ++i)
     {
-        size_t channel_step = filters_shape.at(1);
-
-        const Coordinate data_lower_bound{0, i * channel_step, 0, 0};
-        const Coordinate data_upper_bound{
-            data_shape.at(0), (i + 1) * channel_step, data_shape.at(2), data_shape.at(3)};
-        auto sliced_data =
-            std::make_shared<op::Slice>(data_batch, data_lower_bound, data_upper_bound);
-
-        size_t filters_step = filters_shape.at(0) / get_groups();
-
-        const Coordinate filters_lower_bound{i * filters_step, 0, 0, 0};
-        const Coordinate filters_upper_bound{
-            (i + 1) * filters_step, filters_shape.at(1), filters_shape.at(2), filters_shape.at(3)};
-        auto sliced_filters =
-            std::make_shared<op::Slice>(filters, filters_lower_bound, filters_upper_bound);
-
-        const Coordinate delta_lower_bound{0, i * filters_step, 0, 0};
-        const Coordinate delta_upper_bound{
-            delta_shape.at(0), (i + 1) * filters_step, delta_shape.at(2), delta_shape.at(3)};
-        auto sliced_delta =
-            std::make_shared<op::Slice>(output_delta, delta_lower_bound, delta_upper_bound);
-
-        auto sliced_conv =
-            std::make_shared<op::ConvolutionBackpropData>(sliced_data->get_shape(),
-                                                          sliced_filters,
-                                                          sliced_delta,
-                                                          get_window_movement_strides(),
-                                                          get_window_dilation_strides(),
-                                                          get_padding_below(),
-                                                          get_padding_above(),
-                                                          Strides{1, 1});
+        auto sliced_conv = std::make_shared<op::ConvolutionBackpropData>(
+            data_shape,
+            sliced_filters[i],
+            sliced_delta[i],
+            get_window_movement_strides(),
+            get_window_dilation_strides(),
+            get_padding_below(),
+            get_padding_above(),
+            Strides(num_spatials, 1)); // default data dilation strides
 
         sliced_inputs.push_back(sliced_conv);
     }

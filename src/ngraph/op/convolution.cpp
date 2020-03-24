@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -126,7 +126,8 @@ shared_ptr<Node> op::v1::Convolution::copy_with_new_args(const NodeVector& new_a
                                         m_auto_pad);
 }
 
-void op::v1::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -319,7 +320,7 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
 }
 
 void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                        const NodeVector& deltas)
+                                                        const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -716,7 +717,8 @@ shared_ptr<Node> op::v0::Convolution::copy_with_new_args(const NodeVector& new_a
                                         m_pad_type);
 }
 
-void op::v0::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -840,7 +842,7 @@ void op::v0::ConvolutionBackpropData::validate_and_infer_types()
 }
 
 void op::v0::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                        const NodeVector& deltas)
+                                                        const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

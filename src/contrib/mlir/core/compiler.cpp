@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,24 +28,7 @@
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/argmax.hpp"
-#include "ngraph/op/argmin.hpp"
-#include "ngraph/op/concat.hpp"
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/dot.hpp"
-#include "ngraph/op/experimental/compiled_kernel.hpp"
-#include "ngraph/op/gather.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/op/less.hpp"
-#include "ngraph/op/maximum.hpp"
-#include "ngraph/op/minimum.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/negative.hpp"
-#include "ngraph/op/relu.hpp"
-#include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/index_reduction.hpp"
+#include "ngraph/ops.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include "contrib/mlir/utils.hpp"

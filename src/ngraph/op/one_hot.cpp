@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -165,10 +165,8 @@ void op::v1::OneHot::validate_and_infer_types()
 
         auto depth_element_type = depth->get_output_element_type(0);
         NODE_VALIDATION_CHECK(this,
-                              depth_element_type == element::i8 ||
-                                  depth_element_type == element::i32 ||
-                                  depth_element_type == element::i64,
-                              "'depth' input element type must be i8, i32 or i64 (got ",
+                              depth_element_type.is_integral(),
+                              "'depth' input element type must be an integer (got ",
                               depth_element_type,
                               ").");
 
@@ -179,7 +177,8 @@ void op::v1::OneHot::validate_and_infer_types()
                               depth->get_shape(),
                               " elements).");
 
-        int64_t depth_val = read_scalar_int_from_constant_node(depth);
+        const auto depth_constant = as_type_ptr<op::Constant>(depth);
+        int64_t depth_val = depth_constant->cast_vector<int64_t>()[0];
 
         NODE_VALIDATION_CHECK(this,
                               depth_val > 0,
@@ -200,39 +199,4 @@ shared_ptr<Node> op::v1::OneHot::copy_with_new_args(const NodeVector& new_args) 
     check_new_args_count(this, new_args);
     return make_shared<v1::OneHot>(
         new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), m_axis);
-}
-
-size_t op::v1::OneHot::read_scalar_int_from_constant_node(const shared_ptr<Node>& node) const
-{
-    size_t scalar;
-    auto node_element_type = node->get_output_element_type(0);
-    const auto constant = as_type_ptr<op::Constant>(node);
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-#endif
-    switch (static_cast<element::Type_t>(node_element_type))
-    {
-    case element::Type_t::i8:
-        scalar = static_cast<size_t>(constant->get_vector<int8_t>()[0]);
-        break;
-    case element::Type_t::i32:
-        scalar = static_cast<size_t>(constant->get_vector<int32_t>()[0]);
-        break;
-    case element::Type_t::i64:
-        scalar = static_cast<size_t>(constant->get_vector<int64_t>()[0]);
-        break;
-    default:
-        NODE_VALIDATION_CHECK(node.get(),
-                              false,
-                              "Expected integer input of element type i8, i32 or i64 (got ",
-                              node_element_type,
-                              ").");
-    }
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
-
-    return scalar;
 }

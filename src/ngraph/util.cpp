@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -639,6 +639,19 @@ vector<float> read_float_vector(shared_ptr<runtime::Tensor> tv)
         // Changed from vector ctor to explicit for loop to add static_cast
         // This silences MSVC warnings
         for (char value : vec)
+        {
+            float_vec.push_back(static_cast<float>(value));
+        }
+    }
+    else if (element_type == element::bf16)
+    {
+        vector<bfloat16> vec = read_vector<bfloat16>(tv);
+        float_vec = bfloat16::to_float_vector(vec);
+    }
+    else if (element_type == element::f16)
+    {
+        vector<float16> vec = read_vector<float16>(tv);
+        for (float16 value : vec)
         {
             float_vec.push_back(static_cast<float>(value));
         }
