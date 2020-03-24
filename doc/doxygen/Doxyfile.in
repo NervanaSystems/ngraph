@@ -18,6 +18,7 @@ ENABLE_PREPROCESSING   = YES
 MACRO_EXPANSION        = YES
 EXPAND_ONLY_PREDEF     = YES
 PREDEFINED             = NGRAPH_API= \
+                         NOP_BACKEND_API= \
                          CPU_BACKEND_API= \
                          GCPU_BACKEND_API= \
                          GPU_BACKEND_API= \
