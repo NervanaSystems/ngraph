@@ -18,10 +18,10 @@
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/opsets/opset1.hpp"
 #include "ngraph/partial_shape.hpp"
 
 #include <numeric>
-#include <ops.hpp>
 
 using namespace std;
 using namespace ngraph;
@@ -66,7 +66,7 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
             auto target_shape = get_input_shape(1);
             NGRAPH_CHECK(target_shape.size() == 1);
             auto axes_mapping_val =
-                static_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr())
+                static_pointer_cast<opset1::Constant>(input_value(2).get_node_shared_ptr())
                     ->get_axis_vector_val();
 
             std::vector<size_t> axes(target_shape[0]);
@@ -142,12 +142,12 @@ void op::v1::Broadcast::validate_and_infer_types()
     PartialShape result_shape{PartialShape::dynamic()};
     if (input_value(1).get_node_shared_ptr()->is_constant())
     {
-        result_shape = static_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr())
+        result_shape = static_pointer_cast<opset1::Constant>(input_value(1).get_node_shared_ptr())
                            ->get_shape_val();
     }
-    else if (dynamic_pointer_cast<op::Concat>(input_value(1).get_node_shared_ptr()))
+    else if (dynamic_pointer_cast<opset1::Concat>(input_value(1).get_node_shared_ptr()))
     {
-        auto concat = as_type_ptr<op::Concat>(input_value(1).get_node_shared_ptr());
+        auto concat = as_type_ptr<opset1::Concat>(input_value(1).get_node_shared_ptr());
         auto concat_inputs = concat->inputs();
 
         if (concat->get_output_partial_shape(0).is_static() && concat->get_shape().size() == 1 &&
@@ -157,9 +157,8 @@ void op::v1::Broadcast::validate_and_infer_types()
             for (const auto& concat_input : concat_inputs)
             {
                 auto source_node_ptr = concat_input.get_source_output().get_node_shared_ptr();
-                if (source_node_ptr->is_constant())
+                if (auto source_const_ptr = as_type_ptr<opset1::Constant>(source_node_ptr))
                 {
-                    auto source_const_ptr = dynamic_pointer_cast<op::Constant>(source_node_ptr);
                     output_partial_shape.push_back(source_const_ptr->get_axis_vector_val()[0]);
                 }
                 else
@@ -192,7 +191,7 @@ void op::v1::Broadcast::validate_and_infer_types()
                 input_value(2).get_node_shared_ptr()->is_constant())
             {
                 auto target_shape =
-                    static_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr())
+                    static_pointer_cast<opset1::Constant>(input_value(1).get_node_shared_ptr())
                         ->get_shape_val();
                 auto axes_mapping_val =
                     static_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr())
