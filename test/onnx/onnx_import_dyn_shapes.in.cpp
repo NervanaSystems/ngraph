@@ -55,11 +55,11 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, onnx_dynamic_dims_to_ngraph_dynamic
         EXPECT_TRUE(input_ps.is_dynamic());
 
         ASSERT_TRUE(input_ps.rank().is_static());
-        EXPECT_EQ(static_cast<size_t>(input_ps.rank()), 2);
+        EXPECT_EQ(input_ps.rank().get_length(), 2);
 
         EXPECT_TRUE(input_ps[0].is_dynamic());
         ASSERT_TRUE(input_ps[1].is_static());
-        EXPECT_EQ(static_cast<size_t>(input_ps[1]), 2);
+        EXPECT_EQ(input_ps[1].get_length(), 2);
     }
 
     const auto& graph_outputs = function->get_results();
@@ -68,11 +68,11 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, onnx_dynamic_dims_to_ngraph_dynamic
     const auto out = *(graph_outputs.cbegin());
     const auto& out_ps = out->get_output_partial_shape(0);
     ASSERT_TRUE(out_ps.rank().is_static());
-    EXPECT_EQ(static_cast<size_t>(out_ps.rank()), 2);
+    EXPECT_EQ(out_ps.rank().get_length(), 2);
 
     EXPECT_TRUE(out_ps[0].is_dynamic());
     ASSERT_TRUE(out_ps[1].is_static());
-    EXPECT_EQ(static_cast<size_t>(out_ps[1]), 2);
+    EXPECT_EQ(out_ps[1].get_length(), 2);
 }
 
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, ab_plus_c_inference)
@@ -548,5 +548,31 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_uint16_dyn_shape)
     std::vector<uint16_t> expected_values{1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2};
     test_case.add_expected_output<uint16_t>(Shape{2, 2, 2, 2}, expected_values);
 
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_tile)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/tile.prototxt"));
+
+    auto test_case =
+        ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+    test_case.add_input<std::int16_t>({0, 1, 2, 3, 4, 5}); // input
+    test_case.add_input<std::int16_t>({2, 1});             // repeats
+    test_case.add_expected_output<std::int16_t>(Shape{4, 3}, {0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5});
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_tile_static)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/tile_static.prototxt"));
+
+    auto test_case =
+        ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+    test_case.add_input<std::int16_t>({0, 1, 2, 3, 4, 5}); // input
+    test_case.add_expected_output<std::int16_t>(
+        Shape{4, 6}, {0, 1, 2, 0, 1, 2, 3, 4, 5, 3, 4, 5, 0, 1, 2, 0, 1, 2, 3, 4, 5, 3, 4, 5});
     test_case.run();
 }

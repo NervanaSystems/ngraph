@@ -32,7 +32,7 @@ TEST(opset_transform, opset1_convolution_upgrade_pass)
     pass_manager.run_passes(f);
 
     auto convolution_s1_result = f->get_results().at(0);
-    auto node = convolution_s1_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = convolution_s1_result->get_input_node_shared_ptr(0);
     auto convolution_v1_node = as_type_ptr<op::v1::Convolution>(node);
 
     ASSERT_TRUE(convolution_v1_node);
@@ -64,7 +64,7 @@ TEST(opset_transform, opset1_convolution_downgrade_pass)
     pass_manager.run_passes(f);
 
     auto conv_s0_result = f->get_results().at(0);
-    auto node = conv_s0_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = conv_s0_result->get_input_node_shared_ptr(0);
     auto conv_v0_node = as_type_ptr<op::v0::Convolution>(node);
 
     ASSERT_TRUE(conv_v0_node);
@@ -96,7 +96,7 @@ TEST(opset_transform, opset1_convolution_backprop_data_downgrade_pass)
     pass_manager.run_passes(f);
 
     auto conv_s0_result = f->get_results().at(0);
-    auto node = conv_s0_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = conv_s0_result->get_input_node_shared_ptr(0);
     auto conv_v0_node = as_type_ptr<op::v0::ConvolutionBackpropData>(node);
 
     ASSERT_TRUE(conv_v0_node);
@@ -127,7 +127,7 @@ TEST(opset_transform, opset1_convolution_backprop_filters_downgrade_pass)
     pass_manager.run_passes(f);
 
     auto conv_s0_result = f->get_results().at(0);
-    auto node = conv_s0_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = conv_s0_result->get_input_node_shared_ptr(0);
     auto conv_v0_node = as_type_ptr<op::v0::ConvolutionBackpropFilters>(node);
 
     ASSERT_TRUE(conv_v0_node);
@@ -161,7 +161,7 @@ TEST(opset_transform, opset1_group_convolution_backprop_data_downgrade_pass)
     pass_manager.run_passes(f);
 
     auto group_conv_backprop_s0_result = f->get_results().at(0);
-    auto node = group_conv_backprop_s0_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = group_conv_backprop_s0_result->get_input_node_shared_ptr(0);
     auto group_conv_backprop_v0_node = as_type_ptr<op::v0::GroupConvolutionBackpropData>(node);
 
     ASSERT_TRUE(group_conv_backprop_v0_node);
@@ -169,7 +169,7 @@ TEST(opset_transform, opset1_group_convolution_backprop_data_downgrade_pass)
     EXPECT_EQ(group_conv_backprop_v0_node->get_window_dilation_strides(), dilations);
     EXPECT_EQ(group_conv_backprop_v0_node->get_padding_below(), padding_begin);
     EXPECT_EQ(group_conv_backprop_v0_node->get_padding_above(), padding_end);
-    EXPECT_EQ(group_conv_backprop_v0_node->input(1).get_shape(), (Shape{256, 3, 10}));
+    EXPECT_EQ(group_conv_backprop_v0_node->get_input_shape(1), (Shape{256, 3, 10}));
     EXPECT_EQ(group_conv_backprop_v0_node->get_groups(), groups);
 }
 
@@ -194,7 +194,7 @@ TEST(opset_transform, opset1_group_convolution_backprop_data_upgrade_pass)
     pass_manager.run_passes(f);
 
     auto group_conv_backprop_s1_result = f->get_results().at(0);
-    auto node = group_conv_backprop_s1_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = group_conv_backprop_s1_result->get_input_node_shared_ptr(0);
     auto group_conv_backprop_v1_node = as_type_ptr<op::v1::GroupConvolutionBackpropData>(node);
 
     ASSERT_TRUE(group_conv_backprop_v1_node);

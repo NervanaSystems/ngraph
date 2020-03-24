@@ -42,6 +42,24 @@ op::v1::Convolution::Convolution(const Output<Node>& data_batch,
     , m_pads_end(pads_end)
     , m_auto_pad(auto_pad)
 {
+    if (auto_pad != PadType::EXPLICIT)
+    {
+        NODE_VALIDATION_CHECK(this,
+                              std::all_of(pads_begin.begin(),
+                                          pads_begin.end(),
+                                          [](std::ptrdiff_t i) { return (i == 0); }),
+                              "pads_begin: (",
+                              pads_begin,
+                              ") Non-zero padding should not be used along with auto pad modes.");
+        NODE_VALIDATION_CHECK(this,
+                              std::all_of(pads_end.begin(),
+                                          pads_end.end(),
+                                          [](std::ptrdiff_t i) { return (i == 0); }),
+                              "pads_end: (",
+                              pads_end,
+                              ") Non-zero padding should not be used along with auto pad modes.");
+    }
+
     constructor_validate_and_infer_types();
 }
 
@@ -237,12 +255,12 @@ bool op::v1::ConvolutionBackpropData::is_dynamic() const
 
 const PartialShape op::v1::ConvolutionBackpropData::get_output_shape() const
 {
-    auto data_pshape = input(0).get_partial_shape();
+    auto data_pshape = get_input_partial_shape(0);
 
     PartialShape shape;
     if (data_pshape.rank().is_static())
     {
-        shape = PartialShape{vector<Dimension>(static_cast<size_t>(data_pshape.rank() - 2))};
+        shape = PartialShape{vector<Dimension>(data_pshape.rank().get_length() - 2)};
     }
     else
     {
@@ -272,10 +290,10 @@ void op::v1::ConvolutionBackpropData::set_output_shape(const Shape& shape)
 
 void op::v1::ConvolutionBackpropData::validate_and_infer_types()
 {
-    auto data_pshape = input(0).get_partial_shape();
-    element::Type delta_et = input(0).get_element_type();
-    const PartialShape& filters_pshape = input(1).get_partial_shape();
-    element::Type filters_et = input(1).get_element_type();
+    auto data_pshape = get_input_partial_shape(0);
+    element::Type delta_et = get_input_element_type(0);
+    const PartialShape& filters_pshape = get_input_partial_shape(1);
+    element::Type filters_et = get_input_element_type(1);
 
     bool is_output_shape_present = get_inputs().size() == 3;
     PartialShape output_pshape = get_output_shape();
@@ -443,7 +461,7 @@ void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
 
         ptrdiff_t pads_end_backward =
             (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * m_dilations[i] +
-            ((m_pads_begin[i] + (static_cast<size_t>(get_output_shape()[i]) - 1) * m_strides[i] +
+            ((m_pads_begin[i] + (get_output_shape()[i].get_length() - 1) * m_strides[i] +
               m_pads_end[i] - (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * m_dilations[i]) %
              m_strides[i]) -
             m_pads_end[i];
@@ -605,7 +623,7 @@ void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
         forward_result_shape =
             infer_convolution_forward(this,
                                       data_batch_shape,
-                                      Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 1),
+                                      Strides(data_batch_shape.rank().get_length() - 2, 1),
                                       m_pads_begin,
                                       m_pads_end,
                                       filters_shape,

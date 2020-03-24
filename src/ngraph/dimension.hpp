@@ -59,6 +59,7 @@ namespace ngraph
             }
             return m_dimension;
         }
+
         /// \brief Convert this dimension to `size_t`. This dimension must be static and
         ///        non-negative.
         /// \throws std::invalid_argument If this dimension is dynamic or negative.
@@ -171,5 +172,6 @@ namespace ngraph
     /// \return A reference to `str` after insertion.
     ///
     /// Inserts the string `?` if `dimension` is dynamic; else inserts `int64_t(dimension)`.
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& str, const Dimension& dimension);
 }

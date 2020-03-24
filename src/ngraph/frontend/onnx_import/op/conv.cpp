@@ -83,7 +83,7 @@ namespace ngraph
                                  const std::shared_ptr<ngraph::Node>& bias)
                     {
                         const auto rank_of_conv =
-                            static_cast<size_t>(ng_conv->get_output_partial_shape(0).rank());
+                            ng_conv->get_output_partial_shape(0).rank().get_length();
 
                         // reshape the bias node {M} to {1, M, 1, 1, ..., 1}
                         // this is required by the addition operation that needs to be able

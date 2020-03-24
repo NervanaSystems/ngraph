@@ -572,6 +572,8 @@ set (SRC
     pattern/matcher.hpp
     pattern/op/any.cpp
     pattern/op/any.hpp
+    pattern/op/any_output.cpp
+    pattern/op/any_output.hpp
     pattern/op/any_of.cpp
     pattern/op/any_of.hpp
     pattern/op/branch.cpp
@@ -657,6 +659,11 @@ if (NGRAPH_STATIC_LIB_ENABLE)
 else()
     add_library(ngraph SHARED ${SRC})
 endif()
+
+set_target_properties(ngraph PROPERTIES
+                      CXX_VISIBILITY_PRESET hidden
+                      C_VISIBILITY_PRESET hidden
+                      VISIBILITY_INLINES_HIDDEN ON)
 
 if(NOT NGRAPH_JSON_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
@@ -751,10 +758,9 @@ endif()
 
 # nGraph
 install(TARGETS ngraph EXPORT ngraphTargets
-        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB}
-        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB}
-        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB}
-        COMPONENT ngraph)
+        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph
+        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph
+        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION ${NGRAPH_INSTALL_INCLUDE}/ngraph
     COMPONENT ngraph
