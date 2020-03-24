@@ -142,39 +142,28 @@ void op::v1::Broadcast::validate_and_infer_types()
     PartialShape result_shape{PartialShape::dynamic()};
     if (input_value(1).get_node_shared_ptr()->is_constant())
     {
-        std::cout << "Constant" << std::endl;
         result_shape = static_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr())
                            ->get_shape_val();
     }
     else if (dynamic_pointer_cast<op::Concat>(input_value(1).get_node_shared_ptr()))
     {
-        std::cout << "Concat" << std::endl;
         auto concat = as_type_ptr<op::Concat>(input_value(1).get_node_shared_ptr());
         auto concat_inputs = concat->inputs();
-
-        std::cout << "Concat " << concat->get_output_partial_shape(0) << endl;
-        std::cout << "Concat " << concat->get_output_partial_shape(0).is_static() << endl;
-        std::cout << "Concat " << concat->get_shape().size() << endl;
-        std::cout << "Concat " << concat_inputs.size() << endl;
-        std::cout << "Concat " << shape_size(concat->get_shape());
 
         if (concat->get_output_partial_shape(0).is_static() && concat->get_shape().size() == 1 &&
             concat_inputs.size() == shape_size(concat->get_shape()))
         {
-            std::cout << "Concat: static rank" << std::endl;
             auto output_partial_shape = vector<Dimension>{};
             for (const auto& concat_input : concat_inputs)
             {
                 auto source_node_ptr = concat_input.get_source_output().get_node_shared_ptr();
                 if (source_node_ptr->is_constant())
                 {
-                    std::cout << "Concat: static rank output cnstant" << std::endl;
                     auto source_const_ptr = dynamic_pointer_cast<op::Constant>(source_node_ptr);
                     output_partial_shape.push_back(source_const_ptr->get_axis_vector_val()[0]);
                 }
                 else
                 {
-                    std::cout << "Concat: static rank output dynamic" << std::endl;
                     output_partial_shape.push_back(Dimension::dynamic());
                 }
             }
