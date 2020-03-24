@@ -20,7 +20,10 @@ class TestMatcher : public ngraph::pattern::Matcher
     using ngraph::pattern::Matcher::Matcher;
 
 public:
-    TestMatcher() {}
+    TestMatcher()
+        : TestMatcher(ngraph::Output<ngraph::Node>{})
+    {
+    }
     bool virtual match_value(const ngraph::Output<ngraph::Node>& pattern_value,
                              const ngraph::Output<ngraph::Node>& graph_value) override
     {

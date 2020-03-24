@@ -49,7 +49,6 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 LSTMSequence() = default;
 
-                size_t get_default_output_index() const override { return no_default_index(); }
                 enum class direction
                 {
                     FORWARD,

@@ -36,34 +36,6 @@ namespace ngraph
         {
         }
 
-        namespace
-        {
-            Output<Node> make_node_output(const std::shared_ptr<Node>& node)
-            {
-                return node->get_output_size() == 1
-                           ? node->output(0)
-                           : std::make_shared<op::AnyOutput>(node)->output(0);
-            }
-        }
-
-        Matcher::Matcher(std::shared_ptr<Node> pattern_node)
-            : m_pattern_node(make_node_output(pattern_node))
-        {
-        }
-
-        Matcher::Matcher(std::shared_ptr<Node> pattern_node, const std::string& name)
-            : m_pattern_node(make_node_output(pattern_node))
-            , m_name(name)
-        {
-        }
-
-        Matcher::Matcher(std::shared_ptr<Node> pattern_node,
-                         const std::string& name,
-                         bool strict_mode)
-            : Matcher(make_node_output(pattern_node), name, strict_mode)
-        {
-        }
-
         MatcherState::~MatcherState()
         {
             if (m_restore)
@@ -90,10 +62,10 @@ namespace ngraph
             return is_successful;
         }
         PatternMap Matcher::get_pattern_map() const { return as_pattern_map(m_pattern_map); }
-        size_t Matcher::add_node(Output<Node> value)
+        size_t Matcher::add_node(Output<Node> node)
         {
             size_t result = m_matched_list.size();
-            m_matched_list.push_back(value);
+            m_matched_list.push_back(node.get_node_shared_ptr());
             return result;
         }
 
@@ -172,8 +144,11 @@ namespace ngraph
             return true;
         }
 
-        bool Matcher::match_arguments(Node* pattern_node, const std::shared_ptr<Node>& graph_node)
+        bool Matcher::match_arguments(const Output<Node>& pattern_value,
+                                      const Output<Node>& graph_value)
         {
+            auto pattern_node = pattern_value.get_node_shared_ptr();
+            auto graph_node = graph_value.get_node_shared_ptr();
             NGRAPH_DEBUG << "[MATCHER] Match arguments at " << *graph_node << " for pattern "
                          << *pattern_node;
 
@@ -225,7 +200,6 @@ namespace ngraph
             return match(graph_value, PatternValueMap{});
         }
 
-        bool Matcher::match(std::shared_ptr<Node> node) { return match(node->output(0)); }
         bool Matcher::match(const Output<Node>& graph_value,
                             const PatternValueMap& previous_matches)
         {

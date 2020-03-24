@@ -58,7 +58,7 @@ namespace ngraph
                     : AnyOf(type,
                             s,
                             [pred](const Output<Node>& value) {
-                                return pred(value.as_single_output_node());
+                                return pred(value.as_single_output_node(false));
                             },
                             as_output_vector(wrapped_values))
                 {

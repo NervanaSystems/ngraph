@@ -56,7 +56,6 @@ doc/source/generated
 nervana_aeon.egg-info/
 *.xsd
 *.xslt
-.vscode
 
 # emacs
 *~
