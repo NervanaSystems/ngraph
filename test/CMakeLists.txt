@@ -268,242 +268,161 @@ add_subdirectory(util)
 # All such files are configured via cmake which replaces all instances of cmake variables
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 
-set(MULTI_TEST_SRC
-    backend/abc.in.cpp
-    backend/abs.in.cpp
-    backend/acos.in.cpp
-    backend/add.in.cpp
-    backend/aliased_output.in.cpp
-    backend/all.in.cpp
-    backend/any.in.cpp
-    backend/api.in.cpp
-    backend/arg_reduce.in.cpp
-    backend/asin.in.cpp
-    backend/atan.in.cpp
-    backend/atan2.in.cpp
-    backend/auto_broadcast.in.cpp
-    backend/autodiff.in.cpp
-    backend/batch_mat_mul.in.cpp
-    backend/batch_norm.in.cpp
-    backend/broadcast.in.cpp
-    backend/builder_flatten.in.cpp
-    backend/ceiling.in.cpp
-    backend/comparison.in.cpp
-    backend/computation_reuse.in.cpp
-    backend/concat.in.cpp
-    backend/constant.in.cpp
-    backend/convert.in.cpp
-    backend/convolution_reference.in.cpp
-    backend/convolution.in.cpp
-    backend/cos.in.cpp
-    backend/cosh.in.cpp
-    backend/cum_sum.in.cpp
-    backend/divide.in.cpp
-    backend/dot.in.cpp
-    backend/dyn_broadcast.in.cpp
-    backend/dyn_replace_slice_reference.in.cpp
-    backend/dyn_reshape.in.cpp
-    backend/dyn_slice_reference.in.cpp
-    backend/strided_slice.in.cpp
-    backend/dynamic.in.cpp
-    backend/embedding_lookup.in.cpp
-    backend/erf.in.cpp
-    backend/exp.in.cpp
-    backend/floor.in.cpp
-    backend/function_name.in.cpp
-    backend/fused_op.in.cpp
-    backend/gather.in.cpp
-    backend/gelu.in.cpp
-    backend/generate_mask.in.cpp
-    backend/group_convolution.in.cpp
-    backend/layer_norm.in.cpp
-    backend/log.in.cpp
-    backend/logical_and.in.cpp
-    backend/logical_or.in.cpp
-    backend/logical_xor.in.cpp
-    backend/lrn.in.cpp
-    backend/matmul.in.cpp
-    backend/max.in.cpp
-    backend/maximum.in.cpp
-    backend/min.in.cpp
-    backend/minimum.in.cpp
-    backend/multiple_backends.in.cpp
-    backend/multiple_result.in.cpp
-    backend/multiply.in.cpp
-    backend/negative.in.cpp
-    backend/node_name.in.cpp
-    backend/not.in.cpp
-    backend/numeric.in.cpp
-    backend/one_hot.in.cpp
-    backend/pad.in.cpp
-    backend/parameter_as_output.in.cpp
-    backend/partial_slice.in.cpp
-    backend/pool.in.cpp
-    backend/power.in.cpp
-    backend/product.in.cpp
-    backend/quantize_dequantize.in.cpp
-    backend/quantized_convolution.in.cpp
-    backend/quantized_dot.in.cpp
-    backend/random_uniform.in.cpp
-    backend/range.in.cpp
-    backend/relu.in.cpp
-    backend/replace_slice.in.cpp
-    backend/reshape.in.cpp
-    backend/reverse_sequence.in.cpp
-    backend/reverse.in.cpp
-    backend/round.in.cpp
-    backend/scatter.in.cpp
-    backend/select.in.cpp
-    backend/shape_of.in.cpp
-    backend/sigmoid.in.cpp
-    backend/sign.in.cpp
-    backend/sin.in.cpp
-    backend/sinh.in.cpp
-    backend/slice.in.cpp
-    backend/softmax.in.cpp
-    backend/sqrt.in.cpp
-    backend/subtract.in.cpp
-    backend/sum.in.cpp
-    backend/tan.in.cpp
-    backend/tanh.in.cpp
-    backend/tile.in.cpp
-    backend/topk.in.cpp
-    backend/transpose.in.cpp
-    backend/unhandled_op.in.cpp
-    backend/validate_call.in.cpp
-    backend/zero_sized.in.cpp
-)
+include(CMakeParseArguments)
 
-if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
+function(ie_get_object_library backend)
+    cmake_parse_arguments(MULTI_TESTS "" "TEST_LOOPS;MANIFEST;TARGET_NAME" "" ${ARGN})
+
     set(MULTI_TEST_SRC
-            backend/abc.in.cpp
-            backend/abs.in.cpp
-            backend/acos.in.cpp
-            backend/add.in.cpp
-            backend/aliased_output.in.cpp
-            backend/all.in.cpp
-            backend/any.in.cpp
-            backend/arg_reduce.in.cpp
-            backend/asin.in.cpp
-            backend/atan.in.cpp
-            backend/atan2.in.cpp
-            backend/auto_broadcast.in.cpp
-            backend/batch_mat_mul.in.cpp
-            backend/broadcast.in.cpp
-            backend/builder_flatten.in.cpp
-            backend/ceiling.in.cpp
-            backend/comparison.in.cpp
-            backend/computation_reuse.in.cpp
-            backend/concat.in.cpp
-            backend/convert.in.cpp
-            backend/convolution.in.cpp
-            backend/cos.in.cpp
-            backend/cosh.in.cpp
-            backend/cum_sum.in.cpp
-            backend/divide.in.cpp
-            backend/dot.in.cpp
-            backend/dyn_broadcast.in.cpp
-            backend/dyn_replace_slice_reference.in.cpp
-            backend/dyn_reshape.in.cpp
-            backend/dyn_slice_reference.in.cpp
-            backend/strided_slice.in.cpp
-            backend/dynamic.in.cpp
-            backend/embedding_lookup.in.cpp
-            backend/erf.in.cpp
-            backend/exp.in.cpp
-            backend/floor.in.cpp
-            backend/function_name.in.cpp
-            backend/fused_op.in.cpp
-            backend/gather.in.cpp
-            backend/generate_mask.in.cpp
-            backend/group_convolution.in.cpp
-            backend/layer_norm.in.cpp
-            backend/log.in.cpp
-            backend/logical_and.in.cpp
-            backend/logical_or.in.cpp
-            backend/logical_xor.in.cpp
-            backend/lrn.in.cpp
-            backend/max.in.cpp
-            backend/maximum.in.cpp
-            backend/min.in.cpp
-            backend/minimum.in.cpp
-            backend/multiple_backends.in.cpp
-            backend/multiple_result.in.cpp
-            backend/multiply.in.cpp
-            backend/negative.in.cpp
-            backend/node_name.in.cpp
-            backend/not.in.cpp
-            backend/numeric.in.cpp
-            backend/one_hot.in.cpp
-            backend/pad.in.cpp
-            backend/parameter_as_output.in.cpp
-            backend/partial_slice.in.cpp
-            backend/pool.in.cpp
-            backend/power.in.cpp
-            backend/product.in.cpp
-            backend/quantize_dequantize.in.cpp
-            backend/quantized_convolution.in.cpp
-            backend/quantized_dot.in.cpp
-            backend/random_uniform.in.cpp
-            backend/range.in.cpp
-            backend/relu.in.cpp
-            backend/replace_slice.in.cpp
-            backend/reshape.in.cpp
-            backend/reverse_sequence.in.cpp
-            backend/reverse.in.cpp
-            backend/scatter.in.cpp
-            backend/select.in.cpp
-            backend/shape_of.in.cpp
-            backend/sigmoid.in.cpp
-            backend/sign.in.cpp
-            backend/sin.in.cpp
-            backend/sinh.in.cpp
-            backend/slice.in.cpp
-            backend/softmax.in.cpp
-            backend/sqrt.in.cpp
-            backend/subtract.in.cpp
-            backend/sum.in.cpp
-            backend/tan.in.cpp
-            backend/tanh.in.cpp
-            backend/tile.in.cpp
-            backend/transpose.in.cpp
-            backend/unhandled_op.in.cpp
-            backend/validate_call.in.cpp
-            backend/zero_sized.in.cpp
+        backend/abc.in.cpp
+        backend/abc.in.cpp
+        backend/abs.in.cpp
+        backend/acos.in.cpp
+        backend/add.in.cpp
+        backend/aliased_output.in.cpp
+        backend/all.in.cpp
+        backend/any.in.cpp
+        backend/arg_reduce.in.cpp
+        backend/asin.in.cpp
+        backend/atan.in.cpp
+        backend/atan2.in.cpp
+        backend/auto_broadcast.in.cpp
+        backend/batch_mat_mul.in.cpp
+        backend/broadcast.in.cpp
+        backend/builder_flatten.in.cpp
+        backend/ceiling.in.cpp
+        backend/comparison.in.cpp
+        backend/computation_reuse.in.cpp
+        backend/concat.in.cpp
+        backend/convert.in.cpp
+        backend/convolution.in.cpp
+        backend/cos.in.cpp
+        backend/cosh.in.cpp
+        backend/cum_sum.in.cpp
+        backend/divide.in.cpp
+        backend/dot.in.cpp
+        backend/dyn_broadcast.in.cpp
+        backend/dyn_replace_slice_reference.in.cpp
+        backend/dyn_reshape.in.cpp
+        backend/dyn_slice_reference.in.cpp
+        backend/strided_slice.in.cpp
+        backend/dynamic.in.cpp
+        backend/embedding_lookup.in.cpp
+        backend/erf.in.cpp
+        backend/exp.in.cpp
+        backend/floor.in.cpp
+        backend/function_name.in.cpp
+        backend/fused_op.in.cpp
+        backend/gather.in.cpp
+        backend/generate_mask.in.cpp
+        backend/group_convolution.in.cpp
+        backend/layer_norm.in.cpp
+        backend/log.in.cpp
+        backend/logical_and.in.cpp
+        backend/logical_or.in.cpp
+        backend/logical_xor.in.cpp
+        backend/lrn.in.cpp
+        backend/max.in.cpp
+        backend/maximum.in.cpp
+        backend/min.in.cpp
+        backend/minimum.in.cpp
+        backend/multiple_backends.in.cpp
+        backend/multiple_result.in.cpp
+        backend/multiply.in.cpp
+        backend/negative.in.cpp
+        backend/node_name.in.cpp
+        backend/not.in.cpp
+        backend/numeric.in.cpp
+        backend/one_hot.in.cpp
+        backend/pad.in.cpp
+        backend/parameter_as_output.in.cpp
+        backend/partial_slice.in.cpp
+        backend/pool.in.cpp
+        backend/power.in.cpp
+        backend/product.in.cpp
+        backend/quantize_dequantize.in.cpp
+        backend/quantized_convolution.in.cpp
+        backend/quantized_dot.in.cpp
+        backend/random_uniform.in.cpp
+        backend/range.in.cpp
+        backend/relu.in.cpp
+        backend/replace_slice.in.cpp
+        backend/reshape.in.cpp
+        backend/reverse_sequence.in.cpp
+        backend/reverse.in.cpp
+        backend/scatter.in.cpp
+        backend/select.in.cpp
+        backend/shape_of.in.cpp
+        backend/sigmoid.in.cpp
+        backend/sign.in.cpp
+        backend/sin.in.cpp
+        backend/sinh.in.cpp
+        backend/slice.in.cpp
+        backend/softmax.in.cpp
+        backend/sqrt.in.cpp
+        backend/subtract.in.cpp
+        backend/sum.in.cpp
+        backend/tan.in.cpp
+        backend/tanh.in.cpp
+        backend/tile.in.cpp
+        backend/transpose.in.cpp
+        backend/unhandled_op.in.cpp
+        backend/validate_call.in.cpp
+        backend/zero_sized.in.cpp
+    )
 
-#            This files should be commented,because they are not working for a while.
-#            Need to fix for IE plugin:
-#            backend/api.in.cpp
-#            backend/batch_norm.in.cpp
-#            backend/gelu.in.cpp
-#            backend/topk.in.cpp
+    if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
+        list(REMOVE_ITEM MULTI_TEST_SRC
+               # This files should be commented,because they are not working for a while.
+               # Need to fix for IE plugin:
+               backend/api.in.cpp
+               backend/batch_norm.in.cpp
+               backend/gelu.in.cpp
+               backend/topk.in.cpp
 
-#            Other issues:
-#            backend/autodiff.in.cpp
-#            backend/constant.in.cpp
-#            backend/convolution_reference.in.cpp
-            )
-endif()
+               # Other issues:
+               backend/autodiff.in.cpp
+               backend/constant.in.cpp
+               backend/convolution_reference.in.cpp)
+    endif()
 
-if (NGRAPH_MLIR_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
-    list(APPEND SRC mlir/ops_test.cpp)
-endif()
+    if (NGRAPH_MLIR_ENABLE)
+        list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
+        list(APPEND SRC mlir/ops_test.cpp)
+    endif()
 
-if (NGRAPH_CPU_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend/graph_comparison.in.cpp)
-endif()
+    if (NGRAPH_CPU_ENABLE)
+        list(APPEND MULTI_TEST_SRC backend/graph_comparison.in.cpp)
+    endif()
 
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    list(APPEND MULTI_TEST_SRC
-            onnx/onnx_import.in.cpp
-            onnx/onnx_import_convpool.in.cpp
-            onnx/onnx_import_dyn_shapes.in.cpp
-            onnx/onnx_import_provenance.in.cpp
-            onnx/onnx_import_reshape.in.cpp
-            onnx/onnx_import_rnn.in.cpp
-            onnx/onnx_import_quant.in.cpp)
-endif()
+    if (NGRAPH_ONNX_IMPORT_ENABLE)
+        list(APPEND MULTI_TEST_SRC
+                onnx/onnx_import.in.cpp
+                onnx/onnx_import_convpool.in.cpp
+                onnx/onnx_import_dyn_shapes.in.cpp
+                onnx/onnx_import_provenance.in.cpp
+                onnx/onnx_import_reshape.in.cpp
+                onnx/onnx_import_rnn.in.cpp
+                onnx/onnx_import_quant.in.cpp)
+    endif()
+
+    set(TEST_LOOPS ${MULTI_TESTS_TEST_LOOPS})
+    set(MANIFEST ${MULTI_TESTS_MANIFEST})
+
+    foreach(TEST_SRC ${MULTI_TEST_SRC})
+        string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
+        configure_file(${TEST_SRC} ${TARGET_NAME})
+        set(SRC_LOCAL ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} ${SRC_LOCAL})
+    endforeach()
+
+    string(TOLOWER ${BACKEND_NAME} backend_lower)
+    set(target_name "${backend_lower}-unit-test-obj")
+    set(${MULTI_TESTS_TARGET_NAME} ${target_name} PARENT_SCOPE)
+
+    add_library(${target_name} OBJECT ${SRC_LOCAL})
+    target_link_libraries(${target_name} PRIVATE ngraph ngraph_test_util)
+    target_link_libraries(${target_name} PRIVATE libgtest) # TODO
+endfunction()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     # Some---but not all---autodiff tests go through multiple iterations with
@@ -520,14 +439,16 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
     set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
 
-    foreach(TEST_SRC ${MULTI_TEST_SRC})
-        string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
-        configure_file(${TEST_SRC} ${TARGET_NAME})
-        set(SRC ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} ${SRC})
-    endforeach()
+    ie_get_object_library(BACKEND_NAME ${BACKEND_NAME}
+                          TEST_LOOPS ${TEST_LOOPS}
+                          MANIFEST ${MANIFEST}
+                          TARGET_NAME TEST_TARGET_NAME)
+    list(APPEND SRC $<TARGET_OBJECTS:${TEST_TARGET_NAME}>)
 
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
+
+########################
 
 add_executable(unit-test ${SRC})
 

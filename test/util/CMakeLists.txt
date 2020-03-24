@@ -34,13 +34,12 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph_test_util PROPERTIES
         VERSION ${NGRAPH_VERSION})
 endif()
-target_include_directories(ngraph_test_util PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+target_include_directories(ngraph_test_util PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(ngraph_test_util PRIVATE ngraph libgtest)
 add_dependencies(ngraph_test_util ext_gtest)
 
 if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
-    add_definitions(-DNGRAPH_UNIT_TEST_OPENVINO_ENABLE)
-    target_include_directories(ngraph_test_util PUBLIC ${IE_MAIN_SOURCE_DIR}/include)
+    target_compile_definitions(ngraph_test_util PUBLIC NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
     target_link_libraries(ngraph_test_util PRIVATE inference_engine)
 endif()
 
