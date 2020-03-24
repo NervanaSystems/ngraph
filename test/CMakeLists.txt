@@ -592,6 +592,10 @@ if (NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
 endif()
 
+if (NGRAPH_GENERIC_CPU_ENABLE)
+    target_link_libraries(unit-test PRIVATE gcpu_backend)
+endif()
+
 if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test PRIVATE gpu_backend)
 endif()
