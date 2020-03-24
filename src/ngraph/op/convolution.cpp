@@ -308,10 +308,8 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
         filters_et,
         ").");
 
-    if (data_pshape.is_static() && filters_pshape.is_static())
+    if (data_pshape.rank().is_static() && filters_pshape.rank().is_static())
     {
-        const Shape& data_shape = data_pshape.to_shape();
-
         if (m_pads_begin.size() == 0)
         {
             m_pads_begin = conv_default_padding(this, data_pshape, filters_pshape);
@@ -333,7 +331,7 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
             m_dilations = conv_default_strides(this, data_pshape, filters_pshape);
         }
 
-        const size_t num_spatial_dims = data_shape.size() - 2;
+        const size_t num_spatial_dims = data_pshape.rank().get_length() - 2;
 
         NODE_VALIDATION_CHECK(this,
                               m_strides.size() == num_spatial_dims,
