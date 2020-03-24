@@ -24,7 +24,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/any_of.hpp"
-#include "ngraph/pattern/op/any_output.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 
@@ -77,20 +76,18 @@ namespace ngraph
             using PatternMap = ngraph::pattern::PatternMap;
 
             // Avoid implicit string construction from nullptr.
-            Matcher(const std::shared_ptr<Node> pattern_node, std::nullptr_t name) = delete;
+            Matcher(const std::shared_ptr<Node>& pattern_node, std::nullptr_t name) = delete;
 
-            Matcher() {}
-            Matcher(Output<Node>& pattern_node)
+            Matcher(const Output<Node>& pattern_node)
                 : m_pattern_node{pattern_node}
             {
             }
 
-            Matcher(Output<Node>& pattern_node, const std::string& name)
+            Matcher(const Output<Node>& pattern_node, const std::string& name)
                 : m_pattern_node(pattern_node)
                 , m_name{name}
             {
             }
-
             /// \brief Constructs a Matcher object
             ///
             /// \param pattern_node is a pattern sub graph that will be matched against input graphs
@@ -103,19 +100,11 @@ namespace ngraph
             {
             }
 
-            // Some matches should start on a node rather than an output. These three constructors
-            // are transition until we work out the right way to do that.
-            Matcher(std::shared_ptr<Node> pattern_node);
-            Matcher(std::shared_ptr<Node> pattern_node, const std::string& name);
-            Matcher(std::shared_ptr<Node> pattern_node, const std::string& name, bool strict_mode);
-
             virtual ~Matcher() {}
             /// \brief Matches a pattern to \p graph_node
             ///
             /// \param graph_value is an input graph to be matched against
             bool match(const Output<Node>& graph_value);
-
-            bool match(std::shared_ptr<Node> graph_node);
 
             /// \brief Matches a pattern to \p graph_node
             ///
@@ -171,8 +160,8 @@ namespace ngraph
                                      const ngraph::Output<Node>& graph_value);
 
             bool is_strict_mode() { return m_strict_mode; }
-            virtual bool match_arguments(Node* pattern_node,
-                                         const std::shared_ptr<Node>& graph_node);
+            virtual bool match_arguments(const Output<Node>& pattern_value,
+                                         const Output<Node>& graph_value);
 
             void capture(const std::set<Node*>& static_nodes);
 

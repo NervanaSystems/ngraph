@@ -116,14 +116,6 @@ TEST(type_prop, topk_rank_dynamic_ok)
     ASSERT_TRUE(topk->get_output_partial_shape(0).rank().is_dynamic());
     ASSERT_TRUE(topk->get_output_partial_shape(1).rank().is_dynamic());
     ASSERT_TRUE(topk->get_sort() == op::TopK::SortType::SORT_VALUES);
-    try
-    {
-        auto badout = Output<Node>(topk);
-        FAIL() << "No default output for topk";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-    }
 }
 
 TEST(type_prop, topk_rank_dynamic_result_et_dynamic)

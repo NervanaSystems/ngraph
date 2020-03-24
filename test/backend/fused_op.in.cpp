@@ -1574,7 +1574,6 @@ NGRAPH_TEST(${BACKEND_NAME}, split_var_len_parts)
 
 NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_no_bias_no_peepholes)
 {
-    DisableRemoveGOE nogoe;
     const size_t batch_size = 2;
     const size_t input_size = 3;
     const size_t hidden_size = 3;
@@ -1708,7 +1707,6 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_zero_bias_peepholes)
 
 NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_zero_bias_peepholes_constant)
 {
-    DisableRemoveGOE nogoe;
     const size_t batch_size = 2;
     const size_t input_size = 3;
     const size_t hidden_size = 3;
@@ -1776,7 +1774,6 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_zero_bias_peepholes_constant)
 
 NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_fixed_no_bias_no_peepholes)
 {
-    DisableRemoveGOE nogoe;
     const size_t batch_size = 2;
     const size_t input_size = 3;
     const size_t hidden_size = 3;

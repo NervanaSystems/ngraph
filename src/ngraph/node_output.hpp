@@ -39,8 +39,6 @@ namespace ngraph
     template <>
     class NGRAPH_API Output<Node>
     {
-        void eliminate_goe() NGRAPH_DEPRECATED("Remove when GetOrderedOutput is removed");
-
     public:
         /// \brief Constructs a Output.
         /// \param node A pointer to the node for the output handle.
@@ -58,7 +56,7 @@ namespace ngraph
         /// \param node A `shared_ptr` to the node for the output handle.
         template <typename T>
         Output(const std::shared_ptr<T>& node)
-            : Output(node ? node->get_default_output() : Output<Node>())
+            : Output(node, 0)
         {
         }
 
@@ -77,7 +75,7 @@ namespace ngraph
         std::shared_ptr<Node> get_node_shared_ptr() const;
         /// \return A useable shared pointer to this output. If index 0, the node,
         /// otherwise find or create a GOE.
-        std::shared_ptr<Node> as_single_output_node() const NGRAPH_DEPRECATED("Transitional.");
+        std::shared_ptr<Node> as_single_output_node(bool for_get_output_element = true) const;
 
         /// \return The index of the output referred to by this output handle.
         size_t get_index() const;
@@ -120,8 +118,6 @@ namespace ngraph
     template <>
     class NGRAPH_API Output<const Node>
     {
-        void eliminate_goe();
-
     public:
         /// \brief Constructs a Output.
         /// \param node A pointer to the node for the output handle.
@@ -139,7 +135,7 @@ namespace ngraph
         /// \param node A `shared_ptr` to the node for the output handle.
         template <typename T>
         Output(const std::shared_ptr<T>& node)
-            : Output(node ? node->get_default_output() : Output<const Node>())
+            : Output(node, 0)
         {
         }
 
