@@ -70,7 +70,8 @@ namespace ngraph
                     }
                     else
                     {
-                        const size_t data_rank = data->get_output_partial_shape(0).rank().get_length();
+                        const size_t data_rank =
+                            data->get_output_partial_shape(0).rank().get_length();
                         axes = default_opset::Constant::create(
                             element::i64,
                             {data_rank},
