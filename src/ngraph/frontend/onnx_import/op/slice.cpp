@@ -57,7 +57,6 @@ namespace ngraph
                 {
                     NodeVector inputs{node.get_ng_inputs()};
                     const auto data = inputs.at(0);
-                    const size_t data_rank = data->get_output_partial_shape(0).rank().get_length();
 
                     const auto starts = inputs.at(1);
                     const auto ends = inputs.at(2);
@@ -71,6 +70,7 @@ namespace ngraph
                     }
                     else
                     {
+                        const size_t data_rank = data->get_output_partial_shape(0).rank().get_length();
                         axes = default_opset::Constant::create(
                             element::i64,
                             {data_rank},
