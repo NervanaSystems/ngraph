@@ -600,21 +600,26 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, flatten_axis)
         SERIALIZED_ZOO, "onnx/dynamic_shapes/flatten_dyn_shape_axis.prototxt"));
     auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
 
+    const size_t RANKS_TO_TEST = 4;
     const size_t AXIS = 3;
-    size_t r = 4;
-    const Shape shape(r, 2);
-    const auto elems_in_tensor = shape_size(shape);
 
-    std::vector<float> input_values(elems_in_tensor);
-    std::iota(input_values.begin(), input_values.end(), 1);
+    for (size_t r = AXIS; r <= RANKS_TO_TEST + AXIS; ++r)
+    {
+        // size_t r = 3;
+        const Shape shape(r, 2);
+        const auto elems_in_tensor = shape_size(shape);
 
-    test_case.add_input<float>(shape, input_values);
+        std::vector<float> input_values(elems_in_tensor);
+        std::iota(input_values.begin(), input_values.end(), 1);
 
-    std::vector<float> expected_values(input_values.begin(), input_values.end());
-    const Shape expected_shape(get_flattened_shape(shape, AXIS));
-    test_case.add_expected_output<float>(expected_shape, expected_values);
+        test_case.add_input<float>(shape, input_values);
 
-    test_case.run();
+        std::vector<float> expected_values(input_values.begin(), input_values.end());
+        const Shape expected_shape(get_flattened_shape(shape, AXIS));
+        test_case.add_expected_output<float>(expected_shape, expected_values);
+
+        test_case.run();
+    }
 }
 
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, flatten_neg_axis)
@@ -623,20 +628,24 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, flatten_neg_axis)
         SERIALIZED_ZOO, "onnx/dynamic_shapes/flatten_dyn_shape_neg_axis.prototxt"));
     auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
 
+    const size_t RANKS_TO_TEST = 4;
     const int64_t AXIS = -3;
 
-    size_t r = 4;
-    const Shape shape(r, 2);
-    const auto elems_in_tensor = shape_size(shape);
+    for (size_t r = -AXIS; r <= RANKS_TO_TEST + -AXIS; ++r)
+    {
+        // size_t r = 4;
+        const Shape shape(r, 2);
+        const auto elems_in_tensor = shape_size(shape);
 
-    std::vector<float> input_values(elems_in_tensor);
-    std::iota(input_values.begin(), input_values.end(), 1);
+        std::vector<float> input_values(elems_in_tensor);
+        std::iota(input_values.begin(), input_values.end(), 1);
 
-    test_case.add_input<float>(shape, input_values);
+        test_case.add_input<float>(shape, input_values);
 
-    std::vector<float> expected_values(input_values.begin(), input_values.end());
-    const Shape expected_shape(get_flattened_shape(shape, r + AXIS));
-    test_case.add_expected_output<float>(expected_shape, expected_values);
+        std::vector<float> expected_values(input_values.begin(), input_values.end());
+        const Shape expected_shape(get_flattened_shape(shape, r + AXIS));
+        test_case.add_expected_output<float>(expected_shape, expected_values);
 
-    test_case.run();
+        test_case.run();
+    }
 }
