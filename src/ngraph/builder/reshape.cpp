@@ -236,7 +236,7 @@ namespace ngraph
 
                     // TODO: What if axis value is beyond acceptable values? [-node_rank,
                     // node_rank-1]
-                    return make_shared<ngraph::opset1::Subtract>(node_rank, axis_node);
+                    return make_shared<ngraph::opset1::Add>(node_rank, axis_node);
                 }
             } // opset1
         }     // builder
@@ -245,7 +245,7 @@ namespace ngraph
 
 shared_ptr<Node> builder::opset1::flatten(const Output<Node>& value, int axis)
 {
-    if (value.get_partial_shape().rank().is_static())
+    if (value.get_partial_shape().is_static())
     {
         auto data_shape = value.get_shape();
         // First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of
