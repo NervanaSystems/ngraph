@@ -16,11 +16,8 @@
 
 #pragma once
 
-#include <memory>
-
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/get_output_element.hpp"
 
 namespace ngraph
 {
@@ -30,12 +27,12 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector identity(const Node& node)
-                {
-                    auto input = node.get_ng_inputs().at(0);
-                    auto zero = default_opset::Constant::create(input->get_element_type(), {}, {0});
-                    return {std::make_shared<default_opset::Add>(input, zero)};
-                }
+                /// \brief Performs ONNX Tile operation.
+                ///
+                /// \param node The ONNX node object representing this operation.
+                /// \return The vector containing nGraph a node producing the output of the Tile op.
+                NodeVector tile(const Node& node);
+
             } // namespace set_1
 
         } // namespace op
