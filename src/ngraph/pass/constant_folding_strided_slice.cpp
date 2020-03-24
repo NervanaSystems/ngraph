@@ -44,10 +44,32 @@ shared_ptr<op::Constant> fold_constant_strided_slice(shared_ptr<op::Constant> da
         return axis_set;
     };
 
+    auto begin_ext = begin->get_vector<int64_t>();
+    auto end_ext = end->get_vector<int64_t>();
+    auto strides_ext = strides->get_vector<int64_t>();
+    const auto begin_mask = convert_mask_to_axis_set(slice->get_begin_mask());
+    const auto end_mask = convert_mask_to_axis_set(slice->get_end_mask());
+
+    for (const auto& mask_axis : begin_mask)
+    {
+        if (begin_ext.size() < data->get_shape().size())
+        {
+            begin_ext.insert(std::next(begin_ext.begin(), mask_axis), 0);
+            strides_ext.insert(std::next(strides_ext.begin(), mask_axis), 1);
+        }
+    }
+    for (const auto& mask_axis : end_mask)
+    {
+        if (end_ext.size() < data->get_shape().size())
+        {
+            end_ext.insert(std::next(end_ext.begin(), mask_axis), 0);
+        }
+    }
+
     SlicePlan plan = make_slice_plan(data->get_shape(),
-                                     begin->get_vector<int64_t>(),
-                                     end->get_vector<int64_t>(),
-                                     strides->get_vector<int64_t>(),
+                                     begin_ext,
+                                     end_ext,
+                                     strides_ext,
                                      convert_mask_to_axis_set(slice->get_begin_mask()),
                                      convert_mask_to_axis_set(slice->get_end_mask()),
                                      convert_mask_to_axis_set(slice->get_new_axis_mask()),
