@@ -245,7 +245,7 @@ namespace ngraph
 
 shared_ptr<Node> builder::opset1::flatten(const Output<Node>& value, int axis)
 {
-    if (value.get_partial_shape().rank().is_static())
+    if (value.get_partial_shape().is_static())
     {
         auto data_shape = value.get_shape();
         // First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of
