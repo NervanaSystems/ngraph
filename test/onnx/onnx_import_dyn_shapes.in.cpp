@@ -594,3 +594,28 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, flatten_axis_0)
     }
 }
 
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, flatten_axis)
+{
+    const auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/flatten_dyn_shape_axis.prototxt"));
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const size_t AXIS = 3;
+    size_t r = 4;
+    const Shape shape(r, 2);
+    const auto elems_in_tensor = shape_size(shape);
+
+    std::vector<float> input_values(elems_in_tensor);
+    std::iota(input_values.begin(), input_values.end(), 1);
+
+    test_case.add_input<float>(shape, input_values);
+
+    std::vector<float> expected_values(input_values.begin(), input_values.end());
+    const Shape expected_shape(get_flattened_shape(shape, AXIS));
+    test_case.add_expected_output<float>(expected_shape, expected_values);
+
+    test_case.run();
+}
+
+    size_t r = 4;
+    const Shape shape(r, 2);
