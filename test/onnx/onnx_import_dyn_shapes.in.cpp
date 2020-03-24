@@ -554,7 +554,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, expand_uint16_dyn_shape)
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_2d_input)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/slice.prototxt"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/slice_2d_input.prototxt"));
 
     auto test_case =
         ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
