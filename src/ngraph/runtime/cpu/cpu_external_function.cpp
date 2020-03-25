@@ -1191,13 +1191,15 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         if (getenv_bool("NGRAPH_MLIR") && getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             if (typeid(ngraph::op::MatMul) == typeid(node) &&
-                node.get_input_element_type(0) == element::f32)
+                node.get_input_element_type(0) == element::f32 &&
+                node.get_input_shape(0).size() == 2 && node.get_input_shape(1).size() == 2)
             {
                 return true;
             }
 
             if (typeid(ngraph::op::Gemm) == typeid(node) &&
-                node.get_input_element_type(0) == element::f32)
+                node.get_input_element_type(0) == element::f32 &&
+                node.get_input_shape(0).size() == 2 && node.get_input_shape(1).size() == 2)
             {
                 return true;
             }
