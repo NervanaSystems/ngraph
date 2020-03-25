@@ -1964,7 +1964,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_scatter10_import_only)
 {
     const auto scatter_fn = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/scatter_opset10.prototxt"));
-    
+
     const Shape data_shape{2};
 
     EXPECT_EQ(scatter_fn->get_output_size(), 1);
@@ -1977,7 +1977,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_scatter_elements11_import_only)
 {
     const auto scatter_fn = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/scatter_elements_opset11.prototxt"));
-    
+
     const Shape data_shape{2, 2};
 
     EXPECT_EQ(scatter_fn->get_output_size(), 1);
