@@ -134,9 +134,8 @@ namespace ngraph
         ///
         /// Formally, PartialShape `s1` is said to _relax_ PartialShape `s2`
         /// if:
-        /// \li `s1` has dynamic rank, or
-        /// \li `s1` and `s2` both have static rank `r`, and for every `i` from `0` to `r-1`,
-        ///      either `s1[i]` is dynamic, or `s1[i]` == `s2[i]`.
+        /// \li For every `i` from `0` to `r-1`,
+        ///      either `s1[i]` contains s2[i].
         bool relaxes(const PartialShape& s) const;
 
         /// \brief Check whether this shape is a refinement of the argument.

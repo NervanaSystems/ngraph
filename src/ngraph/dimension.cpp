@@ -31,8 +31,8 @@ std::ostream& ngraph::operator<<(std::ostream& str, const Dimension& dimension)
     }
     else if (dimension.get_interval().has_upper_bound())
     {
-        return str << "[" << dimension.get_interval().get_min_val() << ", "
-                   << dimension.get_interval().get_max_val() << "]";
+        return str << "[" << dimension.get_min_length() << ", " << dimension.get_max_length()
+                   << "]";
     }
     else
     {
@@ -111,14 +111,19 @@ uint64_t Dimension::get_length() const
     return m_dimension.get_min_val();
 }
 
+namespace
+{
+    int64_t dimension_length(Interval::value_type vt) { return vt == Interval::s_max ? -1 : vt; }
+}
+
 int64_t Dimension::get_max_length() const
 {
-    return m_dimension.get_max_val();
+    return dimension_length(m_dimension.get_max_val());
 }
 
 int64_t Dimension::get_min_length() const
 {
-    return m_dimension.get_min_val();
+    return dimension_length(m_dimension.get_min_val());
 }
 
 Dimension::operator size_t() const

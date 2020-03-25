@@ -250,8 +250,10 @@ void op::Range::validate_and_infer_types()
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
-    result_shape[0].get_interval().set_max_val(m_max_output_length == -1 ? Interval::s_max
-                                                                         : m_max_output_length);
+    if (m_max_output_length != -1)
+    {
+        result_shape[0].get_interval().set_max_val(m_max_output_length);
+    }
     set_output_type(0, result_et, result_shape);
 }
 
