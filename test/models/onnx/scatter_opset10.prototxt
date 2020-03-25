@@ -24,8 +24,8 @@ graph {
   initializer {
     dims: 2
     data_type: 6
+    int32_data: 0
     int32_data: 1
-    int32_data: 3
     name: "indices"
   }
   initializer {
