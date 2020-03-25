@@ -57,6 +57,7 @@ namespace
     {
 #define VSUF0(NAME) NAME
 #define VSUF1(NAME) NAME##_v1
+#define VSUF3(NAME) NAME##_v3
 #define NGRAPH_OP(NAME, NAMESPACE, VERSION) VSUF##VERSION(NAME),
 #include "ngraph/op/op_version_tbl.hpp"
 #undef NGRAPH_OP
@@ -2252,7 +2253,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
             break;
         }
-        case OP_TYPEID::NonZero:
+        case OP_TYPEID::NonZero_v3:
         {
             node = make_shared<op::v3::NonZero>(args[0]);
 
@@ -4124,7 +4125,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["sort_result_descending"] = tmp->get_sort_result_descending();
         break;
     }
-    case OP_TYPEID::NonZero: { break;
+    case OP_TYPEID::NonZero_v3: { break;
     }
     case OP_TYPEID::NormalizeL2:
     {
