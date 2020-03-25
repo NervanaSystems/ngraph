@@ -14,20 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/pattern/op/any_output.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
-#include <cstdlib>
+using namespace std;
+using namespace ngraph;
 
-#include "ngraph/env_util.hpp"
+constexpr NodeTypeInfo pattern::op::AnyOutput::type_info;
 
-#include "ngraph/ngraph_visibility.hpp"
-
-namespace ngraph
+const NodeTypeInfo& pattern::op::AnyOutput::get_type_info() const
 {
-    static bool s_provenance_enabled = getenv_bool("NGRAPH_PROVENANCE_ENABLE");
+    return type_info;
+}
 
-    NGRAPH_API
-    void set_provenance_enabled(bool enabled);
-    NGRAPH_API
-    bool get_provenance_enabled();
+bool pattern::op::AnyOutput::match_value(Matcher* matcher,
+                                         const Output<Node>& pattern_value,
+                                         const Output<Node>& graph_value)
+{
+    return input_value(0).get_node()->match_node(matcher, graph_value);
 }

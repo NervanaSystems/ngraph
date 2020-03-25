@@ -34,7 +34,7 @@ namespace ngraph
 
     namespace autodiff
     {
-        class Adjoints
+        class NGRAPH_API Adjoints
         {
         public:
             /// \brief (dy/dx)(c) for all x used to compute y
