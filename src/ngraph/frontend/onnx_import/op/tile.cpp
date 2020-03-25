@@ -16,11 +16,9 @@
 
 #include <memory>
 
+#include "core/node.hpp"
 #include "default_opset.hpp"
-#include "exceptions.hpp"
-#include "ngraph/shape.hpp"
-#include "ngraph/validation_util.hpp"
-#include "unsqueeze.hpp"
+#include "tile.hpp"
 
 namespace ngraph
 {
@@ -30,13 +28,16 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector unsqueeze(const Node& node)
+                NodeVector tile(const Node& node)
                 {
-                    auto data = node.get_ng_inputs().at(0);
-                    auto axes = node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
-                    auto axes_node = std::make_shared<default_opset::Constant>(
-                        element::i64, Shape{axes.size()}, axes);
-                    return {std::make_shared<default_opset::Unsqueeze>(data, axes_node)};
+                    auto input = node.get_ng_inputs().at(0);
+                    auto repeats = node.get_ng_inputs().at(1);
+
+                    // Workaround for backends which require repeats to be i64.
+                    // Remove the following line when no longer needed.
+                    repeats = std::make_shared<default_opset::Convert>(repeats, element::i64);
+
+                    return {std::make_shared<default_opset::Tile>(input, repeats)};
                 }
 
             } // namespace set_1
