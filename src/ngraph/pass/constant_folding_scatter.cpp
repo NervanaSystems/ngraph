@@ -79,28 +79,20 @@ static shared_ptr<op::Constant>
                      "Encountered 'dynamic' element type in constant_scatter_elem_updt_callback");
         break;
     case element::Type_t::u8:
+    case element::Type_t::i8:
         return fold_constant_scatter_elem_updt<T, U, uint8_t>(
             data, indices, updates, axis, scatter_elem_updt);
     case element::Type_t::u16:
+    case element::Type_t::i16:
         return fold_constant_scatter_elem_updt<T, U, uint16_t>(
             data, indices, updates, axis, scatter_elem_updt);
     case element::Type_t::u32:
+    case element::Type_t::i32:
         return fold_constant_scatter_elem_updt<T, U, uint32_t>(
             data, indices, updates, axis, scatter_elem_updt);
     case element::Type_t::u64:
-        return fold_constant_scatter_elem_updt<T, U, uint64_t>(
-            data, indices, updates, axis, scatter_elem_updt);
-    case element::Type_t::i8:
-        return fold_constant_scatter_elem_updt<T, U, int8_t>(
-            data, indices, updates, axis, scatter_elem_updt);
-    case element::Type_t::i16:
-        return fold_constant_scatter_elem_updt<T, U, int16_t>(
-            data, indices, updates, axis, scatter_elem_updt);
-    case element::Type_t::i32:
-        return fold_constant_scatter_elem_updt<T, U, int32_t>(
-            data, indices, updates, axis, scatter_elem_updt);
     case element::Type_t::i64:
-        return fold_constant_scatter_elem_updt<T, U, int64_t>(
+        return fold_constant_scatter_elem_updt<T, U, uint64_t>(
             data, indices, updates, axis, scatter_elem_updt);
     case element::Type_t::boolean:
     case element::Type_t::bf16:
@@ -138,28 +130,20 @@ static shared_ptr<op::Constant> dispatch_const_fold_data(const shared_ptr<op::Co
                      "Encountered 'dynamic' element type in constant_scatter_elem_updt_callback");
         break;
     case element::Type_t::u8:
+    case element::Type_t::i8:
         return dispatch_const_fold_indices<T, uint8_t>(
             data, indices, updates, axis, scatter_elem_updt);
     case element::Type_t::u16:
+    case element::Type_t::i16:
         return dispatch_const_fold_indices<T, uint16_t>(
             data, indices, updates, axis, scatter_elem_updt);
     case element::Type_t::u32:
+    case element::Type_t::i32:
         return dispatch_const_fold_indices<T, uint32_t>(
             data, indices, updates, axis, scatter_elem_updt);
     case element::Type_t::u64:
-        return dispatch_const_fold_indices<T, uint64_t>(
-            data, indices, updates, axis, scatter_elem_updt);
-    case element::Type_t::i8:
-        return dispatch_const_fold_indices<T, int8_t>(
-            data, indices, updates, axis, scatter_elem_updt);
-    case element::Type_t::i16:
-        return dispatch_const_fold_indices<T, int16_t>(
-            data, indices, updates, axis, scatter_elem_updt);
-    case element::Type_t::i32:
-        return dispatch_const_fold_indices<T, int32_t>(
-            data, indices, updates, axis, scatter_elem_updt);
     case element::Type_t::i64:
-        return dispatch_const_fold_indices<T, int64_t>(
+        return dispatch_const_fold_indices<T, uint64_t>(
             data, indices, updates, axis, scatter_elem_updt);
     case element::Type_t::boolean:
     case element::Type_t::bf16:
@@ -184,7 +168,6 @@ void pass::ConstantFolding::construct_constant_scatter_elements_update()
         element::i64, Shape{5, 10, 15}, pattern::has_class<op::Constant>());
     const auto updates_label = make_shared<pattern::op::Label>(
         element::f32, Shape{5, 10, 15}, pattern::has_class<op::Constant>());
-    // TODO: does scalar axis need special case??
     const auto axis_label =
         make_shared<pattern::op::Label>(element::i64, Shape{}, pattern::has_class<op::Constant>());
     auto scatter_elem_updt = make_shared<op::v3::ScatterElementsUpdate>(
@@ -236,9 +219,6 @@ void pass::ConstantFolding::construct_constant_scatter_elements_update()
                          "Encountered 'u1' element type in constant_scatter_elem_updt_callback");
             break;
         case element::Type_t::bf16:
-            replacement =
-                dispatch_const_fold_data<bfloat16>(data, indices, updates, axis, scatter_elem_updt);
-            break;
         case element::Type_t::f16:
             replacement =
                 dispatch_const_fold_data<float16>(data, indices, updates, axis, scatter_elem_updt);
@@ -251,35 +231,23 @@ void pass::ConstantFolding::construct_constant_scatter_elements_update()
             replacement =
                 dispatch_const_fold_data<double>(data, indices, updates, axis, scatter_elem_updt);
             break;
-        case element::Type_t::i8:
-            replacement =
-                dispatch_const_fold_data<int8_t>(data, indices, updates, axis, scatter_elem_updt);
-            break;
-        case element::Type_t::i16:
-            replacement =
-                dispatch_const_fold_data<int16_t>(data, indices, updates, axis, scatter_elem_updt);
-            break;
-        case element::Type_t::i32:
-            replacement =
-                dispatch_const_fold_data<int32_t>(data, indices, updates, axis, scatter_elem_updt);
-            break;
-        case element::Type_t::i64:
-            replacement =
-                dispatch_const_fold_data<int64_t>(data, indices, updates, axis, scatter_elem_updt);
-            break;
         case element::Type_t::u8:
+        case element::Type_t::i8:
             replacement =
                 dispatch_const_fold_data<uint8_t>(data, indices, updates, axis, scatter_elem_updt);
             break;
         case element::Type_t::u16:
+        case element::Type_t::i16:
             replacement =
                 dispatch_const_fold_data<uint16_t>(data, indices, updates, axis, scatter_elem_updt);
             break;
         case element::Type_t::u32:
+        case element::Type_t::i32:
             replacement =
                 dispatch_const_fold_data<uint32_t>(data, indices, updates, axis, scatter_elem_updt);
             break;
         case element::Type_t::u64:
+        case element::Type_t::i64:
             replacement =
                 dispatch_const_fold_data<uint64_t>(data, indices, updates, axis, scatter_elem_updt);
             break;
