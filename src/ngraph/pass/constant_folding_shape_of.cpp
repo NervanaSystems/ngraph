@@ -58,18 +58,17 @@ void pass::ConstantFolding::construct_constant_shape_of()
             {
                 if (output_dimensions[i].is_static())
                 {
-                    auto value = std::vector<int64_t>{
-                        static_cast<int64_t>(output_dimensions[i].get_length())};
-                    auto temp = make_shared<op::Constant>(element::i64, Shape{1}, value);
+                    auto temp = op::Constant::create(
+                        element::i64,
+                        Shape{1},
+                        {static_cast<int64_t>(output_dimensions[i].get_length())});
                     temp->set_friendly_name("ConstDim/" + temp->get_name());
                     dimensions.push_back(temp);
                 }
                 else
                 {
-                    auto index = make_shared<op::Constant>(
-                        element::i64, Shape{1}, vector<int64_t>{static_cast<int64_t>(i)});
-                    auto axis =
-                        make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{0});
+                    auto index = op::Constant::create(element::i64, Shape{1}, {i});
+                    auto axis = op::Constant::create(element::i64, Shape{}, {0});
                     auto temp = make_shared<op::v1::Gather>(shape_of, index, axis);
                     temp->set_friendly_name("DynDim/" + temp->get_name());
                     dimensions.push_back(temp);
