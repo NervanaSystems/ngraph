@@ -42,31 +42,35 @@ namespace ngraph
                         (std::find(supported_modes.begin(), supported_modes.end(), mode) !=
                          supported_modes.end());
 
-                    if (!is_mode_supported)
+                    if(!is_mode_supported)
                     {
-                        throw error::NotSupported("ResizeOp: " + mode +
-                                                  " - this type of interpolation mode is not "
-                                                  "supported. Choose one of the following modes: "
-                                                  "'nearest', 'linear'.");
+                        std::string supported_modes_str = "";
+                        for (const auto& mode_name : supported_modes) 
+                        { 
+                            supported_modes_str += (mode_name + ", ");
+                        }
+                        CHECK_VALID_NODE(node, 
+                                        is_mode_supported,
+                                        mode,
+                                        " - this type of interpolation mode is not supported.",
+                                        " Choose one of the following modes: ",
+                                        supported_modes_str
+                        );
                     }
+
+                    CHECK_VALID_NODE(node,
+                                     scales_shape.rank().is_static(),
+                                     "Dynamic rank of Scales input is not supported.");
 
                     auto attrs = ngraph::op::InterpolateAttrs();
                     attrs.mode = mode;
 
-                    if (scales_shape.rank().is_static())
+                    AxisSet axes;
+                    for (int ax = 0; ax < scales_shape.rank().get_length(); ++ax)
                     {
-                        AxisSet axes;
-                        for (int ax = 0; ax < scales_shape.rank().get_length(); ++ax)
-                        {
-                            axes.insert(ax);
-                        }
-                        attrs.axes = axes;
+                        axes.insert(ax);
                     }
-                    else
-                    {
-                        throw error::NotSupported(
-                            "ResizeOp: Dynamic rank of Scales input is not supported.");
-                    }
+                    attrs.axes = axes;
 
                     auto shape_of_data = std::make_shared<default_opset::Convert>(
                         std::make_shared<default_opset::ShapeOf>(data), ngraph::element::f32);
