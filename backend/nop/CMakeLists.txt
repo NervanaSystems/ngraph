@@ -14,18 +14,16 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_NOP_ENABLE)
-    add_library(nop_backend SHARED nop_backend.cpp)
-    target_compile_definitions(nop_backend PRIVATE NOP_BACKEND_EXPORTS)
-    if(NGRAPH_LIB_VERSIONING_ENABLE)
-        set_target_properties(nop_backend PROPERTIES
-            VERSION ${NGRAPH_VERSION}
-            SOVERSION ${NGRAPH_API_VERSION})
-    endif()
-    target_link_libraries(nop_backend PUBLIC ngraph)
-
-    install(TARGETS nop_backend
-        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
-        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
-    )
+add_library(nop_backend SHARED nop_backend.cpp)
+target_compile_definitions(nop_backend PRIVATE NOP_BACKEND_EXPORTS)
+if(NGRAPH_LIB_VERSIONING_ENABLE)
+    set_target_properties(nop_backend PROPERTIES
+        VERSION ${NGRAPH_VERSION}
+        SOVERSION ${NGRAPH_API_VERSION})
 endif()
+target_link_libraries(nop_backend PUBLIC ngraph)
+
+install(TARGETS nop_backend
+    LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
+    ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+)
