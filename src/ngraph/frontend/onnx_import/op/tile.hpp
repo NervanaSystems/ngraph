@@ -14,13 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
+#pragma once
 
-#include "default_opset.hpp"
-#include "exceptions.hpp"
-#include "ngraph/shape.hpp"
-#include "ngraph/validation_util.hpp"
-#include "unsqueeze.hpp"
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
@@ -30,14 +27,11 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector unsqueeze(const Node& node)
-                {
-                    auto data = node.get_ng_inputs().at(0);
-                    auto axes = node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
-                    auto axes_node = std::make_shared<default_opset::Constant>(
-                        element::i64, Shape{axes.size()}, axes);
-                    return {std::make_shared<default_opset::Unsqueeze>(data, axes_node)};
-                }
+                /// \brief Performs ONNX Tile operation.
+                ///
+                /// \param node The ONNX node object representing this operation.
+                /// \return The vector containing nGraph a node producing the output of the Tile op.
+                NodeVector tile(const Node& node);
 
             } // namespace set_1
 
