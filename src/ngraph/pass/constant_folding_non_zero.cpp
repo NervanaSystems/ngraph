@@ -39,18 +39,20 @@ namespace
             const auto values_count = shape_size(m_input_shape);
 
             const T zero_value = T{0};
-            for (size_t i = 0; i < values_count; ++i)
+            for (size_t i = 0; i + 1 < values_count; ++i)
             {
                 if (values[i] != zero_value)
                 {
                     add_to_results(m_current_index);
                 }
 
-                // don't generate the next index when the last value has been processed
-                if (i < values_count - 1)
-                {
-                    next_index();
-                }
+                next_index();
+            }
+
+            // check the last element in the input values
+            if (values_count != 0 && values[values_count - 1] != zero_value)
+            {
+                add_to_results(m_current_index);
             }
 
             return m_results;
@@ -68,7 +70,7 @@ namespace
 
         // Generates an index pointing to the next element in the flattened tensor
         // It behaves similar to flipping bits when incrementing a binary number
-        void next_index()
+        inline void next_index()
         {
             for (size_t dim = m_current_index.size() - 1; dim >= 0; --dim)
             {
