@@ -30,10 +30,12 @@ namespace
             : m_input_shape{input_shape}
             , m_results{Results_t(input_shape.size())}
         {
+            NGRAPH_CHECK(m_input_shape.size() > 0,
+                         "Can't use the NonZeroElements class with a scalar shape");
         }
 
         template <typename T>
-        const Results_t& find_indices(const T* values)
+        void find_indices(const T* values)
         {
             m_current_index = Shape(m_input_shape.size(), 0UL);
             const auto values_count = shape_size(m_input_shape);
@@ -54,10 +56,9 @@ namespace
             {
                 add_to_results(m_current_index);
             }
-
-            return m_results;
         }
 
+        const Results_t& get_indices() const { return m_results; }
     private:
         /// \brief Adds single dimensions of an index into the matching element of the results
         void add_to_results(const Shape& index)
@@ -144,7 +145,15 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
     {
         NonZeroElements non_zero_elems{input_shape};
 
-        const auto& found_indices = non_zero_elems.find_indices(input_values);
+        if (identical_elems_in_data)
+        {
+        }
+        else
+        {
+            non_zero_elems.find_indices(input_values);
+        }
+
+        const auto& found_indices = non_zero_elems.get_indices();
 
         // flatten the results and return them as a Constant
         std::vector<int64_t> indices;
