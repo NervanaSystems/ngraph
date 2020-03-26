@@ -41,27 +41,25 @@ void op::Squeeze::pre_validate_and_infer_types()
     bool dynamic_data_rank = data.get_partial_shape().rank().is_dynamic();
     bool dynamic_data_shape = data.get_partial_shape().is_dynamic();
 
-    bool axes_is_constant = axes_node->is_constant();
+    auto axes_constant = as_type_ptr<op::v0::Constant>(axes_node);
     bool axes_is_empty_constant =
-        (axes_is_constant) ? as_type_ptr<op::Constant>(axes_node)->cast_vector<int64_t>().empty()
-                           : false;
+        (axes_constant) ? axes_constant->cast_vector<int64_t>().empty() : false;
 
-    if (dynamic_data_rank || !axes_is_constant || (dynamic_data_shape && axes_is_empty_constant))
+    if (dynamic_data_rank || !axes_constant || (dynamic_data_shape && axes_is_empty_constant))
     {
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
         return;
     }
 
-    uint64_t data_rank = data.get_partial_shape().rank().get_length();
     auto data_partial_shape = data.get_partial_shape();
+    uint64_t data_rank = data_partial_shape.rank().get_length();
 
     // Get value of axes from Constant
-    auto axes_constant = as_type_ptr<op::Constant>(axes_node);
     auto axes =
         normalize_axes(this->description(), axes_constant->cast_vector<int64_t>(), data_rank);
 
     // Prepare set of unique axes marked to be removed from input data.
-    std::vector<uint64_t> axes_to_squeeze(data_rank);
+    vector<uint64_t> axes_to_squeeze(data_rank);
     if (axes_is_empty_constant)
     {
         auto data_shape = data.get_shape();
@@ -95,7 +93,7 @@ void op::Squeeze::pre_validate_and_infer_types()
         }
     }
 
-    std::vector<Dimension> output_data_shape;
+    vector<Dimension> output_data_shape;
     for (uint64_t idx = 0; idx < data_rank; ++idx)
     {
         if (axes_to_squeeze.at(idx) == 0)
