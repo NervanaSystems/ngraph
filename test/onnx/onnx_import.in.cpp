@@ -932,7 +932,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_mean)
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(inputs);
-    test_case.add_expected_output(expected_output);
+    test_case.add_expected_output(Shape{}, expected_output);
     test_case.run();
 }
 

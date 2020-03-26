@@ -64,6 +64,24 @@ op::v1::Convolution::Convolution(const Output<Node>& data_batch,
     , m_source("DLDT")
 
 {
+    if (auto_pad != PadType::EXPLICIT)
+    {
+        NODE_VALIDATION_CHECK(this,
+                              std::all_of(pads_begin.begin(),
+                                          pads_begin.end(),
+                                          [](std::ptrdiff_t i) { return (i == 0); }),
+                              "pads_begin: (",
+                              pads_begin,
+                              ") Non-zero padding should not be used along with auto pad modes.");
+        NODE_VALIDATION_CHECK(this,
+                              std::all_of(pads_end.begin(),
+                                          pads_end.end(),
+                                          [](std::ptrdiff_t i) { return (i == 0); }),
+                              "pads_end: (",
+                              pads_end,
+                              ") Non-zero padding should not be used along with auto pad modes.");
+    }
+
     constructor_validate_and_infer_types();
 }
 

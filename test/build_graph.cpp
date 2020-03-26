@@ -188,7 +188,7 @@ TEST(build_graph, function_revalidate_and_infer)
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
     auto pattern = op::Constant::create(element::i64, Shape{6}, {1, 3, 16, 2, 2, 2});
 
-    auto r = make_shared<op::DynReshape>(arg, pattern);
+    auto r = make_shared<op::v1::Reshape>(arg, pattern, true);
     auto relu = make_shared<op::Relu>(r);
     auto f = make_shared<Function>(relu, ParameterVector{arg});
 
@@ -220,4 +220,17 @@ TEST(build_graph, validate_function_for_dynamic_shape)
 
     EXPECT_TRUE(make_function(true)->is_dynamic());
     EXPECT_FALSE(make_function(false)->is_dynamic());
+}
+
+TEST(build_graph, default_output_checks)
+{
+    try
+    {
+        std::shared_ptr<Node> empty;
+        auto nullout = Output<Node>(empty);
+    }
+    catch (...)
+    {
+        FAIL() << "nullptr initialization of Output failed";
+    }
 }
