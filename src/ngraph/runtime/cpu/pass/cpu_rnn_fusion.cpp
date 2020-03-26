@@ -95,7 +95,6 @@ void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
         auto src_layer = pattern_map[src_layer_label];
         auto src_iter = pattern_map[src_iter_label];
 
-        size_t batch_size = src_layer->get_shape()[0];
         size_t slc = src_layer->get_shape()[1];
         size_t sic = src_iter->get_shape()[1];
         size_t dlc = fused_weights->get_shape()[1];
