@@ -17,6 +17,7 @@
 #include "ngraph/op/strided_slice.hpp"
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 #include <algorithm>
@@ -45,6 +46,43 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+namespace
+{
+    shared_ptr<Node> calculate_default_strides(const Output<Node>& begin, const Output<Node>& end)
+    {
+        const auto begin_pshape = begin.get_partial_shape();
+        bool is_begin_length_static = false;
+        if (begin_pshape.rank().is_static() && begin_pshape.rank().get_length() == 1)
+        {
+            is_begin_length_static = begin_pshape[0].is_static();
+        }
+
+        const auto end_pshape = end.get_partial_shape();
+        bool is_end_length_static = false;
+        if (end_pshape.rank().is_static() && end_pshape.rank().get_length() == 1)
+        {
+            is_end_length_static = end_pshape[0].is_static();
+        }
+
+        NGRAPH_CHECK(is_begin_length_static || is_end_length_static,
+                     "First dimension of begin or end inputs must be static in order to "
+                     "calculate default strides value");
+
+        size_t strides_length = 0;
+        if (is_begin_length_static)
+        {
+            strides_length = begin_pshape[0].get_length();
+        }
+        else if (is_end_length_static)
+        {
+            strides_length = end_pshape[0].get_length();
+        }
+
+        return op::Constant::create(
+            element::i64, Shape{strides_length}, vector<int64_t>(strides_length, 1));
+    }
+}
+
 op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
                                    const Output<Node>& begin,
                                    const Output<Node>& end,
@@ -56,9 +94,7 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     : StridedSlice(data,
                    begin,
                    end,
-                   op::Constant::create(element::i64,
-                                        Shape{begin_mask.size()},
-                                        vector<int64_t>(begin_mask.size(), 1)),
+                   calculate_default_strides(begin, end),
                    begin_mask,
                    end_mask,
                    new_axis_mask,
@@ -139,19 +175,40 @@ void op::v1::StridedSlice::validate_and_infer_types()
 
     auto begin_const = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
     auto end_const = as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
-    auto strides = as_type_ptr<op::Constant>(input_value(3).get_node_shared_ptr());
+    auto strides_const = as_type_ptr<op::Constant>(input_value(3).get_node_shared_ptr());
 
-    if (begin_const && end_const && strides)
+    if (begin_const && end_const && strides_const && data_rank.is_static())
     {
+        auto begin = begin_const->cast_vector<int64_t>();
+        auto end = end_const->cast_vector<int64_t>();
+        auto strides = strides_const->cast_vector<int64_t>();
+        const auto begin_mask = convert_mask_to_axis_set(get_begin_mask());
+        const auto end_mask = convert_mask_to_axis_set(get_end_mask());
+
+        // Handle a case when begin/end/stride size is less than data rank
+        // and begin/end mask are passed
+        // Example:
+        // data_shape: {3, 3, 3, 3}
+        // begin_values: [1, 1] - after extending --> [0, 0, 1, 1]
+        // end_values: [2, 2] - after extending --> [0, 0, 2, 2]
+        // strides : [0, 1] - after extending --> [1, 1, 0, 1] (`1` is neutral as a strides value)
+        // begin_mask: [0, 1] - ignore 0 and 1 axes (apply begin slice values to 2 and 3 axes)
+        // end_mask: [0, 1] - ignore 0 and 1 axes (apply end slice values to 2 and 3 axes)
+        // expected_output_shape: {3, 3, 1, 1}
+        const auto data_rank_value = data_rank.get_length();
+        begin = extend_vector_by_value(begin, begin_mask, data_rank_value, 0);
+        strides = extend_vector_by_value(strides, begin_mask, data_rank_value, 1);
+        end = extend_vector_by_value(end, end_mask, data_rank_value, 0);
+
         set_output_type(0,
                         get_input_element_type(0),
                         infer_slice_shape(this,
                                           get_input_partial_shape(0),
-                                          begin_const->cast_vector<int64_t>(),
-                                          end_const->cast_vector<int64_t>(),
-                                          strides->cast_vector<int64_t>(),
-                                          convert_mask_to_axis_set(get_begin_mask()),
-                                          convert_mask_to_axis_set(get_end_mask()),
+                                          begin,
+                                          end,
+                                          strides,
+                                          begin_mask,
+                                          end_mask,
                                           convert_mask_to_axis_set(get_new_axis_mask()),
                                           convert_mask_to_axis_set(get_shrink_axis_mask()),
                                           convert_mask_to_axis_set(get_ellipsis_mask())));
