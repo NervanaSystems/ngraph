@@ -1286,11 +1286,6 @@ std::string runtime::gpu::GPU_Emitter::emit_v0_DynReplaceSlice(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_v0_DynReshape(EMIT_ARGS)
-{
-    throw unsupported_op("Unsupported op '" + node->description() + "'");
-}
-
 std::string runtime::gpu::GPU_Emitter::emit_v0_DynSlice(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
