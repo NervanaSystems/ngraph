@@ -28,6 +28,8 @@ namespace ngraph
             {
                 NodeVector resize(const onnx_import::Node& node)
                 {
+                    onnx_import::validation::check_valid_inputs_size(node, 2);
+
                     const auto inputs = node.get_ng_inputs();
                     const auto data = inputs.at(0);
                     const auto scales = inputs.at(1);
