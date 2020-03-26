@@ -236,7 +236,7 @@ namespace ngraph
 
                     // TODO: What if axis value is beyond acceptable values? [-node_rank,
                     // node_rank-1]
-                    return make_shared<ngraph::opset1::Subtract>(node_rank, axis_node);
+                    return make_shared<ngraph::opset1::Add>(node_rank, axis_node);
                 }
             } // opset1
         }     // builder
