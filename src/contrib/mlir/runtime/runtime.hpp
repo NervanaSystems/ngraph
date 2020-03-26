@@ -50,7 +50,7 @@ namespace ngraph
                 /// Overload with module op
                 void set_module(mlir::ModuleOp& module) { m_module = module; }
                 /// Executes a pre-compiled subgraph
-                virtual void run(const std::vector<MemRefArg>& args) = 0;
+                virtual void run(const std::vector<MemRefArg>& args, bool firstIteration) = 0;
 
                 /// Get the MLIR module that this runtime owns
                 mlir::OwningModuleRef& get_module() { return m_module; }

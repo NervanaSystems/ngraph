@@ -84,6 +84,7 @@ namespace ngraph
             size_t m_pool_offset{0};
         };
 
+        NGRAPH_API
         std::ostream& operator<<(std::ostream&, const ngraph::descriptor::Tensor&);
     }
 }

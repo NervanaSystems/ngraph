@@ -220,15 +220,6 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::DynReshape> node)
-    {
-        auto zero_flag = false;
-        auto replacement_node =
-            make_shared<op::v1::Reshape>(node->input_value(0), node->input_value(1), zero_flag);
-        replace_node(node, replacement_node);
-        return replacement_node;
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::Equal> node)
     {
         return op_cast_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);

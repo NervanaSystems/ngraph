@@ -3,8 +3,8 @@ PROJECT_BRIEF    = "Intel® nGraph™ library"
 
 OUTPUT_DIRECTORY = @CMAKE_CURRENT_BINARY_DIR@
 INPUT            = @CMAKE_SOURCE_DIR@/src
+INCLUDE_PATH     = @CMAKE_SOURCE_DIR@/src
 RECURSIVE        = YES
-EXCLUDE_PATTERNS = json.hpp
 
 USE_MATHJAX      = YES
 
@@ -12,3 +12,18 @@ GENERATE_XML     = YES
 
 WARN_IF_UNDOCUMENTED = @DOXYGEN_WARN_IF_UNDOCUMENTED@
 QUIET                = @DOXYGEN_QUIET@
+
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED             = NGRAPH_API= \
+                         NOP_BACKEND_API= \
+                         CPU_BACKEND_API= \
+                         GCPU_BACKEND_API= \
+                         GPU_BACKEND_API= \
+                         INTERPRETER_BACKEND_API= \
+                         PLAID_BACKEND_API= \
+
+EXCLUDE_PATTERNS  = */plaidml/*
+EXCLUDE_PATTERNS += */gpu/*
+EXCLUDE_PATTERNS += */src/contrib/mlir/*

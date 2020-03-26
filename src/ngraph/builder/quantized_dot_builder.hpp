@@ -28,6 +28,7 @@ namespace ngraph
 {
     namespace builder
     {
+        NGRAPH_API
         std::shared_ptr<Node> QuantizedDotBuilder(const Output<Node>& input0,
                                                   const Output<Node>& input1,
                                                   const size_t reduction_axes_count,
@@ -42,6 +43,7 @@ namespace ngraph
                                                   const ngraph::AxisSet& input1_axes,
                                                   const ngraph::AxisSet& output_axes);
 
+        NGRAPH_API
         std::shared_ptr<Node> QuantizedDotBiasBuilder(const Output<Node>& input,
                                                       const Output<Node>& filters,
                                                       const Output<Node>& bias,
