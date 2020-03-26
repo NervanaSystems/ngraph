@@ -175,7 +175,7 @@ namespace ngraph
     {
         if (remove_goe)
         {
-            while (auto goe = as_type_ptr<op::GetOutputElement>(m_node))
+            while (is_type<op::GetOutputElement>(m_node))
             {
                 *this = m_node->input_value(0);
             }
@@ -274,7 +274,7 @@ namespace ngraph
     {
         if (remove_goe)
         {
-            while (auto goe = as_type_ptr<const op::GetOutputElement>(m_node))
+            while (is_type<const op::GetOutputElement>(m_node))
             {
                 auto value = m_node->input_value(0);
                 m_node = value.get_node_shared_ptr();
