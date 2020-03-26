@@ -172,6 +172,61 @@ namespace ngraph
                                 ->add_provenance_group_members_above({filters});
                         }
                     }
+
+                    std::shared_ptr<ngraph::Node>
+                        get_prepared_bias(const std::shared_ptr<ngraph::Node>& bias,
+                                          const std::shared_ptr<ngraph::Node>& conv)
+                    {
+                        // Prepare bias shape [1, C, 1, 1]
+                        const auto& conv_pshape = conv->get_output_partial_shape(0);
+                        std::shared_ptr<ngraph::Node> bias_shape_node;
+
+                        if (conv_pshape.rank().is_static() && conv_pshape[1].is_static())
+                        {
+                            Shape new_bias_shape(conv_pshape.rank().get_length(), 1);
+                            new_bias_shape[1] = conv_pshape[1].get_length();
+
+                            bias_shape_node = default_opset::Constant::create(
+                                element::i64, Shape{new_bias_shape.size()}, new_bias_shape);
+                        }
+                        else
+                        {
+                            const auto conv_shape = std::make_shared<default_opset::ShapeOf>(conv);
+                            const auto conv_rank =
+                                std::make_shared<default_opset::ShapeOf>(conv_shape);
+
+                            // Prepare new bias shape base: [1, 1, 1, 1, ... ]
+                            const auto one_node =
+                                default_opset::Constant::create(element::i64, Shape{1}, {1});
+                            const auto two_node =
+                                default_opset::Constant::create(element::i64, Shape{1}, {2});
+                            const auto remaining_shape_length =
+                                std::make_shared<default_opset::Subtract>(conv_rank, two_node);
+                            const auto remaining_bias_shape_ones =
+                                std::make_shared<default_opset::Broadcast>(
+                                    one_node,
+                                    remaining_shape_length); // To skalar czy [1]?
+
+                            // Split conv shape into (N), (C), (H, W, ...) in order to get C dim
+                            const auto split_part_lengths = std::make_shared<default_opset::Concat>(
+                                OutputVector{one_node, one_node, remaining_shape_length}, 0);
+                            const auto conv_split_parts =
+                                std::make_shared<default_opset::VariadicSplit>(
+                                    conv_shape,
+                                    default_opset::Constant::create(element::i64, Shape{}, {0}),
+                                    split_part_lengths);
+                            const auto C_dim =
+                                conv_split_parts->get_output_as_single_output_node(1);
+
+                            // Construct new bias shape: [1, C, 1, 1, ... ]
+                            bias_shape_node = std::make_shared<default_opset::Concat>(
+                                OutputVector{one_node, C_dim, remaining_bias_shape_ones}, 0);
+                        }
+
+                        return std::make_shared<default_opset::Reshape>(
+                                   bias, bias_shape_node, false)
+                            ->add_provenance_group_members_above({bias});
+                    }
                 }
 
                 NodeVector conv_transpose(const Node& node)
@@ -269,17 +324,7 @@ namespace ngraph
                     {
                         return {conv_node};
                     }
-
-                    auto bias = inputs.at(2);
-                    // Prepare bias shape [1, C, 1, 1]
-                    Shape new_shape(conv_node->get_shape().size(), 1);
-                    new_shape[1] = conv_node->get_shape()[1];
-
-                    auto reshaped_bias = std::make_shared<default_opset::Reshape>(
-                        bias,
-                        default_opset::Constant::create(
-                            element::i64, Shape{new_shape.size()}, new_shape),
-                        true);
+                    const auto reshaped_bias = get_prepared_bias(inputs[2], conv_node);
 
                     return {std::make_shared<default_opset::Add>(conv_node, reshaped_bias)};
                 }
