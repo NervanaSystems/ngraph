@@ -66,7 +66,7 @@ void op::Unsqueeze::pre_validate_and_infer_types()
     for (auto axis : axes)
     {
         NODE_VALIDATION_CHECK(
-            this, axis <= data_rank_value, "provided 'axes' value ", axis, " is not valid.");
+            this, axis <= expanded_rank, "provided 'axes' value ", axis, " is not valid.");
 
         output_shape.insert(next(begin(output_shape), axis), 1);
     }
