@@ -14,13 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
 #include <memory>
 
 #include "core/node.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op/get_output_element.hpp"
+#include "default_opset.hpp"
+#include "tile.hpp"
 
 namespace ngraph
 {
@@ -30,12 +28,18 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector identity(const Node& node)
+                NodeVector tile(const Node& node)
                 {
                     auto input = node.get_ng_inputs().at(0);
-                    auto zero = default_opset::Constant::create(input->get_element_type(), {}, {0});
-                    return {std::make_shared<default_opset::Add>(input, zero)};
+                    auto repeats = node.get_ng_inputs().at(1);
+
+                    // Workaround for backends which require repeats to be i64.
+                    // Remove the following line when no longer needed.
+                    repeats = std::make_shared<default_opset::Convert>(repeats, element::i64);
+
+                    return {std::make_shared<default_opset::Tile>(input, repeats)};
                 }
+
             } // namespace set_1
 
         } // namespace op
