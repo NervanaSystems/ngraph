@@ -566,6 +566,30 @@ TEST(constant_folding, shape_of_dynamic)
     ASSERT_EQ(result_as_concat->get_output_shape(0), Shape{7});
 }
 
+// We need to be sure that constant folding won't be calculated endlessly.
+TEST(constant_folding, shape_of_dynamic_double_folding)
+{
+    PartialShape input_shape{3, 4, Dimension::dynamic(), 22, 608, 909, 3};
+
+    auto param = make_shared<op::Parameter>(element::boolean, input_shape);
+    auto shape_of = make_shared<op::ShapeOf>(param);
+    auto f = make_shared<Function>(shape_of, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::ShapeOf>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 8);
+
+    auto result_as_concat = as_type_ptr<op::Concat>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(result_as_concat);
+    ASSERT_EQ(result_as_concat->get_output_shape(0), Shape{7});
+}
+
 // Constant folding will not succeed on ShapeOf if the argument rank is dynamic.
 // We want to make sure it fails gracefully, leaving the ShapeOf op in place.
 TEST(constant_folding, shape_of_rank_dynamic)
