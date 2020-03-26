@@ -29,6 +29,7 @@ TEST(intervals, size)
     EXPECT_TRUE(Interval(2).size() == 1);
     EXPECT_TRUE(Interval(1, 5).size() == 5);
     EXPECT_TRUE(Interval(3, 2).size() == 0);
+    EXPECT_TRUE(Interval(3, 3).size() == 1);
 }
 
 TEST(intervals, contains)
@@ -60,8 +61,8 @@ TEST(intervals, equals)
 
 TEST(intervals, arithmetic)
 {
-    Interval a(1, 5);
-    Interval b(7, 10);
+    Interval a(7, 10);
+    Interval b(1, 5);
     Interval a_plus = a;
     auto a_plus_b = a + b;
     a_plus += b;
@@ -96,7 +97,14 @@ TEST(intervals, arithmetic)
                 max_plus = sum;
             }
             auto minus = a_i - b_i;
-            EXPECT_TRUE(a_minus_b.contains(minus));
+            if (minus < 0)
+            {
+                EXPECT_FALSE(a_minus_b.contains(minus));
+            }
+            else
+            {
+                EXPECT_TRUE(a_minus_b.contains(minus));
+            }
             if (minus < min_minus)
             {
                 min_minus = minus;
@@ -105,6 +113,7 @@ TEST(intervals, arithmetic)
             {
                 max_minus = minus;
             }
+            min_minus = max(Interval::value_type(0), min_minus);
 
             auto times = a_i * b_i;
             EXPECT_TRUE(a_times_b.contains(times));

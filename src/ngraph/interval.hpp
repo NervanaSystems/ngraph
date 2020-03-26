@@ -28,10 +28,11 @@ namespace ngraph
 {
     /// \brief Interval arithmetic
     ///
-    /// An interval is a set of contiguous intgers. The values s_min and s_max act like negative and
-    /// positive infinity. The addition, subtraction, or multiplication of intervals is the interval
-    /// of the sums, differences, or products of the two intervals. An empty interval is
-    /// canonicalized to [s_max, s_min].
+    /// An interval is the set of integers from m_min_val through m_max_val.
+    /// The value s_max acts like infinity. The
+    /// addition, subtraction, or multiplication of intervals is the smallest interval
+    /// containing the sums, differences, or products of elements of the two intervals. An empty
+    /// interval is canonicalized to [s_max, s_max].
     class NGRAPH_API Interval
     {
     public:
@@ -65,8 +66,6 @@ namespace ngraph
         void set_max_val(value_type val) { m_max_val = val; }
         /// \brief True if the upper bound is finite
         bool has_upper_bound() const { return m_max_val != s_max; }
-        /// \brief True if the lower bound is finite
-        bool has_lower_bound() const { return m_min_val != s_min; }
         /// \brief True if min and max bounds match
         bool operator==(const Interval& interval) const;
         bool operator!=(const Interval& interval) const;
@@ -77,13 +76,14 @@ namespace ngraph
         /// \brief Extend this interval to sums of elements in this interval and interval
         Interval& operator+=(const Interval& interval);
 
-        /// \brief The interval whose elements are a differences of an element from each interval
+        /// \brief The interval whose elements are a difference of an element from each interval
         Interval operator-(const Interval& interval) const;
-        /// \brief The interval whose elements are negations of elements in this interval
-        Interval operator-() const { return Interval(-m_max_val, -m_min_val); }
+
+        /// \brief Extend this interval to differences of elements in this interval and interval
         Interval& operator-=(const Interval& interval);
 
-        /// \brief The interval whose elements are a product of an element from each interval
+        /// \brief The smallest interval whose elements are a product of an element from each
+        /// interval
         Interval operator*(const Interval& interval) const;
 
         /// \brief Extend this interval to products of elements in this interval and interval
@@ -102,19 +102,19 @@ namespace ngraph
 
         /// \brief The value used for no upper bound
         static constexpr value_type s_max{std::numeric_limits<value_type>::max()};
-        /// \brief The value used for no lower bound
-        static constexpr value_type s_min{-s_max};
 
     protected:
         void canonicalize();
         static value_type clip(value_type value);
         static value_type clip_times(value_type a, value_type b);
         static value_type clip_add(value_type a, value_type b);
+        static value_type clip_minus(value_type a, value_type b);
 
     private:
-        value_type m_min_val{s_min};
+        value_type m_min_val{0};
         value_type m_max_val{s_max};
     };
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& str, const Interval& interval);
 }

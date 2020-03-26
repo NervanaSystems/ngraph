@@ -23,7 +23,7 @@ void Interval::canonicalize()
     if (m_max_val < m_min_val)
     {
         m_min_val = s_max;
-        m_max_val = s_min;
+        m_max_val = s_max;
     }
     else
     {
@@ -46,12 +46,16 @@ Interval::Interval(value_type val)
 
 Interval::size_type Interval::size() const
 {
-    return m_min_val <= m_max_val ? m_max_val - m_min_val + 1 : 0;
+    if (m_max_val == s_max)
+    {
+        return m_min_val == s_max ? 0 : s_max;
+    }
+    return m_max_val - m_min_val + 1;
 }
 
 bool Interval::empty() const
 {
-    return m_min_val > m_max_val;
+    return m_min_val == s_max;
 }
 bool Interval::operator==(const Interval& interval) const
 {
@@ -65,13 +69,9 @@ bool Interval::operator!=(const Interval& interval) const
 
 Interval Interval::operator+(const Interval& interval) const
 {
-    if (empty())
+    if (empty() || interval.empty())
     {
-        return *this;
-    }
-    if (interval.empty())
-    {
-        return interval;
+        return Interval(s_max);
     }
     return Interval(clip_add(m_min_val, interval.m_min_val),
                     clip_add(m_max_val, interval.m_max_val));
@@ -97,16 +97,12 @@ Interval& Interval::operator+=(const Interval& interval)
 
 Interval Interval::operator-(const Interval& interval) const
 {
-    if (empty())
+    if (empty() || interval.empty())
     {
-        return *this;
+        return Interval(s_max);
     }
-    if (interval.empty())
-    {
-        return interval;
-    }
-    return Interval(clip_add(m_min_val, -interval.m_max_val),
-                    clip_add(m_max_val, -interval.m_min_val));
+    return Interval(clip_minus(m_min_val, interval.m_max_val),
+                    clip_minus(m_max_val, interval.m_min_val));
 }
 
 Interval& Interval::operator-=(const Interval& interval)
@@ -120,8 +116,8 @@ Interval& Interval::operator-=(const Interval& interval)
     }
     else
     {
-        m_min_val = clip_add(m_min_val, -interval.m_max_val);
-        m_max_val = clip_add(m_max_val, -interval.m_min_val);
+        m_min_val = clip_minus(m_min_val, interval.m_max_val);
+        m_max_val = clip_minus(m_max_val, interval.m_min_val);
         canonicalize();
     }
     return *this;
@@ -184,33 +180,25 @@ bool Interval::contains(const Interval& interval) const
 
 Interval::value_type Interval::clip(value_type value)
 {
-    return std::max(s_min, std::min(s_max, value));
+    return std::max(value_type(0), std::min(s_max, value));
 }
 
 Interval::value_type Interval::clip_add(value_type a, value_type b)
 {
+    return (a == s_max || b == s_max) ? s_max : a + b;
+}
+
+Interval::value_type Interval::clip_minus(value_type a, value_type b)
+{
+    if (a <= b)
+    {
+        return 0;
+    }
     if (a == s_max)
     {
-        if (b == s_min)
-        {
-            throw std::invalid_argument("Cannot determine interval in sum");
-        }
         return s_max;
     }
-    else if (a == s_min)
-    {
-        if (b == s_max)
-        {
-            throw std::invalid_argument("Cannot determine interval in sum");
-        }
-        return s_min;
-    }
-    else if (b == s_max || b == s_min)
-    {
-        return b;
-    }
-    else
-        return a + b;
+    return a - b;
 }
 
 Interval::value_type Interval::clip_times(value_type a, value_type b)
@@ -219,27 +207,14 @@ Interval::value_type Interval::clip_times(value_type a, value_type b)
     {
         return 0;
     }
-    else if (a == s_max)
+    else if (a == s_max || b == s_max)
     {
-        return b < 0 ? s_min : s_max;
-    }
-    else if (a == s_min)
-    {
-        return b < 0 ? s_max : s_min;
-    }
-    else if (b == s_max)
-    {
-        return a < 0 ? s_min : s_max;
-    }
-    else if (b == s_min)
-    {
-        return a < 0 ? s_max : s_min;
+        return s_max;
     }
     else
         return a * b;
 }
 
-constexpr Interval::value_type Interval::s_min;
 constexpr Interval::value_type Interval::s_max;
 
 namespace ngraph

@@ -35,9 +35,7 @@ namespace ngraph
     {
     public:
         /// \brief Construct a static dimension.
-        /// \param dimension Value of the dimension. Must not be equal to
-        ///                  Dimension::s_dynamic_val.
-        /// \throws std::invalid_argument If `dimension` == Dimension::s_dynamic_val.
+        /// \param dimension Value of the dimension.
         Dimension(int64_t dimension)
             : m_dimension(dimension)
         {
@@ -150,9 +148,6 @@ namespace ngraph
         /// \brief Create a dynamic dimension.
         /// \return A dynamic dimension.
         static Dimension dynamic() { return Dimension(); }
-        /// \brief Constant for the value used internally to represent a dynamic dimension.
-        static const int64_t s_dynamic_val{(std::numeric_limits<int64_t>::max())};
-
         /// \brief Addition operator for Dimension.
         /// \param dim Right operand for addition.
         /// \return Dimension::dynamic() if either of `*this` or `dim` is dynamic; else, a static
@@ -186,9 +181,8 @@ namespace ngraph
         {
         }
 
-        // The actual numerical value of the dimension. s_dynamic_val is a special case,
-        // representing a dynamic dimension.
-        Interval m_dimension{0, Interval::s_max};
+        // The actual numerical value of the dimension.
+        Interval m_dimension{};
     };
 
     /// \brief Insert a human-readable representation of a dimension into an output stream.
