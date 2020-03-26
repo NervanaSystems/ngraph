@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/nop/nop_backend_visibility.hpp"
+#include "nop_backend_visibility.hpp"
 
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
@@ -26,7 +26,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/nop/nop_backend.hpp"
+#include "nop_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -37,17 +37,17 @@ using descriptor::layout::DenseTensorLayout;
 extern "C" NOP_BACKEND_API void ngraph_register_nop_backend()
 {
     runtime::BackendManager::register_backend("NOP", [](const std::string& /* config */) {
-        return std::make_shared<runtime::nop::NOPBackend>();
+        return std::make_shared<nop_backend::NOPBackend>();
     });
 }
 
-shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const element::Type& type,
+shared_ptr<runtime::Tensor> nop_backend::NOPBackend::create_tensor(const element::Type& type,
                                                                     const Shape& shape)
 {
     return make_shared<runtime::HostTensor>(type, shape, "external");
 }
 
-shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const element::Type& type,
+shared_ptr<runtime::Tensor> nop_backend::NOPBackend::create_tensor(const element::Type& type,
                                                                     const Shape& shape,
                                                                     void* memory_pointer)
 {
@@ -55,13 +55,13 @@ shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const elemen
 }
 
 shared_ptr<runtime::Executable>
-    runtime::nop::NOPBackend::compile(shared_ptr<Function> function,
+    nop_backend::NOPBackend::compile(shared_ptr<Function> function,
                                       bool enable_performance_collection)
 {
     return make_shared<NOPExecutable>(function, enable_performance_collection);
 }
 
-runtime::nop::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
+nop_backend::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
                                            bool /* enable_performance_collection */)
 {
     pass::Manager pass_manager;
@@ -71,7 +71,7 @@ runtime::nop::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
     set_parameters_and_results(*function);
 }
 
-bool runtime::nop::NOPExecutable::call(const vector<shared_ptr<runtime::Tensor>>& /* outputs */,
+bool nop_backend::NOPExecutable::call(const vector<shared_ptr<runtime::Tensor>>& /* outputs */,
                                        const vector<shared_ptr<runtime::Tensor>>& /* inputs */)
 {
     return true;

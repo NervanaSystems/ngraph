@@ -25,34 +25,28 @@
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
-namespace ngraph
+namespace nop_backend
 {
-    namespace runtime
-    {
-        namespace nop
-        {
-            class NOPBackend;
-            class NOPExecutable;
-        }
-    }
+    class NOPBackend;
+    class NOPExecutable;
 }
 
-class ngraph::runtime::nop::NOPBackend : public Backend
+class nop_backend::NOPBackend : public ngraph::runtime::Backend
 {
 public:
-    std::shared_ptr<Tensor>
-        create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
+    std::shared_ptr<ngraph::runtime::Tensor>
+        create_tensor(const ngraph::element::Type& type, const ngraph::Shape& shape, void* memory_pointer) override;
 
-    std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
+    std::shared_ptr<ngraph::runtime::Tensor> create_tensor(const ngraph::element::Type& type, const ngraph::Shape& shape) override;
 
-    std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
+    std::shared_ptr<ngraph::runtime::Executable> compile(std::shared_ptr<ngraph::Function> function,
                                         bool enable_performance_data = false) override;
 };
 
-class ngraph::runtime::nop::NOPExecutable : public Executable
+class nop_backend::NOPExecutable : public ngraph::runtime::Executable
 {
 public:
-    NOPExecutable(std::shared_ptr<Function> function, bool enable_performance_collection = false);
-    bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
+    NOPExecutable(std::shared_ptr<ngraph::Function> function, bool enable_performance_collection = false);
+    bool call(const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
+              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& inputs) override;
 };

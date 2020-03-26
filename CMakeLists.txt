@@ -633,6 +633,8 @@ if (NGRAPH_PYTHON_BUILD_ENABLE)
     add_subdirectory(python)
 endif()
 
+include_directories(src)
+
 add_subdirectory(backend)
 
 if (NGRAPH_EXPORT_TARGETS_ENABLE)
