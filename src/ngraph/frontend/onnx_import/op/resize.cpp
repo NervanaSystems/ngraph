@@ -60,18 +60,39 @@ namespace ngraph
                     }
 
                     CHECK_VALID_NODE(node,
-                                     scales_shape.rank().is_static(),
-                                     " Dynamic rank of Scales input is not supported.");
+                                     scales_shape.is_static() || data_shape.rank().is_static(),
+                                     " Data rank or shape of Scales input is required to be static.");
 
-                    auto attrs = ngraph::op::InterpolateAttrs();
-                    attrs.mode = mode;
-
+                    size_t axes_size = scales_shape.is_static() ? scales_shape.to_shape().at(0) : data_shape.rank().get_length();
                     AxisSet axes;
-                    for (int ax = 0; ax < scales_shape.rank().get_length(); ++ax)
+                    for (int ax = 0; ax < axes_size; ++ax)
                     {
                         axes.insert(ax);
                     }
+
+                    auto attrs = ngraph::op::InterpolateAttrs();
                     attrs.axes = axes;
+                    attrs.mode = mode;
+
+                    if (scales->is_constant() && data_shape.is_static())
+                    {
+                        const auto scales_const = as_type_ptr<default_opset::Constant>(scales->shared_from_this());
+
+                        auto scales_vector = scales_const->cast_vector<float>();
+                        auto data_static_shape = data_shape.to_shape();
+
+                        std::vector<int64_t> output_shape;
+                        for (size_t i = 0; i < data_static_shape.size(); ++i)
+                        {
+                            std::cout << i << "Data shape: " << data_static_shape.at(i) << "Scales: " << scales_vector.at(i);
+                            auto sh = std::floor(data_static_shape.at(i) * scales_vector.at(i));
+                            std::cout << " OUT SHAPE: " << sh << " " << std::endl;
+                            output_shape.push_back(sh);
+                        }
+                        auto output_shape_const = default_opset::Constant::create(element::u64, 
+                            Shape({output_shape.size()}), output_shape);
+                        return {std::make_shared<default_opset::Interpolate>(data, output_shape_const, attrs)};
+                    }
 
                     auto shape_of_data = std::make_shared<default_opset::Convert>(
                         std::make_shared<default_opset::ShapeOf>(data), ngraph::element::f32);
