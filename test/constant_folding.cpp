@@ -544,9 +544,6 @@ TEST(constant_folding, shape_of)
     ASSERT_EQ((vector<int64_t>{3, 4, 0, 22, 608, 909, 3}), values_out);
 }
 
-// A bit of an unusual case here: constant folding will not succeed on ShapeOf
-// if the argument doesn't have dynamic shape. We want to make sure it fails
-// gracefully, leaving the ShapeOf op in place.
 TEST(constant_folding, shape_of_dynamic)
 {
     PartialShape input_shape{3, 4, Dimension::dynamic(), 22, 608, 909, 3};
@@ -560,14 +557,17 @@ TEST(constant_folding, shape_of_dynamic)
     pass_manager.run_passes(f);
 
     ASSERT_EQ(count_ops_of_type<op::ShapeOf>(f), 1);
-    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 8);
 
-    auto result_as_shape_of = as_type_ptr<op::ShapeOf>(f->get_results().at(0)->get_argument(0));
-    ASSERT_TRUE(result_as_shape_of);
-    ASSERT_EQ(result_as_shape_of->get_output_shape(0), Shape{7});
+    auto result_as_concat = as_type_ptr<op::Concat>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(result_as_concat);
+    ASSERT_EQ(result_as_concat->get_output_shape(0), Shape{7});
 }
 
-// Similar to shape_of_dynamic above but here even the rank is dynamic.
+// Constant folding will not succeed on ShapeOf if the argument rank is dynamic.
+// We want to make sure it fails gracefully, leaving the ShapeOf op in place.
 TEST(constant_folding, shape_of_rank_dynamic)
 {
     PartialShape input_shape{PartialShape::dynamic()};
