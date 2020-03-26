@@ -99,7 +99,6 @@ void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
         size_t slc = src_layer->get_shape()[1];
         size_t sic = src_iter->get_shape()[1];
         size_t dlc = fused_weights->get_shape()[1];
-        size_t dic = dlc;
         size_t n_gates = 1;
         size_t direction = 1;
         size_t n_layers = 1;
