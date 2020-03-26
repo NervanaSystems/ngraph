@@ -2131,3 +2131,11 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_3d)
     test_non_zero_constant_folding(fn,
                                    {0, 0, 0, 1, 1, 2, 2, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1});
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_2d_bool)
+{
+    const auto fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/non_zero_2d_bool.prototxt"));
+
+    test_non_zero_constant_folding(fn, {0, 1, 1, 0});
+}

@@ -39,7 +39,7 @@ void op::v3::NonZero::validate_and_infer_types()
     const auto input_et = get_input_element_type(0);
 
     NODE_VALIDATION_CHECK(this,
-                          input_et.is_integral_number() || input_et.is_real(),
+                          input_et.is_integral() || input_et.is_real(),
                           "NonZero input data type needs to be a numeric type. Got: ",
                           input_et);
 
