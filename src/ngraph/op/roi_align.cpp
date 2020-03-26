@@ -103,7 +103,7 @@ void op::v3::ROIAlign::validate_and_infer_types()
         {
             NODE_VALIDATION_CHECK(
                 this,
-                rois_ps[0].same_scheme(batch_indices_ps[0]),
+                rois_ps[0].compatible(batch_indices_ps[0]),
                 "The first dimension of ROIs input must be equal to the first dimension ",
                 "of the batch indices input. Got: ",
                 rois_ps[0],
@@ -159,7 +159,7 @@ bool op::v3::ROIAlign::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::v3::ROIAlign::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v3::ROIAlign::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ROIAlign>(new_args.at(0),

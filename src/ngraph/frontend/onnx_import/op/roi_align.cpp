@@ -29,9 +29,15 @@ namespace ngraph
             {
                 NodeVector roi_align(const Node& node)
                 {
-                    const auto data = node.get_ng_inputs().at(0);
-                    const auto rois = node.get_ng_inputs().at(1);
-                    const auto num_rois = node.get_ng_inputs().at(2);
+                    const auto inputs = node.get_ng_inputs();
+
+                    NGRAPH_CHECK(inputs.size() == 3,
+                                 "The RoiAlign operator expects 3 inputs. Got: ",
+                                 inputs.size());
+
+                    const auto& data = inputs[0];
+                    const auto& rois = inputs[1];
+                    const auto& num_rois = inputs[2];
 
                     const auto pooled_h = node.get_attribute_value<size_t>("output_height", 1);
                     const auto pooled_w = node.get_attribute_value<size_t>("output_width", 1);

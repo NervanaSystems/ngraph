@@ -69,7 +69,7 @@ namespace ngraph
                 virtual void validate_and_infer_types() override;
                 virtual bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 size_t get_pooled_h() const { return m_pooled_h; }
                 size_t get_pooled_w() const { return m_pooled_w; }
