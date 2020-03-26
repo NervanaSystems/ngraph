@@ -2400,6 +2400,29 @@ TEST(constant_folding, constant_non_zero_1D)
     ASSERT_EQ((Shape{1, 2}), new_const->get_shape());
 }
 
+TEST(constant_folding, constant_non_zero_1D_all_indices)
+{
+    const vector<float> values_in{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+    const auto data = make_shared<op::Constant>(element::f32, Shape{values_in.size()}, values_in);
+    const auto non_zero = make_shared<op::v3::NonZero>(data);
+    auto f = make_shared<Function>(non_zero, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    const auto values_out = new_const->get_vector<int64_t>();
+
+    const vector<int64_t> values_expected{0, 1, 2, 3, 4, 5, 6, 7};
+    ASSERT_EQ(values_expected, values_out);
+    ASSERT_EQ((Shape{1, values_in.size()}), new_const->get_shape());
+}
+
 TEST(constant_folding, constant_non_zero_2D)
 {
     vector<int> values_in{1, 0, 0, 0, 1, 0, 1, 1, 0};

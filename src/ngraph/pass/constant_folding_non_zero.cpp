@@ -97,14 +97,17 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
 {
     const auto input_shape = data->get_shape();
     const auto* input_values = data->get_data_ptr<T>();
+    const bool identical_elems_in_data = data->get_all_data_elements_bitwise_identical();
+
+    if (identical_elems_in_data)
+    {
+        NGRAPH_CHECK(input_values[0] != T{0},
+                     "It's not possible to constant fold a NonZero op with an input containing "
+                     "only zeros.");
+    }
+
     if (ngraph::is_scalar(input_shape))
     {
-        const auto scalar_value = input_values[0];
-
-        NGRAPH_CHECK(scalar_value != T{0},
-                     "It's not possible to constant fold a NonZero op for a scalar equal to zero.");
-
-        // return 0(the only index) if the data input contains a scalar different than zero
         return op::Constant::create(element::i64, Shape{1, 1}, {0});
     }
     else if (is_vector(input_shape))
@@ -113,27 +116,33 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
         std::vector<int64_t> indices;
         indices.reserve(input_values_count);
 
-        const T zero_value = T{0};
-        for (size_t i = 0; i < input_values_count; ++i)
+        if (identical_elems_in_data)
         {
-            if (input_values[i] != zero_value)
+            // return a complete set of indices since all of them are non-zero
+            indices.resize(input_values_count);
+            std::iota(indices.begin(), indices.end(), 0);
+        }
+        else
+        {
+            const T zero_value = T{0};
+            for (size_t i = 0; i < input_values_count; ++i)
             {
-                indices.push_back(i);
+                if (input_values[i] != zero_value)
+                {
+                    indices.push_back(i);
+                }
             }
+
+            indices.shrink_to_fit();
         }
 
-        indices.shrink_to_fit();
         return op::Constant::create(element::i64, Shape{1, indices.size()}, indices);
     }
     else
     {
         NonZeroElements non_zero_elems{input_shape};
-        const auto& found_indices = non_zero_elems.find_indices(input_values);
 
-        // we can't create an empty Constant indicating that no non-zero elems were found
-        NGRAPH_CHECK(
-            found_indices.front().size() > 0,
-            "It's not possible to constant fold a NonZero op with an input containing only zeros.");
+        const auto& found_indices = non_zero_elems.find_indices(input_values);
 
         // flatten the results and return them as a Constant
         std::vector<int64_t> indices;
