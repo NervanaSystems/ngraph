@@ -56,3 +56,25 @@ TEST(type_prop, squeeze_dynamic)
     EXPECT_TRUE(
         squeeze_default_axes->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
 }
+
+TEST(type_prop, squeeze_axes_invalid_value)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{0, 2});
+
+    try
+    {
+        auto squeeze = make_shared<op::Squeeze>(param, axes_node);
+        FAIL() << "Squeeze axis invalid value not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "provided axis value is invalid. Only axes of size 1 may be removed.");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}

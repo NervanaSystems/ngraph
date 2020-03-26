@@ -43,8 +43,7 @@ void op::Squeeze::pre_validate_and_infer_types()
 
     auto axes_constant = as_type_ptr<op::v0::Constant>(axes_node);
     bool axes_is_empty_constant =
-        (axes_constant) ? axes_constant->cast_vector<int64_t>().empty()
-                           : false;
+        (axes_constant) ? axes_constant->cast_vector<int64_t>().empty() : false;
 
     if (dynamic_data_rank || !axes_constant || (dynamic_data_shape && axes_is_empty_constant))
     {
@@ -54,7 +53,7 @@ void op::Squeeze::pre_validate_and_infer_types()
 
     auto data_partial_shape = data.get_partial_shape();
     uint64_t data_rank = data_partial_shape.rank().get_length();
-    
+
     // Get value of axes from Constant
     auto axes =
         normalize_axes(this->description(), axes_constant->cast_vector<int64_t>(), data_rank);
