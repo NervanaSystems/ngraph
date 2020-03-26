@@ -596,3 +596,17 @@ TEST(algebraic_simplification, pass_property)
     ASSERT_TRUE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
     ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }
+
+TEST(algebraic_simplification, skip_dup_converts)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{96, 100});
+
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    auto f = std::make_shared<Function>(make_shared<op::Convert>(a, element::f32), ParameterVector{a});
+    pass_manager.run_passes(f);
+    ASSERT_EQ(count_ops_of_type<op::Convert>(f), 0);
+
+}
