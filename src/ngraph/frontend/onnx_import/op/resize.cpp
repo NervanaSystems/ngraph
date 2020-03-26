@@ -42,25 +42,24 @@ namespace ngraph
                         (std::find(supported_modes.begin(), supported_modes.end(), mode) !=
                          supported_modes.end());
 
-                    if(!is_mode_supported)
+                    if (!is_mode_supported)
                     {
                         std::string supported_modes_str = "";
-                        for (const auto& mode_name : supported_modes) 
-                        { 
+                        for (const auto& mode_name : supported_modes)
+                        {
                             supported_modes_str += (mode_name + ", ");
                         }
-                        CHECK_VALID_NODE(node, 
-                                        is_mode_supported,
-                                        mode,
-                                        " - this type of interpolation mode is not supported.",
-                                        " Choose one of the following modes: ",
-                                        supported_modes_str
-                        );
+                        CHECK_VALID_NODE(node,
+                                         is_mode_supported,
+                                         mode,
+                                         " - this type of interpolation mode is not supported.",
+                                         " Choose one of the following modes: ",
+                                         supported_modes_str);
                     }
 
                     CHECK_VALID_NODE(node,
                                      scales_shape.rank().is_static(),
-                                     "Dynamic rank of Scales input is not supported.");
+                                     " Dynamic rank of Scales input is not supported.");
 
                     auto attrs = ngraph::op::InterpolateAttrs();
                     attrs.mode = mode;
