@@ -58,6 +58,20 @@ namespace
             }
         }
 
+        void generate_all_indices()
+        {
+            m_current_index = Shape(m_input_shape.size(), 0UL);
+            size_t i = 0;
+            const auto values_count = shape_size(m_input_shape);
+            while (i + 1 < values_count)
+            {
+                add_to_results(m_current_index);
+                next_index();
+                ++i;
+            }
+            add_to_results(m_current_index);
+        }
+
         const Results_t& get_indices() const { return m_results; }
     private:
         /// \brief Adds single dimensions of an index into the matching element of the results
@@ -147,6 +161,7 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
 
         if (identical_elems_in_data)
         {
+            non_zero_elems.generate_all_indices();
         }
         else
         {
