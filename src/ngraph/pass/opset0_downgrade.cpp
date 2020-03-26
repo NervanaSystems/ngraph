@@ -320,8 +320,7 @@ namespace
         }
         else
         {
-            replacement_node = make_shared<op::v0::DynReshape>(
-                node->input_value(0), node->input_value(1), node->get_special_zero());
+            NGRAPH_CHECK(replacement_node, "Unable to convert Reshape:v1 with dynamic shape.");
         }
 
         replace_node(node, replacement_node);

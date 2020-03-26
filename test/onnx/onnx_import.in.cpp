@@ -37,6 +37,7 @@
 #include "gtest/gtest.h"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/frontend/onnx_import/onnx_utils.hpp"
+#include "ngraph/frontend/onnx_import/default_opset.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/constant_folding.hpp"
@@ -1012,6 +1013,21 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_sum_square)
     test_case.add_multiple_inputs(inputs);
     test_case.add_expected_output(expected_output);
     test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_resize_opset10_import_only)
+{
+    const auto resize_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/resize_opset10.prototxt"));
+
+    // Input data shape (1, 2, 3, 4)
+    // Scales input constant values {4, 3, 2, 1}
+
+    Shape expected_output_shape {4, 6, 6, 4};
+    EXPECT_EQ(resize_fn->get_output_size(), 1);
+    EXPECT_EQ(resize_fn->get_output_shape(0), expected_output_shape);
+    EXPECT_EQ(count_ops_of_type<onnx_import::default_opset::Interpolate>(resize_fn), 1);
+    EXPECT_EQ(count_ops_of_type<onnx_import::default_opset::Constant>(resize_fn), 1);
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_shape)

@@ -34,5 +34,19 @@ namespace ngraph
                 }
             }
         }
+
+        namespace validation
+        {
+            void check_valid_inputs_size(const onnx_import::Node& node, size_t minimum_inputs_size)
+            {
+                const auto inputs_size = node.get_ng_inputs().size();
+                CHECK_VALID_NODE(node,
+                                 inputs_size >= minimum_inputs_size,
+                                 " Minimum required inputs size is: ",
+                                 minimum_inputs_size,
+                                 " Got: ",
+                                 inputs_size);
+            }
+        }
     }
 }

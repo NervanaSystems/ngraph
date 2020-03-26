@@ -28,6 +28,8 @@ namespace ngraph
             {
                 NodeVector resize(const onnx_import::Node& node)
                 {
+                    onnx_import::validation::check_valid_inputs_size(node, 2);
+
                     const auto inputs = node.get_ng_inputs();
                     const auto data = inputs.at(0);
                     const auto scales = inputs.at(1);
@@ -37,36 +39,62 @@ namespace ngraph
 
                     const auto mode = node.get_attribute_value<std::string>("mode", "nearest");
 
-                    std::unordered_set<std::string> supported_modes = {
-                        "nearest", "linear", "cubic", "area"};
+                    std::unordered_set<std::string> supported_modes = {"nearest", "linear"};
                     bool is_mode_supported =
                         (std::find(supported_modes.begin(), supported_modes.end(), mode) !=
                          supported_modes.end());
 
                     if (!is_mode_supported)
                     {
-                        throw error::NotSupported("ResizeOp: " + mode +
-                                                  " - this type of interpolation mode is not "
-                                                  "supported. Choose one of the following modes: "
-                                                  "'nearest', 'linear', 'cubic', 'area'.");
+                        std::string supported_modes_str = "";
+                        for (const auto& mode_name : supported_modes)
+                        {
+                            supported_modes_str += (mode_name + ", ");
+                        }
+                        CHECK_VALID_NODE(node,
+                                         is_mode_supported,
+                                         mode,
+                                         " - this type of interpolation mode is not supported.",
+                                         " Choose one of the following modes: ",
+                                         supported_modes_str);
+                    }
+
+                    CHECK_VALID_NODE(
+                        node,
+                        scales_shape.is_static() || data_shape.rank().is_static(),
+                        " Data rank or shape of Scales input is required to be static.");
+
+                    size_t axes_size = scales_shape.is_static() ? scales_shape.to_shape().at(0)
+                                                                : data_shape.rank().get_length();
+                    AxisSet axes;
+                    for (int ax = 0; ax < axes_size; ++ax)
+                    {
+                        axes.insert(ax);
                     }
 
                     auto attrs = ngraph::op::InterpolateAttrs();
+                    attrs.axes = axes;
                     attrs.mode = mode;
 
-                    if (scales_shape.rank().is_static())
+                    if (scales->is_constant() && data_shape.is_static())
                     {
-                        AxisSet axes;
-                        for (int ax = 0; ax < scales_shape.rank().get_length(); ++ax)
+                        const auto scales_const =
+                            as_type_ptr<default_opset::Constant>(scales->shared_from_this());
+
+                        auto scales_vector = scales_const->cast_vector<float>();
+                        auto data_static_shape = data_shape.to_shape();
+
+                        std::vector<int64_t> output_shape;
+                        for (size_t i = 0; i < data_static_shape.size(); ++i)
                         {
-                            axes.insert(ax);
+                            output_shape.push_back(
+                                std::floor(data_static_shape.at(i) * scales_vector.at(i)));
                         }
-                        attrs.axes = axes;
-                    }
-                    else
-                    {
-                        throw error::NotSupported(
-                            "ResizeOp: Dynamic rank of Scales input is not supported.");
+                        auto output_shape_const = default_opset::Constant::create(
+                            element::u64, Shape({output_shape.size()}), output_shape);
+
+                        return {std::make_shared<default_opset::Interpolate>(
+                            data, output_shape_const, attrs)};
                     }
 
                     auto shape_of_data = std::make_shared<default_opset::Convert>(
