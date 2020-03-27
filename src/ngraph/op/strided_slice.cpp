@@ -179,9 +179,9 @@ void op::v1::StridedSlice::validate_and_infer_types()
 
     if (begin_const && end_const && strides_const && data_rank.is_static())
     {
-        auto begin = begin_const->get_vector<int64_t>();
-        auto end = end_const->get_vector<int64_t>();
-        auto strides = strides_const->get_vector<int64_t>();
+        auto begin = begin_const->cast_vector<int64_t>();
+        auto end = end_const->cast_vector<int64_t>();
+        auto strides = strides_const->cast_vector<int64_t>();
         const auto begin_mask = convert_mask_to_axis_set(get_begin_mask());
         const auto end_mask = convert_mask_to_axis_set(get_end_mask());
 

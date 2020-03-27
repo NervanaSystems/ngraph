@@ -78,7 +78,7 @@ namespace ngraph
                             common::get_monotonic_range<int64_t>(data_rank));
                     }
                     const auto axes_const = as_type_ptr<default_opset::Constant>(axes);
-                    const auto begin_end_mask = axes_to_mask(axes_const->get_vector<int64_t>());
+                    const auto begin_end_mask = axes_to_mask(axes_const->cast_vector<int64_t>());
 
                     if (inputs.size() == 5) // steps input provided
                     {
