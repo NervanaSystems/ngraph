@@ -772,11 +772,6 @@ protected:
                            dot->get_reduction_axes_count());
             break;
         }
-        case OP_TYPEID::DynReshape:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
         case OP_TYPEID::DynSlice:
         {
             throw unsupported_op("Unsupported op '" + node.description() + "'");
