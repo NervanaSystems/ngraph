@@ -179,19 +179,4 @@ bool runtime::Backend::executable_can_create_tensors()
 
 void runtime::Backend::initialize_backends()
 {
-// This is a big ol hack to make the backends work for static linking the way they do
-// for dynamic linking.
-// What should happen is that the ngraph user should call the initialization for each
-// backend they want to use. They know the list because the linked in the libraries.
-#ifdef NGRAPH_CPU_ENABLE
-    ngraph_register_cpu_backend();
-#endif
-
-#ifdef NGRAPH_INTERPRETER_ENABLE
-    ngraph_register_interpreter_backend();
-#endif
-
-#ifdef NGRAPH_MLIR_ENABLE
-    ngraph::runtime::ngmlir::initializeNGraphMLIR();
-#endif
 }
