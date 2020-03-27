@@ -198,4 +198,7 @@ namespace ngraph
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<element::Type>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
+
+    /// \brief Return the number of bytes in the compile-time representation of the element type.
+    size_t compiler_byte_size(element::Type_t et);
 }

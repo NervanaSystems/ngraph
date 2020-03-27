@@ -62,6 +62,7 @@ set(SRC
     cse.cpp
     dyn_elimination.cpp
     element_type.cpp
+    eval.cpp
     file_util.cpp
     float16.cpp
     includes.cpp
