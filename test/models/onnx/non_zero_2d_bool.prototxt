@@ -12,11 +12,8 @@ graph {
     name: "A"
     type {
       tensor_type {
-        elem_type: 6
+        elem_type: 9
         shape {
-          dim {
-            dim_value: 3
-          }
           dim {
             dim_value: 2
           }
@@ -28,23 +25,14 @@ graph {
     }
   }
   initializer {
-    data_type: 6
+    data_type: 9
     name: "A"
-    dims: 3
     dims: 2
     dims: 2
-    int32_data: 1
-    int32_data: 1
-    int32_data: 0
-    int32_data: 1
     int32_data: 0
     int32_data: 1
     int32_data: 1
     int32_data: 0
-    int32_data: 1
-    int32_data: 0
-    int32_data: 0
-    int32_data: 1
   }
   output {
     name: "out"
@@ -54,7 +42,7 @@ graph {
       }
     }
   }
-  name: "non_zero_3d"
+  name: "non_zero_2d_bool"
 }
 opset_import {
   domain: ""

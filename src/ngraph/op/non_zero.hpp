@@ -24,7 +24,14 @@ namespace ngraph
     {
         namespace v3
         {
-            /// \brief NonZero operation.
+            /// \brief NonZero operation returning indices of non-zero elements in the input tensor.
+            ///
+            /// \note The indices are returned by-dimension in row-major order. For example
+            ///       the following output contains 3 indices of a 3D input tensor elements:
+            ///       [[0, 0, 2],
+            ///        [0, 1, 1],
+            ///        [0, 1, 2]]
+            ///       The values point to input elements at [0,0,0], [0,1,1] and [2,1,2]
             class NGRAPH_API NonZero : public Op
             {
             public:

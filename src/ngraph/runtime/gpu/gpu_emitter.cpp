@@ -1651,11 +1651,6 @@ std::string runtime::gpu::GPU_Emitter::emit_v0_DetectionOutput(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_v0_NonZero(EMIT_ARGS)
-{
-    throw unsupported_op("Unsupported op '" + node->description() + "'");
-}
-
 std::string runtime::gpu::GPU_Emitter::emit_v1_NonMaxSuppression(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
@@ -1996,13 +1991,17 @@ std::string runtime::gpu::GPU_Emitter::emit_v0_LayerNormBackprop(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_v3_NonZero(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_v3_ROIAlign(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_v3_ScatterElementsUpdate(EMIT_ARGS)
-
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }

@@ -31,7 +31,7 @@ graph {
       }
     }
   }
-  name: "non_zero_1d"
+  name: "non_zero_scalar"
 }
 opset_import {
   domain: ""

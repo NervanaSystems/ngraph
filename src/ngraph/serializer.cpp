@@ -2247,7 +2247,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
             break;
         }
-        case OP_TYPEID::NonZero:
+        case OP_TYPEID::NonZero_v3:
         {
             node = make_shared<op::v3::NonZero>(args[0]);
 
@@ -4131,7 +4131,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["sort_result_descending"] = tmp->get_sort_result_descending();
         break;
     }
-    case OP_TYPEID::NonZero: { break;
+    case OP_TYPEID::NonZero_v3: { break;
     }
     case OP_TYPEID::NormalizeL2:
     {

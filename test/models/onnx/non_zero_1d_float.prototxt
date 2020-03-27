@@ -12,39 +12,29 @@ graph {
     name: "A"
     type {
       tensor_type {
-        elem_type: 6
+        elem_type: 1
         shape {
           dim {
-            dim_value: 3
-          }
-          dim {
-            dim_value: 2
-          }
-          dim {
-            dim_value: 2
+            dim_value: 10
           }
         }
       }
     }
   }
   initializer {
-    data_type: 6
+    data_type: 1
     name: "A"
-    dims: 3
-    dims: 2
-    dims: 2
-    int32_data: 1
-    int32_data: 1
-    int32_data: 0
-    int32_data: 1
-    int32_data: 0
-    int32_data: 1
-    int32_data: 1
-    int32_data: 0
-    int32_data: 1
-    int32_data: 0
-    int32_data: 0
-    int32_data: 1
+    dims: 10
+    float_data: -1234.567
+    float_data: -0.5
+    float_data: 0.0
+    float_data: 0.1
+    float_data: 0.01
+    float_data: 0.001
+    float_data: 0.0001
+    float_data: 0.00001
+    float_data: 0.000001
+    float_data: 0.0000001
   }
   output {
     name: "out"
@@ -54,7 +44,7 @@ graph {
       }
     }
   }
-  name: "non_zero_3d"
+  name: "non_zero_1d_float"
 }
 opset_import {
   domain: ""

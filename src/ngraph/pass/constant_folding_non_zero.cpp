@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <numeric>
+
 #include "constant_folding.hpp"
 #include "ngraph/op/non_zero.hpp"
 
@@ -30,32 +32,49 @@ namespace
             : m_input_shape{input_shape}
             , m_results{Results_t(input_shape.size())}
         {
+            NGRAPH_CHECK(m_input_shape.size() > 0,
+                         "Can't use the NonZeroElements class with a scalar shape");
         }
 
         template <typename T>
-        const Results_t& find_indices(const T* values)
+        void find_indices(const T* values)
         {
             m_current_index = Shape(m_input_shape.size(), 0UL);
             const auto values_count = shape_size(m_input_shape);
 
             const T zero_value = T{0};
-            for (size_t i = 0; i < values_count; ++i)
+            for (size_t i = 0; i + 1 < values_count; ++i)
             {
                 if (values[i] != zero_value)
                 {
                     add_to_results(m_current_index);
                 }
 
-                // don't generate the next index when the last value has been processed
-                if (i < values_count - 1)
-                {
-                    next_index();
-                }
+                next_index();
             }
 
-            return m_results;
+            // check the last element in the input values
+            if (values_count != 0 && values[values_count - 1] != zero_value)
+            {
+                add_to_results(m_current_index);
+            }
         }
 
+        void generate_all_indices()
+        {
+            m_current_index = Shape(m_input_shape.size(), 0UL);
+            size_t i = 0;
+            const auto values_count = shape_size(m_input_shape);
+            while (i + 1 < values_count)
+            {
+                add_to_results(m_current_index);
+                next_index();
+                ++i;
+            }
+            add_to_results(m_current_index);
+        }
+
+        const Results_t& get_indices() const { return m_results; }
     private:
         /// \brief Adds single dimensions of an index into the matching element of the results
         void add_to_results(const Shape& index)
@@ -68,7 +87,7 @@ namespace
 
         // Generates an index pointing to the next element in the flattened tensor
         // It behaves similar to flipping bits when incrementing a binary number
-        void next_index()
+        inline void next_index()
         {
             for (size_t dim = m_current_index.size() - 1; dim >= 0; --dim)
             {
@@ -97,14 +116,17 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
 {
     const auto input_shape = data->get_shape();
     const auto* input_values = data->get_data_ptr<T>();
+    const bool identical_elems_in_data = data->get_all_data_elements_bitwise_identical();
+
+    if (identical_elems_in_data)
+    {
+        NGRAPH_CHECK(input_values[0] != T{0},
+                     "It's not possible to constant fold a NonZero op with an input containing "
+                     "only zeros.");
+    }
+
     if (ngraph::is_scalar(input_shape))
     {
-        const auto scalar_value = input_values[0];
-
-        NGRAPH_CHECK(scalar_value != T{0},
-                     "It's not possible to constant fold a NonZero op for a scalar equal to zero.");
-
-        // return 0(the only index) if the data input contains a scalar different than zero
         return op::Constant::create(element::i64, Shape{1, 1}, {0});
     }
     else if (is_vector(input_shape))
@@ -113,27 +135,42 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
         std::vector<int64_t> indices;
         indices.reserve(input_values_count);
 
-        const T zero_value = T{0};
-        for (size_t i = 0; i < input_values_count; ++i)
+        if (identical_elems_in_data)
         {
-            if (input_values[i] != zero_value)
+            // return a complete set of indices since all of them are non-zero
+            indices.resize(input_values_count);
+            std::iota(indices.begin(), indices.end(), 0);
+        }
+        else
+        {
+            const T zero_value = T{0};
+            for (size_t i = 0; i < input_values_count; ++i)
             {
-                indices.push_back(i);
+                if (input_values[i] != zero_value)
+                {
+                    indices.push_back(i);
+                }
             }
+
+            indices.shrink_to_fit();
         }
 
-        indices.shrink_to_fit();
-        return op::Constant::create(element::i64, Shape{indices.size()}, indices);
+        return op::Constant::create(element::i64, Shape{1, indices.size()}, indices);
     }
     else
     {
         NonZeroElements non_zero_elems{input_shape};
-        const auto& found_indices = non_zero_elems.find_indices(input_values);
 
-        // we can't create an empty Constant indicating that no non-zero elems were found
-        NGRAPH_CHECK(
-            found_indices.front().size() > 0,
-            "It's not possible to constant fold a NonZero op with an input containing only zeros.");
+        if (identical_elems_in_data)
+        {
+            non_zero_elems.generate_all_indices();
+        }
+        else
+        {
+            non_zero_elems.find_indices(input_values);
+        }
+
+        const auto& found_indices = non_zero_elems.get_indices();
 
         // flatten the results and return them as a Constant
         std::vector<int64_t> indices;
@@ -168,11 +205,9 @@ void pass::ConstantFolding::construct_constant_non_zero()
         std::shared_ptr<Node> replacement;
         switch (data->get_element_type())
         {
-        // case element::Type_t::boolean: replacement = fold_constant_non_zero<char>(data, tile);
-        // break;
-        // case element::Type_t::bf16: replacement = fold_constant_tile<bfloat16>(data, tile);
-        // break;
-        // case element::Type_t::f16: replacement = fold_constant_tile<float16>(data, tile); break;
+        case element::Type_t::boolean: replacement = fold_constant_non_zero<char>(data); break;
+        case element::Type_t::bf16: replacement = fold_constant_non_zero<bfloat16>(data); break;
+        case element::Type_t::f16: replacement = fold_constant_non_zero<float16>(data); break;
         case element::Type_t::f32: replacement = fold_constant_non_zero<float>(data); break;
         case element::Type_t::f64: replacement = fold_constant_non_zero<double>(data); break;
         case element::Type_t::i8: replacement = fold_constant_non_zero<int8_t>(data); break;
@@ -183,12 +218,9 @@ void pass::ConstantFolding::construct_constant_non_zero()
         case element::Type_t::u16: replacement = fold_constant_non_zero<uint16_t>(data); break;
         case element::Type_t::u32: replacement = fold_constant_non_zero<uint32_t>(data); break;
         case element::Type_t::u64: replacement = fold_constant_non_zero<uint64_t>(data); break;
-        case element::Type_t::boolean:
-        case element::Type_t::bf16:
-        case element::Type_t::f16:
+        case element::Type_t::u1:
         case element::Type_t::dynamic:
         case element::Type_t::undefined:
-        case element::Type_t::u1:
             NGRAPH_CHECK(false, "Unsupported data type in NonZero constant folding");
             break;
         }
