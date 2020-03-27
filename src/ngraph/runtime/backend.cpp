@@ -23,6 +23,7 @@
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/dynamic/dynamic_backend.hpp"
@@ -72,6 +73,7 @@ std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string
 std::shared_ptr<runtime::Backend> runtime::Backend::create(const string& type,
                                                            bool must_support_dynamic)
 {
+    initialize_backend(type);
     auto inner_backend = BackendManager::create_backend(type);
 
     if (!must_support_dynamic || inner_backend->supports_dynamic_tensors())
@@ -172,4 +174,16 @@ bool runtime::Backend::executable_can_create_tensors()
     }
     remove_compiled_function(exec);
     return exec_can_create_tensors;
+}
+
+void runtime::Backend::initialize_backend(std::string backend_name)
+{
+    backend_name = "GPU:0";
+    NGRAPH_INFO << backend_name;
+    auto offset = backend_name.find(':');
+    if (offset != string::npos)
+    {
+        backend_name = backend_name.substr(0, offset);
+    }
+    NGRAPH_INFO << backend_name;
 }

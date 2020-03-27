@@ -30,7 +30,7 @@
 #ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
 #endif
-#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
+#include "int_backend_visibility.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
@@ -137,7 +137,7 @@ namespace ngraph
             enum class OP_TYPEID
             {
 #define NGRAPH_OP(NAME, NAMESPACE) ID_SUFFIX(NAME),
-#include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
+#include "opset_int_tbl.hpp"
 #undef NGRAPH_OP
                 UnknownOp
             };

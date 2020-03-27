@@ -14,8 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(interpreter)
-
 # With CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS, when creating cpu_backend.dll, link reports error: library limit of 65535 objects exceeded
 if (NGRAPH_CPU_ENABLE)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS FALSE)

@@ -615,6 +615,7 @@ if(NGRAPH_TBB_ENABLE)
     endif()
 endif()
 
+include_directories(backend)
 add_subdirectory(src)
 
 if (NGRAPH_TEST_UTIL_ENABLE)

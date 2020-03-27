@@ -179,6 +179,7 @@ public:
     /// The default value of 0.0.0 is chosen to be a parsable version number
     virtual std::string get_version() const { return "0.0.0"; }
 private:
+    static void initialize_backend(std::string backend_name);
     // mutex to modify s_backend_shared_library_search_directory thread safe
     static std::mutex m_mtx;
     static std::string s_backend_shared_library_search_directory;

@@ -17,3 +17,7 @@
 if (NGRAPH_NOP_ENABLE)
     add_subdirectory(nop)
 endif()
+
+if (NGRAPH_INTERPRETER_ENABLE)
+    add_subdirectory(interpreter)
+endif()
