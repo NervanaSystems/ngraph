@@ -2172,9 +2172,15 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, mask_rcnn_test_import_only)
 
     ASSERT_TRUE(mask_rcnn_fn);
 
-    std::cout << "Function name: " << mask_rcnn_fn->get_name() << std::endl;
     std::cout << "Graph size: " << mask_rcnn_fn->get_graph_size() << std::endl;
     std::cout << "Output size: " << mask_rcnn_fn->get_output_size() << std::endl;
+    std::cout << "Funcion is_dynamic: " << mask_rcnn_fn->is_dynamic() << std::endl;
+
+    for (int i=0; i < mask_rcnn_fn->get_output_size(); ++i)
+    {
+        std::cout << "Output at " << i << " partial shape: " 
+                  << mask_rcnn_fn->get_output_partial_shape(i) << std::endl;
+    }
 
     ////
     //// UNCOMMENT THE CODE BELOW TO SERIALIZE NGRAPH FUNCTION
@@ -2186,7 +2192,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, mask_rcnn_test_import_only)
     // #include "ngraph/serializer.hpp"
 
     // std::string mask_rcnn_fn_json = serialize(mask_rcnn_fn, 4);
-    // std::string path_to_save_the_model = "mask_rcnn_R_50_FPN_1x.js";
+    // std::string path_to_save_the_model = "mask_rcnn_R_50_FPN_1x.json";
     // std::ofstream out(path_to_save_the_model);
     // out << mask_rcnn_fn_json;
 
