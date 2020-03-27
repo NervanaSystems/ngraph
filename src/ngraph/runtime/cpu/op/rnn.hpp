@@ -74,6 +74,19 @@ namespace ngraph
 #else
             CPU_BACKEND_API Rnn(const Output<Node>& src_layer,
                                 const Output<Node>& src_iter,
+                                const Output<Node>& weights_layer,
+                                const Output<Node>& weights_iter,
+                                const Output<Node>& bias,
+                                size_t num_timesteps,
+                                size_t num_gates_per_cell,
+                                size_t src_sequence_length,
+                                size_t num_cell_states,
+                                size_t direction,
+                                size_t num_fused_layers,
+                                ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
+
+            CPU_BACKEND_API Rnn(const Output<Node>& src_layer,
+                                const Output<Node>& src_iter,
                                 const Output<Node>& src_iter_c,
                                 const Output<Node>& weights_layer,
                                 const Output<Node>& weights_iter,
