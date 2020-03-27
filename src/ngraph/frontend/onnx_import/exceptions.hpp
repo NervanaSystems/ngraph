@@ -63,12 +63,6 @@ namespace ngraph
 
         } // namespace  error
 
-        namespace validation
-        {
-            void check_valid_inputs_size(const onnx_import::Node& node, size_t minimum_inputs_size);
-
-        } // namespace  validation
-
     } // namespace  onnx_import
 
 } // namespace  ngraph
