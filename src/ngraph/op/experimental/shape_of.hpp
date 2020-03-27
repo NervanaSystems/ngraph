@@ -39,6 +39,11 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 void validate_and_infer_types() override;
+
+                void block_constant_folding() { m_is_foldable = false; }
+                bool is_foldable() { return m_is_foldable; }
+            private:
+                bool m_is_foldable = true;
             };
         }
         using v0::ShapeOf;

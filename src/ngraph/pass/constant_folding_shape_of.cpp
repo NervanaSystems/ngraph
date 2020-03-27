@@ -29,20 +29,20 @@ void pass::ConstantFolding::construct_constant_shape_of()
     auto shape_of_op = make_shared<op::ShapeOf>(arg_label);
 
     auto constant_shape_of_callback = [arg_label](pattern::Matcher& m) {
-        static set<string> visited_nodes;
-        auto node_name = m.get_match_root()->get_name();
-        NGRAPH_DEBUG << "In callback for constant_shape_of_callback against node = " << node_name;
+        NGRAPH_DEBUG << "In callback for constant_shape_of_callback against node = "
+                     << m.get_match_root()->get_name();
 
-        if (visited_nodes.count(node_name))
-        {
-            return true;
-        }
         auto pattern_value_map = m.get_pattern_value_map();
 
         auto arg_match = pattern_value_map[arg_label];
 
         auto partial_shape = arg_match.get_partial_shape();
-        if (partial_shape.is_static())
+        auto original_shape_of_node = as_type_ptr<op::ShapeOf>(m.get_match_root());
+        if (!original_shape_of_node->is_foldable())
+        {
+            return true;
+        }
+        else if (partial_shape.is_static())
         {
             NGRAPH_CHECK(revalidate_and_ensure_static(m.get_match_root()));
 
@@ -57,6 +57,7 @@ void pass::ConstantFolding::construct_constant_shape_of()
         else if (partial_shape.rank().is_static())
         {
             auto shape_of = make_shared<op::ShapeOf>(arg_match);
+            shape_of->block_constant_folding();
             auto dimensions = OutputVector{};
             auto output_dimensions = vector<Dimension>(partial_shape);
             for (size_t i = 0; i < output_dimensions.size(); ++i)
@@ -83,7 +84,6 @@ void pass::ConstantFolding::construct_constant_shape_of()
             auto replacement = std::make_shared<op::Concat>(dimensions, 0);
             replace_node(m.get_match_root(), replacement);
 
-            visited_nodes.insert(shape_of->get_name());
             return true;
         }
         else
