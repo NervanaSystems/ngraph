@@ -114,6 +114,11 @@ namespace ngraph
             size_t get_num_cell_states() const { return m_num_cell_states; }
             size_t get_direction() const { return m_direction; }
             size_t get_num_fused_layers() const { return m_num_fused_layers; }
+            bool is_type(ngraph::runtime::cpu::rnn_utils::rnntype rnn_type) const
+            {
+                return m_rnntype == rnn_type;
+            }
+
         private:
             size_t m_num_timesteps;
             size_t m_num_gates_per_cell;

@@ -662,6 +662,7 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Rnn)
                 {
                     (void)external_function;
+                    auto rnn_op = static_cast<ngraph::op::Rnn*>(node);
                     auto src_layer_rank = node->get_input_shape(0).size();
                     auto src_iter_rank = node->get_input_shape(1).size();
 #if MKLDNN_VERSION_MAJOR < 1
@@ -677,7 +678,7 @@ namespace ngraph
                     }
 #else
 
-                    if (node->get_inputs().size() == 6)
+                    if (rnn_op->is_type(ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm))
                     {
                         auto src_iter_c_rank = node->get_input_shape(2).size();
                         auto weights_layer_rank = node->get_input_shape(3).size();
@@ -691,7 +692,7 @@ namespace ngraph
                             runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                         }
                     }
-                    else
+                    else if (rnn_op->is_type(ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_rnn))
                     {
                         auto weights_layer_rank = node->get_input_shape(2).size();
                         auto weights_iter_rank = node->get_input_shape(3).size();

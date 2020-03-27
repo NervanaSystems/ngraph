@@ -18,6 +18,7 @@
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -39,7 +40,7 @@ namespace ngraph
                 }
 
                 auto& functors = external_function->get_functors();
-
+                auto rnn_op = static_cast<const ngraph::op::Rnn*>(node);
                 auto src_layer_buffer_index =
                     external_function->get_buffer_index(args[0].get_name());
                 auto src_iter_buffer_index =
@@ -49,7 +50,6 @@ namespace ngraph
                 auto dst_iter_buffer_index = external_function->get_buffer_index(out[1].get_name());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto rnn_node = static_cast<const ngraph::op::Rnn*>(node);
 
 #if MKLDNN_VERSION_MAJOR < 1
                 auto rnn_desc =
@@ -110,7 +110,7 @@ namespace ngraph
                 };
                 functors.emplace_back(functor);
 #else
-                if (args.size() == 5)
+                if (rnn_op->is_type(ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_rnn))
                 {
                     auto weights_layer_buffer_index =
                         external_function->get_buffer_index(args[2].get_name());
@@ -170,11 +170,15 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[7], ctx->mkldnn_workspaces[deps[8]]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, rnn_index, deps, cpu::mkldnn_utils::OpType::RNN, scratchpad_size);
+                            ctx,
+                            rnn_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::VANILLA_RNN,
+                            scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
-                else
+                else if (rnn_op->is_type(ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm))
                 {
                     auto src_iter_c_buffer_index =
                         external_function->get_buffer_index(args[2].get_name());
