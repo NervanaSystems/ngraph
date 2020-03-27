@@ -14,27 +14,25 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(NOT NGRAPH_TEST_UTIL_ENABLE)
-    return()
+if (NGRAPH_IE_STATIC_LIB_ENABLE)
+    set(LIBRARY_TYPE STATIC)
+else()
+    set(LIBRARY_TYPE SHARED)
 endif()
 
-set (SRC
-    autodiff/backprop_function.cpp
-    all_close_f.cpp
-    float_util.cpp
-    test_tools.cpp
-    test_control.cpp
-    test_case.cpp
-    provenance_enabler.hpp
+set(SRC
+    ie_backend.cpp
+    ie_backend.hpp
+    ie_backend_visibility.hpp
+    ie_tensor.cpp
+    ie_tensor.hpp
+    ie_executable.cpp
+    ie_executable.hpp
 )
 
-add_library(ngraph_test_util STATIC ${SRC})
-if(NGRAPH_LIB_VERSIONING_ENABLE)
-    set_target_properties(ngraph_test_util PROPERTIES
-        VERSION ${NGRAPH_VERSION})
-endif()
-target_include_directories(ngraph_test_util PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
-target_link_libraries(ngraph_test_util PRIVATE ngraph libgtest)
-add_dependencies(ngraph_test_util ext_gtest)
+add_library(ie_backend ${LIBRARY_TYPE} ${SRC})
+target_compile_definitions(ie_backend PRIVATE IE_BACKEND_DLL_EXPORTS)
+target_include_directories(ie_backend PUBLIC ${IE_MAIN_SOURCE_DIR}/include)
+target_link_libraries(ie_backend PUBLIC ngraph inference_engine)
 
-install(TARGETS ngraph_test_util DESTINATION ${NGRAPH_INSTALL_LIB})
+install(TARGETS ie_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
