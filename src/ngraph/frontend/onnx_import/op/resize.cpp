@@ -28,8 +28,6 @@ namespace ngraph
             {
                 NodeVector resize(const onnx_import::Node& node)
                 {
-                    onnx_import::validation::check_valid_inputs_size(node, 2);
-
                     const auto inputs = node.get_ng_inputs();
                     const auto data = inputs.at(0);
                     const auto scales = inputs.at(1);
@@ -54,14 +52,14 @@ namespace ngraph
                         CHECK_VALID_NODE(node,
                                          is_mode_supported,
                                          mode,
-                                         " - this type of interpolation mode is not supported.",
+                                         " - this type of interpolation mode is not supported."
                                          " Choose one of the following modes: ",
                                          supported_modes_str);
                     }
 
                     CHECK_VALID_NODE(
                         node,
-                        scales_shape.is_static() || data_shape.rank().is_static(),
+                        (scales_shape.is_static() || data_shape.rank().is_static()),
                         " Data rank or shape of Scales input is required to be static.");
 
                     size_t axes_size = scales_shape.is_static() ? scales_shape.to_shape().at(0)
