@@ -73,7 +73,7 @@ std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string
 std::shared_ptr<runtime::Backend> runtime::Backend::create(const string& type,
                                                            bool must_support_dynamic)
 {
-    initialize_backend(type);
+    initialize_backends();
     auto inner_backend = BackendManager::create_backend(type);
 
     if (!must_support_dynamic || inner_backend->supports_dynamic_tensors())
@@ -88,6 +88,7 @@ std::shared_ptr<runtime::Backend> runtime::Backend::create(const string& type,
 
 vector<string> runtime::Backend::get_registered_devices()
 {
+    initialize_backends();
     return BackendManager::get_registered_backends();
 }
 
@@ -176,14 +177,21 @@ bool runtime::Backend::executable_can_create_tensors()
     return exec_can_create_tensors;
 }
 
-void runtime::Backend::initialize_backend(std::string backend_name)
+void runtime::Backend::initialize_backends()
 {
-    backend_name = "GPU:0";
-    NGRAPH_INFO << backend_name;
-    auto offset = backend_name.find(':');
-    if (offset != string::npos)
-    {
-        backend_name = backend_name.substr(0, offset);
-    }
-    NGRAPH_INFO << backend_name;
+// This is a big ol hack to make the backends work for static linking the way they do
+// for dynamic linking.
+// What should happen is that the ngraph user should call the initialization for each
+// backend they want to use. They know the list because the linked in the libraries.
+#ifdef NGRAPH_CPU_ENABLE
+    ngraph_register_cpu_backend();
+#endif
+
+#ifdef NGRAPH_INTERPRETER_ENABLE
+    ngraph_register_interpreter_backend();
+#endif
+
+#ifdef NGRAPH_MLIR_ENABLE
+    ngraph::runtime::ngmlir::initializeNGraphMLIR();
+#endif
 }

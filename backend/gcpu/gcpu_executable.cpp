@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gcpu/gcpu_executable.hpp"
+#include "gcpu_executable.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
@@ -37,33 +37,33 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& function,
+gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& function,
                                               bool enable_performance_collection)
     : INTExecutable(function, enable_performance_collection)
 {
 }
 
-bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
+bool gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    // convert inputs to HostTensor
-    vector<shared_ptr<HostTensor>> func_inputs;
+    // convert inputs to runtime::HostTensor
+    vector<shared_ptr<runtime::HostTensor>> func_inputs;
     for (auto tensor : inputs)
     {
         auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
         func_inputs.push_back(host_tensor);
     }
 
-    // convert outputs to HostTensor
-    vector<shared_ptr<HostTensor>> func_outputs;
+    // convert outputs to runtime::HostTensor
+    vector<shared_ptr<runtime::HostTensor>> func_outputs;
     for (auto tensor : outputs)
     {
         auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
         func_outputs.push_back(host_tensor);
     }
 
-    // map function params -> HostTensor
-    unordered_map<descriptor::Tensor*, shared_ptr<HostTensor>> tensor_map;
+    // map function params -> runtime::HostTensor
+    unordered_map<descriptor::Tensor*, shared_ptr<runtime::HostTensor>> tensor_map;
     size_t input_count = 0;
     for (auto param : get_parameters())
     {
@@ -74,7 +74,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         }
     }
 
-    // map function outputs -> HostTensor
+    // map function outputs -> runtime::HostTensor
     for (size_t output_count = 0; output_count < get_results().size(); ++output_count)
     {
         auto output = get_results()[output_count];
@@ -90,13 +90,13 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     for (auto& op : m_nodes)
     {
         auto type_id = get_typeid(*op);
-        if (type_id == ngraph::runtime::interpreter::OP_TYPEID::Parameter)
+        if (type_id == interpreter::OP_TYPEID::Parameter)
         {
             continue;
         }
 
         // get op inputs from map
-        vector<shared_ptr<HostTensor>> op_inputs;
+        vector<shared_ptr<runtime::HostTensor>> op_inputs;
         for (auto input : op->inputs())
         {
             descriptor::Tensor* tensor = &input.get_tensor();
@@ -104,11 +104,11 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         }
 
         // get op outputs from map or create
-        vector<shared_ptr<HostTensor>> op_outputs;
+        vector<shared_ptr<runtime::HostTensor>> op_outputs;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
             descriptor::Tensor* tensor = &op->output(i).get_tensor();
-            shared_ptr<HostTensor> host_tensor;
+            shared_ptr<runtime::HostTensor> host_tensor;
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
@@ -133,25 +133,25 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
 #endif
         switch (type_id)
         {
-        case ngraph::runtime::interpreter::OP_TYPEID::Convert:
-        case ngraph::runtime::interpreter::OP_TYPEID::Quantize:
-        case ngraph::runtime::interpreter::OP_TYPEID::Dequantize:
-        case ngraph::runtime::interpreter::OP_TYPEID::ArgMin:
-        case ngraph::runtime::interpreter::OP_TYPEID::ArgMax:
+        case interpreter::OP_TYPEID::Convert:
+        case interpreter::OP_TYPEID::Quantize:
+        case interpreter::OP_TYPEID::Dequantize:
+        case interpreter::OP_TYPEID::ArgMin:
+        case interpreter::OP_TYPEID::ArgMax:
             type = op->get_input_element_type(0);
             break;
-        case ngraph::runtime::interpreter::OP_TYPEID::Equal:
-        case ngraph::runtime::interpreter::OP_TYPEID::Greater:
-        case ngraph::runtime::interpreter::OP_TYPEID::GreaterEq:
-        case ngraph::runtime::interpreter::OP_TYPEID::Less:
-        case ngraph::runtime::interpreter::OP_TYPEID::LessEq:
-        case ngraph::runtime::interpreter::OP_TYPEID::NotEqual:
+        case interpreter::OP_TYPEID::Equal:
+        case interpreter::OP_TYPEID::Greater:
+        case interpreter::OP_TYPEID::GreaterEq:
+        case interpreter::OP_TYPEID::Less:
+        case interpreter::OP_TYPEID::LessEq:
+        case interpreter::OP_TYPEID::NotEqual:
             // Get the type of the second input, not the first
             // All BinaryElementwiseComparision ops have the same type for inputs
             // Select has bool for first input and the type we are interested in for the second
             type = op->get_input_element_type(1);
             break;
-        case ngraph::runtime::interpreter::OP_TYPEID::TopK:
+        case interpreter::OP_TYPEID::TopK:
             type = op->get_output_element_type(1);
             break;
         default: type = op->get_output_element_type(0); break;
@@ -174,10 +174,10 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     return true;
 }
 
-void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
+void gcpu::GCPUExecutable::generate_calls(const element::Type& type,
                                                    const Node& op,
-                                                   const vector<shared_ptr<HostTensor>>& out,
-                                                   const vector<shared_ptr<HostTensor>>& in)
+                                                   const vector<shared_ptr<runtime::HostTensor>>& out,
+                                                   const vector<shared_ptr<runtime::HostTensor>>& in)
 {
     stringstream ss;
     switch (type)

@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-#include "../backend/interpreter/int_executable.hpp"
+#include "interpreter/int_executable.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
@@ -32,11 +32,7 @@
 #include "ngraph/runtime/opt_kernel/reshape.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace gcpu
+namespace gcpu
         {
             class GCPUBackend;
             class GCPUExecutable;
@@ -57,31 +53,29 @@ namespace ngraph
                 };
             }
         }
-    }
-}
 
-class ngraph::runtime::gcpu::GCPUExecutable : public runtime::interpreter::INTExecutable
+class gcpu::GCPUExecutable : public interpreter::INTExecutable
 {
     friend class GCPUBackend;
 
 public:
-    GCPUExecutable(const std::shared_ptr<Function>& function,
+    GCPUExecutable(const std::shared_ptr<ngraph::Function>& function,
                    bool enable_performance_collection = false);
 
-    bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
-              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+    bool call(const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
+              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& intputs) override;
 
 private:
     int get_alignment() const { return 64; }
-    void generate_calls(const element::Type& type,
-                        const Node& op,
-                        const std::vector<std::shared_ptr<HostTensor>>& outputs,
-                        const std::vector<std::shared_ptr<HostTensor>>& inputs) override;
+    void generate_calls(const ngraph::element::Type& type,
+                        const ngraph::Node& op,
+                        const std::vector<std::shared_ptr<ngraph::runtime::HostTensor>>& outputs,
+                        const std::vector<std::shared_ptr<ngraph::runtime::HostTensor>>& inputs) override;
 
     template <typename T>
-    void gop_engine(const Node& node,
-                    const std::vector<std::shared_ptr<HostTensor>>& out,
-                    const std::vector<std::shared_ptr<HostTensor>>& args)
+    void gop_engine(const ngraph::Node& node,
+                    const std::vector<std::shared_ptr<ngraph::runtime::HostTensor>>& out,
+                    const std::vector<std::shared_ptr<ngraph::runtime::HostTensor>>& args)
     {
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
@@ -89,23 +83,23 @@ private:
 #endif
         switch (INTExecutable::get_typeid(node))
         {
-        case ngraph::runtime::interpreter::OP_TYPEID::Broadcast:
+        case interpreter::OP_TYPEID::Broadcast:
         {
-            const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
-            Shape in_shape = node.get_input_shape(0);
-            Shape out_shape = node.get_output_shape(0);
-            AxisSet broadcast_axes = broadcast->get_broadcast_axes();
-            reference::broadcast<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Broadcast* broadcast = static_cast<const ngraph::op::Broadcast*>(&node);
+            ngraph::Shape in_shape = node.get_input_shape(0);
+            ngraph::Shape out_shape = node.get_output_shape(0);
+            ngraph::AxisSet broadcast_axes = broadcast->get_broadcast_axes();
+            ngraph::runtime::reference::broadcast<T>(args[0]->get_data_ptr<const T>(),
                                     out[0]->get_data_ptr<T>(),
                                     in_shape,
                                     out_shape,
                                     broadcast_axes);
             break;
         }
-        case ngraph::runtime::interpreter::OP_TYPEID::Reshape:
+        case interpreter::OP_TYPEID::Reshape:
         {
-            const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
-            reference::reshape(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Reshape* reshape = static_cast<const ngraph::op::Reshape*>(&node);
+            ngraph::runtime::reference::reshape(args[0]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<T>(),
                                node.get_input_shape(0),
                                reshape->get_input_order(),

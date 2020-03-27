@@ -26,19 +26,13 @@
 #include "ngraph/runtime/reference/allreduce.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace gcpu
+namespace gcpu
         {
             class GCPUBackend;
             class GCPUExecutable;
         }
-    }
-}
 
-class ngraph::runtime::gcpu::GCPUBackend : public Backend
+class gcpu::GCPUBackend : public ngraph::runtime::Backend
 {
 public:
     GCPUBackend();
@@ -47,15 +41,15 @@ public:
     GCPUBackend(GCPUBackend&&) = delete;
     GCPUBackend& operator=(const GCPUBackend&) = delete;
 
-    std::shared_ptr<Tensor>
-        create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
+    std::shared_ptr<ngraph::runtime::Tensor>
+        create_tensor(const ngraph::element::Type& type, const ngraph::Shape& shape, void* memory_pointer) override;
 
-    std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
+    std::shared_ptr<ngraph::runtime::Tensor> create_tensor(const ngraph::element::Type& type, const ngraph::Shape& shape) override;
 
-    std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
+    std::shared_ptr<ngraph::runtime::Executable> compile(std::shared_ptr<ngraph::Function> function,
                                         bool enable_performance_data = false) override;
 
-    bool is_supported(const Node& node) const override;
+    bool is_supported(const ngraph::Node& node) const override;
 
 private:
     std::set<std::string> m_unsupported_op_name_list;

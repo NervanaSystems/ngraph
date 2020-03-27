@@ -14,13 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-message(STATUS "*****************************************************************")
-get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-foreach(dir ${dirs})
-  message(STATUS "dir='${dir}'")
-endforeach()
-message(STATUS "*****************************************************************")
-
 add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
 
 if(NOT NGRAPH_UNIT_TEST_ENABLE)

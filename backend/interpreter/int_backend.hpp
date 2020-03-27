@@ -26,21 +26,15 @@
 
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/tensor.hpp"
+#include "ngraph/runtime/backend.hpp"
 
-namespace ngraph
+namespace interpreter
 {
-    namespace runtime
-    {
-        namespace interpreter
-        {
-            class INTBackend;
-            class INTExecutable;
-            class INTBackendConstructor;
-        }
-    }
+    class INTBackend;
+    class INTExecutable;
 }
 
-class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTBackend : public Backend
+class INTERPRETER_BACKEND_API interpreter::INTBackend : public ngraph::runtime::Backend
 {
 public:
     INTBackend();
@@ -49,16 +43,16 @@ public:
     INTBackend(INTBackend&&) = delete;
     INTBackend& operator=(const INTBackend&) = delete;
 
-    std::shared_ptr<Tensor>
-        create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
+    std::shared_ptr<ngraph::runtime::Tensor>
+        create_tensor(const ngraph::element::Type& type, const ngraph::Shape& shape, void* memory_pointer) override;
 
-    std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
+    std::shared_ptr<ngraph::runtime::Tensor> create_tensor(const ngraph::element::Type& type, const ngraph::Shape& shape) override;
 
-    std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
+    std::shared_ptr<ngraph::runtime::Executable> compile(std::shared_ptr<ngraph::Function> function,
                                         bool enable_performance_data = false) override;
-    std::shared_ptr<Executable> load(std::istream& input_stream) override;
+    std::shared_ptr<ngraph::runtime::Executable> load(std::istream& input_stream) override;
 
-    bool is_supported(const Node& node) const override;
+    bool is_supported(const ngraph::Node& node) const override;
 
     bool set_config(const std::map<std::string, std::string>& config, std::string& error) override;
 

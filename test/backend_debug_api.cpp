@@ -46,8 +46,8 @@ TEST(INTERPRETER, nan_check_input)
 
     shared_ptr<runtime::Executable> handle = backend->compile(f);
 
-    shared_ptr<runtime::interpreter::INTExecutable> ihandle =
-        static_pointer_cast<runtime::interpreter::INTExecutable>(handle);
+    shared_ptr<interpreter::INTExecutable> ihandle =
+        static_pointer_cast<interpreter::INTExecutable>(handle);
     ihandle->set_nan_check(true);
     EXPECT_ANY_THROW(handle->call_with_validate({result}, {a, b}));
 }
@@ -69,8 +69,8 @@ TEST(INTERPRETER, nan_check_output)
     auto result = backend->create_tensor(element::f32, shape);
 
     shared_ptr<runtime::Executable> handle = backend->compile(f);
-    shared_ptr<runtime::interpreter::INTExecutable> ihandle =
-        static_pointer_cast<runtime::interpreter::INTExecutable>(handle);
+    shared_ptr<interpreter::INTExecutable> ihandle =
+        static_pointer_cast<interpreter::INTExecutable>(handle);
     ihandle->set_nan_check(true);
     EXPECT_ANY_THROW(handle->call_with_validate({result}, {a, b}));
 }

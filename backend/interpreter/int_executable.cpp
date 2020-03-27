@@ -36,7 +36,7 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-runtime::interpreter::OP_TYPEID runtime::interpreter::INTExecutable::get_typeid(const Node& node)
+interpreter::OP_TYPEID interpreter::INTExecutable::get_typeid(const Node& node)
 {
     const NodeTypeInfo& type_info = node.get_type_info();
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
@@ -58,7 +58,7 @@ runtime::interpreter::OP_TYPEID runtime::interpreter::INTExecutable::get_typeid(
     return rc;
 }
 
-runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
+interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
                                                    bool enable_performance_collection)
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
@@ -86,7 +86,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     set_parameters_and_results(*m_function);
 }
 
-runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_string)
+interpreter::INTExecutable::INTExecutable(const std::string& model_string)
     : m_is_compiled{true}
     , m_performance_counters_enabled{false}
 {
@@ -98,13 +98,13 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
     set_parameters_and_results(*m_function);
 }
 
-bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
+bool interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     event::Duration d1("call", "Interpreter");
 
-    // convert inputs to HostTensor
-    vector<shared_ptr<HostTensor>> func_inputs;
+    // convert inputs to runtime::HostTensor
+    vector<shared_ptr<runtime::HostTensor>> func_inputs;
     for (auto tensor : inputs)
     {
         auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
@@ -115,16 +115,16 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         perform_nan_check(func_inputs);
     }
 
-    // convert outputs to HostTensor
-    vector<shared_ptr<HostTensor>> func_outputs;
+    // convert outputs to runtime::HostTensor
+    vector<shared_ptr<runtime::HostTensor>> func_outputs;
     for (auto tensor : outputs)
     {
         auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
         func_outputs.push_back(host_tensor);
     }
 
-    // map function params -> HostTensor
-    unordered_map<descriptor::Tensor*, shared_ptr<HostTensor>> tensor_map;
+    // map function params -> runtime::HostTensor
+    unordered_map<descriptor::Tensor*, shared_ptr<runtime::HostTensor>> tensor_map;
     size_t input_count = 0;
     for (auto param : get_parameters())
     {
@@ -135,7 +135,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         }
     }
 
-    // map function outputs -> HostTensor
+    // map function outputs -> runtime::HostTensor
     for (size_t output_count = 0; output_count < get_results().size(); ++output_count)
     {
         auto output = get_results()[output_count];
@@ -157,7 +157,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         }
 
         // get op inputs from map
-        vector<shared_ptr<HostTensor>> op_inputs;
+        vector<shared_ptr<runtime::HostTensor>> op_inputs;
         for (auto input : op->inputs())
         {
             descriptor::Tensor* tensor = &input.get_tensor();
@@ -165,11 +165,11 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         }
 
         // get op outputs from map or create
-        vector<shared_ptr<HostTensor>> op_outputs;
+        vector<shared_ptr<runtime::HostTensor>> op_outputs;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
             descriptor::Tensor* tensor = &op->output(i).get_tensor();
-            shared_ptr<HostTensor> host_tensor;
+            shared_ptr<runtime::HostTensor> host_tensor;
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
@@ -228,10 +228,10 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
     return true;
 }
 
-void runtime::interpreter::INTExecutable::generate_calls(const element::Type& type,
+void interpreter::INTExecutable::generate_calls(const element::Type& type,
                                                          const Node& op,
-                                                         const vector<shared_ptr<HostTensor>>& out,
-                                                         const vector<shared_ptr<HostTensor>>& in)
+                                                         const vector<shared_ptr<runtime::HostTensor>>& out,
+                                                         const vector<shared_ptr<runtime::HostTensor>>& in)
 {
     stringstream ss;
     switch (type)
@@ -257,13 +257,13 @@ void runtime::interpreter::INTExecutable::generate_calls(const element::Type& ty
     }
 }
 
-void runtime::interpreter::INTExecutable::set_nan_check(bool enable)
+void interpreter::INTExecutable::set_nan_check(bool enable)
 {
     m_nan_check_enabled = enable;
 }
 
 vector<runtime::PerformanceCounter>
-    runtime::interpreter::INTExecutable::get_performance_data() const
+    interpreter::INTExecutable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
     for (const pair<shared_ptr<const Node>, stopwatch> p : m_timer_map)
@@ -273,11 +273,11 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-void runtime::interpreter::INTExecutable::perform_nan_check(
-    const vector<shared_ptr<HostTensor>>& tensors, const Node* op)
+void interpreter::INTExecutable::perform_nan_check(
+    const vector<shared_ptr<runtime::HostTensor>>& tensors, const Node* op)
 {
     size_t arg_number = 1;
-    for (const shared_ptr<HostTensor>& tensor : tensors)
+    for (const shared_ptr<runtime::HostTensor>& tensor : tensors)
     {
         const element::Type& type = tensor->get_element_type();
         if (type == element::f32)
@@ -322,7 +322,7 @@ void runtime::interpreter::INTExecutable::perform_nan_check(
     }
 }
 
-void runtime::interpreter::INTExecutable::save(ostream& out)
+void interpreter::INTExecutable::save(ostream& out)
 {
     cpio::Writer writer(out);
     string si = "INTERPRETER Save File 1.0";
@@ -332,35 +332,35 @@ void runtime::interpreter::INTExecutable::save(ostream& out)
 }
 
 shared_ptr<ngraph::op::Parameter>
-    runtime::interpreter::INTExecutable::get_parameter(size_t index) const
+    interpreter::INTExecutable::get_parameter(size_t index) const
 {
     const ParameterVector& parameters = get_parameters();
     NGRAPH_CHECK(index < parameters.size(), "create_tensor for input out of bounds");
     return parameters[index];
 }
 
-shared_ptr<ngraph::op::Result> runtime::interpreter::INTExecutable::get_result(size_t index) const
+shared_ptr<ngraph::op::Result> interpreter::INTExecutable::get_result(size_t index) const
 {
     const ResultVector& results = get_results();
     NGRAPH_CHECK(index < results.size(), "create_tensor for input out of bounds");
     return results[index];
 }
 shared_ptr<runtime::Tensor>
-    runtime::interpreter::INTExecutable::create_input_tensor(size_t input_index)
+    interpreter::INTExecutable::create_input_tensor(size_t input_index)
 {
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
     return make_shared<runtime::HostTensor>(parameter->get_element_type(), parameter->get_shape());
 }
 
 shared_ptr<runtime::Tensor>
-    runtime::interpreter::INTExecutable::create_output_tensor(size_t output_index)
+    interpreter::INTExecutable::create_output_tensor(size_t output_index)
 {
     shared_ptr<op::Result> result = get_result(output_index);
     return make_shared<runtime::HostTensor>(result->get_element_type(), result->get_shape());
 }
 
 vector<shared_ptr<runtime::Tensor>>
-    runtime::interpreter::INTExecutable::create_input_tensor(size_t input_index,
+    interpreter::INTExecutable::create_input_tensor(size_t input_index,
                                                              size_t pipeline_depth)
 {
     vector<shared_ptr<runtime::HostTensor>> tensors;
@@ -382,7 +382,7 @@ vector<shared_ptr<runtime::Tensor>>
 }
 
 vector<shared_ptr<runtime::Tensor>>
-    runtime::interpreter::INTExecutable::create_output_tensor(size_t output_index,
+    interpreter::INTExecutable::create_output_tensor(size_t output_index,
                                                               size_t pipeline_depth)
 {
     vector<shared_ptr<runtime::HostTensor>> tensors;

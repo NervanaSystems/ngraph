@@ -32,46 +32,46 @@ using namespace ngraph;
 extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend()
 {
     runtime::BackendManager::register_backend("INTERPRETER", [](const std::string&) {
-        return std::make_shared<runtime::interpreter::INTBackend>();
+        return std::make_shared<interpreter::INTBackend>();
     });
 }
 
-runtime::interpreter::INTBackend::INTBackend()
+interpreter::INTBackend::INTBackend()
 {
 }
 
-runtime::interpreter::INTBackend::INTBackend(const vector<string>& unsupported_op_name_list)
+interpreter::INTBackend::INTBackend(const vector<string>& unsupported_op_name_list)
     : m_unsupported_op_name_list{unsupported_op_name_list.begin(), unsupported_op_name_list.end()}
 {
 }
 
 shared_ptr<runtime::Tensor>
-    runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
+    interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
 {
     return make_shared<runtime::HostTensor>(type, shape);
 }
 
-shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
+shared_ptr<runtime::Tensor> interpreter::INTBackend::create_tensor(
     const element::Type& type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer);
 }
 
-shared_ptr<runtime::Executable>
-    runtime::interpreter::INTBackend::compile(shared_ptr<Function> function,
+shared_ptr<ngraph::runtime::Executable>
+    interpreter::INTBackend::compile(shared_ptr<Function> function,
                                               bool enable_performance_collection)
 {
     return make_shared<INTExecutable>(function, enable_performance_collection);
 }
 
-bool runtime::interpreter::INTBackend::is_supported(const Node& node) const
+bool interpreter::INTBackend::is_supported(const Node& node) const
 {
     return m_unsupported_op_name_list.find(node.description()) == m_unsupported_op_name_list.end();
 }
 
-std::shared_ptr<runtime::Executable> runtime::interpreter::INTBackend::load(istream& in)
+std::shared_ptr<ngraph::runtime::Executable> interpreter::INTBackend::load(istream& in)
 {
-    shared_ptr<Executable> exec;
+    shared_ptr<ngraph::runtime::Executable> exec;
     cpio::Reader reader(in);
     auto file_info = reader.get_file_info();
     string save_info;
@@ -100,7 +100,7 @@ std::shared_ptr<runtime::Executable> runtime::interpreter::INTBackend::load(istr
     return exec;
 }
 
-bool runtime::interpreter::INTBackend::set_config(const map<string, string>& config, string& error)
+bool interpreter::INTBackend::set_config(const map<string, string>& config, string& error)
 {
     bool rc = false;
     auto it = config.find("test_echo");

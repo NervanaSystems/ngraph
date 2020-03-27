@@ -120,11 +120,7 @@
 #include "ngraph/state/bernoulli_rng_state.hpp"
 #include "ngraph/state/uniform_rng_state.hpp"
 
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace interpreter
+namespace interpreter
         {
             class INTBackend;
             class INTExecutable;
@@ -141,35 +137,33 @@ namespace ngraph
 #undef NGRAPH_OP
                 UnknownOp
             };
-        } // namespace interpreter
-    }     // namespace runtime
-} // namespace ngraph
+        } 
 
-class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTExecutable : public Executable
+class INTERPRETER_BACKEND_API interpreter::INTExecutable : public ngraph::runtime::Executable
 {
     friend class INTBackend;
 
 public:
-    INTExecutable(const std::shared_ptr<Function>& function,
+    INTExecutable(const std::shared_ptr<ngraph::Function>& function,
                   bool enable_performance_collection = false);
 
-    bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
-              const std::vector<std::shared_ptr<Tensor>>& inputs) override;
+    bool call(const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
+              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& inputs) override;
 
     virtual void save(std::ostream& output_stream) override;
 
     void set_nan_check(bool enable);
 
-    std::vector<PerformanceCounter> get_performance_data() const override;
+    std::vector<ngraph::runtime::PerformanceCounter> get_performance_data() const override;
 
-    std::shared_ptr<runtime::Tensor> create_input_tensor(size_t input_index) override;
+    std::shared_ptr<ngraph::runtime::Tensor> create_input_tensor(size_t input_index) override;
 
-    std::shared_ptr<runtime::Tensor> create_output_tensor(size_t output_index) override;
+    std::shared_ptr<ngraph::runtime::Tensor> create_output_tensor(size_t output_index) override;
 
-    std::vector<std::shared_ptr<runtime::Tensor>>
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>>
         create_input_tensor(size_t input_index, size_t pipeline_depth) override;
 
-    std::vector<std::shared_ptr<runtime::Tensor>>
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>>
         create_output_tensor(size_t output_index, size_t pipeline_depth) override;
 
 protected:
@@ -181,26 +175,26 @@ protected:
     bool m_is_compiled = false;
     bool m_nan_check_enabled = false;
     bool m_performance_counters_enabled = false;
-    std::shared_ptr<Function> m_function;
-    std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
-    std::vector<std::shared_ptr<Node>> m_nodes;
-    std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
+    std::shared_ptr<ngraph::Function> m_function;
+    std::unordered_map<std::shared_ptr<const ngraph::Node>, ngraph::stopwatch> m_timer_map;
+    std::vector<std::shared_ptr<ngraph::Node>> m_nodes;
+    std::unordered_map<const ngraph::Node*, std::shared_ptr<ngraph::State>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
 
-    static OP_TYPEID get_typeid(const Node& node);
+    static OP_TYPEID get_typeid(const ngraph::Node& node);
 
-    static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
-                                  const Node* op = nullptr);
+    static void perform_nan_check(const std::vector<std::shared_ptr<ngraph::runtime::HostTensor>>&,
+                                  const ngraph::Node* op = nullptr);
 
-    virtual void generate_calls(const element::Type& type,
-                                const Node& op,
-                                const std::vector<std::shared_ptr<HostTensor>>& outputs,
-                                const std::vector<std::shared_ptr<HostTensor>>& inputs);
+    virtual void generate_calls(const ngraph::element::Type& type,
+                                const ngraph::Node& op,
+                                const std::vector<std::shared_ptr<ngraph::runtime::HostTensor>>& outputs,
+                                const std::vector<std::shared_ptr<ngraph::runtime::HostTensor>>& inputs);
 
     template <typename T>
-    void op_engine(const Node& node,
-                   const std::vector<std::shared_ptr<HostTensor>>& out,
-                   const std::vector<std::shared_ptr<HostTensor>>& args)
+    void op_engine(const ngraph::Node& node,
+                   const std::vector<std::shared_ptr<ngraph::runtime::HostTensor>>& out,
+                   const std::vector<std::shared_ptr<ngraph::runtime::HostTensor>>& args)
     {
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
@@ -215,21 +209,21 @@ protected:
         case OP_TYPEID::Abs:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::abs<T>(
+            ngraph::runtime::reference::abs<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Acos:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::acos<T>(
+            ngraph::runtime::reference::acos<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Add:
         {
-            const op::Add* add = static_cast<const op::Add*>(&node);
-            reference::add<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Add* add = static_cast<const ngraph::op::Add*>(&node);
+            ngraph::runtime::reference::add<T>(args[0]->get_data_ptr<const T>(),
                               args[1]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
@@ -239,8 +233,8 @@ protected:
         }
         case OP_TYPEID::All:
         {
-            const op::All* all = static_cast<const op::All*>(&node);
-            reference::all(args[0]->get_data_ptr<const char>(),
+            const ngraph::op::All* all = static_cast<const ngraph::op::All*>(&node);
+            ngraph::runtime::reference::all(args[0]->get_data_ptr<const char>(),
                            out[0]->get_data_ptr<char>(),
                            node.get_input_shape(0),
                            node.get_output_shape(0),
@@ -251,7 +245,7 @@ protected:
         {
             const ngraph::op::AllReduce* allreduce =
                 static_cast<const ngraph::op::AllReduce*>(&node);
-            reference::allreduce<T>(args[0]->get_data_ptr<T>(),
+            ngraph::runtime::reference::allreduce<T>(args[0]->get_data_ptr<T>(),
                                     out[0]->get_data_ptr<T>(),
                                     node.get_input_element_type(0),
                                     allreduce->get_reduce_type(),
@@ -260,8 +254,8 @@ protected:
         }
         case OP_TYPEID::And:
         {
-            auto logical_and = static_cast<const op::And*>(&node);
-            reference::logical_and(args[0]->get_data_ptr<const T>(),
+            auto logical_and = static_cast<const ngraph::op::And*>(&node);
+            ngraph::runtime::reference::logical_and(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
                                    node.get_input_shape(0),
@@ -271,8 +265,8 @@ protected:
         }
         case OP_TYPEID::Any:
         {
-            const op::Any* any = static_cast<const op::Any*>(&node);
-            reference::any(args[0]->get_data_ptr<const char>(),
+            const ngraph::op::Any* any = static_cast<const ngraph::op::Any*>(&node);
+            ngraph::runtime::reference::any(args[0]->get_data_ptr<const char>(),
                            out[0]->get_data_ptr<char>(),
                            node.get_input_shape(0),
                            node.get_output_shape(0),
@@ -281,19 +275,19 @@ protected:
         }
         case OP_TYPEID::ArgMin:
         {
-            const op::ArgMin* argmin = static_cast<const op::ArgMin*>(&node);
+            const ngraph::op::ArgMin* argmin = static_cast<const ngraph::op::ArgMin*>(&node);
             auto element_type = node.get_output_element_type(0);
-            if (element_type == element::i64)
+            if (element_type == ngraph::element::i64)
             {
-                reference::argmin<T, int64_t>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::argmin<T, int64_t>(args[0]->get_data_ptr<const T>(),
                                               out[0]->get_data_ptr<int64_t>(),
                                               node.get_input_shape(0),
                                               node.get_output_shape(0),
                                               argmin->get_reduction_axis());
             }
-            else if (element_type == element::i32)
+            else if (element_type == ngraph::element::i32)
             {
-                reference::argmin<T, int32_t>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::argmin<T, int32_t>(args[0]->get_data_ptr<const T>(),
                                               out[0]->get_data_ptr<int32_t>(),
                                               node.get_input_shape(0),
                                               node.get_output_shape(0),
@@ -301,25 +295,25 @@ protected:
             }
             else
             {
-                throw ngraph_error("Unexpected type");
+                throw std::runtime_error("Unexpected type");
             }
             break;
         }
         case OP_TYPEID::ArgMax:
         {
-            const op::ArgMax* argmax = static_cast<const op::ArgMax*>(&node);
+            const ngraph::op::ArgMax* argmax = static_cast<const ngraph::op::ArgMax*>(&node);
             auto element_type = node.get_output_element_type(0);
-            if (element_type == element::i64)
+            if (element_type == ngraph::element::i64)
             {
-                reference::argmax<T, int64_t>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::argmax<T, int64_t>(args[0]->get_data_ptr<const T>(),
                                               out[0]->get_data_ptr<int64_t>(),
                                               node.get_input_shape(0),
                                               node.get_output_shape(0),
                                               argmax->get_reduction_axis());
             }
-            else if (element_type == element::i32)
+            else if (element_type == ngraph::element::i32)
             {
-                reference::argmax<T, int32_t>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::argmax<T, int32_t>(args[0]->get_data_ptr<const T>(),
                                               out[0]->get_data_ptr<int32_t>(),
                                               node.get_input_shape(0),
                                               node.get_output_shape(0),
@@ -327,28 +321,28 @@ protected:
             }
             else
             {
-                throw ngraph_error("Unexpected type");
+                throw std::runtime_error("Unexpected type");
             }
             break;
         }
         case OP_TYPEID::Asin:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::asin<T>(
+            ngraph::runtime::reference::asin<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Atan:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::atan<T>(
+            ngraph::runtime::reference::atan<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Atan2:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::atan2<T>(args[0]->get_data_ptr<const T>(),
+            ngraph::runtime::reference::atan2<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
                                 element_count);
@@ -356,9 +350,9 @@ protected:
         }
         case OP_TYPEID::AvgPool:
         {
-            const op::AvgPool* avg_pool = static_cast<const op::AvgPool*>(&node);
+            const ngraph::op::AvgPool* avg_pool = static_cast<const ngraph::op::AvgPool*>(&node);
 
-            reference::avg_pool<T>(args[0]->get_data_ptr<const T>(),
+            ngraph::runtime::reference::avg_pool<T>(args[0]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
                                    node.get_input_shape(0),
                                    node.get_output_shape(0),
@@ -374,25 +368,25 @@ protected:
             bool use_seed = static_cast<bool>(args[2]->get_data_ptr<const int32_t>()[0]);
             if (m_states.count(&node) == 0)
             {
-                const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
+                const ngraph::op::GenerateMask* gm = static_cast<const ngraph::op::GenerateMask*>(&node);
                 auto seed = use_seed ? gm->get_seed() : 0;
                 m_states[&node] =
-                    std::unique_ptr<State>(new BernoulliRNGState(seed, gm->get_probability()));
+                    std::unique_ptr<ngraph::State>(new ngraph::BernoulliRNGState(seed, gm->get_probability()));
             }
 
             bool training = static_cast<bool>(args[0]->get_data_ptr<const T>()[0]);
-            auto state = static_cast<BernoulliRNGState*>(m_states.at(&node).get());
+            auto state = static_cast<ngraph::BernoulliRNGState*>(m_states.at(&node).get());
             size_t element_count = shape_size(node.get_output_shape(0));
             if (!use_seed)
             {
-                reference::generate_mask<T>(
+                ngraph::runtime::reference::generate_mask<T>(
                     out[0]->get_data_ptr<T>(), element_count, state, training);
             }
             else
             {
                 uint64_t seed = static_cast<uint64_t>(args[3]->get_data_ptr<const T>()[0]);
                 double prob = static_cast<double>(args[4]->get_data_ptr<const T>()[0]);
-                reference::generate_mask_no_state<T>(
+                ngraph::runtime::reference::generate_mask_no_state<T>(
                     out[0]->get_data_ptr<T>(), element_count, training, seed, prob);
             }
             break;
@@ -406,7 +400,7 @@ protected:
         }
         case OP_TYPEID::BatchMatMul:
         {
-            reference::batch_mat_mul(args[0]->get_data_ptr<const T>(),
+            ngraph::runtime::reference::batch_mat_mul(args[0]->get_data_ptr<const T>(),
                                      args[1]->get_data_ptr<const T>(),
                                      out[0]->get_data_ptr<T>(),
                                      node.get_input_shape(0),
@@ -419,7 +413,7 @@ protected:
         {
             const ngraph::op::BatchNormTraining* bn =
                 static_cast<const ngraph::op::BatchNormTraining*>(&node);
-            reference::batch_norm_training<T>(bn->get_eps_value(),
+            ngraph::runtime::reference::batch_norm_training<T>(bn->get_eps_value(),
                                               args[0]->get_data_ptr<const T>(),
                                               args[1]->get_data_ptr<const T>(),
                                               args[2]->get_data_ptr<const T>(),
@@ -433,7 +427,7 @@ protected:
         {
             const ngraph::op::BatchNormInference* bn =
                 static_cast<const ngraph::op::BatchNormInference*>(&node);
-            reference::batch_norm_inference<T>(bn->get_eps_value(),
+            ngraph::runtime::reference::batch_norm_inference<T>(bn->get_eps_value(),
                                                args[0]->get_data_ptr<const T>(),
                                                args[1]->get_data_ptr<const T>(),
                                                args[2]->get_data_ptr<const T>(),
@@ -447,7 +441,7 @@ protected:
         {
             const ngraph::op::BatchNormTrainingBackprop* bn_bprop =
                 static_cast<const ngraph::op::BatchNormTrainingBackprop*>(&node);
-            reference::batch_norm_backprop(bn_bprop->get_eps_value(),
+            ngraph::runtime::reference::batch_norm_backprop(bn_bprop->get_eps_value(),
                                            args[0]->get_data_ptr<const T>(),
                                            args[1]->get_data_ptr<const T>(),
                                            args[2]->get_data_ptr<const T>(),
@@ -462,8 +456,8 @@ protected:
         }
         case OP_TYPEID::AvgPoolBackprop:
         {
-            const op::AvgPoolBackprop* apb = static_cast<const op::AvgPoolBackprop*>(&node);
-            reference::avg_pool_backprop<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::AvgPoolBackprop* apb = static_cast<const ngraph::op::AvgPoolBackprop*>(&node);
+            ngraph::runtime::reference::avg_pool_backprop<T>(args[0]->get_data_ptr<const T>(),
                                             out[0]->get_data_ptr<T>(),
                                             node.get_input_shape(0),
                                             node.get_output_shape(0),
@@ -476,11 +470,11 @@ protected:
         }
         case OP_TYPEID::Broadcast:
         {
-            const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
-            Shape in_shape = node.get_input_shape(0);
-            Shape out_shape = node.get_output_shape(0);
-            AxisSet broadcast_axes = broadcast->get_broadcast_axes();
-            reference::broadcast<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Broadcast* broadcast = static_cast<const ngraph::op::Broadcast*>(&node);
+            ngraph::Shape in_shape = node.get_input_shape(0);
+            ngraph::Shape out_shape = node.get_output_shape(0);
+            ngraph::AxisSet broadcast_axes = broadcast->get_broadcast_axes();
+            ngraph::runtime::reference::broadcast<T>(args[0]->get_data_ptr<const T>(),
                                     out[0]->get_data_ptr<T>(),
                                     in_shape,
                                     out_shape,
@@ -492,11 +486,11 @@ protected:
             const ngraph::op::BroadcastDistributed* broadcast =
                 static_cast<const ngraph::op::BroadcastDistributed*>(&node);
             int rank_ID;
-            rank_ID = get_distributed_interface()->get_rank();
+            rank_ID = ngraph::get_distributed_interface()->get_rank();
             int root_id = broadcast->get_root_id();
             if (rank_ID == root_id)
             {
-                reference::broadcastdistributed<T>(
+                ngraph::runtime::reference::broadcastdistributed<T>(
                     args[0]->get_data_ptr<T>(),
                     node.get_input_element_type(0),
                     static_cast<int>(shape_size(node.get_input_shape(0))),
@@ -506,7 +500,7 @@ protected:
             }
             else
             {
-                reference::broadcastdistributed<T>(
+                ngraph::runtime::reference::broadcastdistributed<T>(
                     out[0]->get_data_ptr<T>(),
                     node.get_input_element_type(0),
                     static_cast<int>(shape_size(node.get_input_shape(0))),
@@ -518,21 +512,21 @@ protected:
         case OP_TYPEID::Ceiling:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::ceiling<T>(
+            ngraph::runtime::reference::ceiling<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Concat:
         {
-            const op::Concat* concat = static_cast<const op::Concat*>(&node);
+            const ngraph::op::Concat* concat = static_cast<const ngraph::op::Concat*>(&node);
             std::vector<const T*> in_args;
-            std::vector<Shape> in_shapes;
+            std::vector<ngraph::Shape> in_shapes;
             for (size_t i = 0; i < node.get_input_size(); i++)
             {
                 in_args.push_back(args[i]->get_data_ptr<const T>());
                 in_shapes.push_back(node.get_input_shape(i));
             }
-            reference::concat<T>(in_args,
+            ngraph::runtime::reference::concat<T>(in_args,
                                  out[0]->get_data_ptr<T>(),
                                  in_shapes,
                                  node.get_output_shape(0),
@@ -541,77 +535,77 @@ protected:
         }
         case OP_TYPEID::Constant:
         {
-            const op::Constant* c = static_cast<const op::Constant*>(&node);
+            const ngraph::op::Constant* c = static_cast<const ngraph::op::Constant*>(&node);
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::constant<T>(c->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), element_count);
+            ngraph::runtime::reference::constant<T>(c->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Convert:
         {
-            // const op::Convert* c = static_cast<const op::Convert*>(&node);
-            element::Type type = node.get_element_type();
+            // const ngraph::op::Convert* c = static_cast<const ngraph::op::Convert*>(&node);
+            ngraph::element::Type type = node.get_element_type();
             std::stringstream ss;
             size_t element_count = shape_size(node.get_output_shape(0));
             switch (type)
             {
-            case element::Type_t::boolean:
-                reference::convert_to_bool<T>(
+            case ngraph::element::Type_t::boolean:
+                ngraph::runtime::reference::convert_to_bool<T>(
                     args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<char>(), element_count);
                 break;
-            case element::Type_t::f32:
-                reference::convert<T>(
+            case ngraph::element::Type_t::f32:
+                ngraph::runtime::reference::convert<T>(
                     args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<float>(), element_count);
                 break;
-            case element::Type_t::f64:
-                reference::convert<T>(args[0]->get_data_ptr<const T>(),
+            case ngraph::element::Type_t::f64:
+                ngraph::runtime::reference::convert<T>(args[0]->get_data_ptr<const T>(),
                                       out[0]->get_data_ptr<double>(),
                                       element_count);
                 break;
-            case element::Type_t::i8:
-                reference::convert<T>(args[0]->get_data_ptr<const T>(),
+            case ngraph::element::Type_t::i8:
+                ngraph::runtime::reference::convert<T>(args[0]->get_data_ptr<const T>(),
                                       out[0]->get_data_ptr<int8_t>(),
                                       element_count);
                 break;
-            case element::Type_t::i16:
-                reference::convert<T>(args[0]->get_data_ptr<const T>(),
+            case ngraph::element::Type_t::i16:
+                ngraph::runtime::reference::convert<T>(args[0]->get_data_ptr<const T>(),
                                       out[0]->get_data_ptr<int16_t>(),
                                       element_count);
                 break;
-            case element::Type_t::i32:
-                reference::convert<T>(args[0]->get_data_ptr<const T>(),
+            case ngraph::element::Type_t::i32:
+                ngraph::runtime::reference::convert<T>(args[0]->get_data_ptr<const T>(),
                                       out[0]->get_data_ptr<int32_t>(),
                                       element_count);
                 break;
-            case element::Type_t::i64:
-                reference::convert<T>(args[0]->get_data_ptr<const T>(),
+            case ngraph::element::Type_t::i64:
+                ngraph::runtime::reference::convert<T>(args[0]->get_data_ptr<const T>(),
                                       out[0]->get_data_ptr<int64_t>(),
                                       element_count);
                 break;
-            case element::Type_t::u8:
-                reference::convert<T>(args[0]->get_data_ptr<const T>(),
+            case ngraph::element::Type_t::u8:
+                ngraph::runtime::reference::convert<T>(args[0]->get_data_ptr<const T>(),
                                       out[0]->get_data_ptr<uint8_t>(),
                                       element_count);
                 break;
-            case element::Type_t::u16:
-                reference::convert<T>(args[0]->get_data_ptr<const T>(),
+            case ngraph::element::Type_t::u16:
+                ngraph::runtime::reference::convert<T>(args[0]->get_data_ptr<const T>(),
                                       out[0]->get_data_ptr<uint16_t>(),
                                       element_count);
                 break;
-            case element::Type_t::u32:
-                reference::convert<T>(args[0]->get_data_ptr<const T>(),
+            case ngraph::element::Type_t::u32:
+                ngraph::runtime::reference::convert<T>(args[0]->get_data_ptr<const T>(),
                                       out[0]->get_data_ptr<uint32_t>(),
                                       element_count);
                 break;
-            case element::Type_t::u64:
-                reference::convert<T>(args[0]->get_data_ptr<const T>(),
+            case ngraph::element::Type_t::u64:
+                ngraph::runtime::reference::convert<T>(args[0]->get_data_ptr<const T>(),
                                       out[0]->get_data_ptr<uint64_t>(),
                                       element_count);
                 break;
-            case element::Type_t::undefined:
-            case element::Type_t::dynamic:
-            case element::Type_t::u1:
-            case element::Type_t::bf16:
-            case element::Type_t::f16:
+            case ngraph::element::Type_t::undefined:
+            case ngraph::element::Type_t::dynamic:
+            case ngraph::element::Type_t::u1:
+            case ngraph::element::Type_t::bf16:
+            case ngraph::element::Type_t::f16:
                 ss << "unsupported element type " << type << " op Convert";
                 throw std::runtime_error(ss.str());
             }
@@ -619,8 +613,8 @@ protected:
         }
         case OP_TYPEID::Convolution:
         {
-            const op::Convolution* c = static_cast<const op::Convolution*>(&node);
-            reference::convolution<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Convolution* c = static_cast<const ngraph::op::Convolution*>(&node);
+            ngraph::runtime::reference::convolution<T>(args[0]->get_data_ptr<const T>(),
                                       args[1]->get_data_ptr<const T>(),
                                       out[0]->get_data_ptr<T>(),
                                       node.get_input_shape(0),
@@ -636,9 +630,9 @@ protected:
         }
         case OP_TYPEID::ConvolutionBackpropFilters:
         {
-            const op::ConvolutionBackpropFilters* c =
-                static_cast<const op::ConvolutionBackpropFilters*>(&node);
-            reference::convolution_backprop_filter<T>(
+            const ngraph::op::ConvolutionBackpropFilters* c =
+                static_cast<const ngraph::op::ConvolutionBackpropFilters*>(&node);
+            ngraph::runtime::reference::convolution_backprop_filter<T>(
                 args[0]->get_data_ptr<const T>(), // input
                 args[1]->get_data_ptr<const T>(), // delta_convolution_output
                 out[0]->get_data_ptr<T>(),        // delta_filter
@@ -655,9 +649,9 @@ protected:
         case OP_TYPEID::ConvolutionBackpropData:
         {
             // Note that args[1] and args[0] are switched here from the usual order.
-            const op::ConvolutionBackpropData* c =
-                static_cast<const op::ConvolutionBackpropData*>(&node);
-            reference::convolution_backprop_in<T>(args[1]->get_data_ptr<const T>(),
+            const ngraph::op::ConvolutionBackpropData* c =
+                static_cast<const ngraph::op::ConvolutionBackpropData*>(&node);
+            ngraph::runtime::reference::convolution_backprop_in<T>(args[1]->get_data_ptr<const T>(),
                                                   args[0]->get_data_ptr<const T>(),
                                                   out[0]->get_data_ptr<T>(),
                                                   c->get_input_shape(1),
@@ -673,33 +667,33 @@ protected:
         case OP_TYPEID::Cos:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::cos<T>(
+            ngraph::runtime::reference::cos<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Cosh:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::cosh<T>(
+            ngraph::runtime::reference::cosh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::CumSum:
         {
-            const op::CumSum* cumsum = static_cast<const op::CumSum*>(&node);
+            const ngraph::op::CumSum* cumsum = static_cast<const ngraph::op::CumSum*>(&node);
             auto axis_et = node.get_input_element_type(1);
-            if (axis_et == element::i32)
+            if (axis_et == ngraph::element::i32)
             {
-                reference::cumsum<T, int32_t>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::cumsum<T, int32_t>(args[0]->get_data_ptr<const T>(),
                                               args[1]->get_data_ptr<const int32_t>(),
                                               out[0]->get_data_ptr<T>(),
                                               node.get_input_shape(0),
                                               cumsum->is_exclusive(),
                                               cumsum->is_reverse());
             }
-            else if (axis_et == element::i64)
+            else if (axis_et == ngraph::element::i64)
             {
-                reference::cumsum<T, int64_t>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::cumsum<T, int64_t>(args[0]->get_data_ptr<const T>(),
                                               args[1]->get_data_ptr<const int64_t>(),
                                               out[0]->get_data_ptr<T>(),
                                               node.get_input_shape(0),
@@ -710,17 +704,17 @@ protected:
         }
         case OP_TYPEID::CropAndResize:
         {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            throw ngraph::unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
         case OP_TYPEID::Dequantize:
         {
-            const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
+            const ngraph::op::Dequantize* dequantize = static_cast<const ngraph::op::Dequantize*>(&node);
             auto type = dequantize->get_element_type();
 
-            if (type == element::f32)
+            if (type == ngraph::element::f32)
             {
-                reference::dequantize<T>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::dequantize<T>(args[0]->get_data_ptr<const T>(),
                                          args[1]->get_data_ptr<const float>(),
                                          args[2]->get_data_ptr<const T>(),
                                          out[0]->get_data_ptr<float>(),
@@ -728,9 +722,9 @@ protected:
                                          node.get_input_shape(1),
                                          dequantize->get_axes());
             }
-            else if (type == element::f64)
+            else if (type == ngraph::element::f64)
             {
-                reference::dequantize<T>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::dequantize<T>(args[0]->get_data_ptr<const T>(),
                                          args[1]->get_data_ptr<const double>(),
                                          args[2]->get_data_ptr<const T>(),
                                          out[0]->get_data_ptr<double>(),
@@ -749,8 +743,8 @@ protected:
         }
         case OP_TYPEID::Divide:
         {
-            const op::Divide* divop = static_cast<const op::Divide*>(&node);
-            reference::divide<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Divide* divop = static_cast<const ngraph::op::Divide*>(&node);
+            ngraph::runtime::reference::divide<T>(args[0]->get_data_ptr<const T>(),
                                  args[1]->get_data_ptr<const T>(),
                                  out[0]->get_data_ptr<T>(),
                                  node.get_input_shape(0),
@@ -761,9 +755,9 @@ protected:
         }
         case OP_TYPEID::Dot:
         {
-            const op::Dot* dot = static_cast<const op::Dot*>(&node);
+            const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(&node);
 
-            reference::dot(args[0]->get_data_ptr<const T>(),
+            ngraph::runtime::reference::dot(args[0]->get_data_ptr<const T>(),
                            args[1]->get_data_ptr<const T>(),
                            out[0]->get_data_ptr<T>(),
                            node.get_input_shape(0),
@@ -774,42 +768,42 @@ protected:
         }
         case OP_TYPEID::DynSlice:
         {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            throw ngraph::unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
         case OP_TYPEID::EmbeddingLookup:
         {
-            const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
+            const ngraph::op::EmbeddingLookup* embed = static_cast<const ngraph::op::EmbeddingLookup*>(&node);
             auto type = embed->get_argument(0)->get_element_type();
             size_t element_count = shape_size(embed->get_argument(0)->get_shape());
 
-            if (type == element::f32)
+            if (type == ngraph::element::f32)
             {
-                reference::embedding<T, float>(args[0]->get_data_ptr<const float>(),
+                ngraph::runtime::reference::embedding<T, float>(args[0]->get_data_ptr<const float>(),
                                                args[1]->get_data_ptr<const T>(),
                                                out[0]->get_data_ptr<T>(),
                                                element_count,
                                                embed->get_shape());
             }
-            else if (type == element::f64)
+            else if (type == ngraph::element::f64)
             {
-                reference::embedding<T, double>(args[0]->get_data_ptr<const double>(),
+                ngraph::runtime::reference::embedding<T, double>(args[0]->get_data_ptr<const double>(),
                                                 args[1]->get_data_ptr<const T>(),
                                                 out[0]->get_data_ptr<T>(),
                                                 element_count,
                                                 embed->get_shape());
             }
-            else if (type == element::i32)
+            else if (type == ngraph::element::i32)
             {
-                reference::embedding<T, int32_t>(args[0]->get_data_ptr<const int>(),
+                ngraph::runtime::reference::embedding<T, int32_t>(args[0]->get_data_ptr<const int>(),
                                                  args[1]->get_data_ptr<const T>(),
                                                  out[0]->get_data_ptr<T>(),
                                                  element_count,
                                                  embed->get_shape());
             }
-            else if (type == element::i64)
+            else if (type == ngraph::element::i64)
             {
-                reference::embedding<T, int64_t>(args[0]->get_data_ptr<const int64_t>(),
+                ngraph::runtime::reference::embedding<T, int64_t>(args[0]->get_data_ptr<const int64_t>(),
                                                  args[1]->get_data_ptr<const T>(),
                                                  out[0]->get_data_ptr<T>(),
                                                  element_count,
@@ -817,15 +811,15 @@ protected:
             }
             else
             {
-                throw ngraph_error(std::string("Unsupported index type ") + type.c_type_string() +
+                throw std::runtime_error(std::string("Unsupported index type ") + type.c_type_string() +
                                    std::string("in EmbeddingLookup"));
             }
             break;
         }
         case OP_TYPEID::Equal:
         {
-            auto equal = static_cast<const op::Equal*>(&node);
-            reference::equal<T>(args[0]->get_data_ptr<const T>(),
+            auto equal = static_cast<const ngraph::op::Equal*>(&node);
+            ngraph::runtime::reference::equal<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<char>(),
                                 node.get_input_shape(0),
@@ -836,14 +830,14 @@ protected:
         case OP_TYPEID::Erf:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::erf<T>(
+            ngraph::runtime::reference::erf<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Exp:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::exp<T>(
+            ngraph::runtime::reference::exp<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
@@ -854,15 +848,15 @@ protected:
             auto backend = f->get_backend();
             auto executable = f->get_executable();
 
-            std::vector<std::shared_ptr<Tensor>> outputs;
-            std::vector<std::shared_ptr<Tensor>> inputs;
-            for (const std::shared_ptr<HostTensor>& t : out)
+            std::vector<std::shared_ptr<ngraph::runtime::Tensor>> outputs;
+            std::vector<std::shared_ptr<ngraph::runtime::Tensor>> inputs;
+            for (const std::shared_ptr<ngraph::runtime::HostTensor>& t : out)
             {
                 auto backend_tensor = backend->create_tensor(
                     t->get_element_type(), t->get_shape(), t->get_data_ptr());
                 outputs.push_back(backend_tensor);
             }
-            for (const std::shared_ptr<HostTensor>& t : args)
+            for (const std::shared_ptr<ngraph::runtime::HostTensor>& t : args)
             {
                 auto backend_tensor = backend->create_tensor(
                     t->get_element_type(), t->get_shape(), t->get_data_ptr());
@@ -875,16 +869,16 @@ protected:
         case OP_TYPEID::Floor:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::floor<T>(
+            ngraph::runtime::reference::floor<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Gather:
         {
-            const op::Gather* gather = static_cast<const op::Gather*>(&node);
-            if (node.get_input_element_type(1) == element::i64)
+            const ngraph::op::Gather* gather = static_cast<const ngraph::op::Gather*>(&node);
+            if (node.get_input_element_type(1) == ngraph::element::i64)
             {
-                reference::gather<T, int64_t>(args[0]->get_data_ptr<T>(),
+                ngraph::runtime::reference::gather<T, int64_t>(args[0]->get_data_ptr<T>(),
                                               args[1]->get_data_ptr<int64_t>(),
                                               out[0]->get_data_ptr<T>(),
                                               node.get_input_shape(0),
@@ -892,9 +886,9 @@ protected:
                                               node.get_output_shape(0),
                                               gather->get_axis());
             }
-            else if (node.get_input_element_type(1) == element::i32)
+            else if (node.get_input_element_type(1) == ngraph::element::i32)
             {
-                reference::gather<T, int32_t>(args[0]->get_data_ptr<T>(),
+                ngraph::runtime::reference::gather<T, int32_t>(args[0]->get_data_ptr<T>(),
                                               args[1]->get_data_ptr<int32_t>(),
                                               out[0]->get_data_ptr<T>(),
                                               node.get_input_shape(0),
@@ -904,24 +898,24 @@ protected:
             }
             else
             {
-                throw ngraph_error("Unexpected type");
+                throw std::runtime_error("Unexpected type");
             }
             break;
         }
         case OP_TYPEID::GatherND:
         {
-            if (node.get_input_element_type(1) == element::i64)
+            if (node.get_input_element_type(1) == ngraph::element::i64)
             {
-                reference::gather_nd<T, int64_t>(args[0]->get_data_ptr<T>(),
+                ngraph::runtime::reference::gather_nd<T, int64_t>(args[0]->get_data_ptr<T>(),
                                                  args[1]->get_data_ptr<int64_t>(),
                                                  out[0]->get_data_ptr<T>(),
                                                  node.get_input_shape(0),
                                                  node.get_input_shape(1),
                                                  node.get_output_shape(0));
             }
-            else if (node.get_input_element_type(1) == element::i32)
+            else if (node.get_input_element_type(1) == ngraph::element::i32)
             {
-                reference::gather_nd<T, int32_t>(args[0]->get_data_ptr<T>(),
+                ngraph::runtime::reference::gather_nd<T, int32_t>(args[0]->get_data_ptr<T>(),
                                                  args[1]->get_data_ptr<int32_t>(),
                                                  out[0]->get_data_ptr<T>(),
                                                  node.get_input_shape(0),
@@ -930,14 +924,14 @@ protected:
             }
             else
             {
-                throw ngraph_error("Unexpected type");
+                throw std::runtime_error("Unexpected type");
             }
             break;
         }
         case OP_TYPEID::Greater:
         {
-            auto greater = static_cast<const op::Greater*>(&node);
-            reference::greater<T>(args[0]->get_data_ptr<const T>(),
+            auto greater = static_cast<const ngraph::op::Greater*>(&node);
+            ngraph::runtime::reference::greater<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
                                   node.get_input_shape(0),
@@ -947,8 +941,8 @@ protected:
         }
         case OP_TYPEID::GreaterEq:
         {
-            auto greater_eq = static_cast<const op::GreaterEq*>(&node);
-            reference::greater_eq<T>(args[0]->get_data_ptr<const T>(),
+            auto greater_eq = static_cast<const ngraph::op::GreaterEq*>(&node);
+            ngraph::runtime::reference::greater_eq<T>(args[0]->get_data_ptr<const T>(),
                                      args[1]->get_data_ptr<const T>(),
                                      out[0]->get_data_ptr<char>(),
                                      node.get_input_shape(0),
@@ -958,8 +952,8 @@ protected:
         }
         case OP_TYPEID::Less:
         {
-            auto less = static_cast<const op::Less*>(&node);
-            reference::less<T>(args[0]->get_data_ptr<const T>(),
+            auto less = static_cast<const ngraph::op::Less*>(&node);
+            ngraph::runtime::reference::less<T>(args[0]->get_data_ptr<const T>(),
                                args[1]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<char>(),
                                node.get_input_shape(0),
@@ -969,8 +963,8 @@ protected:
         }
         case OP_TYPEID::LessEq:
         {
-            auto less_eq = static_cast<const op::LessEq*>(&node);
-            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
+            auto less_eq = static_cast<const ngraph::op::LessEq*>(&node);
+            ngraph::runtime::reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
                                   node.get_input_shape(0),
@@ -980,8 +974,8 @@ protected:
         }
         case OP_TYPEID::LessEqual_v1:
         {
-            auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
-            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
+            auto less_eq = static_cast<const ngraph::op::v1::LessEqual*>(&node);
+            ngraph::runtime::reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
                                   node.get_input_shape(0),
@@ -992,14 +986,14 @@ protected:
         case OP_TYPEID::Log:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::log<T>(
+            ngraph::runtime::reference::log<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::LogicalAnd_v1:
         {
-            auto logical_and = static_cast<const op::v1::LogicalAnd*>(&node);
-            reference::logical_and(args[0]->get_data_ptr<const T>(),
+            auto logical_and = static_cast<const ngraph::op::v1::LogicalAnd*>(&node);
+            ngraph::runtime::reference::logical_and(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
                                    node.get_input_shape(0),
@@ -1009,8 +1003,8 @@ protected:
         }
         case OP_TYPEID::LogicalOr_v1:
         {
-            auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
-            reference::logical_or(args[0]->get_data_ptr<const T>(),
+            auto logical_or = static_cast<const ngraph::op::v1::LogicalOr*>(&node);
+            ngraph::runtime::reference::logical_or(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
                                   node.get_input_shape(0),
@@ -1020,8 +1014,8 @@ protected:
         }
         case OP_TYPEID::LogicalXor_v1:
         {
-            auto logical_xor = static_cast<const op::v1::LogicalXor*>(&node);
-            reference::logical_xor(args[0]->get_data_ptr<const T>(),
+            auto logical_xor = static_cast<const ngraph::op::v1::LogicalXor*>(&node);
+            ngraph::runtime::reference::logical_xor(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
                                    node.get_input_shape(0),
@@ -1031,8 +1025,8 @@ protected:
         }
         case OP_TYPEID::LRN:
         {
-            const op::LRN* lrn = static_cast<const op::LRN*>(&node);
-            reference::lrn<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::LRN* lrn = static_cast<const ngraph::op::LRN*>(&node);
+            ngraph::runtime::reference::lrn<T>(args[0]->get_data_ptr<const T>(),
                               lrn->get_reduction_axes(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
@@ -1044,8 +1038,8 @@ protected:
         }
         case OP_TYPEID::Max:
         {
-            const op::Max* max = static_cast<const op::Max*>(&node);
-            reference::max<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Max* max = static_cast<const ngraph::op::Max*>(&node);
+            ngraph::runtime::reference::max<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
                               node.get_output_shape(0),
@@ -1054,8 +1048,8 @@ protected:
         }
         case OP_TYPEID::Maximum:
         {
-            auto maximum = static_cast<const op::Maximum*>(&node);
-            reference::maximum<T>(args[0]->get_data_ptr<const T>(),
+            auto maximum = static_cast<const ngraph::op::Maximum*>(&node);
+            ngraph::runtime::reference::maximum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
                                   node.get_input_shape(0),
@@ -1065,9 +1059,9 @@ protected:
         }
         case OP_TYPEID::MaxPool:
         {
-            const op::MaxPool* max_pool = static_cast<const op::MaxPool*>(&node);
+            const ngraph::op::MaxPool* max_pool = static_cast<const ngraph::op::MaxPool*>(&node);
 
-            reference::max_pool<T>(args[0]->get_data_ptr<const T>(),
+            ngraph::runtime::reference::max_pool<T>(args[0]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
                                    node.get_input_shape(0),
                                    node.get_output_shape(0),
@@ -1079,10 +1073,10 @@ protected:
         }
         case OP_TYPEID::MaxPoolBackprop:
         {
-            const op::MaxPoolBackprop* max_pool_backprop =
-                static_cast<const op::MaxPoolBackprop*>(&node);
+            const ngraph::op::MaxPoolBackprop* max_pool_backprop =
+                static_cast<const ngraph::op::MaxPoolBackprop*>(&node);
 
-            reference::max_pool_backprop<T>(args[0]->get_data_ptr<const T>(),
+            ngraph::runtime::reference::max_pool_backprop<T>(args[0]->get_data_ptr<const T>(),
                                             args[1]->get_data_ptr<const T>(),
                                             out[0]->get_data_ptr<T>(),
                                             node.get_input_shape(1),
@@ -1095,8 +1089,8 @@ protected:
         }
         case OP_TYPEID::Min:
         {
-            const op::Min* min = static_cast<const op::Min*>(&node);
-            reference::min<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Min* min = static_cast<const ngraph::op::Min*>(&node);
+            ngraph::runtime::reference::min<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
                               node.get_output_shape(0),
@@ -1105,8 +1099,8 @@ protected:
         }
         case OP_TYPEID::Minimum:
         {
-            auto minimum = static_cast<const op::Minimum*>(&node);
-            reference::minimum<T>(args[0]->get_data_ptr<const T>(),
+            auto minimum = static_cast<const ngraph::op::Minimum*>(&node);
+            ngraph::runtime::reference::minimum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
                                   node.get_input_shape(0),
@@ -1116,8 +1110,8 @@ protected:
         }
         case OP_TYPEID::Multiply:
         {
-            auto multiply = static_cast<const op::Multiply*>(&node);
-            reference::multiply<T>(args[0]->get_data_ptr<const T>(),
+            auto multiply = static_cast<const ngraph::op::Multiply*>(&node);
+            ngraph::runtime::reference::multiply<T>(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
                                    node.get_input_shape(0),
@@ -1128,7 +1122,7 @@ protected:
         case OP_TYPEID::Negative:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::negate<T>(
+            ngraph::runtime::reference::negate<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
@@ -1136,14 +1130,14 @@ protected:
         case OP_TYPEID::Not:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::logical_not(
+            ngraph::runtime::reference::logical_not(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::NotEqual:
         {
-            auto not_equal = static_cast<const op::NotEqual*>(&node);
-            reference::not_equal<T>(args[0]->get_data_ptr<const T>(),
+            auto not_equal = static_cast<const ngraph::op::NotEqual*>(&node);
+            ngraph::runtime::reference::not_equal<T>(args[0]->get_data_ptr<const T>(),
                                     args[1]->get_data_ptr<const T>(),
                                     out[0]->get_data_ptr<char>(),
                                     node.get_input_shape(0),
@@ -1153,8 +1147,8 @@ protected:
         }
         case OP_TYPEID::OneHot:
         {
-            const op::OneHot* oh = static_cast<const op::OneHot*>(&node);
-            reference::one_hot<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::OneHot* oh = static_cast<const ngraph::op::OneHot*>(&node);
+            ngraph::runtime::reference::one_hot<T>(args[0]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
                                   node.get_input_shape(0),
                                   node.get_output_shape(0),
@@ -1163,8 +1157,8 @@ protected:
         }
         case OP_TYPEID::Or:
         {
-            auto logical_or = static_cast<const op::Or*>(&node);
-            reference::logical_or(args[0]->get_data_ptr<const T>(),
+            auto logical_or = static_cast<const ngraph::op::Or*>(&node);
+            ngraph::runtime::reference::logical_or(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
                                   node.get_input_shape(0),
@@ -1175,14 +1169,14 @@ protected:
         case OP_TYPEID::Parameter: break;
         case OP_TYPEID::Passthrough:
         {
-            const op::Passthrough* passthrough = static_cast<const op::Passthrough*>(&node);
-            throw unsupported_op{"Unsupported operation language: " + passthrough->language()};
+            const ngraph::op::Passthrough* passthrough = static_cast<const ngraph::op::Passthrough*>(&node);
+            throw ngraph::unsupported_op{"Unsupported operation language: " + passthrough->language()};
         }
         case OP_TYPEID::Pad:
         {
-            const op::Pad* pad = static_cast<const op::Pad*>(&node);
+            const ngraph::op::Pad* pad = static_cast<const ngraph::op::Pad*>(&node);
 
-            reference::pad(args[0]->get_data_ptr<const T>(),
+            ngraph::runtime::reference::pad(args[0]->get_data_ptr<const T>(),
                            args[1]->get_data_ptr<const T>(),
                            out[0]->get_data_ptr<T>(),
                            node.get_input_shape(0),
@@ -1194,8 +1188,8 @@ protected:
         }
         case OP_TYPEID::Power:
         {
-            auto power = static_cast<const op::Power*>(&node);
-            reference::power<T>(args[0]->get_data_ptr<const T>(),
+            auto power = static_cast<const ngraph::op::Power*>(&node);
+            ngraph::runtime::reference::power<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
                                 node.get_input_shape(0),
@@ -1205,8 +1199,8 @@ protected:
         }
         case OP_TYPEID::Product:
         {
-            const op::Product* product = static_cast<const op::Product*>(&node);
-            reference::product<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(&node);
+            ngraph::runtime::reference::product<T>(args[0]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
                                   node.get_input_shape(0),
                                   node.get_output_shape(0),
@@ -1215,12 +1209,12 @@ protected:
         }
         case OP_TYPEID::Quantize:
         {
-            const op::Quantize* quantize = static_cast<const op::Quantize*>(&node);
+            const ngraph::op::Quantize* quantize = static_cast<const ngraph::op::Quantize*>(&node);
             auto type = quantize->get_element_type();
 
-            if (type == element::u8)
+            if (type == ngraph::element::u8)
             {
-                reference::quantize<T>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::quantize<T>(args[0]->get_data_ptr<const T>(),
                                        args[1]->get_data_ptr<const T>(),
                                        args[2]->get_data_ptr<const uint8_t>(),
                                        out[0]->get_data_ptr<uint8_t>(),
@@ -1229,9 +1223,9 @@ protected:
                                        quantize->get_axes(),
                                        quantize->get_round_mode());
             }
-            else if (type == element::i8)
+            else if (type == ngraph::element::i8)
             {
-                reference::quantize<T>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::quantize<T>(args[0]->get_data_ptr<const T>(),
                                        args[1]->get_data_ptr<const T>(),
                                        args[2]->get_data_ptr<const int8_t>(),
                                        out[0]->get_data_ptr<int8_t>(),
@@ -1240,9 +1234,9 @@ protected:
                                        quantize->get_axes(),
                                        quantize->get_round_mode());
             }
-            else if (type == element::i32)
+            else if (type == ngraph::element::i32)
             {
-                reference::quantize<T>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::quantize<T>(args[0]->get_data_ptr<const T>(),
                                        args[1]->get_data_ptr<const T>(),
                                        args[2]->get_data_ptr<const int32_t>(),
                                        out[0]->get_data_ptr<int32_t>(),
@@ -1263,17 +1257,17 @@ protected:
 
         case OP_TYPEID::QuantizedConvolution:
         {
-            const op::QuantizedConvolution* qc =
-                static_cast<const op::QuantizedConvolution*>(&node);
+            const ngraph::op::QuantizedConvolution* qc =
+                static_cast<const ngraph::op::QuantizedConvolution*>(&node);
 
             auto input_element_type = qc->get_input_element_type(0);
             auto filter_element_type = qc->get_input_element_type(1);
             auto output_element_type = qc->get_output_element_type(0);
 
-            if (input_element_type == element::u8 && filter_element_type == element::i8 &&
-                output_element_type == element::i8)
+            if (input_element_type == ngraph::element::u8 && filter_element_type == ngraph::element::i8 &&
+                output_element_type == ngraph::element::i8)
             {
-                reference::convolution<uint8_t, int8_t, int8_t, int32_t>(
+                ngraph::runtime::reference::convolution<uint8_t, int8_t, int8_t, int32_t>(
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const int8_t>(),
                     out[0]->get_data_ptr<int8_t>(),
@@ -1292,10 +1286,10 @@ protected:
                     args[6]->get_data_ptr<const float>(),
                     args[7]->get_data_ptr<const int8_t>());
             }
-            else if (input_element_type == element::u8 && filter_element_type == element::u8 &&
-                     output_element_type == element::u8)
+            else if (input_element_type == ngraph::element::u8 && filter_element_type == ngraph::element::u8 &&
+                     output_element_type == ngraph::element::u8)
             {
-                reference::convolution<uint8_t, uint8_t, uint8_t, int32_t>(
+                ngraph::runtime::reference::convolution<uint8_t, uint8_t, uint8_t, int32_t>(
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const uint8_t>(),
                     out[0]->get_data_ptr<uint8_t>(),
@@ -1314,10 +1308,10 @@ protected:
                     args[6]->get_data_ptr<const float>(),
                     args[7]->get_data_ptr<const uint8_t>());
             }
-            else if (input_element_type == element::u8 && filter_element_type == element::i8 &&
-                     output_element_type == element::i32)
+            else if (input_element_type == ngraph::element::u8 && filter_element_type == ngraph::element::i8 &&
+                     output_element_type == ngraph::element::i32)
             {
-                reference::convolution<uint8_t, int8_t, int32_t, int32_t>(
+                ngraph::runtime::reference::convolution<uint8_t, int8_t, int32_t, int32_t>(
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const int8_t>(),
                     out[0]->get_data_ptr<int32_t>(),
@@ -1336,10 +1330,10 @@ protected:
                     args[6]->get_data_ptr<const float>(),
                     args[7]->get_data_ptr<const int32_t>());
             }
-            else if (input_element_type == element::u8 && filter_element_type == element::u8 &&
-                     output_element_type == element::i32)
+            else if (input_element_type == ngraph::element::u8 && filter_element_type == ngraph::element::u8 &&
+                     output_element_type == ngraph::element::i32)
             {
-                reference::convolution<uint8_t, uint8_t, int32_t, int32_t>(
+                ngraph::runtime::reference::convolution<uint8_t, uint8_t, int32_t, int32_t>(
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const uint8_t>(),
                     out[0]->get_data_ptr<int32_t>(),
@@ -1375,16 +1369,16 @@ protected:
         case OP_TYPEID::QuantizedDotBias:
         case OP_TYPEID::QuantizedDot:
         {
-            const op::QuantizedDot* qd = static_cast<const op::QuantizedDot*>(&node);
+            const ngraph::op::QuantizedDot* qd = static_cast<const ngraph::op::QuantizedDot*>(&node);
 
             auto input0_element_type = qd->get_input_element_type(0);
             auto input1_element_type = qd->get_input_element_type(1);
             auto output_element_type = qd->get_output_element_type(0);
 
-            if (input0_element_type == element::u8 && input1_element_type == element::i8 &&
-                output_element_type == element::i8)
+            if (input0_element_type == ngraph::element::u8 && input1_element_type == ngraph::element::i8 &&
+                output_element_type == ngraph::element::i8)
             {
-                reference::dot<uint8_t, int8_t, int8_t, int32_t>(
+                ngraph::runtime::reference::dot<uint8_t, int8_t, int8_t, int32_t>(
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const int8_t>(),
                     out[0]->get_data_ptr<int8_t>(),
@@ -1399,10 +1393,10 @@ protected:
                     args[6]->get_data_ptr<const float>(),
                     args[7]->get_data_ptr<const int8_t>());
             }
-            else if (input0_element_type == element::u8 && input1_element_type == element::u8 &&
-                     output_element_type == element::u8)
+            else if (input0_element_type == ngraph::element::u8 && input1_element_type == ngraph::element::u8 &&
+                     output_element_type == ngraph::element::u8)
             {
-                reference::dot<uint8_t, uint8_t, uint8_t, int32_t>(
+                ngraph::runtime::reference::dot<uint8_t, uint8_t, uint8_t, int32_t>(
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const uint8_t>(),
                     out[0]->get_data_ptr<uint8_t>(),
@@ -1417,10 +1411,10 @@ protected:
                     args[6]->get_data_ptr<const float>(),
                     args[7]->get_data_ptr<const uint8_t>());
             }
-            else if (input0_element_type == element::u8 && input1_element_type == element::u8 &&
-                     output_element_type == element::i32)
+            else if (input0_element_type == ngraph::element::u8 && input1_element_type == ngraph::element::u8 &&
+                     output_element_type == ngraph::element::i32)
             {
-                reference::dot<uint8_t, uint8_t, int32_t, int32_t>(
+                ngraph::runtime::reference::dot<uint8_t, uint8_t, int32_t, int32_t>(
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const uint8_t>(),
                     out[0]->get_data_ptr<int32_t>(),
@@ -1435,10 +1429,10 @@ protected:
                     args[6]->get_data_ptr<const float>(),
                     args[7]->get_data_ptr<const int32_t>());
             }
-            else if (input0_element_type == element::u8 && input1_element_type == element::i8 &&
-                     output_element_type == element::i32)
+            else if (input0_element_type == ngraph::element::u8 && input1_element_type == ngraph::element::i8 &&
+                     output_element_type == ngraph::element::i32)
             {
-                reference::dot<uint8_t, int8_t, int32_t, int32_t>(
+                ngraph::runtime::reference::dot<uint8_t, int8_t, int32_t, int32_t>(
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const int8_t>(),
                     out[0]->get_data_ptr<int32_t>(),
@@ -1469,7 +1463,7 @@ protected:
             const auto* op = static_cast<const ngraph::op::Recv*>(&node);
             int src_id = op->get_src_id();
 
-            reference::recv<T>(
+            ngraph::runtime::reference::recv<T>(
                 args[0]->get_data_ptr<T>(), node.get_input_element_type(0), element_count, src_id);
 
             memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
@@ -1477,7 +1471,7 @@ protected:
         }
         case OP_TYPEID::RandomUniform:
         {
-            const op::RandomUniform* ru = static_cast<const op::RandomUniform*>(&node);
+            const ngraph::op::RandomUniform* ru = static_cast<const ngraph::op::RandomUniform*>(&node);
 
             T min_val = args[0]->get_data_ptr<const T>()[0];
             T max_val = args[1]->get_data_ptr<const T>()[0];
@@ -1487,19 +1481,19 @@ protected:
 
             if (m_states.count(&node) == 0)
             {
-                m_states[&node] = std::unique_ptr<UniformRNGState>(new UniformRNGState());
+                m_states[&node] = std::unique_ptr<ngraph::UniformRNGState>(new ngraph::UniformRNGState());
             }
 
-            auto state = static_cast<UniformRNGState*>(m_states.at(&node).get());
+            auto state = static_cast<ngraph::UniformRNGState*>(m_states.at(&node).get());
             size_t element_count = shape_size(node.get_output_shape(0));
             if (!use_fixed_seed)
             {
-                reference::random_uniform<T>(
+                ngraph::runtime::reference::random_uniform<T>(
                     out[0]->get_data_ptr<T>(), min_val, max_val, element_count, state);
             }
             else
             {
-                reference::random_uniform_with_fixed_seed<T>(out[0]->get_data_ptr<T>(),
+                ngraph::runtime::reference::random_uniform_with_fixed_seed<T>(out[0]->get_data_ptr<T>(),
                                                              min_val,
                                                              max_val,
                                                              element_count,
@@ -1509,20 +1503,20 @@ protected:
         }
         case OP_TYPEID::Range:
         {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            throw ngraph::unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
         case OP_TYPEID::Relu:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::relu<T>(
+            ngraph::runtime::reference::relu<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::ReluBackprop:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::relu_backprop<T>(args[0]->get_data_ptr<const T>(),
+            ngraph::runtime::reference::relu_backprop<T>(args[0]->get_data_ptr<const T>(),
                                         args[1]->get_data_ptr<const T>(),
                                         out[0]->get_data_ptr<T>(),
                                         element_count);
@@ -1530,8 +1524,8 @@ protected:
         }
         case OP_TYPEID::ReplaceSlice:
         {
-            const op::ReplaceSlice* slice = static_cast<const op::ReplaceSlice*>(&node);
-            reference::replace_slice<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::ReplaceSlice* slice = static_cast<const ngraph::op::ReplaceSlice*>(&node);
+            ngraph::runtime::reference::replace_slice<T>(args[0]->get_data_ptr<const T>(),
                                         args[1]->get_data_ptr<const T>(),
                                         out[0]->get_data_ptr<T>(),
                                         node.get_input_shape(1),
@@ -1543,8 +1537,8 @@ protected:
         }
         case OP_TYPEID::Reshape:
         {
-            const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
-            reference::reshape(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Reshape* reshape = static_cast<const ngraph::op::Reshape*>(&node);
+            ngraph::runtime::reference::reshape(args[0]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<T>(),
                                node.get_input_shape(0),
                                reshape->get_input_order(),
@@ -1553,16 +1547,16 @@ protected:
         }
         case OP_TYPEID::Result:
         {
-            const op::Result* res = static_cast<const op::Result*>(&node);
-            reference::result(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Result* res = static_cast<const ngraph::op::Result*>(&node);
+            ngraph::runtime::reference::result(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               shape_size(res->get_shape()));
             break;
         }
         case OP_TYPEID::Reverse:
         {
-            const op::Reverse* reverse = static_cast<const op::Reverse*>(&node);
-            reference::reverse(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Reverse* reverse = static_cast<const ngraph::op::Reverse*>(&node);
+            ngraph::runtime::reference::reverse(args[0]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<T>(),
                                node.get_input_shape(0),
                                node.get_output_shape(0),
@@ -1571,11 +1565,11 @@ protected:
         }
         case OP_TYPEID::ReverseSequence:
         {
-            const op::ReverseSequence* reverse = static_cast<const op::ReverseSequence*>(&node);
+            const ngraph::op::ReverseSequence* reverse = static_cast<const ngraph::op::ReverseSequence*>(&node);
 
-            if (node.get_input_element_type(1) == element::i32)
+            if (node.get_input_element_type(1) == ngraph::element::i32)
             {
-                reference::reverse_sequence<T, int32_t>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::reverse_sequence<T, int32_t>(args[0]->get_data_ptr<const T>(),
                                                         out[0]->get_data_ptr<T>(),
                                                         node.get_input_shape(0),
                                                         reverse->get_batch_axis(),
@@ -1584,22 +1578,22 @@ protected:
             }
             else
             {
-                throw ngraph_error("only int32 indices are supported");
+                throw std::runtime_error("only int32 indices are supported");
             }
             break;
         }
         case OP_TYPEID::Round:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::round<T>(
+            ngraph::runtime::reference::round<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::ScatterAdd:
         {
-            if (node.get_input_element_type(1) == element::i64)
+            if (node.get_input_element_type(1) == ngraph::element::i64)
             {
-                reference::scatter_add<T, int64_t>(args[0]->get_data_ptr<T>(),
+                ngraph::runtime::reference::scatter_add<T, int64_t>(args[0]->get_data_ptr<T>(),
                                                    args[1]->get_data_ptr<int64_t>(),
                                                    args[2]->get_data_ptr<T>(),
                                                    out[0]->get_data_ptr<T>(),
@@ -1608,9 +1602,9 @@ protected:
                                                    node.get_input_shape(2),
                                                    node.get_output_shape(0));
             }
-            else if (node.get_input_element_type(1) == element::i32)
+            else if (node.get_input_element_type(1) == ngraph::element::i32)
             {
-                reference::scatter_add<T, int32_t>(args[0]->get_data_ptr<T>(),
+                ngraph::runtime::reference::scatter_add<T, int32_t>(args[0]->get_data_ptr<T>(),
                                                    args[1]->get_data_ptr<int32_t>(),
                                                    args[2]->get_data_ptr<T>(),
                                                    out[0]->get_data_ptr<T>(),
@@ -1621,15 +1615,15 @@ protected:
             }
             else
             {
-                throw ngraph_error("Unexpected type");
+                throw std::runtime_error("Unexpected type");
             }
             break;
         }
         case OP_TYPEID::ScatterNDAdd:
         {
-            if (node.get_input_element_type(1) == element::i64)
+            if (node.get_input_element_type(1) == ngraph::element::i64)
             {
-                reference::scatter_nd_add<T, int64_t>(args[0]->get_data_ptr<T>(),
+                ngraph::runtime::reference::scatter_nd_add<T, int64_t>(args[0]->get_data_ptr<T>(),
                                                       args[1]->get_data_ptr<int64_t>(),
                                                       args[2]->get_data_ptr<T>(),
                                                       out[0]->get_data_ptr<T>(),
@@ -1638,9 +1632,9 @@ protected:
                                                       node.get_input_shape(2),
                                                       node.get_output_shape(0));
             }
-            else if (node.get_input_element_type(1) == element::i32)
+            else if (node.get_input_element_type(1) == ngraph::element::i32)
             {
-                reference::scatter_nd_add<T, int32_t>(args[0]->get_data_ptr<T>(),
+                ngraph::runtime::reference::scatter_nd_add<T, int32_t>(args[0]->get_data_ptr<T>(),
                                                       args[1]->get_data_ptr<int32_t>(),
                                                       args[2]->get_data_ptr<T>(),
                                                       out[0]->get_data_ptr<T>(),
@@ -1651,14 +1645,14 @@ protected:
             }
             else
             {
-                throw ngraph_error("Unexpected type");
+                throw std::runtime_error("Unexpected type");
             }
             break;
         }
         case OP_TYPEID::Select:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::select<T>(args[0]->get_data_ptr<const char>(),
+            ngraph::runtime::reference::select<T>(args[0]->get_data_ptr<const char>(),
                                  args[1]->get_data_ptr<const T>(),
                                  args[2]->get_data_ptr<const T>(),
                                  out[0]->get_data_ptr<T>(),
@@ -1672,7 +1666,7 @@ protected:
             const auto* op = static_cast<const ngraph::op::Send*>(&node);
             int dest_id = op->get_dest_id();
 
-            reference::send<T>(args[0]->get_data_ptr<const T>(),
+            ngraph::runtime::reference::send<T>(args[0]->get_data_ptr<const T>(),
                                node.get_input_element_type(0),
                                element_count,
                                dest_id);
@@ -1682,20 +1676,20 @@ protected:
         }
         case OP_TYPEID::ShapeOf:
         {
-            reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint64_t>());
+            ngraph::runtime::reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint64_t>());
             break;
         }
         case OP_TYPEID::Sigmoid:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::sigmoid<T>(
+            ngraph::runtime::reference::sigmoid<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::SigmoidBackprop:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::sigmoid_backprop<T>(args[0]->get_data_ptr<const T>(),
+            ngraph::runtime::reference::sigmoid_backprop<T>(args[0]->get_data_ptr<const T>(),
                                            args[1]->get_data_ptr<const T>(),
                                            out[0]->get_data_ptr<T>(),
                                            element_count);
@@ -1704,28 +1698,28 @@ protected:
         case OP_TYPEID::Sign:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::sign<T>(
+            ngraph::runtime::reference::sign<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Sin:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::sin<T>(
+            ngraph::runtime::reference::sin<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Sinh:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::sinh<T>(
+            ngraph::runtime::reference::sinh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Slice:
         {
-            const op::Slice* slice = static_cast<const op::Slice*>(&node);
-            reference::slice<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Slice* slice = static_cast<const ngraph::op::Slice*>(&node);
+            ngraph::runtime::reference::slice<T>(args[0]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
                                 node.get_input_shape(0),
                                 slice->get_lower_bounds(),
@@ -1736,8 +1730,8 @@ protected:
         }
         case OP_TYPEID::Softmax:
         {
-            const op::Softmax* softmax = static_cast<const op::Softmax*>(&node);
-            reference::softmax<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Softmax* softmax = static_cast<const ngraph::op::Softmax*>(&node);
+            ngraph::runtime::reference::softmax<T>(args[0]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
                                   node.get_output_shape(0),
                                   softmax->get_axes());
@@ -1746,16 +1740,16 @@ protected:
         case OP_TYPEID::Sqrt:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::sqrt<T>(
+            ngraph::runtime::reference::sqrt<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::StopGradient: { throw unsupported_op("Unsupported op 'StopGradient'");
+        case OP_TYPEID::StopGradient: { throw ngraph::unsupported_op("Unsupported op 'StopGradient'");
         }
         case OP_TYPEID::Subtract:
         {
-            auto subtract = static_cast<const op::Subtract*>(&node);
-            reference::subtract<T>(args[0]->get_data_ptr<const T>(),
+            auto subtract = static_cast<const ngraph::op::Subtract*>(&node);
+            ngraph::runtime::reference::subtract<T>(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
                                    node.get_input_shape(0),
@@ -1765,8 +1759,8 @@ protected:
         }
         case OP_TYPEID::Sum:
         {
-            const op::Sum* sum = static_cast<const op::Sum*>(&node);
-            reference::sum<T>(args[0]->get_data_ptr<const T>(),
+            const ngraph::op::Sum* sum = static_cast<const ngraph::op::Sum*>(&node);
+            ngraph::runtime::reference::sum<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
                               node.get_output_shape(0),
@@ -1776,23 +1770,23 @@ protected:
         case OP_TYPEID::Tan:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::tan<T>(
+            ngraph::runtime::reference::tan<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Tanh:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::tanh<T>(
+            ngraph::runtime::reference::tanh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::TopK:
         {
-            const op::TopK* topk = static_cast<const op::TopK*>(&node);
-            if (node.get_output_element_type(0) == element::i64)
+            const ngraph::op::TopK* topk = static_cast<const ngraph::op::TopK*>(&node);
+            if (node.get_output_element_type(0) == ngraph::element::i64)
             {
-                reference::topk<T, int64_t>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::topk<T, int64_t>(args[0]->get_data_ptr<const T>(),
                                             out[0]->get_data_ptr<int64_t>(),
                                             out[1]->get_data_ptr<T>(),
                                             node.get_input_shape(0),
@@ -1802,9 +1796,9 @@ protected:
                                             topk->get_compute_max(),
                                             topk->get_sort());
             }
-            else if (node.get_output_element_type(0) == element::i32)
+            else if (node.get_output_element_type(0) == ngraph::element::i32)
             {
-                reference::topk<T, int32_t>(args[0]->get_data_ptr<const T>(),
+                ngraph::runtime::reference::topk<T, int32_t>(args[0]->get_data_ptr<const T>(),
                                             out[0]->get_data_ptr<int32_t>(),
                                             out[1]->get_data_ptr<T>(),
                                             node.get_input_shape(0),
@@ -1816,14 +1810,14 @@ protected:
             }
             else
             {
-                throw ngraph_error("Unexpected type");
+                throw std::runtime_error("Unexpected type");
             }
             break;
         }
         case OP_TYPEID::Xor:
         {
-            auto logical_xor = static_cast<const op::Or*>(&node);
-            reference::logical_xor(args[0]->get_data_ptr<const T>(),
+            auto logical_xor = static_cast<const ngraph::op::Or*>(&node);
+            ngraph::runtime::reference::logical_xor(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
                                    node.get_input_shape(0),
@@ -1884,7 +1878,7 @@ protected:
         // Tensor Iterator not yet supported
         case OP_TYPEID::TensorIterator:
         case OP_TYPEID::UnknownOp:
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            throw ngraph::unsupported_op("Unsupported op '" + node.description() + "'");
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif

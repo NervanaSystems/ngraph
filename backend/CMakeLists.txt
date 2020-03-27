@@ -21,3 +21,7 @@ endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     add_subdirectory(interpreter)
 endif()
+
+if (NGRAPH_GENERIC_CPU_ENABLE)
+    add_subdirectory(gcpu)
+endif()
