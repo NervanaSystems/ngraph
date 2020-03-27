@@ -36,7 +36,6 @@ namespace ngraph
                     std::int64_t axis = node.get_attribute_value<std::int64_t>("axis");
                     if (axis < 0)
                     {
-                        std::cout << "Concat rank: " << inputs.at(0)->get_output_partial_shape(0).rank().get_length() << std::endl;
                         axis = ngraph::normalize_axis(
                             node.get_description(),
                             axis,
