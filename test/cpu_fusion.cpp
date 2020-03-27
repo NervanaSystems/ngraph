@@ -4007,7 +4007,7 @@ TEST(cpu_fusion, fuse_vanilla_rnn_cells)
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::VanillaRNNFusion>();
     const string json_path =
-        file_util::path_join(SERIALIZED_ZOO, "tensorflow/vanilla_rnn_3_time_step.json");
+        file_util::path_join(SERIALIZED_ZOO, "tensorflow/rnn/vanilla_rnn_3_time_step.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
@@ -4018,7 +4018,7 @@ TEST(cpu_fusion, fuse_vanilla_rnn_cells)
 
 TEST(cpu_fusion, vanilla_rnn_cpu_vs_inter)
 {
-    const std::string file_name("tensorflow/vanilla_rnn_3_time_step.json");
+    const std::string file_name("tensorflow/rnn/vanilla_rnn_3_time_step.json");
     auto cpu_f = make_function_from_file(file_name);
     auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-1.0f, 1.0f);
