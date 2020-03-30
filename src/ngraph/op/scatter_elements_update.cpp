@@ -110,6 +110,11 @@ void op::v3::ScatterElementsUpdate::validate_and_infer_types()
             axis);
     }
 
+    if (data_shape.is_dynamic())
+    {
+        set_input_is_relevant_to_shape(0);
+    }
+
     set_output_size(1);
     set_output_type(0, data_et, data_shape);
 }
