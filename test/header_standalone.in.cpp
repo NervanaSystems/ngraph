@@ -14,4 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
+#define NGRAPH_OP(...)
 #include "${HEADER}"
+#undef NGRAPH_OP

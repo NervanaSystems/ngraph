@@ -211,7 +211,6 @@ file(GLOB_RECURSE LIST_RECURSE
     "${NGRAPH_MAIN_SRC_DIR}/descriptor/*.hpp"
     "${NGRAPH_MAIN_SRC_DIR}/distributed/*.hpp"
     "${NGRAPH_MAIN_SRC_DIR}/op/*.hpp"
-    "${NGRAPH_MAIN_SRC_DIR}/opsets/*.hpp"
     "${NGRAPH_MAIN_SRC_DIR}/pass/*.hpp"
     "${NGRAPH_MAIN_SRC_DIR}/state*.hpp")
 file(GLOB LIST
@@ -221,7 +220,6 @@ set(NGRAPH_HEADER_LIST ${LIST_RECURSE} ${LIST})
 list(APPEND NGRAPH_HEADER_LIST ${LIST})
 foreach(HEADER ${NGRAPH_HEADER_LIST})
     file(RELATIVE_PATH OUT_PATH ${NGRAPH_MAIN_SRC_DIR} ${HEADER})
-    message("**** ${OUT_PATH}")
     string(REGEX REPLACE "hpp$" "cpp" OUT_PATH ${OUT_PATH})
     set(OUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/include_test/${OUT_PATH}")
     configure_file("header_standalone.in.cpp" ${OUT_FILE})
