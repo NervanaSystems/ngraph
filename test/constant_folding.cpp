@@ -1596,8 +1596,6 @@ TEST(constant_folding, const_gather_v1_scalar)
     ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
-#include "ngraph/pass/visualize_tree.hpp"
-
 TEST(constant_folding, const_gather_v1_subgraph)
 {
     const auto A = make_shared<op::Parameter>(element::f32, Shape{1});
@@ -1658,6 +1656,121 @@ TEST(constant_folding, const_gather_v1_subgraph_neg_axis)
 
     const auto values_out = new_const->get_vector<float>();
     ASSERT_TRUE(test::all_close_f(values_out, {b_value}, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(constant_folding, const_gather_v1_subgraph_no_constant_input)
+{
+    const auto A = make_shared<op::Parameter>(element::f32, Shape{1});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{1});
+    const auto C = make_shared<op::Parameter>(element::f32, Shape{1});
+    const int64_t axis = 0;
+    const auto axis_const = op::Constant::create(element::i64, {}, {axis});
+
+    const auto concat = make_shared<op::Concat>(NodeVector{A, B, C}, axis);
+
+    const vector<int64_t> indices{1};
+    const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);
+    const auto gather = make_shared<op::v1::Gather>(concat, indices_const, axis_const);
+    auto f = make_shared<Function>(gather, ParameterVector{A, B, C});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 0);
+}
+
+TEST(constant_folding, const_gather_v1_subgraph_skip_if_non_zero_axis)
+{
+    const auto A = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+    const auto C = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+    const int64_t axis = 1;
+    const auto axis_const = op::Constant::create(element::i64, {}, {axis});
+
+    const auto concat = make_shared<op::Concat>(NodeVector{A, B, C}, axis);
+
+    const vector<int64_t> indices{1};
+    const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);
+    const auto gather = make_shared<op::v1::Gather>(concat, indices_const, axis_const);
+    auto f = make_shared<Function>(gather, ParameterVector{A, B, C});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
+}
+
+TEST(constant_folding, const_gather_v1_subgraph_skip_if_non_single_indices)
+{
+    const auto A = make_shared<op::Parameter>(element::f32, Shape{1});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{1});
+    const auto C = make_shared<op::Parameter>(element::f32, Shape{1});
+    const int64_t axis = 0;
+    const auto axis_const = op::Constant::create(element::i64, {}, {axis});
+
+    const auto concat = make_shared<op::Concat>(NodeVector{A, B, C}, axis);
+
+    const vector<int64_t> indices{0, 1};
+    const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);
+    const auto gather = make_shared<op::v1::Gather>(concat, indices_const, axis_const);
+    auto f = make_shared<Function>(gather, ParameterVector{A, B, C});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
+}
+
+TEST(constant_folding, const_gather_v1_subgraph_skip_if_concat_output_shape_dynamic)
+{
+    const auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{1});
+    const auto C = make_shared<op::Parameter>(element::f32, Shape{1});
+    const int64_t axis = 0;
+    const auto axis_const = op::Constant::create(element::i64, {}, {axis});
+
+    const auto concat = make_shared<op::Concat>(NodeVector{A, B, C}, axis);
+
+    const vector<int64_t> indices{1};
+    const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);
+    const auto gather = make_shared<op::v1::Gather>(concat, indices_const, axis_const);
+    auto f = make_shared<Function>(gather, ParameterVector{A, B, C});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
+}
+
+TEST(constant_folding, const_gather_v1_subgraph_skip_if_not_single_input)
+{
+    const auto A = make_shared<op::Parameter>(element::f32, Shape{2});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{1});
+    const auto C = make_shared<op::Parameter>(element::f32, Shape{1});
+    const int64_t axis = 0;
+    const auto axis_const = op::Constant::create(element::i64, {}, {axis});
+
+    const auto concat = make_shared<op::Concat>(NodeVector{A, B, C}, axis);
+
+    const vector<int64_t> indices{1};
+    const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);
+    const auto gather = make_shared<op::v1::Gather>(concat, indices_const, axis_const);
+    auto f = make_shared<Function>(gather, ParameterVector{A, B, C});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
 }
 
 TEST(constant_folding, const_slice)

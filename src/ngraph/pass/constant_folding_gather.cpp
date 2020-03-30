@@ -217,9 +217,6 @@ void pass::ConstantFolding::construct_constant_gather_with_subgraph()
         const auto axis = static_pointer_cast<op::Constant>(pattern_map[axis_label]);
         const auto gather = m.get_match_root();
 
-        // gather takes exactly one element out of the Concat output
-        if (axis->get_axis_vector_val().size() != 1)
-            return false;
         // only along axis=0
         if (axis->cast_vector<int64_t>()[0] != 0 || concat->get_axis() != 0)
             return false;
@@ -238,16 +235,11 @@ void pass::ConstantFolding::construct_constant_gather_with_subgraph()
         const int64_t rank = concat->get_shape()[0];
         const int64_t raw_index = indices->cast_vector<int64_t>()[0];
         const int64_t positive_index = raw_index < 0 ? rank + raw_index : raw_index;
+        // gather takes exactly one element out of the Concat output
         const auto gathered =
             concat_inputs[positive_index].get_source_output().get_node_shared_ptr();
-        if (!gathered->is_constant())
-            return false;
 
-        const auto gathered_const = dynamic_pointer_cast<op::Constant>(gathered);
-        const auto replacement = make_shared<op::Constant>(
-            gathered->get_element_type(), indices_shape, gathered_const->get_data_ptr());
-
-        replace_node(m.get_match_root(), replacement);
+        replace_node(m.get_match_root(), gathered);
         return true;
     };
 
