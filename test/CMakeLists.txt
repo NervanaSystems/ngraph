@@ -199,6 +199,21 @@ set(SRC
     zero_dim_tensor_elimination.cpp
 )
 
+# This code generates one source file per header file under ngraph/src where the source file
+# has just a single #include statement. This checks that each header in the source tree is
+# complete and self-contained so it can be included without requiring any other includes.
+set(NGRAPH_MAIN_SRC_DIR "${CMAKE_SOURCE_DIR}/src/ngraph/")
+string(LENGTH ${NGRAPH_MAIN_SRC_DIR} SRC_DIR_LENGTH)
+file(GLOB_RECURSE NGRAPH_HEADER_LIST "${NGRAPH_MAIN_SRC_DIR}*.hpp")
+foreach(HEADER ${NGRAPH_HEADER_LIST})
+    file(RELATIVE_PATH OUT_PATH ${NGRAPH_MAIN_SRC_DIR} ${HEADER})
+    message("**** ${OUT_PATH}")
+    string(REGEX REPLACE "hpp$" "cpp" OUT_PATH ${OUT_PATH})
+    set(OUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/include_test/${OUT_PATH}")
+    configure_file("header_standalone.in.cpp" ${OUT_FILE})
+    list(APPEND SRC ${OUT_FILE})
+endforeach()
+
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC core.cpp serialize.cpp)
 endif()
