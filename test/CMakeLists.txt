@@ -202,9 +202,23 @@ set(SRC
 # This code generates one source file per header file under ngraph/src where the source file
 # has just a single #include statement. This checks that each header in the source tree is
 # complete and self-contained so it can be included without requiring any other includes.
-set(NGRAPH_MAIN_SRC_DIR "${CMAKE_SOURCE_DIR}/src/ngraph/")
-string(LENGTH ${NGRAPH_MAIN_SRC_DIR} SRC_DIR_LENGTH)
-file(GLOB_RECURSE NGRAPH_HEADER_LIST "${NGRAPH_MAIN_SRC_DIR}*.hpp")
+set(DIRECTORIES_IGNORED runtime frontend)
+set(NGRAPH_MAIN_SRC_DIR "${CMAKE_SOURCE_DIR}/src/ngraph")
+file(GLOB_RECURSE LIST_RECURSE
+    "${NGRAPH_MAIN_SRC_DIR}/autodiff/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/builder/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/codegen/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/descriptor/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/distributed/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/op/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/opsets/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/pass/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/state*.hpp")
+file(GLOB LIST
+    "${NGRAPH_MAIN_SRC_DIR}/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/runtime/*.hpp")
+set(NGRAPH_HEADER_LIST ${LIST_RECURSE} ${LIST})
+list(APPEND NGRAPH_HEADER_LIST ${LIST})
 foreach(HEADER ${NGRAPH_HEADER_LIST})
     file(RELATIVE_PATH OUT_PATH ${NGRAPH_MAIN_SRC_DIR} ${HEADER})
     message("**** ${OUT_PATH}")
