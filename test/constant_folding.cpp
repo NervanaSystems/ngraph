@@ -24,6 +24,30 @@
 using namespace ngraph;
 using namespace std;
 
+template <typename T>
+static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
+{
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(pos)->get_argument(0));
+    return new_const->cast_vector<T>();
+}
+
+void range_test_check(const vector<double>& values_out, const vector<double>& values_expected)
+{
+    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+void range_test_check(const vector<float>& values_out, const vector<float>& values_expected)
+{
+    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+template <typename T>
+typename std::enable_if<std::is_integral<T>::value>::type
+    range_test_check(const vector<T>& values_out, const vector<T>& values_expected)
+{
+    ASSERT_EQ(values_out, values_expected);
+}
+
 TEST(constant_folding, constant_squeeze)
 {
     Shape shape_in{2, 4, 1};
@@ -283,13 +307,6 @@ TEST(constant_folding, constant_pad_exterior)
     ASSERT_EQ(padded_values, values_out);
 }
 
-template <typename T>
-static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
-{
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(pos)->get_argument(0));
-    return new_const->get_vector<T>();
-}
-
 TEST(constant_folding, constant_unary_binary)
 {
     vector<int> values_a{1, 2, 3, 4};
@@ -544,9 +561,6 @@ TEST(constant_folding, shape_of)
     ASSERT_EQ((vector<int64_t>{3, 4, 0, 22, 608, 909, 3}), values_out);
 }
 
-// A bit of an unusual case here: constant folding will not succeed on ShapeOf
-// if the argument doesn't have dynamic shape. We want to make sure it fails
-// gracefully, leaving the ShapeOf op in place.
 TEST(constant_folding, shape_of_dynamic)
 {
     PartialShape input_shape{3, 4, Dimension::dynamic(), 22, 608, 909, 3};
@@ -560,14 +574,41 @@ TEST(constant_folding, shape_of_dynamic)
     pass_manager.run_passes(f);
 
     ASSERT_EQ(count_ops_of_type<op::ShapeOf>(f), 1);
-    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 8);
 
-    auto result_as_shape_of = as_type_ptr<op::ShapeOf>(f->get_results().at(0)->get_argument(0));
-    ASSERT_TRUE(result_as_shape_of);
-    ASSERT_EQ(result_as_shape_of->get_output_shape(0), Shape{7});
+    auto result_as_concat = as_type_ptr<op::Concat>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(result_as_concat);
+    ASSERT_EQ(result_as_concat->get_output_shape(0), Shape{7});
 }
 
-// Similar to shape_of_dynamic above but here even the rank is dynamic.
+// We need to be sure that constant folding won't be calculated endlessly.
+TEST(constant_folding, shape_of_dynamic_double_folding)
+{
+    PartialShape input_shape{3, 4, Dimension::dynamic(), 22, 608, 909, 3};
+
+    auto param = make_shared<op::Parameter>(element::boolean, input_shape);
+    auto shape_of = make_shared<op::ShapeOf>(param);
+    auto f = make_shared<Function>(shape_of, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::ShapeOf>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 8);
+
+    auto result_as_concat = as_type_ptr<op::Concat>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(result_as_concat);
+    ASSERT_EQ(result_as_concat->get_output_shape(0), Shape{7});
+}
+
+// Constant folding will not succeed on ShapeOf if the argument rank is dynamic.
+// We want to make sure it fails gracefully, leaving the ShapeOf op in place.
 TEST(constant_folding, shape_of_rank_dynamic)
 {
     PartialShape input_shape{PartialShape::dynamic()};
@@ -1751,23 +1792,6 @@ TEST(constant_folding, constant_transpose)
     ASSERT_TRUE(test::all_close_f(values_permute, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
-void range_test_check(const vector<double>& values_out, const vector<double>& values_expected)
-{
-    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
-}
-
-void range_test_check(const vector<float>& values_out, const vector<float>& values_expected)
-{
-    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
-}
-
-template <typename T>
-typename std::enable_if<std::is_integral<T>::value>::type
-    range_test_check(const vector<T>& values_out, const vector<T>& values_expected)
-{
-    ASSERT_EQ(values_out, values_expected);
-}
-
 template <typename T>
 void range_test(T start, T stop, T step, const vector<T>& values_expected)
 {
@@ -2377,6 +2401,28 @@ TEST(constant_folding, pass_property)
     ASSERT_TRUE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }
 
+TEST(constant_folding, constant_non_zero_0D)
+{
+    auto data = op::Constant::create(element::i32, Shape{}, {1});
+    auto non_zero = make_shared<op::v3::NonZero>(data);
+    auto f = make_shared<Function>(non_zero, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    const auto values_out = new_const->get_vector<int64_t>();
+
+    const vector<int64_t> values_expected{0};
+    ASSERT_EQ(values_expected, values_out);
+    ASSERT_EQ((Shape{1, 1}), new_const->get_shape());
+}
+
 TEST(constant_folding, constant_non_zero_1D)
 {
     vector<int> values_in{0, 1, 0, 1};
@@ -2391,13 +2437,36 @@ TEST(constant_folding, constant_non_zero_1D)
     ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    auto values_out = new_const->get_vector<int64_t>();
+    const auto values_out = new_const->get_vector<int64_t>();
 
-    vector<int64_t> values_expected{1, 3};
+    const vector<int64_t> values_expected{1, 3};
     ASSERT_EQ(values_expected, values_out);
     ASSERT_EQ((Shape{1, 2}), new_const->get_shape());
+}
+
+TEST(constant_folding, constant_non_zero_1D_all_indices)
+{
+    const vector<float> values_in{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+    const auto data = make_shared<op::Constant>(element::f32, Shape{values_in.size()}, values_in);
+    const auto non_zero = make_shared<op::v3::NonZero>(data);
+    auto f = make_shared<Function>(non_zero, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    const auto values_out = new_const->get_vector<int64_t>();
+
+    const vector<int64_t> values_expected{0, 1, 2, 3, 4, 5, 6, 7};
+    ASSERT_EQ(values_expected, values_out);
+    ASSERT_EQ((Shape{1, values_in.size()}), new_const->get_shape());
 }
 
 TEST(constant_folding, constant_non_zero_2D)
@@ -2414,13 +2483,36 @@ TEST(constant_folding, constant_non_zero_2D)
     ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    auto values_out = new_const->get_vector<int64_t>();
+    const auto values_out = new_const->get_vector<int64_t>();
 
-    vector<int64_t> values_expected{0, 1, 2, 2, 0, 1, 0, 1};
+    const vector<int64_t> values_expected{0, 1, 2, 2, 0, 1, 0, 1};
     ASSERT_EQ(values_expected, values_out);
     ASSERT_EQ((Shape{2, 4}), new_const->get_shape());
+}
+
+TEST(constant_folding, constant_non_zero_2D_all_indices)
+{
+    const vector<int8_t> values_in{1, 1, 1, 1, 1, 1, 1, 1, 1};
+    const auto data = make_shared<op::Constant>(element::i8, Shape{3, 3}, values_in);
+    const auto non_zero = make_shared<op::v3::NonZero>(data);
+    auto f = make_shared<Function>(non_zero, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    const auto values_out = new_const->get_vector<int64_t>();
+
+    const vector<int64_t> values_expected{0, 0, 0, 1, 1, 1, 2, 2, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2};
+    ASSERT_EQ(values_expected, values_out);
+    ASSERT_EQ((Shape{2, values_in.size()}), new_const->get_shape());
 }
 
 TEST(constant_folding, constant_non_zero_3D)
@@ -2437,12 +2529,12 @@ TEST(constant_folding, constant_non_zero_3D)
     ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    auto values_out = new_const->get_vector<int64_t>();
+    const auto values_out = new_const->get_vector<int64_t>();
 
-    vector<int64_t> values_expected{0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 2, 2, 2,
-                                    0, 0, 0, 1, 1, 2, 0, 2, 1, 0, 1, 2, 0, 1, 2, 0, 2, 1};
+    const vector<int64_t> values_expected{0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 2, 2, 2,
+                                          0, 0, 0, 1, 1, 2, 0, 2, 1, 0, 1, 2, 0, 1, 2, 0, 2, 1};
     ASSERT_EQ(values_expected, values_out);
     ASSERT_EQ((Shape{3, 12}), new_const->get_shape());
 }

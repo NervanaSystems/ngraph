@@ -303,7 +303,6 @@ set (SRC
     op/reduce_sum.hpp
     op/roi_align.cpp
     op/roi_align.hpp
-    op/roi_align.hpp
     op/round.cpp
     op/round.hpp
     op/quantize.cpp
@@ -495,6 +494,7 @@ set (SRC
     pass/constant_folding_dyn_reshape.cpp
     pass/constant_folding_dyn_slice.cpp
     pass/constant_folding_gather.cpp
+    pass/constant_folding_scatter.cpp
     pass/constant_folding_logical_reduction.cpp
     pass/constant_folding_non_zero.cpp
     pass/constant_folding_one_hot.cpp

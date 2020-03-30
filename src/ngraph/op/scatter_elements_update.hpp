@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/util/scatter.hpp"
 
 namespace ngraph
 {
@@ -25,30 +24,28 @@ namespace ngraph
     {
         namespace v3
         {
-            /// \brief Set new values to slices from inputs addressed by indices
-            class NGRAPH_API ScatterElementsUpdate : public util::Scatter
+            class NGRAPH_API ScatterElementsUpdate : public Op
             {
             public:
                 static constexpr NodeTypeInfo type_info{"ScatterElementsUpdate", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ScatterElementsUpdate() = default;
-                /// \param inputs Tensor
-                /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-                /// \param updates Tensor: Must have same type as inputs
-                ScatterElementsUpdate(const Output<Node>& inputs,
+                /// \brief Constructs a ScatterElementsUpdate node
+
+                /// \param data            Input data
+                /// \param indices         Data entry index that will be updated
+                /// \param updates         Update values
+                /// \param axis            Axis to scatter on
+                ScatterElementsUpdate(const Output<Node>& data,
                                       const Output<Node>& indices,
                                       const Output<Node>& updates,
                                       const Output<Node>& axis);
 
-                void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const OutputVector& /* deltas */) override
-                {
-                    throw ngraph_error("Not yet implemented");
-                }
+                virtual void validate_and_infer_types() override;
+                virtual bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
-                bool visit_attributes(AttributeVisitor& visitor) override;
+                    clone_with_new_inputs(const OutputVector& inputs) const override;
             };
         }
         using v3::ScatterElementsUpdate;

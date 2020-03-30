@@ -50,7 +50,7 @@ void op::Unsqueeze::pre_validate_and_infer_types()
     uint64_t data_rank_value = data_partial_shape.rank().get_length();
 
     // Get value of axes from Constant
-    const auto axes_constant = as_type_ptr<op::Constant>(axes_node);
+    const auto axes_constant = as_type_ptr<op::v0::Constant>(axes_node);
     const auto axes_values = axes_constant->cast_vector<int64_t>();
     const auto expanded_rank = data_rank_value + axes_values.size();
     auto axes = normalize_axes(this->description(), axes_values, expanded_rank);
@@ -66,7 +66,7 @@ void op::Unsqueeze::pre_validate_and_infer_types()
     for (auto axis : axes)
     {
         NODE_VALIDATION_CHECK(
-            this, axis <= data_rank_value, "provided 'axes' value ", axis, " is not valid.");
+            this, axis <= expanded_rank, "provided 'axes' value ", axis, " is not valid.");
 
         output_shape.insert(next(begin(output_shape), axis), 1);
     }

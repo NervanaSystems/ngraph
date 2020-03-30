@@ -14,15 +14,152 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/roi_align.hpp"
-#include "ngraph/shape.hpp"
+#include "roi_align.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 constexpr NodeTypeInfo op::v3::ROIAlign::type_info;
 
-shared_ptr<Node> op::v3::ROIAlign::copy_with_new_args(const NodeVector& new_args) const
+op::v3::ROIAlign::ROIAlign(const Output<Node>& input,
+                           const Output<Node>& rois,
+                           const Output<Node>& batch_indices,
+                           const size_t pooled_h,
+                           const size_t pooled_w,
+                           const size_t sampling_ratio,
+                           const float spatial_scale,
+                           const string& mode)
+    : Op{{input, rois, batch_indices}}
+    , m_pooled_h{pooled_h}
+    , m_pooled_w{pooled_w}
+    , m_sampling_ratio{sampling_ratio}
+    , m_spatial_scale{spatial_scale}
+    , m_mode{EnumNames<ROIAlign::PoolingMode>::as_enum(mode)}
+{
+    constructor_validate_and_infer_types();
+}
+
+op::v3::ROIAlign::ROIAlign(const Output<Node>& input,
+                           const Output<Node>& rois,
+                           const Output<Node>& batch_indices,
+                           const size_t pooled_h,
+                           const size_t pooled_w,
+                           const size_t sampling_ratio,
+                           const float spatial_scale,
+                           const PoolingMode mode)
+    : Op{{input, rois, batch_indices}}
+    , m_pooled_h{pooled_h}
+    , m_pooled_w{pooled_w}
+    , m_sampling_ratio{sampling_ratio}
+    , m_spatial_scale{spatial_scale}
+    , m_mode{mode}
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::v3::ROIAlign::validate_and_infer_types()
+{
+    NODE_VALIDATION_CHECK(
+        this,
+        get_input_element_type(0).is_real() && get_input_element_type(1).is_real(),
+        "The data type for input and ROIs is expected to be a floating point type. Got: ",
+        get_input_element_type(0),
+        " and: ",
+        get_input_element_type(1));
+
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(2).is_integral_number(),
+                          "The data type for batch indices is expected to be an integer. Got: ",
+                          get_input_element_type(2));
+
+    const auto& input_ps = get_input_partial_shape(0);
+    NODE_VALIDATION_CHECK(this,
+                          input_ps.rank().compatible(4),
+                          "Expected a 4D tensor for the input data. Got: ",
+                          input_ps);
+
+    const auto& rois_ps = get_input_partial_shape(1);
+    NODE_VALIDATION_CHECK(this,
+                          rois_ps.rank().compatible(2),
+                          "Expected a 2D tensor for the ROIs input. Got: ",
+                          rois_ps);
+
+    const auto& batch_indices_ps = get_input_partial_shape(2);
+    NODE_VALIDATION_CHECK(this,
+                          batch_indices_ps.rank().compatible(1),
+                          "Expected a 1D tensor for the batch indices input. Got: ",
+                          batch_indices_ps);
+
+    if (rois_ps.rank().is_static())
+    {
+        const auto rois_second_dim = rois_ps[1];
+        NODE_VALIDATION_CHECK(this,
+                              rois_second_dim.compatible(4),
+                              "The second dimension of ROIs input should contain box coordinates. ",
+                              "This dimension is expected to be equal to 4. Got: ",
+                              rois_second_dim);
+
+        if (batch_indices_ps.rank().is_static())
+        {
+            NODE_VALIDATION_CHECK(
+                this,
+                rois_ps[0].compatible(batch_indices_ps[0]),
+                "The first dimension of ROIs input must be equal to the first dimension ",
+                "of the batch indices input. Got: ",
+                rois_ps[0],
+                " and: ",
+                batch_indices_ps[0]);
+        }
+    }
+
+    // the output shape should have the following format [NUM_ROIS, C, pooled_h, pooled_w]
+    auto output_shape = PartialShape{{Dimension::dynamic(),
+                                      input_ps[1],
+                                      Dimension{static_cast<int64_t>(m_pooled_h)},
+                                      Dimension{static_cast<int64_t>(m_pooled_w)}}};
+
+    // if either of those 2 dimensions is static its value will be used
+    // for the first dimension of the output shape - 'NUM_ROIS'
+    if (rois_ps.rank().is_static() && rois_ps[0].is_static())
+    {
+        output_shape[0] = rois_ps[0];
+    }
+    else if (batch_indices_ps.rank().is_static() && batch_indices_ps[0].is_static())
+    {
+        output_shape[0] = batch_indices_ps[0];
+    }
+
+    set_output_size(1);
+    set_output_type(0, get_input_element_type(0), output_shape);
+
+    // if the channels dimension is not known
+    // the first input should be used during the function specialization
+    if (input_ps.rank().is_static() && input_ps[1].is_dynamic())
+    {
+        set_input_is_relevant_to_shape(0);
+    }
+
+    // if the 'NUM_ROIS' value is not known
+    // the last 2 inputs should be used during the function specialization
+    if (output_shape[0].is_dynamic())
+    {
+        set_input_is_relevant_to_shape(1);
+        set_input_is_relevant_to_shape(2);
+    }
+}
+
+bool op::v3::ROIAlign::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("pooled_h", m_pooled_h);
+    visitor.on_attribute("pooled_w", m_pooled_w);
+    visitor.on_attribute("sampling_ratio", m_sampling_ratio);
+    visitor.on_attribute("spatial_scale", m_spatial_scale);
+    visitor.on_attribute("mode", m_mode);
+
+    return true;
+}
+
+shared_ptr<Node> op::v3::ROIAlign::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ROIAlign>(new_args.at(0),
@@ -35,100 +172,22 @@ shared_ptr<Node> op::v3::ROIAlign::copy_with_new_args(const NodeVector& new_args
                                  m_mode);
 }
 
-op::v3::ROIAlign::ROIAlign(const Output<Node>& data,
-                           const Output<Node>& rois,
-                           const Output<Node>& batch_indices,
-                           const size_t pooled_h,
-                           const size_t pooled_w,
-                           const size_t sampling_ratio,
-                           const float spatial_scale,
-                           const std::string& mode)
-    : Op({data, rois, batch_indices})
-    , m_pooled_h(pooled_h)
-    , m_pooled_w(pooled_w)
-    , m_sampling_ratio(sampling_ratio)
-    , m_spatial_scale(spatial_scale)
-    , m_mode(mode)
+namespace ngraph
 {
-    constructor_validate_and_infer_types();
-}
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v3::ROIAlign::PoolingMode>::type_info;
 
-void op::v3::ROIAlign::validate_and_infer_types()
-{
-    const PartialShape& data_shape = get_input_partial_shape(0);
-    const PartialShape& rois_shape = get_input_partial_shape(1);
-    const PartialShape& batch_indices_shape = get_input_partial_shape(2);
-
-    element::Type data_batch_et = get_input_element_type(0);
-    element::Type rois_et = get_input_element_type(1);
-    element::Type batch_indices_et = get_input_element_type(2);
-
-    if (data_shape.rank().is_static())
+    template <>
+    EnumNames<op::v3::ROIAlign::PoolingMode>& EnumNames<op::v3::ROIAlign::PoolingMode>::get()
     {
-        NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(data_shape.rank()) == 4,
-                              "The feature map tensor rank is expected to be 4, got: ",
-                              data_shape.rank());
-        NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(data_shape[0]) == 1,
-                              "The feature map tensor batch dimension is expected to be 1, got: ",
-                              data_shape[0]);
+        static auto enum_names =
+            EnumNames<op::v3::ROIAlign::PoolingMode>("op::v3::ROIAlign::PoolingMode",
+                                                     {{"avg", op::v3::ROIAlign::PoolingMode::AVG},
+                                                      {"max", op::v3::ROIAlign::PoolingMode::MAX}});
+        return enum_names;
     }
 
-    if (rois_shape.rank().is_static())
+    std::ostream& operator<<(std::ostream& s, const op::v3::ROIAlign::PoolingMode& type)
     {
-        NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(rois_shape.rank()) == 2,
-                              "The ROIs tensor rank is expected to be 2, got: ",
-                              rois_shape.rank());
-        NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(rois_shape[1]) == 4,
-                              "The ROIs tensor last dimension is expected to be 4, got: ",
-                              rois_shape[1]);
+        return s << as_string(type);
     }
-
-    if (batch_indices_shape.is_static())
-    {
-        NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(batch_indices_shape.rank()) == 1,
-                              "The batch indices tensor rank is expected to be 1, got: ",
-                              batch_indices_shape.rank());
-    }
-
-    if (rois_shape.rank().is_static() && batch_indices_shape.is_static() &&
-        rois_shape[0].is_static() && batch_indices_shape[0].is_static())
-    {
-        NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(batch_indices_shape[0]) ==
-                                  static_cast<size_t>(rois_shape[0]),
-                              "The number of elements in batch indices tensor and ROIs tensor is "
-                              "expected to be equal, got: ",
-                              batch_indices_shape[0],
-                              " and ",
-                              rois_shape[0]);
-    }
-
-    PartialShape result_shape;
-    int64_t i_pooled_h = static_cast<int64_t>(m_pooled_h);
-    int64_t i_pooled_w = static_cast<int64_t>(m_pooled_w);
-
-    if (rois_shape.is_static())
-    {
-        result_shape = PartialShape({rois_shape[0], data_shape[1], i_pooled_h, i_pooled_w});
-    }
-    else
-    {
-        result_shape = PartialShape({Dimension::dynamic(), data_shape[1], i_pooled_h, i_pooled_w});
-    }
-    set_output_type(0, data_batch_et, result_shape);
-}
-
-bool ngraph::op::v3::ROIAlign::visit_attributes(AttributeVisitor& visitor)
-{
-    visitor.on_attribute("pooled_h", m_pooled_h);
-    visitor.on_attribute("pooled_w", m_pooled_w);
-    visitor.on_attribute("sampling_ratio", m_sampling_ratio);
-    visitor.on_attribute("spatial_scale", m_spatial_scale);
-    visitor.on_attribute("mode", m_mode);
-    return true;
 }

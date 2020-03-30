@@ -30,6 +30,7 @@
 #include "ngraph/provenance.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/type.hpp"
+#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -730,19 +731,31 @@ namespace
             as_type_ptr<op::Constant>(node->input_value(1).get_node_shared_ptr());
         const auto end_const =
             as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
-        const auto strides = as_type_ptr<op::Constant>(node->input_value(3).get_node_shared_ptr());
+        const auto strides_const =
+            as_type_ptr<op::Constant>(node->input_value(3).get_node_shared_ptr());
 
-        NGRAPH_CHECK(begin_const && end_const && strides,
+        NGRAPH_CHECK(begin_const && end_const && strides_const,
                      "Unable to convert StridedSlice:v1 to Slice:v0 "
                      "if begin, end or strides are not constant. Node: ",
                      *node);
 
+        auto begins = begin_const->get_vector<int64_t>();
+        auto ends = end_const->get_vector<int64_t>();
+        auto strides = strides_const->get_vector<int64_t>();
+        const auto begin_mask = convert_mask_to_axes(node->get_begin_mask());
+        const auto end_mask = convert_mask_to_axes(node->get_end_mask());
+
+        const auto data_rank_value = input_data_pshape.rank().get_length();
+        begins = extend_vector_by_value(begins, begin_mask, data_rank_value, 0);
+        strides = extend_vector_by_value(strides, begin_mask, data_rank_value, 1);
+        ends = extend_vector_by_value(ends, end_mask, data_rank_value, 0);
+
         SlicePlan p = make_slice_plan(input_data_pshape.to_shape(),
-                                      begin_const->get_vector<int64_t>(),
-                                      end_const->get_vector<int64_t>(),
-                                      strides->get_vector<int64_t>(),
-                                      convert_mask_to_axes(node->get_begin_mask()),
-                                      convert_mask_to_axes(node->get_end_mask()),
+                                      begins,
+                                      ends,
+                                      strides,
+                                      begin_mask,
+                                      end_mask,
                                       convert_mask_to_axes(node->get_new_axis_mask()),
                                       convert_mask_to_axes(node->get_shrink_axis_mask()),
                                       convert_mask_to_axes(node->get_ellipsis_mask()));

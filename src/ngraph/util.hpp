@@ -238,6 +238,13 @@ namespace ngraph
     NGRAPH_API
     AxisVector get_permutation_to_default_order(const AxisVector& axis_order);
 
+    /// \brief Insert the value to the input vector in positions determined by the axes till the
+    /// input is shorter than the target_size
+    std::vector<int64_t> extend_vector_by_value(const std::vector<int64_t> input,
+                                                const AxisSet& axes,
+                                                uint64_t target_size,
+                                                int64_t value);
+
     //
     // Return type struct for cache_fprop, with the modified fprop and bprop
     // functions

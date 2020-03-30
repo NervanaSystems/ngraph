@@ -25,11 +25,23 @@ namespace ngraph
     {
         namespace op
         {
+            namespace set_10
+            {
+                NodeVector slice(const Node& node);
+
+            } // namespace set_10
+
             namespace set_1
             {
                 NodeVector slice(const Node& node);
 
             } // namespace set_1
+
+            namespace set_10
+            {
+                NodeVector slice(const Node& node);
+
+            } // namespace set_10
 
         } // namespace op
 

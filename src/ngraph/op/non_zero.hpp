@@ -24,25 +24,33 @@ namespace ngraph
     {
         namespace v3
         {
-            /// \brief Determine indices of non-zero input elements.
+            /// \brief NonZero operation returning indices of non-zero elements in the input tensor.
             ///
+            /// \note The indices are returned by-dimension in row-major order. For example
+            ///       the following output contains 3 indices of a 3D input tensor elements:
+            ///       [[0, 0, 2],
+            ///        [0, 1, 1],
+            ///        [0, 1, 2]]
+            ///       The values point to input elements at [0,0,0], [0,1,1] and [2,1,2]
             class NGRAPH_API NonZero : public Op
             {
             public:
                 static constexpr NodeTypeInfo type_info{"NonZero", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a NonZero operation.
                 NonZero() = default;
-
                 /// \brief Constructs a NonZero operation.
                 ///
-                /// \param data Output that produces a tensor with input data.
-                explicit NonZero(const Output<Node>& data);
+                /// \param arg Node that produces the input tensor.
+                NonZero(const Output<Node>& arg);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
-    }
-}
+        using v3::NonZero;
+    } // namespace op
+} // namespace ngraph

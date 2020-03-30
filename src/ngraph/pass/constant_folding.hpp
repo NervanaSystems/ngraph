@@ -50,6 +50,7 @@ public:
         LOGICAL_REDUCTION,
         CONCAT,
         GATHER,
+        SCATTER,
         SLICE,
         DYN_SLICE,
         STRIDED_SLICE,
@@ -63,7 +64,7 @@ public:
         VARIADIC_SPLIT,
         ONE_HOT,
         TILE,
-        NON_ZERO,
+        NON_ZERO
     };
 
     ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
@@ -90,6 +91,7 @@ public:
         construct_constant_concat();
         construct_constant_gather_with_subgraph();
         construct_constant_gather();
+        construct_constant_scatter_elements_update();
         construct_constant_slice();
         construct_constant_dyn_slice();
         construct_constant_strided_slice();
@@ -133,6 +135,7 @@ public:
                 construct_constant_logical_reduction();
                 break;
             case CFTransformations::CONCAT: construct_constant_concat(); break;
+            case CFTransformations::SCATTER: construct_constant_scatter_elements_update(); break;
             case CFTransformations::GATHER:
             {
                 construct_constant_gather_with_subgraph();
@@ -174,6 +177,7 @@ private:
     void construct_constant_concat();
     void construct_constant_gather_with_subgraph();
     void construct_constant_gather();
+    void construct_constant_scatter_elements_update();
     void construct_constant_slice();
     void construct_constant_dyn_slice();
     void construct_constant_strided_slice();

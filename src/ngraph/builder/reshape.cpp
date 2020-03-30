@@ -27,9 +27,12 @@
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce_prod.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/variadic_split.hpp"
 #include "ngraph/opsets/opset1.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -201,20 +204,93 @@ shared_ptr<Node> builder::opset1::transpose(const Output<Node>& value)
     return builder::opset1::reorder_axes(value, axes_order);
 }
 
+namespace ngraph
+{
+    namespace builder
+    {
+        namespace opset1
+        {
+            namespace
+            {
+                ///
+                /// \brief      Return the node representing normalized axis with respect to
+                ///             provided rank.
+                ///
+                /// \param[in]  node_rank  The node representing rank used for normalization.
+                /// \param[in]  axis       The axis value to be normalized.
+                ///
+                /// \return     The new Constant node representing normalized axis value.
+                ///
+                std::shared_ptr<Node>
+                    get_normalized_axis_node(const std::shared_ptr<Node> node_rank, int64_t axis)
+                {
+                    auto axis_node =
+                        ngraph::opset1::Constant::create(element::i64, Shape{1}, {axis});
+                    // shortcut for alredy positive value
+                    if (axis >= 0)
+                    {
+                        return axis_node;
+                    }
+
+                    // TODO: What if axis value is beyond acceptable values? [-node_rank,
+                    // node_rank-1]
+                    return make_shared<ngraph::opset1::Add>(node_rank, axis_node);
+                }
+            } // opset1
+        }     // builder
+    }         // ngraph
+}
+
 shared_ptr<Node> builder::opset1::flatten(const Output<Node>& value, int axis)
 {
-    auto data_shape = value.get_shape();
+    if (value.get_partial_shape().is_static())
+    {
+        auto data_shape = value.get_shape();
+        // First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of
+        // input
+        // tensor. The last dimension is the product of the rest of input tensor dimensions:
+        // [d_{axis}, ..., d_n]
+        size_t first_dim_size =
+            accumulate(begin(data_shape), next(begin(data_shape), axis), 1UL, multiplies<size_t>());
 
-    // First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of input
-    // tensor. The last dimension is the product of the rest of input tensor dimensions:
-    // [d_{axis}, ..., d_n]
-    size_t first_dim_size =
-        accumulate(begin(data_shape), next(begin(data_shape), axis), 1UL, multiplies<size_t>());
+        size_t last_dim_size =
+            accumulate(next(begin(data_shape), axis), end(data_shape), 1UL, multiplies<size_t>());
 
-    size_t last_dim_size =
-        accumulate(next(begin(data_shape), axis), end(data_shape), 1UL, multiplies<size_t>());
+        return builder::opset1::reshape(value, Shape{first_dim_size, last_dim_size});
+    }
+    else
+    {
+        shared_ptr<Node> output_shape;
+        if (axis == 0)
+        {
+            output_shape = ngraph::opset1::Constant::create(element::i64, Shape{2}, {1, -1});
+        }
+        else
+        {
+            const auto value_shape = make_shared<ngraph::opset1::ShapeOf>(value);
+            const auto value_rank = make_shared<ngraph::opset1::ShapeOf>(value_shape);
+            const auto axis_node = get_normalized_axis_node(value_rank, axis);
+            const auto remaining_part_length =
+                ngraph::opset1::Constant::create(element::i64, Shape{1}, {-1});
+            const auto shape_split_lengths = make_shared<ngraph::opset1::Concat>(
+                OutputVector{axis_node, remaining_part_length}, 0);
+            const auto split_parts = make_shared<ngraph::opset1::VariadicSplit>(
+                value_shape,
+                ngraph::opset1::Constant::create(element::i64, Shape{}, {0}),
+                shape_split_lengths);
+            // We're reducing vectors thus, just single zero axis to reduce and keep dims to true.
+            const auto first_part_dim = make_shared<ngraph::opset1::ReduceProd>(
+                split_parts->get_output_as_single_output_node(0),
+                ngraph::opset1::Constant::create(element::i64, Shape{}, {0}),
+                true);
+            // TODO, handle edge case where first part is empty - then should equal to one
+            output_shape = make_shared<ngraph::opset1::Concat>(
+                OutputVector{first_part_dim, remaining_part_length}, 0);
+        }
 
-    return builder::opset1::reshape(value, Shape{first_dim_size, last_dim_size});
+        return make_shared<ngraph::opset1::Reshape>(value, output_shape, false)
+            ->add_provenance_group_members_above({value});
+    }
 }
 
 shared_ptr<Node> builder::opset1::expand_dims(const Output<Node>& value, size_t axis)

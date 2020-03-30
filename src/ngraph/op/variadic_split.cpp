@@ -59,14 +59,14 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
         auto axis_input = input_value(1).get_node_shared_ptr();
         auto split_lengths_input = input_value(2).get_node_shared_ptr();
         auto data_shape = data.get_partial_shape();
-        auto data_type = data.get_element_type();
+        const auto& data_type = data.get_element_type();
 
         set_output_size(num_outputs);
         if (data_shape.rank().is_static() && axis_input->is_constant() &&
             split_lengths_input->is_constant())
         {
-            const auto axis_input = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
-            auto axis_val = axis_input->cast_vector<int64_t>()[0];
+            const auto axis_input_constant = as_type_ptr<op::Constant>(axis_input);
+            auto axis_val = axis_input_constant->cast_vector<int64_t>()[0];
 
             // Adjust split axis in case of negatives
             int64_t axis = ngraph::normalize_axis(this, axis_val, data_shape.rank());
@@ -100,9 +100,11 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
                 }
             }
             auto data_shape_dims = vector<Dimension>{data.get_partial_shape()};
-            if (negative_one > 0 && data_shape_dims[axis].is_static())
+            auto dimension_at_axis = data_shape_dims.at(axis);
+
+            if (negative_one >= 0 && dimension_at_axis.is_static())
             {
-                split_lengths[negative_one] = data_shape[axis].get_length() - sum_of_splits;
+                split_lengths[negative_one] = dimension_at_axis.get_length() - sum_of_splits;
                 sum_of_splits += split_lengths[negative_one];
             }
             if (data_shape[axis].is_static())

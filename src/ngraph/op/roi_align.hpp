@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include <string>
-
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
@@ -26,42 +24,86 @@ namespace ngraph
     {
         namespace v3
         {
-            /// \brief ROIAlign operation.
             class NGRAPH_API ROIAlign : public Op
             {
             public:
+                enum class PoolingMode
+                {
+                    AVG,
+                    MAX
+                };
+
                 static constexpr NodeTypeInfo type_info{"ROIAlign", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                /// \brief Constructs a ROIAlign operation.
                 ROIAlign() = default;
-
-                /// \brief Constructs a ROIAlign operation.
+                /// \brief Constructs a ROIAlign node matching the ONNX ROIAlign specification
                 ///
-                /// \param arg data that produces the input feature map tensor.
-                /// \param arg rois that produces the input ROIs coordinates tensor.
-                /// \param arg batch_indices that produces the input batch indices tensor.
-                ROIAlign(const Output<Node>& data,
+                /// \param input           Input feature map {N, C, H, W}
+                /// \param rois            Regions of interest to pool over
+                /// \param batch_indices   Indices of images in the batch matching
+                ///                        the number or ROIs
+                /// \param pooled_h        Height of the ROI output features
+                /// \param pooled_w        Width of the ROI output features
+                /// \param sampling_ratio  Number of sampling points used to compute
+                ///                        an output element
+                /// \param spatial_scale   Spatial scale factor used to translate ROI coordinates
+                /// \param mode            Method of pooling - 'avg' or 'max'
+                ROIAlign(const Output<Node>& input,
                          const Output<Node>& rois,
                          const Output<Node>& batch_indices,
-                         size_t pooled_h,
-                         size_t pooled_w,
-                         size_t sampling_ratio,
-                         float spatial_scale,
+                         const size_t pooled_h,
+                         const size_t pooled_w,
+                         const size_t sampling_ratio,
+                         const float spatial_scale,
                          const std::string& mode);
 
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
-                void validate_and_infer_types() override;
-                bool visit_attributes(AttributeVisitor& visitor) override;
+                ROIAlign(const Output<Node>& input,
+                         const Output<Node>& rois,
+                         const Output<Node>& batch_indices,
+                         const size_t pooled_h,
+                         const size_t pooled_w,
+                         const size_t sampling_ratio,
+                         const float spatial_scale,
+                         const PoolingMode mode);
 
-            protected:
+                virtual void validate_and_infer_types() override;
+                virtual bool visit_attributes(AttributeVisitor& visitor) override;
+                virtual std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+
+                size_t get_pooled_h() const { return m_pooled_h; }
+                size_t get_pooled_w() const { return m_pooled_w; }
+                size_t get_sampling_ratio() const { return m_sampling_ratio; }
+                float get_spatial_scale() const { return m_spatial_scale; }
+                PoolingMode get_mode() const { return m_mode; }
+            private:
+                PoolingMode mode_from_string(const std::string& mode) const;
+
+            private:
                 size_t m_pooled_h;
                 size_t m_pooled_w;
                 size_t m_sampling_ratio;
                 float m_spatial_scale;
-                std::string m_mode;
+                PoolingMode m_mode;
             };
         }
         using v3::ROIAlign;
     }
+
+    std::ostream& operator<<(std::ostream& s, const op::v3::ROIAlign::PoolingMode& mode);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v3::ROIAlign::PoolingMode>
+        : public EnumAttributeAdapterBase<op::v3::ROIAlign::PoolingMode>
+    {
+    public:
+        AttributeAdapter(op::v3::ROIAlign::PoolingMode& value)
+            : EnumAttributeAdapterBase<op::v3::ROIAlign::PoolingMode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v3::ROIAlign::PoolingMode>", 3};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

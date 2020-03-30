@@ -14,130 +14,222 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <ops.hpp>
+#include <numeric>
+
 #include "constant_folding.hpp"
 #include "ngraph/op/non_zero.hpp"
-#include "ngraph/type/element_type.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-void next_coordinates(vector<int64_t>& coordinates, const Shape& max_shape)
+namespace
 {
-    for (int64_t i = coordinates.size() - 1; i >= 0; --i)
+    struct NonZeroElements
     {
-        if (coordinates[i] < max_shape[i] - 1)
+        using Results_t = std::vector<std::vector<int64_t>>;
+
+        NonZeroElements(const Shape& input_shape)
+            : m_input_shape{input_shape}
+            , m_results{Results_t(input_shape.size())}
         {
-            ++coordinates[i];
-            return;
+            NGRAPH_CHECK(m_input_shape.size() > 0,
+                         "Can't use the NonZeroElements class with a scalar shape");
         }
-        else
+
+        template <typename T>
+        void find_indices(const T* values)
         {
-            coordinates[i] = 0;
+            m_current_index = Shape(m_input_shape.size(), 0UL);
+            const auto values_count = shape_size(m_input_shape);
+
+            const T zero_value = T{0};
+            for (size_t i = 0; i + 1 < values_count; ++i)
+            {
+                if (values[i] != zero_value)
+                {
+                    add_to_results(m_current_index);
+                }
+
+                next_index();
+            }
+
+            // check the last element in the input values
+            if (values_count != 0 && values[values_count - 1] != zero_value)
+            {
+                add_to_results(m_current_index);
+            }
         }
-    }
+
+        void generate_all_indices()
+        {
+            m_current_index = Shape(m_input_shape.size(), 0UL);
+            size_t i = 0;
+            const auto values_count = shape_size(m_input_shape);
+            while (i + 1 < values_count)
+            {
+                add_to_results(m_current_index);
+                next_index();
+                ++i;
+            }
+            add_to_results(m_current_index);
+        }
+
+        const Results_t& get_indices() const { return m_results; }
+    private:
+        /// \brief Adds single dimensions of an index into the matching element of the results
+        void add_to_results(const Shape& index)
+        {
+            for (size_t dim = 0; dim < index.size(); ++dim)
+            {
+                m_results.at(dim).push_back(index[dim]);
+            }
+        }
+
+        // Generates an index pointing to the next element in the flattened tensor
+        // It behaves similar to flipping bits when incrementing a binary number
+        inline void next_index()
+        {
+            for (size_t dim = m_current_index.size() - 1; dim >= 0; --dim)
+            {
+                auto& dim_value = m_current_index.at(dim);
+                if (dim_value + 1 == m_input_shape[dim])
+                {
+                    dim_value = 0;
+                }
+                else
+                {
+                    ++dim_value;
+                    return;
+                }
+            }
+        }
+
+    private:
+        const Shape m_input_shape;
+        Results_t m_results;
+        Shape m_current_index;
+    };
 }
 
 template <typename T>
-static shared_ptr<op::Constant>
-    fold_constant_non_zero_helper(const shared_ptr<op::Constant>& input_constant, const T& zero)
+static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Constant>& data)
 {
-    auto shape = input_constant->get_shape();
-    auto rank = shape.size();
-    auto input_vector = input_constant->template cast_vector<T>();
-    vector<vector<int64_t>> result(rank, vector<int64_t>());
+    const auto input_shape = data->get_shape();
+    const auto* input_values = data->get_data_ptr<T>();
+    const bool identical_elems_in_data = data->get_all_data_elements_bitwise_identical();
 
-    vector<int64_t> curr_coordinates(rank, 0);
-    for (const auto& value : input_vector)
+    if (identical_elems_in_data)
     {
-        if (value != zero)
-        {
-            for (auto i = 0; i < rank; ++i)
-                result[i].push_back(curr_coordinates[i]);
-        }
-        next_coordinates(curr_coordinates, shape);
+        NGRAPH_CHECK(input_values[0] != T{0},
+                     "It's not possible to constant fold a NonZero op with an input containing "
+                     "only zeros.");
     }
-    auto flattened_result = vector<int64_t>();
-    for (const auto& row : result)
-        flattened_result.insert(flattened_result.end(), row.begin(), row.end());
 
-    return make_shared<op::Constant>(
-        element::i64, Shape{result.size(), result[0].size()}, flattened_result);
+    if (ngraph::is_scalar(input_shape))
+    {
+        return op::Constant::create(element::i64, Shape{1, 1}, {0});
+    }
+    else if (is_vector(input_shape))
+    {
+        const auto input_values_count = shape_size(input_shape);
+        std::vector<int64_t> indices;
+        indices.reserve(input_values_count);
+
+        if (identical_elems_in_data)
+        {
+            // return a complete set of indices since all of them are non-zero
+            indices.resize(input_values_count);
+            std::iota(indices.begin(), indices.end(), 0);
+        }
+        else
+        {
+            const T zero_value = T{0};
+            for (size_t i = 0; i < input_values_count; ++i)
+            {
+                if (input_values[i] != zero_value)
+                {
+                    indices.push_back(i);
+                }
+            }
+
+            indices.shrink_to_fit();
+        }
+
+        return op::Constant::create(element::i64, Shape{1, indices.size()}, indices);
+    }
+    else
+    {
+        NonZeroElements non_zero_elems{input_shape};
+
+        if (identical_elems_in_data)
+        {
+            non_zero_elems.generate_all_indices();
+        }
+        else
+        {
+            non_zero_elems.find_indices(input_values);
+        }
+
+        const auto& found_indices = non_zero_elems.get_indices();
+
+        // flatten the results and return them as a Constant
+        std::vector<int64_t> indices;
+        indices.reserve(found_indices.size() * found_indices.front().size());
+        for (const auto& row : found_indices)
+        {
+            indices.insert(indices.end(), row.begin(), row.end());
+        }
+
+        const Shape out_shape{found_indices.size(), found_indices.front().size()};
+        return op::Constant::create(element::i64, out_shape, indices);
+    }
 }
 
 void pass::ConstantFolding::construct_constant_non_zero()
 {
-    auto const_op = make_shared<pattern::op::Label>(
-        element::f32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
-    auto non_zero_op = make_shared<op::v3::NonZero>(const_op);
+    const auto data_label = make_shared<pattern::op::Label>(
+        element::f32, Shape{2, 2, 3}, pattern::has_class<op::Constant>());
+    const auto non_zero = make_shared<op::v3::NonZero>(data_label);
 
-    auto constant_non_zero_callback = [const_op](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for constant_non_zero_callback against node = "
-                     << m.get_match_root()->get_name();
-
+    auto constant_non_zero_callback = [data_label](pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
-        auto constant_node = static_pointer_cast<op::Constant>(pattern_map[const_op]);
-        auto non_zero_node = static_pointer_cast<op::v3::NonZero>(m.get_match_root());
 
-        std::shared_ptr<op::Constant> replacement;
+        const auto data = static_pointer_cast<op::Constant>(pattern_map[data_label]);
 
-        switch (non_zero_node->get_output_element_type(0))
+        // const auto found_nz_node = m.get_match_root();
+        // this fails because the output of NonZero is still dynamic - is it ok to remove this line?
+        // or should the output shape of this op be calculated as the maximum possible number
+        // of non-zero indices it can return if the input is a constant?
+        // NGRAPH_CHECK(revalidate_and_ensure_static(found_nz_node));
+
+        std::shared_ptr<Node> replacement;
+        switch (data->get_element_type())
         {
-        case element::Type_t::undefined:
-            NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_non_zero");
-            break;
-        case element::Type_t::dynamic:
-            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_non_zero");
-            break;
+        case element::Type_t::boolean: replacement = fold_constant_non_zero<char>(data); break;
+        case element::Type_t::bf16: replacement = fold_constant_non_zero<bfloat16>(data); break;
+        case element::Type_t::f16: replacement = fold_constant_non_zero<float16>(data); break;
+        case element::Type_t::f32: replacement = fold_constant_non_zero<float>(data); break;
+        case element::Type_t::f64: replacement = fold_constant_non_zero<double>(data); break;
+        case element::Type_t::i8: replacement = fold_constant_non_zero<int8_t>(data); break;
+        case element::Type_t::i16: replacement = fold_constant_non_zero<int16_t>(data); break;
+        case element::Type_t::i32: replacement = fold_constant_non_zero<int32_t>(data); break;
+        case element::Type_t::i64: replacement = fold_constant_non_zero<int64_t>(data); break;
+        case element::Type_t::u8: replacement = fold_constant_non_zero<uint8_t>(data); break;
+        case element::Type_t::u16: replacement = fold_constant_non_zero<uint16_t>(data); break;
+        case element::Type_t::u32: replacement = fold_constant_non_zero<uint32_t>(data); break;
+        case element::Type_t::u64: replacement = fold_constant_non_zero<uint64_t>(data); break;
         case element::Type_t::u1:
-            NGRAPH_CHECK(false, "Encountered 'u1' element type in fold_constant_non_zero");
-            break;
-        case element::Type_t::boolean:
-            NGRAPH_CHECK(false, "Encountered 'boolean' element type in fold_constant_non_zero");
-            break;
-        case element::Type_t::bf16:
-            replacement = fold_constant_non_zero_helper<bfloat16>(constant_node, bfloat16());
-            break;
-        case element::Type_t::f16:
-            replacement = fold_constant_non_zero_helper<float16>(constant_node, float16());
-            break;
-        case element::Type_t::f32:
-            replacement = fold_constant_non_zero_helper<float>(constant_node, float(0));
-            break;
-        case element::Type_t::f64:
-            replacement = fold_constant_non_zero_helper<double>(constant_node, double(0));
-            break;
-        case element::Type_t::i8:
-            replacement = fold_constant_non_zero_helper<int8_t>(constant_node, int8_t(0));
-            break;
-        case element::Type_t::i16:
-            replacement = fold_constant_non_zero_helper<int16_t>(constant_node, int16_t(0));
-            break;
-        case element::Type_t::i32:
-            replacement = fold_constant_non_zero_helper<int32_t>(constant_node, int32_t(0));
-            break;
-        case element::Type_t::i64:
-            replacement = fold_constant_non_zero_helper<int64_t>(constant_node, int64_t(0));
-            break;
-        case element::Type_t::u8:
-            replacement = fold_constant_non_zero_helper<uint8_t>(constant_node, uint8_t(0));
-            break;
-        case element::Type_t::u16:
-            replacement = fold_constant_non_zero_helper<uint16_t>(constant_node, uint16_t(0));
-            break;
-        case element::Type_t::u32:
-            replacement = fold_constant_non_zero_helper<uint32_t>(constant_node, uint32_t(0));
-            break;
-        case element::Type_t::u64:
-            replacement = fold_constant_non_zero_helper<uint64_t>(constant_node, uint64_t(0));
+        case element::Type_t::dynamic:
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false, "Unsupported data type in NonZero constant folding");
             break;
         }
+
         replace_node(m.get_match_root(), replacement);
         return true;
     };
 
-    auto non_zero_matcher =
-        make_shared<pattern::Matcher>(non_zero_op, "ConstantFolding.ConstantNonZero");
-    this->add_matcher(
-        non_zero_matcher, constant_non_zero_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+    const auto matcher =
+        make_shared<pattern::Matcher>(non_zero, "ConstantFolding.ConstantNonZeroV3");
+    this->add_matcher(matcher, constant_non_zero_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }

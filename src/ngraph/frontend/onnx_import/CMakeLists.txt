@@ -152,6 +152,8 @@ add_library(onnx_import STATIC
         op/not.hpp
         op/non_max_suppression.cpp
         op/non_max_suppression.hpp
+        op/non_zero.cpp
+        op/non_zero.hpp
         op/onehot.cpp
         op/onehot.hpp
         op/or.hpp
@@ -173,12 +175,18 @@ add_library(onnx_import STATIC
         op/relu.hpp
         op/reshape.cpp
         op/reshape.hpp
+        op/resize.cpp
+        op/resize.hpp
         op/reverse_sequence.cpp
         op/reverse_sequence.hpp
+        op/roi_align.cpp
+        op/roi_align.hpp
         op/round.cpp
         op/round.hpp
         op/scatter_nd.cpp
         op/scatter_nd.hpp
+        op/scatter_elements.cpp
+        op/scatter_elements.hpp
         op/selu.cpp
         op/selu.hpp
         op/shape.hpp
