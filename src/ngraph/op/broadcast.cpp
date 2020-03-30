@@ -145,6 +145,31 @@ void op::v1::Broadcast::validate_and_infer_types()
         result_shape = static_pointer_cast<op::v0::Constant>(input_value(1).get_node_shared_ptr())
                            ->get_shape_val();
     }
+    else if (dynamic_pointer_cast<op::Concat>(input_value(1).get_node_shared_ptr()))
+    {
+        auto concat = as_type_ptr<op::Concat>(input_value(1).get_node_shared_ptr());
+        auto concat_inputs = concat->inputs();
+
+        if (concat->get_output_partial_shape(0).is_static() && concat->get_shape().size() == 1 &&
+            concat_inputs.size() == shape_size(concat->get_shape()))
+        {
+            auto output_partial_shape = vector<Dimension>{};
+            for (const auto& concat_input : concat_inputs)
+            {
+                auto source_node_ptr = concat_input.get_source_output().get_node_shared_ptr();
+                if (source_node_ptr->is_constant())
+                {
+                    auto source_const_ptr = dynamic_pointer_cast<op::Constant>(source_node_ptr);
+                    output_partial_shape.push_back(source_const_ptr->get_axis_vector_val()[0]);
+                }
+                else
+                {
+                    output_partial_shape.push_back(Dimension::dynamic());
+                }
+            }
+            result_shape = PartialShape(output_partial_shape);
+        }
+    }
 
     if (m_broadcast_spec.m_type == AutoBroadcastType::NONE)
     {
