@@ -21,7 +21,6 @@
 #define NGRAPH_OP(x, y)
 #endif
 
-#include "opset1_tbl.hpp"
 NGRAPH_OP(Abs, ngraph::op::v0)
 NGRAPH_OP(Acos, ngraph::op::v0)
 NGRAPH_OP(Add, ngraph::op::v1)
