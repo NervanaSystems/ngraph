@@ -42,24 +42,6 @@ op::v1::Convolution::Convolution(const Output<Node>& data_batch,
     , m_pads_end(pads_end)
     , m_auto_pad(auto_pad)
 {
-    if (auto_pad != PadType::EXPLICIT)
-    {
-        NODE_VALIDATION_CHECK(this,
-                              std::all_of(pads_begin.begin(),
-                                          pads_begin.end(),
-                                          [](std::ptrdiff_t i) { return (i == 0); }),
-                              "pads_begin: (",
-                              pads_begin,
-                              ") Non-zero padding should not be used along with auto pad modes.");
-        NODE_VALIDATION_CHECK(this,
-                              std::all_of(pads_end.begin(),
-                                          pads_end.end(),
-                                          [](std::ptrdiff_t i) { return (i == 0); }),
-                              "pads_end: (",
-                              pads_end,
-                              ") Non-zero padding should not be used along with auto pad modes.");
-    }
-
     constructor_validate_and_infer_types();
 }
 
@@ -90,12 +72,12 @@ void op::v1::Convolution::validate_and_infer_types()
         m_dilations = conv_default_strides(this, data_batch_shape, filters_shape);
     }
 
-    if (m_pads_begin.size() == 0)
+    if (m_pads_begin.size() == 0 || m_auto_pad == PadType::VALID)
     {
         m_pads_begin = conv_default_padding(this, data_batch_shape, filters_shape);
     }
 
-    if (m_pads_end.size() == 0)
+    if (m_pads_end.size() == 0 || m_auto_pad == PadType::VALID)
     {
         m_pads_end = conv_default_padding(this, data_batch_shape, filters_shape);
     }
@@ -392,13 +374,11 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
     // and padding values.
     else
     {
-        NODE_VALIDATION_CHECK(this,
-                              m_auto_pad == PadType::VALID || m_auto_pad == PadType::EXPLICIT,
-                              "If output shape input is absent auto padding can't be used. "
-                              "Got auto_pad: <",
-                              m_auto_pad,
-                              "> Expected: ",
-                              PadType::VALID);
+        if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER || m_auto_pad == PadType::VALID)
+        {
+            m_pads_begin.assign(m_pads_begin.size(), 0);
+            m_pads_end.assign(m_pads_end.size(), 0);
+        }
 
         if (data_pshape.is_static() && filters_pshape.is_static())
         {
