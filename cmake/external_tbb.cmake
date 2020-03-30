@@ -24,7 +24,7 @@ set(NGRAPH_TBB_VERSION "2019_U3")
 if(NGRAPH_TBB_ENABLE)
     set(TBB_ROOT ${CMAKE_CURRENT_BINARY_DIR}/tbb/tbb-src)
 
-    configure_file(${CMAKE_SOURCE_DIR}/cmake/tbb_fetch.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/tbb/CMakeLists.txt)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/tbb_fetch.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/tbb/CMakeLists.txt)
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tbb")
     execute_process(COMMAND "${CMAKE_COMMAND}" --build .
