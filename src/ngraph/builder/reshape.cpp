@@ -265,6 +265,10 @@ shared_ptr<Node> builder::opset1::flatten(const Output<Node>& value, int axis)
         {
             output_shape = ngraph::opset1::Constant::create(element::i64, Shape{2}, {1, -1});
         }
+        else if (axis == 1)
+        {
+            output_shape = ngraph::opset1::Constant::create(element::i64, Shape{2}, {0, -1});
+        }
         else
         {
             const auto value_shape = make_shared<ngraph::opset1::ShapeOf>(value);
@@ -288,7 +292,7 @@ shared_ptr<Node> builder::opset1::flatten(const Output<Node>& value, int axis)
                 OutputVector{first_part_dim, remaining_part_length}, 0);
         }
 
-        return make_shared<ngraph::opset1::Reshape>(value, output_shape, false)
+        return make_shared<ngraph::opset1::Reshape>(value, output_shape, true)
             ->add_provenance_group_members_above({value});
     }
 }
