@@ -29,14 +29,16 @@ namespace ngraph
     /// \brief Class representing a dimension, which may be dynamic (undetermined until runtime),
     ///        in a shape or shape-like object.
     ///
-    /// Static dimensions may be implicitly converted from int64_t. A dynamic dimension is
+    /// Static dimensions may be implicitly converted from value_type. A dynamic dimension is
     /// constructed with Dimension() or Dimension::dynamic().
     class NGRAPH_API Dimension
     {
     public:
+        using value_type = int64_t;
+
         /// \brief Construct a static dimension.
         /// \param dimension Value of the dimension.
-        Dimension(int64_t dimension)
+        Dimension(value_type dimension)
             : m_dimension(dimension)
         {
         }
@@ -44,8 +46,8 @@ namespace ngraph
         /// \brief Construct a dynamic dimension with bounded range
         /// \param min_dimension The lower inclusive limit for the dimension
         /// \param mas_dimension The upper inclusive limit for the dimension
-        Dimension(int64_t min_dimension, int64_t mas_dimension)
-            : m_dimension(min_dimension, mas_dimension)
+        Dimension(value_type min_dimension, int64_t max_dimension)
+            : m_dimension(min_dimension, max_dimension)
         {
         }
 
@@ -66,13 +68,13 @@ namespace ngraph
         /// \brief Check whether this dimension is dynamic.
         /// \return `false` if the dimension is static, else `true`.
         bool is_dynamic() const { return m_dimension.size() != 1; }
-        /// \brief Convert this dimension to `int64_t`. This dimension must be static.
+        /// \brief Convert this dimension to `value-type`. This dimension must be static.
         /// \throws std::invalid_argument If this dimension is dynamic.
-        explicit operator int64_t() const
+        explicit operator value_type() const NGRAPH_DEPRECATED("use get_length() instead")
         {
             if (is_dynamic())
             {
-                throw std::invalid_argument("Cannot convert dynamic dimension to int64_t");
+                throw std::invalid_argument("Cannot convert dynamic dimension to value_type");
             }
             return m_dimension.get_min_val();
         }
@@ -82,10 +84,10 @@ namespace ngraph
         /// \throws std::invalid_argument If this dimension is dynamic or negative.
         explicit operator size_t() const NGRAPH_DEPRECATED("use get_length() instead");
 
-        /// \brief Convert this dimension to `uint64_t`. This dimension must be static and
+        /// \brief Convert this dimension to `value_type`. This dimension must be static and
         ///        non-negative.
         /// \throws std::invalid_argument If this dimension is dynamic or negative.
-        uint64_t get_length() const;
+        value_type get_length() const;
 
         int64_t get_min_length() const;
         int64_t get_max_length() const;

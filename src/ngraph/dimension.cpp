@@ -102,7 +102,7 @@ bool Dimension::broadcast_merge(Dimension& dst, const Dimension d1, const Dimens
     return merge(dst, d1, d2);
 }
 
-uint64_t Dimension::get_length() const
+Dimension::value_type Dimension::get_length() const
 {
     if (is_dynamic())
     {
