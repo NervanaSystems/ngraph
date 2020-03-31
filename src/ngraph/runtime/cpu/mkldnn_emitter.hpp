@@ -1349,19 +1349,6 @@ namespace ngraph
                     auto batch = static_cast<unsigned long>(rnn_node->get_batch_size());
                     auto rnn_cell_n_gates =
                         static_cast<unsigned long>(rnn_node->get_gates_per_cell());
-                    auto rnn_cell_n_states =
-                        static_cast<unsigned long>(rnn_node->get_num_cell_states());
-
-                    auto get_mkldnn_rnn_cell_type = [&]() {
-                        switch (rnn_node->get_rnn_type())
-                        {
-                        case rnn_utils::rnntype::vanilla_rnn: return mkldnn::algorithm::vanilla_rnn;
-                        case rnn_utils::rnntype::vanilla_gru: return mkldnn::algorithm::vanilla_gru;
-                        case rnn_utils::rnntype::vanilla_lstm:
-                            return mkldnn::algorithm::vanilla_lstm;
-                        default: throw ngraph_error("unsupported mkldnn rnn algorithm");
-                        }
-                    };
 
                     auto get_mkldnn_rnn_direction = [&]() {
                         switch (direction)
