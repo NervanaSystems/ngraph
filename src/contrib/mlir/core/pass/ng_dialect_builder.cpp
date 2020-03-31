@@ -177,7 +177,8 @@ void NgDialectConversionPass::runOnModule()
         auto paramNode = p.first;
         auto argId = p.second;
         auto argValue = function.getArgument(argId);
-        m_tensorToValueMap.insert(TensorToInfo(paramNode->get_output_tensor_ptr().get(), {argValue}));
+        m_tensorToValueMap.insert(
+            TensorToInfo(paramNode->get_output_tensor_ptr().get(), {argValue}));
         i++;
     }
 
