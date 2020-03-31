@@ -40,8 +40,8 @@ void test_type_prop_opset0_downgrade_pass(const element::Type& output_type,
 
     ASSERT_TRUE(v0_node);
     EXPECT_EQ(v0_node->get_autob(), np_auto_b);
-    EXPECT_EQ(v0_node->output(0).get_element_type(), output_type);
-    EXPECT_EQ(v0_node->output(0).get_shape(), (Shape{1, 3, 2}));
+    EXPECT_EQ(v0_node->get_output_element_type(0), output_type);
+    EXPECT_EQ(v0_node->get_output_shape(0), (Shape{1, 3, 2}));
 }
 
 template <typename OpV0, typename OpV1>
@@ -74,12 +74,12 @@ void test_type_prop_opset1_upgrade_pass(const element::Type& output_type,
     pass_manager.run_passes(f);
 
     auto v1_result = f->get_results().at(0);
-    auto node = v1_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = v1_result->get_input_node_shared_ptr(0);
     auto v1_node = as_type_ptr<OpV1>(node);
     ASSERT_TRUE(v1_node);
     EXPECT_EQ(v1_node->get_autob(), none_auto_b);
-    EXPECT_EQ(v1_node->output(0).get_element_type(), output_type);
-    EXPECT_EQ(v1_node->output(0).get_shape(), (Shape{1, 3, 2}));
+    EXPECT_EQ(v1_node->get_output_element_type(0), output_type);
+    EXPECT_EQ(v1_node->get_output_shape(0), (Shape{1, 3, 2}));
 }
 
 template <typename OpV0, typename OpV1>
@@ -127,13 +127,13 @@ TEST(opset_transform, opset0_divide_downgrade_pass)
     pass_manager.run_passes(f);
 
     auto divide_v0_result = f->get_results().at(0);
-    auto node = divide_v0_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = divide_v0_result->get_input_node_shared_ptr(0);
     auto divide_v0_node = as_type_ptr<op::v0::Divide>(node);
     ASSERT_TRUE(divide_v0_node);
     EXPECT_EQ(divide_v0_node->is_pythondiv(), pydiv);
     EXPECT_EQ(divide_v0_node->get_autob(), np_auto_b);
-    EXPECT_EQ(divide_v0_node->output(0).get_element_type(), element::f32);
-    EXPECT_EQ(divide_v0_node->output(0).get_shape(), (Shape{1, 3, 2}));
+    EXPECT_EQ(divide_v0_node->get_output_element_type(0), element::f32);
+    EXPECT_EQ(divide_v0_node->get_output_shape(0), (Shape{1, 3, 2}));
 }
 
 TEST(opset_transform, opset1_divide_upgrade_pass)
@@ -152,13 +152,13 @@ TEST(opset_transform, opset1_divide_upgrade_pass)
     pass_manager.run_passes(f);
 
     auto divide_v1_result = f->get_results().at(0);
-    auto node = divide_v1_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = divide_v1_result->get_input_node_shared_ptr(0);
     auto divide_v1_node = as_type_ptr<op::v1::Divide>(node);
     ASSERT_TRUE(divide_v1_node);
     EXPECT_EQ(divide_v1_node->is_pythondiv(), pydiv);
     EXPECT_EQ(divide_v1_node->get_autob(), none_auto_b);
-    EXPECT_EQ(divide_v1_node->output(0).get_element_type(), element::f32);
-    EXPECT_EQ(divide_v1_node->output(0).get_shape(), (Shape{1, 3, 2}));
+    EXPECT_EQ(divide_v1_node->get_output_element_type(0), element::f32);
+    EXPECT_EQ(divide_v1_node->get_output_shape(0), (Shape{1, 3, 2}));
 }
 
 TEST(opset_transform, opset0_equal_downgrade_pass)

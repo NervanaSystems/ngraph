@@ -94,6 +94,7 @@ namespace ngraph
                 Constant(const element::Type& type, const Shape& shape, const void* data);
 
                 Constant(const Constant& other);
+                Constant& operator=(const Constant&) = delete;
 
                 virtual ~Constant() override;
 

@@ -117,8 +117,8 @@ TEST(cpu_test, trivial_in_place_relu)
     auto f = make_shared<Function>(relu, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
     (backend->compile(f));
-    ASSERT_EQ(relu->output(0).get_tensor().get_pool_offset(),
-              add->output(0).get_tensor().get_pool_offset());
+    ASSERT_EQ(relu->get_output_tensor(0).get_pool_offset(),
+              add->get_output_tensor(0).get_pool_offset());
 }
 
 TEST(cpu_test, MLIR_DISABLE_TEST(trivial_in_place_relu_fail))
@@ -131,8 +131,8 @@ TEST(cpu_test, MLIR_DISABLE_TEST(trivial_in_place_relu_fail))
     auto f = make_shared<Function>(add2, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
     (backend->compile(f));
-    ASSERT_NE(relu->output(0).get_tensor().get_pool_offset(),
-              add->output(0).get_tensor().get_pool_offset());
+    ASSERT_NE(relu->get_output_tensor(0).get_pool_offset(),
+              add->get_output_tensor(0).get_pool_offset());
 }
 
 #ifdef NGRAPH_TBB_ENABLE
@@ -1052,7 +1052,12 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
     unset_environment("NGRAPH_CPU_CONCURRENCY");
 }
 
-TEST(cpu_test, constant_convertlayout)
+// This test checks if a ConverLayout node is inserted before the ConvolutionBias node.
+// Since MLIR supports ConvolutionBias through callback, the data layout conversion is done in
+// callback.
+// There is no ConvertLayout node when MLIR and MLIR CALLBACK are enabled.
+// Thus this test is disabled with MLIR enabled.
+TEST(cpu_test, MLIR_DISABLE_TEST(constant_convertlayout))
 {
     Shape data_shape{1, 64, 56, 56};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);

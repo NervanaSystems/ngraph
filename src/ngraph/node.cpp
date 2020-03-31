@@ -88,16 +88,43 @@ std::shared_ptr<Node> Node::copy_with_new_inputs(const OutputVector& inputs) con
     return copy_with_new_inputs(inputs, get_control_dependencies());
 }
 
-std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i, bool for_get_output_element)
+std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i)
 {
-    for (auto in : output(i).get_target_inputs())
+    if (i == 0 && get_output_size() == 1)
     {
-        if (is_type<op::GetOutputElement>(in.get_node()))
-        {
-            return in.get_node()->shared_from_this();
-        }
+        return shared_from_this();
     }
-    return get_output_element(output(i), for_get_output_element);
+    else
+    {
+        for (auto in : output(i).get_target_inputs())
+        {
+            if (is_type<op::GetOutputElement>(in.get_node()))
+            {
+                return in.get_node()->shared_from_this();
+            }
+        }
+        return make_shared<op::GetOutputElement>(shared_from_this(), i);
+    }
+}
+
+Output<const Node> Node::get_default_output() const
+{
+    return output(get_default_output_index());
+}
+
+Output<Node> Node::get_default_output()
+{
+    return output(get_default_output_index());
+}
+
+size_t Node::get_default_output_index() const
+{
+    return 0;
+}
+
+size_t Node::no_default_index() const
+{
+    NODE_VALIDATION_CHECK(this, false, "Default output not supported");
 }
 
 std::shared_ptr<Node>
@@ -116,7 +143,6 @@ std::shared_ptr<Node> Node::copy_with_new_args(const NodeVector& args) const
 {
     NODE_VALIDATION_CHECK(
         this, false, "Internal error: copy_with_new_args not replaced by clone_with_new_inputs");
-    return nullptr;
 }
 
 std::shared_ptr<Node> Node::clone_with_new_inputs(const OutputVector& inputs) const
@@ -124,7 +150,7 @@ std::shared_ptr<Node> Node::clone_with_new_inputs(const OutputVector& inputs) co
     NodeVector args;
     for (const Output<Node>& input : inputs)
     {
-        args.push_back(get_output_element(input, false));
+        args.push_back(get_output_element(input));
     }
     std::shared_ptr<Node> clone = copy_with_new_args(args);
     // Remove the inserted GOEs
@@ -341,16 +367,6 @@ void Node::set_placement(Placement placement)
     m_placement = placement;
 }
 
-size_t Node::get_placement_index() const
-{
-    return m_placement_index;
-}
-
-void Node::set_placement_index(size_t placement)
-{
-    m_placement_index = placement;
-}
-
 void Node::add_provenance_group_member(const shared_ptr<Node>& node)
 {
     m_provenance_group.insert(node);
@@ -499,7 +515,7 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     NGRAPH_CHECK(
         index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
-    return m_inputs[index].get_output().get_node();
+    return input_value(index).as_single_output_node();
 }
 
 Node* Node::get_input_node_ptr(size_t index) const
@@ -519,10 +535,10 @@ std::shared_ptr<Node> Node::get_input_node_shared_ptr(size_t index) const
 NodeVector Node::get_arguments() const
 {
     NodeVector result;
-    for (auto& i : m_inputs)
+    for (size_t i = 0; i < get_input_size(); ++i)
     {
         {
-            result.push_back(i.get_output().get_node());
+            result.push_back(get_argument(i));
         }
     }
     return result;
@@ -731,6 +747,13 @@ descriptor::Tensor& Node::get_output_tensor(size_t i) const
     return m_outputs[i].get_tensor();
 }
 
+descriptor::Tensor& Node::get_input_tensor(size_t i) const
+{
+    NGRAPH_CHECK(i < m_inputs.size(), "index '", i, "' out of range in get_input_tensor(size_t i)");
+    descriptor::Input input = m_inputs[i];
+    return input.get_tensor();
+}
+
 const string& Node::get_output_tensor_name(size_t i) const
 {
     NGRAPH_CHECK(
@@ -799,25 +822,17 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
 NodeVector Node::get_users(bool check_is_used) const
 {
     NodeVector result;
-
-    for (size_t i = 0; i < get_output_size(); ++i)
+    for (auto output : outputs())
     {
-        for (auto input : m_outputs.at(i).get_inputs())
+        for (auto input : output.get_target_inputs())
         {
-            if (check_is_used)
+            Node* input_node = input.get_node();
+            if (!check_is_used || is_used(input_node))
             {
-                if (is_used(input->get_node().get()))
-                {
-                    result.push_back(input->get_node());
-                }
-            }
-            else
-            {
-                result.push_back(input->get_node());
+                result.push_back(input_node->shared_from_this());
             }
         }
     }
-
     return result;
 }
 
@@ -848,7 +863,7 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
 OutputVector ngraph::as_output_vector(const NodeVector& args)
 {
     OutputVector output_vector;
-    for (auto& arg : check_single_output_args(args))
+    for (auto arg : args)
     {
         output_vector.push_back(arg);
     }
@@ -958,10 +973,14 @@ bool Node::match_value(pattern::Matcher* matcher,
     {
         return false;
     }
+    return match_node(matcher, graph_value);
+}
 
+bool Node::match_node(pattern::Matcher* matcher, const Output<Node>& graph_value)
+{
     matcher->add_node(graph_value);
     return graph_value.get_node_shared_ptr()->get_type_info() == get_type_info() &&
-           matcher->match_arguments(pattern_value, graph_value);
+           matcher->match_arguments(this, graph_value.get_node_shared_ptr());
 }
 
 // default implementation for the node to check if it contains partial shape
@@ -1006,7 +1025,8 @@ Input<const Node> Node::input(size_t input_index) const
 
 Output<Node> Node::output(size_t output_index)
 {
-    if (output_index >= m_outputs.size())
+    // All nodes will have at least 1 output
+    if (output_index > 0 && output_index >= m_outputs.size())
     {
         throw out_of_range("node output index is out of range");
     }
@@ -1016,7 +1036,8 @@ Output<Node> Node::output(size_t output_index)
 
 Output<const Node> Node::output(size_t output_index) const
 {
-    if (output_index >= m_outputs.size())
+    // All nodes will have at least 1 output
+    if (output_index > 0 && output_index >= m_outputs.size())
     {
         throw out_of_range("node output index is out of range");
     }

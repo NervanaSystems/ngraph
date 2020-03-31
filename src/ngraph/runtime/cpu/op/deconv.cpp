@@ -139,14 +139,13 @@ void op::DeconvolutionBias::validate_and_infer_types()
                           ").");
 
     NODE_VALIDATION_CHECK(this,
-                          static_cast<size_t>(bias_shape.rank()) == 1,
+                          bias_shape.rank().get_length() == 1,
                           "bias_shape size(",
                           bias_shape.rank(),
                           ") is not equal to 1");
 
     NODE_VALIDATION_CHECK(this,
-                          static_cast<size_t>(bias_shape[0]) ==
-                              static_cast<size_t>(filters_shape[0]),
+                          bias_shape[0].get_length() == filters_shape[0].get_length(),
                           "Filter input channel count (",
                           filters_shape,
                           ") does not compatible with ",

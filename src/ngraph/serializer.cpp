@@ -166,7 +166,7 @@ static json write_dimension(Dimension d)
     }
     else
     {
-        return static_cast<size_t>(d);
+        return d.get_length();
     }
 }
 
@@ -190,7 +190,7 @@ static json write_partial_shape(const PartialShape& s)
     }
     else
     {
-        std::vector<json> vals(static_cast<size_t>(s.rank()));
+        std::vector<json> vals(s.rank().get_length());
         for (size_t i = 0; i < vals.size(); i++)
         {
             vals[i] = write_dimension(s[i]);
@@ -1510,12 +1510,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                     new_axis,
                                                     shrink_axis,
                                                     ellipsis_mask);
-            break;
-        }
-        case OP_TYPEID::DynReshape:
-        {
-            const auto zero_flag = node_js.at("zero_flag").get<bool>();
-            node = make_shared<op::v0::DynReshape>(args[0], args[1], zero_flag);
             break;
         }
         case OP_TYPEID::Reshape_v1:
@@ -3636,12 +3630,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
-    case OP_TYPEID::DynReshape:
-    {
-        auto tmp = static_cast<const op::v0::DynReshape*>(&n);
-        node["zero_flag"] = tmp->get_zero_flag();
-        break;
-    }
     case OP_TYPEID::Reshape_v1:
     {
         auto tmp = static_cast<const op::v1::Reshape*>(&n);
@@ -4351,7 +4339,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::Reshape*>(&n);
         node["input_order"] = tmp->get_input_order();
-        node["output_shape"] = tmp->get_output_shape();
+        node["output_shape"] = tmp->get_output_shape(0);
         break;
     }
     case OP_TYPEID::Result:
