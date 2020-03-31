@@ -335,21 +335,23 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
         filters_et,
         ").");
 
-    if (data_pshape.is_static() && filters_pshape.is_static())
+    if (data_pshape.rank().is_static() && filters_pshape.rank().is_static())
     {
-        const Shape& data_shape = data_pshape.to_shape();
-        const Shape& filters_shape = filters_pshape.to_shape();
-        size_t groups{filters_shape.at(0)};
-        size_t input_channels{filters_shape.at(1)};
-        size_t n_data_channels{data_shape.at(1)};
+        if (filters_pshape[0].is_static() && filters_pshape[1].is_static() &&
+            data_pshape[1].is_static())
+        {
+            size_t groups{filters_pshape[0]};
+            size_t input_channels{filters_pshape[1]};
+            size_t n_data_channels{data_pshape[1]};
 
-        NODE_VALIDATION_CHECK(this,
-                              n_data_channels % groups == 0,
-                              "Number of data channels not a multiple of group size.");
-        NODE_VALIDATION_CHECK(this,
-                              n_data_channels / groups == input_channels,
-                              "Data second dimension has incompatible value "
-                              "with number of input channels.");
+            NODE_VALIDATION_CHECK(this,
+                                  n_data_channels % groups == 0,
+                                  "Number of data channels not a multiple of group size.");
+            NODE_VALIDATION_CHECK(this,
+                                  n_data_channels / groups == input_channels,
+                                  "Data second dimension has incompatible value "
+                                  "with number of input channels.");
+        }
 
         if (m_pads_begin.size() == 0)
         {
@@ -372,7 +374,7 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
             m_dilations = conv_default_strides(this, data_pshape, filters_pshape);
         }
 
-        const size_t num_spatial_dims = data_shape.size() - 2;
+        const auto num_spatial_dims = data_pshape.rank().get_length() - 2;
 
         NODE_VALIDATION_CHECK(this,
                               m_strides.size() == num_spatial_dims,
