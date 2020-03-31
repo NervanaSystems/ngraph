@@ -297,3 +297,47 @@ TEST(concat_fusion, pass_property)
         ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
     }
 }
+
+TEST(concat_fusion, concat_elimination_single_node)
+{
+    int64_t a = 0;
+    auto A = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A}, a), ParameterVector{A});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Validate>();
+    pass_manager.register_pass<pass::ConcatElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
+}
+
+TEST(concat_fusion, concat_elimination_single_input)
+{
+    int64_t a = 0;
+    auto A = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto B = make_shared<op::Concat>(NodeVector{A}, a);
+    auto f = make_shared<Function>(make_shared<op::Abs>(B), ParameterVector{A});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Validate>();
+    pass_manager.register_pass<pass::ConcatElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 0);
+}
+
+TEST(concat_fusion, concat_elimination_single_input_dynamic)
+{
+    int64_t a = 0;
+    auto A = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 3});
+    auto B = make_shared<op::Concat>(NodeVector{A}, a);
+    auto f = make_shared<Function>(make_shared<op::Abs>(B), ParameterVector{A});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Validate>();
+    pass_manager.register_pass<pass::ConcatElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 0);
+}
