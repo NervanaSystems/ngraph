@@ -338,7 +338,7 @@ bool PartialShape::all_non_negative() const
 {
     for (auto& d : m_dimensions)
     {
-        if (d.is_static() && int64_t(d) < 0)
+        if (d.is_static() && d.get_length() < 0)
         {
             return false;
         }
