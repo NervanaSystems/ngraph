@@ -286,6 +286,37 @@ void op::v1::GroupConvolutionBackpropData::set_output_shape(const Shape& shape)
             ->output(0));
 }
 
+void op::v1::GroupConvolutionBackpropData::infer_conv_backprop_output_spatial_shape(
+    const vector<Dimension>& input_data_shape,
+    const vector<Dimension>& filters_shape,
+    const Strides& strides,
+    const Strides& dilations,
+    const CoordinateDiff& pads_begin,
+    const CoordinateDiff& pads_end,
+    const CoordinateDiff& output_padding,
+    vector<Dimension>& output_spatial_shape)
+{
+    size_t num_spatial_dims = input_data_shape.size();
+    NGRAPH_CHECK(filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
+                 dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
+                 pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
+
+    for (size_t i = 0; i < num_spatial_dims; ++i)
+    {
+        if (input_data_shape[i].is_static() && filters_shape[i].is_static())
+        {
+            int64_t val = strides[i] * (input_data_shape[i].get_length() - 1) +
+                          dilations[i] * (filters_shape[i].get_length() - 1) + 1 - pads_begin[i] -
+                          pads_end[i] + output_padding[i];
+            output_spatial_shape.push_back(val);
+        }
+        else
+        {
+            output_spatial_shape.push_back(Dimension::dynamic());
+        }
+    }
+}
+
 void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
 {
     const auto& data_pshape = get_input_partial_shape(0);
@@ -417,7 +448,7 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
         {
             vector<Dimension> data_shape{data_pshape}, filters_shape{filters_pshape}, output_shape;
 
-            opset1::infer_conv_backprop_output_spatial_shape(
+            infer_conv_backprop_output_spatial_shape(
                 vector<Dimension>{std::next(data_shape.begin(), 2), std::end(data_shape)},
                 vector<Dimension>{std::next(filters_shape.begin(), 3), std::end(filters_shape)},
                 m_strides,

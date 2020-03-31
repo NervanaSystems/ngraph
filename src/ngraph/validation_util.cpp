@@ -869,37 +869,6 @@ int64_t ngraph::normalize_axis(const std::string& node_description,
     return static_cast<int64_t>(axis);
 }
 
-void ngraph::opset1::infer_conv_backprop_output_spatial_shape(
-    const vector<Dimension>& input_data_shape,
-    const vector<Dimension>& filters_shape,
-    const Strides& strides,
-    const Strides& dilations,
-    const CoordinateDiff& pads_begin,
-    const CoordinateDiff& pads_end,
-    const CoordinateDiff& output_padding,
-    vector<Dimension>& output_spatial_shape)
-{
-    size_t num_spatial_dims = input_data_shape.size();
-    NGRAPH_CHECK(filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
-                 dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
-                 pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
-
-    for (size_t i = 0; i < num_spatial_dims; ++i)
-    {
-        if (input_data_shape[i].is_static() && filters_shape[i].is_static())
-        {
-            int64_t val = strides[i] * (input_data_shape[i].get_length() - 1) +
-                          dilations[i] * (filters_shape[i].get_length() - 1) + 1 - pads_begin[i] -
-                          pads_end[i] + output_padding[i];
-            output_spatial_shape.push_back(val);
-        }
-        else
-        {
-            output_spatial_shape.push_back(Dimension::dynamic());
-        }
-    }
-}
-
 void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_shape,
                                                       const Shape& filters_shape,
                                                       const Shape& output_shape,
