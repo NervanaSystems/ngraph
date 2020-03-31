@@ -405,7 +405,8 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
     // and padding values.
     else
     {
-        if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER || m_auto_pad == PadType::VALID)
+        if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER ||
+            m_auto_pad == PadType::VALID)
         {
             m_pads_begin.assign(m_pads_begin.size(), 0);
             m_pads_end.assign(m_pads_end.size(), 0);
