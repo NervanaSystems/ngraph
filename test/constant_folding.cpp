@@ -1707,7 +1707,7 @@ TEST(constant_folding, constant_dyn_reshape_shape_not_originally_constant)
         make_shared<op::v1::Reshape>(constant_in, constant_shape_a + constant_shape_b, false);
     auto f = make_shared<Function>(dyn_reshape, ParameterVector{});
 
-    ASSERT_TRUE(dyn_reshape->output(0).get_partial_shape().is_dynamic());
+    ASSERT_TRUE(dyn_reshape->get_output_partial_shape(0).is_dynamic());
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
@@ -1875,6 +1875,41 @@ TEST(constant_folding, constant_v1_split)
 
     auto split_v1 = make_shared<op::v1::Split>(const_data, const_axis, num_splits);
     auto f = make_shared<Function>(split_v1->outputs(), ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Split>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), num_splits);
+
+    auto res1 = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto res2 = as_type_ptr<op::Constant>(f->get_results().at(1)->get_argument(0));
+    auto res3 = as_type_ptr<op::Constant>(f->get_results().at(2)->get_argument(0));
+    ASSERT_TRUE(res1);
+    ASSERT_TRUE(res2);
+    ASSERT_TRUE(res3);
+
+    auto res1_values = res1->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>(data.begin(), data.begin() + 2), res1_values));
+    auto res2_values = res2->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>(data.begin() + 2, data.begin() + 4), res2_values));
+    auto res3_values = res3->get_vector<float>();
+    ASSERT_TRUE(test::all_close_f(vector<float>(data.begin() + 4, data.end()), res3_values));
+}
+
+TEST(constant_folding, constant_v1_split_specialized)
+{
+    vector<float> data{.1f, .2f, .3f, .4f, .5f, .6f};
+    const auto const_data = op::Constant::create(element::f32, Shape{data.size()}, data);
+    const auto const_axis = op::Constant::create(element::i64, Shape{}, {0});
+    const auto num_splits = 3;
+
+    auto split_v1 = make_shared<op::v1::Split>(const_data, const_axis, num_splits);
+    auto f = make_shared<Function>(split_v1->outputs(), ParameterVector{});
+
+    auto specialized_function = ::ngraph::specialize_function(
+        std::const_pointer_cast<ngraph::Function>(f), {}, {}, {}, true, true);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();

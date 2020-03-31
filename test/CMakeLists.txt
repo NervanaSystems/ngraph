@@ -77,7 +77,6 @@ set(SRC
     opset_pass/binary_elementwise_opset_pass.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
-    opset_pass/dyn_reshape_opset_pass.cpp
     opset_pass/logical_and_opset_pass.cpp
     opset_pass/logical_not_opset_pass.cpp
     opset_pass/logical_or_opset_pass.cpp
@@ -114,6 +113,7 @@ set(SRC
     type_prop/batch_mat_mul.cpp
     type_prop/batch_mat_mul_transpose.cpp
     type_prop/batch_norm.cpp
+    type_prop/batch_to_space.cpp
     type_prop/binary_elementwise.cpp
     type_prop/broadcast.cpp
     type_prop/clamp.cpp
@@ -179,6 +179,7 @@ set(SRC
     type_prop/shape_of.cpp
     type_prop/shuffle_channels.cpp
     type_prop/slice.cpp
+    type_prop/space_to_batch.cpp
     type_prop/space_to_depth.cpp
     type_prop/split.cpp
     type_prop/squared_difference.cpp
@@ -488,10 +489,6 @@ if (NGRAPH_MLIR_ENABLE)
     list(APPEND SRC mlir/ops_test.cpp)
 endif()
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend/distributed.in.cpp)
-endif()
-
 if (NGRAPH_CPU_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/graph_comparison.in.cpp)
 endif()
@@ -591,6 +588,10 @@ endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
+endif()
+
+if (NGRAPH_GENERIC_CPU_ENABLE)
+    target_link_libraries(unit-test PRIVATE gcpu_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)

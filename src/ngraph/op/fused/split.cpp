@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include <numeric>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/split.hpp"
@@ -46,7 +47,7 @@ op::v0::Split::Split(const Output<Node>& data,
 
 void op::v0::Split::pre_validate_and_infer_types()
 {
-    const auto axis_shape = input(1).get_shape();
+    const auto axis_shape = get_input_shape(1);
     NODE_VALIDATION_CHECK(this, is_scalar(axis_shape), "The 'axis' input node must be scalar");
 
     const auto axis_node = input_value(1).get_node_shared_ptr();
@@ -57,7 +58,7 @@ void op::v0::Split::pre_validate_and_infer_types()
     // Create dynamic-typed outputs. Actual shape/type will be computed during shape inference
     for (size_t i = 0; i < std::max(m_splits.size(), m_num_split); i++)
     {
-        set_output_type(i, input(0).get_element_type(), PartialShape::dynamic());
+        set_output_type(i, get_input_element_type(0), PartialShape::dynamic());
     }
 
     if (is_dynamic())
@@ -65,7 +66,7 @@ void op::v0::Split::pre_validate_and_infer_types()
         return;
     }
 
-    const auto shape = input(0).get_shape();
+    const auto shape = get_input_shape(0);
 
     const auto data_rank = get_input_partial_shape(0).rank();
     m_axis = ngraph::normalize_axis(this, m_axis, data_rank);
@@ -121,6 +122,12 @@ op::v1::Split::Split(const Output<Node>& data, const Output<Node>& axis, const s
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::Split::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("num_splits", m_num_splits);
+    return true;
+}
+
 void op::v1::Split::validate_and_infer_types()
 {
     const auto data_ps = input_value(0).get_partial_shape();
@@ -128,7 +135,7 @@ void op::v1::Split::validate_and_infer_types()
     const auto axis_et = input_value(1).get_element_type();
 
     NODE_VALIDATION_CHECK(this,
-                          axis_ps.rank().is_static() && (size_t)axis_ps.rank() == 0,
+                          axis_ps.rank().is_static() && axis_ps.rank().get_length() == 0,
                           "The 'axis' input is expected to be a scalar. Got: ",
                           axis_ps);
 
@@ -158,14 +165,14 @@ void op::v1::Split::validate_and_infer_types()
 
         for (size_t i = 0; i < m_num_splits; ++i)
         {
-            set_output_type(i, input(0).get_element_type(), each_output_shape);
+            set_output_type(i, get_input_element_type(0), each_output_shape);
         }
     }
     else
     {
         for (size_t i = 0; i < m_num_splits; ++i)
         {
-            set_output_type(i, input(0).get_element_type(), PartialShape::dynamic());
+            set_output_type(i, get_input_element_type(0), PartialShape::dynamic());
         }
 
         set_input_is_relevant_to_shape(0);

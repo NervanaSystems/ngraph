@@ -48,9 +48,12 @@ namespace ngraph
                               const Output<Node>& axis,
                               const Output<Node>& split_lengths);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
                 void validate_and_infer_types() override;
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
+                size_t get_default_output_index() const override { return no_default_index(); }
             };
         } // namespace v1
 

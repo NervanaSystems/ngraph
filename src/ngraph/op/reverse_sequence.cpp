@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <memory>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/validation_util.hpp"
@@ -39,6 +40,13 @@ op::ReverseSequence::ReverseSequence(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::ReverseSequence::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("batch_axis", m_batch_axis);
+    visitor.on_attribute("seq_axis", m_seq_axis);
+    return true;
+}
+
 void op::ReverseSequence::validate_and_infer_types()
 {
     auto input_shape = get_input_partial_shape(0);
@@ -52,7 +60,7 @@ void op::ReverseSequence::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(
         this,
-        indices_rank.is_dynamic() || size_t(indices_rank) == 1,
+        indices_rank.is_dynamic() || indices_rank.get_length() == 1,
         "Sequence indices must be a 1-dimensional tensor (sequence indices shape: ",
         get_input_partial_shape(1),
         ").");

@@ -80,6 +80,8 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
+    distributed/null.cpp
+    distributed/null.hpp
     distributed.cpp
     distributed.hpp
     enum_names.hpp
@@ -184,8 +186,6 @@ set (SRC
     op/experimental/dyn_pad.hpp
     op/experimental/dyn_replace_slice.cpp
     op/experimental/dyn_replace_slice.hpp
-    op/experimental/dyn_reshape.cpp
-    op/experimental/dyn_reshape.hpp
     op/experimental/dyn_slice.cpp
     op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
@@ -365,6 +365,8 @@ set (SRC
     op/xor.hpp
     op/fused/batch_mat_mul_transpose.cpp
     op/fused/batch_mat_mul_transpose.hpp
+    op/fused/batch_to_space.cpp
+    op/fused/batch_to_space.hpp
     op/fused/clamp.cpp
     op/fused/clamp.hpp
     op/fused/conv_fused.cpp
@@ -421,6 +423,8 @@ set (SRC
     op/fused/shuffle_channels.hpp
     op/fused/softmax_crossentropy.cpp
     op/fused/softmax_crossentropy.hpp
+    op/fused/space_to_batch.cpp
+    op/fused/space_to_batch.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
     op/fused/split.cpp
@@ -566,6 +570,8 @@ set (SRC
     pattern/matcher.hpp
     pattern/op/any.cpp
     pattern/op/any.hpp
+    pattern/op/any_output.cpp
+    pattern/op/any_output.hpp
     pattern/op/any_of.cpp
     pattern/op/any_of.hpp
     pattern/op/branch.cpp
@@ -652,6 +658,11 @@ else()
     add_library(ngraph SHARED ${SRC})
 endif()
 
+set_target_properties(ngraph PROPERTIES
+                      CXX_VISIBILITY_PRESET hidden
+                      C_VISIBILITY_PRESET hidden
+                      VISIBILITY_INLINES_HIDDEN ON)
+
 if(NOT NGRAPH_JSON_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
 endif()
@@ -662,19 +673,6 @@ endif()
 
 if(NGRAPH_CPU_STATIC_LIB_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_CPU_STATIC_LIB_ENABLE)
-endif()
-
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-        target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
-        target_link_libraries(ngraph PRIVATE libmlsl)
-    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-        find_package(MPI REQUIRED)
-        target_include_directories(ngraph SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-        target_link_libraries(ngraph PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    else()
-        message(FATAL_ERROR "Distributed Library not supported/mentioned")
-    endif()
 endif()
 
 add_subdirectory(frontend)
@@ -758,10 +756,9 @@ endif()
 
 # nGraph
 install(TARGETS ngraph EXPORT ngraphTargets
-        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB}
-        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB}
-        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB}
-        COMPONENT ngraph)
+        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph
+        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph
+        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION ${NGRAPH_INSTALL_INCLUDE}/ngraph
     COMPONENT ngraph

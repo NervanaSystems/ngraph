@@ -45,6 +45,19 @@ namespace ngraph
     class Function;
 }
 
+class DisableRemoveGOE
+{
+public:
+    DisableRemoveGOE()
+        : m_saved_remove_goe(ngraph::get_remove_goe())
+    {
+        ngraph::set_remove_goe(false);
+    }
+    ~DisableRemoveGOE() { ngraph::set_remove_goe(m_saved_remove_goe); }
+private:
+    bool m_saved_remove_goe;
+};
+
 bool validate_list(const std::vector<std::shared_ptr<ngraph::Node>>& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
 #ifndef NGRAPH_JSON_DISABLE
@@ -57,6 +70,9 @@ void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>
     size_t data_size = data.size() * sizeof(T);
     tv->write(data.data(), data_size);
 }
+
+template <>
+void copy_data<bool>(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<bool>& data);
 
 template <typename T>
 std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)

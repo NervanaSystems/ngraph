@@ -1015,7 +1015,7 @@ TEST(constant, shared_data)
 {
     Shape shape{100, 200};
     auto c1 = make_shared<op::Constant>(element::f16, shape, vector<float16>{123});
-    auto c2 = static_pointer_cast<op::Constant>(c1->copy_with_new_args({}));
+    auto c2 = static_pointer_cast<op::Constant>(c1->clone_with_new_inputs({}));
     const float* p1 = c1->get_data_ptr<float>();
     const float* p2 = c2->get_data_ptr<float>();
     EXPECT_EQ(p1, p2);

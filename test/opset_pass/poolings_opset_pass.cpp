@@ -32,7 +32,7 @@ TEST(opset_transform, opset1_avgpool_upgrade_pass_floor)
     pass_manager.run_passes(f);
 
     auto avgpool_s1_result = f->get_results().at(0);
-    auto node = avgpool_s1_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = avgpool_s1_result->get_input_node_shared_ptr(0);
     auto avg_pool_v1_node = as_type_ptr<op::v1::AvgPool>(node);
     ASSERT_TRUE(avg_pool_v1_node);
 
@@ -66,7 +66,7 @@ TEST(opset_transform, opset1_avgpool_upgrade_pass_ceil)
     pass_manager.run_passes(f);
 
     auto avgpool_s1_result = f->get_results().at(0);
-    auto node = avgpool_s1_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = avgpool_s1_result->get_input_node_shared_ptr(0);
     auto avg_pool_v1_node = as_type_ptr<op::v1::AvgPool>(node);
     ASSERT_TRUE(avg_pool_v1_node);
 
@@ -99,7 +99,7 @@ TEST(opset_transform, opset1_maxpool_upgrade_pass_fllor)
     pass_manager.run_passes(f);
 
     auto maxpool_s1_result = f->get_results().at(0);
-    auto node = maxpool_s1_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = maxpool_s1_result->get_input_node_shared_ptr(0);
     auto max_pool_v1_node = as_type_ptr<op::v1::MaxPool>(node);
     ASSERT_TRUE(max_pool_v1_node);
 
@@ -131,7 +131,7 @@ TEST(opset_transform, opset1_maxpool_upgrade_pass_ceil)
     pass_manager.run_passes(f);
 
     auto maxpool_s1_result = f->get_results().at(0);
-    auto node = maxpool_s1_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = maxpool_s1_result->get_input_node_shared_ptr(0);
     auto max_pool_v1_node = as_type_ptr<op::v1::MaxPool>(node);
     ASSERT_TRUE(max_pool_v1_node);
 
@@ -170,7 +170,7 @@ TEST(opset_transform, opset1_avgpool_downgrade_pass)
     pass_manager.run_passes(f);
 
     auto avgpool_s0_result = f->get_results().at(0);
-    auto node = avgpool_s0_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = avgpool_s0_result->get_input_node_shared_ptr(0);
     auto avg_pool_v0_node = as_type_ptr<op::v0::AvgPool>(node);
     ASSERT_TRUE(avg_pool_v0_node);
 
@@ -208,7 +208,7 @@ TEST(opset_transform, opset1_maxpool_downgrade_pass)
     pass_manager.run_passes(f);
 
     auto maxpool_s0_result = f->get_results().at(0);
-    auto node = maxpool_s0_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = maxpool_s0_result->get_input_node_shared_ptr(0);
     auto max_pool_v0_node = as_type_ptr<op::v0::MaxPool>(node);
     ASSERT_TRUE(max_pool_v0_node);
 
@@ -246,7 +246,7 @@ TEST(opset_transform, opset1_avgpool_backprop_downgrade_pass)
     pass_manager.run_passes(f);
 
     auto avgpool_backprop_s0_result = f->get_results().at(0);
-    auto node = avgpool_backprop_s0_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = avgpool_backprop_s0_result->get_input_node_shared_ptr(0);
     auto avg_pool_backprop_v0_node = as_type_ptr<op::v0::AvgPoolBackprop>(node);
     ASSERT_TRUE(avg_pool_backprop_v0_node);
 
@@ -284,7 +284,7 @@ TEST(opset_transform, opset1_maxpool_backprop_downgrade_pass)
     pass_manager.run_passes(f);
 
     auto max_pool_backprop_s0_result = f->get_results().at(0);
-    auto node = max_pool_backprop_s0_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = max_pool_backprop_s0_result->get_input_node_shared_ptr(0);
     auto max_pool_backprop_v0_node = as_type_ptr<op::v0::MaxPoolBackprop>(node);
     ASSERT_TRUE(max_pool_backprop_v0_node);
     EXPECT_EQ(max_pool_backprop_v0_node->get_padding_below(), padding_below);

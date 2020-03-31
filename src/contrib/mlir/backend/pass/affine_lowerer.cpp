@@ -28,9 +28,10 @@
 
 #include <llvm/ADT/DenseSet.h>
 #include <llvm/Support/Debug.h>
-#include <mlir/EDSC/Builders.h>
-#include <mlir/EDSC/Helpers.h>
-#include <mlir/EDSC/Intrinsics.h>
+#include <mlir/Dialect/AffineOps/EDSC/Builders.h>
+#include <mlir/Dialect/AffineOps/EDSC/Intrinsics.h>
+#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
+#include <mlir/Dialect/StandardOps/EDSC/Intrinsics.h>
 #include <mlir/IR/AffineExpr.h>
 #include <mlir/IR/Function.h>
 #include <mlir/IR/IntegerSet.h>
@@ -43,6 +44,9 @@
 #define PASS_NAME "convert-ngraph-to-affine"
 #define DEBUG_TYPE PASS_NAME
 
+// Enable the lowering of MemRefs to LLVM bare pointers.
+extern llvm::cl::opt<bool> clEnableBarePtrMemRefLowering;
+
 std::vector<ngraph::runtime::ngmlir::opAttrs> opAttrsVec;
 
 // anonymous namespace
@@ -51,11 +55,10 @@ namespace
 {
     using namespace mlir;
     using namespace mlir::edsc;
+    using namespace mlir::edsc::intrinsics;
     using namespace mlir::edsc::op;
     using namespace ngraph::runtime;
     using namespace ngraph::runtime::ngmlir;
-    // Index notation to generate standard (i.e., non-affine) loads and stores.
-    using StdIndexedValue = TemplatedIndexedValue<intrinsics::std_load, intrinsics::std_store>;
 
     class DialectLoweringPass;
 
@@ -215,10 +218,95 @@ namespace
         NGraphTypeConverter()
             : TypeConverter()
         {
-        }
+            // TODO(dcaballe): split this into independent conversion patterns when there is a
+            // way to check if a type is valid in Std dialect.
+            addConversion([this](Type type) -> Type {
+                if (auto tensorType = type.dyn_cast<NGTensorType>())
+                {
+                    // Convert NGTensorType to Std MemRefType directly instead of going to Std
+                    // TensorType. This may change in the future.
+                    return MemRefType::get(tensorType.getShape(),
+                                           convertType(tensorType.getElementType()),
+                                           {/* no map used */},
+                                           0);
+                }
+                if (auto floatType = type.dyn_cast<NGFloatType>())
+                {
+                    // Float types are already std type.
+                    return floatType;
+                }
+                if (auto intType = type.dyn_cast<NGIntegerType>())
+                {
+                    return mlir::IntegerType::get(intType.getWidth(), intType.getContext());
+                }
+                if (auto boolType = type.dyn_cast<NGBoolType>())
+                {
+                    return mlir::IntegerType::get(1 /* width */, boolType.getContext());
+                }
 
-        Type convertType(Type t) override;
+                // Do not assert/NGRAPH_CHECK here. Type convertion infra expects `convertType` to
+                // return the input type if the type is not supported.
+                return type;
+            });
+        }
     };
+
+    // Return llvm type for given attributes type
+    static LLVM::LLVMType getLLVMType(AttrsType attrsType, LLVM::LLVMDialect* llvmDialect)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(llvmDialect);
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmArray1DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 1);
+        auto llvmArray2DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 2);
+        auto llvmArray3DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 3);
+        auto llvmF32Ty = LLVM::LLVMType::getFloatTy(llvmDialect);
+        switch (attrsType)
+        {
+        case AttrsType::INT: return llvmI64Ty;
+        case AttrsType::CONV1D:
+            return LLVM::LLVMType::getStructTy(
+                llvmDialect,
+                {llvmI8Ty, llvmArray1DI64Ty, llvmArray1DI64Ty, llvmArray1DI64Ty, llvmArray1DI64Ty});
+        case AttrsType::CONV2D:
+            return LLVM::LLVMType::getStructTy(
+                llvmDialect,
+                {llvmI8Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty});
+        case AttrsType::CONV3D:
+            return LLVM::LLVMType::getStructTy(
+                llvmDialect,
+                {llvmI8Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty});
+        case AttrsType::POOL2D:
+            return LLVM::LLVMType::getStructTy(
+                llvmDialect,
+                {llvmI8Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty});
+        case AttrsType::POOL3D:
+            return LLVM::LLVMType::getStructTy(
+                llvmDialect,
+                {llvmI8Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty});
+        case AttrsType::GEMM:
+            return LLVM::LLVMType::getStructTy(llvmDialect,
+                                               {llvmI8Ty,
+                                                llvmI8Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmF32Ty,
+                                                llvmF32Ty,
+                                                llvmI32Ty});
+        }
+    }
+
+    // Create a Constant op and a Store op which stores the Constant
+    static void
+        createStore(LLVM::LLVMType llvmTy, Attribute valAttr, LLVM::GEPOp gep, OpBuilder& builder)
+    {
+        auto valueOp = builder.create<LLVM::ConstantOp>(builder.getUnknownLoc(), llvmTy, valAttr);
+        builder.create<LLVM::StoreOp>(builder.getUnknownLoc(), valueOp, gep);
+    }
 
     /// Dialect Lowering Pass to affine ops
     class DialectLoweringPass : public ModulePass<DialectLoweringPass>
@@ -246,7 +334,20 @@ namespace
                            ArrayRef<Type> output,
                            PatternRewriter& rewriter);
 
-        inline size_t insertAttrs(opAttrs attrs);
+        // Return a GlobalOp with the given name
+        // If such GlobalOp does not exist, create one
+        mlir::LLVM::GlobalOp getGlobalOp(StringRef name,
+                                         LLVM::LLVMType globalType,
+                                         bool isConstant,
+                                         LLVM::Linkage linkageType,
+                                         Attribute initVal,
+                                         OpBuilder& rewriter);
+
+        /// Insert a function to the module which initializes the global variables
+        /// that hold the attributes information for callbacks.
+        void insertInitFunc();
+
+        inline int32_t insertAttrs(opAttrs attrs, AttrsType type);
 
         MemoryAnalysis* getMemAnalysis() const { return m_memAnalysis; }
     private:
@@ -270,6 +371,7 @@ namespace
 
         // Store the attributes needed by callback
         std::vector<opAttrs> m_attrsVec;
+        std::vector<AttrsType> m_attrsTyVec;
     };
 
     void DialectLoweringPass::runOnModule()
@@ -286,7 +388,7 @@ namespace
         // Create target that defines legal ops for nGraph dialect to be lowered to.
         ConversionTarget target(getContext());
 
-        target.addLegalDialect<AffineOpsDialect, StandardOpsDialect>();
+        target.addLegalDialect<AffineOpsDialect, StandardOpsDialect, LLVM::LLVMDialect>();
         target.addLegalOp<ModuleOp, ModuleTerminatorOp>();
         target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
             // FuncOp is legal only if types have been converted to Std types.
@@ -317,10 +419,13 @@ namespace
 
             // TODO: Encode no alias attribute as part of the function signature conversion or as a
             // separate rewrite pattern. Retrieve new function after signature conversion.
-            insertNoAliasArgAttrs();
+            if (clEnableBarePtrMemRefLowering)
+            {
+                insertNoAliasArgAttrs();
+            }
         }
 
-        opAttrsVec = m_attrsVec;
+        insertInitFunc();
     }
 
     void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
@@ -537,44 +642,515 @@ namespace
         return callBackFunc;
     }
 
-    inline size_t DialectLoweringPass::insertAttrs(opAttrs attrs)
+    mlir::LLVM::GlobalOp DialectLoweringPass::getGlobalOp(StringRef name,
+                                                          LLVM::LLVMType globalType,
+                                                          bool isConstant,
+                                                          LLVM::Linkage linkageType,
+                                                          Attribute initVal,
+                                                          OpBuilder& rewriter)
     {
-        m_attrsVec.push_back(attrs);
-        return m_attrsVec.size() - 1;
+        auto module = getModule();
+        auto globalVal = module.lookupSymbol<LLVM::GlobalOp>(name);
+        if (!globalVal)
+        {
+            // Create a global and insert to the module.
+            PatternRewriter::InsertionGuard insertGuard(rewriter);
+            rewriter.setInsertionPointToStart(module.getBody());
+            rewriter.create<LLVM::GlobalOp>(
+                rewriter.getUnknownLoc(), globalType, isConstant, linkageType, name, initVal);
+        }
+        return module.lookupSymbol<LLVM::GlobalOp>(name);
     }
 
-    // NGDialect converters
-    Type NGraphTypeConverter::convertType(Type type)
+    // Attribute is int64_t
+    static void initINT(LLVM::LLVMDialect* llvmDialect,
+                        int64_t intAttr,
+                        LLVM::AddressOfOp globalPtr,
+                        OpBuilder& builder)
     {
-        // We may need to refactor this code to a external utility if type conversion is needed
-        // outside of the lowering context since NGraphTypeConverter is private.
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto castOp =
+            builder.create<LLVM::BitcastOp>(builder.getUnknownLoc(),
+                                            getLLVMType(AttrsType::INT, llvmDialect).getPointerTo(),
+                                            globalPtr);
+        auto intOp = builder.create<LLVM::ConstantOp>(
+            builder.getUnknownLoc(), llvmI64Ty, builder.getI64IntegerAttr(intAttr));
+        builder.create<LLVM::StoreOp>(builder.getUnknownLoc(), intOp, castOp);
+    }
 
-        if (auto tensorType = type.dyn_cast<NGTensorType>())
+    /*
+            template <int N>
+            struct convAttrs
+            {
+                bool withRelu;
+                int64_t windowStrides[N];
+                int64_t windowDilation[N];
+                int64_t padBelow[N];
+                int64_t padAbove[N];
+            };
+     */
+    static void initCONV1D(LLVM::LLVMDialect* llvmDialect,
+                           convAttrs<1>& convAttrs1d,
+                           SmallVector<LLVM::ConstantOp, 12>& constants,
+                           LLVM::AddressOfOp globalPtr,
+                           OpBuilder& builder)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmArray1DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 1);
+        auto conv1dTy = getLLVMType(AttrsType::CONV1D, llvmDialect);
+        auto castOp = builder.create<LLVM::BitcastOp>(
+            builder.getUnknownLoc(), conv1dTy.getPointerTo(), globalPtr);
+
+        SmallVector<LLVM::GEPOp, 6> geps;
+        SmallVector<LLVM::LLVMType, 6> elemsTy{
+            llvmI8Ty, llvmArray1DI64Ty, llvmArray1DI64Ty, llvmArray1DI64Ty, llvmArray1DI64Ty};
+        for (auto j = 0; j < 5; j++)
         {
-            // Convert NGTensorType to Std MemRefType directly instead of going to Std TensorType.
-            // This may change in the future.
-            return MemRefType::get(tensorType.getShape(),
-                                   convertType(tensorType.getElementType()),
-                                   {/* no map used */},
-                                   0);
+            auto gepConv1dOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            elemsTy[j].getPointerTo(),
+                                            castOp,
+                                            ArrayRef<Value>({constants[0], constants[j]}));
+            geps.push_back(gepConv1dOp);
         }
-        if (auto floatType = type.dyn_cast<NGFloatType>())
+        // Store attribute values
+        createStore(llvmI8Ty,
+                    builder.getI8IntegerAttr(static_cast<int8_t>(convAttrs1d.withRelu)),
+                    geps[0],
+                    builder);
+        int k = 1;
+        for (auto& convAttr : {convAttrs1d.windowStrides[0],
+                               convAttrs1d.windowDilation[0],
+                               convAttrs1d.padBelow[0],
+                               convAttrs1d.padAbove[0]})
         {
-            // Float types are already std type.
-            return floatType;
+            auto gepStructOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            llvmI64PtrTy,
+                                            geps[k],
+                                            ArrayRef<Value>({constants[0], constants[0]}));
+            createStore(llvmI64Ty, builder.getI64IntegerAttr(convAttr), gepStructOp, builder);
+            k++;
         }
-        if (auto intType = type.dyn_cast<NGIntegerType>())
+    }
+
+    static void initCONV2D(LLVM::LLVMDialect* llvmDialect,
+                           convAttrs<2>& convAttrs2d,
+                           SmallVector<LLVM::ConstantOp, 12>& constants,
+                           LLVM::AddressOfOp globalPtr,
+                           OpBuilder& builder)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmArray2DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 2);
+        auto conv2dTy = getLLVMType(AttrsType::CONV2D, llvmDialect);
+        auto castOp = builder.create<LLVM::BitcastOp>(
+            builder.getUnknownLoc(), conv2dTy.getPointerTo(), globalPtr);
+
+        SmallVector<LLVM::GEPOp, 6> geps;
+        SmallVector<LLVM::LLVMType, 6> elemsTy{
+            llvmI8Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty};
+        for (auto j = 0; j < 5; j++)
         {
-            return mlir::IntegerType::get(intType.getWidth(), intType.getContext());
+            auto gepConv2dOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            elemsTy[j].getPointerTo(),
+                                            castOp,
+                                            ArrayRef<Value>({constants[0], constants[j]}));
+            geps.push_back(gepConv2dOp);
         }
-        if (auto boolType = type.dyn_cast<NGBoolType>())
+        // Store attribute values
+        createStore(llvmI8Ty,
+                    builder.getI8IntegerAttr(static_cast<int8_t>(convAttrs2d.withRelu)),
+                    geps[0],
+                    builder);
+        int k = 1, m = 0;
+        for (auto& convAttr : {convAttrs2d.windowStrides[0],
+                               convAttrs2d.windowStrides[1],
+                               convAttrs2d.windowDilation[0],
+                               convAttrs2d.windowDilation[1],
+                               convAttrs2d.padBelow[0],
+                               convAttrs2d.padBelow[1],
+                               convAttrs2d.padAbove[0],
+                               convAttrs2d.padAbove[1]})
         {
-            return mlir::IntegerType::get(1 /* width */, boolType.getContext());
+            auto gepStructOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            llvmI64PtrTy,
+                                            geps[k],
+                                            ArrayRef<Value>({constants[0], constants[m]}));
+            createStore(llvmI64Ty, builder.getI64IntegerAttr(convAttr), gepStructOp, builder);
+            // k increments after every 2 iterations
+            if (m == 1)
+            {
+                k++;
+            }
+            // m be 0 or 1 alternatively
+            m = (m + 1) % 2;
+        }
+    }
+
+    static void initCONV3D(LLVM::LLVMDialect* llvmDialect,
+                           convAttrs<3>& convAttrs3d,
+                           SmallVector<LLVM::ConstantOp, 12>& constants,
+                           LLVM::AddressOfOp globalPtr,
+                           OpBuilder& builder)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmArray3DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 3);
+        auto conv3dTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto castOp = builder.create<LLVM::BitcastOp>(
+            builder.getUnknownLoc(), conv3dTy.getPointerTo(), globalPtr);
+
+        SmallVector<LLVM::GEPOp, 6> geps;
+        SmallVector<LLVM::LLVMType, 6> elemsTy{
+            llvmI8Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty};
+        for (auto j = 0; j < 5; j++)
+        {
+            auto gepConv3dOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            elemsTy[j].getPointerTo(),
+                                            castOp,
+                                            ArrayRef<Value>({constants[0], constants[j]}));
+            geps.push_back(gepConv3dOp);
+        }
+        // Store attribute values
+        createStore(llvmI8Ty,
+                    builder.getI8IntegerAttr(static_cast<int8_t>(convAttrs3d.withRelu)),
+                    geps[0],
+                    builder);
+        int k = 1, m = 0;
+        for (auto& convAttr : {convAttrs3d.windowStrides[0],
+                               convAttrs3d.windowStrides[1],
+                               convAttrs3d.windowStrides[2],
+                               convAttrs3d.windowDilation[0],
+                               convAttrs3d.windowDilation[1],
+                               convAttrs3d.windowDilation[2],
+                               convAttrs3d.padBelow[0],
+                               convAttrs3d.padBelow[1],
+                               convAttrs3d.padBelow[2],
+                               convAttrs3d.padAbove[0],
+                               convAttrs3d.padAbove[1],
+                               convAttrs3d.padAbove[2]})
+        {
+            auto gepStructOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            llvmI64PtrTy,
+                                            geps[k],
+                                            ArrayRef<Value>({constants[0], constants[m]}));
+            createStore(llvmI64Ty, builder.getI64IntegerAttr(convAttr), gepStructOp, builder);
+            // k increments after every 3 iterations
+            if (m == 2)
+            {
+                k++;
+            }
+            // m be 0, 1, or 2 repeatedly.
+            m = (m + 1) % 3;
+        }
+    }
+
+    /*
+            template <int N>
+            struct poolAttrs
+            {
+                bool includePaddingInAvgComputation;
+                int64_t windowShape[N];
+                int64_t windowStrides[N];
+                int64_t padBelow[N];
+                int64_t padAbove[N];
+            };
+     */
+    static void initPOOL2D(LLVM::LLVMDialect* llvmDialect,
+                           poolAttrs<2>& poolAttrs2d,
+                           SmallVector<LLVM::ConstantOp, 12>& constants,
+                           LLVM::AddressOfOp globalPtr,
+                           OpBuilder& builder)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmArray2DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 2);
+        auto pool2dTy = getLLVMType(AttrsType::POOL2D, llvmDialect);
+        auto castOp = builder.create<LLVM::BitcastOp>(
+            builder.getUnknownLoc(), pool2dTy.getPointerTo(), globalPtr);
+
+        SmallVector<LLVM::GEPOp, 6> geps;
+        SmallVector<LLVM::LLVMType, 6> elemsTy{
+            llvmI8Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty};
+        for (auto j = 0; j < 5; j++)
+        {
+            auto gepPool2dOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            elemsTy[j].getPointerTo(),
+                                            castOp,
+                                            ArrayRef<Value>({constants[0], constants[j]}));
+            geps.push_back(gepPool2dOp);
+        }
+        // Store attribute values
+        createStore(llvmI8Ty,
+                    builder.getI8IntegerAttr(
+                        static_cast<int8_t>(poolAttrs2d.includePaddingInAvgComputation)),
+                    geps[0],
+                    builder);
+        int k = 1, m = 0;
+        for (auto& poolAttr : {poolAttrs2d.windowShape[0],
+                               poolAttrs2d.windowShape[1],
+                               poolAttrs2d.windowStrides[0],
+                               poolAttrs2d.windowStrides[1],
+                               poolAttrs2d.padBelow[0],
+                               poolAttrs2d.padBelow[1],
+                               poolAttrs2d.padAbove[0],
+                               poolAttrs2d.padAbove[1]})
+        {
+            auto gepStructOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            llvmI64PtrTy,
+                                            geps[k],
+                                            ArrayRef<Value>({constants[0], constants[m]}));
+            createStore(llvmI64Ty, builder.getI64IntegerAttr(poolAttr), gepStructOp, builder);
+            // k increments after every 2 iterations
+            if (m == 1)
+            {
+                k++;
+            }
+            // m be 0 or 1 alternatively
+            m = (m + 1) % 2;
+        }
+    }
+
+    static void initPOOL3D(LLVM::LLVMDialect* llvmDialect,
+                           poolAttrs<3>& poolAttrs3d,
+                           SmallVector<LLVM::ConstantOp, 12>& constants,
+                           LLVM::AddressOfOp globalPtr,
+                           OpBuilder& builder)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmArray3DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 3);
+        auto pool3dTy = getLLVMType(AttrsType::POOL3D, llvmDialect);
+        auto castOp = builder.create<LLVM::BitcastOp>(
+            builder.getUnknownLoc(), pool3dTy.getPointerTo(), globalPtr);
+
+        SmallVector<LLVM::GEPOp, 6> geps;
+        SmallVector<LLVM::LLVMType, 6> elemsTy{
+            llvmI8Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty};
+        for (auto j = 0; j < 5; j++)
+        {
+            auto gepPool3dOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            elemsTy[j].getPointerTo(),
+                                            castOp,
+                                            ArrayRef<Value>({constants[0], constants[j]}));
+            geps.push_back(gepPool3dOp);
+        }
+        // Store attribute values
+        createStore(llvmI8Ty,
+                    builder.getI8IntegerAttr(
+                        static_cast<int8_t>(poolAttrs3d.includePaddingInAvgComputation)),
+                    geps[0],
+                    builder);
+        int k = 1, m = 0;
+        for (auto& poolAttr : {poolAttrs3d.windowShape[0],
+                               poolAttrs3d.windowShape[1],
+                               poolAttrs3d.windowShape[2],
+                               poolAttrs3d.windowStrides[0],
+                               poolAttrs3d.windowStrides[1],
+                               poolAttrs3d.windowStrides[2],
+                               poolAttrs3d.padBelow[0],
+                               poolAttrs3d.padBelow[1],
+                               poolAttrs3d.padBelow[2],
+                               poolAttrs3d.padAbove[0],
+                               poolAttrs3d.padAbove[1],
+                               poolAttrs3d.padAbove[2]})
+        {
+            auto gepStructOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            llvmI64PtrTy,
+                                            geps[k],
+                                            ArrayRef<Value>({constants[0], constants[m]}));
+            createStore(llvmI64Ty, builder.getI64IntegerAttr(poolAttr), gepStructOp, builder);
+            // k increments after every 3 iterations
+            if (m == 2)
+            {
+                k++;
+            }
+            // m be 0, 1, or 2 repeatedly
+            m = (m + 1) % 3;
+        }
+    }
+
+    /*
+            struct gemmAttrs
+            {
+                bool transposeA;
+                bool transposeB;
+                int64_t m;
+                int64_t n;
+                int64_t k;
+                int64_t lda;
+                int64_t ldb;
+                int64_t ldc;
+                float alpha;
+                float beta;
+                BroadcastType broadcastHint;
+            };
+     */
+    static void initGEMM(LLVM::LLVMDialect* llvmDialect,
+                         gemmAttrs gemmAttrs2d,
+                         SmallVector<LLVM::ConstantOp, 12>& constants,
+                         LLVM::AddressOfOp globalPtr,
+                         OpBuilder& builder)
+    {
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(llvmDialect);
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmF32Ty = LLVM::LLVMType::getFloatTy(llvmDialect);
+        auto gemmTy = getLLVMType(AttrsType::GEMM, llvmDialect);
+        auto castOp = builder.create<LLVM::BitcastOp>(
+            builder.getUnknownLoc(), gemmTy.getPointerTo(), globalPtr);
+
+        SmallVector<LLVM::GEPOp, 12> geps;
+        SmallVector<LLVM::LLVMType, 12> elemsTy{llvmI8Ty,
+                                                llvmI8Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmI64Ty,
+                                                llvmF32Ty,
+                                                llvmF32Ty,
+                                                llvmI32Ty};
+        for (auto j = 0; j < 11; j++)
+        {
+            auto gepGemmOp =
+                builder.create<LLVM::GEPOp>(builder.getUnknownLoc(),
+                                            elemsTy[j].getPointerTo(),
+                                            castOp,
+                                            ArrayRef<Value>({constants[0], constants[j]}));
+            geps.push_back(gepGemmOp);
+        }
+        // Store attribute values
+        int k = 0;
+        for (auto& gemmAttr : {gemmAttrs2d.transposeA, gemmAttrs2d.transposeB})
+        {
+            createStore(llvmI8Ty,
+                        builder.getI8IntegerAttr(static_cast<int8_t>(gemmAttr)),
+                        geps[k],
+                        builder);
+            k++;
+        }
+        for (auto& gemmAttr : {gemmAttrs2d.m,
+                               gemmAttrs2d.n,
+                               gemmAttrs2d.k,
+                               gemmAttrs2d.lda,
+                               gemmAttrs2d.ldb,
+                               gemmAttrs2d.ldc})
+        {
+            createStore(llvmI64Ty, builder.getI64IntegerAttr(gemmAttr), geps[k], builder);
+            k++;
+        }
+        for (auto& gemmAttr : {gemmAttrs2d.alpha, gemmAttrs2d.beta})
+        {
+            createStore(llvmF32Ty, builder.getF32FloatAttr(gemmAttr), geps[k], builder);
+            k++;
+        }
+        createStore(llvmI32Ty,
+                    builder.getI32IntegerAttr(static_cast<int32_t>(gemmAttrs2d.broadcastHint)),
+                    geps[10],
+                    builder);
+    }
+
+    void DialectLoweringPass::insertInitFunc()
+    {
+        auto module = getModule();
+        OpBuilder builder(module.getContext());
+        OpBuilder::InsertionGuard moduleInsertionGuard(builder);
+        builder.setInsertionPointToStart(module.getBody());
+
+        // Insert init function
+        auto funcTy = builder.getFunctionType({}, {});
+        SmallVector<NamedAttribute, 4> attributes;
+        auto funcOp = builder.create<mlir::FuncOp>(
+            builder.getUnknownLoc(), "callback_init", funcTy, attributes);
+        // Insert entry block
+        auto entry = funcOp.addEntryBlock();
+        builder.setInsertionPointToStart(entry);
+
+        if (m_attrsVec.size() == 0)
+        {
+            // No callbacks, just return
+            builder.create<mlir::ReturnOp>(builder.getUnknownLoc());
+            return;
         }
 
-        // Do not assert/NGRAPH_CHECK here. Type convertion infra expects `convertType` to return
-        // the input type if the type is not supported.
-        return type;
+        // Insert operations into entry block
+        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(llvmDialect);
+
+        // constants needed by gep
+        // LLVM requires that structure indexes be (vectors of) 32-bit integer constants.
+        SmallVector<LLVM::ConstantOp, 12> constants;
+        auto maxNumElem = 11;
+        for (auto i = 0; i < maxNumElem; i++)
+        {
+            auto constant = builder.create<LLVM::ConstantOp>(
+                builder.getUnknownLoc(), llvmI32Ty, builder.getI32IntegerAttr(i));
+            constants.push_back(constant);
+        }
+        auto globalType = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto gepTy = getLLVMType(AttrsType::CONV3D, llvmDialect).getPointerTo();
+
+        int32_t i = 0;
+        for (auto attrs : m_attrsVec)
+        {
+            StringRef name = "globalAttrs" + std::to_string(i);
+            LLVM::GlobalOp globalVal = getGlobalOp(name,
+                                                   globalType,
+                                                   false,
+                                                   LLVM::Linkage::Internal,
+                                                   builder.getZeroAttr(globalType),
+                                                   builder);
+            auto globalPtr = builder.create<LLVM::AddressOfOp>(builder.getUnknownLoc(), globalVal);
+            switch (m_attrsTyVec[i])
+            {
+            case AttrsType::INT: initINT(llvmDialect, attrs.intAttr, globalPtr, builder); break;
+            case AttrsType::CONV1D:
+                initCONV1D(llvmDialect, attrs.convAttrs1d, constants, globalPtr, builder);
+                break;
+            case AttrsType::CONV2D:
+                initCONV2D(llvmDialect, attrs.convAttrs2d, constants, globalPtr, builder);
+                break;
+            case AttrsType::CONV3D:
+                initCONV3D(llvmDialect, attrs.convAttrs3d, constants, globalPtr, builder);
+                break;
+            case AttrsType::POOL2D:
+                initPOOL2D(llvmDialect, attrs.poolAttrs2d, constants, globalPtr, builder);
+                break;
+            case AttrsType::POOL3D:
+                initPOOL3D(llvmDialect, attrs.poolAttrs3d, constants, globalPtr, builder);
+                break;
+            case AttrsType::GEMM:
+                initGEMM(llvmDialect, attrs.gemmAttrs2d, constants, globalPtr, builder);
+                break;
+            default: break;
+            }
+            i++;
+        }
+        builder.create<mlir::ReturnOp>(builder.getUnknownLoc());
+    }
+
+    inline int32_t DialectLoweringPass::insertAttrs(opAttrs attrs, AttrsType type)
+    {
+        m_attrsVec.push_back(attrs);
+        m_attrsTyVec.push_back(type);
+        return m_attrsVec.size() - 1;
     }
 
 #define REWRITER(OP)                                                                               \
@@ -680,15 +1256,15 @@ namespace
 
         ScopedContext scope(rewriter, loc);
         // Views
-        MemRefView vRes(result), vLHS(lhs);
+        MemRefBoundsCapture vRes(result), vLHS(lhs);
         // Index Values
-        IndexedValue iRes(result), iLHS(lhs);
+        AffineIndexedValue iRes(result), iLHS(lhs);
         // Bounds Index Handles
         auto lbs = vLHS.getLbs();
         auto ubs = vLHS.getUbs();
         // Loop induction vars
-        auto ivs = makeIndexHandles(vLHS.rank());
-        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
+        auto ivs = ValueHandle::makeIndexHandles(vLHS.rank());
+        auto pivs = makeHandlePointers(ivs);
         // Steps
         auto steps = vLHS.getSteps();
 
@@ -698,7 +1274,7 @@ namespace
         AffineLoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iLHS(ivs);
             ValueHandle zero = createZeroConstant(elemTy);
-            iRes(ivs) = intrinsics::select(val > zero, val, zero);
+            iRes(ivs) = std_select(val > zero, val, zero);
         });
 
         rewriter.replaceOp(op, {result});
@@ -742,36 +1318,37 @@ namespace
         //         res[n, k] += lhs[n, m] * rhs[m, k]
         // TODO (dcab): We currently generate a super naive loop nest. Improve loop nest layout.
 
-        MemRefView vRes(result), vLhs(lhs), vRhs(rhs);
+        MemRefBoundsCapture vRes(result), vLhs(lhs), vRhs(rhs);
 
         NGRAPH_CHECK(vLhs.rank() == 2 && vRhs.rank() == 2 && vRes.rank() == 2,
                      "Dot operation is only supported for 2D tensors");
 
         // Create induction variables, lower bounds, upper bounds and steps of the loop nest.
-        // It's important to note that MemRefView priovides lb/ub/step info is "reverse order",
-        // i.e., fastest varying dimension is the last one, slowest varying dimention is the first
-        // one.
-        IndexHandle n, m, k;
+        // It's important to note that MemRefBoundsCapture priovides lb/ub/step info is "reverse
+        // order", i.e., fastest varying dimension is the last one, slowest varying dimention is the
+        // first one.
+        auto indexType = IndexType::get(rewriter.getContext());
+        ValueHandle n(indexType), m(indexType), k(indexType);
         unsigned nDim = vLhs.fastestVarying() - 1;
         unsigned mDim = vRhs.fastestVarying();
         unsigned kDim = vRhs.fastestVarying();
-        IndexHandle nLb(vLhs.lb(nDim)), mLb(vLhs.lb(mDim)), kLb(vRhs.lb(kDim));
-        IndexHandle nUb(vLhs.ub(nDim)), mUb(vLhs.ub(mDim)), kUb(vRhs.ub(kDim));
+        ValueHandle nLb(vLhs.lb(nDim)), mLb(vLhs.lb(mDim)), kLb(vRhs.lb(kDim));
+        ValueHandle nUb(vLhs.ub(nDim)), mUb(vLhs.ub(mDim)), kUb(vRhs.ub(kDim));
         int64_t nStep = vLhs.step(nDim), mStep = vLhs.step(mDim), kStep = vRhs.step(kDim);
 
         // Constants and indexed values to be used inside the loop nest.
-        IndexedValue iRes(result), iLhs(lhs), iRhs(rhs);
+        AffineIndexedValue iRes(result), iLhs(lhs), iRhs(rhs);
         ValueHandle zeroInit(rewriter.create<ConstantOp>(loc, rewriter.getZeroAttr(elemTy)));
 
         {
-            IndexHandle n, k;
-            LoopBuilder::makeAffine(&n, nLb, nUb, nStep)([&] {
-                LoopBuilder::makeAffine(&k, kLb, kUb, kStep)([&] { iRes(n, k) = zeroInit; });
+            ValueHandle n(indexType), k(indexType);
+            makeAffineLoopBuilder(&n, nLb, nUb, nStep)([&] {
+                makeAffineLoopBuilder(&k, kLb, kUb, kStep)([&] { iRes(n, k) = zeroInit; });
             });
         }
-        LoopBuilder::makeAffine(&n, nLb, nUb, nStep)([&] {
-            LoopBuilder::makeAffine(&m, mLb, mUb, mStep)([&] {
-                LoopBuilder::makeAffine(&k, kLb, kUb, kStep)(
+        makeAffineLoopBuilder(&n, nLb, nUb, nStep)([&] {
+            makeAffineLoopBuilder(&m, mLb, mUb, mStep)([&] {
+                makeAffineLoopBuilder(&k, kLb, kUb, kStep)(
                     [&] { iRes(n, k) += iLhs(n, m) * iRhs(m, k); });
             });
         });
@@ -792,13 +1369,13 @@ namespace
         NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
 
         // Create view to write into result.
-        MemRefView vRes(result);
+        MemRefBoundsCapture vRes(result);
         auto rank = vRes.rank();
 
         // For each operand, generate a separate loop to copy into the target slice of "result".
         // We'll keep track of the slice offsets via concatenation_axis_pos.
         auto concatenationAxis = concat.concatenation_axis().getSExtValue();
-        IndexHandle concatenationAxisPos(index_type(0));
+        Value concatenationAxisPos(std_constant_index(0));
 
         for (auto& operand : operands)
         {
@@ -817,7 +1394,7 @@ namespace
             //              [i_(r-2)][i_(r-1)]
             //                  :=
             //        operand[i_0][i_1]...[i_(r-2)][i_(r-1)]
-            MemRefView vOperand(operand);
+            MemRefBoundsCapture vOperand(operand);
             NGRAPH_CHECK(vOperand.rank() == rank, "Unexpected rank mismatch");
 
             llvm::SmallVector<ValueHandle, 5> indexVars;
@@ -825,9 +1402,10 @@ namespace
             llvm::SmallVector<ValueHandle, 5> indexVarLbs;
             llvm::SmallVector<ValueHandle, 5> indexVarUbs;
             llvm::SmallVector<int64_t, 5> indexVarSteps;
+            auto indexType = IndexType::get(rewriter.getContext());
             for (int i = 0; i < rank; i++)
             {
-                indexVars.push_back(IndexHandle());
+                indexVars.push_back(ValueHandle(indexType));
                 indexVarPtrs.push_back(&(indexVars.back()));
                 indexVarLbs.push_back(vOperand.lb(i));
                 indexVarUbs.push_back(vOperand.ub(i));
@@ -835,15 +1413,15 @@ namespace
             }
 
             AffineLoopNestBuilder(indexVarPtrs, indexVarLbs, indexVarUbs, indexVarSteps)([&] {
-                IndexedValue ivRes(result);
-                IndexedValue ivOperand(operand);
+                AffineIndexedValue ivRes(result);
+                AffineIndexedValue ivOperand(operand);
 
                 // On the LHS of the assignment, adjust the index for the concatenation axis.
                 llvm::SmallVector<ValueHandle, 5> resIndexHandles;
                 for (int i = 0; i < rank; i++)
                 {
                     resIndexHandles.push_back(i == concatenationAxis
-                                                  ? indexVars[i] + concatenationAxisPos
+                                                  ? indexVars[i] + ValueHandle(concatenationAxisPos)
                                                   : indexVars[i]);
                 }
 
@@ -851,11 +1429,11 @@ namespace
             });
 
             // Move up concatenation_axis_pos for the next operand.
-            concatenationAxisPos = concatenationAxisPos + vOperand.ub(concatenationAxis);
+            concatenationAxisPos =
+                ValueHandle(concatenationAxisPos) + vOperand.ub(concatenationAxis);
         }
 
         rewriter.replaceOp(op, {result});
-
         return matchSuccess();
     }
 
@@ -874,14 +1452,13 @@ namespace
         auto axis = gatherOp.axis().getSExtValue();
 
         // Create view to write into result.
-        MemRefView vRes(result), vParams(params), vIndices(indices);
+        MemRefBoundsCapture vRes(result), vParams(params), vIndices(indices);
         // Indexed Values
-        IndexedValue iRes(result), iIndices(indices);
+        AffineIndexedValue iRes(result), iIndices(indices);
         StdIndexedValue iParams(params);
 
         // Construct outer loop for params dims. Exclude the axis dim.
-        SmallVector<ValueHandle, 4> paramsLbs, paramsUbs;
-        SmallVector<IndexHandle, 4> paramsIVs;
+        SmallVector<ValueHandle, 4> paramsLbs, paramsUbs, paramsIVs;
         SmallVector<int64_t, 4> paramsSteps;
         SmallVector<ValueHandle*, 4> paramsIVPtrs;
         for (auto i = 0; i < vParams.rank(); i++)
@@ -889,8 +1466,8 @@ namespace
             // skip gather axis
             if (i == axis)
                 continue;
-            paramsLbs.push_back(IndexHandle(vParams.lb(i)));
-            paramsUbs.push_back(IndexHandle(vParams.ub(i)));
+            paramsLbs.push_back(vParams.lb(i));
+            paramsUbs.push_back(vParams.ub(i));
             paramsSteps.push_back(vParams.step(i));
         }
         NGRAPH_CHECK(paramsLbs.size() == vParams.rank() - 1 &&
@@ -898,17 +1475,17 @@ namespace
                          paramsSteps.size() == paramsLbs.size(),
                      "Incorrect loop nest bounds size for gather params");
 
-        paramsIVs = makeIndexHandles(vParams.rank() - 1);
-        paramsIVPtrs = makeHandlePointers(MutableArrayRef<IndexHandle>(paramsIVs));
+        paramsIVs = ValueHandle::makeIndexHandles(vParams.rank() - 1);
+        paramsIVPtrs = makeHandlePointers(paramsIVs);
 
         auto indicesLbs = vIndices.getLbs();
         auto indicesUbs = vIndices.getUbs();
         auto indicesSteps = vIndices.getSteps();
 
-        auto indicesIVs = makeIndexHandles(vIndices.rank());
-        auto indicesIVPtrs = makeHandlePointers(MutableArrayRef<IndexHandle>(indicesIVs));
+        auto indicesIVs = ValueHandle::makeIndexHandles(vIndices.rank());
+        auto indicesIVPtrs = makeHandlePointers(indicesIVs);
 
-        SmallVector<IndexHandle, 8> paramsIndices, resIndices;
+        SmallVector<ValueHandle, 8> paramsIndices, resIndices;
 
         // Make sure we are going to create loops
         NGRAPH_CHECK(vParams.rank() > 0, "Invalid size for indices steps");
@@ -946,7 +1523,7 @@ namespace
                 {
                     if (i == axis)
                     {
-                        paramsIndices.push_back(IndexHandle(axisIdx));
+                        paramsIndices.push_back(axisIdx);
                     }
                     else
                     {
@@ -1022,10 +1599,10 @@ namespace
         NGRAPH_CHECK(groups > 0, "Invalid number of groups");
         // create outer group convolution loop
         // for group = 0 to groups
-        IndexHandle iv;
-
-        ValueHandle lb = intrinsics::constant_index(0);
-        ValueHandle ub = intrinsics::constant_index(groups);
+        auto indexType = IndexType::get(rewriter.getContext());
+        ValueHandle iv(indexType);
+        ValueHandle lb = std_constant_index(0);
+        ValueHandle ub = std_constant_index(groups);
 
         auto imagesType = images.getType().cast<MemRefType>();
         auto filtersType = filters.getType().cast<MemRefType>();
@@ -1043,13 +1620,13 @@ namespace
         NGRAPH_CHECK(groupsInFilters || filtersShape[0] % groups == 0,
                      "Filters dim is not divisible by number of groups");
 
-        auto channelGroupSize = intrinsics::constant_index(imagesShape[1] / groups);
-        auto filtersGroupSize = intrinsics::constant_index(
-            groupsInFilters ? filtersShape[1] : filtersShape[0] / groups);
+        auto channelGroupSize = std_constant_index(imagesShape[1] / groups);
+        auto filtersGroupSize =
+            std_constant_index(groupsInFilters ? filtersShape[1] : filtersShape[0] / groups);
 
         NGRAPH_CHECK(!groupsInFilters || groups == filtersShape[0]);
 
-        LoopBuilder::makeAffine(&iv, lb, ub, 1)([&] {
+        makeAffineLoopBuilder(&iv, lb, ub, 1)([&] {
             // lower/upper bounds on image channel dim and kernels dim
             auto cLb = iv * channelGroupSize;
             auto cUb = cLb + channelGroupSize;
@@ -1080,7 +1657,7 @@ namespace
         return matchSuccess();
     }
 
-    // Use callback: Pooling, MatMul, Gemm, Softmax
+    // Use callback: Pooling, MatMul, Gemm, Softmax, ConvBias
     static void castMemRef(SmallVector<mlir::Value, 4>& inputs,
                            SmallVector<mlir::Value, 4>& outputs,
                            PatternRewriter& rewriter,
@@ -1091,6 +1668,23 @@ namespace
             auto out = rewriter.create<mlir::MemRefCastOp>(rewriter.getUnknownLoc(), in, type);
             outputs.push_back(out);
         }
+    }
+
+    static LLVM::AddressOfOp
+        getGlobalAddr(int32_t index, PatternRewriter& rewriter, DialectLoweringPass& pass)
+    {
+        auto module = pass.getModule();
+        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto globalTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        StringRef name = "globalAttrs" + std::to_string(index);
+        LLVM::GlobalOp globalVal = pass.getGlobalOp(name,
+                                                    globalTy,
+                                                    false,
+                                                    LLVM::Linkage::Internal,
+                                                    rewriter.getZeroAttr(globalTy),
+                                                    rewriter);
+        auto globalPtr = rewriter.create<LLVM::AddressOfOp>(rewriter.getUnknownLoc(), globalVal);
+        return globalPtr;
     }
 
     REWRITER(NGAvgPoolOp)
@@ -1145,19 +1739,8 @@ namespace
                          (srcShape.size() == 5 && resultShape.size() == 5),
                      "MKLDNN pooling operation is only supported for 3D and 5D tensors");
 
-        auto int64Ty = rewriter.getIntegerType(64);
-        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-        SmallVector<mlir::Value, 4> inputs = {src, delta, result};
-        SmallVector<mlir::Value, 4> outputs;
-        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
-
-        FuncOp callBackFunc = pass.getCallDecl(
-            "__mlir_callback_2_inputs",
-            {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
-            {},
-            rewriter);
-
         opAttrs attrs;
+        int32_t index = 0;
         if (srcShape.size() == 4)
         {
             attrs.poolAttrs2d.includePaddingInAvgComputation = false;
@@ -1168,6 +1751,7 @@ namespace
                 attrs.poolAttrs2d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
                 attrs.poolAttrs2d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
             }
+            index = pass.insertAttrs(attrs, AttrsType::POOL2D);
         }
         else if (srcShape.size() == 5)
         {
@@ -1179,15 +1763,28 @@ namespace
                 attrs.poolAttrs3d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
                 attrs.poolAttrs3d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
             }
+            index = pass.insertAttrs(attrs, AttrsType::POOL3D);
         }
-        auto index = pass.insertAttrs(attrs);
-        auto attrsIndexArg =
-            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
+        // Get callback func
+        auto module = pass.getModule();
+        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto int64Ty = rewriter.getIntegerType(64);
+        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
+        FuncOp callBackFunc = pass.getCallDecl(
+            "callback_2_inputs",
+            {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy, unionTy.getPointerTo(), int64Ty},
+            {},
+            rewriter);
+        // Insert call
+        auto globalPtr = getGlobalAddr(index, rewriter, pass);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MAXPOOLBACKPROP), 64);
-        SmallVector<mlir::Value, 4> args = {
-            outputs[0], outputs[1], outputs[2], attrsIndexArg, opTypeArg};
-
+        SmallVector<mlir::Value, 4> inputs = {src, delta, result};
+        SmallVector<mlir::Value, 4> outputs;
+        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
+        SmallVector<mlir::Value, 6> args = {
+            outputs[0], outputs[1], outputs[2], globalPtr, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
         return matchSuccess();
@@ -1241,26 +1838,30 @@ namespace
             attrs.gemmAttrs2d.n = rhsShape[0];
         }
         attrs.gemmAttrs2d.ldc = attrs.gemmAttrs2d.n;
-
+        attrs.gemmAttrs2d.alpha = 1.0;
+        attrs.gemmAttrs2d.beta = 0.0;
+        BroadcastType broadcastHint = BroadcastType::NONE;
+        auto index = pass.insertAttrs(attrs, AttrsType::GEMM);
+        // Get callback func
+        auto module = pass.getModule();
+        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         auto callBackFunc = pass.getCallDecl(
-            "__mlir_callback_2_inputs",
-            {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
+            "callback_2_inputs",
+            {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy, unionTy.getPointerTo(), int64Ty},
             {},
             rewriter);
-
-        auto index = pass.insertAttrs(attrs);
-        auto attrsIndexArg =
-            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
+        // Insert call
+        auto globalPtr = getGlobalAddr(index, rewriter, pass);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MATMUL), 64);
         SmallVector<mlir::Value, 4> inputs = {lhs, rhs, result};
         SmallVector<mlir::Value, 4> outputs;
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
-        SmallVector<mlir::Value, 4> args = {
-            outputs[0], outputs[1], outputs[2], attrsIndexArg, opTypeArg};
-
+        SmallVector<mlir::Value, 6> args = {
+            outputs[0], outputs[1], outputs[2], globalPtr, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 
@@ -1297,7 +1898,7 @@ namespace
                          elemTy == biasTy.getElementType(),
                      "Types mismatch in GemmOp");
 
-        MemRefView vRes(result), vLhs(lhs), vRhs(rhs), vBias(bias);
+        MemRefBoundsCapture vRes(result), vLhs(lhs), vRhs(rhs), vBias(bias);
 
         NGRAPH_CHECK(vLhs.rank() == 2 && vRhs.rank() == 2 && vRes.rank() == 2 && vBias.rank() <= 2,
                      "Gemm operation is only supported for 2D tensors");
@@ -1358,30 +1959,31 @@ namespace
         }
         NGRAPH_CHECK(broadcastHint != BroadcastType::ERROR, "Unhandled broadcast");
         attrs.gemmAttrs2d.broadcastHint = broadcastHint;
-
+        auto index = pass.insertAttrs(attrs, AttrsType::GEMM);
+        // Get callback func
+        auto module = pass.getModule();
+        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-        auto callBackFunc = pass.getCallDecl("__mlir_callback_3_inputs",
+        auto callBackFunc = pass.getCallDecl("callback_3_inputs",
                                              {unrankedMemrefTy,
                                               unrankedMemrefTy,
                                               unrankedMemrefTy,
                                               unrankedMemrefTy,
-                                              int64Ty,
+                                              unionTy.getPointerTo(),
                                               int64Ty},
                                              {},
                                              rewriter);
-
-        auto index = pass.insertAttrs(attrs);
-        auto attrsIndexArg =
-            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
+        // Insert call
+        auto globalPtr = getGlobalAddr(index, rewriter, pass);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::GEMM), 64);
         SmallVector<mlir::Value, 4> inputs = {lhs, rhs, bias, result};
         SmallVector<mlir::Value, 4> outputs;
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
-        SmallVector<mlir::Value, 4> args = {
-            outputs[0], outputs[1], outputs[2], outputs[3], attrsIndexArg, opTypeArg};
-
+        SmallVector<mlir::Value, 6> args = {
+            outputs[0], outputs[1], outputs[2], outputs[3], globalPtr, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 
@@ -1413,28 +2015,126 @@ namespace
                          (lhsShape.size() == 4 && resultShape.size() == 4),
                      "MKLDNN Softmax operation is only supported for 2D and 4D tensors");
 
-        auto int64Ty = rewriter.getIntegerType(64);
-        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         auto axes = softmax.axes().getValue();
         opAttrs attrs;
         attrs.intAttr = axes[0].cast<IntegerAttr>().getInt();
-        auto index = pass.insertAttrs(attrs);
-        auto attrsIndexArg =
-            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
-        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
-            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::SOFTMAX), 64);
-
+        auto index = pass.insertAttrs(attrs, AttrsType::INT);
+        // Get callback func
+        auto module = pass.getModule();
+        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto int64Ty = rewriter.getIntegerType(64);
+        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         FuncOp callBackFunc =
-            pass.getCallDecl("__mlir_callback_1_input",
-                             {unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
+            pass.getCallDecl("callback_1_input",
+                             {unrankedMemrefTy, unrankedMemrefTy, unionTy.getPointerTo(), int64Ty},
                              {},
                              rewriter);
-
+        // Insert call
+        auto globalPtr = getGlobalAddr(index, rewriter, pass);
+        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::SOFTMAX), 64);
         SmallVector<mlir::Value, 4> inputs = {lhs, result};
         SmallVector<mlir::Value, 4> outputs;
         castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
-        SmallVector<mlir::Value, 4> args = {outputs[0], outputs[1], attrsIndexArg, opTypeArg};
+        SmallVector<mlir::Value, 4> args = {outputs[0], outputs[1], globalPtr, opTypeArg};
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        rewriter.replaceOp(op, result);
 
+        return matchSuccess();
+    }
+
+    REWRITER(NGConvBiasOp)
+    {
+        auto convBias = cast<NGConvBiasOp>(op);
+        auto loc = convBias.getLoc();
+        ScopedContext scope(rewriter, loc);
+
+        // Get operands
+        Value result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result, "Unexpected null result in ConvBias Op");
+        Value images = operands[0];
+        Value filters = operands[1];
+        Value bias = operands[2];
+        auto strides = convBias.strides().getValue();
+        auto dilation = convBias.dilation().getValue();
+        auto padBelow = convBias.padBelow().getValue();
+        auto padAbove = convBias.padBelow().getValue();
+
+        auto resultTy = result.getType().dyn_cast<MemRefType>();
+        auto resultShape = resultTy.getShape();
+        auto imagesTy = images.getType().dyn_cast<MemRefType>();
+        auto imagesShape = imagesTy.getShape();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
+        NGRAPH_CHECK(imagesTy, "Unexpected non-memref LHS type");
+
+        Type elemTy = resultTy.getElementType();
+        NGRAPH_CHECK(elemTy == imagesTy.getElementType(), "Types mismatch in ConvBias");
+
+        NGRAPH_CHECK((imagesShape.size() == 3 && resultShape.size() == 3) ||
+                         (imagesShape.size() == 4 && resultShape.size() == 4) ||
+                         (imagesShape.size() == 5 && resultShape.size() == 5),
+                     "MKLDNN conv operation is only supported for 3D, 4D, and 5D tensors");
+
+        opAttrs attrs;
+        size_t index = 0;
+        if (imagesShape.size() == 3)
+        {
+            attrs.convAttrs1d.withRelu = convBias.withRelu();
+            attrs.convAttrs1d.windowStrides[0] = strides[0].cast<IntegerAttr>().getInt();
+            attrs.convAttrs1d.windowDilation[0] = dilation[0].cast<IntegerAttr>().getInt();
+            attrs.convAttrs1d.padBelow[0] = padBelow[0].cast<IntegerAttr>().getInt();
+            attrs.convAttrs1d.padAbove[0] = padAbove[0].cast<IntegerAttr>().getInt();
+            index = pass.insertAttrs(attrs, AttrsType::CONV1D);
+        }
+        else if (imagesShape.size() == 4)
+        {
+            attrs.convAttrs2d.withRelu = convBias.withRelu();
+            for (auto i = 0; i < 2; i++)
+            {
+                attrs.convAttrs2d.windowStrides[i] = strides[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs2d.windowDilation[i] = dilation[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs2d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs2d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+            }
+            index = pass.insertAttrs(attrs, AttrsType::CONV2D);
+        }
+        else if (imagesShape.size() == 5)
+        {
+            attrs.convAttrs3d.withRelu = convBias.withRelu();
+            for (auto i = 0; i < 3; i++)
+            {
+                attrs.convAttrs3d.windowStrides[i] = strides[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs3d.windowDilation[i] = dilation[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs3d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
+                attrs.convAttrs3d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
+            }
+            index = pass.insertAttrs(attrs, AttrsType::CONV3D);
+        }
+        // Get callback func
+        auto module = pass.getModule();
+        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto int64Ty = rewriter.getIntegerType(64);
+        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
+        FuncOp callBackFunc = pass.getCallDecl("callback_3_inputs",
+                                               {unrankedMemrefTy,
+                                                unrankedMemrefTy,
+                                                unrankedMemrefTy,
+                                                unrankedMemrefTy,
+                                                unionTy.getPointerTo(),
+                                                int64Ty},
+                                               {},
+                                               rewriter);
+        // Insert call
+        auto globalPtr = getGlobalAddr(index, rewriter, pass);
+        auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
+            rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::CONVOLUTIONBIAS), 64);
+        SmallVector<mlir::Value, 4> inputs = {images, filters, bias, result};
+        SmallVector<mlir::Value, 4> outputs;
+        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
+        SmallVector<mlir::Value, 6> args = {
+            outputs[0], outputs[1], outputs[2], outputs[3], globalPtr, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 
@@ -1511,11 +2211,12 @@ namespace
         auto padBelow = padBelowAttr.getValue();
         auto padAbove = padBelowAttr.getValue();
         Type elemTy = images.getType().cast<MemRefType>().getElementType();
+        auto indexType = IndexType::get(rewriter.getContext());
 
         // Create views
-        MemRefView vRes(result), vImages(images), vFilters(filters);
+        MemRefBoundsCapture vRes(result), vImages(images), vFilters(filters);
         // Create indexed Values
-        IndexedValue iRes(result), iImages(images), iFilters(filters);
+        AffineIndexedValue iRes(result), iImages(images), iFilters(filters);
         // Bounds on batch size N
         ValueHandle batchLb = vImages.lb(0), batchUb = vImages.ub(0);
         // Bounds on spatial dimensions
@@ -1526,9 +2227,8 @@ namespace
         unsigned spatialRank = vImages.rank() - 2;
 
         // Result spatial indices and bounds
-        auto resSpatialIndices = makeIndexHandles(spatialRank);
-        auto resSpatialIndicesPtrs =
-            makeHandlePointers(MutableArrayRef<IndexHandle>(resSpatialIndices));
+        auto resSpatialIndices = ValueHandle::makeIndexHandles(spatialRank);
+        auto resSpatialIndicesPtrs = makeHandlePointers(resSpatialIndices);
         SmallVector<int64_t, 4> resSteps, filtersSteps;
         SmallVector<int, 4> padBelowIntValues;
         bool withPadding = false;
@@ -1610,9 +2310,8 @@ namespace
                      "Results spatial dims mismatches input");
 
         // Filters spatial indices and bounds
-        auto filtersSpatialIndices = makeIndexHandles(spatialRank);
-        auto filtersSpatialIndicesPtrs =
-            makeHandlePointers(MutableArrayRef<IndexHandle>(filtersSpatialIndices));
+        auto filtersSpatialIndices = ValueHandle::makeIndexHandles(spatialRank);
+        auto filtersSpatialIndicesPtrs = makeHandlePointers(filtersSpatialIndices);
 
         for (auto i = 0; i < spatialRank; i++)
         {
@@ -1658,23 +2357,22 @@ namespace
 
         // Initialize output to zero
         {
-            IndexHandle n, k, c;
-            auto resSpatialIndices = makeIndexHandles(spatialRank);
-            auto resSpatialIndicesPtrs =
-                makeHandlePointers(MutableArrayRef<IndexHandle>(resSpatialIndices));
+            ValueHandle n(indexType), k(indexType), c(indexType);
+            auto resSpatialIndices = ValueHandle::makeIndexHandles(spatialRank);
+            auto resSpatialIndicesPtrs = makeHandlePointers(resSpatialIndices);
 
-            LoopBuilder::makeAffine(&n, batchLb, batchUb, 1)([&] {
-                LoopBuilder::makeAffine(&k, numFiltersLb, numFiltersUb, 1)([&] {
+            makeAffineLoopBuilder(&n, batchLb, batchUb, 1)([&] {
+                makeAffineLoopBuilder(&k, numFiltersLb, numFiltersUb, 1)([&] {
                     AffineLoopNestBuilder(
                         resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&] {
-                        SmallVector<IndexHandle, 4> resIndices;
+                        SmallVector<ValueHandle, 4> resIndices;
                         // Result indices
                         resIndices.push_back(n);
                         if (groupConvolution && groupsInFilters)
                         {
                             // compute global C_OUT from gID and k
                             // gId * C_OUT (num of filters) + k
-                            resIndices.push_back(IndexHandle(ValueHandle(gId) * numFiltersUb + k));
+                            resIndices.push_back(ValueHandle(gId) * numFiltersUb + k);
                         }
                         else
                         {
@@ -1689,31 +2387,31 @@ namespace
             });
         }
 
-        IndexHandle n, k, c;
+        ValueHandle n(indexType), k(indexType), c(indexType);
         // Convolution loop
-        LoopBuilder::makeAffine(&n, batchLb, batchUb, 1)([&] {
+        makeAffineLoopBuilder(&n, batchLb, batchUb, 1)([&] {
             // Number of filters loop
-            LoopBuilder::makeAffine(&k, numFiltersLb, numFiltersUb, 1)([&] {
+            makeAffineLoopBuilder(&k, numFiltersLb, numFiltersUb, 1)([&] {
                 // Channels loop
-                LoopBuilder::makeAffine(&c, numChannelsLb, numChannelsUb, 1)([&] {
+                makeAffineLoopBuilder(&c, numChannelsLb, numChannelsUb, 1)([&] {
                     // Results loop
                     AffineLoopNestBuilder(
                         resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&] {
                         // Compute image start indices
-                        SmallVector<IndexHandle, 4> imgStartIndices;
+                        SmallVector<ValueHandle, 4> imgStartIndices;
                         for (auto i = 0; i < spatialRank; i++)
                         {
                             IntegerAttr iAttr = strides[i].cast<IntegerAttr>();
-                            auto stride = intrinsics::constant_index(iAttr.getInt());
-                            imgStartIndices.push_back(IndexHandle(resSpatialIndices[i] * stride));
+                            auto stride = std_constant_index(iAttr.getInt());
+                            imgStartIndices.push_back(resSpatialIndices[i] * stride);
                         }
-                        SmallVector<IndexHandle, 4> resIndices;
+                        SmallVector<ValueHandle, 4> resIndices;
                         // Result indices
                         resIndices.push_back(n);
                         if (groupConvolution && groupsInFilters)
                         {
                             // gId * C_OUT (num of filters) + k
-                            resIndices.push_back(IndexHandle(ValueHandle(gId) * numFiltersUb + k));
+                            resIndices.push_back(ValueHandle(gId) * numFiltersUb + k);
                         }
                         else
                         {
@@ -1727,15 +2425,14 @@ namespace
                                               filtersSpatialLbs,
                                               filtersSpatialUbs,
                                               filtersSteps)([&] {
-                            SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
+                            SmallVector<ValueHandle, 4> imgIndices, filtersIndices;
                             // Image indices
                             // Here we compute the virtual start index into the padded image.
                             imgIndices.push_back(n);
                             imgIndices.push_back(c);
                             for (auto i = 0; i < spatialRank; i++)
                             {
-                                imgIndices.push_back(
-                                    IndexHandle(imgStartIndices[i] + filtersSpatialIndices[i]));
+                                imgIndices.push_back(imgStartIndices[i] + filtersSpatialIndices[i]);
                             }
                             // Filter indices
 
@@ -1744,14 +2441,14 @@ namespace
                             // index
                             if (groupConvolution && groupsInFilters)
                             {
-                                filtersIndices.push_back(IndexHandle(gId));
+                                filtersIndices.push_back(ValueHandle(gId));
                             }
 
                             filtersIndices.push_back(k);
                             // subtract lower bound of channel
                             // if we are doing group convolution this bound will advance based
                             // on the group id. For the filters, it should always start from 0
-                            filtersIndices.push_back(IndexHandle(c - numChannelsLb));
+                            filtersIndices.push_back(c - numChannelsLb);
                             filtersIndices.insert(filtersIndices.end(),
                                                   filtersSpatialIndices.begin(),
                                                   filtersSpatialIndices.end());
@@ -1759,7 +2456,7 @@ namespace
                             if (withPadding)
                             {
                                 // if args : img dims, img lbs, img ubs
-                                SmallVector<IndexHandle, 4>::iterator it = imgIndices.begin();
+                                SmallVector<ValueHandle, 4>::iterator it = imgIndices.begin();
                                 std::advance(it, 2);
                                 SmallVector<Value, 4> affineIfArgs(it, imgIndices.end());
                                 affineIfArgs.insert(
@@ -1777,14 +2474,14 @@ namespace
                                     ScopedContext scope(rewriter, loc);
                                     // We must subtract pad below before img load, since the
                                     // physical image is not padded
-                                    SmallVector<IndexHandle, 4> adjustedImgIndices;
+                                    SmallVector<ValueHandle, 4> adjustedImgIndices;
                                     adjustedImgIndices.push_back(n);
                                     adjustedImgIndices.push_back(c);
                                     for (auto i = 0; i < spatialRank; i++)
                                     {
-                                        adjustedImgIndices.push_back(IndexHandle(
+                                        adjustedImgIndices.push_back(
                                             imgIndices[2 + i] -
-                                            intrinsics::constant_index(padBelowIntValues[i])));
+                                            std_constant_index(padBelowIntValues[i]));
                                     }
                                     iRes(resIndices) =
                                         iRes(resIndices) +
@@ -1821,15 +2518,15 @@ namespace
 
         ScopedContext scope(rewriter, loc);
         // Views
-        MemRefView vRes(result), vLHS(lhs);
+        MemRefBoundsCapture vRes(result), vLHS(lhs);
         // Index Values
-        IndexedValue iRes(result), iLHS(lhs);
+        AffineIndexedValue iRes(result), iLHS(lhs);
         // Bounds Index Handles
         auto lbs = vLHS.getLbs();
         auto ubs = vLHS.getUbs();
         // Loop induction vars
-        auto ivs = makeIndexHandles(vLHS.rank());
-        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
+        auto ivs = ValueHandle::makeIndexHandles(vLHS.rank());
+        auto pivs = makeHandlePointers(ivs);
         // Steps
         auto steps = vLHS.getSteps();
 
@@ -1867,15 +2564,15 @@ namespace
 
         ScopedContext scope(rewriter, loc);
         // Views
-        MemRefView vRes(result), vLHS(lhs), vRHS(rhs);
+        MemRefBoundsCapture vRes(result), vLHS(lhs), vRHS(rhs);
         // Index Values
-        IndexedValue iRes(result), iLHS(lhs), iRHS(rhs);
+        AffineIndexedValue iRes(result), iLHS(lhs), iRHS(rhs);
         // Bounds Index Handles
         auto lbs = vLHS.getLbs();
         auto ubs = vLHS.getUbs();
         // Loop induction vars
-        auto ivs = makeIndexHandles(vLHS.rank());
-        auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
+        auto ivs = ValueHandle::makeIndexHandles(vLHS.rank());
+        auto pivs = makeHandlePointers(ivs);
         // Steps
         auto steps = vLHS.getSteps();
         // element type of the operand
@@ -1900,65 +2597,57 @@ namespace
                     iRes(ivs) = iLHS(ivs) / iRHS(ivs);
                 }
                 // TODO(pthoreho) For all comparision operators, use
-                // edsc::intrinsics::zero_extendi(ValueHandle(iLHS(ivs)) !=
+                // zero_extendi(ValueHandle(iLHS(ivs)) !=
                 // ValueHandle(iRHS(ivs)), IntegerType::get(8, op->getContext()));
-                // instead of edsc::intrinsics::select once `zero_extendi` is
+                // instead of std_select once `zero_extendi` is
                 // made available in the edsc::intrinsics namescope in MLIR repo.
                 else if (isa<NGGreaterOp>(op))
                 {
-                    iRes(ivs) =
-                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)),
-                                                 createOneConstant(elemTy),
-                                                 createZeroConstant(elemTy));
+                    iRes(ivs) = std_select(ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)),
+                                           createOneConstant(elemTy),
+                                           createZeroConstant(elemTy));
                 }
                 else if (isa<NGLessOp>(op))
                 {
-                    iRes(ivs) =
-                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)),
-                                                 createOneConstant(elemTy),
-                                                 createZeroConstant(elemTy));
+                    iRes(ivs) = std_select(ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)),
+                                           createOneConstant(elemTy),
+                                           createZeroConstant(elemTy));
                 }
                 else if (isa<NGGreaterEqOp>(op))
                 {
-                    iRes(ivs) =
-                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) >= ValueHandle(iRHS(ivs)),
-                                                 createOneConstant(elemTy),
-                                                 createZeroConstant(elemTy));
+                    iRes(ivs) = std_select(ValueHandle(iLHS(ivs)) >= ValueHandle(iRHS(ivs)),
+                                           createOneConstant(elemTy),
+                                           createZeroConstant(elemTy));
                 }
                 else if (isa<NGLessEqOp>(op))
                 {
-                    iRes(ivs) =
-                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) <= ValueHandle(iRHS(ivs)),
-                                                 createOneConstant(elemTy),
-                                                 createZeroConstant(elemTy));
+                    iRes(ivs) = std_select(ValueHandle(iLHS(ivs)) <= ValueHandle(iRHS(ivs)),
+                                           createOneConstant(elemTy),
+                                           createZeroConstant(elemTy));
                 }
                 else if (isa<NGEqOp>(op))
                 {
-                    iRes(ivs) =
-                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) == ValueHandle(iRHS(ivs)),
-                                                 createOneConstant(elemTy),
-                                                 createZeroConstant(elemTy));
+                    iRes(ivs) = std_select(ValueHandle(iLHS(ivs)) == ValueHandle(iRHS(ivs)),
+                                           createOneConstant(elemTy),
+                                           createZeroConstant(elemTy));
                 }
                 else if (isa<NGNotEqOp>(op))
                 {
-                    iRes(ivs) =
-                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) != ValueHandle(iRHS(ivs)),
-                                                 createOneConstant(elemTy),
-                                                 createZeroConstant(elemTy));
+                    iRes(ivs) = std_select(ValueHandle(iLHS(ivs)) != ValueHandle(iRHS(ivs)),
+                                           createOneConstant(elemTy),
+                                           createZeroConstant(elemTy));
                 }
                 else if (isa<NGMaxOp>(op))
                 {
-                    iRes(ivs) =
-                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)),
-                                                 ValueHandle(iLHS(ivs)),
-                                                 ValueHandle(iRHS(ivs)));
+                    iRes(ivs) = std_select(ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)),
+                                           ValueHandle(iLHS(ivs)),
+                                           ValueHandle(iRHS(ivs)));
                 }
                 else if (isa<NGMinOp>(op))
                 {
-                    iRes(ivs) =
-                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)),
-                                                 ValueHandle(iLHS(ivs)),
-                                                 ValueHandle(iRHS(ivs)));
+                    iRes(ivs) = std_select(ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)),
+                                           ValueHandle(iLHS(ivs)),
+                                           ValueHandle(iRHS(ivs)));
                 }
                 else
                 {
@@ -1995,10 +2684,10 @@ namespace
         Value result = pass.buildOutputDefs(op, rewriter)[0];
 
         // Views
-        MemRefView vRes(result), vArg(arg);
+        MemRefBoundsCapture vRes(result), vArg(arg);
         // Index Values
         StdIndexedValue iRes(result), stdArg(arg);
-        IndexedValue affineArg(arg);
+        AffineIndexedValue affineArg(arg);
         // Bounds Index Handles
         auto resLbs = vRes.getLbs();
         auto resUbs = vRes.getUbs();
@@ -2008,8 +2697,8 @@ namespace
         Type resTy = result.getType().cast<MemRefType>().getElementType();
         // Generate loop nest that initializes result to lower bound of the axis to be reduced.
         {
-            auto ivs = makeIndexHandles(vRes.rank());
-            auto pivs = makeHandlePointers(MutableArrayRef<IndexHandle>(ivs));
+            auto ivs = ValueHandle::makeIndexHandles(vRes.rank());
+            auto pivs = makeHandlePointers(ivs);
             auto steps = vRes.getSteps();
             auto initVal = vArg.lb(axis);
             AffineLoopNestBuilder(pivs, resLbs, resUbs, steps)(
@@ -2018,10 +2707,11 @@ namespace
 
         // Generate loop nest that computes the actual index reduction.
         {
-            auto allIVs = makeIndexHandles(vArg.rank());
-            auto pAllIVs = makeHandlePointers(MutableArrayRef<IndexHandle>(allIVs));
+            auto allIVs = ValueHandle::makeIndexHandles(vArg.rank());
+            auto pAllIVs = makeHandlePointers(allIVs);
             auto steps = vArg.getSteps();
-            SmallVector<IndexHandle, 8> nonRedIVs;
+            SmallVector<ValueHandle, 8> nonRedIVs;
+            SmallVector<ValueHandle, 8> tempIVs;
 
             Type resTy = result.getType().cast<MemRefType>().getElementType();
             NGRAPH_CHECK(resTy.isa<IntegerType>(),
@@ -2043,16 +2733,23 @@ namespace
                     (ValueHandle)iRes(nonRedIVs), IndexType::get(resTy.getContext()));
 
                 // Build list of IVs including current min index.
-                auto tempIVs = allIVs;
-                tempIVs[axis] = currRedIdx;
+                for (auto i = 0; i < vArg.rank(); i++)
+                {
+                    if (i != axis)
+                    {
+                        tempIVs.push_back(allIVs[i]);
+                    }
+                    else
+                    {
+                        tempIVs.push_back(currRedIdx);
+                    }
+                }
 
                 // Select the min/max value and cast it back to integer type before storing it.
                 ValueHandle newRedIdx =
                     std::is_same<RedOp, NGArgMinRedOp>()
-                        ? edsc::intrinsics::select(
-                              affineArg(allIVs) < stdArg(tempIVs), allIVs[axis], currRedIdx)
-                        : edsc::intrinsics::select(
-                              stdArg(tempIVs) < affineArg(allIVs), allIVs[axis], currRedIdx);
+                        ? std_select(affineArg(allIVs) < stdArg(tempIVs), allIVs[axis], currRedIdx)
+                        : std_select(stdArg(tempIVs) < affineArg(allIVs), allIVs[axis], currRedIdx);
 
                 iRes(nonRedIVs) = ValueHandle::create<IndexCastOp>(newRedIdx, resTy);
             });
@@ -2117,18 +2814,8 @@ namespace
             NGRAPH_UNREACHABLE("Unsupported pooling op");
         }
 
-        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-        SmallVector<mlir::Value, 4> inputs = {lhs, result};
-        SmallVector<mlir::Value, 4> outputs;
-        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
-
-        FuncOp callBackFunc =
-            pass.getCallDecl("__mlir_callback_1_input",
-                             {unrankedMemrefTy, unrankedMemrefTy, int64Ty, int64Ty},
-                             {},
-                             rewriter);
-
         opAttrs attrs;
+        size_t index = 0;
         if (lhsShape.size() == 4)
         {
             attrs.poolAttrs2d.includePaddingInAvgComputation = includePadding;
@@ -2139,6 +2826,7 @@ namespace
                 attrs.poolAttrs2d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
                 attrs.poolAttrs2d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
             }
+            index = pass.insertAttrs(attrs, AttrsType::POOL2D);
         }
         else if (lhsShape.size() == 5)
         {
@@ -2150,14 +2838,26 @@ namespace
                 attrs.poolAttrs3d.padBelow[i] = padBelow[i].cast<IntegerAttr>().getInt();
                 attrs.poolAttrs3d.padAbove[i] = padAbove[i].cast<IntegerAttr>().getInt();
             }
+            index = pass.insertAttrs(attrs, AttrsType::POOL3D);
         }
-        auto index = pass.insertAttrs(attrs);
-        auto attrsIndexArg =
-            rewriter.create<mlir::ConstantIntOp>(rewriter.getUnknownLoc(), index, 64);
+        // Get callback func
+        auto module = pass.getModule();
+        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
+        FuncOp callBackFunc =
+            pass.getCallDecl("callback_1_input",
+                             {unrankedMemrefTy, unrankedMemrefTy, unionTy.getPointerTo(), int64Ty},
+                             {},
+                             rewriter);
+        // Insert call
+        auto globalPtr = getGlobalAddr(index, rewriter, pass);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(ty), 64);
-        SmallVector<mlir::Value, 4> args = {outputs[0], outputs[1], attrsIndexArg, opTypeArg};
-
+        SmallVector<mlir::Value, 4> inputs = {lhs, result};
+        SmallVector<mlir::Value, 4> outputs;
+        castMemRef(inputs, outputs, rewriter, unrankedMemrefTy);
+        SmallVector<mlir::Value, 4> args = {outputs[0], outputs[1], globalPtr, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
     }
@@ -2168,11 +2868,11 @@ namespace
         {
             if (floatTy.isF32())
             {
-                return intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
+                return std_constant_float(llvm::APFloat(0.0f), floatTy);
             }
             else if (floatTy.isF64())
             {
-                return intrinsics::constant_float(llvm::APFloat(0.0), floatTy);
+                return std_constant_float(llvm::APFloat(0.0), floatTy);
             }
             else
             {
@@ -2181,7 +2881,7 @@ namespace
         }
         else if (auto intTy = type.dyn_cast<IntegerType>())
         {
-            return intrinsics::constant_int(0, intTy.getWidth());
+            return std_constant_int(0, intTy.getWidth());
         }
         NGRAPH_UNREACHABLE("Unsupported type");
     }
@@ -2192,11 +2892,11 @@ namespace
         {
             if (floatTy.isF32())
             {
-                return intrinsics::constant_float(llvm::APFloat(1.0f), floatTy);
+                return std_constant_float(llvm::APFloat(1.0f), floatTy);
             }
             else if (floatTy.isF64())
             {
-                return intrinsics::constant_float(llvm::APFloat(1.0f), floatTy);
+                return std_constant_float(llvm::APFloat(1.0f), floatTy);
             }
             else
             {
@@ -2205,7 +2905,7 @@ namespace
         }
         else if (auto intTy = type.dyn_cast<IntegerType>())
         {
-            return intrinsics::constant_int(1, intTy.getWidth());
+            return std_constant_int(1, intTy.getWidth());
         }
         NGRAPH_UNREACHABLE("Unsupported type");
     }

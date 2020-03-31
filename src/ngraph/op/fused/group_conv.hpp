@@ -61,6 +61,8 @@ namespace ngraph
                                  const CoordinateDiff& pads_end,
                                  const Strides& dilations,
                                  const PadType& auto_pad = PadType::EXPLICIT);
+
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 // TODO - Remove supports_decompose and validate_and_infer_type once op supports
                 // decomposition
                 bool supports_decompose() const override { return false; }
@@ -187,6 +189,7 @@ namespace ngraph
                                              const PadType& auto_pad = PadType::EXPLICIT,
                                              const CoordinateDiff& output_padding = {});
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual bool is_dynamic() const override;
                 virtual NodeVector decompose_op() const override;
                 virtual void pre_validate_and_infer_types() override;
@@ -197,7 +200,7 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 /// \return The spatial shape of the output.
-                const PartialShape get_output_shape() const;
+                const PartialShape get_convolution_output_shape() const;
                 void set_output_shape(const Shape& output_shape);
                 /// \return The strides from the forward prop.
                 const Strides& get_strides() const { return m_strides; }

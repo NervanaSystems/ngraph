@@ -29,8 +29,7 @@ The Python wheels for nGraph have been tested and are supported on the following
 
 To install via pip, run: 
 
-```python
-
+```
 pip install --upgrade pip==19.3.1
 pip install ngraph-core
 ```

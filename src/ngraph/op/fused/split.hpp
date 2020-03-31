@@ -95,6 +95,7 @@ namespace ngraph
                 ///                    split into.
                 Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_splits);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
