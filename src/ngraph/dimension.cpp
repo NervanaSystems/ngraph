@@ -113,15 +113,18 @@ Dimension::value_type Dimension::get_length() const
 
 namespace
 {
-    int64_t dimension_length(Interval::value_type vt) { return vt == Interval::s_max ? -1 : vt; }
+    Dimension::value_type dimension_length(Interval::value_type vt)
+    {
+        return vt == Interval::s_max ? -1 : vt;
+    }
 }
 
-int64_t Dimension::get_max_length() const
+Dimension::value_type Dimension::get_max_length() const
 {
     return dimension_length(m_dimension.get_max_val());
 }
 
-int64_t Dimension::get_min_length() const
+Dimension::value_type Dimension::get_min_length() const
 {
     return dimension_length(m_dimension.get_min_val());
 }

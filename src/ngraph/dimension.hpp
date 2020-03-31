@@ -46,7 +46,7 @@ namespace ngraph
         /// \brief Construct a dynamic dimension with bounded range
         /// \param min_dimension The lower inclusive limit for the dimension
         /// \param mas_dimension The upper inclusive limit for the dimension
-        Dimension(value_type min_dimension, int64_t max_dimension)
+        Dimension(value_type min_dimension, value_type max_dimension)
             : m_dimension(min_dimension, max_dimension)
         {
         }
@@ -89,8 +89,8 @@ namespace ngraph
         /// \throws std::invalid_argument If this dimension is dynamic or negative.
         value_type get_length() const;
 
-        int64_t get_min_length() const;
-        int64_t get_max_length() const;
+        value_type get_min_length() const;
+        value_type get_max_length() const;
 
         /// \brief Return the interval of valid lengths
         const Interval& get_interval() const { return m_dimension; }
@@ -152,21 +152,18 @@ namespace ngraph
         static Dimension dynamic() { return Dimension(); }
         /// \brief Addition operator for Dimension.
         /// \param dim Right operand for addition.
-        /// \return Dimension::dynamic() if either of `*this` or `dim` is dynamic; else, a static
-        ///         dimension with value `int64_t(*this)+in64_t(dim)`.
+        /// \return Smallest interval dimension enclosing inputs
         Dimension operator+(const Dimension& dim) const;
 
         /// \brief Subtraction operator for Dimension.
         /// \param dim Right operand for subtraction.
-        /// \return Dimension::dynamic() if either of `*this` or `dim` is dynamic; else, a static
-        ///         dimension with value `int64_t(*this)-int64_t(dim)`.
+        /// \return Smallest interval dimension enclosing inputs
         Dimension operator-(const Dimension& dim) const;
 
         /// \brief Multiplication operator for Dimension.
         /// \param dim Right operand for multiplicaiton.
-        /// \return 0 if either of `*this` or `dim` is static and 0; else, Dimension::dynamic() if
-        ///         either of `*this` or `dim` is dynamic; else, a static dimension with value
-        ///         `int64_t(*this)*int64_t(dim)`.
+        /// \return Smallest interval containing all "produces" which are 0 if either of `this` or
+        /// `dim` has length `0`, else unbounded if either is unbounded, else product of lengths.
         Dimension operator*(const Dimension& dim) const;
 
         /// \brief Add-into operator for Dimension.
@@ -192,7 +189,7 @@ namespace ngraph
     /// \param dimension The dimension to be inserted into `str`.
     /// \return A reference to `str` after insertion.
     ///
-    /// Inserts the string `?` if `dimension` is dynamic; else inserts `int64_t(dimension)`.
+    /// Inserts the string `?` if `dimension` is dynamic; else inserts `dimension.get_length()`.
     NGRAPH_API
     std::ostream& operator<<(std::ostream& str, const Dimension& dimension);
 }
