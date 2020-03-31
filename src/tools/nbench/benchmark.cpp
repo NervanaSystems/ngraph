@@ -51,6 +51,12 @@ static void dump_result_tensors(vector<shared_ptr<runtime::HostTensor>>& results
     {
         cout << "Result tensor #" << i << ": " << result->get_name() << endl;
         auto element_type = result->get_element_type();
+
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
         switch (element_type)
         {
         case (element::Type_t::f32): dump_tensor_elements<float>(*result); break;
@@ -63,8 +69,14 @@ static void dump_result_tensors(vector<shared_ptr<runtime::HostTensor>>& results
         case (element::Type_t::f64): dump_tensor_elements<double>(*result); break;
         case (element::Type_t::u32): dump_tensor_elements<uint32_t>(*result); break;
         case (element::Type_t::u64): dump_tensor_elements<uint64_t>(*result); break;
+        case (element::Type_t::boolean): dump_tensor_elements<char>(*result); break;
+        case (element::Type_t::bf16): dump_tensor_elements<bfloat16>(*result); break;
+        case (element::Type_t::f16): dump_tensor_elements<float16>(*result); break;
         default: NGRAPH_UNREACHABLE("Type not implemented yet");
         }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
         ++i;
     }
 }
@@ -159,8 +171,9 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     ss << time / iterations << "ms per iteration" << endl;
     cout << ss.str();
 
-    if (dump_results) {
-      dump_result_tensors(result_data);
+    if (dump_results)
+    {
+        dump_result_tensors(result_data);
     }
 
     vector<runtime::PerformanceCounter> perf_data = exec->get_performance_data();
