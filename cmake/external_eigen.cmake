@@ -34,7 +34,7 @@ ExternalProject_Add(
     GIT_TAG ${EIGEN_GIT_TAG}
     UPDATE_COMMAND ""
     PATCH_COMMAND ${EIGEN_PATCH_REVERT_COMMAND}
-    COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_SOURCE_DIR}/cmake/eigen.patch
+    COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_CURRENT_SOURCE_DIR}/cmake/eigen.patch
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
