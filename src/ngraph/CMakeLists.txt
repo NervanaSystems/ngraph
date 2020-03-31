@@ -734,7 +734,7 @@ add_library(ngraph::ngraph ALIAS ngraph)
 
 if (NOT WIN32)
     find_package(Threads REQUIRED)
-    target_link_libraries(ngraph PUBLIC dl Threads::Threads)
+    target_link_libraries(ngraph PRIVATE dl Threads::Threads)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
