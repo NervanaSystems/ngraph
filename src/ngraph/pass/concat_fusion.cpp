@@ -99,14 +99,15 @@ void pass::ConcatElimination::construct_concat_elimination()
             << "concat_elimination: In callback for construct_concat_elimination against node = "
             << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
-        auto op = pattern_map[op_label];
+        auto concat_input_op = pattern_map[op_label];
 
-        auto root = as_type_ptr<op::Concat>(m.get_match_root());
-        if (root && (root->get_input_shape(0) == root->get_output_shape(0)))
+        auto concat = as_type_ptr<op::Concat>(m.get_match_root());
+        // eliminate concat with 1 input
+        if (concat && (concat->get_input_size() == 1))
         {
-            NGRAPH_DEBUG << " eliminated " << m.get_match_root() << "\n";
-            replace_node(m.get_match_root(), op);
-
+            NGRAPH_DEBUG << " eliminated " << concat << "\n";
+            concat_input_op->set_friendly_name(concat->get_friendly_name());
+            replace_node(concat, concat_input_op);
             return true;
         }
         NGRAPH_DEBUG << " Incorrect match in callback\n";
@@ -114,7 +115,15 @@ void pass::ConcatElimination::construct_concat_elimination()
     };
 
     auto m = std::make_shared<pattern::Matcher>(concat_label, "ConcatElimination");
-    this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
+    this->add_matcher(m, callback, PassProperty::CHANGE_DYNAMIC_STATE);
+}
+
+bool ngraph::pass::ConcatElimination::run_on_function(std::shared_ptr<Function> function)
+{
+    // skip if graph is just concat itself
+    if (function->get_ops().size() < 4)
+        return false;
+    return GraphRewrite::run_on_function(function);
 }
 
 bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> function)
