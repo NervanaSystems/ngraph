@@ -103,6 +103,7 @@ set(SRC
     provenance.cpp
     replace_node.cpp
     reshape_elimination.cpp
+    reshape_elimination_v1.cpp
     reshape_sinking.cpp
     shape.cpp
     specialize_function.cpp

@@ -546,6 +546,8 @@ set (SRC
     pass/propagate_cacheability.hpp
     pass/reshape_elimination.cpp
     pass/reshape_elimination.hpp
+    pass/reshape_elimination_v1.cpp
+    pass/reshape_elimination_v1.hpp
     pass/reshape_sinking.cpp
     pass/reshape_sinking.hpp
     pass/serialize.cpp
