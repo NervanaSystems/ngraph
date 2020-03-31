@@ -731,6 +731,11 @@ target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH
 #Add an alias so that library can be used inside the build tree, e.g. when testing
 add_library(ngraph::ngraph ALIAS ngraph)
 
+if (NOT WIN32)
+    find_package(Threads REQUIRED)
+    target_link_libraries(ngraph PRIVATE dl Threads::Threads)
+endif()
+
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
     target_link_libraries(ngraph PRIVATE onnx_import)
