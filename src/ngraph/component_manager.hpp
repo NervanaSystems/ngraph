@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "interpreter/int_backend_visibility.hpp"
+#include "../../backend/interpreter/int_backend_visibility.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/runtime/plaidml/plaidml_backend_visibility.hpp"
