@@ -463,7 +463,7 @@ namespace
         NGRAPH_CHECK(output_pshape[one_hot_axis].is_static(),
                      "OneHot:v0 one hot axis dimension must be static ",
                      *node);
-        const auto depth = static_cast<int64_t>(output_pshape[one_hot_axis]);
+        const auto depth = output_pshape[one_hot_axis].get_length();
         const auto depth_node = op::Constant::create(element::i64, Shape{}, {depth});
 
         const auto on_value = op::Constant::create(element::i64, Shape{}, {1});
