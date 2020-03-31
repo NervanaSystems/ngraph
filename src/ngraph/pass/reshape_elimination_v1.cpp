@@ -53,7 +53,6 @@ void pass::ReshapeEliminationV1::construct_identity_reshape_pattern()
             return false;
         }
 
-        /* m.get_match_value().replace(gop); */
         gop->set_friendly_name(r1->get_friendly_name());
         replace_node(r1, gop);
         return true;
