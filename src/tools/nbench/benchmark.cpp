@@ -72,6 +72,9 @@ static void dump_result_tensors(vector<shared_ptr<runtime::HostTensor>>& results
         case (element::Type_t::boolean): dump_tensor_elements<char>(*result); break;
         case (element::Type_t::bf16): dump_tensor_elements<bfloat16>(*result); break;
         case (element::Type_t::f16): dump_tensor_elements<float16>(*result); break;
+        case element::Type_t::u1: throw runtime_error("unsupported type");
+        case element::Type_t::undefined: throw runtime_error("unsupported type");
+        case element::Type_t::dynamic: throw runtime_error("unsupported type");
         default: NGRAPH_UNREACHABLE("Type not implemented yet");
         }
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
