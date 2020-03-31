@@ -23,6 +23,8 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/stop_gradient.hpp"
@@ -37,7 +39,7 @@ using namespace ngraph;
 
 static bool eliminate_pad(const std::shared_ptr<Node>& node)
 {
-    auto pad = std::static_pointer_cast<op::Pad>(node);
+    auto pad = std::static_pointer_cast<op::v0::Pad>(node);
     if (pad->get_input_shape(0) == pad->get_output_shape(0))
     {
         replace_node(node, node->get_argument(0));
@@ -81,9 +83,29 @@ static bool eliminate_slice(const std::shared_ptr<Node>& node)
 
 static bool eliminate_broadcast(const std::shared_ptr<Node>& node)
 {
-    auto broadcast = std::static_pointer_cast<op::Broadcast>(node);
+    auto broadcast = std::static_pointer_cast<op::v0::Broadcast>(node);
     if (broadcast->get_input_shape(0) == broadcast->get_output_shape(0))
     {
+        replace_node(node, node->get_argument(0));
+        return true;
+    }
+    return false;
+}
+
+static bool eliminate_shapeof_gather_axis_one(const std::shared_ptr<Node>& node)
+{
+    auto shapeof = std::static_pointer_cast<op::ShapeOf>(node);
+    if (auto gather = as_type_ptr<op::v1::Gather>(shapeof->get_argument(0)))
+    {
+        auto p_shape = gather->get_input_partial_shape(0);
+        auto i_shape = gather->get_input_partial_shape(1);
+        auto a_shape = gather->get_input_partial_shape(2);
+        if (!p_shape.is_static() || !i_shape.is_static() || !a_shape.is_static() ||
+            static_cast<int64_t>(p_shape.rank()) != 2)
+        {
+            return false;
+        }
+
         replace_node(node, node->get_argument(0));
         return true;
     }
@@ -97,12 +119,13 @@ static bool eliminate_stop_gradient(const std::shared_ptr<Node>& node)
 }
 
 static const std::unordered_map<std::type_index, std::function<bool(const std::shared_ptr<Node>&)>>
-    dispatcher{{TI(op::Pad), &eliminate_pad},
+    dispatcher{{TI(op::v0::Pad), &eliminate_pad},
                {TI(op::Sum), &eliminate_sum},
                {TI(op::Convert), &eliminate_convert},
                {TI(op::Slice), &eliminate_slice},
                {TI(op::StopGradient), &eliminate_stop_gradient},
-               {TI(op::Broadcast), &eliminate_broadcast}};
+               {TI(op::ShapeOf), &eliminate_shapeof_gather_axis_one},
+               {TI(op::v0::Broadcast), &eliminate_broadcast}};
 
 bool pass::NopElimination::run_on_function(std::shared_ptr<Function> function)
 {

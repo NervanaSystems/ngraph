@@ -26,6 +26,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/abs.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/parameter.hpp"
@@ -296,4 +297,32 @@ TEST(concat_fusion, pass_property)
         ASSERT_TRUE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
         ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
     }
+}
+
+TEST(concat_fusion, concat_elimination_result)
+{
+    int64_t a = 0;
+    auto A = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A}, a), ParameterVector{A});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Validate>();
+    pass_manager.register_pass<pass::ConcatElimination>();
+    pass_manager.run_passes(f);
+
+    /* ASSERT_EQ(count_ops_of_type<op::StopGradient>(f), 0); */
+}
+TEST(concat_fusion, concat_elimination_nonresult)
+{
+    int64_t a = 0;
+    auto A = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto B = make_shared<op::Concat>(NodeVector{A}, a);
+    auto f = make_shared<Function>(make_shared<op::Abs>(B), ParameterVector{A});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Validate>();
+    pass_manager.register_pass<pass::ConcatElimination>();
+    pass_manager.run_passes(f);
+
+    /* ASSERT_EQ(count_ops_of_type<op::StopGradient>(f), 0); */
 }

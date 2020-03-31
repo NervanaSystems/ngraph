@@ -39,6 +39,7 @@ public:
     {
         construct_concat_elimination();
     }
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
 
 private:
     void construct_concat_elimination();

@@ -111,6 +111,31 @@ TEST(nop_elimination, eliminate_stop_gradient)
     ASSERT_EQ(count_ops_of_type<op::StopGradient>(f), 0);
 }
 
+TEST(nop_elimination, eliminate_shapeof_gather_axis_one)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto index = make_shared<op::Constant>(element::i64, Shape{}, vector<float>{0});
+    auto axis = make_shared<op::Constant>(element::i64, Shape{}, vector<float>{0});
+    auto gather = make_shared<op::v1::Gather>(A, index, axis);
+    auto shapeof = make_shared<op::ShapeOf>(gather);
+    auto f = make_shared<Function>(NodeVector{shapeof}, ParameterVector{A});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Validate>();
+    /* pass_manager.register_pass<pass::NopElimination>(); */
+    pass_manager.run_passes(f);
+
+    auto backend = runtime::Backend::create("CPU");
+    auto a = backend->create_tensor(element::f32, Shape{2, 3});
+    copy_data(a, vector<float>{1, -2, 0, -4.75f});
+    auto handle = backend->compile(f);
+    auto result = backend->create_tensor(element::i64, Shape{1});
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<int64_t>{2}), read_vector<int64_t>(result));
+
+    /* ASSERT_EQ(count_ops_of_type<op::StopGradient>(f), 0); */
+}
+
 TEST(nop_elimination, pass_property)
 {
     auto pass = std::make_shared<ngraph::pass::NopElimination>();
