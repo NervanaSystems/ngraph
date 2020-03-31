@@ -89,8 +89,8 @@ NGRAPH_TEST(${BACKEND_NAME}, range_subgraph)
     auto stop = make_shared<op::Parameter>(element::i32, Shape{});
     auto step = make_shared<op::Parameter>(element::i32, Shape{});
     auto start_2 = make_shared<op::Parameter>(element::i32, Shape{});
-    const int64_t out_max_length = 15;
-    const int64_t out_max_length_2 = 10;
+    const uint32_t out_max_length = 15;
+    const uint32_t out_max_length_2 = 10;
 
     // subgraph
     auto range = make_shared<op::Range>(start, stop, step, out_max_length);
