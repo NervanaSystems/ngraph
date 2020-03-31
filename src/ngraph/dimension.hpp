@@ -28,18 +28,20 @@ namespace ngraph
     /// \brief Class representing a dimension, which may be dynamic (undetermined until runtime),
     ///        in a shape or shape-like object.
     ///
-    /// Static dimensions may be implicitly converted from int64_t. A dynamic dimension is
+    /// Static dimensions may be implicitly converted from value_type. A dynamic dimension is
     /// constructed with Dimension() or Dimension::dynamic().
     ///
     /// XXX: THIS CLASS IS NOT IN USE YET AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
     class NGRAPH_API Dimension
     {
     public:
+        using value_type = int64_t;
+
         /// \brief Construct a static dimension.
         /// \param dimension Value of the dimension. Must not be equal to
         ///                  Dimension::s_dynamic_val.
         /// \throws std::invalid_argument If `dimension` == Dimension::s_dynamic_val.
-        Dimension(int64_t dimension);
+        Dimension(value_type dimension);
 
         /// \brief Construct a dynamic dimension.
         Dimension() { m_dimension = s_dynamic_val; }
@@ -49,13 +51,13 @@ namespace ngraph
         /// \brief Check whether this dimension is dynamic.
         /// \return `false` if the dimension is static, else `true`.
         bool is_dynamic() const { return !is_static(); }
-        /// \brief Convert this dimension to `int64_t`. This dimension must be static.
+        /// \brief Convert this dimension to `value_type`. This dimension must be static.
         /// \throws std::invalid_argument If this dimension is dynamic.
-        explicit operator int64_t() const
+        explicit operator value_type() const NGRAPH_DEPRECATED("use get_length() instead")
         {
             if (is_dynamic())
             {
-                throw std::invalid_argument("Cannot convert dynamic dimension to int64_t");
+                throw std::invalid_argument("Cannot convert dynamic dimension to value_type");
             }
             return m_dimension;
         }
@@ -65,10 +67,10 @@ namespace ngraph
         /// \throws std::invalid_argument If this dimension is dynamic or negative.
         explicit operator size_t() const NGRAPH_DEPRECATED("use get_length() instead");
 
-        /// \brief Convert this dimension to `uint64_t`. This dimension must be static and
+        /// \brief Convert this dimension to `value_type`. This dimension must be static and
         ///        non-negative.
         /// \throws std::invalid_argument If this dimension is dynamic or negative.
-        uint64_t get_length() const;
+        value_type get_length() const;
 
         /// \brief Check whether this dimension represents the same scheme as the argument (both
         ///        dynamic, or equal).
@@ -78,7 +80,7 @@ namespace ngraph
         bool same_scheme(const Dimension& dim) const
         {
             return (is_dynamic() && dim.is_dynamic()) ||
-                   (is_static() && dim.is_static() && m_dimension == int64_t(dim));
+                   (is_static() && dim.is_static() && get_length() == dim.get_length());
         }
 
         /// \brief Try to merge two Dimension objects together.
@@ -131,7 +133,7 @@ namespace ngraph
         /// \return A dynamic dimension.
         static Dimension dynamic() { return Dimension(); }
         /// \brief Constant for the value used internally to represent a dynamic dimension.
-        static const int64_t s_dynamic_val{(std::numeric_limits<int64_t>::max())};
+        static const value_type s_dynamic_val{(std::numeric_limits<value_type>::max())};
 
         /// \brief Addition operator for Dimension.
         /// \param dim Right operand for addition.
@@ -163,7 +165,7 @@ namespace ngraph
     private:
         // The actual numerical value of the dimension. s_dynamic_val is a special case,
         // representing a dynamic dimension.
-        int64_t m_dimension;
+        value_type m_dimension;
     };
 
     /// \brief Insert a human-readable representation of a dimension into an output stream.
