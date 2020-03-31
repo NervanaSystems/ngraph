@@ -116,7 +116,7 @@ void pass::ConstantFolding::construct_constant_gather()
 
     auto constant_gather_callback = [data_label, indices_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_gather_callback against node = "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_root();
 
         auto pattern_map = m.get_pattern_map();
 
@@ -207,42 +207,45 @@ void pass::ConstantFolding::construct_constant_gather_with_subgraph()
 
     auto concat_gather_callback = [concat_label, indices_label, axis_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_constant_gather_with_subgraph against node = "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_root();
 
         auto pattern_map = m.get_pattern_map();
 
-        auto concat = static_pointer_cast<op::Concat>(pattern_map[concat_label]);
+        const auto concat = static_pointer_cast<op::Concat>(pattern_map[concat_label]);
 
-        auto indices = static_pointer_cast<op::Constant>(pattern_map[indices_label]);
-        auto axis = static_pointer_cast<op::Constant>(pattern_map[axis_label]);
-        auto gather = m.get_match_root();
+        const auto indices = static_pointer_cast<op::Constant>(pattern_map[indices_label]);
+        const auto axis = static_pointer_cast<op::Constant>(pattern_map[axis_label]);
+        const auto gather = m.get_match_root();
 
         // gather takes exactly one element out of the Concat output
         if (axis->get_axis_vector_val().size() != 1)
             return false;
-        if (axis->cast_vector<int64_t>()[0] != 0)
+        // only along axis=0
+        if (axis->cast_vector<int64_t>()[0] != 0 || concat->get_axis() != 0)
             return false;
-        if (indices->get_shape().size() == 1)
+        // only single indices are accepted
+        const auto indices_shape = indices->get_shape();
+        if (indices_shape.size() > 1 || (indices_shape.size() == 1 && indices_shape[0] > 1))
             return false;
         // concat inputs are 1D and their count is equal to Concat output shape
         if (concat->get_output_partial_shape(0).is_dynamic())
             return false;
-        if (concat->get_shape().size() != 1)
-            return false;
-        auto concat_inputs = concat->inputs();
+        const auto concat_inputs = concat->inputs();
+        // concat inputs must be single elements
         if (concat_inputs.size() != shape_size(concat->get_shape()))
             return false;
 
-        int64_t rank = concat->get_shape()[0];
-        int64_t raw_index = indices->cast_vector<int64_t>()[0];
-        int64_t positive_index = raw_index < 0 ? rank + raw_index : raw_index;
-        auto gathered = concat_inputs[positive_index].get_source_output().get_node_shared_ptr();
+        const int64_t rank = concat->get_shape()[0];
+        const int64_t raw_index = indices->cast_vector<int64_t>()[0];
+        const int64_t positive_index = raw_index < 0 ? rank + raw_index : raw_index;
+        const auto gathered =
+            concat_inputs[positive_index].get_source_output().get_node_shared_ptr();
         if (!gathered->is_constant())
             return false;
 
-        auto gathered_const = dynamic_pointer_cast<op::Constant>(gathered);
-        auto replacement = make_shared<op::Constant>(
-            gathered->get_element_type(), indices->get_shape(), gathered_const->get_data_ptr());
+        const auto gathered_const = dynamic_pointer_cast<op::Constant>(gathered);
+        const auto replacement = make_shared<op::Constant>(
+            gathered->get_element_type(), indices_shape, gathered_const->get_data_ptr());
 
         replace_node(m.get_match_root(), replacement);
         return true;
