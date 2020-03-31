@@ -26,10 +26,11 @@ namespace ngraph
     }
 }
 
-/// The Common Subexpression Elimination pass removes duplicate computations in a given computation graph.\n
-/// Two commutations are considered to be duplicate to each other if both applies same operation on same set of inputs,
-/// and with same attributes. As an example shown in the below graphs, the original graph has two duplicate Add computations. 
-/// After applying this pass, the graph is optimized by doing Add computation only once. 
+/// The Common Subexpression Elimination pass removes duplicate computations in a given computation
+/// graph.\n Two computations are considered to be duplicate to each other if both apply same
+/// operation on same set of inputs with same attributes.
+/// An example is shown in the graphs below. The original graph has two duplicate Add computations.
+/// After applying this pass, the graph is optimized to do Add computation only once.
 /// <table>
 /// <tr><th>Before the pass              <th>After the pass
 /// <tr>
