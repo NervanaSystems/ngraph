@@ -732,8 +732,7 @@ target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH
 add_library(ngraph::ngraph ALIAS ngraph)
 
 if (NOT WIN32)
-    find_package(Threads REQUIRED)
-    target_link_libraries(ngraph PUBLIC Threads::Threads dl)
+    target_link_libraries(ngraph PRIVATE dl)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
