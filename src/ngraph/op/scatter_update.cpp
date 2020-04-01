@@ -14,13 +14,26 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifndef NGRAPH_OP
-#warning "NGRAPH_OP not defined"
-#define NGRAPH_OP(x, y)
-#endif
+#include "ngraph/op/scatter_update.hpp"
+#include "ngraph/shape.hpp"
 
-#include "opset2_tbl.hpp"
-NGRAPH_OP(NonZero, ngraph::op::v3)
-NGRAPH_OP(ScatterAdd, ngraph::op::v3)
-NGRAPH_OP(ScatterElementsUpdate, ngraph::op::v3)
-NGRAPH_OP(ScatterUpdate, ngraph::op::v3)
+using namespace std;
+using namespace ngraph;
+
+constexpr NodeTypeInfo op::v3::ScatterUpdate::type_info;
+
+op::v3::ScatterUpdate::ScatterUpdate(const Output<Node>& inputs,
+                                     const Output<Node>& indices,
+                                     const Output<Node>& updates,
+                                     const Output<Node>& axis)
+    : util::Scatter(inputs, indices, updates, axis)
+{
+    constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v3::ScatterUpdate::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
+// TODO: copyt_with_new_inputs
