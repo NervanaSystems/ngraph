@@ -488,8 +488,9 @@ namespace ngraph
             template <typename T>
             std::shared_ptr<ngraph::op::Constant> make_ng_constant(const element::Type& type) const
             {
-                auto constant = std::make_shared<ngraph::op::Constant>(type, m_shape, get_data<T>());
-                if(m_tensor_proto->has_name())
+                auto constant =
+                    std::make_shared<ngraph::op::Constant>(type, m_shape, get_data<T>());
+                if (m_tensor_proto->has_name())
                 {
                     constant->set_friendly_name(get_name());
                 }
