@@ -14,18 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/util/scatter.hpp"
+#include "ngraph/op/util/scatter_base.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-static int INPUTS = 0;
-static int INDICES = 1;
-static int UPDATES = 2;
-static int AXIS = 3;
+static constexpr int INPUTS = 0;
+static constexpr int INDICES = 1;
+static constexpr int UPDATES = 2;
+static constexpr int AXIS = 3;
 
-void op::util::Scatter::validate_and_infer_types()
+constexpr NodeTypeInfo op::ScatterBase::type_info;
+
+op::util::ScatterBase::ScatterBase(const Output<Node>& inputs,
+                                   const Output<Node>& indices,
+                                   const Output<Node>& updates,
+                                   const Output<Node>& axis)
+    : Op({inputs, indices, updates, axis});
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::util::ScatterBase::validate_and_infer_types()
 {
     element::Type inputs_et = get_input_element_type(INPUTS);
     element::Type indices_et = get_input_element_type(INDICES);
@@ -72,4 +83,14 @@ void op::util::Scatter::validate_and_infer_types()
         this, compatible, "Updates shape must be indices_shape + inputs_shape[1:]");
 
     set_output_type(0, inputs_et, inputs_shape);
+}
+
+bool op::util::ScatterBase::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
+void op::util::ScatterBase::generate_adjoints(autodiff::Adjoints&, const OutputVector&)
+{
+    throw ngraph_error("Not yet implemented");
 }

@@ -28,12 +28,11 @@ op::v3::ScatterUpdate::ScatterUpdate(const Output<Node>& inputs,
                                      const Output<Node>& axis)
     : util::Scatter(inputs, indices, updates, axis)
 {
-    constructor_validate_and_infer_types();
 }
 
-bool ngraph::op::v3::ScatterUpdate::visit_attributes(AttributeVisitor& visitor)
+shared_ptr<Node> op::v3::ScatterUpdate::clone_with_new_inputs(const OutputVector& new_args) const
 {
-    return true;
+    check_new_args_count(this, new_args);
+    return make_shared<v3::ScatterUpdate>(
+        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }
-
-// TODO: copyt_with_new_inputs

@@ -58,8 +58,10 @@ namespace ngraph
 
         namespace v3
         {
-            /// \brief Add updates to slices from inputs addressed by indices
-            class NGRAPH_API ScatterAdd : public util::Scatter
+            ///
+            /// \brief      Add updates to slices from inputs addressed by indices
+            ///
+            class NGRAPH_API ScatterAdd : public util::ScatterBase
             {
             public:
                 static constexpr NodeTypeInfo type_info{"ScatterAdd", 3};
@@ -67,23 +69,21 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ScatterAdd() = default;
 
-                /// \param inputs Tensor
-                /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-                /// \param updates Tensor: Must have same type as inputs
+                ///
+                /// \brief      Constructs ScatterAdd object.
+                ///
+                /// \param      inputs   The input tensor to be updated.
+                /// \param      indices  The tensor with indexes which will be updated.
+                /// \param      updates  The tensor with update values.
+                /// \param[in]  axis     The axis at which elements will be updated.
+                ///
                 ScatterAdd(const Output<Node>& inputs,
                            const Output<Node>& indices,
                            const Output<Node>& updates,
                            const Output<Node>& axis);
 
-                void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const OutputVector& /* deltas */) override
-                {
-                    throw ngraph_error("Not yet implemented");
-                }
-
-                // FIXME copy_with_new_inputs
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& inputs) const override;
             };
         }
         using v0::ScatterAdd;
