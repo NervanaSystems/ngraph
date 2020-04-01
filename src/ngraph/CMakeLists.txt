@@ -554,6 +554,8 @@ set (SRC
     pass/serialize.hpp
     pass/shape_relevance.cpp
     pass/shape_relevance.hpp
+    pass/transpose_elimination.cpp
+    pass/transpose_elimination.hpp
     pass/validate_graph.cpp
     pass/validate_graph.hpp
     pass/validate.cpp
