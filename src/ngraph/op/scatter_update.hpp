@@ -40,16 +40,8 @@ namespace ngraph
                               const Output<Node>& updates,
                               const Output<Node>& axis);
 
-                void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const OutputVector& /* deltas */) override
-                {
-                    throw ngraph_error("Not yet implemented");
-                }
-
-                // FIXME: copy_with_new_inputs
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
-                bool visit_attributes(AttributeVisitor& visitor) override;
+                    clone_with_new_inputs(const OutputVector& inputs) const override;
             };
         }
         using v3::ScatterUpdate;

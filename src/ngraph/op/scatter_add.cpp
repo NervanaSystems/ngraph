@@ -91,15 +91,13 @@ op::v3::ScatterAdd::ScatterAdd(const Output<Node>& inputs,
                                const Output<Node>& indices,
                                const Output<Node>& updates,
                                const Output<Node>& axis)
-    : util::Scatter(inputs, indices, updates, axis)
+    : util::ScatterBase(inputs, indices, updates, axis)
 {
-    constructor_validate_and_infer_types();
 }
 
-// TODO: copyt_with_new_inputs
-shared_ptr<Node> op::v3::ScatterAdd::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v3::ScatterAdd::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<op::v3::ScatterAdd>(
+    return make_shared<v3::ScatterAdd>(
         new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }

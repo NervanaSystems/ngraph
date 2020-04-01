@@ -24,31 +24,34 @@ namespace ngraph
     {
         namespace util
         {
-            /// \brief Applies updates to slices from inputs addressed by indices
-            class NGRAPH_API Scatter : public Op
+            ///
+            /// \brief      Base class for ScatterXXX operators.
+            ///
+            class NGRAPH_API ScatterBase : public Op
             {
             public:
-                Scatter() = default;
+                static constexpr NodeTypeInfo type_info{"ScatterBase", 3};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                virtual void validate_and_infer_types() override;
+                virtual bool visit_attributes(AttributeVisitor& visitor) override;
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
 
-                /// \param inputs Tensor
-                /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-                /// \param updates Tensor: Must have same type as inputs
-                Scatter(const Output<Node>& inputs,
-                        const Output<Node>& indices,
-                        const Output<Node>& updates,
-                        const Output<Node>& axis)
-                    : Op({inputs, indices, updates, axis})
-                {
-                    constructor_validate_and_infer_types();
-                }
+            protected:
+                ScatterBase() = default;
 
-                void validate_and_infer_types() override;
-
-                void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const OutputVector& /* deltas */) override
-                {
-                    throw ngraph_error("Not yet implemented");
-                }
+                ///
+                /// \brief      Constructs ScatterBase object.
+                ///
+                /// \param      inputs   The input tensor to be updated.
+                /// \param      indices  The tensor with indexes which will be updated.
+                /// \param      updates  The tensor with update values.
+                /// \param[in]  axis     The axis at which elements will be updated.
+                ///
+                ScatterBase(const Output<Node>& inputs,
+                            const Output<Node>& indices,
+                            const Output<Node>& updates,
+                            const Output<Node>& axis);
             };
         }
     }
