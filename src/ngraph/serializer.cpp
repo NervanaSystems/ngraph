@@ -2656,6 +2656,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::ScatterAdd>(args[0], args[1], args[2]);
             break;
         }
+        case OP_TYPEID::ScatterAdd_v3:
+        {
+            node = make_shared<op::v3::ScatterAdd>(args[0], args[1], args[2], args[3]);
+            break;
+        }
         case OP_TYPEID::ScatterElementsUpdate_v3:
         {
             node = make_shared<op::v3::ScatterElementsUpdate>(args[0], args[1], args[2], args[3]);
@@ -2669,6 +2674,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::ScatterNDAdd:
         {
             node = make_shared<op::ScatterNDAdd>(args[0], args[1], args[2]);
+            break;
+        }
+        case OP_TYPEID::ScatterUpdate_v3:
+        {
+            node = make_shared<op::v3::ScatterUpdate>(args[0], args[1], args[2], args[3]);
             break;
         }
         case OP_TYPEID::Select:
@@ -4403,11 +4413,15 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::ScatterAdd: { break;
     }
+    case OP_TYPEID::ScatterAdd_v3: { break;
+    }
     case OP_TYPEID::ScatterElementsUpdate_v3: { break;
     }
     case OP_TYPEID::ScatterND: { break;
     }
     case OP_TYPEID::ScatterNDAdd: { break;
+    }
+    case OP_TYPEID::ScatterUpdate_v3: { break;
     }
     case OP_TYPEID::Select: { break;
     }
