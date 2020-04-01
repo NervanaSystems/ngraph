@@ -675,6 +675,24 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_4d_input_23_axes)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_4d_input_23_axes_ends_max)
+{
+    auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/slice_4d_input_23_axes_ends_max.prototxt"));
+
+    auto test_case =
+        ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+
+    const Shape input_shape{2, 2, 2, 2};
+    std::vector<float> input_values(shape_size(input_shape));
+    std::iota(input_values.begin(), input_values.end(), 0);
+    test_case.add_input<float>(input_values);
+    test_case.add_input<int64_t>({0, 1, 1, 0});
+    test_case.add_input<int64_t>({2147483647, 2147483647, 2147483647, 2147483647});
+    test_case.add_expected_output<float>(Shape{2, 2, 1, 1}, {0, 4, 8, 12});
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_4d_input_23_axes_21_steps)
 {
     auto function = onnx_import::import_onnx_model(file_util::path_join(
