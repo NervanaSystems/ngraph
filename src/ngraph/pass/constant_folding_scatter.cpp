@@ -218,19 +218,6 @@ void pass::ConstantFolding::construct_constant_scatter_elements_update()
             NGRAPH_CHECK(false,
                          "Encountered 'u1' element type in constant_scatter_elem_updt_callback");
             break;
-        case element::Type_t::bf16:
-        case element::Type_t::f16:
-            replacement =
-                dispatch_const_fold_data<float16>(data, indices, updates, axis, scatter_elem_updt);
-            break;
-        case element::Type_t::f32:
-            replacement =
-                dispatch_const_fold_data<float>(data, indices, updates, axis, scatter_elem_updt);
-            break;
-        case element::Type_t::f64:
-            replacement =
-                dispatch_const_fold_data<double>(data, indices, updates, axis, scatter_elem_updt);
-            break;
         case element::Type_t::u8:
         case element::Type_t::i8:
             replacement =
@@ -238,16 +225,20 @@ void pass::ConstantFolding::construct_constant_scatter_elements_update()
             break;
         case element::Type_t::u16:
         case element::Type_t::i16:
+        case element::Type_t::bf16:
+        case element::Type_t::f16:
             replacement =
                 dispatch_const_fold_data<uint16_t>(data, indices, updates, axis, scatter_elem_updt);
             break;
         case element::Type_t::u32:
         case element::Type_t::i32:
+        case element::Type_t::f32:
             replacement =
                 dispatch_const_fold_data<uint32_t>(data, indices, updates, axis, scatter_elem_updt);
             break;
         case element::Type_t::u64:
         case element::Type_t::i64:
+        case element::Type_t::f64:
             replacement =
                 dispatch_const_fold_data<uint64_t>(data, indices, updates, axis, scatter_elem_updt);
             break;
