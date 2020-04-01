@@ -545,13 +545,13 @@ TEST(graph, huge)
     {
         auto param = make_shared<op::Parameter>(element::f32, Shape{3, 3});
         std::shared_ptr<Node> n = param;
+        weak_nodes.push_back(n);
         for (size_t i = 0; i < 1000000; i++)
         {
             n = make_shared<op::Negative>(n);
+            weak_nodes.push_back(n);
         }
         auto f = make_shared<Function>(NodeVector{n}, ParameterVector{param});
-        f->map_unordered_ops(
-            [&weak_nodes](Node* node) { weak_nodes.push_back(node->shared_from_this()); });
     }
 
     for (auto& weak_node : weak_nodes)
