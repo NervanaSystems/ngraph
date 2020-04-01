@@ -181,6 +181,10 @@ namespace ngraph
                            std::int64_t axis_range_min,
                            std::int64_t axis_range_max);
 
+    /// \brief Try to compute the maximum value of value
+    /// \return (true, max_value) if can be determined, or (false, 0) if not.
+    NGRAPH_API std::pair<bool, int64_t> maximum_value(const Output<Node>& value);
+
     namespace opset1
     {
         ///
