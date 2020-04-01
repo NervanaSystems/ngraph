@@ -120,9 +120,6 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
 
     if (identical_elems_in_data && input_values[0] == T{0})
     {
-        NGRAPH_WARN << "It's not possible to constant fold a NonZero op with an input containing "
-                       "only zeros.";
-
         return nullptr;
     }
 
