@@ -32,18 +32,31 @@ namespace ngraph
         /// \brief values we compute for outputs
         using value_map = std::map<RawNodeOutput, V>;
 
-        /// \brief Handle computation of a value about an op
+        /// \brief Handler for a computation of a value about an op
+        ///
+        /// A handler is passed a Node* and a vector of computed input values. The handler should
+        /// return a vector of computed output values.
         using op_handler = std::function<std::vector<V>(Node* op, std::vector<V>& inputs)>;
 
         /// \brief Table of ops with handlers
         using op_handler_map = std::map<Node::type_info_t, op_handler>;
 
+        /// \brief construct  handler using the provided op handlers.
+        ///
+        /// Evaluations share previously computed values so that calls on multiple nodes can share
+        /// work. All state is kept in the value map, which is accessible for clearing or seeding
+        /// with
+        /// Evaluator::get_value_map().
+        ///
+        /// \param Handlers for ops. Pairs of Node::type_info_t and handler functions.
         Evaluator(const op_handler_map& handlers)
             : m_handlers(handlers)
         {
         }
 
-        value_map get_value_map() { return m_value_map; }
+        /// \brief Retrieves the value_map, which holds all Output<Node> value associations.
+        value_map& get_value_map() { return m_value_map; }
+        const value_map& get_value_map() const { return m_value_map; }
     protected:
         /// \brief Intstructions for evaluations state machine
         class Inst
