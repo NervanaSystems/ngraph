@@ -18,6 +18,10 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/interval.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/topk.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -162,4 +166,18 @@ TEST(intervals, sets)
         }
     }
     EXPECT_TRUE(Interval(min_int, max_int) == a_int_b);
+}
+
+TEST(intervals, topk)
+{
+    auto p0 = make_shared<op::Parameter>(element::i64, Shape{});
+    auto p1 = make_shared<op::Parameter>(element::f32, Shape{50, 40});
+    auto tk0 = make_shared<op::v1::TopK>(p1, p0, 1, "min", "none");
+    // Maximum is number of elements in input
+    EXPECT_EQ(40, tk0->output(0).get_partial_shape()[1].get_max_length());
+    auto c = op::Constant::create<int64_t>(element::i64, Shape{}, {27});
+    auto m = make_shared<op::Minimum>(c, p0);
+    auto tk1 = make_shared<op::v1::TopK>(p1, m, 1, "min", "none");
+    // Maximum is limited by c to 27
+    EXPECT_EQ(27, tk1->output(0).get_partial_shape()[1].get_max_length());
 }

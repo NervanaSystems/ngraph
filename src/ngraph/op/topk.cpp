@@ -299,6 +299,15 @@ void op::v1::TopK::validate_and_infer_types()
         {
             output_shape[m_normalized_axis] = k;
         }
+        else
+        {
+            auto max_k = maximum_value(input_value(1));
+            if (max_k.first)
+            {
+                output_shape[m_normalized_axis] &= Dimension(0, max_k.second);
+            }
+        }
+        output_shape[m_normalized_axis] &= input_partial_shape[m_normalized_axis];
     }
 
     set_output_size(2);
