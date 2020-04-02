@@ -16,73 +16,117 @@
 
 #include "ngraph/op/util/scatter_base.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-static constexpr int INPUTS = 0;
+static constexpr int DATA = 0;
 static constexpr int INDICES = 1;
 static constexpr int UPDATES = 2;
 static constexpr int AXIS = 3;
 
-constexpr NodeTypeInfo op::ScatterBase::type_info;
+constexpr NodeTypeInfo op::util::ScatterBase::type_info;
 
-op::util::ScatterBase::ScatterBase(const Output<Node>& inputs,
+op::util::ScatterBase::ScatterBase(const Output<Node>& data,
                                    const Output<Node>& indices,
                                    const Output<Node>& updates,
                                    const Output<Node>& axis)
-    : Op({inputs, indices, updates, axis});
+    : Op({data, indices, updates, axis})
 {
     constructor_validate_and_infer_types();
 }
 
 void op::util::ScatterBase::validate_and_infer_types()
 {
-    element::Type inputs_et = get_input_element_type(INPUTS);
-    element::Type indices_et = get_input_element_type(INDICES);
-    element::Type updates_et = get_input_element_type(UPDATES);
-
-    const PartialShape& inputs_shape = get_input_partial_shape(INPUTS);
-    const PartialShape& indices_shape = get_input_partial_shape(INDICES);
-    const PartialShape& updates_shape = get_input_partial_shape(UPDATES);
+    const auto& data_et = get_input_element_type(DATA);
+    const auto& indices_et = get_input_element_type(INDICES);
+    const auto& updates_et = get_input_element_type(UPDATES);
+    const auto& axis_et = get_input_element_type(AXIS);
 
     NODE_VALIDATION_CHECK(this,
-                          indices_et == element::i32 || indices_et == element::i64,
-                          "Indices element type must be i64 or i32");
+                          indices_et.is_integral_number(),
+                          "Indices element type must be of an integral number type.");
 
+    element::Type result_et;
     NODE_VALIDATION_CHECK(
-        this, updates_et == inputs_et, "Updates element type must be the same as Inputs");
+        this,
+        element::Type::merge(result_et, data_et, updates_et),
+        "Element types for input data and updates do not match (data element type: ",
+        data_et,
+        ", updates element type: ",
+        updates_et,
+        ").");
 
-    // updates rank must be at indices rank + inputs rank - 1
-    /*    NODE_VALIDATION_CHECK(this,
-                              inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic()
-       ||
+    NODE_VALIDATION_CHECK(this,
+                          axis_et.is_integral_number(),
+                          "Axis element type must be of an integral number type.");
+
+    const auto& data_shape = get_input_partial_shape(DATA);
+    const auto& indices_shape = get_input_partial_shape(INDICES);
+    const auto& updates_shape = get_input_partial_shape(UPDATES);
+    const auto& axis_shape = get_input_partial_shape(AXIS);
+
+    NODE_VALIDATION_CHECK(this,
+                          axis_shape.compatible(PartialShape{}) ||
+                              axis_shape.compatible(PartialShape{1}),
+                          "Axis input shape is required to be scalar or 1D tensor. ",
+                          "Got: ",
+                          axis_shape);
+
+    // Updates rank must be at indices rank + data rank - 1
+    NODE_VALIDATION_CHECK(this,
+                          data_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
                               updates_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(updates_shape.rank()) ==
-                              static_cast<size_t>(indices_shape.rank()) +
-                              static_cast<size_t>(inputs_shape.rank()) - 1,
-                              "Updates rank is expected to be indices rank + inputs rank - 1");*/
+                              updates_shape.rank().get_length() ==
+                                  indices_shape.rank().get_length() +
+                                      data_shape.rank().get_length() - 1,
+                          "Updates rank is expected to be indices rank + data rank - 1.");
 
     bool compatible = true;
-    if (inputs_shape.is_static() && indices_shape.is_static() && updates_shape.is_static())
+
+    if (input_value(AXIS).get_node_shared_ptr()->is_constant() && data_shape.is_static() &&
+        indices_shape.is_static() && updates_shape.is_static())
     {
-        for (size_t i = 0; i < static_cast<size_t>(indices_shape.rank()); i++)
+        const auto axis_const_input =
+            as_type_ptr<op::v0::Constant>(input_value(AXIS).get_node_shared_ptr());
+        auto axis = axis_const_input->cast_vector<int64_t>().at(0);
+        axis = normalize_axis(this, axis, data_shape.rank().get_length());
+
+        for (int64_t i = 0; i < indices_shape.rank().get_length(); ++i)
         {
-            compatible = compatible && updates_shape[i].same_scheme(indices_shape[i]);
+            compatible = compatible && updates_shape[axis + i].same_scheme(indices_shape[i]);
         }
-        for (size_t i = 1; i < static_cast<size_t>(inputs_shape.rank()); i++)
+
+        int64_t indices_rank = indices_shape.rank().get_length();
+        // Check [d_0, d_1, ... d_(axis - 1)] updates dimensions
+        for (int64_t i = 0; i < axis; ++i)
         {
-            compatible =
-                compatible &&
-                updates_shape[static_cast<size_t>(indices_shape.rank()) + i - 1].same_scheme(
-                    inputs_shape[i]);
+            compatible = compatible && updates_shape[indices_rank + i].same_scheme(data_shape[i]);
+        }
+        // Check [d_(axis + k + 1), ..., d_n] updates dimensions
+        for (int64_t i = axis + 1; i < data_shape.rank().get_length(); ++i)
+        {
+            compatible = compatible && updates_shape[indices_rank + i].same_scheme(data_shape[i]);
         }
     }
 
-    NODE_VALIDATION_CHECK(
-        this, compatible, "Updates shape must be indices_shape + inputs_shape[1:]");
+    NODE_VALIDATION_CHECK(this,
+                          compatible,
+                          "Updates shape must have appropriate dimensions equal to indices and "
+                          "data dimensions. Updates shape:",
+                          updates_shape.to_shape(),
+                          ", data shape: ",
+                          data_shape.to_shape(),
+                          ", indices_shape: ",
+                          indices_shape.to_shape(),
+                          ".");
 
-    set_output_type(0, inputs_et, inputs_shape);
+    if (data_shape.is_dynamic())
+    {
+        set_input_is_relevant_to_shape(0);
+    }
+    set_output_type(0, data_et, data_shape);
 }
 
 bool op::util::ScatterBase::visit_attributes(AttributeVisitor& visitor)

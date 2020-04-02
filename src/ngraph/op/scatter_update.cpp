@@ -26,7 +26,7 @@ op::v3::ScatterUpdate::ScatterUpdate(const Output<Node>& inputs,
                                      const Output<Node>& indices,
                                      const Output<Node>& updates,
                                      const Output<Node>& axis)
-    : util::Scatter(inputs, indices, updates, axis)
+    : util::ScatterBase(inputs, indices, updates, axis)
 {
 }
 

@@ -26,7 +26,7 @@ namespace ngraph
         namespace v3
         {
             /// \brief Set new values to slices from inputs addressed by indices
-            class NGRAPH_API ScatterUpdate : public util::Scatter
+            class NGRAPH_API ScatterUpdate : public util::ScatterBase
             {
             public:
                 static constexpr NodeTypeInfo type_info{"ScatterUpdate", 3};
