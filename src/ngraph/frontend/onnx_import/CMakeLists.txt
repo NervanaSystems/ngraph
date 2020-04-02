@@ -152,6 +152,8 @@ add_library(onnx_import STATIC
         op/not.hpp
         op/non_max_suppression.cpp
         op/non_max_suppression.hpp
+        op/non_zero.cpp
+        op/non_zero.hpp
         op/onehot.cpp
         op/onehot.hpp
         op/or.hpp
@@ -212,6 +214,8 @@ add_library(onnx_import STATIC
         op/tanh.hpp
         op/thresholded_relu.cpp
         op/thresholded_relu.hpp
+        op/tile.cpp
+        op/tile.hpp
         op/topk.cpp
         op/topk.hpp
         op/transpose.cpp
@@ -238,14 +242,14 @@ add_library(onnx_import STATIC
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
-add_dependencies(onnx_import_interface onnx::libonnx onnx::libonnx_proto)
+add_dependencies(onnx_import_interface onnx onnx_proto)
 add_dependencies(onnx_import onnx_import_interface)
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(onnx_import
     SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
-target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} ${ONNX_PROTO_LIBRARY})
+target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} onnx_proto)
 
 target_compile_definitions(onnx_import PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
 
@@ -254,6 +258,7 @@ target_include_directories(onnx_import_interface SYSTEM PRIVATE ${ONNX_IMPORT_IN
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 
 target_compile_definitions(onnx_import_interface PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
+target_compile_definitions(onnx_import_interface PRIVATE -DONNX_ML=ON)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
