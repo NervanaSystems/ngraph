@@ -113,6 +113,11 @@ namespace ngraph
                     }
 
                     const auto begin_end_mask = axes_to_mask(axes_vec);
+
+                    const auto data_rank = data->get_output_partial_shape(0).rank();
+                    NGRAPH_CHECK(data_rank.is_static(), "Data rank of input must be static");
+                    NGRAPH_CHECK(data_rank.get_length() == axes_vec.size(), "Axes input length must be equal data rank");
+
                     if (is_steps_provided)
                     {
                         return {std::make_shared<default_opset::StridedSlice>(
