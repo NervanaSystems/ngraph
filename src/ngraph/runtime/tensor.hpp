@@ -21,18 +21,12 @@
 
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/runtime/backend.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
-    namespace descriptor
-    {
-        class Value;
-    }
-
     namespace runtime
     {
         class NGRAPH_API Tensor
