@@ -33,10 +33,10 @@ void pass::ConstantFolding::construct_constant_shape_of()
         auto node_name = m.get_match_root()->get_name();
         NGRAPH_DEBUG << "In callback for constant_shape_of_callback against node = " << node_name;
 
-        if (visited_nodes.count(node_name))
-        {
-            return true;
-        }
+//        if (visited_nodes.count(node_name))
+//        {
+//            return true;
+//        }
         auto pattern_value_map = m.get_pattern_value_map();
 
         auto arg_match = pattern_value_map[arg_label];
@@ -54,7 +54,7 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
             return true;
         }
-        else if (partial_shape.rank().is_static())
+        else if (partial_shape.rank().is_static() && !visited_nodes.count(node_name))
         {
             auto shape_of = make_shared<op::ShapeOf>(arg_match);
             auto dimensions = OutputVector{};
