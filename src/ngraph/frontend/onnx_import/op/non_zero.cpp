@@ -14,11 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifndef NGRAPH_OP
-#warning "NGRAPH_OP not defined"
-#define NGRAPH_OP(x, y)
-#endif
+#include <memory>
 
-#include "opset2_tbl.hpp"
-NGRAPH_OP(NonZero, ngraph::op::v3)
-NGRAPH_OP(ROIAlign, ngraph::op::v3)
+#include "ngraph/opsets/opset3.hpp"
+#include "non_zero.hpp"
+
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector non_zero(const Node& node)
+                {
+                    const auto data = node.get_ng_inputs().at(0);
+                    return {std::make_shared<ngraph::opset3::NonZero>(data)};
+                }
+
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

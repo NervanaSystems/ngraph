@@ -2247,6 +2247,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
             break;
         }
+        case OP_TYPEID::NonZero_v3:
+        {
+            node = make_shared<op::v3::NonZero>(args[0]);
+
+            break;
+        }
         case OP_TYPEID::NormalizeL2:
         {
             float eps = node_js.at("eps").get<float>();
@@ -4119,6 +4125,8 @@ json JSONSerializer::serialize_node(const Node& n)
         node["box_encoding"] = tmp->get_box_encoding();
         node["sort_result_descending"] = tmp->get_sort_result_descending();
         break;
+    }
+    case OP_TYPEID::NonZero_v3: { break;
     }
     case OP_TYPEID::NormalizeL2:
     {
