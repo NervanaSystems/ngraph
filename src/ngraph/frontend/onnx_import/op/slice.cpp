@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "default_opset.hpp"
+#include "gather.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "utils/common.hpp"
@@ -58,8 +59,8 @@ namespace ngraph
                     NodeVector inputs{node.get_ng_inputs()};
                     const auto data = inputs.at(0);
 
-                    const auto starts = inputs.at(1);
-                    const auto ends = inputs.at(2);
+                    auto starts = inputs.at(1);
+                    auto ends = inputs.at(2);
 
                     // Slice is calculated over all axes as default
                     std::shared_ptr<ngraph::Node> axes;
@@ -77,12 +78,43 @@ namespace ngraph
                             {data_rank},
                             common::get_monotonic_range<int64_t>(data_rank));
                     }
-                    const auto axes_const = as_type_ptr<default_opset::Constant>(axes);
-                    const auto begin_end_mask = axes_to_mask(axes_const->cast_vector<int64_t>());
 
-                    if (inputs.size() == 5) // steps input provided
+                    const bool is_steps_provided = inputs.size() == 5;
+                    std::shared_ptr<ngraph::Node> steps = nullptr;
+                    if (is_steps_provided)
                     {
-                        const auto steps = inputs.at(4);
+                        steps = inputs.at(4);
+                    }
+
+                    const auto axes_const = as_type_ptr<default_opset::Constant>(axes);
+                    const auto axes_vec = axes_const->cast_vector<int64_t>();
+
+                    // if axes have not growing elements, order of starts, ends, steps must adjusted
+                    if (!std::is_sorted(axes_vec.begin(), axes_vec.end()))
+                    {
+                        std::vector<int64_t> new_order(axes_vec.size());
+                        for (int i = 0; i < new_order.size(); ++i)
+                        {
+                            new_order[axes_vec[i]] = i;
+                        }
+                        const auto new_order_const = default_opset::Constant::create(
+                            element::i64, {new_order.size()}, new_order);
+                        const auto gather_axis =
+                            default_opset::Constant::create(element::i64, {}, {0});
+                        starts = std::make_shared<default_opset::Gather>(
+                            starts, new_order_const, gather_axis);
+                        ends = std::make_shared<default_opset::Gather>(
+                            ends, new_order_const, gather_axis);
+                        if (is_steps_provided)
+                        {
+                            steps = std::make_shared<default_opset::Gather>(
+                                steps, new_order_const, gather_axis);
+                        }
+                    }
+
+                    const auto begin_end_mask = axes_to_mask(axes_vec);
+                    if (is_steps_provided)
+                    {
                         return {std::make_shared<default_opset::StridedSlice>(
                             data, starts, ends, steps, begin_end_mask, begin_end_mask)};
                     }
