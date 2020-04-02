@@ -89,6 +89,11 @@ namespace ngraph
                     const auto axes_const = as_type_ptr<default_opset::Constant>(axes);
                     const auto axes_vec = axes_const->cast_vector<int64_t>();
 
+                    const auto data_rank = data->get_output_partial_shape(0).rank();
+                    NGRAPH_CHECK(data_rank.is_static(), "Data rank of input must be static");
+                    NGRAPH_CHECK(data_rank.get_length() == axes_vec.size(),
+                                 "Axes input length must be equal data rank");
+
                     // if axes have not growing elements, order of starts, ends, steps must adjusted
                     if (!std::is_sorted(axes_vec.begin(), axes_vec.end()))
                     {
@@ -113,11 +118,6 @@ namespace ngraph
                     }
 
                     const auto begin_end_mask = axes_to_mask(axes_vec);
-
-                    const auto data_rank = data->get_output_partial_shape(0).rank();
-                    NGRAPH_CHECK(data_rank.is_static(), "Data rank of input must be static");
-                    NGRAPH_CHECK(data_rank.get_length() == axes_vec.size(),
-                                 "Axes input length must be equal data rank");
 
                     if (is_steps_provided)
                     {
