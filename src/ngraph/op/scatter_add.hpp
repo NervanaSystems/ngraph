@@ -65,19 +65,18 @@ namespace ngraph
             {
             public:
                 static constexpr NodeTypeInfo type_info{"ScatterAdd", 3};
-
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ScatterAdd() = default;
 
                 ///
                 /// \brief      Constructs ScatterAdd object.
                 ///
-                /// \param      inputs   The input tensor to be updated.
+                /// \param      data     The input tensor to be updated.
                 /// \param      indices  The tensor with indexes which will be updated.
                 /// \param      updates  The tensor with update values.
                 /// \param[in]  axis     The axis at which elements will be updated.
                 ///
-                ScatterAdd(const Output<Node>& inputs,
+                ScatterAdd(const Output<Node>& data,
                            const Output<Node>& indices,
                            const Output<Node>& updates,
                            const Output<Node>& axis);

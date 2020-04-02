@@ -25,17 +25,24 @@ namespace ngraph
     {
         namespace v3
         {
-            /// \brief Set new values to slices from inputs addressed by indices
+            ///
+            /// \brief      Set new values to slices from data addressed by indices
+            ///
             class NGRAPH_API ScatterUpdate : public util::ScatterBase
             {
             public:
                 static constexpr NodeTypeInfo type_info{"ScatterUpdate", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ScatterUpdate() = default;
-                /// \param inputs Tensor
-                /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-                /// \param updates Tensor: Must have same type as inputs
-                ScatterUpdate(const Output<Node>& inputs,
+                ///
+                /// \brief      Constructs ScatterUpdate operator object.
+                ///
+                /// \param      data     The input tensor to be updated.
+                /// \param      indices  The tensor with indexes which will be updated.
+                /// \param      updates  The tensor with update values.
+                /// \param[in]  axis     The axis at which elements will be updated.
+                ///
+                ScatterUpdate(const Output<Node>& data,
                               const Output<Node>& indices,
                               const Output<Node>& updates,
                               const Output<Node>& axis);
