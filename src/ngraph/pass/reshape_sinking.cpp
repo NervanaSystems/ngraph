@@ -173,8 +173,7 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
             new_reshape->merge_provenance_tags_from(n);
             NGRAPH_DEBUG << "Materializing new reshape " << describe_reshape(new_reshape);
             csw.input.replace_source_output(new_reshape->output(0));
-        };
-        // Only swim past nodes which have a single user
+        }; // Only swim past nodes which have a single user
         if (n->get_users().size() > 1)
         {
             materialize();

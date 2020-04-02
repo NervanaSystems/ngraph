@@ -286,6 +286,7 @@ namespace ngraph
         using v0::LSTMCell;
     } // namespace op
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const op::LSTMWeightsFormat& type);
 
     template <>

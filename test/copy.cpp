@@ -123,7 +123,7 @@ TEST(copy, concat)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == as_output_vector(new_node->get_arguments()));
+    ASSERT_TRUE(new_args == new_node->input_values());
     ASSERT_TRUE(node_cast->get_concatenation_axis() == axis);
 }
 
@@ -133,7 +133,7 @@ TEST(copy, constant)
     vector<float> c{2.4f};
     auto& et = element::f32;
     auto node = op::Constant::create(et, shape, c);
-    auto new_node = node->clone_with_new_inputs({});
+    auto new_node = node->clone_with_new_inputs(OutputVector{});
     auto node_cast = as_type_ptr<op::Constant>(new_node);
     ASSERT_NE(node_cast, nullptr);
     ASSERT_TRUE(nullptr != new_node);
@@ -299,7 +299,7 @@ TEST(copy, select)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == as_output_vector(new_node->get_arguments()));
+    ASSERT_TRUE(new_args == new_node->input_values());
 }
 
 TEST(copy, sign)

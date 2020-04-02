@@ -62,7 +62,7 @@ void op::MatMul::pre_validate_and_infer_types()
 
     if (A_rank.is_static() && B_rank.is_static())
     {
-        Rank max_rank = int64_t(A_rank) > int64_t(B_rank) ? A_rank : B_rank;
+        Rank max_rank = A_rank.get_length() > B_rank.get_length() ? A_rank : B_rank;
         set_output_type(0, result_et, PartialShape::dynamic(max_rank));
     }
 }
