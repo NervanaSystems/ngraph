@@ -34,7 +34,3 @@ endif()
 if (NGRAPH_GENERIC_CPU_ENABLE)
     add_subdirectory(gcpu)
 endif()
-
-if (NGRAPH_PLAIDML_ENABLE)
-    add_subdirectory(plaidml)
-endif()

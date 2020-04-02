@@ -35,7 +35,6 @@ Compile Flags
    ``NGRAPH_MLIR_ENABLE``, Control the building of MLIR backend, ``FALSE``
    ``NGRAPH_NOP_ENABLE``,  Control the building of the NOP backend,  ``TRUE``
    ``NGRAPH_ONNX_IMPORT_ENABLE``, Enable ONNX importer, ``FALSE``
-   ``NGRAPH_PLAIDML_ENABLE``, Enable the PlaidML backend,  ``${PLAIDML_FOUND}``
    ``NGRAPH_PYTHON_BUILD_ENABLE``, Enable build of ``NGRAPH`` python package wheel, ``FALSE``
    ``NGRAPH_STATIC_LIB_ENABLE``, Enable build ``NGRAPH`` static library, ``FALSE``
    ``NGRAPH_TBB_ENABLE``, Only if (``NGRAPH_CPU_ENABLE``) Control usage of TBB for CPU backend, ``TRUE``
