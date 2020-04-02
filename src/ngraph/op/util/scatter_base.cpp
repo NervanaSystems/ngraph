@@ -84,31 +84,37 @@ void op::util::ScatterBase::validate_and_infer_types()
                           "Updates rank is expected to be indices rank + data rank - 1.");
 
     bool compatible = true;
+    int64_t axis;
+    bool is_axis_constant = input_value(AXIS).get_node_shared_ptr()->is_constant();
 
-    if (input_value(AXIS).get_node_shared_ptr()->is_constant() && data_shape.is_static() &&
-        indices_shape.is_static() && updates_shape.is_static())
+    // Get axis value if possible.
+    if (is_axis_constant && data_shape.rank().is_static())
     {
         const auto axis_const_input =
             as_type_ptr<op::v0::Constant>(input_value(AXIS).get_node_shared_ptr());
-        auto axis = axis_const_input->cast_vector<int64_t>().at(0);
+        axis = axis_const_input->cast_vector<int64_t>().at(0);
         axis = normalize_axis(this, axis, data_shape.rank().get_length());
+    }
 
+    if (is_axis_constant && data_shape.rank().is_static() && indices_shape.rank().is_static() &&
+        updates_shape.rank().is_static())
+    {
         for (int64_t i = 0; i < indices_shape.rank().get_length(); ++i)
         {
-            compatible = compatible && updates_shape[axis + i].same_scheme(indices_shape[i]);
+            compatible = compatible && updates_shape[axis + i].compatible(indices_shape[i]);
         }
 
         int64_t indices_rank = indices_shape.rank().get_length();
         // Check [d_0, d_1, ... d_(axis - 1)] updates dimensions
         for (int64_t i = 0; i < axis; ++i)
         {
-            compatible = compatible && updates_shape[i].same_scheme(data_shape[i]);
+            compatible = compatible && updates_shape[i].compatible(data_shape[i]);
         }
         // Check [d_(axis + k + 1), ..., d_n] updates dimensions
         for (int64_t i = axis + 1; i < data_shape.rank().get_length(); ++i)
         {
             compatible =
-                compatible && updates_shape[indices_rank - 1 + i].same_scheme(data_shape[i]);
+                compatible && updates_shape[indices_rank - 1 + i].compatible(data_shape[i]);
         }
     }
 
@@ -121,6 +127,8 @@ void op::util::ScatterBase::validate_and_infer_types()
                           data_shape.to_shape(),
                           ", indices_shape: ",
                           indices_shape.to_shape(),
+                          ", axis: ",
+                          axis,
                           ".");
 
     if (data_shape.is_dynamic())
