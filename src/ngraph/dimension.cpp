@@ -55,6 +55,17 @@ Dimension Dimension::operator*(const Dimension& dim) const
     return Dimension(m_dimension * dim.m_dimension);
 }
 
+Dimension Dimension::operator&(const Dimension& dim) const
+{
+    return Dimension(m_dimension & dim.m_dimension);
+}
+
+Dimension& Dimension::operator&=(const Dimension& dim)
+{
+    m_dimension &= dim.m_dimension;
+    return *this;
+}
+
 bool Dimension::compatible(const Dimension& d) const
 {
     return !(m_dimension & d.m_dimension).empty();

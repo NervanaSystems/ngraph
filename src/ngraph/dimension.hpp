@@ -174,6 +174,11 @@ namespace ngraph
         /// \param dim Right operand for multiplication.
         /// \return A reference to `*this`, after updating `*this` to the value `*this * dim`.
         Dimension& operator*=(const Dimension& dim) { return (*this = *this * dim); }
+        /// \brief Intersection of dimensions
+        Dimension operator&(const Dimension& dim) const;
+        /// \brief Intersection of dimensions
+        Dimension& operator&=(const Dimension& dim);
+
     private:
         Dimension(const Interval& interval)
             : m_dimension(interval)
