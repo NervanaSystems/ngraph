@@ -142,9 +142,9 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t data_padded_dilated_dim = -1;
             if (data_dim_static)
             {
-                data_padded_dilated_dim = (static_cast<int64_t>(data_dilation[i]) *
-                                           (static_cast<int64_t>(data_shape[i]) - 1)) +
-                                          1 + data_padding_below[i] + data_padding_above[i];
+                data_padded_dilated_dim =
+                    (static_cast<int64_t>(data_dilation[i]) * (data_shape[i].get_length() - 1)) +
+                    1 + data_padding_below[i] + data_padding_above[i];
                 NODE_VALIDATION_CHECK(
                     node,
                     data_padded_dilated_dim > 0,
@@ -158,9 +158,9 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t window_dilated_dim = -1;
             if (window_dim_static)
             {
-                window_dilated_dim = static_cast<int64_t>(window_dilation[i]) *
-                                         (static_cast<int64_t>(window_shape[i]) - 1) +
-                                     1;
+                window_dilated_dim =
+                    static_cast<int64_t>(window_dilation[i]) * (window_shape[i].get_length() - 1) +
+                    1;
 
                 NODE_VALIDATION_CHECK(node,
                                       window_dilated_dim > 0,
@@ -719,17 +719,17 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                 // so according to tensorflow and numpy we just get 0
                 if (lb < 0)
                 {
-                    lb = std::max(int64_t(input_shape[input_shape_idx]) + lb, int64_t(0));
+                    lb = std::max(input_shape[input_shape_idx].get_length() + lb, int64_t(0));
                 }
 
                 if (ub < 0)
                 {
-                    ub = std::max(int64_t(input_shape[input_shape_idx]) + ub, int64_t(0));
+                    ub = std::max(input_shape[input_shape_idx].get_length() + ub, int64_t(0));
                 }
 
                 // apply restrictions when begin or end values more than max possible values.
-                lb = std::min(int64_t(input_shape[input_shape_idx]), lb);
-                ub = std::min(int64_t(input_shape[input_shape_idx]), ub);
+                lb = std::min(input_shape[input_shape_idx].get_length(), lb);
+                ub = std::min(input_shape[input_shape_idx].get_length(), ub);
 
                 // set default value for stride or use given value
                 int64_t stride = 1;
@@ -746,14 +746,14 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                     // apply masks
                     if (begin_mask.count(axis))
                     {
-                        lb = int64_t(input_shape[input_shape_idx]) - 1;
+                        lb = input_shape[input_shape_idx].get_length() - 1;
                     }
                     if (end_mask.count(axis))
                     {
                         ub = -1;
                     }
 
-                    lb = std::min(lb, int64_t(input_shape[input_shape_idx]) - 1);
+                    lb = std::min(lb, input_shape[input_shape_idx].get_length() - 1);
                     lb -= 1; // we always get 1st element, so we need decrease range
                     if (ub <= lb)
                     {
@@ -769,7 +769,7 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                     }
                     if (end_mask.count(axis))
                     {
-                        ub = int64_t(input_shape[input_shape_idx]);
+                        ub = input_shape[input_shape_idx].get_length();
                     }
 
                     lb += 1; // we always get 1st element, so we need decrease range
@@ -829,7 +829,7 @@ int64_t ngraph::normalize_axis(const std::string& node_description,
         return axis;
     }
 
-    const auto tensor_rank_value = static_cast<int64_t>(tensor_rank);
+    const auto tensor_rank_value = tensor_rank.get_length();
     return normalize_axis(
         node_description, axis, tensor_rank_value, -tensor_rank_value, tensor_rank_value - 1);
 }
@@ -866,7 +866,7 @@ int64_t ngraph::normalize_axis(const std::string& node_description,
         axis = axis + tensor_rank;
     }
 
-    return static_cast<int64_t>(axis);
+    return int64_t(axis);
 }
 
 void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_shape,
