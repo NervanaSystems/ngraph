@@ -221,10 +221,9 @@ namespace ngraph
         }
 
         template <>
-        std::size_t Node::get_attribute_value(const std::string& name,
-                                              std::size_t default_value) const
+        int Node::get_attribute_value(const std::string& name, int default_value) const
         {
-            return m_pimpl->template get_attribute_value<std::size_t>(name, default_value);
+            return m_pimpl->template get_attribute_value<int>(name, default_value);
         }
 
         template <>

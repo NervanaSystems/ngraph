@@ -24,9 +24,9 @@ constexpr NodeTypeInfo op::v3::ROIAlign::type_info;
 op::v3::ROIAlign::ROIAlign(const Output<Node>& input,
                            const Output<Node>& rois,
                            const Output<Node>& batch_indices,
-                           const size_t pooled_h,
-                           const size_t pooled_w,
-                           const size_t sampling_ratio,
+                           const int pooled_h,
+                           const int pooled_w,
+                           const int sampling_ratio,
                            const float spatial_scale,
                            const string& mode)
     : Op{{input, rois, batch_indices}}
@@ -42,9 +42,9 @@ op::v3::ROIAlign::ROIAlign(const Output<Node>& input,
 op::v3::ROIAlign::ROIAlign(const Output<Node>& input,
                            const Output<Node>& rois,
                            const Output<Node>& batch_indices,
-                           const size_t pooled_h,
-                           const size_t pooled_w,
-                           const size_t sampling_ratio,
+                           const int pooled_h,
+                           const int pooled_w,
+                           const int sampling_ratio,
                            const float spatial_scale,
                            const PoolingMode mode)
     : Op{{input, rois, batch_indices}}
