@@ -35,7 +35,34 @@ void pass::TransposeElimination::construct_transpose_pattern()
     auto callback = [op](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_transpose_pattern against node = "
                      << m.get_match_root()->get_name();
-        return false;
+        auto root = m.get_match_root();
+        auto param = root->get_argument(0);
+        auto perm =
+            std::static_pointer_cast<op::Constant>(root->get_argument(1))->get_value_strings();
+
+        if (param->get_shape().size() != 2)
+        {
+            NGRAPH_DEBUG << "The rank of input shape = " << param->get_shape().size()
+                         << ". (expected to be 2 for the pattern.)";
+            return false;
+        }
+
+        if (param->get_shape()[0] != 1)
+        {
+            NGRAPH_DEBUG << "Input parameter's shape[0]  = " << param->get_shape()[0] << ". "
+                         << "The pattern expects it to be 1.";
+            return false;
+        }
+
+        if (perm != std::vector<std::string>{"1", "0"})
+        {
+            NGRAPH_DEBUG << "Permutation is [" << perm[0] << ", " << perm[1] << "]. "
+                         << "Expected to be {1, 0}";
+            return false;
+        }
+
+        replace_node(m.get_match_root(), param);
+        return true;
     };
 
     auto m = std::make_shared<pattern::Matcher>(transpose);
