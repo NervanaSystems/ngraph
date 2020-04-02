@@ -40,6 +40,22 @@ TEST(transpose_elimination, remove_transpose)
     ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
 }
 
+TEST(transpose_elimination, remove_transpose_dyn_shape)
+{
+    // add a simple graph with transpose
+    auto ps = PartialShape{1, Dimension::dynamic()};
+    auto param = make_shared<op::Parameter>(element::boolean, ps);
+    auto constant_perm = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 0});
+    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto f = make_shared<Function>(transpose, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::TransposeElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
+}
+
 TEST(transpose_elimination, keep_transpose)
 {
     // add a simple graph with transpose

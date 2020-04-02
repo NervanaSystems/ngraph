@@ -28,8 +28,7 @@ void pass::TransposeElimination::construct_transpose_pattern()
 {
     Shape shape_op{1, 2};
     auto op = std::make_shared<pattern::op::Label>(element::f32, shape_op);
-    auto const_perm =
-        std::make_shared<op::Constant>(element::i64, Shape{2}, std::vector<int64_t>{1, 0});
+    auto const_perm = op::Constant::create(element::i64, Shape{2}, std::vector<int64_t>{1, 0});
     auto transpose = std::make_shared<op::Transpose>(op, const_perm);
 
     auto callback = [op](pattern::Matcher& m) {
@@ -37,27 +36,28 @@ void pass::TransposeElimination::construct_transpose_pattern()
                      << m.get_match_root()->get_name();
         auto root = m.get_match_root();
         auto param = root->get_argument(0);
-        auto perm =
-            std::static_pointer_cast<op::Constant>(root->get_argument(1))->get_value_strings();
+        auto param_input_shape = root->input_value(0).get_partial_shape();
+        auto perm = std::static_pointer_cast<op::Constant>(root->get_argument(1));
 
-        if (param->get_shape().size() != 2)
+        if (param_input_shape.rank().get_length() != 2)
         {
-            NGRAPH_DEBUG << "The rank of input shape = " << param->get_shape().size()
+            NGRAPH_DEBUG << "The rank of input shape = " << param_input_shape.rank().get_length()
                          << ". (expected to be 2 for the pattern.)";
             return false;
         }
 
-        if (param->get_shape()[0] != 1)
+        if (param_input_shape[0].get_length() != 1)
         {
-            NGRAPH_DEBUG << "Input parameter's shape[0]  = " << param->get_shape()[0] << ". "
-                         << "The pattern expects it to be 1.";
+            NGRAPH_DEBUG << "Input parameter's shape[0]  = " << param_input_shape[0].get_length()
+                         << ". The pattern expects it to be 1.";
             return false;
         }
 
-        if (perm != std::vector<std::string>{"1", "0"})
+        if (perm->get_vector<int64_t>() != std::vector<int64_t>{1, 0})
         {
-            NGRAPH_DEBUG << "Permutation is [" << perm[0] << ", " << perm[1] << "]. "
-                         << "Expected to be {1, 0}";
+            NGRAPH_DEBUG << "Permutation is [" << perm->get_vector<int64_t>()[0] << ", "
+                         << perm->get_vector<int64_t>()[1] << "]. "
+                         << "Expected to be [1, 0]";
             return false;
         }
 
