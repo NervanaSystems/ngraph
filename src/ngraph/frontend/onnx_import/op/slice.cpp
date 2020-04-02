@@ -116,7 +116,8 @@ namespace ngraph
 
                     const auto data_rank = data->get_output_partial_shape(0).rank();
                     NGRAPH_CHECK(data_rank.is_static(), "Data rank of input must be static");
-                    NGRAPH_CHECK(data_rank.get_length() == axes_vec.size(), "Axes input length must be equal data rank");
+                    NGRAPH_CHECK(data_rank.get_length() == axes_vec.size(),
+                                 "Axes input length must be equal data rank");
 
                     if (is_steps_provided)
                     {

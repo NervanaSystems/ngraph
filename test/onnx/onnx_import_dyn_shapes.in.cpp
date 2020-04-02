@@ -680,3 +680,22 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_default_axes)
     test_case.add_expected_output<float>(Shape{1, 1, 1}, {9});
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_throw_exception_when_all_axes_are_provided)
+{
+    try
+    {
+        auto function = onnx_import::import_onnx_model(file_util::path_join(
+            SERIALIZED_ZOO, "onnx/dynamic_shapes/slice_3d_input_12_axes.prototxt"));
+        FAIL() << "Importing Slice-10 didn't fail despite the incorrect data";
+    }
+    catch (const ngraph::ngraph_error& err)
+    {
+        std::string what{err.what()};
+        EXPECT_NE(what.find("Axes input length must be equal data rank"), std::string::npos);
+    }
+    catch (...)
+    {
+        FAIL() << "Importing Slice-10 failed for unexpected reason";
+    }
+}
