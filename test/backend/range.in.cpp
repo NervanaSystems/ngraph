@@ -127,7 +127,4 @@ NGRAPH_TEST(${BACKEND_NAME}, range_subgraph)
     EXPECT_EQ((Shape{}), sum->get_output_partial_shape(0).get_max_shape());
     EXPECT_EQ((Shape{out_max_length_2}), range_2->get_output_partial_shape(0).get_max_shape());
     EXPECT_EQ((Shape{out_max_length_2}), negative_2->get_output_partial_shape(0).get_max_shape());
-    // handle->call_with_validate({result}, {t_start, t_stop, t_step, t_start_2});
-    // EXPECT_EQ(PartialShape{5}, result->get_shape());
-    // ASSERT_EQ(expected_result, read_vector<int32_t>(result));
 }
