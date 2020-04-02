@@ -14,26 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <memory>
 
-#include "ngraph/pass/graph_rewrite.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/opsets/opset3.hpp"
+#include "non_zero.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace onnx_import
     {
-        class NGRAPH_API DynElimination : public GraphRewrite
+        namespace op
         {
-        public:
-            DynElimination();
+            namespace set_1
+            {
+                NodeVector non_zero(const Node& node)
+                {
+                    const auto data = node.get_ng_inputs().at(0);
+                    return {std::make_shared<ngraph::opset3::NonZero>(data)};
+                }
 
-        private:
-            void construct_transpose();
-            void construct_dyn_broadcast();
-            void construct_dyn_replace_slice();
-            void construct_dyn_slice();
-            void construct_range();
-        };
-    }
-}
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

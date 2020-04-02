@@ -16,24 +16,29 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
-#include "ngraph/util.hpp"
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace onnx_import
     {
-        class NGRAPH_API DynElimination : public GraphRewrite
+        namespace op
         {
-        public:
-            DynElimination();
+            namespace set_1
+            {
+                /// \brief Convert ONNX NonZero operation to an nGraph node.
+                ///
+                /// \param node   The ONNX node object representing this operation.
+                ///
+                /// \return The vector containing nGraph nodes producing output of ONNX NonZero
+                ///         operation.
+                NodeVector non_zero(const Node& node);
 
-        private:
-            void construct_transpose();
-            void construct_dyn_broadcast();
-            void construct_dyn_replace_slice();
-            void construct_dyn_slice();
-            void construct_range();
-        };
-    }
-}
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

@@ -186,8 +186,6 @@ set (SRC
     op/experimental/dyn_pad.hpp
     op/experimental/dyn_replace_slice.cpp
     op/experimental/dyn_replace_slice.hpp
-    op/experimental/dyn_reshape.cpp
-    op/experimental/dyn_reshape.hpp
     op/experimental/dyn_slice.cpp
     op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
@@ -271,6 +269,8 @@ set (SRC
     op/negative.hpp
     op/non_max_suppression.cpp
     op/non_max_suppression.hpp
+    op/non_zero.cpp
+    op/non_zero.hpp
     op/not.cpp
     op/not.hpp
     op/not_equal.cpp
@@ -490,6 +490,7 @@ set (SRC
     pass/constant_folding_gather.cpp
     pass/constant_folding_scatter.cpp
     pass/constant_folding_logical_reduction.cpp
+    pass/constant_folding_non_zero.cpp
     pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
@@ -737,8 +738,7 @@ target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH
 add_library(ngraph::ngraph ALIAS ngraph)
 
 if (NOT WIN32)
-    find_package(Threads REQUIRED)
-    target_link_libraries(ngraph PUBLIC dl Threads::Threads)
+    target_link_libraries(ngraph PRIVATE dl)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
