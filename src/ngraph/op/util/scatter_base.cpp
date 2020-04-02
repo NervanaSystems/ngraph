@@ -102,12 +102,13 @@ void op::util::ScatterBase::validate_and_infer_types()
         // Check [d_0, d_1, ... d_(axis - 1)] updates dimensions
         for (int64_t i = 0; i < axis; ++i)
         {
-            compatible = compatible && updates_shape[indices_rank + i].same_scheme(data_shape[i]);
+            compatible = compatible && updates_shape[i].same_scheme(data_shape[i]);
         }
         // Check [d_(axis + k + 1), ..., d_n] updates dimensions
         for (int64_t i = axis + 1; i < data_shape.rank().get_length(); ++i)
         {
-            compatible = compatible && updates_shape[indices_rank + i].same_scheme(data_shape[i]);
+            compatible =
+                compatible && updates_shape[indices_rank - 1 + i].same_scheme(data_shape[i]);
         }
     }
 
