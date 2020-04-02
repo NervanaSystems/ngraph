@@ -2923,6 +2923,38 @@ TEST(type_prop, conv_v1_incorrect_auto_pad)
     }
 }
 
+TEST(type_prop, conv_double_validate_with_pad)
+{
+    PartialShape data_batch_shape{1, 3, 64, 64};
+    PartialShape filters_shape{4, 3, 5, 5};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff pads_begin{0, 0};
+    CoordinateDiff pads_end{0, 0};
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::v1::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 pads_begin,
+                                                 pads_end,
+                                                 window_dilation_strides,
+                                                 op::PadType::SAME_UPPER);
+    ASSERT_EQ(conv->get_pads_begin()[0], 2);
+    ASSERT_EQ(conv->get_pads_begin()[1], 2);
+    ASSERT_EQ(conv->get_pads_end()[0], 2);
+    ASSERT_EQ(conv->get_pads_end()[1], 2);
+    try
+    {
+        conv->validate_and_infer_types();
+    }
+    catch (...)
+    {
+        FAIL() << "Double validate failure";
+    }
+}
+
 TEST(type_prop, deformable_conv_incorrect_group)
 {
     const PartialShape data_batch_shape{1, 3, 96, 96};
