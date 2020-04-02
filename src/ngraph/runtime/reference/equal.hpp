@@ -23,6 +23,9 @@
 
 #include <cstddef>
 
+#include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/shape.hpp"
+
 namespace ngraph
 {
     namespace runtime
