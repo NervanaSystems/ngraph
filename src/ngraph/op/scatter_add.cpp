@@ -87,11 +87,11 @@ void op::v0::ScatterAdd::validate_and_infer_types()
 
 constexpr NodeTypeInfo op::v3::ScatterAdd::type_info;
 
-op::v3::ScatterAdd::ScatterAdd(const Output<Node>& inputs,
+op::v3::ScatterAdd::ScatterAdd(const Output<Node>& data,
                                const Output<Node>& indices,
                                const Output<Node>& updates,
                                const Output<Node>& axis)
-    : util::ScatterBase(inputs, indices, updates, axis)
+    : util::ScatterBase(data, indices, updates, axis)
 {
 }
 
