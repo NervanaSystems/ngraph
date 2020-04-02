@@ -122,6 +122,7 @@ namespace ngraph
             /// \param      axes_order The permutation of axes.
             ///
             /// \return     Transpose:v1 op.
+            NGRAPH_API
             std::shared_ptr<Node> reorder_axes(const Output<Node>& value,
                                                std::vector<size_t> axes_order = {});
 
