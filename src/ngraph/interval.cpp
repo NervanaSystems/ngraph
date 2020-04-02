@@ -163,8 +163,12 @@ Interval Interval::operator&(const Interval& interval) const
 
 Interval& Interval::operator&=(const Interval& interval)
 {
+    std::cerr << "Before: " << *this << " " << interval << std::endl;
     m_min_val = std::max(m_min_val, interval.m_min_val);
     m_max_val = std::min(m_max_val, interval.m_max_val);
+    std::cerr << "After: " << *this << std::endl;
+    canonicalize();
+    std::cerr << "Can: " << *this << std::endl;
     return *this;
 }
 

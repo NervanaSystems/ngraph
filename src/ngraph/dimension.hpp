@@ -38,18 +38,12 @@ namespace ngraph
 
         /// \brief Construct a static dimension.
         /// \param dimension Value of the dimension.
-        Dimension(value_type dimension)
-            : m_dimension(dimension)
-        {
-        }
+        Dimension(value_type dimension);
 
         /// \brief Construct a dynamic dimension with bounded range
         /// \param min_dimension The lower inclusive limit for the dimension
         /// \param mas_dimension The upper inclusive limit for the dimension
-        Dimension(value_type min_dimension, value_type max_dimension)
-            : m_dimension(min_dimension, max_dimension)
-        {
-        }
+        Dimension(value_type min_dimension, value_type max_dimension);
 
         /// \brief Construct a dynamic dimension with range [0, ...]
         Dimension() = default;
