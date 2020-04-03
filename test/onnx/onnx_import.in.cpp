@@ -2099,8 +2099,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_scatter_elements_const_folding)
 
     const auto result_node =
         as_type_ptr<op::Constant>(scatter_fn->get_results().at(0)->get_argument(0));
-    const auto expexted_output = std::vector<float>{1.0, 1.1, 3.0, 2.1, 5.0};
-    EXPECT_TRUE(ngraph::test::all_close(result_node->cast_vector<float>(), expexted_output));
+    const auto expected_output = std::vector<float>{1.0, 1.1, 3.0, 2.1, 5.0};
+    EXPECT_TRUE(ngraph::test::all_close(result_node->cast_vector<float>(), expected_output));
 }
 
 namespace
