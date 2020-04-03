@@ -73,6 +73,7 @@ namespace ngraph
                     auto attrs = ngraph::op::InterpolateAttrs();
                     attrs.axes = axes;
                     attrs.mode = mode;
+                    attrs.align_corners = false;
 
                     if (scales->is_constant() && data_shape.is_static())
                     {
