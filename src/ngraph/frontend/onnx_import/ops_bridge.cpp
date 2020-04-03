@@ -103,6 +103,7 @@
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
 #include "op/reverse_sequence.hpp"
+#include "op/roi_align.hpp"
 #include "op/round.hpp"
 #include "op/scatter_elements.hpp"
 #include "op/scatter_nd.hpp"
@@ -341,6 +342,7 @@ namespace ngraph
             REGISTER_OPERATOR("Relu", 1, relu);
             REGISTER_OPERATOR("Reshape", 1, reshape);
             REGISTER_OPERATOR("ReverseSequence", 1, reverse_sequence);
+            REGISTER_OPERATOR("RoiAlign", 1, roi_align);
             REGISTER_OPERATOR("Round", 1, round);
             REGISTER_OPERATOR("Scatter", 1, scatter_elements);
             REGISTER_OPERATOR("ScatterElements", 1, scatter_elements);
