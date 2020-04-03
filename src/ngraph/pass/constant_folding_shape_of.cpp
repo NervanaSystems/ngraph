@@ -50,11 +50,7 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
             return true;
         }
-        else if (!original_shape_of_node->is_foldable())
-        {
-            return false;
-        }
-        else if (partial_shape.rank().is_static())
+        else if (partial_shape.rank().is_static() && original_shape_of_node->is_foldable())
         {
             auto shape_of = make_shared<op::ShapeOf>(arg_match);
             shape_of->block_recurent_constant_folding();
