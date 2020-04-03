@@ -2005,4 +2005,3 @@ std::string runtime::gpu::GPU_Emitter::emit_v3_ScatterUpdate(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
-
