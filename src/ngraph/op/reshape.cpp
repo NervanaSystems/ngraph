@@ -118,7 +118,7 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
 {
     auto delta = deltas.at(0);
 
-    auto x_shape = input(0).get_shape();
+    auto x_shape = get_input_shape(0);
     auto x_rank = x_shape.size();
     Shape permuted_x_shape(x_rank);
     AxisVector x_input_order(x_rank);
@@ -201,7 +201,17 @@ void op::v1::Reshape::validate_and_infer_types()
 
         if (!(zero_dims && m_special_zero) && !negative_dims)
         {
-            set_output_type(0, get_input_element_type(0), const_shape->get_shape_val());
+            auto output_shape = const_shape->get_shape_val();
+            if (get_input_partial_shape(0).is_static())
+            {
+                NODE_VALIDATION_CHECK(this,
+                                      shape_size(get_input_shape(0)) == shape_size(output_shape),
+                                      "Requested output shape ",
+                                      output_shape,
+                                      " is incompatible with input shape ",
+                                      get_input_shape(0));
+            }
+            set_output_type(0, get_input_element_type(0), output_shape);
         }
         else
         {

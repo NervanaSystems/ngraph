@@ -1513,12 +1513,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                     ellipsis_mask);
             break;
         }
-        case OP_TYPEID::DynReshape:
-        {
-            const auto zero_flag = node_js.at("zero_flag").get<bool>();
-            node = make_shared<op::v0::DynReshape>(args[0], args[1], zero_flag);
-            break;
-        }
         case OP_TYPEID::Reshape_v1:
         {
             const bool special_zero = node_js.at("special_zero").get<bool>();
@@ -2250,6 +2244,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
             node = make_shared<op::v1::NonMaxSuppression>(
                 args[0], args[1], args[2], args[3], args[4], box_encoding, sort_result_descending);
+
+            break;
+        }
+        case OP_TYPEID::NonZero_v3:
+        {
+            node = make_shared<op::v3::NonZero>(args[0]);
 
             break;
         }
@@ -3647,12 +3647,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
-    case OP_TYPEID::DynReshape:
-    {
-        auto tmp = static_cast<const op::v0::DynReshape*>(&n);
-        node["zero_flag"] = tmp->get_zero_flag();
-        break;
-    }
     case OP_TYPEID::Reshape_v1:
     {
         auto tmp = static_cast<const op::v1::Reshape*>(&n);
@@ -4129,6 +4123,8 @@ json JSONSerializer::serialize_node(const Node& n)
         node["sort_result_descending"] = tmp->get_sort_result_descending();
         break;
     }
+    case OP_TYPEID::NonZero_v3: { break;
+    }
     case OP_TYPEID::NormalizeL2:
     {
         auto tmp = static_cast<const op::NormalizeL2*>(&n);
@@ -4362,7 +4358,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::Reshape*>(&n);
         node["input_order"] = tmp->get_input_order();
-        node["output_shape"] = tmp->get_output_shape();
+        node["output_shape"] = tmp->get_output_shape(0);
         break;
     }
     case OP_TYPEID::Result:

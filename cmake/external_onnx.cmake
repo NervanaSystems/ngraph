@@ -14,8 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-# Enable ExternalProject CMake module
-include(ExternalProject)
+include(FetchContent)
 
 #------------------------------------------------------------------------------
 # ONNX.proto definition version
@@ -27,74 +26,38 @@ set(ONNX_VERSION 1.6.0)
 # Download and install libonnx ...
 #------------------------------------------------------------------------------
 
+# Since this file is going to be modifying CMAKE_CXX_FLAGS we need to preserve
+# it so we won't overwrite the caller's CMAKE_CXX_FLAGS
+set(PUSH_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
 set(ONNX_GIT_REPO_URL https://github.com/onnx/onnx.git)
 set(ONNX_GIT_BRANCH rel-${ONNX_VERSION})
 
 add_definitions(-DONNX_BUILD_SHARED_LIBS=ON)
-add_definitions(-DONNX_ML=ON)
 
-ExternalProject_Add(
+set(CMAKE_CXX_FLAGS ${CMAKE_ORIGINAL_CXX_FLAGS})
+
+FetchContent_Declare(
     ext_onnx
-    PREFIX onnx
     GIT_REPOSITORY ${ONNX_GIT_REPO_URL}
     GIT_TAG ${ONNX_GIT_BRANCH}
-    INSTALL_COMMAND ""
-    UPDATE_COMMAND ""
-    CMAKE_GENERATOR ${CMAKE_GENERATOR}
-    CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
-    CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
-    CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
-               -DCMAKE_CXX_FLAGS=${CMAKE_ORIGINAL_CXX_FLAGS}
-               -DONNX_GEN_PB_TYPE_STUBS=OFF
-               -DCMAKE_PREFIX_PATH=${Protobuf_INSTALL_PREFIX}
-               -DONNX_ML=TRUE
-    TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/tmp"
-    STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/stamp"
-    DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/download"
-    SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/src"
-    BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/bin"
-    INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx"
-    EXCLUDE_FROM_ALL TRUE
-    BUILD_BYPRODUCTS ${EXTERNAL_PROJECTS_ROOT}/onnx/bin/libonnx.a ${EXTERNAL_PROJECTS_ROOT}/onnx/bin/libonnx_proto.a
 )
 
-# -----------------------------------------------------------------------------
-
-ExternalProject_Get_Property(ext_onnx SOURCE_DIR BINARY_DIR)
-
-set(ONNX_INCLUDE_DIR ${SOURCE_DIR})
-set(ONNX_PROTO_INCLUDE_DIR ${BINARY_DIR})
-if (WIN32)
-    set(ONNX_LIBRARY ${BINARY_DIR}/${CMAKE_BUILD_TYPE}/onnx.lib)
-    set(ONNX_PROTO_LIBRARY ${BINARY_DIR}/${CMAKE_BUILD_TYPE}/onnx_proto.lib)
-
-    ExternalProject_Add_Step(
-        ext_onnx
-        CopyONNX
-        COMMAND ${CMAKE_COMMAND} -E copy ${BINARY_DIR}/${CMAKE_BUILD_TYPE}/onnx.lib ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/onnx.lib
-        COMMAND ${CMAKE_COMMAND} -E copy ${BINARY_DIR}/${CMAKE_BUILD_TYPE}/onnx_proto.lib ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/onnx_proto.lib
-        COMMENT "Copy onnx libraries to ngraph build directory."
-        DEPENDEES install
-    )
-
-else()
-    set(ONNX_LIBRARY ${BINARY_DIR}/libonnx.a)
-    set(ONNX_PROTO_LIBRARY ${BINARY_DIR}/libonnx_proto.a)
-endif()
-set(ONNX_LIBRARIES ${ONNX_LIBRARY} ${ONNX_PROTO_LIBRARY})
-
-if (NOT TARGET onnx::libonnx)
-    add_library(onnx::libonnx UNKNOWN IMPORTED)
-    set_target_properties(onnx::libonnx PROPERTIES
-            INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ${ONNX_INCLUDE_DIR}
-            IMPORTED_LOCATION ${ONNX_LIBRARY})
-    add_dependencies(onnx::libonnx ext_onnx)
+FetchContent_GetProperties(ext_onnx)
+if(NOT ext_onnx_POPULATED)
+    FetchContent_Populate(ext_onnx)
+    set(ONNX_GEN_PB_TYPE_STUBS OFF)
+    if(CMAKE_CROSSCOMPILING)
+        set(ONNX_CUSTOM_PROTOC_EXECUTABLE ${SYSTEM_PROTOC})
+    endif()
+    add_subdirectory(${ext_onnx_SOURCE_DIR} ${ext_onnx_BINARY_DIR})
 endif()
 
-if (NOT TARGET onnx::libonnx_proto)
-    add_library(onnx::libonnx_proto UNKNOWN IMPORTED)
-    set_target_properties(onnx::libonnx_proto PROPERTIES
-            INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ${ONNX_PROTO_INCLUDE_DIR}
-            IMPORTED_LOCATION ${ONNX_PROTO_LIBRARY})
-    add_dependencies(onnx::libonnx_proto ext_onnx)
-endif()
+target_include_directories(onnx PRIVATE "${Protobuf_INCLUDE_DIR}")
+target_include_directories(onnx_proto PRIVATE "${Protobuf_INCLUDE_DIR}")
+
+set(ONNX_INCLUDE_DIR ${ext_onnx_SOURCE_DIR})
+set(ONNX_PROTO_INCLUDE_DIR ${ext_onnx_BINARY_DIR})
+
+# Now make sure we restore the original CMAKE_CXX_FLAGS for the caller
+set(CMAKE_CXX_FLAGS ${PUSH_CMAKE_CXX_FLAGS})

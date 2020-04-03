@@ -59,10 +59,10 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
 
     if (m_broadcast_spec.m_type == AutoBroadcastType::NONE)
     {
-        if (input(1).get_partial_shape().is_static() &&
+        if (get_input_partial_shape(1).is_static() &&
             input_value(2).get_node_shared_ptr()->is_constant())
         {
-            auto target_shape = input(1).get_shape();
+            auto target_shape = get_input_shape(1);
             NGRAPH_CHECK(target_shape.size() == 1);
             auto axes_mapping_val =
                 static_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr())
@@ -81,10 +81,10 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
     else if (m_broadcast_spec.m_type == AutoBroadcastType::NUMPY ||
              m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
     {
-        if (input(0).get_partial_shape().is_static() && output(0).get_partial_shape().is_static())
+        if (get_input_partial_shape(0).is_static() && output(0).get_partial_shape().is_static())
         {
-            auto arg_shape = input(0).get_shape();
-            auto result_shape = output(0).get_shape();
+            auto arg_shape = get_input_shape(0);
+            auto result_shape = get_output_shape(0);
             auto start_axis = (m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
                                   ? m_broadcast_spec.m_axis
                                   : result_shape.size() - arg_shape.size();
@@ -148,11 +148,11 @@ void op::v1::Broadcast::validate_and_infer_types()
     if (m_broadcast_spec.m_type == AutoBroadcastType::NONE)
     {
         // Validate axes_mapping
-        if (input(0).get_partial_shape().is_static() && input(1).get_partial_shape().is_static() &&
-            input(2).get_partial_shape().is_static())
+        if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static() &&
+            get_input_partial_shape(2).is_static())
         {
-            auto arg_shape = input(0).get_shape();
-            auto axes_shape = input(2).get_shape();
+            auto arg_shape = get_input_shape(0);
+            auto axes_shape = get_input_shape(2);
 
             // Rank(arg_shape) == shape_size(axes_mapping)
             NODE_VALIDATION_CHECK(this,
@@ -206,9 +206,9 @@ void op::v1::Broadcast::validate_and_infer_types()
     else if (m_broadcast_spec.m_type == AutoBroadcastType::NUMPY ||
              m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
     {
-        if (input(0).get_partial_shape().is_static() && input(1).get_partial_shape().is_static())
+        if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static())
         {
-            auto arg_shape = input(0).get_shape();
+            auto arg_shape = get_input_shape(0);
 
             if (input_value(1).get_node_shared_ptr()->is_constant())
             {

@@ -20,5 +20,6 @@
 #endif
 
 #include "opset2_tbl.hpp"
+NGRAPH_OP(NonZero, ngraph::op::v3)
 NGRAPH_OP(ScatterAdd, ngraph::op::v3)
 NGRAPH_OP(ScatterUpdate, ngraph::op::v3)

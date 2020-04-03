@@ -88,6 +88,7 @@
 #include "op/mul.hpp"
 #include "op/neg.hpp"
 #include "op/non_max_suppression.hpp"
+#include "op/non_zero.hpp"
 #include "op/not.hpp"
 #include "op/onehot.hpp"
 #include "op/or.hpp"
@@ -125,6 +126,7 @@
 #include "op/tan.hpp"
 #include "op/tanh.hpp"
 #include "op/thresholded_relu.hpp"
+#include "op/tile.hpp"
 #include "op/topk.hpp"
 #include "op/transpose.hpp"
 #include "op/unsqueeze.hpp"
@@ -313,6 +315,7 @@ namespace ngraph
             REGISTER_OPERATOR("Mul", 7, mul);
             REGISTER_OPERATOR("Neg", 1, neg);
             REGISTER_OPERATOR("NonMaxSuppression", 1, non_max_suppression);
+            REGISTER_OPERATOR("NonZero", 1, non_zero);
             REGISTER_OPERATOR("Not", 1, logical_not);
             REGISTER_OPERATOR("Or", 1, logical_or);
             REGISTER_OPERATOR("OneHot", 1, onehot);
@@ -362,6 +365,7 @@ namespace ngraph
             REGISTER_OPERATOR("Tan", 1, tan);
             REGISTER_OPERATOR("Tanh", 1, tanh);
             REGISTER_OPERATOR("ThresholdedRelu", 1, thresholded_relu);
+            REGISTER_OPERATOR("Tile", 1, tile);
             REGISTER_OPERATOR("TopK", 1, topk);
             REGISTER_OPERATOR("TopK", 10, topk);
             REGISTER_OPERATOR("TopK", 11, topk);

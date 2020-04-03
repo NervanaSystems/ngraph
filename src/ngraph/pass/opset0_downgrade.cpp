@@ -81,13 +81,12 @@ namespace
             auto reshaped_product = make_shared<op::Reshape>(replacement_node->output(0),
                                                              get_default_order(output_shape),
                                                              reshaped_output_shape);
-            replace_node(node, reshaped_product);
+            return reshaped_product;
         }
         else
         {
-            replace_node(node, replacement_node);
+            return replacement_node;
         }
-        return replacement_node;
     }
 
     // Default is that we did nothing
@@ -173,7 +172,7 @@ namespace
             const auto& arg_shape = arg_pshape.to_shape();
 
             NGRAPH_CHECK(target_shape_input.get_node_shared_ptr()->is_constant());
-            auto target_shape = node->output(0).get_shape();
+            auto target_shape = node->get_output_shape(0);
             NGRAPH_CHECK(node->get_broadcast_axes().first);
 
             // (Re)construct axes_mapping.
@@ -320,8 +319,7 @@ namespace
         }
         else
         {
-            replacement_node = make_shared<op::v0::DynReshape>(
-                node->input_value(0), node->input_value(1), node->get_special_zero());
+            NGRAPH_CHECK(replacement_node, "Unable to convert Reshape:v1 with dynamic shape.");
         }
 
         replace_node(node, replacement_node);
@@ -608,22 +606,63 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ReduceMax> node)
     {
-        return op_cast_reduction_node<op::v0::Max, op::v1::ReduceMax>(node);
+        auto replacement_node = op_cast_reduction_node<op::v0::Max, op::v1::ReduceMax>(node);
+        replace_node(node, replacement_node);
+        return replacement_node;
+    }
+
+    shared_ptr<Node> op_cast(shared_ptr<op::v1::ReduceMean> node)
+    {
+        // ReduceMean = Sum / Count
+        auto sum_node = op_cast_reduction_node<op::v0::Sum, op::v1::ReduceMean>(node);
+
+        // Count = Sum(Constant(1, shape=data.shape))
+        const auto data = node->input_value(0);
+        const auto axes = node->input_value(1);
+        const auto const_node =
+            op::v0::Constant::create(data.get_element_type(), data.get_shape(), {1});
+        std::shared_ptr<Node> count_node = std::make_shared<op::v0::Sum>(const_node, axes);
+
+        // Support keep_dims attribute
+        if (node->get_keep_dims())
+        {
+            // In order to keep the original dimensions we need to reshape the Count node
+            // before we use it in Divide with NUMPY broadcast
+            auto output_shape = count_node->get_shape();
+            auto reshaped_output_shape = output_shape;
+            for (const auto& axis : node->get_reduction_axes())
+            {
+                reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
+            }
+            count_node = make_shared<op::Reshape>(
+                count_node->output(0), get_default_order(output_shape), reshaped_output_shape);
+        }
+
+        const auto replacement_node =
+            std::make_shared<op::v0::Divide>(sum_node, count_node, op::AutoBroadcastSpec::NUMPY);
+        replace_node(node, replacement_node);
+        return replacement_node;
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ReduceMin> node)
     {
-        return op_cast_reduction_node<op::v0::Min, op::v1::ReduceMin>(node);
+        auto replacement_node = op_cast_reduction_node<op::v0::Min, op::v1::ReduceMin>(node);
+        replace_node(node, replacement_node);
+        return replacement_node;
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ReduceProd> node)
     {
-        return op_cast_reduction_node<op::v0::Product, op::v1::ReduceProd>(node);
+        auto replacement_node = op_cast_reduction_node<op::v0::Product, op::v1::ReduceProd>(node);
+        replace_node(node, replacement_node);
+        return replacement_node;
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ReduceSum> node)
     {
-        return op_cast_reduction_node<op::v0::Sum, op::v1::ReduceSum>(node);
+        auto replacement_node = op_cast_reduction_node<op::v0::Sum, op::v1::ReduceSum>(node);
+        replace_node(node, replacement_node);
+        return replacement_node;
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Reverse> node)
