@@ -172,6 +172,7 @@ set(SRC
     type_prop/reshape.cpp
     type_prop/reverse.cpp
     type_prop/reverse_sequence.cpp
+    type_prop/roi_align.cpp
     type_prop/rnn_cell.cpp
     type_prop/scale_shift.cpp
     type_prop/scatter_add.cpp
