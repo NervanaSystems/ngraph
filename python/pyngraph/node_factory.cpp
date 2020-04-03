@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -139,7 +140,9 @@ public:
 private:
     const ngraph::OpSet& get_opset(const std::string& opset_name)
     {
-        const std::string& opset_name_{ngraph::to_lower(opset_name)};
+        std::string opset_name_ = opset_name;
+        std::transform(opset_name_.begin(), opset_name_.end(), opset_name_.begin(), std::tolower);
+
         if (opset_name_ == "opset0")
         {
             return ngraph::get_opset0();
