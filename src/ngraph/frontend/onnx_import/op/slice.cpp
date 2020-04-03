@@ -46,9 +46,9 @@ namespace ngraph
                     {
                         std::vector<int64_t> mask(
                             *std::max_element(std::begin(axes), std::end(axes)) + 1, 1);
-                        for (int i = 0; i < axes.size(); ++i)
+                        for (auto axis : axes)
                         {
-                            mask[axes[i]] = 0;
+                            mask[axis] = 0;
                         }
                         return mask;
                     }
@@ -57,11 +57,7 @@ namespace ngraph
                 NodeVector slice(const Node& node)
                 {
                     NodeVector inputs{node.get_ng_inputs()};
-
                     const auto data = inputs.at(0);
-                    const auto data_rank = data->get_output_partial_shape(0).rank();
-                    NGRAPH_CHECK(data_rank.is_static(), "Data rank of input must be static");
-                    const auto data_rank_value = data_rank.get_length();
 
                     auto starts = inputs.at(1);
                     auto ends = inputs.at(2);
@@ -75,6 +71,10 @@ namespace ngraph
                     }
                     else
                     {
+                        const auto data_rank = data->get_output_partial_shape(0).rank();
+                        NGRAPH_CHECK(data_rank.is_static(),
+                                     "Data rank must be static when axes input is not provided");
+                        const size_t data_rank_value = data_rank.get_length();
                         axes = default_opset::Constant::create(
                             element::i64,
                             {data_rank_value},
@@ -90,8 +90,6 @@ namespace ngraph
 
                     const auto axes_const = as_type_ptr<default_opset::Constant>(axes);
                     const auto axes_vec = axes_const->cast_vector<int64_t>();
-                    NGRAPH_CHECK(data_rank_value == axes_vec.size(),
-                                 "Axes input length must be equal data rank");
 
                     // if axes have not growing elements, order of starts, ends, steps must adjusted
                     if (!std::is_sorted(axes_vec.begin(), axes_vec.end()))
@@ -117,7 +115,6 @@ namespace ngraph
                     }
 
                     const auto begin_end_mask = axes_to_mask(axes_vec);
-
                     if (is_steps_provided)
                     {
                         return {std::make_shared<default_opset::StridedSlice>(
@@ -130,6 +127,7 @@ namespace ngraph
                     }
                 }
             } // namespace set_10
+
             namespace set_1
             {
                 NodeVector slice(const Node& node)
