@@ -40,7 +40,13 @@ namespace ngraph
 
                 void validate_and_infer_types() override;
 
-                void block_constant_folding() { m_is_foldable = false; }
+                // FOR CONSTANT FOLDING INTERNAL USAGE ONLY
+                // Constant folding for cases with static rank but dynamic shape create a subgraph
+                // which contains a Shape of.
+                // In this case we need to prevent constant folding from endless creation of these
+                // subgraphs.
+                // These metods should be removed if better solution will be designed.
+                void block_recurent_constant_folding() { m_is_foldable = false; }
                 bool is_foldable() { return m_is_foldable; }
             private:
                 bool m_is_foldable = true;

@@ -38,11 +38,7 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
         auto partial_shape = arg_match.get_partial_shape();
         auto original_shape_of_node = as_type_ptr<op::ShapeOf>(m.get_match_root());
-        if (!original_shape_of_node->is_foldable())
-        {
-            return true;
-        }
-        else if (partial_shape.is_static())
+        if (partial_shape.is_static())
         {
             NGRAPH_CHECK(revalidate_and_ensure_static(m.get_match_root()));
 
@@ -54,10 +50,14 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
             return true;
         }
+        else if (!original_shape_of_node->is_foldable())
+        {
+            return false;
+        }
         else if (partial_shape.rank().is_static())
         {
             auto shape_of = make_shared<op::ShapeOf>(arg_match);
-            shape_of->block_constant_folding();
+            shape_of->block_recurent_constant_folding();
             auto dimensions = OutputVector{};
             auto output_dimensions = vector<Dimension>(partial_shape);
             for (size_t i = 0; i < output_dimensions.size(); ++i)
