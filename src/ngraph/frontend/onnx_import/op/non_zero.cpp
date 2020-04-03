@@ -14,20 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include <map>
 #include <memory>
-#include <string>
-#include <vector>
 
-#include "ngraph/function.hpp"
-#include "ngraph/runtime/performance_counter.hpp"
+#include "ngraph/opsets/opset3.hpp"
+#include "non_zero.hpp"
 
-std::vector<ngraph::runtime::PerformanceCounter> run_benchmark(std::shared_ptr<ngraph::Function> f,
-                                                               const std::string& backend_name,
-                                                               size_t iterations,
-                                                               bool timing_detail,
-                                                               size_t warmup_iterations,
-                                                               bool copy_data,
-                                                               bool dump_results);
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector non_zero(const Node& node)
+                {
+                    const auto data = node.get_ng_inputs().at(0);
+                    return {std::make_shared<ngraph::opset3::NonZero>(data)};
+                }
+
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

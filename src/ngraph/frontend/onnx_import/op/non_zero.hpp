@@ -16,18 +16,29 @@
 
 #pragma once
 
-#include <map>
-#include <memory>
-#include <string>
-#include <vector>
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
-#include "ngraph/function.hpp"
-#include "ngraph/runtime/performance_counter.hpp"
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                /// \brief Convert ONNX NonZero operation to an nGraph node.
+                ///
+                /// \param node   The ONNX node object representing this operation.
+                ///
+                /// \return The vector containing nGraph nodes producing output of ONNX NonZero
+                ///         operation.
+                NodeVector non_zero(const Node& node);
 
-std::vector<ngraph::runtime::PerformanceCounter> run_benchmark(std::shared_ptr<ngraph::Function> f,
-                                                               const std::string& backend_name,
-                                                               size_t iterations,
-                                                               bool timing_detail,
-                                                               size_t warmup_iterations,
-                                                               bool copy_data,
-                                                               bool dump_results);
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
