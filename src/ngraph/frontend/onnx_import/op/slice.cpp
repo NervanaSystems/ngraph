@@ -57,7 +57,11 @@ namespace ngraph
                 NodeVector slice(const Node& node)
                 {
                     NodeVector inputs{node.get_ng_inputs()};
+
                     const auto data = inputs.at(0);
+                    const auto data_rank = data->get_output_partial_shape(0).rank();
+                    NGRAPH_CHECK(data_rank.is_static(), "Data rank of input must be static");
+                    const auto data_rank_value = data_rank.get_length();
 
                     auto starts = inputs.at(1);
                     auto ends = inputs.at(2);
@@ -71,12 +75,10 @@ namespace ngraph
                     }
                     else
                     {
-                        const size_t data_rank =
-                            data->get_output_partial_shape(0).rank().get_length();
                         axes = default_opset::Constant::create(
                             element::i64,
-                            {data_rank},
-                            common::get_monotonic_range<int64_t>(data_rank));
+                            {data_rank_value},
+                            common::get_monotonic_range<int64_t>(data_rank_value));
                     }
 
                     const bool is_steps_provided = inputs.size() == 5;
@@ -88,10 +90,7 @@ namespace ngraph
 
                     const auto axes_const = as_type_ptr<default_opset::Constant>(axes);
                     const auto axes_vec = axes_const->cast_vector<int64_t>();
-
-                    const auto data_rank = data->get_output_partial_shape(0).rank();
-                    NGRAPH_CHECK(data_rank.is_static(), "Data rank of input must be static");
-                    NGRAPH_CHECK(data_rank.get_length() == axes_vec.size(),
+                    NGRAPH_CHECK(data_rank_value == axes_vec.size(),
                                  "Axes input length must be equal data rank");
 
                     // if axes have not growing elements, order of starts, ends, steps must adjusted
