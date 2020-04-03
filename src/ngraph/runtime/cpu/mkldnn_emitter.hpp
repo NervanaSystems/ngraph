@@ -1335,8 +1335,8 @@ namespace ngraph
                 template <typename OP>
                 mkldnn::vanilla_rnn_forward::desc
                     get_vanilla_rnn_forward_desc(const ngraph::Node* node,
-                                                 const std::vector<TensorViewWrapper>& args,
-                                                 const std::vector<TensorViewWrapper>& out)
+                                                 const std::vector<TensorWrapper>& args,
+                                                 const std::vector<TensorWrapper>& out)
                 {
                     auto rnn_node = static_cast<const OP*>(node);
                     auto src_sequence_length_max =
