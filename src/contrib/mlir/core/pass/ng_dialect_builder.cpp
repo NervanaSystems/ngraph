@@ -76,8 +76,6 @@ namespace
         void buildNgDialectModule();
         void buildNgDialect(mlir::FuncOp function);
         void runOnModule() override;
-        // Applies any nGraph dialect optimizations
-        void optimizeNgDialect() { /*TODO: Add Core NG dialect optimizations */}
 
         mlir::Type getMlirType(const descriptor::Tensor* tensor);
         mlir::Type getMlirType(const element::Type& type);
@@ -174,11 +172,13 @@ void NgDialectConversionPass::runOnModule()
 
     // populate Tensor->Value maps
     int i = 0;
-    for (auto input : kernelInputs)
+    for (auto p : m_compiledKernel->get_input_map())
     {
-        auto arg = function.getArgument(i);
-        TensorInfo tensorInfo{arg};
-        m_tensorToValueMap.insert(TensorToInfo(input->get_output_tensor_ptr().get(), tensorInfo));
+        auto paramNode = p.first;
+        auto argId = p.second;
+        auto argValue = function.getArgument(argId);
+        m_tensorToValueMap.insert(
+            TensorToInfo(paramNode->get_output_tensor_ptr().get(), {argValue}));
         i++;
     }
 
@@ -479,6 +479,21 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::GroupConvo
 }
 
 template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::ConvolutionBias)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGConvBiasOp>(ngNode);
+    auto convNode = static_cast<const ngraph::op::ConvolutionBias*>(ngNode);
+    auto convOp = llvm::cast<mlir::NGConvBiasOp>(op);
+
+    convOp.setStrides(NgDialectObj.getShapeAsAttr(convNode->get_window_movement_strides()));
+    convOp.setDilation(NgDialectObj.getShapeAsAttr(convNode->get_window_dilation_strides()));
+    convOp.setPadBelow(NgDialectObj.getShapeAsAttr(convNode->get_padding_below()));
+    convOp.setPadAbove(NgDialectObj.getShapeAsAttr(convNode->get_padding_above()));
+    convOp.setWithRelu(NgDialectObj.m_builder.getBoolAttr(convNode->with_relu()));
+    return op;
+}
+
+template <>
 mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::AvgPool)
 {
     mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolOp>(ngNode);
@@ -616,7 +631,6 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
 {
     std::vector<mlir::Value> argValues;
     std::vector<mlir::Type> resTypes;
-    auto inputMap = m_compiledKernel->get_input_map();
     std::shared_ptr<descriptor::Tensor> argTensor;
     int i = 0;
     for (auto& argOutput : ngNode->input_values())
@@ -626,18 +640,7 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
             break;
         }
         auto argOutputNode = argOutput.get_node();
-        if (is_type<op::Parameter>(argOutputNode))
-        {
-            auto it = inputMap.find(argOutputNode->shared_from_this());
-            NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
-
-            argTensor = m_compiledKernel->input_values().at(it->second).get_tensor_ptr();
-        }
-        else
-        {
-            argTensor = argOutput.get_tensor_ptr();
-        }
-
+        argTensor = argOutput.get_tensor_ptr();
         auto argV = getTensorValue(argTensor.get()).m_value;
         argValues.push_back(argV);
         i++;
