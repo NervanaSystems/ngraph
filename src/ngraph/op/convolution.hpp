@@ -24,6 +24,99 @@ namespace ngraph
 {
     namespace op
     {
+        namespace v3
+        {
+            /// \brief Batched convolution operation, with optional window dilation and stride.
+            ///
+            class NGRAPH_API Convolution : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Convolution", 3};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a batched convolution operation.
+                Convolution() = default;
+                /// \brief Constructs a batched convolution operation.
+                ///
+                /// \param input The value producing the input tensor.<br>
+                /// `[N, C_IN, D1, ... Df]`
+                /// \param filters The value producing the kernel tensor.<br>
+                /// `[C_OUT, C_IN, F1, ... Ff]`
+                /// \param strides The strides attribute.<br>
+                /// `[f]`
+                /// \param dilations The dilations attribute.<br>
+                /// `[f]`
+                /// \param pads_begin Padding shape on begin coordinates.<br>
+                /// `[f]`
+                /// \param pads_end Padding shape for end cooredinates.<br>
+                /// `[f]`
+                /// \param auto_pad Pad type attribute for automatically computing padding
+                /// sizes.
+                /// Choose one:
+                /// 1) PadType::Explicit will override pads_begin and pads_end
+                /// 2) Non-empty pads_begin and pads_end will override non-explicit pad types
+                /// 3) Non-empty pads_begin and pads_end are an error with non-explicit pad type.
+                /// `[f]`
+                ///
+                /// Output `[N, C_OUT, R1, ... Rf]`
+                ///
+                Convolution(const Output<Node>& input,
+                            const Output<Node>& filters,
+                            const Strides& strides,
+                            const CoordinateDiff& pads_begin,
+                            const CoordinateDiff& pads_end,
+                            const Strides& dilations,
+                            const PadType& auto_pad = PadType::EXPLICIT);
+
+                /// Attributes
+                /// \return The strides.
+                const Strides& get_strides() const { return m_strides; }
+                void set_strides(const Strides& strides) { m_strides = strides; }
+                /// \return The dilations.
+                const Strides& get_dilations() const { return m_dilations; }
+                void set_dilations(const Strides& dilations) { m_dilations = dilations; }
+                /// \return The pads_begin sizes (possibly negative).
+                const CoordinateDiff& get_pads_begin() const { return m_pads_begin; }
+                void set_pads_begin(const CoordinateDiff& pads_begin) { m_pads_begin = pads_begin; }
+                /// \return The pads_end sizes (possibly negative).
+                const CoordinateDiff& get_pads_end() const { return m_pads_end; }
+                void set_pads_end(const CoordinateDiff& pads_end) { m_pads_end = pads_end; }
+                /// \return The pad type for convolution.
+                const PadType& get_auto_pad() const { return m_auto_pad; }
+                void set_auto_pad(const PadType& auto_pad) { m_auto_pad = auto_pad; }
+                ///
+                /// These values are derived during validate_and_infer_types.
+                /// \return The strides.
+                const Strides& get_normalized_strides() const { return m_strides; }
+                /// \return The dilations.
+                const Strides& get_normalized_dilations() const { return m_dilations; }
+                /// \return The pads-begin sizes (possibly negative).
+                const CoordinateDiff& get_normalized_pads_begin() const { return m_pads_begin; }
+                /// \return The padding-above sizes (possibly negative).
+                const CoordinateDiff& get_normalized_pads_end() const { return m_pads_end; }
+                /// \return The default value for Convolution.
+
+            protected:
+                /// These should only be accessed via Node
+                void generate_adjoints(autodiff::Adjoints& adjoints,
+                                       const OutputVector& deltas) override;
+
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+
+                /// \return The default output value for Convolution.
+                std::shared_ptr<Node> get_default_value() const override;
+
+                void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
+                Strides m_strides;
+                Strides m_dilations;
+                CoordinateDiff m_pads_begin;
+                CoordinateDiff m_pads_end;
+                PadType m_auto_pad;
+            };
+        }
+
         namespace v1
         {
             /// \brief Batched convolution operation, with optional window dilation and stride.

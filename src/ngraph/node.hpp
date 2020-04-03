@@ -130,7 +130,7 @@ namespace ngraph
         friend class Output;
 
     public:
-        /// Throws if the node is invalid.
+        /// Throws if the node is invalid. Must be idempotent. Must not modify attributes or inputs.
         virtual void validate_and_infer_types();
 
         // Called in constructors during transition
