@@ -606,6 +606,20 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_default_steps)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_slice_2d_default_steps_dyn_begin_end)
+{
+    auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/slice_2d_default_steps_dyn_begin_end.prototxt"));
+
+    auto test_case =
+        ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+    test_case.add_input<float>({1, 2, 3, 4});
+    test_case.add_input<int64_t>({2}, {1, 1});
+    test_case.add_input<int64_t>({2}, {2, 2});
+    test_case.add_expected_output<float>(Shape{1, 1}, {4});
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_clamp_neg_ends)
 {
     auto function = onnx_import::import_onnx_model(

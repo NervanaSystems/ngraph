@@ -16,7 +16,10 @@
 
 #include "ngraph/op/strided_slice.hpp"
 #include "ngraph/attribute_visitor.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
@@ -51,31 +54,25 @@ namespace
     shared_ptr<Node> calculate_default_strides(const Output<Node>& begin, const Output<Node>& end)
     {
         const auto begin_pshape = begin.get_partial_shape();
-        bool is_begin_length_static = false;
-        if (begin_pshape.rank().is_static() && begin_pshape.rank().get_length() == 1)
-        {
-            is_begin_length_static = begin_pshape[0].is_static();
-        }
-
         const auto end_pshape = end.get_partial_shape();
-        bool is_end_length_static = false;
-        if (end_pshape.rank().is_static() && end_pshape.rank().get_length() == 1)
-        {
-            is_end_length_static = end_pshape[0].is_static();
-        }
-
-        NGRAPH_CHECK(is_begin_length_static || is_end_length_static,
-                     "First dimension of begin or end inputs must be static in order to "
-                     "calculate default strides value");
 
         size_t strides_length = 0;
-        if (is_begin_length_static)
+        if (begin_pshape.rank().is_static() && begin_pshape.rank().get_length() == 1 &&
+            begin_pshape[0].is_static())
         {
             strides_length = begin_pshape[0].get_length();
         }
-        else if (is_end_length_static)
+        else if (end_pshape.rank().is_static() && end_pshape.rank().get_length() == 1 &&
+                 end_pshape[0].is_static())
         {
             strides_length = end_pshape[0].get_length();
+        }
+        else // dynamic case
+        {
+            NGRAPH_CHECK(begin_pshape.rank().is_static() && begin_pshape.rank().get_length() == 1,
+                         "Begin input must be 1D");
+            return std::make_shared<op::v1::Broadcast>(op::Constant::create(element::i64, {}, {1}),
+                                                       std::make_shared<op::ShapeOf>(begin));
         }
 
         return op::Constant::create(

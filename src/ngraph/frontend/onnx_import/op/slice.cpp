@@ -46,9 +46,9 @@ namespace ngraph
                     {
                         std::vector<int64_t> mask(
                             *std::max_element(std::begin(axes), std::end(axes)) + 1, 1);
-                        for (int i = 0; i < axes.size(); ++i)
+                        for (auto axis : axes)
                         {
-                            mask[axes[i]] = 0;
+                            mask[axis] = 0;
                         }
                         return mask;
                     }
@@ -71,12 +71,14 @@ namespace ngraph
                     }
                     else
                     {
-                        const size_t data_rank =
-                            data->get_output_partial_shape(0).rank().get_length();
+                        const auto data_rank = data->get_output_partial_shape(0).rank();
+                        NGRAPH_CHECK(data_rank.is_static(),
+                                     "Data rank must be static when axes input is not provided");
+                        const size_t data_rank_value = data_rank.get_length();
                         axes = default_opset::Constant::create(
                             element::i64,
-                            {data_rank},
-                            common::get_monotonic_range<int64_t>(data_rank));
+                            {data_rank_value},
+                            common::get_monotonic_range<int64_t>(data_rank_value));
                     }
 
                     const bool is_steps_provided = inputs.size() == 5;
@@ -125,6 +127,7 @@ namespace ngraph
                     }
                 }
             } // namespace set_10
+
             namespace set_1
             {
                 NodeVector slice(const Node& node)
