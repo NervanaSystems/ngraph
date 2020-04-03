@@ -9,15 +9,16 @@ graph {
     op_type: "ScatterElements"
     attribute {
       name: "axis"
-      i: 0
+      i: 1
       type: INT
     }
   }
   name: "test_scatter"
   initializer {
-    dims: 2
-    dims: 2
+    dims: 1
+    dims: 5
     data_type: 1
+    float_data: 1.0
     float_data: 2.0
     float_data: 3.0
     float_data: 4.0
@@ -28,16 +29,16 @@ graph {
     dims: 1
     dims: 2
     data_type: 6
-    int32_data: 0
     int32_data: 1
+    int32_data: 3
     name: "indices"
   }
   initializer {
     dims: 1
     dims: 2
     data_type: 1
-    float_data: 12.01
-    float_data: 13.99
+    float_data: 1.1
+    float_data: 2.1
     name: "updates"
   }
   output {

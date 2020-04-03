@@ -39,6 +39,40 @@ TEST(type_prop, scatter_elements_update_output_shape)
     EXPECT_EQ(scatter->get_output_shape(0), expected_output_shape);
 }
 
+TEST(type_prop, scatter_elements_update_output_partial_dyn_shape)
+{
+    PartialShape data_shape{2, Dimension::dynamic(), 5};
+    PartialShape indices_shape{Dimension::dynamic(), 2, 2};
+    PartialShape updates_shape{2, 2, Dimension::dynamic()};
+    PartialShape axis_shape = PartialShape::dynamic();
+
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto indices = make_shared<op::Parameter>(element::i16, indices_shape);
+    auto updates = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto axis = make_shared<op::Parameter>(element::i16, axis_shape);
+
+    auto scatter = make_shared<op::v3::ScatterElementsUpdate>(data, indices, updates, axis);
+
+    EXPECT_TRUE(scatter->get_output_partial_shape(0).same_scheme(data_shape));
+}
+
+TEST(type_prop, scatter_elements_update_output_full_dyn_shape)
+{
+    PartialShape data_shape = PartialShape::dynamic();
+    PartialShape indices_shape = PartialShape::dynamic();
+    PartialShape updates_shape = PartialShape::dynamic();
+    PartialShape axis_shape = PartialShape::dynamic();
+
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto indices = make_shared<op::Parameter>(element::i16, indices_shape);
+    auto updates = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto axis = make_shared<op::Parameter>(element::i16, axis_shape);
+
+    auto scatter = make_shared<op::v3::ScatterElementsUpdate>(data, indices, updates, axis);
+
+    EXPECT_TRUE(scatter->get_output_partial_shape(0).same_scheme(data_shape));
+}
+
 TEST(type_prop, scatter_elements_update_axis_validation)
 {
     Shape data_shape{2, 4, 5, 7};

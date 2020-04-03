@@ -16,12 +16,16 @@ graph {
   name: "test_scatter"
   initializer {
     dims: 2
+    dims: 2
     data_type: 1
+    float_data: 2.0
+    float_data: 3.0
     float_data: 4.0
     float_data: 5.0
     name: "data"
   }
   initializer {
+    dims: 1
     dims: 2
     data_type: 6
     int32_data: 0
@@ -29,10 +33,11 @@ graph {
     name: "indices"
   }
   initializer {
+    dims: 1
     dims: 2
     data_type: 1
-    float_data: 1.100000023841858
-    float_data: 2.0999999046325684
+    float_data: 12.01
+    float_data: 13.99
     name: "updates"
   }
   output {
