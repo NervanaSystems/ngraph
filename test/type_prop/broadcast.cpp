@@ -361,13 +361,17 @@ TEST(type_prop, broadcast_v1_axes_wrong_rank)
     }
 }
 
-TEST(type_prop, broadcast_v1_output_partial_shape_dynamic)
+TEST(type_prop, broadcast_v1_fully_dynamic_target_shape)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
     auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
 
     auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
+    ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
+
+    bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
     ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
 }
 
@@ -381,12 +385,12 @@ TEST(type_prop, broadcast_v1_broadcast_shape_et_wrong)
     try
     {
         auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
-        FAIL() << "Broadcast: did not detect shape element type not i64";
+        FAIL() << "Broadcast: did not detect shape element type not integral number";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Broadcast shape must have element type i64"));
+                             std::string("Broadcast shape must be an integral number"));
     }
     catch (...)
     {
@@ -404,12 +408,12 @@ TEST(type_prop, broadcast_v1_axes_et_wrong)
     try
     {
         auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
-        FAIL() << "Broadcast: did not detect axes element type not i64";
+        FAIL() << "Broadcast: did not detect axes element type not integral numbers";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Broadcast axes must have element type i64"));
+                             std::string("Broadcast axes must be integral numbers, but are:"));
     }
     catch (...)
     {

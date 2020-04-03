@@ -83,6 +83,10 @@ private:
                     const std::vector<std::shared_ptr<HostTensor>>& out,
                     const std::vector<std::shared_ptr<HostTensor>>& args)
     {
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+#endif
         switch (INTExecutable::get_typeid(node))
         {
         case ngraph::runtime::interpreter::OP_TYPEID::Broadcast:
@@ -110,5 +114,8 @@ private:
         }
         default: op_engine<T>(node, out, args); break;
         }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
     }
 };

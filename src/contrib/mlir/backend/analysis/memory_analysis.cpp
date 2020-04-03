@@ -26,7 +26,6 @@
 #include <llvm/ADT/DenseSet.h>
 #include <map>
 #include <mlir/EDSC/Builders.h>
-#include <mlir/EDSC/Helpers.h>
 #include <mlir/EDSC/Intrinsics.h>
 #include <mlir/IR/AffineExpr.h>
 #include <mlir/IR/IntegerSet.h>
@@ -68,16 +67,16 @@ namespace
     {
     public:
         /// Initialize the relationship for a number of syms
-        void init(std::unordered_set<Value*>& symbols);
+        void init(DenseSet<Value>& symbols);
         /// Checks if values a and b can alias
-        bool canAlias(Value* a, Value* b);
-        void insertNoAlias(Value* a, Value* b);
+        bool canAlias(Value a, Value b);
+        void insertNoAlias(Value a, Value b);
 
     private:
         using BV = llvm::BitVector;
-        std::unordered_map<Value*, unsigned> m_valueToIdx;
-        std::unordered_map<unsigned, Value*> m_idxToValue;
-        std::unordered_map<Value*, BV*> m_valueToSet;
+        DenseMap<Value, unsigned> m_valueToIdx;
+        DenseMap<unsigned, Value> m_idxToValue;
+        DenseMap<Value, BV*> m_valueToSet;
         SmallVector<BV, 10> m_sets;
     };
 
@@ -86,16 +85,15 @@ namespace
     class LivenessAnalysis
     {
     public:
-        bool isLive(Value* v);
-        void setLive(Value* v);
-        void kill(Value* v);
-        void getLiveValues(llvm::SmallVectorImpl<Value*>& values);
-        void reset();
+        bool isLive(Value v);
+        void setLive(Value v);
+        void kill(Value v);
+        void getLiveValues(llvm::SmallVectorImpl<Value>& values);
 
     private:
         unsigned m_maxIdx = 0;
         SmallVector<bool, 10> m_liveness;
-        std::unordered_map<Value*, unsigned> m_valueToIdx;
+        DenseMap<Value, unsigned> m_valueToIdx;
     };
 
     // Memory Assignment analysis
@@ -121,7 +119,7 @@ namespace
         void processDestructiveInPlace(mlir::Operation* op);
         void processConcat(mlir::Operation* op);
         bool isSafeInPlace(mlir::Operation* op);
-        bool isInputOrOutputValue(mlir::Value* value);
+        bool isInputOrOutputValue(mlir::Value value);
         LivenessAnalysis m_liveness;
         AliasRelation m_aliasRelation;
         std::unordered_map<std::string, bool> m_inplaceOps;
@@ -132,7 +130,7 @@ namespace
     // helpers
     // Determines the buffer size a value needs based on its type
     // offset is where that value should start in the buffer
-    static unsigned getBufferSizeForOperand(mlir::Value* value, int offset);
+    static unsigned getBufferSizeForOperand(mlir::Value value, int offset);
 
     // Go backwards over instructions
     //
@@ -184,14 +182,14 @@ namespace
         auto& block = *(blocks.begin());
 
         // count number of syms in the code and initialize alias relationship
-        std::unordered_set<Value*> syms;
+        DenseSet<Value> syms;
 
         for (auto it = block.begin(); it != block.end(); it++)
         {
             Operation* op = &(*it);
             for (auto it : op->getResults())
             {
-                Value* v = it;
+                Value v = it;
                 if (syms.find(v) == syms.end())
                 {
                     syms.insert(v);
@@ -199,7 +197,7 @@ namespace
             }
             for (auto it : op->getOperands())
             {
-                Value* v = it;
+                Value v = it;
                 if (syms.find(v) == syms.end())
                 {
                     syms.insert(v);
@@ -245,7 +243,7 @@ namespace
             // concat on the highest non-one axis
             auto concatAxis = concat.concatenation_axis();
             auto result = concat.getResult();
-            auto shape = (result->getType().cast<NGTensorType>()).getShape();
+            auto shape = (result.getType().cast<NGTensorType>()).getShape();
             std::vector<int> opndOffsets;
             BufferInfo bufferInfo;
             int bufferId = -1, baseOffset = 0;
@@ -288,7 +286,7 @@ namespace
                 else
                 {
                     auto opnd = op->getOperand(i - 1);
-                    auto tensorType = opnd->getType().cast<NGTensorType>();
+                    auto tensorType = opnd.getType().cast<NGTensorType>();
                     opndOffset += tensorType.getNumElements();
                     opndOffsets.push_back(opndOffset);
                 }
@@ -306,7 +304,7 @@ namespace
                 for (auto i = 0; i < op->getNumOperands(); i++)
                 {
                     auto opnd = op->getOperand(i);
-                    auto defOp = opnd->getDefiningOp();
+                    auto defOp = opnd.getDefiningOp();
                     NGRAPH_CHECK(defOp != nullptr, "Defining operation expected");
                     // calculate expected absolute offset in the buffer
                     bufferOffset = baseOffset + opndOffsets[i];
@@ -357,7 +355,7 @@ namespace
                 // For now, assign only if all srcs have no prior assignments
                 for (auto opnd : op->getOperands())
                 {
-                    if (m_memAnalysis->getBufferInfo(opnd->getDefiningOp()).isValid())
+                    if (m_memAnalysis->getBufferInfo(opnd.getDefiningOp()).isValid())
                     {
                         return;
                     }
@@ -381,7 +379,7 @@ namespace
             for (auto i = 0; i < op->getNumOperands(); i++)
             {
                 auto opnd = op->getOperand(i);
-                auto defOp = opnd->getDefiningOp();
+                auto defOp = opnd.getDefiningOp();
                 NGRAPH_CHECK(defOp != nullptr, "Defining operation expected");
                 auto opndOffset = baseOffset + opndOffsets[i];
                 m_memAnalysis->setBufferInfo(defOp, {bufferId, opndOffset});
@@ -392,7 +390,7 @@ namespace
     void MemoryAssignment::processDestructiveInPlace(mlir::Operation* op)
     {
         NGRAPH_CHECK(op->getNumResults() == 1, "Destructive in-place with multi-def ?");
-        Value* use = nullptr;
+        Value use = nullptr;
         int useCount = -1;
 
         if (isInputOrOutputValue(op->getResult(0)))
@@ -405,11 +403,7 @@ namespace
         {
             if (!m_liveness.isLive(opnd) && !isInputOrOutputValue(opnd))
             {
-                int uses = 0;
-                for (auto& i : opnd->getUses())
-                {
-                    uses++;
-                }
+                int uses = std::distance(opnd.getUses().begin(), opnd.getUses().end());
                 if (useCount == -1 || uses < useCount)
                 {
                     use = opnd;
@@ -428,28 +422,28 @@ namespace
             // attach a new buffer id, and 0 offset on obth src and result
             bufferInfo = {m_bufferId++, 0};
             m_memAnalysis->setBufferInfo(op, bufferInfo);
-            m_memAnalysis->setBufferInfo(use->getDefiningOp(), bufferInfo);
+            m_memAnalysis->setBufferInfo(use.getDefiningOp(), bufferInfo);
         }
         else
         {
             // copy result buffer id and offset to src
-            m_memAnalysis->setBufferInfo(use->getDefiningOp(), bufferInfo);
+            m_memAnalysis->setBufferInfo(use.getDefiningOp(), bufferInfo);
         }
         auto bufferSize = 0;
         bufferSize = getBufferSizeForOperand(op->getResult(0), bufferInfo.m_offset);
         m_memAnalysis->setBufferSize(bufferInfo.m_bufferId, bufferSize);
         // update aliasing info
         // use value cannot alias any live value
-        SmallVector<Value*, 10> liveValues;
+        SmallVector<Value, 10> liveValues;
         m_liveness.getLiveValues(liveValues);
         for (auto& value : liveValues)
         {
             m_aliasRelation.insertNoAlias(use, value);
         }
     }
-    bool MemoryAssignment::isInputOrOutputValue(mlir::Value* value)
+    bool MemoryAssignment::isInputOrOutputValue(mlir::Value value)
     {
-        auto defOp = value->getDefiningOp();
+        auto defOp = value.getDefiningOp();
         // If no defining op, then this is a block arg, skip operand
         //
         // TODO: This check is assuming single BB function, improve to handle control-flow.
@@ -464,7 +458,7 @@ namespace
         //
         // TODO: Improve to support control flow. Track value use-chain along branches/block-args,
         // if we hit a use in a return, it is an output value.
-        for (auto& use : value->getUses())
+        for (auto& use : value.getUses())
         {
             auto useOp = use.getOwner();
             if (isa<NGReturnOp>(useOp))
@@ -482,7 +476,7 @@ namespace
         return it != m_inplaceOps.end() ? it->second : false;
     }
 
-    void AliasRelation::init(std::unordered_set<Value*>& symbols)
+    void AliasRelation::init(DenseSet<Value>& symbols)
     {
         unsigned numSyms = symbols.size();
         m_sets.resize(numSyms);
@@ -503,13 +497,13 @@ namespace
         }
     }
 
-    bool AliasRelation::canAlias(Value* a, Value* b)
+    bool AliasRelation::canAlias(Value a, Value b)
     {
         // check if a and b are in the same set
         return m_valueToSet[a] != m_valueToSet[b];
     }
 
-    void AliasRelation::insertNoAlias(Value* a, Value* b)
+    void AliasRelation::insertNoAlias(Value a, Value b)
     {
         // union the two sets that a and b belong to
         // update the maps accordingly
@@ -535,14 +529,7 @@ namespace
         }
     }
 
-    void LivenessAnalysis::reset()
-    {
-        m_valueToIdx.clear();
-        m_liveness.clear();
-        m_maxIdx = 0;
-    }
-
-    void LivenessAnalysis::getLiveValues(llvm::SmallVectorImpl<Value*>& values)
+    void LivenessAnalysis::getLiveValues(llvm::SmallVectorImpl<Value>& values)
     {
         for (auto& entry : m_valueToIdx)
         {
@@ -553,7 +540,7 @@ namespace
         }
     }
 
-    bool LivenessAnalysis::isLive(Value* v)
+    bool LivenessAnalysis::isLive(Value v)
     {
         auto it = m_valueToIdx.find(v);
         if (it == m_valueToIdx.end())
@@ -563,7 +550,7 @@ namespace
         return m_liveness[it->second];
     }
 
-    void LivenessAnalysis::setLive(Value* v)
+    void LivenessAnalysis::setLive(Value v)
     {
         auto it = m_valueToIdx.find(v);
         if (it == m_valueToIdx.end())
@@ -578,7 +565,7 @@ namespace
         }
     }
 
-    void LivenessAnalysis::kill(Value* v)
+    void LivenessAnalysis::kill(Value v)
     {
         auto it = m_valueToIdx.find(v);
         if (it == m_valueToIdx.end())
@@ -589,9 +576,9 @@ namespace
         m_liveness[it->second] = false;
     }
     // helpers
-    unsigned getBufferSizeForOperand(mlir::Value* value, int offset)
+    unsigned getBufferSizeForOperand(mlir::Value value, int offset)
     {
-        auto tensorType = value->getType().dyn_cast<NGTensorType>();
+        auto tensorType = value.getType().dyn_cast<NGTensorType>();
         NGRAPH_CHECK(tensorType, "Invalid type to find buffer size for");
 
         unsigned bufferSize = offset * std::ceil(tensorType.getElementBitWidth() / 8);

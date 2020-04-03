@@ -58,6 +58,7 @@ namespace ngraph
         /// \param axis  The axis dividing shape.
         ///
         /// \return The new value will be a 2D matrix representing the flattened input node.
+        NGRAPH_API
         std::shared_ptr<Node> flatten(const Output<Node>& value, int axis);
 
         /// \brief Flatten a value into a 2D matrix, with a dynamic dividing axis.
@@ -67,6 +68,7 @@ namespace ngraph
         ///             to the shape (1,).
         ///
         /// \return The new value will be a 2D matrix representing the flattened input node.
+        NGRAPH_API
         std::shared_ptr<Node> flatten(const Output<Node>& value, const Output<Node>& axis);
 
         /// \brief      Remove empty axes from input tensor.
@@ -120,6 +122,7 @@ namespace ngraph
             /// \param      axes_order The permutation of axes.
             ///
             /// \return     Transpose:v1 op.
+            NGRAPH_API
             std::shared_ptr<Node> reorder_axes(const Output<Node>& value,
                                                std::vector<size_t> axes_order = {});
 
@@ -148,6 +151,15 @@ namespace ngraph
             ///
             /// \return     Reshape:v1 op.
             std::shared_ptr<Node> expand_dims(const Output<Node>& value, std::size_t axis = 0);
+
+            /// \brief      Remove empty axes from input tensor.
+            ///
+            /// \param[in]  value  The value to be squeezed.
+            /// \param[in]  axes   The vector defining indexes of axes to be removed.
+            ///
+            /// \return     Reshape:v1 op.
+            std::shared_ptr<Node> squeeze(const Output<Node>& value,
+                                          std::vector<std::size_t> axes = {0});
         }
     } // namespace  builder
 } // namespace  ngraph

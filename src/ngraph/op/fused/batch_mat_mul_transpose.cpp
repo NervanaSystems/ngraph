@@ -20,7 +20,6 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/util.hpp"
@@ -154,8 +153,8 @@ void op::BatchMatMulTranspose::generate_adjoints(autodiff::Adjoints& adjoints,
 {
     auto delta = deltas.at(0); // NxIxK
 
-    auto arg0 = input(0).get_source_output().get_node_shared_ptr(); // NxIxJ (maybe transposed)
-    auto arg1 = input(1).get_source_output().get_node_shared_ptr(); // NxJxK (maybe transposed)
+    auto arg0 = get_input_node_shared_ptr(0); // NxIxJ (maybe transposed)
+    auto arg1 = get_input_node_shared_ptr(1); // NxJxK (maybe transposed)
 
     // If arg1 is already transposed, it does not need to be transposed again
     auto delta_dot_arg1 =

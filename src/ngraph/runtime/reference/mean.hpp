@@ -17,6 +17,8 @@
 #pragma once
 
 #include <cmath>
+#include <map>
+#include <vector>
 
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/runtime/reference/sum.hpp"

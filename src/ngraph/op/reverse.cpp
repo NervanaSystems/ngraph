@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <sstream>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/reverse.hpp"
@@ -44,7 +45,7 @@ void op::v0::Reverse::validate_and_infer_types()
         for (size_t axis : m_reversed_axes)
         {
             NODE_VALIDATION_CHECK(this,
-                                  axis < size_t(input_rank),
+                                  axis < input_rank.get_length(),
                                   "Reverse axis (",
                                   axis,
                                   ") is out of bounds (argument shape: ",
@@ -91,6 +92,12 @@ op::v1::Reverse::Reverse(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::Reverse::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("mode", m_mode);
+    return true;
+}
+
 void op::v1::Reverse::validate_and_infer_types()
 {
     if (m_mode == Mode::MASK)
@@ -109,22 +116,22 @@ void op::v1::Reverse::validate_and_infer_types()
     if (rev_axes_rank.is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(rev_axes_rank) == 1,
+                              rev_axes_rank.get_length() == 1,
                               "The reversed_axes input must be a 1D tensor (got ",
-                              static_cast<size_t>(rev_axes_rank),
+                              rev_axes_rank.get_length(),
                               ").");
 
         if (m_mode == Mode::MASK)
         {
             if (input_rank.is_static() && rev_axes_shape[0].is_static())
             {
-                const auto rev_axes_mask_elems_count = static_cast<size_t>(rev_axes_shape[0]);
+                const auto rev_axes_mask_elems_count = rev_axes_shape[0].get_length();
                 NODE_VALIDATION_CHECK(this,
-                                      rev_axes_mask_elems_count == static_cast<size_t>(input_rank),
+                                      rev_axes_mask_elems_count == input_rank.get_length(),
                                       "The number of elements in the reversed_axes tensor (",
                                       rev_axes_mask_elems_count,
                                       ") must match the input data tensor rank (",
-                                      static_cast<size_t>(input_rank),
+                                      input_rank.get_length(),
                                       ") in 'mask' mode.");
             }
         }
@@ -132,7 +139,7 @@ void op::v1::Reverse::validate_and_infer_types()
 
     if (input_rank.is_static())
     {
-        const auto rank = static_cast<size_t>(input_rank);
+        const auto rank = input_rank.get_length();
         const auto rev_axes_node = input_value(1).get_node_shared_ptr();
 
         if (rev_axes_node->is_constant())
@@ -160,7 +167,7 @@ void op::v1::Reverse::validate_and_infer_types()
                                       "Some of the provided axes (",
                                       rev_axes,
                                       ") are out of bounds (input rank: ",
-                                      static_cast<size_t>(input_rank),
+                                      input_rank.get_length(),
                                       ").");
             }
         }
@@ -194,3 +201,22 @@ op::v1::Reverse::Mode op::v1::Reverse::mode_from_string(const std::string& mode)
 
     return allowed_values.at(mode);
 }
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::v1::Reverse::Mode>& EnumNames<op::v1::Reverse::Mode>::get()
+    {
+        static auto enum_names = EnumNames<op::v1::Reverse::Mode>(
+            "op::v1::Reverse::Mode",
+            {{"index", op::v1::Reverse::Mode::INDEX}, {"mask", op::v1::Reverse::Mode::MASK}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v1::Reverse::Mode>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::v1::Reverse::Mode& type)
+    {
+        return s << as_string(type);
+    }
+} // namespace ngraph

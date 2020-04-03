@@ -18,6 +18,7 @@
 
 #include <algorithm>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -96,7 +97,7 @@ void op::v0::Softmax::validate_and_infer_types()
             for (auto axis : m_axes)
             {
                 NODE_VALIDATION_CHECK(this,
-                                      axis < static_cast<size_t>(input_shape.rank()),
+                                      axis < input_shape.rank().get_length(),
                                       "Reduction axis (",
                                       axis,
                                       ") is out of bounds (argument shape: ",
@@ -164,12 +165,18 @@ op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::Softmax::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    return true;
+}
+
 void op::v1::Softmax::validate_and_infer_types()
 {
     const PartialShape& input_shape = get_input_partial_shape(0);
     if (input_shape.rank().is_static())
         NODE_VALIDATION_CHECK(this,
-                              m_axis < static_cast<size_t>(input_shape.rank()),
+                              m_axis < input_shape.rank().get_length(),
                               "Reduction axis (",
                               m_axis,
                               ") is out of bounds (argument shape: ",

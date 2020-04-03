@@ -23,7 +23,6 @@
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
@@ -104,7 +103,7 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>&
     // row_dims := value_shape[0:axis]
     auto row_dims_slice_start =
         make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{0});
-    auto row_dims_slice_end = make_shared<op::DynReshape>(axis, shape_1_vector);
+    auto row_dims_slice_end = make_shared<op::v1::Reshape>(axis, shape_1_vector, true);
     auto row_dims = make_shared<op::DynSlice>(
         value_shape, row_dims_slice_start, row_dims_slice_end, unit_strides);
 
@@ -122,8 +121,7 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>&
     // flattened_dims := Concat({row_dims_prod, col_dims_prod})
     auto flattened_dims = make_shared<op::Concat>(NodeVector{row_dims_prod, col_dims_prod}, 0);
 
-    // result := DynReshape(value, flattened_dims)
-    return make_shared<op::DynReshape>(value, flattened_dims)
+    return make_shared<op::v1::Reshape>(value, flattened_dims, true)
         ->add_provenance_group_members_above({value});
 }
 
@@ -137,7 +135,7 @@ shared_ptr<Node> builder::squeeze(const Output<Node>& value, vector<size_t> axes
     Shape in_shape{value.get_shape()};
     for (size_t idx = 0; idx < axes.size(); ++idx)
     {
-        in_shape.at(idx) = 0;
+        in_shape.at(axes.at(idx)) = 0;
     }
     Shape output_shape;
     for (auto axis : in_shape)
@@ -226,5 +224,28 @@ shared_ptr<Node> builder::opset1::expand_dims(const Output<Node>& value, size_t 
     auto empty_axis_it = begin(output_shape);
     advance(empty_axis_it, axis);
     output_shape.insert(empty_axis_it, 1);
+    return builder::opset1::reshape(value, output_shape);
+}
+
+shared_ptr<Node> builder::opset1::squeeze(const Output<Node>& value, vector<size_t> axes)
+{
+    if (axes.empty())
+    {
+        return value.get_node_shared_ptr();
+    }
+
+    Shape in_shape{value.get_shape()};
+    for (size_t idx = 0; idx < axes.size(); ++idx)
+    {
+        in_shape.at(axes.at(idx)) = 0;
+    }
+    Shape output_shape;
+    for (auto axis : in_shape)
+    {
+        if (axis != 0)
+        {
+            output_shape.push_back(axis);
+        }
+    }
     return builder::opset1::reshape(value, output_shape);
 }

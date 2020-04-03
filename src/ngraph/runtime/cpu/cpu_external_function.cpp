@@ -41,6 +41,7 @@
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -172,7 +173,7 @@
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
@@ -206,7 +207,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
-#include "ngraph/runtime/cpu/pass/halide_subgraph_extraction.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -245,12 +245,11 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_release_function(release_function)
     , m_emit_timing(false)
 #if defined(NGRAPH_TBB_ENABLE)
-    , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+    , m_use_tbb(getenv_bool("NGRAPH_CPU_USE_TBB"))
 #endif
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
-    , m_direct_execution((std::getenv("NGRAPH_CODEGEN") == nullptr) ||
-                         (std::string(std::getenv("NGRAPH_CODEGEN")) == "0"))
+    , m_direct_execution(!getenv_bool("NGRAPH_CODEGEN"))
 #else
     , m_direct_execution(true)
 #endif
@@ -458,11 +457,10 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::GeluBackprop), &runtime::cpu::CPU_Emitter::emit<op::GeluBackprop>},
     {TI(ngraph::op::Round), &runtime::cpu::CPU_Emitter::emit<op::Round>}};
 
-static void
-    generate_isnan_isinf_check(CodeWriter& writer,
-                               std::shared_ptr<Node> node,
-                               const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& out,
-                               const char* funcname)
+static void generate_isnan_isinf_check(CodeWriter& writer,
+                                       std::shared_ptr<Node> node,
+                                       const std::vector<ngraph::runtime::cpu::TensorWrapper>& out,
+                                       const char* funcname)
 {
     auto ctype = node->get_element_type().c_type_string();
     writer << "{   // A " << funcname << " for" << node->get_name() << "\n";
@@ -512,7 +510,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
         femitter, node_function_map, common_function_string);
     pass_manager.run_passes(m_function);
 
-    list<shared_ptr<Node>> ordered_ops = m_function->get_ordered_ops();
+    auto ordered_ops = m_function->get_ordered_ops();
 
     CodeWriter writer;
 
@@ -880,7 +878,7 @@ using namespace ngraph::runtime;
         {
             throw unsupported_op(node->description());
         }
-        vector<TensorViewWrapper> in;
+        vector<TensorWrapper> in;
         vector<string> node_input_names;
         vector<string> node_output_names;
         vector<TensorTracerAttributes> t_in_attrs;
@@ -889,16 +887,16 @@ using namespace ngraph::runtime;
         {
             const descriptor::Output& output = input.get_output();
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-            in.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
+            in.push_back(TensorWrapper(tv, m_variable_name_map[tv->get_name()]));
             node_input_names.emplace_back(tv->get_name());
             t_in_attrs.push_back(TensorTracerAttributes(
                 in.back().get_size(), in.back().get_shape(), in.back().get_element_type()));
         }
-        vector<TensorViewWrapper> out;
+        vector<TensorWrapper> out;
         for (const descriptor::Output& output : node->get_outputs())
         {
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-            out.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
+            out.push_back(TensorWrapper(tv, m_variable_name_map[tv->get_name()]));
             node_output_names.emplace_back(tv->get_name());
             t_out_attrs.push_back(TensorTracerAttributes(
                 out.back().get_size(), out.back().get_shape(), out.back().get_element_type()));
@@ -988,11 +986,11 @@ using namespace ngraph::runtime;
             string func_name =
                 ngraph::pass::CommonFunctionCollection::create_function_name(*it->second);
             vector<string> names;
-            for (const TensorViewWrapper& tv : in)
+            for (const TensorWrapper& tv : in)
             {
                 names.push_back(tv.get_name());
             }
-            for (const TensorViewWrapper& tv : out)
+            for (const TensorWrapper& tv : out)
             {
                 names.push_back(tv.get_name());
             }
@@ -1006,14 +1004,14 @@ using namespace ngraph::runtime;
         {
             // check inputs and constants?
             if ((!node->is_parameter() && !node->is_constant()) ||
-                std::getenv("NGRAPH_CPU_CHECK_PARMS_AND_CONSTS"))
+                getenv_bool("NGRAPH_CPU_CHECK_PARMS_AND_CONSTS"))
             {
-                if (std::getenv("NGRAPH_CPU_NAN_CHECK"))
+                if (getenv_bool("NGRAPH_CPU_NAN_CHECK"))
                 {
                     generate_isnan_isinf_check(writer, node, out, "isnan");
                 }
 
-                if (std::getenv("NGRAPH_CPU_INF_CHECK"))
+                if (getenv_bool("NGRAPH_CPU_INF_CHECK"))
                 {
                     generate_isnan_isinf_check(writer, node, out, "isinf");
                 }
@@ -1190,16 +1188,18 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     auto dex = is_direct_execution();
     auto is_supported = [dex](const Node& node) {
 #ifdef NGRAPH_MLIR_ENABLE
-        if (std::getenv("NGRAPH_MLIR") != nullptr && std::getenv("NGRAPH_MLIR_CALLBACK") != nullptr)
+        if (getenv_bool("NGRAPH_MLIR") && getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             if (typeid(ngraph::op::MatMul) == typeid(node) &&
-                node.get_input_element_type(0) == element::f32)
+                node.get_input_element_type(0) == element::f32 &&
+                node.get_input_shape(0).size() == 2 && node.get_input_shape(1).size() == 2)
             {
                 return true;
             }
 
             if (typeid(ngraph::op::Gemm) == typeid(node) &&
-                node.get_input_element_type(0) == element::f32)
+                node.get_input_element_type(0) == element::f32 &&
+                node.get_input_shape(0).size() == 2 && node.get_input_shape(1).size() == 2)
             {
                 return true;
             }
@@ -1296,19 +1296,16 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUPreFusion, true, runtime::cpu::pass)
 
     // Disable CPUFusion if MLIR is enabled to preserve core ops.
-    if (std::getenv("NGRAPH_MLIR") == nullptr)
+    if (!getenv_bool("NGRAPH_MLIR"))
     {
         REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass)
     }
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)
-#if defined(NGRAPH_HALIDE)
-    REGISTER_KNOBBED_PASS(HalideSubgraphExtraction, true, ngraph::runtime::cpu::pass)
-#endif
 
 #ifdef NGRAPH_MLIR_ENABLE
-    if (std::getenv("NGRAPH_MLIR") != nullptr)
+    if (getenv_bool("NGRAPH_MLIR"))
     {
         REGISTER_KNOBBED_PASS(MLIRSubgraphExtractionPass, /*enable by default*/ true, ngraph::pass)
     }
@@ -1461,7 +1458,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
-    if (std::getenv("NGRAPH_ENABLE_VISUALIZE_TRACING"))
+    if (getenv_bool("NGRAPH_ENABLE_VISUALIZE_TRACING"))
     {
         // Enable per_pass_validation if required for debug purpose
         pass_manager.set_per_pass_validation(false);
@@ -1470,7 +1467,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     pass_manager.run_passes(m_function, false);
 
     static runtime::cpu::CPU_DebugTracer debug_tracer;
-    if (std::getenv("NGRAPH_CPU_DEBUG_TRACER") != nullptr)
+    if (getenv_bool("NGRAPH_CPU_DEBUG_TRACER"))
     {
         debug_tracer.set_enable_tracing(true);
     }
@@ -1617,26 +1614,26 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         {
             throw unsupported_op(node->description());
         }
-        vector<TensorViewWrapper> in;
+        vector<TensorWrapper> in;
         vector<string> in_names;
         vector<TensorTracerAttributes> t_in_attrs;
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-            in.push_back(TensorViewWrapper(tv, tv->get_name()));
+            in.push_back(TensorWrapper(tv, tv->get_name()));
             in_names.push_back(tv->get_name());
             t_in_attrs.push_back(TensorTracerAttributes(
                 in.back().get_size(), in.back().get_shape(), in.back().get_element_type()));
         }
-        vector<TensorViewWrapper> out;
+        vector<TensorWrapper> out;
         vector<string> out_names;
         vector<TensorTracerAttributes> t_out_attrs;
 
         for (const descriptor::Output& output : node->get_outputs())
         {
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-            out.push_back(TensorViewWrapper(tv, tv->get_name()));
+            out.push_back(TensorWrapper(tv, tv->get_name()));
             out_names.push_back(tv->get_name());
             t_out_attrs.push_back(TensorTracerAttributes(
                 out.back().get_size(), out.back().get_shape(), out.back().get_element_type()));
@@ -1722,7 +1719,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         m_perf_counters.emplace_back(node, 0, 0);
     }
 
-    if ((std::getenv("NGRAPH_DEX_DEBUG") != nullptr))
+    if (getenv_bool("NGRAPH_DEX_DEBUG"))
     {
         string filename = file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
         std::stringstream strm;
@@ -1926,8 +1923,8 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         else
 #endif
         {
-            static const auto ddebug = std::getenv("NGRAPH_DEX_DEBUG");
-            if (ddebug != nullptr)
+            static const auto ddebug = getenv_bool("NGRAPH_DEX_DEBUG");
+            if (ddebug)
             {
                 if (ctx->first_iteration)
                 {
@@ -2178,8 +2175,8 @@ void runtime::cpu::CPU_ExternalFunction::write_to_file(const std::string& code,
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     CodeWriter& writer,
     Node* node,
-    const std::vector<TensorViewWrapper>& /* in */,
-    const std::vector<TensorViewWrapper>& /* out */)
+    const std::vector<TensorWrapper>& /* in */,
+    const std::vector<TensorWrapper>& /* out */)
 {
     if (m_emit_timing)
     {
@@ -2190,8 +2187,8 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
     CodeWriter& writer,
     Node* node,
-    const std::vector<TensorViewWrapper>& /* in */,
-    const std::vector<TensorViewWrapper>& /* out */)
+    const std::vector<TensorWrapper>& /* in */,
+    const std::vector<TensorWrapper>& /* out */)
 {
     if (m_emit_timing)
     {
@@ -2218,14 +2215,14 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     {
         throw unsupported_op(node.description());
     }
-    vector<TensorViewWrapper> in;
+    vector<TensorWrapper> in;
     size_t arg_index = 0;
     set<string> arg_names;
     for (const descriptor::Input& input : node.get_inputs())
     {
         const descriptor::Output& output = input.get_output();
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-        TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
+        TensorWrapper tvw{tv, "_arg" + to_string(arg_index)};
         if (arg_names.find(tvw.get_name()) == arg_names.end())
         {
             arg_names.insert(tvw.get_name());
@@ -2238,11 +2235,11 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
         }
         in.push_back(tvw);
     }
-    vector<TensorViewWrapper> out;
+    vector<TensorWrapper> out;
     for (const descriptor::Output& output : node.get_outputs())
     {
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-        TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
+        TensorWrapper tvw{tv, "_out" + to_string(arg_index)};
         if (arg_index++ > 0)
         {
             writer << ",";

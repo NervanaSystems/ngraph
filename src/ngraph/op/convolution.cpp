@@ -45,8 +45,37 @@ op::v1::Convolution::Convolution(const Output<Node>& data_batch,
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::Convolution::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("dilations", m_dilations);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    return true;
+}
+
 void op::v1::Convolution::validate_and_infer_types()
 {
+    if (m_auto_pad != PadType::EXPLICIT)
+    {
+        NODE_VALIDATION_CHECK(this,
+                              std::all_of(m_pads_begin.begin(),
+                                          m_pads_begin.end(),
+                                          [](std::ptrdiff_t i) { return (i == 0); }),
+                              " ",
+                              "pads_begin: (",
+                              m_pads_begin,
+                              ") Non-zero padding should not be used along with auto pad modes.");
+        NODE_VALIDATION_CHECK(this,
+                              std::all_of(m_pads_end.begin(),
+                                          m_pads_end.end(),
+                                          [](std::ptrdiff_t i) { return (i == 0); }),
+                              " ",
+                              "pads_end: (",
+                              m_pads_end,
+                              ") Non-zero padding should not be used along with auto pad modes.");
+    }
     const PartialShape& data_batch_shape = get_input_partial_shape(0);
     element::Type data_batch_et = get_input_element_type(0);
     const PartialShape& filters_shape = get_input_partial_shape(1);
@@ -87,6 +116,8 @@ void op::v1::Convolution::validate_and_infer_types()
                                m_auto_pad,
                                m_pads_end,
                                m_pads_begin);
+            // auto padding has now been made explicit, so set to explicit for future validations
+            m_auto_pad = PadType::EXPLICIT;
         }
     }
 
@@ -185,6 +216,17 @@ op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& dat
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::ConvolutionBackpropData::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("dilations", m_dilations);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    visitor.on_attribute("output_padding", m_output_padding);
+    return true;
+}
+
 op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& data,
                                                          const Output<Node>& filters,
                                                          const Strides& strides,
@@ -204,30 +246,39 @@ op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& dat
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::ConvolutionBackpropData::is_dynamic() const
+{
+    bool is_dynamic = Node::is_dynamic();
+    if (get_inputs().size() == 3 && !is_dynamic)
+    {
+        return !is_type<op::Constant>(input_value(2).get_node());
+    }
+    return is_dynamic;
+}
+
 const PartialShape op::v1::ConvolutionBackpropData::get_output_shape() const
 {
-    PartialShape shape{vector<Dimension>(m_strides.size() + 2)};
     auto data_pshape = get_input_partial_shape(0);
+
+    PartialShape shape;
     if (data_pshape.rank().is_static())
     {
-        shape[0] = data_pshape[0]; // N
+        shape = PartialShape{vector<Dimension>(data_pshape.rank().get_length() - 2)};
     }
-    auto filters_pshape = get_input_partial_shape(1);
-    if (filters_pshape.rank().is_static())
+    else
     {
-        shape[1] = filters_pshape[1]; // C
+        shape = PartialShape{vector<Dimension>(m_strides.size())};
     }
     bool is_output_shape_present = get_inputs().size() == 3;
     if (is_output_shape_present)
     {
         if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
         {
-            auto output_shape = const_op->get_shape_val();
-            // Populate spatials
-            for (int i = 0; i < output_shape.size(); ++i)
-            {
-                shape[i + 2] = output_shape[i];
-            }
+            shape = const_op->get_shape_val();
+        }
+        else
+        {
+            shape = PartialShape::dynamic();
         }
     }
     return shape;
@@ -236,7 +287,8 @@ const PartialShape op::v1::ConvolutionBackpropData::get_output_shape() const
 void op::v1::ConvolutionBackpropData::set_output_shape(const Shape& shape)
 {
     this->input(2).replace_source_output(
-        op::Constant::create(element::i64, Shape{shape.size()}, shape)->output(0));
+        op::Constant::create(this->get_input_element_type(2), Shape{shape.size()}, shape)
+            ->output(0));
 }
 
 void op::v1::ConvolutionBackpropData::validate_and_infer_types()
@@ -259,58 +311,123 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
         filters_et,
         ").");
 
-    if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER)
+    if (data_pshape.is_static() && filters_pshape.is_static())
     {
-        NODE_VALIDATION_CHECK(this,
-                              is_output_shape_present,
-                              "Selected Pad type: ",
-                              m_auto_pad,
-                              "requires an output_shape input which is missing.");
-        if (output_pshape.is_static() && filters_pshape.is_static())
+        const Shape& data_shape = data_pshape.to_shape();
+
+        if (m_pads_begin.size() == 0)
         {
-            m_pads_begin.clear();
-            m_pads_end.clear();
-            auto filter_shape = filters_pshape.to_shape();
-            filter_shape.erase(filter_shape.begin(), filter_shape.begin() + 2); // Remove {O,I}
-            infer_auto_padding(output_pshape.to_shape(),
-                               filter_shape,
-                               m_strides,
-                               m_dilations,
-                               m_auto_pad,
-                               m_pads_end,
-                               m_pads_begin);
+            m_pads_begin = conv_default_padding(this, data_pshape, filters_pshape);
         }
+        if (m_pads_end.size() == 0)
+        {
+            m_pads_end = conv_default_padding(this, data_pshape, filters_pshape);
+        }
+        if (m_output_padding.size() == 0)
+        {
+            m_output_padding = conv_default_padding(this, data_pshape, filters_pshape);
+        }
+        if (m_strides.size() == 0)
+        {
+            m_strides = conv_default_strides(this, data_pshape, filters_pshape);
+        }
+        if (m_dilations.size() == 0)
+        {
+            m_dilations = conv_default_strides(this, data_pshape, filters_pshape);
+        }
+
+        const size_t num_spatial_dims = data_shape.size() - 2;
+
+        NODE_VALIDATION_CHECK(this,
+                              m_strides.size() == num_spatial_dims,
+                              "Strides should be defined for all and only spatial features.");
+
+        NODE_VALIDATION_CHECK(this,
+                              m_dilations.size() == num_spatial_dims,
+                              "Dilations should be defined for all and only spatial features.");
+
+        NODE_VALIDATION_CHECK(this,
+                              m_output_padding.size() == num_spatial_dims,
+                              "Output padding should be defined for all and only "
+                              "spatial features.");
     }
 
     PartialShape result_shape;
     if (is_output_shape_present)
     {
-        set_input_is_relevant_to_shape(2);
-    }
-    else
-    {
-        if (filters_pshape.is_static() && data_pshape.is_static())
+        if (output_pshape.is_static() && filters_pshape.is_static() && data_pshape.is_static())
         {
-            auto filters_shape = filters_pshape.to_shape();
-            auto data_shape = data_pshape.to_shape();
+            Shape output_shape = output_pshape.to_shape();
+            const Shape data_shape = data_pshape.to_shape();
+            const Shape filters_shape = filters_pshape.to_shape();
+            const size_t num_spatial_dims = data_shape.size() - 2;
 
-            Shape output_shape;
-            auto data_spatial_rank = data_shape.size() - 2;
-            auto output_padding = get_output_padding();
-            if (output_padding.size() == 0)
+            NODE_VALIDATION_CHECK(this,
+                                  output_shape.size() == num_spatial_dims,
+                                  "Output shape should be specified only and for "
+                                  "all spatial dimensions.");
+
+            // If auto_pad has one of following mode we infer paddings. Otherwise in
+            // EXPLICIT auto_pad mode we use what is provided.
+            if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER)
             {
-                output_padding.insert(output_padding.begin(), data_spatial_rank, 0);
+                opset1::infer_conv_backprop_auto_padding(
+                    Shape{std::next(data_shape.begin(), 2), std::end(data_shape)},
+                    Shape{std::next(filters_shape.begin(), 2), std::end(filters_shape)},
+                    output_shape,
+                    m_strides,
+                    m_dilations,
+                    m_auto_pad,
+                    m_output_padding,
+                    m_pads_begin,
+                    m_pads_end);
             }
-            for (size_t i = 0; i < data_spatial_rank; ++i)
-            {
-                size_t tmp = m_strides[i] * (data_shape[i + 2] - 1) +
-                             ((filters_shape[i + 2] - 1) * m_dilations[i] + 1) - m_pads_begin[i] -
-                             m_pads_end[i] + output_padding[i];
-                output_shape.push_back(tmp);
-            }
+
+            // C_OUTPUT
             output_shape.insert(output_shape.begin(), filters_shape.at(1));
+            // N
             output_shape.insert(output_shape.begin(), data_shape.at(0));
             output_pshape = output_shape;
+        }
+        set_input_is_relevant_to_shape(2);
+    }
+    // Deduce output shape from input spatial shape, strides, dilations, output padding
+    // and padding values.
+    else
+    {
+        NODE_VALIDATION_CHECK(this,
+                              m_auto_pad == PadType::VALID || m_auto_pad == PadType::EXPLICIT,
+                              "If output shape input is absent auto padding can't be used. "
+                              "Got auto_pad: <",
+                              m_auto_pad,
+                              "> Expected: ",
+                              PadType::VALID);
+
+        if (data_pshape.is_static() && filters_pshape.is_static())
+        {
+            const Shape& filters_shape = filters_pshape.to_shape();
+            const Shape& data_shape = data_pshape.to_shape();
+
+            Shape output_shape;
+            opset1::infer_conv_backprop_output_spatial_shape(
+                Shape{std::next(data_shape.begin(), 2), std::end(data_shape)},
+                Shape{std::next(filters_shape.begin(), 2), std::end(filters_shape)},
+                m_strides,
+                m_dilations,
+                m_pads_begin,
+                m_pads_end,
+                m_output_padding,
+                output_shape);
+
+            // C_OUTPUT
+            output_shape.insert(output_shape.begin(), filters_shape.at(1));
+            // N
+            output_shape.insert(output_shape.begin(), data_shape.at(0));
+            output_pshape = output_shape;
+        }
+        else
+        {
+            output_pshape = PartialShape::dynamic(data_pshape.rank());
         }
     }
 
@@ -347,9 +464,8 @@ void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
 
         ptrdiff_t pads_end_backward =
             (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * m_dilations[i] +
-            ((m_pads_begin[i] +
-              (static_cast<size_t>(get_output_shape()[i + 2]) - 1) * m_strides[i] + m_pads_end[i] -
-              (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * m_dilations[i]) %
+            ((m_pads_begin[i] + (get_output_shape()[i].get_length() - 1) * m_strides[i] +
+              m_pads_end[i] - (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * m_dilations[i]) %
              m_strides[i]) -
             m_pads_end[i];
 
@@ -432,6 +548,15 @@ op::v1::ConvolutionBackpropFilters::ConvolutionBackpropFilters(const Output<Node
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::ConvolutionBackpropFilters::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("dilations", m_dilations);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    return true;
+}
+
 const Shape op::v1::ConvolutionBackpropFilters::get_filters_shape() const
 {
     Shape shape;
@@ -501,7 +626,7 @@ void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
         forward_result_shape =
             infer_convolution_forward(this,
                                       data_batch_shape,
-                                      Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 1),
+                                      Strides(data_batch_shape.rank().get_length() - 2, 1),
                                       m_pads_begin,
                                       m_pads_end,
                                       filters_shape,
@@ -518,8 +643,6 @@ void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
                               ").");
     }
 
-    set_input_is_relevant_to_shape(0);
-    set_input_is_relevant_to_shape(1);
     set_input_is_relevant_to_shape(2);
     set_output_type(0, forward_result_et, filters_shape);
 }
@@ -581,6 +704,17 @@ op::v0::Convolution::Convolution(const Output<Node>& data_batch,
     , m_pad_type(pad_type)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::v0::Convolution::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("window_movement_strides", m_window_movement_strides);
+    visitor.on_attribute("window_dilation_strides", m_window_dilation_strides);
+    visitor.on_attribute("data_dilation_strides", m_data_dilation_strides);
+    visitor.on_attribute("padding_below", m_padding_below);
+    visitor.on_attribute("padding_above", m_padding_above);
+    visitor.on_attribute("pad_type", m_pad_type);
+    return true;
 }
 
 void op::v0::Convolution::validate_and_infer_types()
@@ -773,6 +907,17 @@ op::v0::ConvolutionBackpropData::ConvolutionBackpropData(
     , m_data_dilation_strides_forward(data_dilation_strides_forward)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::v0::ConvolutionBackpropData::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("data_batch_shape", m_data_batch_shape);
+    visitor.on_attribute("window_movement_strides_forward", m_window_movement_strides_forward);
+    visitor.on_attribute("window_dilation_strides_forward", m_window_dilation_strides_forward);
+    visitor.on_attribute("padding_below_forward", m_padding_below_forward);
+    visitor.on_attribute("padding_above_forward", m_padding_above_forward);
+    visitor.on_attribute("data_dilation_strides_forward", m_data_dilation_strides_forward);
+    return true;
 }
 
 void op::v0::ConvolutionBackpropData::validate_and_infer_types()
@@ -1004,6 +1149,17 @@ op::v0::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     , m_data_dilation_strides_forward(data_dilation_strides_forward)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::v0::ConvolutionBackpropFilters::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("m_filters_shape", m_filters_shape);
+    visitor.on_attribute("window_movement_strides_forward", m_window_movement_strides_forward);
+    visitor.on_attribute("window_dilation_strides_forward", m_window_dilation_strides_forward);
+    visitor.on_attribute("padding_below_forward", m_padding_below_forward);
+    visitor.on_attribute("padding_above_forward", m_padding_above_forward);
+    visitor.on_attribute("data_dilation_strides_forward", m_data_dilation_strides_forward);
+    return true;
 }
 
 void op::v0::ConvolutionBackpropFilters::validate_and_infer_types()

@@ -49,9 +49,8 @@ namespace ngraph
                 Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
                     : m_element_type(type)
                     , m_shape(shape)
-                    , m_data(new runtime::AlignedBuffer(
-                          std::ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
-                          host_alignment()))
+                    , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
+                                                        host_alignment()))
                 {
                     NODE_VALIDATION_CHECK(
                         this,
@@ -87,14 +86,15 @@ namespace ngraph
                          Shape shape,
                          const std::vector<std::string>& values);
 
-                /// \brief Constructs a tensor constant with the same initialization value copied
-                ///        across the tensor. This constructor is to support deserialization of
-                ///        constants.
+                /// \brief Constructs a tensor constant with the supplied data
                 ///
                 /// \param type The element type of the tensor constant.
                 /// \param shape The shape of the tensor constant.
                 /// \param data A void* to constant data.
                 Constant(const element::Type& type, const Shape& shape, const void* data);
+
+                Constant(const Constant& other);
+                Constant& operator=(const Constant&) = delete;
 
                 virtual ~Constant() override;
 
@@ -194,77 +194,90 @@ namespace ngraph
                 std::vector<T> cast_vector() const
                 {
                     auto source_type = get_element_type();
+                    std::vector<T> rc;
                     switch (source_type)
                     {
                     case element::Type_t::boolean:
                     {
                         auto vector = get_vector<char>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::bf16:
                     {
                         auto vector = get_vector<bfloat16>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::f16:
                     {
                         auto vector = get_vector<float16>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::f32:
                     {
                         auto vector = get_vector<float>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::f64:
                     {
                         auto vector = get_vector<double>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::i8:
                     {
                         auto vector = get_vector<int8_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::i16:
                     {
                         auto vector = get_vector<int16_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::i32:
                     {
                         auto vector = get_vector<int32_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::i64:
                     {
                         auto vector = get_vector<int64_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::u8:
                     {
                         auto vector = get_vector<uint8_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::u16:
                     {
                         auto vector = get_vector<uint16_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::u32:
                     {
                         auto vector = get_vector<uint32_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
                     case element::Type_t::u64:
                     {
                         auto vector = get_vector<uint64_t>();
-                        return std::vector<T>(vector.begin(), vector.end());
+                        rc = std::vector<T>(vector.begin(), vector.end());
+                        break;
                     }
-                    case element::Type_t::u1:
-                    case element::Type_t::undefined:
-                    case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
+                    default: throw std::runtime_error("unsupported type");
                     }
+                    return rc;
                 }
 
                 const void* get_data_ptr() const { return (m_data ? m_data->get_ptr() : nullptr); }
@@ -376,11 +389,9 @@ namespace ngraph
                 static constexpr size_t host_alignment() { return 64; }
                 element::Type m_element_type;
                 Shape m_shape{};
-                std::unique_ptr<runtime::AlignedBuffer> m_data;
+                std::shared_ptr<runtime::AlignedBuffer> m_data;
                 bool m_all_elements_bitwise_identical;
                 bool are_all_data_elements_bitwise_identical() const;
-                Constant(const Constant&) = delete;
-                Constant operator=(const Constant&) = delete;
             };
 
             /// \brief A scalar constant whose element type is the same as like.

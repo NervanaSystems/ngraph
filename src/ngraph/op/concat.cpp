@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/slice.hpp"
 
@@ -61,13 +62,12 @@ void op::Concat::validate_and_infer_types()
         {
             if (get_concatenation_axis() < 0)
             {
-                set_concatenation_axis(get_axis() < 0
-                                           ? get_axis() + static_cast<int64_t>(this_input_rank)
-                                           : get_axis());
+                set_concatenation_axis(get_axis() < 0 ? get_axis() + this_input_rank.get_length()
+                                                      : get_axis());
             }
             auto concat_axis = get_concatenation_axis();
             NODE_VALIDATION_CHECK(this,
-                                  concat_axis < static_cast<int64_t>(this_input_rank),
+                                  concat_axis < this_input_rank.get_length(),
                                   "Concatenation axis (",
                                   concat_axis,
                                   ") is out of bounds for ",
@@ -116,7 +116,7 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVec
 {
     auto delta = deltas.at(0);
 
-    auto concat_result_shape = output(0).get_shape();
+    auto concat_result_shape = get_output_shape(0);
 
     Coordinate arg_delta_slice_lower = Coordinate(concat_result_shape.size(), 0);
     Coordinate arg_delta_slice_upper = concat_result_shape;

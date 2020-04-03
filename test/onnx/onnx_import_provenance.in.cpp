@@ -18,6 +18,11 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/frontend/onnx_import/default_opset.hpp"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
+#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/provenance.hpp"
+#include "util/provenance_enabler.hpp"
 #include "util/test_control.hpp"
 #include "util/type_prop.hpp"
 
@@ -32,9 +37,9 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_text)
         file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_tag_add.prototxt"));
 
     const auto ng_nodes = function->get_ordered_ops();
-    for (const auto ng_node : ng_nodes)
+    for (auto ng_node : ng_nodes)
     {
-        for (const auto tag : ng_node->get_provenance_tags())
+        for (auto tag : ng_node->get_provenance_tags())
         {
             EXPECT_HAS_SUBSTRING(tag, "ONNX");
         }
@@ -44,52 +49,83 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_text)
 // the NodeToCheck parameter of this template is used to find a node in the whole subgraph
 // that a particular unit test is supposed to check against the expected provenance tag
 template <typename NodeToCheck>
-void test_provenance_tags(const std::string& model_path, const std::string& expected_provenance_tag)
+void test_provenance_tags(const std::shared_ptr<Function> function,
+                          const std::string& expected_provenance_tag)
 {
-    const auto function =
-        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, model_path));
-
-    for (const auto ng_node : function->get_ordered_ops())
+    int node_count = 0;
+    for (auto ng_node : function->get_ordered_ops())
     {
         if (as_type_ptr<NodeToCheck>(ng_node))
         {
+            ++node_count;
             const auto tags = ng_node->get_provenance_tags();
-            ASSERT_EQ(tags.size(), 1) << "There should be exactly one provenance tag set for "
-                                      << ng_node;
-
-            EXPECT_EQ(*(tags.cbegin()), expected_provenance_tag);
+            ASSERT_TRUE(tags.size() > 0) << "Node " << ng_node->get_friendly_name()
+                                         << " should have at least one provenance tag.";
+            EXPECT_TRUE(tags.find(expected_provenance_tag) != tags.end());
         }
     }
+    EXPECT_TRUE(node_count > 0) << "Expected type of node doesn't exist in graph.";
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_only_output)
 {
+    test::ProvenanceEnabler provenance_enabler;
+
     // the Add node in the model does not have a name,
     // only its output name should be found in the provenance tags
-    test_provenance_tags<default_opset::Add>("onnx/provenance_only_outputs.prototxt",
-                                             "<ONNX Add (-> output_of_add)>");
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_only_outputs.prototxt"));
+    test_provenance_tags<default_opset::Add>(function, "<ONNX Add (-> output_of_add)>");
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_node_name_and_outputs)
 {
-    test_provenance_tags<default_opset::Add>("onnx/provenance_node_name_and_outputs.prototxt",
-                                             "<ONNX Add (Add_node -> output_of_add)>");
+    test::ProvenanceEnabler provenance_enabler;
+
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_node_name_and_outputs.prototxt"));
+    test_provenance_tags<default_opset::Add>(function, "<ONNX Add (Add_node -> output_of_add)>");
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_multiple_outputs_op)
 {
-    test_provenance_tags<default_opset::TopK>("onnx/provenance_multiple_outputs_op.prototxt",
-                                              "<ONNX TopK (TOPK -> values, indices)>");
+    test::ProvenanceEnabler provenance_enabler;
+
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_multiple_outputs_op.prototxt"));
+    test_provenance_tags<default_opset::TopK>(function, "<ONNX TopK (TOPK -> values, indices)>");
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_constants)
 {
-    test_provenance_tags<default_opset::Constant>("onnx/provenance_input_tags.prototxt",
-                                                  "<ONNX Input (initializer_of_A) Shape{0}>");
+    test::ProvenanceEnabler provenance_enabler;
+
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_input_tags.prototxt"));
+    test_provenance_tags<default_opset::Constant>(function,
+                                                  "<ONNX Input (initializer_of_A) Shape:{1}>");
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_parameters)
 {
-    test_provenance_tags<default_opset::Parameter>("onnx/provenance_input_tags.prototxt",
-                                                   "<ONNX Input (input_B) Shape{0}>");
+    test::ProvenanceEnabler provenance_enabler;
+
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_input_tags.prototxt"));
+    test_provenance_tags<default_opset::Parameter>(function, "<ONNX Input (input_B) Shape:{}>");
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_downgrade_pass)
+{
+    test::ProvenanceEnabler provenance_enabler;
+
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_downgrade_topk.prototxt"));
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.run_passes(function);
+
+    test_provenance_tags<op::v0::TopK>(function, "<ONNX TopK (TOPK -> values, indices)>");
+    test_provenance_tags<op::v0::TopK>(function, "<Opset0_Downgrade (v1 TopK)>");
 }

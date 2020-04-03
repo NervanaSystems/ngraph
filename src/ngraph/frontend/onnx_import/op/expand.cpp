@@ -14,20 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
 
 #include "default_opset.hpp"
 #include "expand.hpp"
-#include "ngraph/descriptor/output.hpp"
 #include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/experimental/dyn_broadcast.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
-#include "ngraph/op/experimental/range.hpp"
-#include "ngraph/op/experimental/shape_of.hpp"
-#include "ngraph/op/reshape.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/multiply.hpp"
 
 namespace ngraph
 {
@@ -42,15 +35,11 @@ namespace ngraph
                     const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
                     const std::shared_ptr<ngraph::Node> shape{node.get_ng_inputs().at(1)};
 
-                    NGRAPH_CHECK(shape->is_constant(),
-                                 "Ngraph does not support dynamic braodcasting for Expand op.");
+                    const auto const_filled_with_ones = std::make_shared<default_opset::Broadcast>(
+                        default_opset::Constant::create(data->get_element_type(), {}, {1}), shape);
 
-                    std::vector<std::size_t> shape_vector =
-                        ngraph::as_type_ptr<default_opset::Constant>(shape)
-                            ->get_vector<std::size_t>();
-
-                    const ngraph::Shape shape_shape{shape_vector};
-                    return {ngraph::op::numpy_style_broadcast(data, shape_shape)};
+                    return {
+                        std::make_shared<default_opset::Multiply>(data, const_filled_with_ones)};
                 }
 
             } // namespace set_1

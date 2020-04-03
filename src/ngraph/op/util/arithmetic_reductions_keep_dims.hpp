@@ -37,6 +37,8 @@ namespace ngraph
                                             const Output<Node>& reduction_axes,
                                             bool keep_dims = false);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
             public:
                 void validate_and_infer_types() override;
 

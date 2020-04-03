@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/interpreter/int_executable.hpp"
+#include "ngraph/chrome_trace.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
@@ -27,7 +28,6 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/chrome_trace.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
@@ -101,7 +101,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    runtime::event::Duration d1("call", "Interpreter");
+    event::Duration d1("call", "Interpreter");
 
     // convert inputs to HostTensor
     vector<shared_ptr<HostTensor>> func_inputs;
@@ -150,7 +150,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
     // for each ordered op in the graph
     for (auto op : m_nodes)
     {
-        runtime::event::Duration d2(op->description(), "Interpreter");
+        event::Duration d2(op->description(), "Interpreter");
         if (op->is_parameter())
         {
             continue;

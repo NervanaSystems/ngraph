@@ -84,7 +84,26 @@ namespace ngraph
                 SOFTMAX
             };
 
+            enum class BroadcastType
+            {
+                NONE,
+                ROW,
+                COLUMN,
+                ROWCOLUMN,
+                ERROR
+            };
+
             // These structs and union are used to pass attributes to callbacks.
+            template <int N>
+            struct convAttrs
+            {
+                bool withRelu;
+                int64_t windowStrides[N];
+                int64_t windowDilation[N];
+                int64_t padBelow[N];
+                int64_t padAbove[N];
+            };
+
             template <int N>
             struct poolAttrs
             {
@@ -107,11 +126,25 @@ namespace ngraph
                 int64_t ldc;
                 float alpha;
                 float beta;
-                int64_t broadcastHint;
+                BroadcastType broadcastHint;
+            };
+
+            enum class AttrsType
+            {
+                INT = 0,
+                CONV1D,
+                CONV2D,
+                CONV3D,
+                POOL2D,
+                POOL3D,
+                GEMM
             };
 
             union opAttrs {
-                int intAttr;
+                int64_t intAttr;
+                convAttrs<1> convAttrs1d;
+                convAttrs<2> convAttrs2d;
+                convAttrs<3> convAttrs3d;
                 poolAttrs<2> poolAttrs2d;
                 poolAttrs<3> poolAttrs3d;
                 gemmAttrs gemmAttrs2d;
