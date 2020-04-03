@@ -77,7 +77,6 @@ set(SRC
     opset_pass/binary_elementwise_opset_pass.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
-    opset_pass/dyn_reshape_opset_pass.cpp
     opset_pass/logical_and_opset_pass.cpp
     opset_pass/logical_not_opset_pass.cpp
     opset_pass/logical_or_opset_pass.cpp
@@ -157,6 +156,7 @@ set(SRC
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
     type_prop/non_max_suppression.cpp
+    type_prop/non_zero.cpp
     type_prop/normalize.cpp
     type_prop/one_hot.cpp
     type_prop/pad.cpp
