@@ -14,11 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifndef NGRAPH_OP
-#warning "NGRAPH_OP not defined"
-#define NGRAPH_OP(x, y)
-#endif
+#pragma once
 
-#include "opset2_tbl.hpp"
-NGRAPH_OP(NonZero, ngraph::op::v3)
-NGRAPH_OP(ROIAlign, ngraph::op::v3)
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
+
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector roi_align(const Node& node);
+
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
