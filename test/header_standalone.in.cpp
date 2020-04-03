@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-
 /// \file This file is used to generate a series of .cpp files, one for each .hpp
 /// file in ngraph, so the line below `#include "${HEADER}"` is expanded out to something
 /// like `#include "/home/user/ngraph/src/ngraph/shape.hpp"`. The .cpp files are generated into
