@@ -101,7 +101,6 @@ namespace ngraph
                 element::Type get_index_element_type() const { return m_index_element_type; }
                 bool get_compute_max() const { return m_compute_max; }
                 SortType get_sort() const { return m_sort; }
-                size_t get_default_output_index() const override { return no_default_index(); }
             protected:
                 element::Type m_index_element_type;
                 bool m_compute_max{false};
@@ -186,7 +185,7 @@ namespace ngraph
                 ///       and returned. If the input is not constant(dynamic) this method returns 0
                 size_t get_k() const;
                 void set_k(size_t k);
-                size_t get_default_output_index() const override { return no_default_index(); }
+
             protected:
                 int64_t m_axis;
                 uint64_t m_normalized_axis;

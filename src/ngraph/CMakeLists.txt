@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 set (SRC
+    assertion.cpp
     assertion.hpp
     attribute_adapter.cpp
     attribute_adapter.hpp
@@ -572,8 +573,6 @@ set (SRC
     pattern/matcher.hpp
     pattern/op/any.cpp
     pattern/op/any.hpp
-    pattern/op/any_output.cpp
-    pattern/op/any_output.hpp
     pattern/op/any_of.cpp
     pattern/op/any_of.hpp
     pattern/op/branch.cpp
@@ -734,8 +733,7 @@ target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH
 add_library(ngraph::ngraph ALIAS ngraph)
 
 if (NOT WIN32)
-    find_package(Threads REQUIRED)
-    target_link_libraries(ngraph PUBLIC dl Threads::Threads)
+    target_link_libraries(ngraph PRIVATE dl)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)

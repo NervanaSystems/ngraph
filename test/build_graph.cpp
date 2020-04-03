@@ -221,16 +221,3 @@ TEST(build_graph, validate_function_for_dynamic_shape)
     EXPECT_TRUE(make_function(true)->is_dynamic());
     EXPECT_FALSE(make_function(false)->is_dynamic());
 }
-
-TEST(build_graph, default_output_checks)
-{
-    try
-    {
-        std::shared_ptr<Node> empty;
-        auto nullout = Output<Node>(empty);
-    }
-    catch (...)
-    {
-        FAIL() << "nullptr initialization of Output failed";
-    }
-}

@@ -248,8 +248,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
             *reshape_m->get_argument(0)->get_output_tensor_ptr());
         rotated_lt_desc->set_mkldnn_md(rotated_md);
 
-        auto cvt_lt_n = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_m->input_value(0),
-                                                                          rotated_lt_desc);
+        auto cvt_lt_n = std::make_shared<runtime::cpu::op::ConvertLayout>(
+            reshape_m->get_argument(0), 0, rotated_lt_desc);
         cvt_lt_n->set_op_annotations(cvt_lt_m->get_op_annotations());
 
         auto reshape_n =

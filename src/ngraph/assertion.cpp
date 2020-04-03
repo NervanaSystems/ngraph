@@ -14,22 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pattern/op/any_output.hpp"
-#include "ngraph/pattern/matcher.hpp"
+#include "ngraph/assertion.hpp"
 
-using namespace std;
-using namespace ngraph;
-
-constexpr NodeTypeInfo pattern::op::AnyOutput::type_info;
-
-const NodeTypeInfo& pattern::op::AnyOutput::get_type_info() const
+const char* ngraph::AssertionFailure::what() const noexcept
 {
-    return type_info;
-}
-
-bool pattern::op::AnyOutput::match_value(Matcher* matcher,
-                                         const Output<Node>& pattern_value,
-                                         const Output<Node>& graph_value)
-{
-    return input_value(0).get_node()->match_node(matcher, graph_value);
+    return m_what.c_str();
 }
