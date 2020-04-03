@@ -24,30 +24,6 @@
 using namespace ngraph;
 using namespace std;
 
-template <typename T>
-static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
-{
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(pos)->get_argument(0));
-    return new_const->cast_vector<T>();
-}
-
-void range_test_check(const vector<double>& values_out, const vector<double>& values_expected)
-{
-    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
-}
-
-void range_test_check(const vector<float>& values_out, const vector<float>& values_expected)
-{
-    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
-}
-
-template <typename T>
-typename std::enable_if<std::is_integral<T>::value>::type
-    range_test_check(const vector<T>& values_out, const vector<T>& values_expected)
-{
-    ASSERT_EQ(values_out, values_expected);
-}
-
 TEST(constant_folding, constant_squeeze)
 {
     Shape shape_in{2, 4, 1};
@@ -307,6 +283,13 @@ TEST(constant_folding, constant_pad_exterior)
     ASSERT_EQ(padded_values, values_out);
 }
 
+template <typename T>
+static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
+{
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(pos)->get_argument(0));
+    return new_const->get_vector<T>();
+}
+
 TEST(constant_folding, constant_unary_binary)
 {
     vector<int> values_a{1, 2, 3, 4};
@@ -561,6 +544,9 @@ TEST(constant_folding, shape_of)
     ASSERT_EQ((vector<int64_t>{3, 4, 0, 22, 608, 909, 3}), values_out);
 }
 
+// A bit of an unusual case here: constant folding will not succeed on ShapeOf
+// if the argument doesn't have dynamic shape. We want to make sure it fails
+// gracefully, leaving the ShapeOf op in place.
 TEST(constant_folding, shape_of_dynamic)
 {
     PartialShape input_shape{3, 4, Dimension::dynamic(), 22, 608, 909, 3};
@@ -574,41 +560,14 @@ TEST(constant_folding, shape_of_dynamic)
     pass_manager.run_passes(f);
 
     ASSERT_EQ(count_ops_of_type<op::ShapeOf>(f), 1);
-    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
-    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
-    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 8);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 0);
 
-    auto result_as_concat = as_type_ptr<op::Concat>(f->get_results().at(0)->get_argument(0));
-    ASSERT_TRUE(result_as_concat);
-    ASSERT_EQ(result_as_concat->get_output_shape(0), Shape{7});
+    auto result_as_shape_of = as_type_ptr<op::ShapeOf>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(result_as_shape_of);
+    ASSERT_EQ(result_as_shape_of->get_output_shape(0), Shape{7});
 }
 
-// We need to be sure that constant folding won't be calculated endlessly.
-TEST(constant_folding, shape_of_dynamic_double_folding)
-{
-    PartialShape input_shape{3, 4, Dimension::dynamic(), 22, 608, 909, 3};
-
-    auto param = make_shared<op::Parameter>(element::boolean, input_shape);
-    auto shape_of = make_shared<op::ShapeOf>(param);
-    auto f = make_shared<Function>(shape_of, ParameterVector{param});
-
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::ConstantFolding>();
-    pass_manager.run_passes(f);
-    pass_manager.run_passes(f);
-
-    ASSERT_EQ(count_ops_of_type<op::ShapeOf>(f), 1);
-    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
-    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
-    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 8);
-
-    auto result_as_concat = as_type_ptr<op::Concat>(f->get_results().at(0)->get_argument(0));
-    ASSERT_TRUE(result_as_concat);
-    ASSERT_EQ(result_as_concat->get_output_shape(0), Shape{7});
-}
-
-// Constant folding will not succeed on ShapeOf if the argument rank is dynamic.
-// We want to make sure it fails gracefully, leaving the ShapeOf op in place.
+// Similar to shape_of_dynamic above but here even the rank is dynamic.
 TEST(constant_folding, shape_of_rank_dynamic)
 {
     PartialShape input_shape{PartialShape::dynamic()};
@@ -1637,70 +1596,6 @@ TEST(constant_folding, const_gather_v1_scalar)
     ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
-#include "ngraph/pass/visualize_tree.hpp"
-
-TEST(constant_folding, const_gather_v1_subgraph)
-{
-    const auto A = make_shared<op::Parameter>(element::f32, Shape{1});
-    const float b_value = 3.21f;
-    const auto B_const = op::Constant::create(element::f32, {1}, {b_value});
-    const auto C = make_shared<op::Parameter>(element::f32, Shape{1});
-    const int64_t axis = 0;
-    const auto axis_const = op::Constant::create(element::i64, {}, {axis});
-
-    const auto concat = make_shared<op::Concat>(NodeVector{A, B_const, C}, axis);
-
-    const vector<int64_t> indices{1};
-    const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);
-    const auto gather = make_shared<op::v1::Gather>(concat, indices_const, axis_const);
-    auto f = make_shared<Function>(gather, ParameterVector{A, C});
-
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::ConstantFolding>();
-    pass_manager.run_passes(f);
-
-    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
-
-    const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
-    ASSERT_TRUE(new_const);
-
-    const auto values_out = new_const->get_vector<float>();
-    ASSERT_TRUE(test::all_close_f(values_out, {b_value}, MIN_FLOAT_TOLERANCE_BITS));
-}
-
-TEST(constant_folding, const_gather_v1_subgraph_neg_axis)
-{
-    const auto A = make_shared<op::Parameter>(element::f32, Shape{1});
-    const float b_value = 1.23f;
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{1});
-    const auto C_const = op::Constant::create(element::f32, {1}, {b_value});
-    const int64_t axis = 0;
-    const auto axis_const = op::Constant::create(element::i64, {}, {axis});
-
-    const auto concat = make_shared<op::Concat>(NodeVector{A, B, C_const}, axis);
-
-    const vector<int64_t> indices{-1};
-    const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);
-    const auto gather = make_shared<op::v1::Gather>(concat, indices_const, axis_const);
-    auto f = make_shared<Function>(gather, ParameterVector{A, B});
-
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::ConstantFolding>();
-    pass_manager.run_passes(f);
-
-    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
-
-    const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
-    ASSERT_TRUE(new_const);
-
-    const auto values_out = new_const->get_vector<float>();
-    ASSERT_TRUE(test::all_close_f(values_out, {b_value}, MIN_FLOAT_TOLERANCE_BITS));
-}
-
 TEST(constant_folding, const_slice)
 {
     Shape shape_in{16};
@@ -1854,6 +1749,23 @@ TEST(constant_folding, constant_transpose)
 
     vector<double> values_permute{0, 4, 1, 5, 2, 6, 3, 7};
     ASSERT_TRUE(test::all_close_f(values_permute, values_out, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+void range_test_check(const vector<double>& values_out, const vector<double>& values_expected)
+{
+    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+void range_test_check(const vector<float>& values_out, const vector<float>& values_expected)
+{
+    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+template <typename T>
+typename std::enable_if<std::is_integral<T>::value>::type
+    range_test_check(const vector<T>& values_out, const vector<T>& values_expected)
+{
+    ASSERT_EQ(values_out, values_expected);
 }
 
 template <typename T>
@@ -2577,6 +2489,22 @@ TEST(constant_folding, constant_non_zero_2D_all_indices)
     const vector<int64_t> values_expected{0, 0, 0, 1, 1, 1, 2, 2, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2};
     ASSERT_EQ(values_expected, values_out);
     ASSERT_EQ((Shape{2, values_in.size()}), new_const->get_shape());
+}
+
+TEST(constant_folding, constant_non_zero_2D_all_zeros)
+{
+    const vector<uint8_t> values_in{0, 0, 0, 0, 0, 0};
+    const auto data = make_shared<op::Constant>(element::u8, Shape{2, 3}, values_in);
+    const auto non_zero = make_shared<op::v3::NonZero>(data);
+    auto f = make_shared<Function>(non_zero, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    // constant folding should fail and the NonZero op should still be in the graph
+    ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 }
 
 TEST(constant_folding, constant_non_zero_3D)
