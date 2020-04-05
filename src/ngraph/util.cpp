@@ -590,22 +590,6 @@ AxisVector ngraph::get_permutation_to_default_order(const AxisVector& axis_order
     return out;
 }
 
-std::vector<int64_t> ngraph::extend_vector_by_value(const std::vector<int64_t> input,
-                                                    const AxisSet& axes,
-                                                    uint64_t target_size,
-                                                    int64_t value)
-{
-    std::vector<int64_t> extended_vector(input);
-    for (const auto& axis : axes)
-    {
-        if (extended_vector.size() < target_size)
-        {
-            extended_vector.insert(std::next(extended_vector.begin(), axis), value);
-        }
-    }
-    return extended_vector;
-}
-
 void ngraph::parse_version_string(
     std::string version, size_t& major, size_t& minor, size_t& patch, string& extra)
 {
