@@ -79,7 +79,7 @@ NGRAPH_OP(Minimum, ngraph::op::v1)
 NGRAPH_OP(Mod, ngraph::op::v1)
 NGRAPH_OP(Multiply, ngraph::op::v1)
 
-NGRAPH_OP(MVN, ngraph::op::v0)  // Missing in opset1
+NGRAPH_OP(MVN, ngraph::op::v0) // Missing in opset1
 
 NGRAPH_OP(Negative, ngraph::op::v0)
 NGRAPH_OP(NonMaxSuppression, ngraph::op::v1)
@@ -150,7 +150,6 @@ NGRAPH_OP(VariadicSplit, ngraph::op::v1)
 
 // Moved out of opset2, it was added to opset1 by mistake
 // NGRAPH_OP(Xor, ngraph::op::v0)
-
 
 // New operations added in opset2
 NGRAPH_OP(Gelu, ngraph::op::v0)
