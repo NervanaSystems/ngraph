@@ -23,6 +23,7 @@
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
 
 #include "ngraph/check.hpp"
+#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops.hpp"
@@ -39,7 +40,7 @@ using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
-    createOp<op_name>(NgDialectConversionPass & NgDialectObj, ngraph::Node * ngNode)
+    createOp<op_name>(NgDialectConversionPass & NgDialectObj, const ngraph::Node* ngNode)
 
 namespace
 {
@@ -50,6 +51,7 @@ namespace
     class NgDialectConversionPass : public mlir::ModulePass<NgDialectConversionPass>
     {
     public:
+        using TensorList = std::vector<descriptor::Tensor*>;
         using TypeList = llvm::SmallVector<mlir::Type, 4>;
 
         NgDialectConversionPass(const ngraph::op::CompiledKernel* compiled_kernel,
@@ -63,7 +65,7 @@ namespace
         NgDialectConversionPass(const NgDialectConversionPass& obj);
 
     private:
-        struct MlirInfo
+        struct TensorInfo
         {
             // MLIR values this tensor maps to.
             mlir::Value m_value;
@@ -75,15 +77,16 @@ namespace
         void buildNgDialect(mlir::FuncOp function);
         void runOnModule() override;
 
-        mlir::Type getMlirType(const Output<Node>& value);
+        mlir::Type getMlirType(const descriptor::Tensor* tensor);
         mlir::Type getMlirType(const element::Type& type);
+        mlir::Type getMlirType(const ngraph::Node* node);
 
-        MlirInfo getMlirInfo(const Output<Node>& tensor);
-        void updateNgraphValueToInfoMap(const Output<Node>&, mlir::Value value);
+        TensorInfo getTensorValue(descriptor::Tensor* tensor);
+        void updateTensorValue(descriptor::Tensor* tensor, mlir::Value value);
 
         template <typename Op>
         static mlir::Operation* createOp(NgDialectConversionPass& NgDialectObj,
-                                         ngraph::Node* ngNode)
+                                         const ngraph::Node* ngNode)
         {
             throw std::runtime_error("Unimplemented op '" + ngNode->description() +
                                      "' in MLIR Compiler");
@@ -93,10 +96,10 @@ namespace
         // Simply maps ngraph tensors to values and generate an OP. No op-specific logic.
         // Use inNum when mlir OP needs less input than its corresponding ngraph OP.
         template <typename Op>
-        mlir::Operation* createGenericOp(ngraph::Node* ngNode, int inNum = -1);
+        mlir::Operation* createGenericOp(const ngraph::Node* ngNode, int inNum = -1);
 
         template <typename RedOp>
-        mlir::Operation* createIndexReduction(ngraph::Node* ngNode);
+        mlir::Operation* createIndexReduction(const ngraph::Node* ngNode);
 
         void createReturn();
 
@@ -121,15 +124,15 @@ namespace
         mlir::MLIRContext* m_context;
         mlir::OpBuilder m_builder;
 
-        using NgraphValueToInfo = std::pair<Output<Node>, MlirInfo>;
-        using NgraphValueToInfoMap = std::map<Output<Node>, MlirInfo>;
-        using MLIRCompOpFunction =
-            std::function<mlir::Operation*(NgDialectConversionPass& NgDialectObj, ngraph::Node*)>;
+        using TensorToInfo = std::pair<descriptor::Tensor*, TensorInfo>;
+        using TensorToInfoMap = std::unordered_map<descriptor::Tensor*, TensorInfo>;
+        using MLIRCompOpFunction = std::function<mlir::Operation*(
+            NgDialectConversionPass& NgDialectObj, const ngraph::Node*)>;
         using MLIRCompOpMap = std::unordered_map<Node::type_info_t, MLIRCompOpFunction>;
 
-        // Maps ngraph value to the value it represents in the IR
+        // Maps tensor to the value it represents in the IR
         // use for MLIR dialect gen
-        NgraphValueToInfoMap m_ngraphValueToInfoMap;
+        TensorToInfoMap m_tensorToValueMap;
         static const MLIRCompOpMap& getOpDispatcher();
     };
 
@@ -138,7 +141,7 @@ NgDialectConversionPass::NgDialectConversionPass(const NgDialectConversionPass& 
     : m_compiledKernel(obj.m_compiledKernel)
     , m_context(obj.m_context)
     , m_builder(obj.m_builder)
-    , m_ngraphValueToInfoMap(obj.m_ngraphValueToInfoMap)
+    , m_tensorToValueMap(obj.m_tensorToValueMap)
 {
 }
 
@@ -148,26 +151,26 @@ void NgDialectConversionPass::runOnModule()
 
     mlir::ModuleOp module = getModule();
     // Retrieve input and output tensors.
-    const auto& kernelInputs = m_compiledKernel->input_values();
+    const auto& kernelInputs = m_compiledKernel->get_arguments();
     const auto& kernelOutput = m_compiledKernel->get_kernel_outputs();
     NGRAPH_CHECK(kernelInputs.size() != 0, "Cannot have empty inputs list");
     NGRAPH_CHECK(kernelOutput.size() != 0, "Cannot have empty outputs list");
 
     for (auto input : kernelInputs)
     {
-        argsTypeList.push_back(getMlirType(input));
+        argsTypeList.push_back(getMlirType(input.get()));
     }
 
     for (auto output : kernelOutput)
     {
-        resultTypeList.push_back(getMlirType(output));
+        resultTypeList.push_back(getMlirType(output.get()));
     }
 
     auto funcType = mlir::FunctionType::get(argsTypeList, resultTypeList, m_context);
     auto function = mlir::FuncOp::create(mlir::UnknownLoc::get(m_context), "main", funcType);
     function.addEntryBlock();
 
-    // populate Output<Node>->MlirValue maps
+    // populate Tensor->Value maps
     int i = 0;
     for (auto p : m_compiledKernel->get_input_map())
     {
@@ -209,13 +212,13 @@ ngraph::Node* NgDialectConversionPass::getOriginArg(ngraph::Node* node) const
     return m_compiledKernel->input_values().at(it->second).get_node();
 }
 
-// Converts an nGraph Output<Node> into an MLIR tensor type, including the conversion of the
+// Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
 // element type.
-mlir::Type NgDialectConversionPass::getMlirType(const Output<Node>& value)
+mlir::Type NgDialectConversionPass::getMlirType(const descriptor::Tensor* tensor)
 {
     llvm::SmallVector<int64_t, 4> mlirShape;
-    getMlirShape(value.get_shape(), mlirShape);
-    return mlir::NGTensorType::get(m_context, getMlirType(value.get_element_type()), mlirShape);
+    getMlirShape(tensor->get_shape(), mlirShape);
+    return mlir::NGTensorType::get(m_context, getMlirType(tensor->get_element_type()), mlirShape);
 }
 
 // Converts an nGraph element type into an MLIR type.
@@ -255,23 +258,26 @@ mlir::Type NgDialectConversionPass::getMlirType(const element::Type& type)
 #endif
 }
 
-void NgDialectConversionPass::updateNgraphValueToInfoMap(const Output<Node>& ngraphValue,
-                                                         mlir::Value mlirValue)
+mlir::Type NgDialectConversionPass::getMlirType(const ngraph::Node* node)
 {
-    NGRAPH_CHECK(m_ngraphValueToInfoMap.find(ngraphValue) == m_ngraphValueToInfoMap.end(),
-                 "mlir value already defined for ngraph value: ",
-                 ngraphValue);
-    std::cerr << "Adding value: " << ngraphValue << std::endl;
-    MlirInfo tensorInfo{mlirValue};
-    m_ngraphValueToInfoMap.insert(NgraphValueToInfo(ngraphValue, tensorInfo));
+    descriptor::Tensor* outTensor = node->get_output_tensor_ptr().get();
+    return getMlirType(outTensor);
 }
 
-NgDialectConversionPass::MlirInfo
-    NgDialectConversionPass::getMlirInfo(const Output<Node>& ngraphValue)
+void NgDialectConversionPass::updateTensorValue(descriptor::Tensor* tensor, mlir::Value value)
 {
-    auto it = m_ngraphValueToInfoMap.find(ngraphValue);
+    NGRAPH_CHECK(m_tensorToValueMap.find(tensor) == m_tensorToValueMap.end(),
+                 "tensor value already defined");
+    TensorInfo tensorInfo{value};
+    m_tensorToValueMap.insert(TensorToInfo(tensor, tensorInfo));
+}
 
-    NGRAPH_CHECK(it != m_ngraphValueToInfoMap.end(), "Undefined ngraph value: ", ngraphValue);
+NgDialectConversionPass::TensorInfo
+    NgDialectConversionPass::getTensorValue(descriptor::Tensor* tensor)
+{
+    auto it = m_tensorToValueMap.find(tensor);
+
+    NGRAPH_CHECK(it != m_tensorToValueMap.end(), "Undefined tensor");
 
     return it->second;
 }
@@ -291,9 +297,8 @@ void NgDialectConversionPass::buildNgDialect(mlir::FuncOp function)
         auto it = opDispatcher.find(np->get_type_info());
         if (it == opDispatcher.end())
         {
-            std::ostringstream s;
-            s << "The MLIR backend doesn't currently implement " << np;
-            throw unsupported_op{s.str()};
+            throw unsupported_op{std::string{"The MLIR backend doesn't currently implement the '"} +
+                                 np->description() + "' operation"};
         }
         mlir::Operation* op = it->second(*this, np.get());
         // This assumes simple 1:1 mapping between output edges and generated MLIR op results
@@ -306,7 +311,7 @@ void NgDialectConversionPass::buildNgDialect(mlir::FuncOp function)
                 auto result = op->getResult(i);
                 if (result)
                 {
-                    updateNgraphValueToInfoMap(np->output(i), result);
+                    updateTensorValue(np->get_output_tensor_ptr(i).get(), result);
                 }
             }
         }
@@ -622,7 +627,7 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::Softmax)
     return op;
 }
 template <typename Op>
-mlir::Operation* NgDialectConversionPass::createGenericOp(ngraph::Node* ngNode, int inNum)
+mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ngNode, int inNum)
 {
     std::vector<mlir::Value> argValues;
     std::vector<mlir::Type> resTypes;
@@ -643,7 +648,7 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(ngraph::Node* ngNode, 
 
     for (auto& output : ngNode->outputs())
     {
-        resTypes.push_back(getMlirType(output));
+        resTypes.push_back(getMlirType(output.get_tensor_ptr().get()));
     }
 
     return (m_builder.create<Op,
@@ -668,13 +673,13 @@ void NgDialectConversionPass::createReturn()
     std::vector<mlir::Value> valueList;
     for (auto output : m_compiledKernel->get_kernel_outputs())
     {
-        valueList.push_back(getMlirInfo(output).m_value);
+        valueList.push_back(getTensorValue(output->get_output_tensor_ptr().get()).m_value);
     }
     m_builder.create<mlir::NGReturnOp>(mlir::UnknownLoc::get(m_context), valueList);
 }
 
 template <typename RedOp>
-mlir::Operation* NgDialectConversionPass::createIndexReduction(ngraph::Node* ngNode)
+mlir::Operation* NgDialectConversionPass::createIndexReduction(const ngraph::Node* ngNode)
 {
     auto* idxRed = static_cast<const ngraph::op::util::IndexReduction*>(ngNode);
     auto op = createGenericOp<RedOp>(ngNode);

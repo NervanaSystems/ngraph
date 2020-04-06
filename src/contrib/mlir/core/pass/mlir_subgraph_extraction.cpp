@@ -112,14 +112,14 @@ void MLIRSubgraphExtractionPass::process_supported_op(std::shared_ptr<ngraph::No
                                                       int current_subgraph_id)
 {
     NodeVector inputs;
-    for (auto pred : node->input_values())
+    for (auto pred : node->get_arguments())
     {
-        int pred_subgraph_id = get_subgraph_id(pred.get_node_shared_ptr());
+        int pred_subgraph_id = get_subgraph_id(pred);
         if (pred_subgraph_id != current_subgraph_id)
         {
             // predecessor doesn't belong to current sub-graph, it is an
             // input
-            inputs.push_back(pred.get_node_shared_ptr());
+            inputs.push_back(pred);
         }
     }
     // add inputs and op to current sub-graph
@@ -284,34 +284,8 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
         auto& outputs = sg.get_outputs();
         auto& nodes = sg.get_nodes();
 
-        OutputVector inputs_vector;
-        for (auto node : inputs)
-        {
-            Output<Node> value;
-            if (auto goe = as_type_ptr<GetOutputElement>(node))
-            {
-                value = goe->input_value(0);
-            }
-            else
-            {
-                value = node;
-            }
-            inputs_vector.push_back(value);
-        }
-        OutputVector outputs_vector;
-        for (auto node : outputs)
-        {
-            Output<Node> value;
-            if (auto goe = as_type_ptr<GetOutputElement>(node))
-            {
-                value = goe->input_value(0);
-            }
-            else
-            {
-                value = node;
-            }
-            outputs_vector.push_back(value);
-        }
+        NodeVector inputs_vector(inputs.begin(), inputs.end());
+        NodeVector outputs_vector(outputs.begin(), outputs.end());
         // must store nodes in topological order
         auto nodes_list = subgraph_topological_sort(nodes);
         NodeVector nodes_vector(nodes_list.begin(), nodes_list.end());
@@ -345,7 +319,7 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
     // Do this after all CK nodes are constructed since they add new edges in the graph (CK inputs)
     for (auto& node : ck_nodes)
     {
-        auto ck = as_type_ptr<CompiledKernel>(node);
+        auto ck = std::static_pointer_cast<CompiledKernel>(node);
 
         auto& outputs_vector = ck->get_kernel_outputs();
         auto& node_list = ck->get_node_list();
@@ -353,18 +327,25 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
 
         for (size_t i = 0, end = outputs_vector.size(); i < end; ++i)
         {
-            auto output = outputs_vector[i];
-            auto ck_output = ck->output(i);
-            auto inputs = output.get_target_inputs();
-            for (auto input : inputs)
+            auto& output_descs = outputs_vector[i]->get_outputs();
+            NGRAPH_CHECK(output_descs.size() == 1, "Unexpected multiple output descriptors");
+            auto& out_desc = output_descs[0];
+
+            // 'replace_output' invalidates iterator of the original container. Use a copy instead.
+            const std::vector<descriptor::Input*> input_descs = out_desc.get_inputs();
+
+            for (descriptor::Input* in_desc : input_descs)
             {
-                input.replace_source_output(ck_output);
+                if (node_set.find(in_desc->get_node()) == node_set.end())
+                {
+                    in_desc->replace_output(ck, i);
+                }
             }
         }
     }
     for (auto& node : ck_nodes)
     {
-        auto ck = as_type_ptr<CompiledKernel>(node);
+        auto ck = std::static_pointer_cast<CompiledKernel>(node);
         if (ck->get_output_size() > 1)
         {
             for (auto& old_output : ck->outputs())
@@ -372,7 +353,7 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
                 auto inputs = old_output.get_target_inputs();
                 auto goe_node = old_output.as_single_output_node();
                 auto new_output = goe_node->output(0);
-                for (auto input : inputs)
+                for (auto& input : inputs)
                 {
                     input.replace_source_output(new_output);
                 }
@@ -415,20 +396,20 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
         // they are all moved to the CK node instead
         for (auto& ck_output : ck_node->get_kernel_outputs())
         {
-            for (auto& user : ck_output.get_target_inputs())
+            for (auto& user : ck_output->get_users())
             {
-                NGRAPH_CHECK(node_set.find(user.get_node()->shared_from_this()) != node_set.end(),
+                NGRAPH_CHECK(node_set.find(user) != node_set.end(),
                              "CK output nodes users should be in the sub-graph");
             }
         }
 
         // Any input to CK must not have any user in the sub-graph body
-        for (auto arg : ck_node->input_values())
+        for (auto& arg : ck_node->get_arguments())
         {
             bool found = false;
-            for (auto& user : arg.get_target_inputs())
+            for (auto& user : arg->get_users())
             {
-                found = (node_set.find(user.get_node()->shared_from_this()) == node_set.end());
+                found = (node_set.find(user) == node_set.end());
                 if (found)
                 {
                     break;
