@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <algorithm>
+#include <cctype>
 #include <memory>
 #include <string>
 #include <vector>
@@ -141,7 +142,7 @@ private:
     const ngraph::OpSet& get_opset(const std::string& opset_name)
     {
         std::string opset_name_ = opset_name;
-        std::transform(opset_name_.begin(), opset_name_.end(), opset_name_.begin(), std::tolower);
+        std::transform(opset_name_.begin(), opset_name_.end(), opset_name_.begin(), ::tolower);
 
         if (opset_name_ == "opset0")
         {
