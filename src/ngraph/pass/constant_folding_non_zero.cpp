@@ -118,11 +118,9 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
     const auto* input_values = data->get_data_ptr<T>();
     const bool identical_elems_in_data = data->get_all_data_elements_bitwise_identical();
 
-    if (identical_elems_in_data)
+    if (identical_elems_in_data && input_values[0] == T{0})
     {
-        NGRAPH_CHECK(input_values[0] != T{0},
-                     "It's not possible to constant fold a NonZero op with an input containing "
-                     "only zeros.");
+        return nullptr;
     }
 
     if (ngraph::is_scalar(input_shape))
@@ -196,12 +194,6 @@ void pass::ConstantFolding::construct_constant_non_zero()
 
         const auto data = static_pointer_cast<op::Constant>(pattern_map[data_label]);
 
-        // const auto found_nz_node = m.get_match_root();
-        // this fails because the output of NonZero is still dynamic - is it ok to remove this line?
-        // or should the output shape of this op be calculated as the maximum possible number
-        // of non-zero indices it can return if the input is a constant?
-        // NGRAPH_CHECK(revalidate_and_ensure_static(found_nz_node));
-
         std::shared_ptr<Node> replacement;
         switch (data->get_element_type())
         {
@@ -225,8 +217,15 @@ void pass::ConstantFolding::construct_constant_non_zero()
             break;
         }
 
-        replace_node(m.get_match_root(), replacement);
-        return true;
+        if (replacement.get() != nullptr)
+        {
+            replace_node(m.get_match_root(), replacement);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     };
 
     const auto matcher =

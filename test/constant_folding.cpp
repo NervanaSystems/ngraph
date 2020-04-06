@@ -2579,6 +2579,22 @@ TEST(constant_folding, constant_non_zero_2D_all_indices)
     ASSERT_EQ((Shape{2, values_in.size()}), new_const->get_shape());
 }
 
+TEST(constant_folding, constant_non_zero_2D_all_zeros)
+{
+    const vector<uint8_t> values_in{0, 0, 0, 0, 0, 0};
+    const auto data = make_shared<op::Constant>(element::u8, Shape{2, 3}, values_in);
+    const auto non_zero = make_shared<op::v3::NonZero>(data);
+    auto f = make_shared<Function>(non_zero, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    // constant folding should fail and the NonZero op should still be in the graph
+    ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+}
+
 TEST(constant_folding, constant_non_zero_3D)
 {
     vector<int> values_in{1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0};
