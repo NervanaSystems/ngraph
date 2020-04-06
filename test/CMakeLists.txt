@@ -156,6 +156,7 @@ set(SRC
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
     type_prop/non_max_suppression.cpp
+    type_prop/non_zero.cpp
     type_prop/normalize.cpp
     type_prop/one_hot.cpp
     type_prop/pad.cpp
@@ -171,6 +172,7 @@ set(SRC
     type_prop/reshape.cpp
     type_prop/reverse.cpp
     type_prop/reverse_sequence.cpp
+    type_prop/roi_align.cpp
     type_prop/rnn_cell.cpp
     type_prop/scale_shift.cpp
     type_prop/scatter_add.cpp
