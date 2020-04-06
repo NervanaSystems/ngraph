@@ -13,16 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include "ngraph/pass/opset1_upgrade.hpp"
 
 #include <functional>
+#include <iterator>
 #include <limits>
 #include <numeric>
 
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/ops.hpp"
-#include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/provenance.hpp"
 
 using namespace std;
@@ -107,7 +108,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Broadcast> node)
     {
-        auto replacement_node = ngraph::op::opset1::make_broadcast(
+        auto replacement_node = ngraph::builder::opset1::make_broadcast(
             node->input_value(0), node->get_broadcast_shape(), node->get_broadcast_axes());
         replace_node(node, replacement_node.get_node_shared_ptr());
         return replacement_node.get_node_shared_ptr();
@@ -219,15 +220,6 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::DynReshape> node)
-    {
-        auto zero_flag = false;
-        auto replacement_node =
-            make_shared<op::v1::Reshape>(node->input_value(0), node->input_value(1), zero_flag);
-        replace_node(node, replacement_node);
-        return replacement_node;
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::Equal> node)
     {
         return op_cast_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
@@ -312,30 +304,32 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v0::GroupConvolutionBackpropData> node)
     {
-        auto strides = node->get_window_movement_strides();
-        auto dilations = node->get_window_dilation_strides();
-        auto pads_begin = node->get_padding_below();
-        auto pads_end = node->get_padding_above();
-        auto data_batch_pshape = node->get_input_partial_shape(0);
+        const auto strides = node->get_window_movement_strides();
+        const auto dilations = node->get_window_dilation_strides();
+        const auto pads_begin = node->get_padding_below();
+        const auto pads_end = node->get_padding_above();
+
+        const auto data_batch_pshape = node->get_input_partial_shape(0);
+        const auto filters_pshape = node->get_input_partial_shape(1);
 
         NGRAPH_CHECK(data_batch_pshape.is_static(),
-                     "Unable to convert GroupConvolution:0 to GroupConvolution:1"
-                     "with dynamic data_batch shape. Node: ",
+                     "Unable to convert GroupConvolutionBackpropData:0 to "
+                     "GroupConvolutionBackpropData:1 with dynamic data_batch shape. Node: ",
+                     *node);
+        NGRAPH_CHECK(filters_pshape.is_static(),
+                     "Unable to convert GroupConvolutionBackpropData:0 to "
+                     "GroupConvolutionBackpropData:1 with dynamic filters shape. Node: ",
                      *node);
 
         auto data_batch_shape = data_batch_pshape.to_shape();
-        data_batch_shape.erase(data_batch_shape.begin(), data_batch_shape.end());
-
-        NGRAPH_CHECK(node->get_input_partial_shape(1).is_static(),
-                     "Unable to convert GroupConvolution:0 to GroupConvolution:1"
-                     "with dynamic filters shape. Node: ",
-                     *node);
-
-        auto filters_shape = node->get_input_shape(1);
+        // Remove N, C from output shape to preserve only spatial dimentions.
+        data_batch_shape.erase(std::begin(data_batch_shape),
+                               std::next(std::begin(data_batch_shape), 2));
+        auto filters_shape = filters_pshape.to_shape();
         auto groups = node->get_groups();
+
         filters_shape[0] /= groups;
         filters_shape.insert(filters_shape.begin(), groups);
-
         auto reshaped_filters = builder::reshape(node->input_value(1), filters_shape);
 
         auto replacement_node = make_shared<op::v1::GroupConvolutionBackpropData>(
@@ -468,7 +462,7 @@ namespace
         NGRAPH_CHECK(output_pshape[one_hot_axis].is_static(),
                      "OneHot:v0 one hot axis dimension must be static ",
                      *node);
-        const auto depth = static_cast<int64_t>(output_pshape[one_hot_axis]);
+        const auto depth = output_pshape[one_hot_axis].get_length();
         const auto depth_node = op::Constant::create(element::i64, Shape{}, {depth});
 
         const auto on_value = op::Constant::create(element::i64, Shape{}, {1});

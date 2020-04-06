@@ -21,18 +21,12 @@
 
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/runtime/backend.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
-    namespace descriptor
-    {
-        class Value;
-    }
-
     namespace runtime
     {
         class NGRAPH_API Tensor
@@ -119,7 +113,5 @@ namespace ngraph
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
         };
-
-        using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;
     }
 }

@@ -96,42 +96,6 @@ TEST(serialize, main)
     EXPECT_EQ((vector<float>{50, 72, 98, 128}), read_vector<float>(result));
 }
 
-TEST(serialize, types)
-{
-    // First create "f(A,B,C) = (A+B)*C".
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C}, "f");
-
-    std::vector<std::pair<PartialShape, element::Type>> types;
-
-    auto results = f->get_results();
-    for (auto& n : results)
-        types.emplace_back(n->get_output_partial_shape(0), n->output(0).get_element_type());
-    auto s_types = serialize_types(types);
-    for (auto& attrs : deserialize_types(s_types))
-    {
-        EXPECT_EQ(size_t(attrs.first.rank()), shape.size());
-        EXPECT_EQ(size_t(attrs.first[0]), 2);
-        EXPECT_EQ(size_t(attrs.first[1]), 2);
-        EXPECT_EQ(element::f32, attrs.second);
-    }
-    auto params = f->get_parameters();
-    types.clear();
-    for (auto& n : params)
-        types.emplace_back(n->get_output_partial_shape(0), n->output(0).get_element_type());
-    s_types = serialize_types(types);
-    for (auto& attrs : deserialize_types(s_types))
-    {
-        EXPECT_EQ(size_t(attrs.first.rank()), shape.size());
-        EXPECT_EQ(size_t(attrs.first[0]), 2);
-        EXPECT_EQ(size_t(attrs.first[1]), 2);
-        EXPECT_EQ(element::f32, attrs.second);
-    }
-}
-
 TEST(serialize, friendly_name)
 {
     // First create "f(A,B,C) = (A+B)*C".
@@ -387,7 +351,7 @@ TEST(serialize, opset1_softmax)
 
     shared_ptr<Function> g = deserialize(s);
     const auto g_result = g->get_results().at(0);
-    const auto g_softmax = g_result->input(0).get_source_output().get_node_shared_ptr();
+    const auto g_softmax = g_result->get_input_node_shared_ptr(0);
     EXPECT_TRUE(is_type<op::v1::Softmax>(g_softmax));
 }
 
@@ -404,7 +368,7 @@ TEST(serialize, opset1_gather)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_gather = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_gather = g_result->get_input_node_shared_ptr(0);
     EXPECT_TRUE(is_type<op::v1::Gather>(g_gather));
 }
 
@@ -420,7 +384,7 @@ TEST(serialize, opset1_product)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_red_prod = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_red_prod = g_result->get_input_node_shared_ptr(0);
     auto node = as_type_ptr<op::v1::ReduceProd>(g_red_prod);
     EXPECT_TRUE(node);
     EXPECT_EQ(node->get_keep_dims(), 1);
@@ -439,7 +403,7 @@ TEST(serialize, opset1_sum)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_red_sum = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_red_sum = g_result->get_input_node_shared_ptr(0);
     auto node = as_type_ptr<op::v1::ReduceSum>(g_red_sum);
     EXPECT_TRUE(node);
     EXPECT_EQ(node->get_keep_dims(), 1);
@@ -629,8 +593,8 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
 
     auto results = ResultVector{result0, result1};
     auto f = make_shared<Function>(results, ParameterVector{X, Y, M});
-    EXPECT_EQ(result0->output(0).get_shape(), out0_shape);
-    EXPECT_EQ(result1->output(0).get_shape(), out1_shape);
+    EXPECT_EQ(result0->get_output_shape(0), out0_shape);
+    EXPECT_EQ(result1->get_output_shape(0), out1_shape);
 
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
@@ -716,10 +680,10 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
 
     auto results = ResultVector{result0, result1};
     auto f = make_shared<Function>(results, ParameterVector{X, Y, M});
-    EXPECT_EQ(result0->output(0).get_shape(), out0_shape);
-    EXPECT_EQ(result1->output(0).get_shape(), out1_shape);
+    EXPECT_EQ(result0->get_output_shape(0), out0_shape);
+    EXPECT_EQ(result1->get_output_shape(0), out1_shape);
 
-    EXPECT_EQ(body->get_results()[0]->output(0).get_shape(), out0_shape);
+    EXPECT_EQ(body->get_results()[0]->get_output_shape(0), out0_shape);
 
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
@@ -755,7 +719,7 @@ TEST(serialize, opset1_strided_slice)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_strided_slice_v1 = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_strided_slice_v1 = g_result->get_input_node_shared_ptr(0);
     auto strided_slice_out = as_type_ptr<op::v1::StridedSlice>(g_strided_slice_v1);
 
     ASSERT_TRUE(strided_slice_out);
@@ -787,7 +751,7 @@ TEST(serialize, opset1_binary_convolution)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_binary_conv = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_binary_conv = g_result->get_input_node_shared_ptr(0);
     auto binary_conv_out = as_type_ptr<op::v1::BinaryConvolution>(g_binary_conv);
     ASSERT_TRUE(binary_conv_out);
 
@@ -814,7 +778,7 @@ TEST(serialize, depth_to_space)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_depth_to_space = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_depth_to_space = g_result->get_input_node_shared_ptr(0);
     auto depth_to_space_out = as_type_ptr<op::DepthToSpace>(g_depth_to_space);
     ASSERT_TRUE(depth_to_space_out);
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
@@ -834,7 +798,7 @@ TEST(serialize, space_to_depth)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_space_to_depth = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_space_to_depth = g_result->get_input_node_shared_ptr(0);
     auto depth_to_space_out = as_type_ptr<op::SpaceToDepth>(g_space_to_depth);
     ASSERT_TRUE(depth_to_space_out);
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
@@ -873,7 +837,7 @@ TEST(serialize, deformable_psroi_pooling)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_def_psroi_pool = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_def_psroi_pool = g_result->get_input_node_shared_ptr(0);
     auto def_psroi_pool_out = as_type_ptr<op::v1::DeformablePSROIPooling>(g_def_psroi_pool);
 
     EXPECT_EQ(def_psroi_pool_out->description(), "DeformablePSROIPooling");

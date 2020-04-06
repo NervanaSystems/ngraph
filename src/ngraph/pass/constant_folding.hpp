@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/log.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/util.hpp"
@@ -60,7 +61,9 @@ public:
         UNSQUEEZE,
         SPLIT,
         VARIADIC_SPLIT,
-        ONE_HOT
+        ONE_HOT,
+        TILE,
+        NON_ZERO
     };
 
     ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
@@ -96,6 +99,8 @@ public:
         construct_constant_squeeze();
         construct_constant_unsqueeze();
         construct_constant_one_hot();
+        construct_constant_tile();
+        construct_constant_non_zero();
     }
 
     // this allows to specify the order in which matchers will be run
@@ -140,6 +145,8 @@ public:
             case CFTransformations::SPLIT: construct_constant_split(); break;
             case CFTransformations::VARIADIC_SPLIT: construct_constant_variadic_split(); break;
             case CFTransformations::ONE_HOT: construct_constant_one_hot(); break;
+            case CFTransformations::TILE: construct_constant_tile(); break;
+            case CFTransformations::NON_ZERO: construct_constant_non_zero(); break;
             }
         }
     }
@@ -172,6 +179,8 @@ private:
     void construct_constant_split();
     void construct_constant_variadic_split();
     void construct_constant_one_hot();
+    void construct_constant_tile();
+    void construct_constant_non_zero();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
 };

@@ -16,6 +16,7 @@
 
 #include "qlinear_matmul.hpp"
 #include "ngraph/builder/matmul_factory.hpp"
+#include "ngraph/log.hpp"
 
 namespace ngraph
 {

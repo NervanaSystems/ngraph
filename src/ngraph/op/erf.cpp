@@ -23,6 +23,11 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Erf::type_info;
 
+bool ngraph::op::v0::Erf::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 shared_ptr<Node> op::Erf::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);

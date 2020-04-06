@@ -20,6 +20,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -27,7 +28,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        class Tensor;
         class Executable;
     }
 }
@@ -72,14 +72,6 @@ public:
     /// \brief Get the preferred pipeline_depth for this executable
     /// \returns  preferred pipeline_depth
     virtual size_t get_preferred_pipeline_depth() const;
-
-    /// \brief Set the input Parameters
-    /// \param params ngraph::ParameterVector of all input parameters
-    void set_parameters(const ngraph::ParameterVector& params);
-
-    /// \brief Set the output Results
-    /// \param results ngraph::ResultVector of all output results
-    void set_results(const ngraph::ResultVector& results);
 
     /// \brief Save this compiled Executable to an output stream.
     ///    Saved stream may be read with Backend::load

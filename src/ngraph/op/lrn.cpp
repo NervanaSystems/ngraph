@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/lrn.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/multiply.hpp"
 
@@ -80,7 +81,7 @@ void op::LRN::validate_and_infer_types()
     NODE_VALIDATION_CHECK(
         this,
         axes_shape.is_dynamic() || input_shape_rank.is_dynamic() ||
-            static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape_rank),
+            axes_shape[0].get_length() <= input_shape_rank.get_length(),
         "Number of elements of axes must be >= 0 and <= argument rank (axes_shape[0]: ",
         axes_shape[0],
         ").");
@@ -91,7 +92,7 @@ void op::LRN::validate_and_infer_types()
         for (auto axis : reduction_axes)
         {
             NODE_VALIDATION_CHECK(this,
-                                  axis < size_t(input_shape_rank),
+                                  axis < input_shape_rank.get_length(),
                                   "Reduction axis (",
                                   axis,
                                   ") is out of bounds ",
@@ -109,6 +110,15 @@ void op::LRN::validate_and_infer_types()
                           "Axes input must be integral numbers, but are: ",
                           axes_type,
                           ").");
+}
+
+bool ngraph::op::v0::LRN::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("alpha", m_alpha);
+    visitor.on_attribute("beta", m_beta);
+    visitor.on_attribute("bias", m_bias);
+    visitor.on_attribute("size", m_size);
+    return true;
 }
 
 shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const

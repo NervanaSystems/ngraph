@@ -21,7 +21,9 @@ add_library(onnx_import_interface OBJECT
         core/node.hpp
         core/operator_set.hpp
         onnx.cpp
-        onnx.hpp)
+        onnx.hpp
+        onnx_utils.hpp
+        onnx_utils.cpp)
 
 add_library(onnx_import STATIC
         core/attribute.cpp
@@ -64,12 +66,16 @@ add_library(onnx_import STATIC
         op/ceil.hpp
         op/clip.cpp
         op/clip.hpp
+        op/cos.cpp
         op/cos.hpp
+        op/cosh.cpp
         op/cosh.hpp
         op/concat.cpp
         op/concat.hpp
         op/constant.cpp
         op/constant.hpp
+        op/constant_of_shape.cpp
+        op/constant_of_shape.hpp
         op/conv.cpp
         op/conv.hpp
         op/conv_integer.cpp
@@ -116,6 +122,7 @@ add_library(onnx_import STATIC
         op/leaky_relu.cpp
         op/leaky_relu.hpp
         op/less.hpp
+        op/log.cpp
         op/log.hpp
         op/log_softmax.cpp
         op/log_softmax.hpp
@@ -145,6 +152,8 @@ add_library(onnx_import STATIC
         op/not.hpp
         op/non_max_suppression.cpp
         op/non_max_suppression.hpp
+        op/non_zero.cpp
+        op/non_zero.hpp
         op/onehot.cpp
         op/onehot.hpp
         op/or.hpp
@@ -168,6 +177,10 @@ add_library(onnx_import STATIC
         op/reshape.hpp
         op/reverse_sequence.cpp
         op/reverse_sequence.hpp
+        op/roi_align.cpp
+        op/roi_align.hpp
+        op/round.cpp
+        op/round.hpp
         op/scatter_nd.cpp
         op/scatter_nd.hpp
         op/selu.cpp
@@ -203,6 +216,8 @@ add_library(onnx_import STATIC
         op/tanh.hpp
         op/thresholded_relu.cpp
         op/thresholded_relu.hpp
+        op/tile.cpp
+        op/tile.hpp
         op/topk.cpp
         op/topk.hpp
         op/transpose.cpp
@@ -229,22 +244,31 @@ add_library(onnx_import STATIC
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
-add_dependencies(onnx_import_interface onnx::libonnx onnx::libonnx_proto)
+add_dependencies(onnx_import_interface onnx onnx_proto)
 add_dependencies(onnx_import onnx_import_interface)
 
-set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(onnx_import PROPERTIES
+                      CXX_VISIBILITY_PRESET hidden
+                      C_VISIBILITY_PRESET hidden
+                      VISIBILITY_INLINES_HIDDEN ON
+                      POSITION_INDEPENDENT_CODE ON)
 target_include_directories(onnx_import
     SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
-target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} ${ONNX_PROTO_LIBRARY})
+target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} onnx_proto)
 
 target_compile_definitions(onnx_import PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
 
-set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(onnx_import_interface PROPERTIES
+                      CXX_VISIBILITY_PRESET hidden
+                      C_VISIBILITY_PRESET hidden
+                      VISIBILITY_INLINES_HIDDEN ON
+                      POSITION_INDEPENDENT_CODE ON)
 target_include_directories(onnx_import_interface SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 
 target_compile_definitions(onnx_import_interface PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
+target_compile_definitions(onnx_import_interface PRIVATE -DONNX_ML=ON)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum

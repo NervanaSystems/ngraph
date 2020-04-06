@@ -19,7 +19,9 @@
 
 #include "mlir_subgraph_extraction.hpp"
 #include "ngraph/assertion.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops.hpp"
 
@@ -368,7 +370,7 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
             for (auto& old_output : ck->outputs())
             {
                 auto inputs = old_output.get_target_inputs();
-                auto goe_node = old_output.as_single_output_node(false);
+                auto goe_node = old_output.as_single_output_node();
                 auto new_output = goe_node->output(0);
                 for (auto input : inputs)
                 {
@@ -437,6 +439,47 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
     }
 }
 
+// Check if convolution related nodes such as Convolution, ConvolutionBias,
+// ConvolutionRelu, ... can use callback.
+template <typename T>
+static bool can_use_mkldnn_conv_callback(ngraph::Node* node)
+{
+    auto convolution = static_cast<const T*>(node);
+    auto arg0_rank = node->get_input_shape(0).size();
+    auto dilation = convolution->get_data_dilation_strides();
+    if (std::any_of(dilation.begin(), dilation.end(), [](size_t s) { return s != 1; }))
+    {
+        return false;
+    }
+
+    // MKLDNN doesnt support negative padding
+    auto pad_above = convolution->get_padding_above();
+    if (std::any_of(pad_above.begin(), pad_above.end(), [](size_t s) { return s < 0; }))
+    {
+        return false;
+    }
+    auto pad_below = convolution->get_padding_below();
+    if (std::any_of(pad_below.begin(), pad_below.end(), [](size_t s) { return s < 0; }))
+    {
+        return false;
+    }
+
+    if (arg0_rank != 3 && arg0_rank != 4 && arg0_rank != 5)
+    {
+        return false;
+    }
+
+    // Only support f32 for now
+    if (node->get_input_element_type(0) != ngraph::element::f32 ||
+        node->get_input_element_type(1) != ngraph::element::f32 ||
+        node->get_output_element_type(0) != ngraph::element::f32)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node)
 {
     if (is_type<Parameter>(node) || is_type<Result>(node))
@@ -491,11 +534,21 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
                std::all_of(window_dilation.begin(), window_dilation.end(), is_one);
     }
 
+    if (is_type<ngraph::op::ConvolutionBias>(node))
+    {
+        // ConvBias is only supported through callback
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
+        {
+            return false;
+        }
+        return can_use_mkldnn_conv_callback<ngraph::op::ConvolutionBias>(node.get());
+    }
+
     // MKLDNN only supports softmax across single axis
     if (auto softmax = as_type_ptr<ngraph::op::Softmax>(node))
     {
         // Softmax is only supported through callback
-        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             return false;
         }
@@ -509,7 +562,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     if (auto avg_pool = as_type_ptr<ngraph::op::AvgPool>(node))
     {
         // AvgPool is only supported through callback
-        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             return false;
         }
@@ -524,7 +577,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     if (auto avg_pool_backprop = as_type_ptr<ngraph::op::AvgPoolBackprop>(node))
     {
         // AvgPoolBackprop is only supported through callback
-        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             return false;
         }
@@ -539,7 +592,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     if (auto max_pool_backprop = as_type_ptr<ngraph::op::MaxPoolBackprop>(node))
     {
         // MaxPoolBackprop is only supported through callback
-        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             return false;
         }
@@ -554,7 +607,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     if (auto max_pool = as_type_ptr<ngraph::op::MaxPool>(node))
     {
         // MaxPool is only supported through callback
-        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             return false;
         }
@@ -569,7 +622,8 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     if (is_type<ngraph::op::MatMul>(node))
     {
         // MatMul is only supported through callback
-        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK") || node->get_input_shape(0).size() != 2 ||
+            node->get_input_shape(1).size() != 2)
         {
             return false;
         }
@@ -578,7 +632,8 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     if (is_type<ngraph::op::Gemm>(node))
     {
         // Gemm is only supported through callback
-        if (std::getenv("NGRAPH_MLIR_CALLBACK") == nullptr)
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK") || node->get_input_shape(0).size() != 2 ||
+            node->get_input_shape(1).size() != 2)
         {
             return false;
         }

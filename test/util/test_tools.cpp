@@ -80,6 +80,13 @@ shared_ptr<Function> make_test_graph()
 }
 
 template <>
+void copy_data<bool>(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<bool>& data)
+{
+    std::vector<char> data_char(data.begin(), data.end());
+    copy_data(tv, data_char);
+}
+
+template <>
 void init_int_tv<char>(ngraph::runtime::Tensor* tv,
                        std::default_random_engine& engine,
                        char min,
@@ -224,7 +231,7 @@ std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
         size_t arg_count = node->get_input_size();
         for (size_t i = 0; i < arg_count; ++i)
         {
-            Node* dep = node->input(i).get_source_output().get_node();
+            Node* dep = node->get_input_node_ptr(i);
             if (seen.count(dep) == 0)
             {
                 return ::testing::AssertionFailure() << "Argument " << *dep

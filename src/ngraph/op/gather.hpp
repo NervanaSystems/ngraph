@@ -67,8 +67,8 @@ namespace ngraph
                        const Output<Node>& indices,
                        const Output<Node>& axis);
 
-                size_t get_version() const override { return 1; }
-                size_t get_axis() const;
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                int64_t get_axis() const;
 
                 void validate_and_infer_types() override;
 
