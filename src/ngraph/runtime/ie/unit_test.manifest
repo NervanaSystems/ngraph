@@ -97,6 +97,8 @@ broadcast_trivial
 aliased_output
 bool_init_raw
 bool_const_op
+model_tile
+model_tile_static
 
 # [NOT_IMPLEMENTED] Input image format BOOL is not supported yet...
 bool_input_or
