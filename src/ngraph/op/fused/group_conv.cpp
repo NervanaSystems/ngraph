@@ -97,12 +97,12 @@ void op::v1::GroupConvolution::validate_and_infer_types()
             m_dilations = conv_default_strides(this, data_batch_shape, filters_shape);
         }
 
-        if (m_pads_begin.size() == 0)
+        if (m_pads_begin.size() == 0 || m_auto_pad == PadType::VALID)
         {
             m_pads_begin = conv_default_padding(this, data_batch_shape, filters_shape);
         }
 
-        if (m_pads_end.size() == 0)
+        if (m_pads_end.size() == 0 || m_auto_pad == PadType::VALID)
         {
             m_pads_end = conv_default_padding(this, data_batch_shape, filters_shape);
         }
