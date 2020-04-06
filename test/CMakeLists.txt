@@ -77,7 +77,6 @@ set(SRC
     opset_pass/binary_elementwise_opset_pass.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
-    opset_pass/dyn_reshape_opset_pass.cpp
     opset_pass/logical_and_opset_pass.cpp
     opset_pass/logical_not_opset_pass.cpp
     opset_pass/logical_or_opset_pass.cpp
@@ -157,6 +156,7 @@ set(SRC
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
     type_prop/non_max_suppression.cpp
+    type_prop/non_zero.cpp
     type_prop/normalize.cpp
     type_prop/one_hot.cpp
     type_prop/pad.cpp
@@ -172,6 +172,7 @@ set(SRC
     type_prop/reshape.cpp
     type_prop/reverse.cpp
     type_prop/reverse_sequence.cpp
+    type_prop/roi_align.cpp
     type_prop/rnn_cell.cpp
     type_prop/scale_shift.cpp
     type_prop/scatter_add.cpp
@@ -589,6 +590,10 @@ endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
+endif()
+
+if (NGRAPH_GENERIC_CPU_ENABLE)
+    target_link_libraries(unit-test PRIVATE gcpu_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)
