@@ -87,7 +87,7 @@ void op::v0::Pad::validate_and_infer_types()
             if (arg_shape[i].is_static())
             {
                 ptrdiff_t result_dim =
-                    m_padding_below[i] + static_cast<int64_t>(arg_shape[i]) + m_padding_above[i];
+                    m_padding_below[i] + arg_shape[i].get_length() + m_padding_above[i];
                 NODE_VALIDATION_CHECK(this,
                                       result_dim >= 0,
                                       "Inferred result dimension at axis ",
@@ -103,13 +103,12 @@ void op::v0::Pad::validate_and_infer_types()
                 {
                     NODE_VALIDATION_CHECK(
                         this,
-                        m_pad_mode != op::PadMode::EDGE || static_cast<size_t>(arg_shape[i]) >= 1,
+                        m_pad_mode != op::PadMode::EDGE || arg_shape[i].get_length() >= 1,
                         "EDGE padding mode requires an input of dimension of at least 1 at each "
                         "spatial axis.");
                     NODE_VALIDATION_CHECK(
                         this,
-                        m_pad_mode != op::PadMode::REFLECT ||
-                            static_cast<size_t>(arg_shape[i]) >= 2,
+                        m_pad_mode != op::PadMode::REFLECT || arg_shape[i].get_length() >= 2,
                         "REFLECT padding mode requires an input of dimension of at least 2 at each "
                         "spatial axis.");
                 }
@@ -293,7 +292,7 @@ void op::v1::Pad::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(
             this,
-            static_cast<size_t>(pads_begin_shape[0]) <= static_cast<size_t>(arg_shape_rank),
+            pads_begin_shape[0].get_length() <= arg_shape_rank.get_length(),
             "Number of elements of pads_begin must be >= 0 and <= arg rank (pads_begin_shape[0]: ",
             pads_begin_shape[0],
             ").");
@@ -302,7 +301,7 @@ void op::v1::Pad::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(
             this,
-            static_cast<size_t>(pads_end_shape[0]) <= static_cast<size_t>(arg_shape_rank),
+            pads_end_shape[0].get_length() <= arg_shape_rank.get_length(),
             "Number of elements of pads_end must be >= 0 and <= arg rank (pads_end_shape[0]: ",
             pads_end_shape[0],
             ").");
@@ -322,19 +321,18 @@ void op::v1::Pad::validate_and_infer_types()
             if (arg_shape[i].is_static())
             {
                 ptrdiff_t result_dim =
-                    pads_begin_coord[i] + static_cast<int64_t>(arg_shape[i]) + pads_end_coord[i];
+                    pads_begin_coord[i] + arg_shape[i].get_length() + pads_end_coord[i];
                 result_dims[i] = static_cast<size_t>(result_dim);
                 if (i > 1)
                 {
                     NODE_VALIDATION_CHECK(
                         this,
-                        m_pad_mode != op::PadMode::EDGE || static_cast<size_t>(arg_shape[i]) >= 1,
+                        m_pad_mode != op::PadMode::EDGE || arg_shape[i].get_length() >= 1,
                         "EDGE padding mode requires an input of dimension of at least 1 at each "
                         "spatial axis.");
                     NODE_VALIDATION_CHECK(
                         this,
-                        m_pad_mode != op::PadMode::REFLECT ||
-                            static_cast<size_t>(arg_shape[i]) >= 2,
+                        m_pad_mode != op::PadMode::REFLECT || arg_shape[i].get_length() >= 2,
                         "REFLECT padding mode requires an input of dimension of at least 2 at each "
                         "spatial axis.");
                 }
