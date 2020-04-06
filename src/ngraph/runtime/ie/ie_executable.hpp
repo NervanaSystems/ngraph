@@ -21,6 +21,7 @@
 #include <vector>
 
 #include <ie_core.hpp>
+#include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
