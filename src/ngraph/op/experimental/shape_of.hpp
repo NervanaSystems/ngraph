@@ -46,7 +46,7 @@ namespace ngraph
                 // In this case we need to prevent constant folding from endless creation of these
                 // subgraphs.
                 // These metods should be removed if better solution will be designed.
-                void block_recurent_constant_folding() { m_is_foldable = false; }
+                void block_recurrent_constant_folding() { m_is_foldable = false; }
                 bool is_foldable() { return m_is_foldable; }
             private:
                 bool m_is_foldable = true;
