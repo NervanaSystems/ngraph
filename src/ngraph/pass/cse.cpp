@@ -167,6 +167,9 @@ static bool cse_one_hot(shared_ptr<Node> a, shared_ptr<Node> b)
            (a->get_shape() == b->get_shape());
 }
 
+// To enable CSE for a new op, add a mapping between the op and a cse handler function to the map
+// below. If the op doesn't map to an existing handler, create a new handler to check if
+// all inputs and attributes for two nodes are exactly same.
 static unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>
     initialize_ops_to_cse_handlers()
 {
