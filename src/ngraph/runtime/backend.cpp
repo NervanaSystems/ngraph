@@ -26,7 +26,6 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/dynamic/dynamic_backend.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

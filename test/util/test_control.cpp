@@ -35,8 +35,6 @@ string ngraph::prepend_disabled(const string& backend_name,
                                 const string& test_name,
                                 const string& manifest)
 {
-    NGRAPH_INFO << backend_name;
-    NGRAPH_INFO << test_name;
     string rc = test_name;
     unordered_set<string>& blacklist = get_blacklist(backend_name);
     if (blacklist.empty() && !manifest.empty())
@@ -60,7 +58,6 @@ string ngraph::prepend_disabled(const string& backend_name,
     {
         rc = "DISABLED_" + test_name;
     }
-    NGRAPH_INFO << rc;
     return rc;
 }
 

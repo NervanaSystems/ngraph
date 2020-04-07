@@ -245,7 +245,7 @@ if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
 
     if (ENABLE_MKL_DNN)
         message(STATUS "NGRAPH_TESTS: CPU enabled")
-        set(ACTIVE_BACKEND_LIST ${ACsdTIVE_BACKEND_LIST} CPU)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
     endif()
 
     if (ENABLE_CLDNN)
@@ -546,6 +546,7 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     endif()
 
     string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
+    string(REGEX REPLACE "([a-z0-9]+):(.*)" "\\1" BACKEND_DIR ${BACKEND_DIR})
     set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
 
     foreach(TEST_SRC ${MULTI_TEST_SRC})
