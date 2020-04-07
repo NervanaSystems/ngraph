@@ -56,12 +56,12 @@ namespace ngraph
     };
 
     SlicePlan NGRAPH_API make_slice_plan(const Shape& input_shape,
-                              const std::vector<int64_t>& begins,
-                              const std::vector<int64_t>& ends,
-                              const std::vector<int64_t>& strides,
-                              const AxisSet& lower_bounds_mask,
-                              const AxisSet& upper_bounds_mask,
-                              const AxisSet& new_axis_mask,
-                              const AxisSet& shrink_axis_mask,
-                              const AxisSet& ellipsis_mask);
+                                         const std::vector<int64_t>& begins,
+                                         const std::vector<int64_t>& ends,
+                                         const std::vector<int64_t>& strides,
+                                         const AxisSet& lower_bounds_mask,
+                                         const AxisSet& upper_bounds_mask,
+                                         const AxisSet& new_axis_mask,
+                                         const AxisSet& shrink_axis_mask,
+                                         const AxisSet& ellipsis_mask);
 }
