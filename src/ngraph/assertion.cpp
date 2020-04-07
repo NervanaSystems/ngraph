@@ -14,11 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifndef NGRAPH_OP
-#warning "NGRAPH_OP not defined"
-#define NGRAPH_OP(x, y)
-#endif
+#include "ngraph/assertion.hpp"
 
-#include "opset2_tbl.hpp"
-NGRAPH_OP(NonZero, ngraph::op::v3)
-NGRAPH_OP(ROIAlign, ngraph::op::v3)
+const char* ngraph::AssertionFailure::what() const noexcept
+{
+    return m_what.c_str();
+}
