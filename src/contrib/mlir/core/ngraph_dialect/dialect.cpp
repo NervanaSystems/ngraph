@@ -101,13 +101,25 @@ mlir::Type NGraphOpsDialect::parseEltType(mlir::DialectAsmParser& parser) const
         switch (width)
         {
         case 8:
-            return isSigned ? NGIntegerType::getInt8(context) : NGIntegerType::getUInt8(context);
+            return isSigned
+                       ? NGIntegerType::get(8, NGIntegerType::SignednessSemantics::Signed, context)
+                       : NGIntegerType::get(
+                             8, mlir::IntegerType::SignednessSemantics::Unsigned, context);
         case 16:
-            return isSigned ? NGIntegerType::getInt16(context) : NGIntegerType::getUInt16(context);
+            return isSigned
+                       ? NGIntegerType::get(16, NGIntegerType::SignednessSemantics::Signed, context)
+                       : NGIntegerType::get(
+                             16, NGIntegerType::SignednessSemantics::Unsigned, context);
         case 32:
-            return isSigned ? NGIntegerType::getInt32(context) : NGIntegerType::getUInt32(context);
+            return isSigned
+                       ? NGIntegerType::get(32, NGIntegerType::SignednessSemantics::Signed, context)
+                       : NGIntegerType::get(
+                             32, NGIntegerType::SignednessSemantics::Unsigned, context);
         case 64:
-            return isSigned ? NGIntegerType::getInt64(context) : NGIntegerType::getUInt64(context);
+            return isSigned
+                       ? NGIntegerType::get(64, NGIntegerType::SignednessSemantics::Signed, context)
+                       : NGIntegerType::get(
+                             64, NGIntegerType::SignednessSemantics::Unsigned, context);
         default: parser.emitError(loc, "Unexpected width for nGraph integer type: " + origTypeStr);
         }
     }

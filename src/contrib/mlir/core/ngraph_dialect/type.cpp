@@ -37,40 +37,6 @@ using llvm::Twine;
 
 using namespace mlir;
 
-unsigned NGIntegerType::getWidth() const
-{
-    switch (getKind())
-    {
-    case NG_I8_TYPE_ID:
-    case NG_U8_TYPE_ID: return 8;
-    case NG_I16_TYPE_ID:
-    case NG_U16_TYPE_ID: return 16;
-    case NG_I32_TYPE_ID:
-    case NG_U32_TYPE_ID: return 32;
-    case NG_I64_TYPE_ID:
-    case NG_U64_TYPE_ID: return 64;
-    default: NGRAPH_CHECK(false, "Invalid type ID");
-    }
-    return 0;
-}
-
-bool NGIntegerType::isSigned() const
-{
-    switch (getKind())
-    {
-    case NG_I8_TYPE_ID:
-    case NG_I16_TYPE_ID:
-    case NG_I32_TYPE_ID:
-    case NG_I64_TYPE_ID: return true;
-    case NG_U8_TYPE_ID:
-    case NG_U16_TYPE_ID:
-    case NG_U32_TYPE_ID:
-    case NG_U64_TYPE_ID: return false;
-    default: NGRAPH_CHECK(false, "Invalid type ID");
-    }
-    return false;
-}
-
 /// Creates TensorType objects. They all point to the same storage if
 /// element type and shape are the same.
 NGTensorType NGTensorType::get(MLIRContext* context, EltType eltType, Shape shape)
