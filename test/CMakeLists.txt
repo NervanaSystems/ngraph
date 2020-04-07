@@ -16,8 +16,6 @@
 
 add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
 set(NGRAPH_ONNX_NAMESPACE ngraph_onnx)
-add_definitions(-DONNX_ML=ON)
-add_definitions(-DONNX_NAMESPACE=${NGRAPH_ONNX_NAMESPACE})
 
 set(ONNX_LIBRARIES onnx onnx_proto)
 
