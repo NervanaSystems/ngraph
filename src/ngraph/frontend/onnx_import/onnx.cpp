@@ -52,6 +52,19 @@ namespace ngraph
             } // namespace error
         }     // namespace detail
 
+        std::shared_ptr<Function> import_onnx_model(const ONNX_NAMESPACE::ModelProto& model_proto)
+        {
+            Model model{model_proto};
+            Graph graph{model_proto.graph(), model};
+            auto function = std::make_shared<Function>(
+                graph.get_ng_outputs(), graph.get_ng_parameters(), graph.get_name());
+            for (std::size_t i{0}; i < function->get_output_size(); ++i)
+            {
+                function->get_output_op(i)->set_friendly_name(graph.get_outputs().at(i).get_name());
+            }
+            return function;
+        }
+
         std::shared_ptr<Function> import_onnx_model(std::istream& stream)
         {
             ONNX_NAMESPACE::ModelProto model_proto;
@@ -69,15 +82,7 @@ namespace ngraph
                 }
             }
 
-            Model model{model_proto};
-            Graph graph{model_proto.graph(), model};
-            auto function = std::make_shared<Function>(
-                graph.get_ng_outputs(), graph.get_ng_parameters(), graph.get_name());
-            for (std::size_t i{0}; i < function->get_output_size(); ++i)
-            {
-                function->get_output_op(i)->set_friendly_name(graph.get_outputs().at(i).get_name());
-            }
-            return function;
+            return import_onnx_model(model_proto);
         }
 
         std::shared_ptr<Function> import_onnx_model(const std::string& file_path)
