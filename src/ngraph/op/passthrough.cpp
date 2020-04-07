@@ -62,7 +62,7 @@ void ngraph::op::Passthrough::validate_and_infer_types()
 }
 
 std::shared_ptr<ngraph::Node>
-    ngraph::op::Passthrough::copy_with_new_args(const NodeVector& new_args) const
+    ngraph::op::Passthrough::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != get_input_size())
     {
