@@ -780,7 +780,6 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, flatten_axis)
 
     for (size_t r = AXIS; r <= RANKS_TO_TEST + AXIS; ++r)
     {
-        // size_t r = 3;
         const Shape shape(r, 2);
         const auto elems_in_tensor = shape_size(shape);
 
@@ -808,7 +807,6 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, flatten_neg_axis)
 
     for (size_t r = -AXIS; r <= RANKS_TO_TEST + -AXIS; ++r)
     {
-        // size_t r = 4;
         const Shape shape(r, 2);
         const auto elems_in_tensor = shape_size(shape);
 
