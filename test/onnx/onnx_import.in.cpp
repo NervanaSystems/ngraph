@@ -1030,6 +1030,26 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_resize_opset10_import_only)
     EXPECT_EQ(count_ops_of_type<onnx_import::default_opset::Constant>(resize_fn), 1);
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_resize_opset10_ie)
+{
+    const auto resize_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/resize_opset10.prototxt"));
+
+    // Input data shape (2, 2)
+    // Scales input constant values {1.0, 2.0}
+
+    Shape expected_output_shape{2, 2};
+    EXPECT_EQ(resize_fn->get_output_size(), 1);
+    EXPECT_EQ(resize_fn->get_output_shape(0), expected_output_shape);
+    EXPECT_EQ(count_ops_of_type<onnx_import::default_opset::Interpolate>(resize_fn), 1);
+    EXPECT_EQ(count_ops_of_type<onnx_import::default_opset::Constant>(resize_fn), 1);
+    
+    auto test_case = ngraph::test::NgraphTestCase(resize_fn, "${BACKEND_NAME}");
+    test_case.add_input<float>({1.f, 2.f, 3.f, 4.f});
+    test_case.add_expected_output<float>({1.f, 1.f, 2.f, 2.f, 3.f, 3.f, 4.f, 4.f});
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_shape)
 {
     auto function =
