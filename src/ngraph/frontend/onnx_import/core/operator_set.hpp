@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,10 @@ namespace ngraph
 {
     namespace onnx_import
     {
+        /// \brief      Function which transforms single ONNX operator to nGraph sub-graph.
         using Operator = std::function<NodeVector(const Node&)>;
+
+        /// \brief      Map which contains ONNX operators accessible by std::string value as a key.
         using OperatorSet = std::unordered_map<std::string, std::reference_wrapper<const Operator>>;
 
     } // namespace onnx_import

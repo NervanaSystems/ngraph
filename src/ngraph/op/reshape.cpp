@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,14 +59,14 @@ void op::Reshape::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(
             this,
-            m_input_order.size() == size_t(input_rank),
+            m_input_order.size() == input_rank.get_length(),
             "Input axis order is not a permutation of argument's axis indices (axis order: ",
             m_input_order,
             ", argument shape: ",
             input_shape,
             ").");
 
-        for (size_t i = 0; i < size_t(input_rank); i++)
+        for (size_t i = 0; i < input_rank.get_length(); i++)
         {
             auto it = find(begin(m_input_order), end(m_input_order), i);
             NODE_VALIDATION_CHECK(
@@ -81,7 +81,7 @@ void op::Reshape::validate_and_infer_types()
 
         // TODO(amprocte): make a partial_shape_size() analogous to shape_size().
         Dimension input_shape_product = 1;
-        for (size_t i = 0; i < size_t(input_rank); i++)
+        for (size_t i = 0; i < input_rank.get_length(); i++)
         {
             input_shape_product *= input_shape[i];
         }
@@ -90,7 +90,7 @@ void op::Reshape::validate_and_infer_types()
         {
             NODE_VALIDATION_CHECK(
                 this,
-                size_t(input_shape_product) == shape_size(m_output_shape),
+                input_shape_product.get_length() == shape_size(m_output_shape),
                 "Product of output shape dimensions does not match product of argument shape "
                 "dimensions ",
                 "(output shape: ",
@@ -114,11 +114,11 @@ shared_ptr<Node> op::Reshape::copy_with_new_args(const NodeVector& new_args) con
     return make_shared<Reshape>(new_args.at(0), m_input_order, m_output_shape);
 }
 
-void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x_shape = input(0).get_shape();
+    auto x_shape = get_input_shape(0);
     auto x_rank = x_shape.size();
     Shape permuted_x_shape(x_rank);
     AxisVector x_input_order(x_rank);
@@ -156,12 +156,18 @@ op::v1::Reshape::Reshape(const Output<Node>& arg, const Output<Node>& pattern, b
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::Reshape::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("special_zero", m_special_zero);
+    return true;
+}
+
 void op::v1::Reshape::validate_and_infer_types()
 {
     auto pattern_et = get_input_element_type(1);
     // check data types
     NODE_VALIDATION_CHECK(
-        this, pattern_et.compatible(element::Type_t::i64), "Pattern must have element type i64.");
+        this, pattern_et.is_integral_number(), "Pattern must be an integral number.");
 
     // check shapes
     const PartialShape& pattern_shape = get_input_partial_shape(1);
@@ -176,7 +182,7 @@ void op::v1::Reshape::validate_and_infer_types()
 
     if (auto const_shape = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
-        std::vector<int64_t> out_shape_val = const_shape->get_vector<int64_t>();
+        std::vector<int64_t> out_shape_val = const_shape->cast_vector<int64_t>();
         NODE_VALIDATION_CHECK(this,
                               std::none_of(out_shape_val.begin(),
                                            out_shape_val.end(),
@@ -195,11 +201,21 @@ void op::v1::Reshape::validate_and_infer_types()
 
         if (!(zero_dims && m_special_zero) && !negative_dims)
         {
-            set_output_type(0, get_input_element_type(0), const_shape->get_shape_val());
+            auto output_shape = const_shape->get_shape_val();
+            if (get_input_partial_shape(0).is_static())
+            {
+                NODE_VALIDATION_CHECK(this,
+                                      shape_size(get_input_shape(0)) == shape_size(output_shape),
+                                      "Requested output shape ",
+                                      output_shape,
+                                      " is incompatible with input shape ",
+                                      get_input_shape(0));
+            }
+            set_output_type(0, get_input_element_type(0), output_shape);
         }
         else
         {
-            std::vector<Dimension> partial_shape(static_cast<size_t>(output_rank));
+            std::vector<Dimension> partial_shape(output_rank.get_length());
             // Replace zeros and negatives with Dynamic dimensions as needed
             std::transform(out_shape_val.begin(),
                            out_shape_val.end(),
@@ -217,7 +233,7 @@ void op::v1::Reshape::validate_and_infer_types()
 
                 auto input_shape = get_input_partial_shape(0).to_shape();
                 size_t input_elements = shape_size(input_shape);
-                for (size_t i = 0; i < static_cast<size_t>(output_rank); i++)
+                for (size_t i = 0; i < output_rank.get_length(); i++)
                 {
                     if (out_shape_val[i] == 0 && m_special_zero)
                     {
@@ -278,7 +294,7 @@ shared_ptr<Node> op::v1::Reshape::copy_with_new_args(const NodeVector& new_args)
 }
 
 void op::v1::Reshape::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                        const NodeVector& /* deltas */)
+                                        const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for Reshape");
 }

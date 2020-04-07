@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -218,6 +218,12 @@ namespace ngraph
                                                std::int64_t default_value) const
         {
             return m_pimpl->template get_attribute_value<std::int64_t>(name, default_value);
+        }
+
+        template <>
+        int Node::get_attribute_value(const std::string& name, int default_value) const
+        {
+            return m_pimpl->template get_attribute_value<int>(name, default_value);
         }
 
         template <>

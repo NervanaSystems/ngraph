@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -180,6 +180,11 @@ static PartialShape infer_output_shape(const op::Range* node, const element::Typ
     }
 
     return result;
+}
+
+bool ngraph::op::v0::Range::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
 }
 
 void op::Range::validate_and_infer_types()

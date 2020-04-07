@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,15 +29,14 @@ void op::EmbeddingLookup::validate_and_infer_types()
     const PartialShape& arg1_shape = get_input_partial_shape(1);
 
     NODE_VALIDATION_CHECK(this,
-                          arg1_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(arg1_shape.rank()) == 2,
+                          arg1_shape.rank().is_dynamic() || arg1_shape.rank().get_length() == 2,
                           "weights are expected to be a matrix");
 
     PartialShape result_shape;
     if (arg0_shape.rank().is_static())
     {
-        std::vector<Dimension> result_dims(static_cast<size_t>(arg0_shape.rank()) + 1);
-        for (size_t i = 0; i < static_cast<size_t>(arg0_shape.rank()); i++)
+        std::vector<Dimension> result_dims(arg0_shape.rank().get_length() + 1);
+        for (size_t i = 0; i < arg0_shape.rank().get_length(); i++)
         {
             result_dims[i] = arg0_shape[i];
         }

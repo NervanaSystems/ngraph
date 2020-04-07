@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 #pragma once
 
 #include "core/node.hpp"
+#include "default_opset.hpp"
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -31,15 +31,16 @@ namespace ngraph
             {
                 inline NodeVector sub(const Node& node)
                 {
-                    auto left_rank = node.get_ng_inputs().at(0)->get_shape().size();
-                    auto right_rank = node.get_ng_inputs().at(1)->get_shape().size();
-                    auto axis =
-                        node.get_attribute_value<std::int64_t>("axis", left_rank - right_rank);
-                    NodeVector ng_inputs{ngraph::op::legacy_style_broadcast_for_binary_operation(
-                        node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
-
-                    return {
-                        std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
+                    const Output<ngraph::Node> lhs_node = node.get_ng_inputs().at(0);
+                    Output<ngraph::Node> rhs_node = node.get_ng_inputs().at(1);
+                    auto lhs_rank = lhs_node.get_shape().size();
+                    auto rhs_rank = rhs_node.get_shape().size();
+                    auto axis = node.get_attribute_value<std::int64_t>("axis", lhs_rank - rhs_rank);
+                    // Unidirectional broadcast right node to left shape.
+                    rhs_node = ngraph::builder::opset1::legacy_broadcast_for_binary_operation(
+                        lhs_node, rhs_node, axis);
+                    return {std::make_shared<default_opset::Subtract>(
+                        lhs_node, rhs_node, ngraph::op::AutoBroadcastSpec::NONE)};
                 }
 
             } // namespace set_1
@@ -48,8 +49,8 @@ namespace ngraph
             {
                 inline NodeVector sub(const Node& node)
                 {
-                    return {std::make_shared<ngraph::op::v1::Subtract>(node.get_ng_inputs().at(0),
-                                                                       node.get_ng_inputs().at(1))};
+                    return {std::make_shared<default_opset::Subtract>(node.get_ng_inputs().at(0),
+                                                                      node.get_ng_inputs().at(1))};
                 }
 
             } // namespace set_1

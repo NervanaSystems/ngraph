@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -147,7 +147,7 @@ void op::QuantizedDot::validate_and_infer_types()
     {
         for (size_t i = 0; i < m_reduction_axes_count; i++)
         {
-            size_t axis_index_arg0 = size_t(arg0_shape.rank()) - m_reduction_axes_count + i;
+            size_t axis_index_arg0 = arg0_shape.rank().get_length() - m_reduction_axes_count + i;
             size_t axis_index_arg1 = i;
 
             NODE_VALIDATION_CHECK(
@@ -166,16 +166,17 @@ void op::QuantizedDot::validate_and_infer_types()
                 ").");
         }
 
-        std::vector<Dimension> result_dims(size_t(arg0_shape.rank()) + size_t(arg1_shape.rank()) -
+        std::vector<Dimension> result_dims(arg0_shape.rank().get_length() +
+                                           arg1_shape.rank().get_length() -
                                            2 * m_reduction_axes_count);
 
         size_t i = 0;
 
-        for (size_t j = 0; j < size_t(arg0_shape.rank()) - m_reduction_axes_count; j++)
+        for (size_t j = 0; j < arg0_shape.rank().get_length() - m_reduction_axes_count; j++)
         {
             result_dims[i++] = arg0_shape[j];
         }
-        for (size_t j = m_reduction_axes_count; j < size_t(arg1_shape.rank()); j++)
+        for (size_t j = m_reduction_axes_count; j < arg1_shape.rank().get_length(); j++)
         {
             result_dims[i++] = arg1_shape[j];
         }
@@ -218,7 +219,7 @@ shared_ptr<Node> op::QuantizedDot::copy_with_new_args(const NodeVector& new_args
 }
 
 void op::QuantizedDot::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                         const NodeVector& /* deltas */)
+                                         const OutputVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

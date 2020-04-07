@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,10 +19,12 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <ngraph/ngraph_visibility.hpp>
+
 namespace ngraph
 {
     /// Base error for ngraph runtime errors.
-    class ngraph_error : public std::runtime_error
+    class NGRAPH_API ngraph_error : public std::runtime_error
     {
     public:
         explicit ngraph_error(const std::string& what_arg)
@@ -41,7 +43,7 @@ namespace ngraph
         }
     };
 
-    class unsupported_op : public std::runtime_error
+    class NGRAPH_API unsupported_op : public std::runtime_error
     {
     public:
         unsupported_op(const std::string& what_arg)

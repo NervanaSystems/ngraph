@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,10 @@
 #error("ngraph.hpp is for external use only")
 #endif
 
-extern "C" const char* get_ngraph_version_string();
+#include <ngraph/ngraph_visibility.hpp>
+
+extern "C" NGRAPH_API const char* get_ngraph_version_string();
+
 namespace ngraph
 {
     /// \brief Function to query parsed version information of the version of ngraph which
@@ -39,6 +42,7 @@ namespace ngraph
     /// the patch version number.
     ///
     /// \note Throws a runtime_error if there is an error during parsing
+    NGRAPH_API
     void get_version(size_t& major, size_t& minor, size_t& patch, std::string& extra);
 }
 

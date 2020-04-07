@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,36 +45,32 @@ void op::GatherND::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           indices_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(indices_shape.rank()) >= 1,
+                              indices_shape.rank().get_length() >= 1,
                           "indices rank is expected to be at least 1");
 
     NODE_VALIDATION_CHECK(this,
-                          params_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(params_shape.rank()) >= 1,
+                          params_shape.rank().is_dynamic() || params_shape.rank().get_length() >= 1,
                           "params rank is expected to be at least 1");
 
-    NODE_VALIDATION_CHECK(
-        this,
-        params_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
-            static_cast<size_t>(indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]) <=
-                static_cast<size_t>(params_shape.rank()),
-        "last dimension of indices can be at most the rank of params");
+    NODE_VALIDATION_CHECK(this,
+                          params_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
+                              indices_shape[indices_shape.rank().get_length() - 1].get_length() <=
+                                  params_shape.rank().get_length(),
+                          "last dimension of indices can be at most the rank of params");
 
     PartialShape result_shape;
     if (params_shape.rank().is_static() && indices_shape.rank().is_static())
     {
         std::vector<Dimension> result_dims(
-            static_cast<size_t>(indices_shape.rank()) - 1 +
-            static_cast<size_t>(params_shape.rank()) -
-            static_cast<size_t>(indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]));
+            indices_shape.rank().get_length() - 1 + params_shape.rank().get_length() -
+            indices_shape[indices_shape.rank().get_length() - 1].get_length());
         size_t i = 0;
-        for (; i < static_cast<size_t>(indices_shape.rank()) - 1; i++)
+        for (; i < indices_shape.rank().get_length() - 1; i++)
         {
             result_dims[i] = indices_shape[i];
         }
-        for (size_t j = static_cast<size_t>(
-                        indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]);
-             j < static_cast<size_t>(params_shape.rank());
+        for (size_t j = indices_shape[indices_shape.rank().get_length() - 1].get_length();
+             j < params_shape.rank().get_length();
              i++, j++)
         {
             result_dims[i] = params_shape[j];

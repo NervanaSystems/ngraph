@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,30 +24,36 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise full arctan operation
-        class NGRAPH_API Atan2 : public util::BinaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            static constexpr NodeTypeInfo type_info{"Atan2", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            Atan2()
-                : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+            /// \brief Elementwise full arctan operation
+            class NGRAPH_API Atan2 : public util::BinaryElementwiseArithmetic
             {
-            }
+            public:
+                static constexpr NodeTypeInfo type_info{"Atan2", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Atan2()
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+                {
+                }
 
-            /// \brief atan2(y,x) is the angle from the origin to the point (x,y) (note reversed
-            /// order).
-            ///
-            /// \param y
-            /// \param x
-            Atan2(const Output<Node>& y,
-                  const Output<Node>& x,
-                  const AutoBroadcastSpec& autob = AutoBroadcastSpec());
-            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                /// \brief atan2(y,x) is the angle from the origin to the point (x,y) (note reversed
+                /// order).
+                ///
+                /// \param y
+                /// \param x
+                Atan2(const Output<Node>& y,
+                      const Output<Node>& x,
+                      const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
+            };
+        }
+        using v0::Atan2;
     }
 }

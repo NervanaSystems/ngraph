@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,8 +40,8 @@ TEST(opset_transform, opset1_gather_upgrade_pass)
     pass_manager.run_passes(f);
 
     auto gather_s1_result = f->get_results().at(0);
-    auto gather_v1_node = as_type_ptr<op::v1::Gather>(
-        gather_s1_result->input(0).get_source_output().get_node_shared_ptr());
+    auto gather_v1_node =
+        as_type_ptr<op::v1::Gather>(gather_s1_result->get_input_node_shared_ptr(0));
     ASSERT_TRUE(gather_v1_node);
     EXPECT_EQ(gather_v1_node->get_axis(), axis);
 }

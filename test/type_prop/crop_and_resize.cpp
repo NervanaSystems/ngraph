@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ TEST(type_prop, crop_and_resize_valid)
         image, boxes, box_indices, crop_shape, op::CropAndResize::ResizeMethod::bilinear, 0);
     auto result = crop_and_resize->output(0);
     ASSERT_EQ(result.get_shape(), result_shape.to_shape());
-    ASSERT_EQ(result.get_element_type(), image->output(0).get_element_type());
+    ASSERT_EQ(result.get_element_type(), image->get_output_element_type(0));
 }
 
 TEST(type_prop, crop_and_resize_not_constant)

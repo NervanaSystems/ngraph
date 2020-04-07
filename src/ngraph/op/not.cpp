@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,11 @@ op::v1::LogicalNot::LogicalNot(const Output<Node>& arg)
     : Op({arg})
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v1::LogicalNot::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
 }
 
 // TODO(amprocte): Update this to allow only boolean, for consistency with logical binops.

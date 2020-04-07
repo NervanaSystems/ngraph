@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@
 
 #include "benchmark.hpp"
 #include "benchmark_pipelined.hpp"
+#include "ngraph/component_manager.hpp"
 #include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
@@ -41,18 +42,27 @@
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#ifdef NGRAPH_MLIR_ENABLE
+#include "contrib/mlir/utils.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
 
 static void configure_static_backends()
 {
-#ifdef NGRAPH_INTERPRETER_STATIC_LIB_ENABLE
-    ngraph::runtime::BackendManager::register_backend(
-        "INTERPRETER", ngraph::runtime::interpreter::get_backend_constructor_pointer());
+#ifdef NGRAPH_CPU_ENABLE
+    ngraph_register_cpu_backend();
+#endif
+#ifdef NGRAPH_INTERPRETER_ENABLE
+    ngraph_register_interpreter_backend();
+#endif
+
+#ifdef NGRAPH_MLIR_ENABLE
+    // Initialize MLIR
+    ngraph::runtime::ngmlir::initializeNGraphMLIR();
 #endif
 }
 
@@ -82,7 +92,7 @@ vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
             throw runtime_error(os.str());
         }
 
-        Shape shape = node->output(0).get_shape();
+        Shape shape = node->get_output_shape(0);
         result.push_back(PerfShape(p, shape));
     }
     return result;
@@ -174,6 +184,7 @@ int main(int argc, char** argv)
     bool visualize = false;
     int warmup_iterations = 1;
     bool copy_data = true;
+    bool dump_results = false;
     bool dot_file = false;
     bool double_buffer = false;
 
@@ -212,6 +223,10 @@ int main(int argc, char** argv)
         else if (arg == "--no_copy_data")
         {
             copy_data = false;
+        }
+        else if (arg == "--dump_results")
+        {
+            dump_results = true;
         }
         else if (arg == "-v" || arg == "--visualize")
         {
@@ -282,6 +297,7 @@ OPTIONS
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
+        --dump_results            Dump result tensors to standard output.
         --dot                     Generate Graphviz dot file
         --double_buffer           Double buffer inputs and outputs
 )###";
@@ -361,13 +377,13 @@ OPTIONS
                         total_temporary_count++;
                     }
                     string op_name = node->description();
-                    string shape_name = "{" + join(node->output(0).get_shape()) + "}";
+                    string shape_name = "{" + join(node->get_output_shape(0)) + "}";
                     op_list[op_name + shape_name]++;
 
                     if (node->is_constant())
                     {
                         total_constant_count++;
-                        const Shape& shape = node->output(0).get_shape();
+                        const Shape& shape = node->get_output_shape(0);
                         size_t const_size = node->output(0).get_element_type().size();
                         if (shape.size() == 0)
                         {
@@ -376,21 +392,21 @@ OPTIONS
                         else
                         {
                             total_constant_bytes +=
-                                (const_size * shape_size(node->output(0).get_shape()));
+                                (const_size * shape_size(node->get_output_shape(0)));
                         }
                     }
                     else if (node->is_parameter())
                     {
                         total_parameter_count++;
-                        const Shape& shape = node->output(0).get_shape();
+                        const Shape& shape = node->get_output_shape(0);
                         size_t size = node->output(0).get_element_type().size() * shape_size(shape);
                         total_parameter_bytes += size;
                     }
                     else if (is_type<op::Result>(node))
                     {
                         total_result_count++;
-                        const Shape& shape = node->input(0).get_shape();
-                        size_t size = node->input(0).get_element_type().size() * shape_size(shape);
+                        const Shape& shape = node->get_input_shape(0);
+                        size_t size = node->get_input_element_type(0).size() * shape_size(shape);
                         total_result_bytes += size;
                     }
                 }
@@ -421,17 +437,30 @@ OPTIONS
             if (!backend.empty())
             {
                 cout << "\n---- Benchmark ----\n";
+                stopwatch t1;
+                t1.start();
                 shared_ptr<Function> f = deserialize(model);
+                stringstream ss;
+                ss.imbue(locale(""));
+                ss << t1.get_milliseconds();
+                cout << "deserialize took " << ss.str() << "ms\n";
                 vector<runtime::PerformanceCounter> perf_data;
                 if (double_buffer)
                 {
+                    NGRAPH_CHECK(!dump_results,
+                                 "'dump_results' not implemented in double buffer mode");
                     perf_data = run_benchmark_pipelined(
                         f, backend, iterations, timing_detail, warmup_iterations, copy_data);
                 }
                 else
                 {
-                    perf_data = run_benchmark(
-                        f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                    perf_data = run_benchmark(f,
+                                              backend,
+                                              iterations,
+                                              timing_detail,
+                                              warmup_iterations,
+                                              copy_data,
+                                              dump_results);
                 }
                 auto perf_shape = to_perf_shape(f, perf_data);
                 aggregate_perf_data.insert(

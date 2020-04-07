@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -74,10 +74,12 @@ namespace ngraph
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const NodeVector& deltas) override;
+                                       const OutputVector& deltas) override;
 
                 /// \return The strides.
                 const Strides& get_strides() const { return m_strides; }
@@ -112,4 +114,24 @@ namespace ngraph
             };
         }
     } // namespace op
+
+    NGRAPH_API
+    std::ostream& operator<<(std::ostream& s,
+                             const op::v1::BinaryConvolution::BinaryConvolutionMode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v1::BinaryConvolution::BinaryConvolutionMode>
+        : public EnumAttributeAdapterBase<op::v1::BinaryConvolution::BinaryConvolutionMode>
+    {
+    public:
+        AttributeAdapter(op::v1::BinaryConvolution::BinaryConvolutionMode& value)
+            : EnumAttributeAdapterBase<op::v1::BinaryConvolution::BinaryConvolutionMode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v1::BinaryConvolution::BinaryConvolutionMode>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
 } // namespace ngraph

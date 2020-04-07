@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@
 
 #include "cpu_backend.hpp"
 #include "contrib/mlir/backend/pass/affine_lowerer.hpp"
-#include "contrib/mlir/backend/pass/memory_optimization.hpp"
 #include "contrib/mlir/utils.hpp"
 #include "ngraph/check.hpp"
+#include "ngraph/env_util.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -34,6 +34,7 @@
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
+#include <mlir/IR/StandardTypes.h>
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>
@@ -71,7 +72,11 @@ static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
         "inferred from the host CPU using for the cache level specified by "
         "-ngraph-loop-tile-cache-level."));
 
+// Enable the lowering of MemRefs to LLVM bare pointers.
+extern llvm::cl::opt<bool> clEnableBarePtrMemRefLowering;
+
 using namespace ngraph::runtime::ngmlir;
+using namespace mlir;
 
 // Default optimization level.
 llvm::CodeGenOpt::Level MLIRCPUBackend::mlirOptLevel = llvm::CodeGenOpt::Level::Aggressive;
@@ -140,9 +145,10 @@ void MLIRCPUBackend::init()
     if (!initialized)
     {
         // Override default optimization level with macro value.
-        if (char* optLevelStr = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
+        int32_t clOptLevel = getenv_int("NGRAPH_MLIR_OPT_LEVEL");
+        // -1 is the value returned if the env variable is not set
+        if (clOptLevel != -1)
         {
-            unsigned clOptLevel = std::stoi(optLevelStr);
             NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");
             mlirOptLevel = (llvm::CodeGenOpt::Level)clOptLevel;
         }
@@ -160,7 +166,6 @@ void MLIRCPUBackend::init()
 
 void MLIRCPUBackend::codegen()
 {
-    optimizeNgDialect();
     lowerNgDialect();
 }
 
@@ -195,7 +200,19 @@ void MLIRCPUBackend::lowerNgDialect()
 void MLIRCPUBackend::lowerStandardDialect()
 {
     mlir::PassManager pm(&m_context);
-    pm.addPass(mlir::createLowerToLLVMPass());
+    // We lower memrefs to a fat memref descriptor by default. If 'clEnableBarePtrMemRefLowering' is
+    // specified, we lower memref arguments to bare pointers to the memref element type.
+    if (clEnableBarePtrMemRefLowering)
+    {
+        pm.addPass(mlir::createLowerToLLVMPass(/*useAlloca=*/false,
+                                               /*useBarePtrCallConv=*/true,
+                                               /*emitCWrappers=*/false));
+    }
+    else
+    {
+        pm.addPass(mlir::createLowerToLLVMPass(
+            /*useAlloca=*/false, /*useBarePtrCallConv=*/false, /*emitCWrappers=*/true));
+    }
 
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
@@ -248,8 +265,9 @@ void MLIRCPUBackend::optimizeAffineDialect()
         pm.addPass(mlir::createLoopTilingPass(cacheLevelSize));
     }
 
-    // Populate pass manager with affine dialect to Std dialect conversion.
+    // Populate pass manager with affine-to-loop and loop-to-std dialect conversions.
     pm.addPass(mlir::createLowerAffinePass());
+    pm.addPass(mlir::createLowerToCFGPass());
 
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
@@ -260,19 +278,4 @@ void MLIRCPUBackend::optimizeAffineDialect()
 
     // Run Std dialect optimizations.
     // TODO
-}
-
-void MLIRCPUBackend::optimizeNgDialect()
-{
-    mlir::PassManager pm(&m_context);
-    mlir::applyPassManagerCLOptions(pm);
-    if (clEnableNgInPlaceMemoryOpt)
-    {
-        pm.addPass(mlir::createMemoryOptimizationPass());
-    }
-
-    if (failed(pm.run(m_module.get())))
-    {
-        NGRAPH_CHECK(false, "MLIR pass manager failed");
-    }
 }

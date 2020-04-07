@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ namespace ngraph
 {
     namespace builder
     {
+        NGRAPH_API
         std::shared_ptr<Node> QuantizedDotBuilder(const Output<Node>& input0,
                                                   const Output<Node>& input1,
                                                   const size_t reduction_axes_count,
@@ -42,6 +43,7 @@ namespace ngraph
                                                   const ngraph::AxisSet& input1_axes,
                                                   const ngraph::AxisSet& output_axes);
 
+        NGRAPH_API
         std::shared_ptr<Node> QuantizedDotBiasBuilder(const Output<Node>& input,
                                                       const Output<Node>& filters,
                                                       const Output<Node>& bias,

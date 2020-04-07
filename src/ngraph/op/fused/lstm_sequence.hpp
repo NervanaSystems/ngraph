@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 LSTMSequence() = default;
 
+                size_t get_default_output_index() const override { return no_default_index(); }
                 enum class direction
                 {
                     FORWARD,
@@ -135,6 +136,7 @@ namespace ngraph
                 {
                 }
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual NodeVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
@@ -162,11 +164,11 @@ namespace ngraph
                 ///
                 /// \return     The masked value.
                 ///
-                std::shared_ptr<Node> get_masked_node(const std::shared_ptr<Node>& data,
-                                                      std::int32_t time_step,
-                                                      std::size_t batch_axis = 0,
-                                                      const std::shared_ptr<Node>& default_value = {
-                                                          nullptr}) const;
+                std::shared_ptr<Node>
+                    get_masked_node(const Output<Node>& data,
+                                    std::int32_t time_step,
+                                    std::size_t batch_axis = 0,
+                                    const Output<Node>& default_value = Output<Node>()) const;
 
                 NodeVector lstm_pass(bool is_reverse = false) const;
 
@@ -185,4 +187,22 @@ namespace ngraph
         }
         using v0::LSTMSequence;
     } // namespace op
+
+    NGRAPH_API
+    std::ostream& operator<<(std::ostream& s, const op::v0::LSTMSequence::direction& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v0::LSTMSequence::direction>
+        : public EnumAttributeAdapterBase<op::v0::LSTMSequence::direction>
+    {
+    public:
+        AttributeAdapter(op::v0::LSTMSequence::direction& value)
+            : EnumAttributeAdapterBase<op::v0::LSTMSequence::direction>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v0::LSTMSequence::direction>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 } // namespace ngraph

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -34,24 +35,25 @@ op::Unsqueeze::Unsqueeze(const Output<Node>& data, const Output<Node>& axes)
 
 void op::Unsqueeze::pre_validate_and_infer_types()
 {
-    auto axes_node = input_value(1).get_node_shared_ptr();
+    const auto data = input_value(0);
+    auto data_partial_shape = data.get_partial_shape();
+    const auto data_rank = data_partial_shape.rank();
 
-    // Currently only support Constant node for axes.
-    NODE_VALIDATION_CHECK(this,
-                          axes_node->is_constant(),
-                          "doesn't support 'axes' input of other type than a Constant.");
-}
+    const auto axes_node = input_value(1).get_node_shared_ptr();
 
-NodeVector op::Unsqueeze::decompose_op() const
-{
-    auto data = input_value(0);
-    auto axes_node = input_value(1).get_node_shared_ptr();
+    if (data_rank.is_dynamic() || !axes_node->is_constant())
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+        return;
+    }
+
+    uint64_t data_rank_value = data_partial_shape.rank().get_length();
 
     // Get value of axes from Constant
-    auto axes_constant = as_type_ptr<op::Constant>(axes_node);
-    auto axes = axes_constant->get_vector<size_t>();
-
-    auto data_shape = data.get_shape();
+    const auto axes_constant = as_type_ptr<op::v0::Constant>(axes_node);
+    const auto axes_values = axes_constant->cast_vector<int64_t>();
+    const auto expanded_rank = data_rank_value + axes_values.size();
+    auto axes = normalize_axes(this->description(), axes_values, expanded_rank);
 
     NODE_VALIDATION_CHECK(this, !axes.empty(), "'axes' input is mandatory.");
     NODE_VALIDATION_CHECK(this,
@@ -60,17 +62,33 @@ NodeVector op::Unsqueeze::decompose_op() const
 
     sort(begin(axes), end(axes), less<int64_t>());
 
-    AxisVector input_order{ngraph::get_default_order(data_shape.size())};
-
+    vector<Dimension> output_shape{data_partial_shape};
     for (auto axis : axes)
     {
         NODE_VALIDATION_CHECK(
-            this, axis <= data_shape.size(), "provided 'axes' value ", axis, " is not valid.");
+            this, axis <= expanded_rank, "provided 'axes' value ", axis, " is not valid.");
 
-        data_shape.insert(next(begin(data_shape), axis), 1);
+        output_shape.insert(next(begin(output_shape), axis), 1);
     }
+    set_output_type(0, get_input_element_type(0), PartialShape{output_shape});
+}
 
-    return {make_shared<ngraph::op::Reshape>(data, input_order, data_shape)};
+NodeVector op::Unsqueeze::decompose_op() const
+{
+    NODE_VALIDATION_CHECK(
+        this,
+        (get_output_partial_shape(0).is_static()),
+        "output shape was not calculated during pre_validate_and_infer_types. Can not decompose.");
+    auto data = input_value(0);
+    auto data_shape = data.get_shape();
+    auto output_shape = get_output_shape(0);
+    AxisVector input_order{ngraph::get_default_order(data_shape.size())};
+    return {make_shared<ngraph::op::Reshape>(data, input_order, output_shape)};
+}
+
+bool ngraph::op::v0::Unsqueeze::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
 }
 
 shared_ptr<Node> op::Unsqueeze::copy_with_new_args(const NodeVector& new_args) const

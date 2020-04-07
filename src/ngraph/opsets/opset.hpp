@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ namespace ngraph
         static std::mutex& get_mutex();
 
     public:
+        OpSet() {}
         std::set<NodeTypeInfo>::size_type size() const
         {
             std::lock_guard<std::mutex> guard(get_mutex());
@@ -45,7 +46,7 @@ namespace ngraph
             std::lock_guard<std::mutex> guard(get_mutex());
             m_op_types.insert(type_info);
             m_name_type_info_map[name] = type_info;
-            ngraph::FactoryRegistry<Node>::get().register_factory(type_info, factory);
+            m_factory_registry.register_factory(type_info, factory);
         }
 
         /// \brief Insert OP_TYPE into the opset with a special name and the default factory
@@ -62,6 +63,7 @@ namespace ngraph
             insert<OP_TYPE>(OP_TYPE::type_info.name);
         }
 
+        const std::set<NodeTypeInfo>& get_types_info() const { return m_op_types; }
         /// \brief Create the op named name using it's factory
         ngraph::Node* create(const std::string& name) const;
 
@@ -93,11 +95,14 @@ namespace ngraph
             return m_op_types.find(node->get_type_info()) != m_op_types.end();
         }
 
+        ngraph::FactoryRegistry<ngraph::Node>& get_factory_registry() { return m_factory_registry; }
     protected:
+        ngraph::FactoryRegistry<ngraph::Node> m_factory_registry;
         std::set<NodeTypeInfo> m_op_types;
         std::map<std::string, NodeTypeInfo> m_name_type_info_map;
     };
 
-    const OpSet& get_opset0();
-    const OpSet& get_opset1();
+    const NGRAPH_API OpSet& get_opset0();
+    const NGRAPH_API OpSet& get_opset1();
+    const NGRAPH_API OpSet& get_opset2();
 }

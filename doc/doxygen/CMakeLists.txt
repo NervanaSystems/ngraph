@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +15,16 @@
 # ******************************************************************************
 
 find_package(Doxygen REQUIRED)
+# include(FetchContent)
+# include(${CMAKE_SOURCE_DIR}/cmake/doxygen.cmake)
 
-if ("${NGRAPH_DOXYGEN_WARN_IF_UNDOCUMENTED}" MATCHES "^ON$")
+if (NGRAPH_DOXYGEN_WARN_IF_UNDOCUMENTED)
     set(DOXYGEN_WARN_IF_UNDOCUMENTED YES)
 else()
     set(DOXYGEN_WARN_IF_UNDOCUMENTED NO)
 endif()
 
-if ("${NGRAPH_DOXYGEN_QUIET}" MATCHES "^ON$")
+if (NGRAPH_DOXYGEN_QUIET)
     set(DOXYGEN_QUIET YES)
 else()
     set(DOXYGEN_QUIET NO)
@@ -39,7 +41,7 @@ add_custom_target(doxygen-docs
     COMMENT "Generating documentation with Doxygen"
     VERBATIM )
 
-add_dependencies( docs doxygen-docs )
+add_dependencies(docs doxygen-docs)
 
 install(
     DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/html/"

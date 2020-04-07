@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #include <map>
 
 #include "cpu_tracing.hpp"
+#include "ngraph/env_util.hpp"
 
 #ifndef NGRAPH_JSON_DISABLE
 void ngraph::runtime::cpu::to_json(nlohmann::json& json, const TraceEvent& event)
@@ -74,7 +75,7 @@ void ngraph::runtime::cpu::GenerateTimeline(const std::vector<OpAttributes>& op_
 
 bool ngraph::runtime::cpu::IsTracingEnabled()
 {
-    static bool enabled = (std::getenv("NGRAPH_CPU_TRACING") != nullptr);
+    static bool enabled = getenv_bool("NGRAPH_CPU_TRACING");
     return enabled;
 }
 #else

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/fused/shuffle_channels.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/reshape.hpp"
 
 using namespace std;
@@ -30,6 +31,13 @@ op::ShuffleChannels::ShuffleChannels(const Output<Node>& data, const int axis, c
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::ShuffleChannels::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    visitor.on_attribute("groups", m_groups);
+    return true;
+}
+
 size_t op::ShuffleChannels::get_zero_based_axis() const
 {
     if (m_axis >= 0)
@@ -40,7 +48,7 @@ size_t op::ShuffleChannels::get_zero_based_axis() const
     {
         if (!get_input_partial_shape(0).rank().is_dynamic())
         {
-            return m_axis + static_cast<size_t>(get_input_partial_shape(0).rank());
+            return m_axis + get_input_partial_shape(0).rank().get_length();
         }
         else
         {
@@ -53,7 +61,7 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
 {
     if (get_input_partial_shape(0).is_static())
     {
-        const auto shape = input(0).get_shape();
+        const auto shape = get_input_shape(0);
 
         NODE_VALIDATION_CHECK(
             this, shape.size() >= 1, "The input tensor's shape is expected to be at least 1D.");

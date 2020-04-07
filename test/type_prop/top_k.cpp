@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -70,9 +70,7 @@ TEST(type_prop, topk_invalid_index_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument element type must be i64 or i32 (got f32)");
     }
     catch (...)
     {
@@ -118,6 +116,14 @@ TEST(type_prop, topk_rank_dynamic_ok)
     ASSERT_TRUE(topk->get_output_partial_shape(0).rank().is_dynamic());
     ASSERT_TRUE(topk->get_output_partial_shape(1).rank().is_dynamic());
     ASSERT_TRUE(topk->get_sort() == op::TopK::SortType::SORT_VALUES);
+    try
+    {
+        auto badout = Output<Node>(topk);
+        FAIL() << "No default output for topk";
+    }
+    catch (const NodeValidationFailure&)
+    {
+    }
 }
 
 TEST(type_prop, topk_rank_dynamic_result_et_dynamic)
@@ -164,9 +170,7 @@ TEST(type_prop, topk_rank_dynamic_result_et_invalid)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument element type must be i64 or i32 (got f32)");
     }
     catch (...)
     {
@@ -234,9 +238,7 @@ TEST(type_prop, topk_rank_static_dynamic_axis_oob)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument element type must be i64 or i32 (got f32)");
     }
     catch (...)
     {
@@ -262,9 +264,7 @@ TEST(type_prop, topk_rank_static_dynamic_k_unknown_axis_oob)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument element type must be i64 or i32 (got f32)");
     }
     catch (...)
     {
@@ -290,9 +290,7 @@ TEST(type_prop, topk_rank_static_dynamic_k_known_too_big)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument element type must be i64 or i32 (got f32)");
     }
     catch (...)
     {
@@ -340,4 +338,39 @@ TEST(type_prop, topk_rank_static_dynamic_k_known_ok)
         PartialShape{Dimension::dynamic(), 2, Dimension::dynamic()}));
     ASSERT_TRUE(topk->get_output_partial_shape(1).same_scheme(
         PartialShape{Dimension::dynamic(), 2, Dimension::dynamic()}));
+}
+
+TEST(type_prop, topk_v1_negative_axis_support)
+{
+    const auto data_shape = Shape{1, 2, 3, 4};
+    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto k = op::Constant::create(element::i64, Shape{}, {2});
+    const int64_t axis = -2;
+
+    const auto topk = make_shared<op::v1::TopK>(data, k, axis, "max", "value");
+
+    ASSERT_EQ(topk->get_provided_axis(), axis);
+    ASSERT_EQ(topk->get_axis(), data_shape.at(1));
+}
+
+TEST(type_prop, topk_v1_negative_axis_dynamic_rank)
+{
+    const auto data_shape = PartialShape::dynamic();
+    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto k = op::Constant::create(element::i64, Shape{}, {2});
+    const int64_t axis = -2;
+    const auto topk = make_shared<op::v1::TopK>(data, k, axis, "max", "value");
+
+    try
+    {
+        topk->get_axis();
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Normalized axis of TopK is unknown"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }

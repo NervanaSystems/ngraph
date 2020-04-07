@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,32 +19,15 @@
 
 #include "mlir_subgraph_extraction.hpp"
 #include "ngraph/assertion.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/argmax.hpp"
-#include "ngraph/op/argmin.hpp"
-#include "ngraph/op/concat.hpp"
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/dot.hpp"
-#include "ngraph/op/experimental/compiled_kernel.hpp"
-#include "ngraph/op/gather.hpp"
-#include "ngraph/op/get_output_element.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/op/less.hpp"
-#include "ngraph/op/maximum.hpp"
-#include "ngraph/op/minimum.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/negative.hpp"
-#include "ngraph/op/relu.hpp"
-#include "ngraph/op/subtract.hpp"
+#include "ngraph/ops.hpp"
 
 using namespace ngraph::descriptor;
 using namespace ngraph::op;
 using namespace ngraph::pass;
-
-#define TI(x) std::type_index(typeid(x))
 
 int MLIRSubgraphExtractionPass::MLIRSubgraph::m_curr_graph_id = 0;
 
@@ -71,38 +54,6 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::add_node(std::shared_ptr<Node> no
                  "node added to graph before");
     m_nodes.emplace_back(node);
     m_pass.m_node_to_graph[node] = get_id();
-}
-
-void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& sg2)
-{
-    NGRAPH_CHECK(&sg2 != this, "Cannot merge a sub-graph into itself");
-
-    // Associate nodes of second sub-graph to first one
-    auto sg_nodes = sg2.get_nodes();
-    for (auto node : sg_nodes)
-    {
-        NGRAPH_DEBUG << *node;
-        NGRAPH_CHECK(m_pass.get_subgraph_id(node) == sg2.get_id(),
-                     "Node does not belong to sub-graph");
-        m_pass.m_node_to_graph[node] = get_id();
-    }
-
-    // nodes  of sub-graphs are exclusive
-    m_nodes.insert(m_nodes.end(), sg2.get_nodes().begin(), sg2.get_nodes().end());
-    // merge inputs
-    add_inputs(sg2.get_inputs());
-
-    // Remove sub-graph from map
-    m_pass.m_id_to_graph.erase(sg2.get_id());
-}
-
-MLIRSubgraphExtractionPass::MLIRSubgraphExtractionPass()
-    : m_max_cycle_depth(20)
-{
-    if (char* max_cycle_depth = std::getenv("NGRAPH_MLIR_MAX_CYCLE_DEPTH"))
-    {
-        m_max_cycle_depth = std::stoi(max_cycle_depth);
-    }
 }
 
 // The sub-graph construction algorithm is as follows
@@ -211,11 +162,11 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
         for (auto it = nodes_ready.begin(); it != nodes_ready.end();)
         {
             auto node = *it;
-            if (TI(Result) == TI(*node))
+            if (is_type<Result>(node))
             {
                 erase_node(it, nodes_ready);
             }
-            else if (TI(Parameter) == TI(*node))
+            else if (is_type<Parameter>(node))
             {
                 process_successors(node, node_to_size_map, nodes_ready);
                 erase_node(it, nodes_ready);
@@ -258,7 +209,7 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
                 for (auto it = nodes_ready.begin(); it != nodes_ready.end();)
                 {
                     auto node = *it;
-                    if (TI(Result) == TI(*node))
+                    if (is_type<Result>(node))
                     {
                         erase_node(it, nodes_ready);
                     }
@@ -285,7 +236,7 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
                 for (auto it = nodes_ready.begin(); it != nodes_ready.end();)
                 {
                     auto node = *it;
-                    if (TI(Result) == TI(*node))
+                    if (is_type<Result>(node))
                     {
                         erase_node(it, nodes_ready);
                     }
@@ -313,10 +264,10 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
     {
         MLIRSubgraph& sg = it->second;
         auto& nodes = sg.get_nodes();
-        NodeVector outputs = std::move(get_subgraph_outputs(NodeVector(nodes.begin(), nodes.end()),
-                                                            {} /*exclusions*/,
-                                                            false /* ignore unused */,
-                                                            false /* ignore output duplicates */));
+        NodeVector outputs = get_subgraph_outputs(NodeVector(nodes.begin(), nodes.end()),
+                                                  {} /*exclusions*/,
+                                                  false /* ignore unused */,
+                                                  false /* ignore output duplicates */);
         sg.add_outputs(outputs);
     }
 }
@@ -400,7 +351,7 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
             for (auto& old_output : ck->outputs())
             {
                 auto inputs = old_output.get_target_inputs();
-                auto goe_node = old_output.as_single_output_node(false);
+                auto goe_node = old_output.as_single_output_node();
                 auto new_output = goe_node->output(0);
                 for (auto& input : inputs)
                 {
@@ -469,38 +420,65 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
     }
 }
 
-#define TI(x) std::type_index(typeid(x))
+// Check if convolution related nodes such as Convolution, ConvolutionBias,
+// ConvolutionRelu, ... can use callback.
+template <typename T>
+static bool can_use_mkldnn_conv_callback(ngraph::Node* node)
+{
+    auto convolution = static_cast<const T*>(node);
+    auto arg0_rank = node->get_input_shape(0).size();
+    auto dilation = convolution->get_data_dilation_strides();
+    if (std::any_of(dilation.begin(), dilation.end(), [](size_t s) { return s != 1; }))
+    {
+        return false;
+    }
+
+    // MKLDNN doesnt support negative padding
+    auto pad_above = convolution->get_padding_above();
+    if (std::any_of(pad_above.begin(), pad_above.end(), [](size_t s) { return s < 0; }))
+    {
+        return false;
+    }
+    auto pad_below = convolution->get_padding_below();
+    if (std::any_of(pad_below.begin(), pad_below.end(), [](size_t s) { return s < 0; }))
+    {
+        return false;
+    }
+
+    if (arg0_rank != 3 && arg0_rank != 4 && arg0_rank != 5)
+    {
+        return false;
+    }
+
+    // Only support f32 for now
+    if (node->get_input_element_type(0) != ngraph::element::f32 ||
+        node->get_input_element_type(1) != ngraph::element::f32 ||
+        node->get_output_element_type(0) != ngraph::element::f32)
+    {
+        return false;
+    }
+
+    return true;
+}
 
 bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node)
 {
-    // Disable any op using boolean type until we have support for i1<->i8 conversion in MLIR.
-    // Otherwise, we would generate code like this:
-    //   %0 = icmp %a, %b : i1
-    //   store %0, %c[%arg1] : i8  // Type error: trying to store an i1 into an i8.
-    for (auto& output : node->get_outputs())
-    {
-        if (output.get_element_type() == element::boolean)
-        {
-            return false;
-        }
-    }
-
-    if (TI(Parameter) == TI(*node) || TI(Result) == TI(*node))
+    if (is_type<Parameter>(node) || is_type<Result>(node))
     {
         return true;
     }
 
     // supported by backend ?
-    if (m_supported_ops.find(TI(*node)) == m_supported_ops.end())
+    auto& supportedOps = getSupportedOps();
+    if (supportedOps.find(node->get_type_info()) == supportedOps.end())
     {
         return false;
     }
 
     // check on invariants expected by MLIR backend
 
-    if (TI(ngraph::op::Divide) == TI(*node))
+    if (auto div = as_type_ptr<ngraph::op::Divide>(node))
     {
-        auto* div = static_cast<ngraph::op::Divide*>(node.get());
         if (div->is_pythondiv())
         {
             // Python specific division rounding is not supported yet.
@@ -511,7 +489,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     }
 
     // Dot is 2D only
-    if (TI(ngraph::op::Dot) == TI(*node))
+    if (is_type<ngraph::op::Dot>(node))
     {
         if (node->get_input_shape(0).size() != 2 || node->get_input_shape(1).size() != 2)
         {
@@ -523,10 +501,9 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         }
     }
 
-    if (TI(ngraph::op::Convolution) == TI(*node))
+    if (auto conv_node = as_type_ptr<ngraph::op::Convolution>(node))
     {
         // No padding for now
-        auto conv_node = static_cast<ngraph::op::Convolution*>(node.get());
         auto pad_below = conv_node->get_padding_below();
         auto pad_above = conv_node->get_padding_above();
         auto data_dilation = conv_node->get_data_dilation_strides();
@@ -538,6 +515,111 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
                std::all_of(window_dilation.begin(), window_dilation.end(), is_one);
     }
 
+    if (is_type<ngraph::op::ConvolutionBias>(node))
+    {
+        // ConvBias is only supported through callback
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
+        {
+            return false;
+        }
+        return can_use_mkldnn_conv_callback<ngraph::op::ConvolutionBias>(node.get());
+    }
+
+    // MKLDNN only supports softmax across single axis
+    if (auto softmax = as_type_ptr<ngraph::op::Softmax>(node))
+    {
+        // Softmax is only supported through callback
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
+        {
+            return false;
+        }
+        auto arg0_shape = node->get_input_shape(0);
+        auto arg0_rank = arg0_shape.size();
+
+        return (arg0_rank == 4 || arg0_rank == 2) &&
+               node->get_input_element_type(0) == element::f32 && softmax->get_axes().size() == 1;
+    }
+
+    if (auto avg_pool = as_type_ptr<ngraph::op::AvgPool>(node))
+    {
+        // AvgPool is only supported through callback
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
+        {
+            return false;
+        }
+        auto arg0_shape = node->get_input_shape(0);
+        auto arg0_rank = arg0_shape.size();
+
+        return ((arg0_rank == 4 && avg_pool->get_window_shape().size() == 2) ||
+                (arg0_rank == 5 && avg_pool->get_window_shape().size() == 3)) &&
+               node->get_input_element_type(0) == element::f32;
+    }
+
+    if (auto avg_pool_backprop = as_type_ptr<ngraph::op::AvgPoolBackprop>(node))
+    {
+        // AvgPoolBackprop is only supported through callback
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
+        {
+            return false;
+        }
+        auto arg0_shape = node->get_input_shape(0);
+        auto arg0_rank = arg0_shape.size();
+
+        return ((arg0_rank == 4 && avg_pool_backprop->get_window_shape().size() == 2) ||
+                (arg0_rank == 5 && avg_pool_backprop->get_window_shape().size() == 3)) &&
+               node->get_input_element_type(0) == element::f32;
+    }
+
+    if (auto max_pool_backprop = as_type_ptr<ngraph::op::MaxPoolBackprop>(node))
+    {
+        // MaxPoolBackprop is only supported through callback
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
+        {
+            return false;
+        }
+        auto arg0_shape = node->get_input_shape(0);
+        auto arg0_rank = arg0_shape.size();
+
+        return ((arg0_rank == 4 && max_pool_backprop->get_window_shape().size() == 2) ||
+                (arg0_rank == 5 && max_pool_backprop->get_window_shape().size() == 3)) &&
+               node->get_input_element_type(0) == element::f32;
+    }
+
+    if (auto max_pool = as_type_ptr<ngraph::op::MaxPool>(node))
+    {
+        // MaxPool is only supported through callback
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
+        {
+            return false;
+        }
+        auto arg0_shape = node->get_input_shape(0);
+        auto arg0_rank = arg0_shape.size();
+
+        return ((arg0_rank == 4 && max_pool->get_window_shape().size() == 2) ||
+                (arg0_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
+               node->get_input_element_type(0) == element::f32;
+    }
+
+    if (is_type<ngraph::op::MatMul>(node))
+    {
+        // MatMul is only supported through callback
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK") || node->get_input_shape(0).size() != 2 ||
+            node->get_input_shape(1).size() != 2)
+        {
+            return false;
+        }
+    }
+
+    if (is_type<ngraph::op::Gemm>(node))
+    {
+        // Gemm is only supported through callback
+        if (!getenv_bool("NGRAPH_MLIR_CALLBACK") || node->get_input_shape(0).size() != 2 ||
+            node->get_input_shape(1).size() != 2)
+        {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -547,7 +629,11 @@ void MLIRSubgraphExtractionPass::clean_up()
     m_node_to_graph.clear();
 }
 
-const std::set<std::type_index> MLIRSubgraphExtractionPass::m_supported_ops{
-#define MLIR_OP(OP) TI(ngraph::op::OP),
+const std::set<ngraph::Node::type_info_t>& MLIRSubgraphExtractionPass::getSupportedOps()
+{
+    static std::set<Node::type_info_t> supportedOps{
+#define MLIR_OP(OP) OP::type_info,
 #include "contrib/mlir/core/ops_supported.inc"
-};
+    };
+    return supportedOps;
+}

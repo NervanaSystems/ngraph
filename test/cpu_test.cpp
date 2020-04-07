@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "misc.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -39,7 +40,7 @@
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
@@ -116,11 +117,10 @@ TEST(cpu_test, trivial_in_place_relu)
     auto f = make_shared<Function>(relu, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
     (backend->compile(f));
-    ASSERT_EQ(relu->output(0).get_tensor().get_pool_offset(),
-              add->output(0).get_tensor().get_pool_offset());
+    ASSERT_EQ(relu->get_output_tensor(0).get_pool_offset(),
+              add->get_output_tensor(0).get_pool_offset());
 }
 
-#ifndef NGRAPH_HALIDE
 TEST(cpu_test, MLIR_DISABLE_TEST(trivial_in_place_relu_fail))
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
@@ -131,17 +131,16 @@ TEST(cpu_test, MLIR_DISABLE_TEST(trivial_in_place_relu_fail))
     auto f = make_shared<Function>(add2, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
     (backend->compile(f));
-    ASSERT_NE(relu->output(0).get_tensor().get_pool_offset(),
-              add->output(0).get_tensor().get_pool_offset());
+    ASSERT_NE(relu->get_output_tensor(0).get_pool_offset(),
+              add->get_output_tensor(0).get_pool_offset());
 }
-#endif
 
 #ifdef NGRAPH_TBB_ENABLE
 TEST(cpu_test, abc_tbb)
 {
     // Force TBB flow graph generation in the CPU backend
     // This has no effect on other backends
-    bool use_tbb = (getenv("NGRAPH_CPU_USE_TBB") != nullptr);
+    bool use_tbb = getenv_bool("NGRAPH_CPU_USE_TBB");
     if (!use_tbb)
     {
         set_environment("NGRAPH_CPU_USE_TBB", "1", 1);
@@ -970,14 +969,7 @@ constexpr int tolerance = FLOAT_MANTISSA_BITS - three_quarters_of_available_bits
 
 bool static is_codegen_mode()
 {
-    static bool codegen_set = false;
-    static bool codegen_mode = false;
-    if (!codegen_set)
-    {
-        const char* ngraph_codegen = std::getenv("NGRAPH_CODEGEN");
-        codegen_mode = (ngraph_codegen != nullptr) && std::string(ngraph_codegen) != "0";
-        codegen_set = true;
-    }
+    static bool codegen_mode = getenv_bool("NGRAPH_CODEGEN");
     return codegen_mode;
 }
 
@@ -1060,7 +1052,12 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
     unset_environment("NGRAPH_CPU_CONCURRENCY");
 }
 
-TEST(cpu_test, constant_convertlayout)
+// This test checks if a ConverLayout node is inserted before the ConvolutionBias node.
+// Since MLIR supports ConvolutionBias through callback, the data layout conversion is done in
+// callback.
+// There is no ConvertLayout node when MLIR and MLIR CALLBACK are enabled.
+// Thus this test is disabled with MLIR enabled.
+TEST(cpu_test, MLIR_DISABLE_TEST(constant_convertlayout))
 {
     Shape data_shape{1, 64, 56, 56};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -1551,14 +1548,16 @@ TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
     Shape padding_below{0, 0};
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto max_pool = make_shared<op::MaxPoolWithIndices>(
+        A, window_shape, window_movement_strides, padding_below, padding_above);
+    auto indices = make_shared<op::GetOutputElement>(max_pool, 1);
     Shape shape_i{2, 2, 4, 3};
-    auto indices = make_shared<op::Parameter>(element::i32, shape_i);
     auto delta = make_shared<op::Parameter>(element::f32, shape_i);
 
     auto max_pool_bprop = make_shared<op::MaxPoolWithIndicesBackprop>(
         A, delta, indices, window_shape, window_movement_strides, padding_below, padding_above);
 
-    auto f = make_shared<Function>(max_pool_bprop, ParameterVector{A, delta, indices});
+    auto f = make_shared<Function>(max_pool_bprop, ParameterVector{A, delta});
 
     auto backend = runtime::Backend::create("CPU");
 
@@ -1590,29 +1589,6 @@ TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
                                          {1, 0, 0, 0, 2}}}})
                   .get_vector());
 
-    auto i = backend->create_tensor(element::i32, shape_i);
-    copy_data(i,
-              test::NDArray<int, 4>({{{{4, 3, 1}, // img 0 chan 0
-                                       {1, 0, 0},
-                                       {0, 4, 5},
-                                       {0, 3, 2}},
-
-                                      {{5, 4, 3}, // img 0 chan 1
-                                       {2, 1, 0},
-                                       {3, 1, 2},
-                                       {0, 0, 0}}},
-
-                                     {{{1, 0, 3}, // img 1 chan 0
-                                       {2, 1, 5},
-                                       {3, 5, 2},
-                                       {0, 2, 1}},
-
-                                      {{0, 3, 2}, // img 1 chan 1
-                                       {1, 0, 3},
-                                       {2, 1, 0},
-                                       {0, 0, 5}}}})
-                  .get_vector());
-
     auto d = backend->create_tensor(element::f32, shape_i);
     copy_data(d,
               test::NDArray<float, 4>({{{{0.3f, 0.3f, 0.2f}, // img 0 chan 0
@@ -1639,7 +1615,7 @@ TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
     auto result = backend->create_tensor(element::f32, shape_a);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a, d, i});
+    handle->call_with_validate({result}, {a, d});
     EXPECT_TRUE(test::all_close_f((test::NDArray<float, 4>({{{{0, 0, 0, 0.2, 0}, // img 0 chan 0
                                                               {0, 1.2, 0.2, 0, 0},
                                                               {0.2, 0, 0, 0, 0},
@@ -2123,7 +2099,7 @@ TEST(cpu_test, tensor_copy_from_same_rotated_layouts)
 
     // Check internal values in rotated layout
     auto result2_internal_buffer = reinterpret_cast<uint8_t*>(
-        static_pointer_cast<runtime::cpu::CPUTensorView>(result2)->get_data_ptr());
+        static_pointer_cast<runtime::cpu::CPUTensor>(result2)->get_data_ptr());
     vector<uint8_t> vec(result2_internal_buffer, result2_internal_buffer + 6);
     // This check can be removed if the CPU backend stops optimizing reshapes using layout
     // transformations
@@ -2155,9 +2131,15 @@ TEST(cpu_test, tensor_copy_from_different_layout)
     EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(b));
 }
 
-#if MKLDNN_VERSION_MAJOR >= 1
-TEST(cpu_test, max_pool_bf16)
+TEST(cpu_test, MLIR_DISABLE_TEST(max_pool_bf16))
 {
+    if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
+    {
+        // TODO change to skip when there is a new release of gtest
+        NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";
+        return;
+    }
+
     Shape shape_a{1, 1, 3, 5};
     Shape window_shape{2, 3};
     auto window_movement_strides = Strides{1, 1};
@@ -2184,8 +2166,15 @@ TEST(cpu_test, max_pool_bf16)
     EXPECT_EQ((vector<bfloat16>{3.5, 3.5, 2.5, 3.5, 3.5, 2.5}), read_vector<bfloat16>(result));
 }
 
-TEST(cpu_test, convolution_simple_bf16)
+TEST(cpu_test, MLIR_DISABLE_TEST(convolution_simple_bf16))
 {
+    if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
+    {
+        // TODO change to skip when there is a new release of gtest
+        NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";
+        return;
+    }
+
     Shape shape_a{1, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2, 1, 1};
@@ -2221,7 +2210,6 @@ TEST(cpu_test, convolution_simple_bf16)
     EXPECT_EQ((vector<bfloat16>{18.0, 24.0, 30.0, 36.0, 18.0, 24.0, 30.0, 36.0}),
               read_vector<bfloat16>(result));
 }
-#endif
 
 // This tests a backend's implementation of the three parameter version of create_tensor
 // Testing using this tensor as a Function input

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -246,6 +247,25 @@ namespace ngraph
         void set(const int64_t& value) override;
     };
 
+#ifdef __APPLE__
+    // size_t is one of the uint types on _WIN32
+    template <>
+    class NGRAPH_API AttributeAdapter<size_t> : public ValueReference<size_t>,
+                                                public ValueAccessor<int64_t>
+    {
+    public:
+        AttributeAdapter(size_t& value)
+            : ValueReference<size_t>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<size_t>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const int64_t& get() override;
+        void set(const int64_t& value) override;
+    };
+#endif
+
     /// Note: These class bodies cannot be defined with templates because of interactions
     /// between dllexport and templates on Windows.
     template <>
@@ -278,6 +298,39 @@ namespace ngraph
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
         void set(const std::vector<int64_t>& value) override;
+    };
+
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<float>>
+        : public ValueReference<std::vector<float>>, public ValueAccessor<std::vector<float>>
+    {
+    public:
+        AttributeAdapter(std::vector<float>& value)
+            : ValueReference<std::vector<float>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<float>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<float>& get() override;
+        void set(const std::vector<float>& value) override;
+    };
+
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<std::string>>
+        : public ValueReference<std::vector<std::string>>,
+          public ValueAccessor<std::vector<std::string>>
+    {
+    public:
+        AttributeAdapter(std::vector<std::string>& value)
+            : ValueReference<std::vector<std::string>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<string>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<std::string>& get() override;
+        void set(const std::vector<std::string>& value) override;
     };
 
     template <typename A, typename B>

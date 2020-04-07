@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,11 @@ op::v0::Selu::Selu(const Output<Node>& data, const Output<Node>& alpha, const Ou
     : FusedOp({data, alpha, lambda})
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::Selu::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
 }
 
 NodeVector op::v0::Selu::decompose_op() const

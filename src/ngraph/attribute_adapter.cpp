@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -201,6 +201,26 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
+#ifdef __APPLE__
+    // size_t is not uint_64t on OSX
+    constexpr DiscreteTypeInfo AttributeAdapter<size_t>::type_info;
+    const int64_t& AttributeAdapter<size_t>::get()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = m_value;
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+
+    void AttributeAdapter<size_t>::set(const int64_t& value)
+    {
+        m_value = value;
+        m_buffer_valid = false;
+    }
+#endif
+
     constexpr DiscreteTypeInfo AttributeAdapter<vector<int64_t>>::type_info;
 
     const vector<int64_t>& AttributeAdapter<vector<int64_t>>::get() { return m_value; }
@@ -220,6 +240,42 @@ namespace ngraph
     void AttributeAdapter<vector<uint64_t>>::set(const vector<int64_t>& value)
     {
         m_value = copy_from<vector<uint64_t>>(value);
+        m_buffer_valid = false;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<float>>::type_info;
+
+    const vector<float>& AttributeAdapter<vector<float>>::get()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = copy_from<vector<float>>(m_value);
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+
+    void AttributeAdapter<vector<float>>::set(const vector<float>& value)
+    {
+        m_value = copy_from<vector<float>>(value);
+        m_buffer_valid = false;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<string>>::type_info;
+
+    const vector<string>& AttributeAdapter<vector<string>>::get()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = copy_from<vector<string>>(m_value);
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+
+    void AttributeAdapter<vector<string>>::set(const vector<string>& value)
+    {
+        m_value = copy_from<vector<string>>(value);
         m_buffer_valid = false;
     }
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,35 +23,41 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Operation which "adds" axes to an input tensor, replicating elements from the
-        ///        input as needed along the new axes.
-        ///
-        /// This is basically the "dynamic shape" version of the static Broadcast op.
-        class NGRAPH_API DynBroadcast : public Op
+        namespace v0
         {
-        public:
-            static constexpr NodeTypeInfo type_info{"DynBroadcast", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            DynBroadcast() = default;
-            /// \brief Constructs a dynamic broadcast operation.
+            /// \brief Operation which "adds" axes to an input tensor, replicating elements from the
+            ///        input as needed along the new axes.
             ///
-            /// \param arg            Node that produces the input tensor to be broadcast.
-            /// \param shape          Node that produces shape of the output tensor.
-            /// \param broadcast_axes Node that produces the axis positions (0-based) in the result
-            ///                       that are being broadcast. The remaining axes in shape must be
-            ///                       the same as the shape of arg.
-            DynBroadcast(const Output<Node>& arg,
-                         const Output<Node>& shape,
-                         const Output<Node>& broadcast_axes);
+            /// This is basically the "dynamic shape" version of the static Broadcast op.
+            class NGRAPH_API DynBroadcast : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"DynBroadcast", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                DynBroadcast() = default;
+                /// \brief Constructs a dynamic broadcast operation.
+                ///
+                /// \param arg            Node that produces the input tensor to be broadcast.
+                /// \param shape          Node that produces shape of the output tensor.
+                /// \param broadcast_axes Node that produces the axis positions (0-based) in the
+                /// result
+                ///                       that are being broadcast. The remaining axes in shape must
+                ///                       be
+                ///                       the same as the shape of arg.
+                DynBroadcast(const Output<Node>& arg,
+                             const Output<Node>& shape,
+                             const Output<Node>& broadcast_axes);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
+            };
+        }
+        using v0::DynBroadcast;
     }
 }

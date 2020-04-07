@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@
 #include <algorithm>
 #include <iterator>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/op/util/rnn_cell_base.hpp"
 #include "ngraph/util.hpp"
 
@@ -49,6 +49,16 @@ op::util::RNNCellBase::RNNCellBase(size_t hidden_size,
 {
 }
 
+bool ngraph::op::util::RNNCellBase::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("hidden_size", m_hidden_size);
+    visitor.on_attribute("activations", m_activations);
+    visitor.on_attribute("activations_alpha", m_activations_alpha);
+    visitor.on_attribute("activations_beta", m_activations_beta);
+    visitor.on_attribute("clip", m_clip);
+    return true;
+}
+
 op::util::ActivationFunction op::util::RNNCellBase::get_activation_function(size_t idx) const
 {
     op::util::ActivationFunction afunc = get_activation_func_by_name(m_activations.at(idx));
@@ -68,20 +78,19 @@ op::util::ActivationFunction op::util::RNNCellBase::get_activation_function(size
 
 shared_ptr<Node> op::util::RNNCellBase::add(const Output<Node>& lhs, const Output<Node>& rhs)
 {
-    auto args = op::numpy_style_broadcast_values({lhs, rhs});
-    return {make_shared<op::Add>(args.at(0), args.at(1))};
+    return {make_shared<op::Add>(lhs, rhs, op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY))};
 }
 
 shared_ptr<Node> op::util::RNNCellBase::sub(const Output<Node>& lhs, const Output<Node>& rhs)
 {
-    auto args = op::numpy_style_broadcast_values({lhs, rhs});
-    return {make_shared<op::Subtract>(args.at(0), args.at(1))};
+    return {
+        make_shared<op::Subtract>(lhs, rhs, op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY))};
 }
 
 shared_ptr<Node> op::util::RNNCellBase::mul(const Output<Node>& lhs, const Output<Node>& rhs)
 {
-    auto args = op::numpy_style_broadcast_values({lhs, rhs});
-    return {make_shared<op::Multiply>(args.at(0), args.at(1))};
+    return {
+        make_shared<op::Multiply>(lhs, rhs, op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY))};
 }
 
 shared_ptr<Node> op::util::RNNCellBase::clip(const Output<Node>& data) const

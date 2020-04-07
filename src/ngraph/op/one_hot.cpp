@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/one_hot.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -44,7 +45,7 @@ void op::v0::OneHot::validate_and_infer_types()
         this, m_shape.rank().is_static(), "Requested result shape has dynamic rank.");
 
     NODE_VALIDATION_CHECK(this,
-                          m_one_hot_axis < static_cast<size_t>(m_shape.rank()),
+                          m_one_hot_axis < m_shape.rank().get_length(),
                           "One-hot axis (",
                           m_one_hot_axis,
                           ") is out of bounds (requested result shape: ",
@@ -64,8 +65,8 @@ void op::v0::OneHot::validate_and_infer_types()
 
     if (arg_rank.is_static())
     {
-        std::vector<Dimension> expected_input_dims(static_cast<size_t>(m_shape.rank()));
-        for (size_t i = 0; i < static_cast<size_t>(m_shape.rank()); i++)
+        std::vector<Dimension> expected_input_dims(m_shape.rank().get_length());
+        for (size_t i = 0; i < m_shape.rank().get_length(); i++)
         {
             expected_input_dims[i] = m_shape[i];
         }
@@ -81,8 +82,8 @@ void op::v0::OneHot::validate_and_infer_types()
                               expected_input_shape,
                               ".");
 
-        std::vector<Dimension> output_dims(static_cast<size_t>(merged_input_shape.rank()));
-        for (size_t i = 0; i < static_cast<size_t>(merged_input_shape.rank()); i++)
+        std::vector<Dimension> output_dims(merged_input_shape.rank().get_length());
+        for (size_t i = 0; i < merged_input_shape.rank().get_length(); i++)
         {
             output_dims[i] = merged_input_shape[i];
         }
@@ -153,7 +154,7 @@ void op::v1::OneHot::validate_and_infer_types()
 
     if (indices_shape.is_static() && indices_shape.rank().is_static() && depth->is_constant())
     {
-        const auto indices_rank = static_cast<int64_t>(indices_shape.rank());
+        const auto indices_rank = indices_shape.rank().get_length();
 
         std::vector<Dimension> out_dims(indices_rank);
         for (auto i = 0; i < indices_rank; i++)
@@ -165,10 +166,8 @@ void op::v1::OneHot::validate_and_infer_types()
 
         auto depth_element_type = depth->get_output_element_type(0);
         NODE_VALIDATION_CHECK(this,
-                              depth_element_type == element::i8 ||
-                                  depth_element_type == element::i32 ||
-                                  depth_element_type == element::i64,
-                              "'depth' input element type must be i8, i32 or i64 (got ",
+                              depth_element_type.is_integral(),
+                              "'depth' input element type must be an integer (got ",
                               depth_element_type,
                               ").");
 
@@ -179,7 +178,8 @@ void op::v1::OneHot::validate_and_infer_types()
                               depth->get_shape(),
                               " elements).");
 
-        int64_t depth_val = read_scalar_int_from_constant_node(depth);
+        const auto depth_constant = as_type_ptr<op::Constant>(depth);
+        int64_t depth_val = depth_constant->cast_vector<int64_t>()[0];
 
         NODE_VALIDATION_CHECK(this,
                               depth_val > 0,
@@ -195,44 +195,15 @@ void op::v1::OneHot::validate_and_infer_types()
     set_output_type(0, on_value_et, result_shape);
 }
 
+bool ngraph::op::v1::OneHot::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    return true;
+}
+
 shared_ptr<Node> op::v1::OneHot::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::OneHot>(
         new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), m_axis);
-}
-
-size_t op::v1::OneHot::read_scalar_int_from_constant_node(const shared_ptr<Node>& node) const
-{
-    size_t scalar;
-    auto node_element_type = node->get_output_element_type(0);
-    const auto constant = as_type_ptr<op::Constant>(node);
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-#endif
-    switch (static_cast<element::Type_t>(node_element_type))
-    {
-    case element::Type_t::i8:
-        scalar = static_cast<size_t>(constant->get_vector<int8_t>()[0]);
-        break;
-    case element::Type_t::i32:
-        scalar = static_cast<size_t>(constant->get_vector<int32_t>()[0]);
-        break;
-    case element::Type_t::i64:
-        scalar = static_cast<size_t>(constant->get_vector<int64_t>()[0]);
-        break;
-    default:
-        NODE_VALIDATION_CHECK(node.get(),
-                              false,
-                              "Expected integer input of element type i8, i32 or i64 (got ",
-                              node_element_type,
-                              ").");
-    }
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
-
-    return scalar;
 }

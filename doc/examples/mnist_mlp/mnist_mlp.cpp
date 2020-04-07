@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -172,10 +172,10 @@ int main(int argc, const char* argv[])
     // Updates
     ngraph::autodiff::Adjoints adjoints(OutputVector{loss},
                                         OutputVector{delta});
-    auto W0_next = W0 + adjoints.backprop_node(W0);
-    auto b0_next = b0 + adjoints.backprop_node(b0);
-    auto W1_next = W1 + adjoints.backprop_node(W1);
-    auto b1_next = b1 + adjoints.backprop_node(b1);
+    auto W0_next = W0 + adjoints.backprop_output(W0);
+    auto b0_next = b0 + adjoints.backprop_output(b0);
+    auto W1_next = W1 + adjoints.backprop_output(W1);
+    auto b1_next = b1 + adjoints.backprop_output(b1);
 
     // Get the backend
     auto backend = runtime::Backend::create("CPU");

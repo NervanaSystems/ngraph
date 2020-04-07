@@ -27,6 +27,14 @@ The Python wheels for nGraph have been tested and are supported on the following
 * Debian 10
 * macOS 10.14.3 (Mojave)
 
+To install via pip, run: 
+
+```
+pip install --upgrade pip==19.3.1
+pip install ngraph-core
+```
+
+
 Frameworks using nGraph Compiler stack to execute workloads have shown 
 [**up to 45X**](https://ai.intel.com/ngraph-compiler-stack-beta-release/) 
 performance boost when compared to native framework implementations. We've also 
@@ -45,8 +53,8 @@ framework and deploying to a variety of hardware targets. We strongly believe in
 providing freedom, performance, and ease-of-use to AI developers. 
 
 The diagram below shows deep learning frameworks and hardware targets
-supported by nGraph. NNP-L and NNP-I in the diagram refer to Intel's next generation 
-deep learning accelerators: Intel® Nervana™ Neural Network Processor for Learning and 
+supported by nGraph. NNP-T and NNP-I in the diagram refer to Intel's next generation 
+deep learning accelerators: Intel® Nervana™ Neural Network Processor for Training and 
 Inference respectively.  Future plans for supporting addtional deep learning frameworks 
 and backends are outlined in the [ecosystem] section. 
 

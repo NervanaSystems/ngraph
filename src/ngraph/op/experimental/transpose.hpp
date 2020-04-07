@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v1
         {
             /// \brief Tensor transpose operation.
             class NGRAPH_API Transpose : public Op
@@ -42,6 +42,7 @@ namespace ngraph
                 ///                    value must contain every integer in the range [0,n-1].
                 Transpose(const Output<Node>& arg, const Output<Node>& input_order);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -49,9 +50,9 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         }
-        using v0::Transpose;
+        using v1::Transpose;
     }
 }

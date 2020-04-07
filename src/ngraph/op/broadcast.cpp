@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
 //*****************************************************************************
 
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/partial_shape.hpp"
 
 #include <numeric>
@@ -59,10 +59,10 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
 
     if (m_broadcast_spec.m_type == AutoBroadcastType::NONE)
     {
-        if (input(1).get_partial_shape().is_static() &&
+        if (get_input_partial_shape(1).is_static() &&
             input_value(2).get_node_shared_ptr()->is_constant())
         {
-            auto target_shape = input(1).get_shape();
+            auto target_shape = get_input_shape(1);
             NGRAPH_CHECK(target_shape.size() == 1);
             auto axes_mapping_val =
                 static_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr())
@@ -81,20 +81,17 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
     else if (m_broadcast_spec.m_type == AutoBroadcastType::NUMPY ||
              m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
     {
-        if (input(0).get_partial_shape().is_static() &&
-            input_value(1).get_node_shared_ptr()->is_constant())
+        if (get_input_partial_shape(0).is_static() && output(0).get_partial_shape().is_static())
         {
-            auto arg_shape = input(0).get_shape();
-            auto target_shape =
-                static_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr())
-                    ->get_shape_val();
+            auto arg_shape = get_input_shape(0);
+            auto result_shape = get_output_shape(0);
             auto start_axis = (m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
                                   ? m_broadcast_spec.m_axis
-                                  : target_shape.size() - arg_shape.size();
+                                  : result_shape.size() - arg_shape.size();
             NGRAPH_CHECK(start_axis >= 0);
-            for (size_t i = 0; i < target_shape.size(); i++)
+            for (size_t i = 0; i < result_shape.size(); i++)
             {
-                if (i < start_axis || target_shape[i] != arg_shape[i - start_axis])
+                if (i < start_axis || result_shape[i] != arg_shape[i - start_axis])
                 {
                     broadcast_axes.insert(i);
                 }
@@ -115,10 +112,9 @@ void op::v1::Broadcast::validate_and_infer_types()
     // shape node should have integer data type. For now we only allow i64
     auto shape_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
-                          shape_et.compatible(element::Type_t::i64),
-                          "Broadcast shape must have element type i64, but has ",
+                          shape_et.is_integral_number(),
+                          "Broadcast shape must be an integral number, but is: ",
                           shape_et);
-
     // shape node should produce a one dimensional shape.
     auto broadcast_shape_rank = get_input_partial_shape(1).rank();
     NODE_VALIDATION_CHECK(this,
@@ -131,10 +127,9 @@ void op::v1::Broadcast::validate_and_infer_types()
         // axes_mapping node should have integer data type. For now we only allow i64
         auto axes_et = get_input_element_type(2);
         NODE_VALIDATION_CHECK(this,
-                              axes_et.compatible(element::Type_t::i64),
-                              "Broadcast axes must have element type i64, but has ",
+                              axes_et.is_integral_number(),
+                              "Broadcast axes must be integral numbers, but are: ",
                               axes_et);
-
         // axes_mapping node should produce a one dimensional shape.
         auto axes_shape_rank = get_input_partial_shape(2).rank();
         NODE_VALIDATION_CHECK(this,
@@ -153,11 +148,11 @@ void op::v1::Broadcast::validate_and_infer_types()
     if (m_broadcast_spec.m_type == AutoBroadcastType::NONE)
     {
         // Validate axes_mapping
-        if (input(0).get_partial_shape().is_static() && input(1).get_partial_shape().is_static() &&
-            input(2).get_partial_shape().is_static())
+        if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static() &&
+            get_input_partial_shape(2).is_static())
         {
-            auto arg_shape = input(0).get_shape();
-            auto axes_shape = input(2).get_shape();
+            auto arg_shape = get_input_shape(0);
+            auto axes_shape = get_input_shape(2);
 
             // Rank(arg_shape) == shape_size(axes_mapping)
             NODE_VALIDATION_CHECK(this,
@@ -211,9 +206,9 @@ void op::v1::Broadcast::validate_and_infer_types()
     else if (m_broadcast_spec.m_type == AutoBroadcastType::NUMPY ||
              m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
     {
-        if (input(0).get_partial_shape().is_static() && input(1).get_partial_shape().is_static())
+        if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static())
         {
-            auto arg_shape = input(0).get_shape();
+            auto arg_shape = get_input_shape(0);
 
             if (input_value(1).get_node_shared_ptr()->is_constant())
             {
@@ -231,13 +226,15 @@ void op::v1::Broadcast::validate_and_infer_types()
                                       arg_shape.size());
                 for (auto i = start_axis; i < target_shape.size(); i++)
                 {
-                    NODE_VALIDATION_CHECK(this,
-                                          arg_shape[i - start_axis] == 1 ||
-                                              arg_shape[i - start_axis] == target_shape[i],
-                                          "Broadcast incorrect target shape. Expecting ",
-                                          arg_shape[i - start_axis],
-                                          " . Got ",
-                                          target_shape[i]);
+                    NODE_VALIDATION_CHECK(
+                        this,
+                        arg_shape[i - start_axis] == 1 || target_shape[i] == 1 ||
+                            arg_shape[i - start_axis] == target_shape[i],
+                        "Broadcast incorrect target shape. Expecting either 1 or ",
+                        arg_shape[i - start_axis],
+                        " . Got ",
+                        target_shape[i]);
+                    result_shape[i] = std::max(arg_shape[i - start_axis], target_shape[i]);
                 }
             }
         }
@@ -249,14 +246,14 @@ void op::v1::Broadcast::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), result_shape);
 }
 
-shared_ptr<Node> op::v1::Broadcast::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Broadcast::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::Broadcast>(
         new_args.at(0), new_args.at(1), new_args.at(2), m_broadcast_spec);
 }
 
-void op::v1::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -342,13 +339,13 @@ void op::v0::Broadcast::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), m_shape);
 }
 
-shared_ptr<Node> op::v0::Broadcast::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Broadcast::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::Broadcast>(new_args.at(0), m_shape, m_broadcast_axes);
 }
 
-void op::v0::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -376,7 +373,7 @@ bool op::v0::BroadcastLike::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::v0::BroadcastLike::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::BroadcastLike::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {

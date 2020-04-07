@@ -32,12 +32,12 @@ steps and the code below.
 #. Create a "pass manager" object (line 1)
 #. Populate it with the desired pass or passes (lines 2-4)
 #. Invoke the pass manager with a pointer to your unoptimized graph, and 
-   it will return a pointer to an optimized graph (lines 5-6)
+   it will return a pointer to an optimized graph (lines 5-8)
 
 
-.. literalinclude:: ../../../../../test/cpu_fusion.cpp
+.. literalinclude:: ../../../../../test/pass_memory_layout.cpp
    :language: cpp
-   :lines: 2085-2092
+   :lines: 222-230
    :linenos: 
 
 nGraph Core includes a large library of hardware-agnostic passes useful 
@@ -95,7 +95,7 @@ group before finally concatenating the result back together.
 
 .. _figure-mobilenet-gc:
 
-.. figure:: ../../graphics/mobilenet-group-conv.png
+.. figure:: ../../graphics/mobilenet-group-conv.svg
    :width: 700px
    :alt: MobileNet example
 

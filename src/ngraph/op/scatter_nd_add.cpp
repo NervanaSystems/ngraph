@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,38 +52,34 @@ void op::ScatterNDAdd::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           indices_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(indices_shape.rank()) >= 1,
+                              indices_shape.rank().get_length() >= 1,
                           "Indices rank is expected to be at least 1");
 
-    NODE_VALIDATION_CHECK(
-        this,
-        inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
-            static_cast<size_t>(indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]) <=
-                static_cast<size_t>(inputs_shape.rank()),
-        "Last dimension of indices can be at most the rank of inputs");
+    NODE_VALIDATION_CHECK(this,
+                          inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
+                              indices_shape[indices_shape.rank().get_length() - 1].get_length() <=
+                                  inputs_shape.rank().get_length(),
+                          "Last dimension of indices can be at most the rank of inputs");
 
     NODE_VALIDATION_CHECK(
         this,
         inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
             updates_shape.rank().is_dynamic() ||
-            static_cast<size_t>(updates_shape.rank()) ==
-                static_cast<size_t>(indices_shape.rank()) +
-                    static_cast<size_t>(inputs_shape.rank()) -
-                    static_cast<size_t>(
-                        indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]) -
-                    1,
+            updates_shape.rank().get_length() ==
+                indices_shape.rank().get_length() + inputs_shape.rank().get_length() -
+                    indices_shape[indices_shape.rank().get_length() - 1].get_length() - 1,
         "Rank of updates must be rank of inputs + rank of indices - last dimension of indices - 1");
 
     bool compatible = true;
     if (inputs_shape.is_static() && indices_shape.is_static() && updates_shape.is_static())
     {
-        size_t indices_rank = static_cast<size_t>(indices_shape.rank());
-        size_t updates_rank = static_cast<size_t>(updates_shape.rank());
+        size_t indices_rank = indices_shape.rank().get_length();
+        size_t updates_rank = updates_shape.rank().get_length();
         for (size_t i = 0; i < indices_rank - 1; i++)
         {
             compatible = compatible && updates_shape[i].same_scheme(indices_shape[i]);
         }
-        size_t j = static_cast<size_t>(indices_shape[indices_rank - 1]);
+        size_t j = indices_shape[indices_rank - 1].get_length();
         for (size_t i = indices_rank - 1; i < updates_rank; i++, j++)
         {
             compatible = compatible && updates_shape[i].same_scheme(inputs_shape[j]);

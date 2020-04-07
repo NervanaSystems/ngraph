@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,10 @@
 #include <memory>
 #include <vector>
 
+#include "default_opset.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/selu.hpp"
 #include "selu.hpp"
-
-using namespace ngraph::op;
 
 namespace ngraph
 {
@@ -39,13 +38,13 @@ namespace ngraph
                     auto gamma =
                         node.get_attribute_value<double>("gamma", 1.05070102214813232421875);
 
-                    auto alpha_node = std::make_shared<ngraph::op::Constant>(
-                        data->get_element_type(), data->get_shape(), std::vector<double>{alpha});
+                    auto alpha_node =
+                        default_opset::Constant::create(data->get_element_type(), Shape{}, {alpha});
 
-                    auto gamma_node = std::make_shared<ngraph::op::Constant>(
-                        data->get_element_type(), data->get_shape(), std::vector<double>{gamma});
+                    auto gamma_node =
+                        default_opset::Constant::create(data->get_element_type(), Shape{}, {gamma});
 
-                    return {std::make_shared<ngraph::op::v0::Selu>(data, alpha_node, gamma_node)};
+                    return {std::make_shared<default_opset::Selu>(data, alpha_node, gamma_node)};
                 }
 
             } // namespace set_1

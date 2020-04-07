@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -78,13 +78,13 @@ void op::DynBroadcast::validate_and_infer_types()
                              ->get_axis_set_val();
     }
 
-    PartialShape arg_shape = input(0).get_partial_shape();
+    PartialShape arg_shape = get_input_partial_shape(0);
     if (result_shape.is_static() && axes_known && arg_shape.is_static())
     {
         for (auto axis : broadcast_axes)
         {
             NODE_VALIDATION_CHECK(this,
-                                  axis < size_t(result_shape.rank()),
+                                  axis < result_shape.rank().get_length(),
                                   "Broadcast axis index (",
                                   axis,
                                   ") exceeds specified output shape rank ",
@@ -131,7 +131,7 @@ shared_ptr<Node> op::DynBroadcast::copy_with_new_args(const NodeVector& new_args
 
 // TODO: This function is not implemented!
 void op::DynBroadcast::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                         const NodeVector& /* deltas */)
+                                         const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynBroadcast");
 }

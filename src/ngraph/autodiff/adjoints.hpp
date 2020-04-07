@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include <unordered_map>
 
 #include "ngraph/coordinate.hpp"
+#include "ngraph/output_vector.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -30,14 +31,10 @@ namespace ngraph
 
     template <typename T>
     class Output;
-    // Need duplicate definition here to avoid g++ issues
-    // Keep consistent with version in node.hpp
-    using NodeVector = std::vector<std::shared_ptr<Node>>;
-    using OutputVector = std::vector<Output<Node>>;
 
     namespace autodiff
     {
-        class Adjoints
+        class NGRAPH_API Adjoints
         {
         public:
             /// \brief (dy/dx)(c) for all x used to compute y
@@ -50,18 +47,11 @@ namespace ngraph
             Adjoints& operator=(const Adjoints& adjoints) = default;
             Adjoints() = default;
 
-            /// \brief (dy/dx)(c)
-            ///
-            /// \param x The node whose adjoint is desired.
-            const OutputVector& get(const Output<Node>& x);
-
             /// \brief Add a backprop contribution to x's adjoint
             ///
             /// \param x The adjoint node
             /// \param delta A backprop contribution
-            void add_delta(const Output<Node>& x,
-                           const Output<Node>& delta,
-                           size_t output_index = 0);
+            void add_delta(const Output<Node>& x, const Output<Node>& delta);
 
             /// \brief Add a backprop contribution to a slice of x's adjoint
             ///
@@ -76,7 +66,9 @@ namespace ngraph
                                     const Coordinate& upper_bounds,
                                     const Strides& strides);
 
-            std::shared_ptr<Node> backprop_node(const Output<Node>& x);
+            /// \brief (dy/dx)(c)
+            ///
+            /// \param x The output whose adjoint is desired.
             Output<Node> backprop_output(const Output<Node>& x);
 
         protected:

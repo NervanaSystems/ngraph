@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 #include "ngraph/op/tensor_iterator.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/specialize_function.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -139,13 +141,6 @@ shared_ptr<op::TensorIterator::OutputDescription>
 
 Input<Node> op::TensorIterator::input_for_value(const Output<Node>& value)
 {
-    for (auto input : inputs())
-    {
-        if (input.get_source_output() == value)
-        {
-            return input;
-        }
-    }
     auto input_index = get_input_size();
     set_argument(input_index, value);
     return Input<Node>(this, input_index);
@@ -220,7 +215,7 @@ void op::TensorIterator::revalidate_and_infer_types_for_body_ops()
     std::stack<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> nodes_to_do;
     std::unordered_set<std::shared_ptr<Node>> nodes_done;
 
-    for (auto r : m_body->get_results())
+    for (const auto& r : m_body->get_results())
     {
         nodes_to_do.push(r);
     }
@@ -281,7 +276,7 @@ void op::TensorIterator::validate_and_infer_types()
 
     // Input
     uint64_t index_it = 0;
-    for (auto input_description : m_input_descriptions)
+    for (const auto& input_description : m_input_descriptions)
     {
         auto index = input_description->m_input_index;
         NODE_VALIDATION_CHECK(this, index == index_it, "Input_index not in order");
@@ -398,7 +393,7 @@ void op::TensorIterator::validate_and_infer_types()
 
     // Output
     index_it = 0;
-    for (auto output_description : m_output_descriptions)
+    for (const auto& output_description : m_output_descriptions)
     {
         auto index = output_description->m_output_index;
         NODE_VALIDATION_CHECK(this, index == index_it, "Output_index not in order");
@@ -437,6 +432,49 @@ void op::TensorIterator::validate_and_infer_types()
 std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& new_args) const
 {
     auto op = make_shared<op::TensorIterator>(as_output_vector(new_args));
+    op->set_output_size(m_output_descriptions.size());
+
+    std::vector<::ngraph::element::Type> types(m_body->get_parameters().size());
+    std::vector<::ngraph::PartialShape> new_shapes(m_body->get_parameters().size());
+
+    for (size_t input_index = 0; input_index < new_args.size(); ++input_index)
+    {
+        for (auto& input_description : m_input_descriptions)
+        {
+            if (input_description->m_input_index == input_index)
+            {
+                types[input_description->m_body_parameter_index] =
+                    new_args[input_index]->get_element_type();
+                new_shapes[input_description->m_body_parameter_index] =
+                    new_args[input_index]->get_output_partial_shape(0);
+
+                if (new_shapes[input_description->m_body_parameter_index].is_static())
+                {
+                    if (auto slice_in = ::ngraph::as_type_ptr<
+                            ngraph::op::TensorIterator::SliceInputDescription>(input_description))
+                    {
+                        new_shapes[slice_in->m_body_parameter_index][slice_in->m_axis] =
+                            slice_in->m_part_size;
+                    }
+                }
+            }
+        }
+    }
+
+    op->m_num_iterations = m_num_iterations;
+    auto func = std::make_shared<Function>(m_body->get_results(), m_body->get_parameters());
+    auto spec_func = specialize_function(
+        func, types, new_shapes, std::vector<void*>(new_args.size(), nullptr), false, true);
+    op->m_body =
+        std::make_shared<BodyLambda>(spec_func->get_results(), spec_func->get_parameters());
+
+    // TODO: remove this code after the fix on the nGraph side (GetOutputElements)
+    ::ngraph::pass::GetOutputElementElimination goe_elimination;
+    for (const auto& n : spec_func->get_ops())
+    {
+        goe_elimination.run_on_node(n);
+    }
+
     for (auto& input_description : m_input_descriptions)
     {
         op->m_input_descriptions.push_back(input_description->copy());

@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ add_subdirectory(tools/ngraph-opt)
 set(SRC
     backend/cpu/cpu_backend.cpp
     backend/pass/affine_lowerer.cpp
-    backend/pass/memory_optimization.cpp
+    backend/analysis/memory_analysis.cpp
     core/compiler.cpp
     core/ngraph_dialect/dialect.cpp
     core/ngraph_dialect/type.cpp
@@ -34,8 +34,11 @@ set(SRC
     core/pass/mlir_subgraph_extraction.hpp
     core/pass/ng_dialect_builder.cpp
     core/pass/ng_dialect_builder.hpp
+    core/pass/ng_dialect_fused_ops.cpp
+    core/pass/ng_dialect_fused_ops.hpp
     runtime/cpu/memory_manager.cpp
     runtime/cpu/cpu_runtime.cpp
+    runtime/cpu/cpu_callbacks.cpp
     utils.cpp
 )
 
@@ -52,6 +55,7 @@ target_link_libraries(
     MLIRExecutionEngine
     MLIRIR
     MLIRLLVMIR
+    MLIRLoopToStandard
     MLIRStandardToLLVM
     MLIRParser
     MLIRPass
@@ -90,7 +94,8 @@ target_link_libraries(
 )
 
 # Link ngraph 
-target_link_libraries(mlir_backend PUBLIC ngraph)
+target_link_libraries(mlir_backend PUBLIC ngraph libmkl libmkldnn)
+target_include_directories(mlir_backend SYSTEM PUBLIC libmkldnn)
 
 # table-gen dialect ops
 # include table-gen helpers
@@ -122,7 +127,12 @@ ngraph_tablegen(ops_attributes.h.inc -gen-enum-decls)
 ngraph_tablegen(ops_attributes.cpp.inc -gen-enum-defs)
 add_public_tablegen_target(ngraph_ops_attributes_gen)
 
-add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen)
+# tabel-gen ops fused_ops_pattern.td
+set(LLVM_TARGET_DEFINITIONS core/pass/fused_ops_pattern.td)
+ngraph_tablegen(fused_ops_pattern.h.inc -gen-rewriters)
+add_public_tablegen_target(ngraph_ops_pattern_gen)
+
+add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen ngraph_ops_pattern_gen)
 
 target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 

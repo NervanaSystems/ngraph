@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ namespace ngraph
         /// | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_{n-1},\dots,d_0)]\textit{ or }E[d_{order[0]},\dots,d_{order[n-1]}]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the axes reordered via Numpy Transpose rules          |
         // clang-format on
+        NGRAPH_API
         std::shared_ptr<Node> numpy_transpose(const Output<Node>& value, AxisVector order = {});
     } // namespace builder
 } // namespace ngraph

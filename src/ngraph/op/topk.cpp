@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,12 @@
 
 #include <memory>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -84,7 +86,7 @@ size_t op::v0::TopK::get_k() const
     Dimension top_k_axis = get_top_k_axis_dynamic();
     if (k == 0 && get_input_partial_shape(0).is_static() && top_k_axis.is_static())
     {
-        k = get_input_partial_shape(0).to_shape()[static_cast<size_t>(top_k_axis)];
+        k = get_input_partial_shape(0).to_shape()[top_k_axis.get_length()];
     }
     return k;
 }
@@ -103,7 +105,7 @@ size_t op::v0::TopK::get_top_k_axis() const
     auto d = get_top_k_axis_dynamic();
     NGRAPH_CHECK(d.is_static(),
                  "get_top_k_axis called on a TopK node whose 'top_k_axis' input is not constant");
-    return static_cast<size_t>(d);
+    return d.get_length();
 }
 
 Dimension op::v0::TopK::get_top_k_axis_dynamic() const
@@ -144,7 +146,7 @@ void op::v0::TopK::validate_and_infer_types()
                           ").");
 
     NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || static_cast<size_t>(input_rank) > 0,
+                          input_rank.is_dynamic() || input_rank.get_length() > 0,
                           "Argument rank must be greater than 0.");
 
     NODE_VALIDATION_CHECK(this,
@@ -157,7 +159,7 @@ void op::v0::TopK::validate_and_infer_types()
     Dimension top_k_axis = get_top_k_axis_dynamic();
     NODE_VALIDATION_CHECK(this,
                           input_rank.is_dynamic() || top_k_axis.is_dynamic() ||
-                              static_cast<size_t>(top_k_axis) < static_cast<size_t>(input_rank),
+                              top_k_axis.get_length() < input_rank.get_length(),
                           "TopK axis (",
                           top_k_axis,
                           ") is out of bounds.");
@@ -165,13 +167,13 @@ void op::v0::TopK::validate_and_infer_types()
     size_t k = get_k();
     NODE_VALIDATION_CHECK(this,
                           input_rank.is_dynamic() || top_k_axis.is_dynamic() ||
-                              input_shape[static_cast<size_t>(top_k_axis)].is_dynamic() ||
+                              input_shape[top_k_axis.get_length()].is_dynamic() ||
                               static_cast<size_t>(k) <=
-                                  static_cast<size_t>(input_shape[static_cast<size_t>(top_k_axis)]),
+                                  input_shape[top_k_axis.get_length()].get_length(),
                           "K (",
                           k,
                           ") exceeds the dimension (",
-                          input_shape[static_cast<size_t>(top_k_axis)],
+                          input_shape[top_k_axis.get_length()],
                           ") of the TopK axis (axis ",
                           top_k_axis,
                           ").");
@@ -184,12 +186,11 @@ void op::v0::TopK::validate_and_infer_types()
         {
             if (k != 0)
             {
-                output_shape[static_cast<size_t>(top_k_axis)] = k;
+                output_shape[top_k_axis.get_length()] = k;
             }
-            else if (k == 0 && output_shape[static_cast<size_t>(top_k_axis)].is_static())
+            else if (k == 0 && output_shape[top_k_axis.get_length()].is_static())
             {
-                output_shape[static_cast<size_t>(top_k_axis)] =
-                    input_shape[static_cast<size_t>(top_k_axis)];
+                output_shape[top_k_axis.get_length()] = input_shape[top_k_axis.get_length()];
             }
         }
         else
@@ -219,7 +220,7 @@ shared_ptr<Node> op::v0::TopK::copy_with_new_args(const NodeVector& new_args) co
 }
 
 void op::v0::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                     const NodeVector& /* deltas */)
+                                     const OutputVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }
@@ -235,12 +236,15 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const element::Type& index_element_type)
     : Op{{data, k}}
     , m_axis{axis}
+    , m_normalized_axis{0}
     , m_mode{mode_from_string(mode)}
     , m_sort{sort_type_from_string(sort)}
     , m_index_element_type{index_element_type}
 {
     constructor_validate_and_infer_types();
 }
+
+static const std::uint64_t UNKNOWN_NORMALIZED_AXIS = std::numeric_limits<uint64_t>::max();
 
 op::v1::TopK::TopK(const Output<Node>& data,
                    const Output<Node>& k,
@@ -250,11 +254,20 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const element::Type& index_element_type)
     : Op{{data, k}}
     , m_axis{axis}
+    , m_normalized_axis{UNKNOWN_NORMALIZED_AXIS}
     , m_mode{mode}
     , m_sort{sort}
     , m_index_element_type{index_element_type}
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v1::TopK::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    visitor.on_attribute("mode", m_mode);
+    visitor.on_attribute("sort", m_sort);
+    return true;
 }
 
 void op::v1::TopK::validate_and_infer_types()
@@ -263,7 +276,7 @@ void op::v1::TopK::validate_and_infer_types()
     const auto input_rank = input_partial_shape.rank();
 
     NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || static_cast<size_t>(input_rank) > 0,
+                          input_rank.is_dynamic() || input_rank.get_length() > 0,
                           "Input rank must be greater than 0.");
 
     const auto& k_partial_shape = get_input_partial_shape(1);
@@ -281,22 +294,38 @@ void op::v1::TopK::validate_and_infer_types()
 
     if (output_shape.rank().is_static())
     {
-        NODE_VALIDATION_CHECK(
-            this,
-            m_axis >= 0 && static_cast<size_t>(m_axis) < static_cast<size_t>(output_shape.rank()),
-            "TopK axis (",
-            m_axis,
-            ") is out of bounds.");
-
+        m_normalized_axis = ngraph::normalize_axis(this, m_axis, output_shape.rank());
         if (k != 0)
         {
-            output_shape[m_axis] = k;
+            output_shape[m_normalized_axis] = k;
         }
     }
 
     set_output_size(2);
     set_output_type(0, get_input_element_type(0), output_shape);
     set_output_type(1, m_index_element_type, output_shape);
+}
+
+void op::v1::TopK::set_axis(const int64_t axis)
+{
+    const auto input_rank = get_input_partial_shape(0).rank();
+    if (input_rank.is_static())
+    {
+        m_normalized_axis = ngraph::normalize_axis(this, axis, input_rank);
+    }
+    else
+    {
+        m_normalized_axis = UNKNOWN_NORMALIZED_AXIS;
+    }
+    m_axis = axis;
+}
+
+uint64_t op::v1::TopK::get_axis() const
+{
+    NODE_VALIDATION_CHECK(
+        this, m_normalized_axis != UNKNOWN_NORMALIZED_AXIS, "Normalized axis of TopK is unknown");
+
+    return m_normalized_axis;
 }
 
 size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
@@ -353,7 +382,8 @@ size_t op::v1::TopK::validate_and_get_k(const shared_ptr<op::Constant>& k_consta
     return static_cast<size_t>(k_const_contents[0]);
 }
 
-void op::v1::TopK::generate_adjoints(autodiff::Adjoints& /*adjoints*/, const NodeVector& /*deltas*/)
+void op::v1::TopK::generate_adjoints(autodiff::Adjoints& /*adjoints*/,
+                                     const OutputVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }
@@ -402,7 +432,7 @@ size_t op::v1::TopK::get_k() const
 
     if (k == 0 && get_input_partial_shape(0).is_static())
     {
-        k = get_input_partial_shape(0).to_shape()[m_axis];
+        k = get_input_partial_shape(0).to_shape()[m_normalized_axis];
     }
     return k;
 }
@@ -411,4 +441,23 @@ void op::v1::TopK::set_k(size_t k)
 {
     this->input(1).replace_source_output(
         op::Constant::create(element::i64, Shape{}, {k})->output(0));
+}
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::v1::TopK::Mode>& EnumNames<op::v1::TopK::Mode>::get()
+    {
+        static auto enum_names = EnumNames<op::v1::TopK::Mode>(
+            "op::v1::TopK::Mode",
+            {{"max", op::v1::TopK::Mode::MAX}, {"min", op::v1::TopK::Mode::MIN}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v1::TopK::Mode>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::v1::TopK::Mode& type)
+    {
+        return s << as_string(type);
+    }
 }

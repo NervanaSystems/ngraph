@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,6 @@ namespace ngraph
             class PoolingFactory
             {
             public:
-                explicit PoolingFactory(const Node& node);
                 virtual ~PoolingFactory() = default;
 
                 ///
@@ -64,6 +63,8 @@ namespace ngraph
                 NodeVector make_max_pool() const;
 
             protected:
+                explicit PoolingFactory(const Node& node);
+
                 Node m_onnx_node;
                 const NodeVector m_inputs;
                 Shape m_kernel_shape;
@@ -75,9 +76,21 @@ namespace ngraph
             };
 
             ///
+            /// \brief      Factory class which generates sub-graphs for ONNX 'local' pooling
+            ///             operators.
+            /// \note       For a 'local' pooling operation, the kernel shape attribute is required
+            class LocalPoolingFactory : public PoolingFactory
+            {
+            public:
+                explicit LocalPoolingFactory(const Node& node);
+                virtual ~LocalPoolingFactory() = default;
+            };
+
+            ///
             /// \brief      Factory class which generates sub-graphs for ONNX 'global' pooling
             ///             operators.
-            ///
+            /// \note       In a 'global' pooling operation, the kernel shape is calculated
+            ///             based on spatial dims
             class GlobalPoolingFactory : public PoolingFactory
             {
             public:

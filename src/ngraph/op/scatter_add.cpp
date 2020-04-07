@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,24 +53,23 @@ void op::ScatterAdd::validate_and_infer_types()
     NODE_VALIDATION_CHECK(this,
                           inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
                               updates_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(updates_shape.rank()) ==
-                                  static_cast<size_t>(indices_shape.rank()) +
-                                      static_cast<size_t>(inputs_shape.rank()) - 1,
+                              updates_shape.rank().get_length() ==
+                                  indices_shape.rank().get_length() +
+                                      inputs_shape.rank().get_length() - 1,
                           "Updates rank is expected to be indices rank + inputs rank - 1");
 
     bool compatible = true;
     if (inputs_shape.is_static() && indices_shape.is_static() && updates_shape.is_static())
     {
-        for (size_t i = 0; i < static_cast<size_t>(indices_shape.rank()); i++)
+        for (size_t i = 0; i < indices_shape.rank().get_length(); i++)
         {
             compatible = compatible && updates_shape[i].same_scheme(indices_shape[i]);
         }
-        for (size_t i = 1; i < static_cast<size_t>(inputs_shape.rank()); i++)
+        for (size_t i = 1; i < inputs_shape.rank().get_length(); i++)
         {
-            compatible =
-                compatible &&
-                updates_shape[static_cast<size_t>(indices_shape.rank()) + i - 1].same_scheme(
-                    inputs_shape[i]);
+            compatible = compatible &&
+                         updates_shape[indices_shape.rank().get_length() + i - 1].same_scheme(
+                             inputs_shape[i]);
         }
     }
 

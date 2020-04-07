@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ namespace ngraph
             class NGRAPH_API StridedSlice : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"Slice", 1};
+                static constexpr NodeTypeInfo type_info{"StridedSlice", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 StridedSlice() = default;
 
@@ -90,6 +90,7 @@ namespace ngraph
                              const std::vector<int64_t>& shrink_axis_mask = std::vector<int64_t>{},
                              const std::vector<int64_t>& ellipsis_mask = std::vector<int64_t>{});
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 const std::vector<int64_t>& get_begin_mask() const { return m_begin_mask; }
                 const std::vector<int64_t>& get_end_mask() const { return m_end_mask; }
                 const std::vector<int64_t>& get_new_axis_mask() const { return m_new_axis_mask; }
@@ -103,7 +104,7 @@ namespace ngraph
                 size_t get_version() const override { return 1; }
             protected:
                 void generate_adjoints(autodiff::Adjoints& adjoints,
-                                       const NodeVector& deltas) override;
+                                       const OutputVector& deltas) override;
 
             private:
                 AxisSet convert_mask_to_axis_set(const std::vector<int64_t>& mask) const;

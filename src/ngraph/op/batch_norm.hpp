@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,12 +77,12 @@ namespace ngraph
 
                 double get_eps_value() const { return m_epsilon; }
                 void set_eps_value(double epsilon) { m_epsilon = epsilon; }
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 static constexpr size_t INPUT_GAMMA = 0;
                 static constexpr size_t INPUT_BETA = 1;
@@ -144,12 +144,12 @@ namespace ngraph
 
                 double get_eps_value() const { return m_epsilon; }
                 void set_eps_value(double epsilon) { m_epsilon = epsilon; }
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                               const NodeVector& /* deltas */) override
+                                               const OutputVector& /* deltas */) override
                 {
                     throw ngraph_error("Invalid operation");
                 }
@@ -194,8 +194,8 @@ namespace ngraph
 
                 double get_eps_value() const { return m_epsilon; }
                 void set_eps_value(double epsilon) { m_epsilon = epsilon; }
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             private:
                 static constexpr size_t INPUT_GAMMA = 0;

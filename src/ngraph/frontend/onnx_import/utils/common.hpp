@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@
 #include <vector>
 
 #include "core/node.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
+#include "default_opset.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -68,60 +68,6 @@ namespace ngraph
                 return range;
             }
 
-            /// \brief      Handle out of range axis.
-            ///
-            /// \param[in]  node         The node with requested axis.
-            /// \param[in]  axis         The requested axis value.
-            /// \param[in]  tensor_rank  The corresponding tensor rank.
-            ///
-            /// \return    Checking if axis is in range [-tensor_rank, tensor_rank-1], otherwise
-            /// returns error.
-            ///            If negative axis, it counts from the last to the first axis, by adding
-            ///            tensor_rank to axis.
-            ///
-            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
-                                      std::int64_t axis,
-                                      std::int64_t tensor_rank);
-
-            /// \brief      Handle out of range axis.
-            ///
-            /// \param[in]  node            The node with requested axis.
-            /// \param[in]  axis            The requested axis value.
-            /// \param[in]  tensor_rank     The corresponding tensor rank.
-            /// \param[in]  axis_range_min  The min value of accepted range for axis.
-            /// \param[in]  axis_range_max  The max value of accepted range for axis.
-            ///
-            /// \return     Checking if axis is in range [axis_range_min, axis_range_max], otherwise
-            /// returns error.
-            ////            If negative axis, it counts from the last to the first axis, by adding
-            /// tensor_rank to axis.
-            ///
-            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
-                                      std::int64_t axis,
-                                      std::int64_t tensor_rank,
-                                      std::int64_t axis_range_min,
-                                      std::int64_t axis_range_max);
-
-            /// \brief      Handle out of range axes in vector.
-            ///
-            /// \param[in]  node         The node with requested axes.
-            /// \param[in]  axes         The requested vector of axes.
-            /// \param[in]  tensor_rank  The corresponding tensor rank.
-            ///
-            /// \return     If any negative axis in vector, it counts from the last to the first
-            /// axis, by adding tensor_rank to axis.
-            ///
-            std::vector<std::size_t> validate_axes(const ngraph::onnx_import::Node& node,
-                                                   std::vector<std::int64_t> axes,
-                                                   std::int64_t tensor_rank);
-
-            /// \brief Return the outputs of the node as vector.
-            ///
-            /// \param[in] node            Node with multiple outputs.
-            ///
-            /// \return                    Vector of outputs of input node.
-            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node);
-
             /// \brief Creates a shifted square identity matrix.
             /// \note Shifting in the context of this operator means that
             ///       the matrix can be created with elements equal to 1 not only in the main
@@ -133,7 +79,7 @@ namespace ngraph
             ///
             /// \return A Constant node representing shifted identity matrix.
             template <typename T = double>
-            std::shared_ptr<ngraph::op::Constant>
+            std::shared_ptr<default_opset::Constant>
                 shifted_square_identity(const Shape output_shape,
                                         const element::Type& output_type,
                                         const std::int64_t shift)
@@ -155,7 +101,7 @@ namespace ngraph
                     identity_matrix.at(diagonal_element_idx) = T{1};
                 }
 
-                return std::make_shared<ngraph::op::Constant>(
+                return std::make_shared<default_opset::Constant>(
                     output_type, output_shape, identity_matrix);
             }
 
@@ -165,8 +111,8 @@ namespace ngraph
             ///
             /// \return A Constant node representing identity matrix with shape (n, n).
             template <typename T = double>
-            std::shared_ptr<ngraph::op::Constant> square_identity(const size_t n,
-                                                                  const element::Type& type)
+            std::shared_ptr<default_opset::Constant> square_identity(const size_t n,
+                                                                     const element::Type& type)
             {
                 return shifted_square_identity(Shape{n, n}, type, 0);
             }

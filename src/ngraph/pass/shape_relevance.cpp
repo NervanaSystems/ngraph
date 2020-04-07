@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ using namespace ngraph;
 //       |            |
 //       |            |
 //       |            |
-//       N2[DynReshape]
+//       N2[v1::Reshape]
 //
 // N1 (but not N0) will be flagged as shape-relevant, because N1 feeds into the "shape" input
 // of N2.
@@ -38,7 +38,7 @@ using namespace ngraph;
 //       |            |
 //       |            N2[ShapeOf]
 //       |            |
-//       N3[DynReshape]
+//       N3[v1::Reshape]
 //
 // Neither N0 nor N1 will be flagged as shape-relevant. (N1 does feed into the "shape" input of N3,
 // but only via the value-irrelevant input of ShapeOf.)
@@ -107,7 +107,7 @@ bool pass::ShapeRelevance::run_on_function(std::shared_ptr<Function> f)
                 {
                     continue;
                 }
-                auto source_node = node->input(i).get_source_output().get_node();
+                auto source_node = node->get_input_node_ptr(i);
                 if (already_visited.count(source_node) == 0)
                 {
                     to_visit.push_front(source_node);

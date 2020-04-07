@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,35 +24,39 @@ namespace ngraph
 {
     namespace op
     {
-        class NGRAPH_API QuantizedDotBias : public Op
+        namespace v0
         {
-        public:
-            static constexpr NodeTypeInfo type_info{"QuantizedDotBias", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            QuantizedDotBias() = default;
-            QuantizedDotBias(const Output<Node>& data,
-                             const Output<Node>& weights,
-                             const Output<Node>& bias,
-                             const Output<Node>& scale,
-                             bool requantize = true,
-                             bool with_relu = false);
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
+            class NGRAPH_API QuantizedDotBias : public Op
             {
-                check_new_args_count(this, new_args);
-                return std::make_shared<QuantizedDotBias>(new_args.at(0),
-                                                          new_args.at(1),
-                                                          new_args.at(2),
-                                                          new_args.at(3),
-                                                          m_requantize,
-                                                          m_with_relu);
-            }
-            bool with_relu() const { return m_with_relu; }
-            bool requantize() const { return m_requantize; }
-        protected:
-            bool m_requantize;
-            bool m_with_relu;
-        };
-    } // namespace op
-} // namespace ngraph
+            public:
+                static constexpr NodeTypeInfo type_info{"QuantizedDotBias", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                QuantizedDotBias() = default;
+                QuantizedDotBias(const Output<Node>& data,
+                                 const Output<Node>& weights,
+                                 const Output<Node>& bias,
+                                 const Output<Node>& scale,
+                                 bool requantize = true,
+                                 bool with_relu = false);
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override
+                {
+                    check_new_args_count(this, new_args);
+                    return std::make_shared<QuantizedDotBias>(new_args.at(0),
+                                                              new_args.at(1),
+                                                              new_args.at(2),
+                                                              new_args.at(3),
+                                                              m_requantize,
+                                                              m_with_relu);
+                }
+                bool with_relu() const { return m_with_relu; }
+                bool requantize() const { return m_requantize; }
+            protected:
+                bool m_requantize;
+                bool m_with_relu;
+            };
+        }
+        using v0::QuantizedDotBias;
+    }
+}

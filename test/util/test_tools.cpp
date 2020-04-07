@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@
 using namespace std;
 using namespace ngraph;
 
-// This function traverses the list of ops and verifies that each op's dependencies (its inputs)
-// is located earlier in the list. That is enough to be valid
-bool validate_list(const list<shared_ptr<Node>>& nodes)
+// This function traverses the vector of ops and verifies that each op's dependencies (its inputs)
+// is located earlier in the vector. That is enough to be valid
+bool validate_list(const vector<shared_ptr<Node>>& nodes)
 {
     bool rc = true;
     for (auto it = nodes.rbegin(); it != nodes.rend(); it++)
@@ -77,6 +77,13 @@ shared_ptr<Function> make_test_graph()
     auto f0 = make_shared<Function>(r0, ParameterVector{arg_0, arg_1, arg_2, arg_3, arg_4, arg_5});
 
     return f0;
+}
+
+template <>
+void copy_data<bool>(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<bool>& data)
+{
+    std::vector<char> data_char(data.begin(), data.end());
+    copy_data(tv, data_char);
 }
 
 template <>
@@ -224,7 +231,7 @@ std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
         size_t arg_count = node->get_input_size();
         for (size_t i = 0; i < arg_count; ++i)
         {
-            Node* dep = node->input(i).get_source_output().get_node();
+            Node* dep = node->get_input_node_ptr(i);
             if (seen.count(dep) == 0)
             {
                 return ::testing::AssertionFailure() << "Argument " << *dep

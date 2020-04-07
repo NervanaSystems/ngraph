@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -120,11 +120,8 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
         throw ngraph_error("GroupConvolution's element type isn't equal to bias!");
     }
 
-    validate_groupconvbias_shapes(conv->input(0).get_shape(),
-                                  conv->input(1).get_shape(),
-                                  bias.get_shape(),
-                                  output_shape,
-                                  groups);
+    validate_groupconvbias_shapes(
+        conv->get_input_shape(0), conv->get_input_shape(1), bias.get_shape(), output_shape, groups);
 
     set_output_type(0, conv->get_element_type(), output_shape);
 }
@@ -194,7 +191,7 @@ shared_ptr<Node> op::GroupConvolutionBias::copy_with_new_args(const NodeVector& 
 }
 
 void op::GroupConvolutionBias::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                                 const NodeVector& /* deltas */)
+                                                 const OutputVector& /* deltas */)
 {
     throw ngraph_error("GroupConvolutionBias generate_adjoints not supported implemented");
 }

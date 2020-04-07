@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,6 +90,21 @@ namespace cblas
                      const int64_t ldb,
                      const float beta,
                      float* C,
+                     const int64_t ldc);
+
+    void cblas_dgemm(const Layout layout,
+                     const Transpose TransA,
+                     const Transpose TransB,
+                     const int64_t M,
+                     const int64_t N,
+                     const int64_t K,
+                     const double alpha,
+                     const double* A,
+                     const int64_t lda,
+                     const double* B,
+                     const int64_t ldb,
+                     const double beta,
+                     double* C,
                      const int64_t ldc);
 
     void cblas_sgemm_batch(const Layout Layout,

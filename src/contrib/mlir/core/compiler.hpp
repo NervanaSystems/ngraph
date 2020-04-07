@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 
 #include <mlir/IR/Builders.h>
 #include <mlir/IR/Module.h>
@@ -41,10 +42,6 @@ namespace ngraph
     namespace element
     {
         class Type;
-    }
-    namespace op
-    {
-        class CompiledKernel;
     }
     namespace runtime
     {
@@ -79,7 +76,7 @@ namespace ngraph
                 // Converts an nGraph sub-graph to MLIR nGraph dialect.
                 void buildNgDialectModule();
                 // Applies any nGraph dialect optimizations
-                void optimizeNgDialect() { /*TODO: Add Core NG dialect optimizations */}
+                void optimizeNgDialect();
 
             private:
                 // Sub-graph to be compiled and executed with MLIR.

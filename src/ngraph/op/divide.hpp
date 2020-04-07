@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,14 +54,14 @@ namespace ngraph
                 Divide(const Output<Node>& arg0,
                        const Output<Node>& arg1,
                        const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 bool is_pythondiv() const { return m_pythondiv; }
                 void set_is_pythondiv(bool pythondiv) { m_pythondiv = pythondiv; }
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             protected:
                 bool m_pythondiv{true};
@@ -103,14 +103,14 @@ namespace ngraph
                        const Output<Node>& arg1,
                        const AutoBroadcastSpec& auto_broadcast =
                            AutoBroadcastSpec(AutoBroadcastType::NUMPY));
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 bool is_pythondiv() const { return m_pythondiv; }
                 void set_is_pythondiv(bool pythondiv) { m_pythondiv = pythondiv; }
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
                 size_t get_version() const override { return 1; }
             protected:
                 bool m_pythondiv{true};
@@ -120,5 +120,6 @@ namespace ngraph
         using v0::Divide;
     } // namespace op
 
+    NGRAPH_API
     std::shared_ptr<Node> operator/(const Output<Node>& arg0, const Output<Node>& arg1);
 } // namespace ngraph

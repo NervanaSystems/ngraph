@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/binary_convolution.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -115,20 +116,20 @@ void op::v1::BinaryConvolution::validate_and_infer_types()
     }
 
     PartialShape result_shape;
-    result_shape =
-        infer_convolution_forward(this,
-                                  data_batch_shape,
-                                  Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 1),
-                                  m_pads_begin,
-                                  m_pads_end,
-                                  filters_shape,
-                                  m_strides,
-                                  m_dilations);
+    result_shape = infer_convolution_forward(this,
+                                             data_batch_shape,
+                                             Strides(data_batch_shape.rank().get_length() - 2, 1),
+                                             m_pads_begin,
+                                             m_pads_end,
+                                             filters_shape,
+                                             m_strides,
+                                             m_dilations);
 
     set_output_type(0, data_batch_et, result_shape);
 }
 
-shared_ptr<Node> op::v1::BinaryConvolution::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::v1::BinaryConvolution::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::BinaryConvolution>(new_args.at(0),
@@ -142,20 +143,48 @@ shared_ptr<Node> op::v1::BinaryConvolution::copy_with_new_args(const NodeVector&
                                               m_auto_pad);
 }
 
+bool op::v1::BinaryConvolution::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("dilations", m_dilations);
+    visitor.on_attribute("mode", m_mode);
+    visitor.on_attribute("pad_value", m_pad_value);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    return true;
+}
+
 void op::v1::BinaryConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                  const NodeVector& deltas)
+                                                  const OutputVector& deltas)
 {
     throw ngraph_error("BinaryConvolution generate_adjoints not implemented");
+}
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::v1::BinaryConvolution::BinaryConvolutionMode>&
+        EnumNames<op::v1::BinaryConvolution::BinaryConvolutionMode>::get()
+    {
+        static auto enum_names = EnumNames<op::v1::BinaryConvolution::BinaryConvolutionMode>(
+            "op::v1::BinaryConvolution::BinaryConvolutionMode",
+            {{"xnor-popcount", op::v1::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo
+        AttributeAdapter<op::v1::BinaryConvolution::BinaryConvolutionMode>::type_info;
+
+    std::ostream& operator<<(std::ostream& s,
+                             const op::v1::BinaryConvolution::BinaryConvolutionMode& type)
+    {
+        return s << as_string(type);
+    }
 }
 
 op::v1::BinaryConvolution::BinaryConvolutionMode
     op::v1::BinaryConvolution::mode_from_string(const std::string& mode) const
 {
-    static const std::map<std::string, BinaryConvolutionMode> allowed_values = {
-        {"xnor-popcount", BinaryConvolutionMode::XNOR_POPCOUNT}};
-
-    NODE_VALIDATION_CHECK(
-        this, allowed_values.count(mode) > 0, "Invalid binary convolution mode value passed in.");
-
-    return allowed_values.at(mode);
+    return as_enum<BinaryConvolutionMode>(mode);
 }

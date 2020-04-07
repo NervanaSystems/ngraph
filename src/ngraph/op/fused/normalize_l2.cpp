@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 #include <algorithm>
 #include <iterator>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -40,6 +40,13 @@ op::NormalizeL2::NormalizeL2(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::NormalizeL2::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("eps", m_eps);
+    visitor.on_attribute("eps_mode", m_eps_mode);
+    return true;
+}
+
 void op::NormalizeL2::pre_validate_and_infer_types()
 {
     auto axes_node = input_value(1).get_node_shared_ptr();
@@ -53,7 +60,7 @@ void op::NormalizeL2::pre_validate_and_infer_types()
     if (axes_rank.is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(axes_rank) <= 1,
+                              axes_rank.get_length() <= 1,
                               "Input axes must be scalar or have rank equal to 1 (axes rank: ",
                               axes_rank,
                               ").");
@@ -64,7 +71,7 @@ void op::NormalizeL2::pre_validate_and_infer_types()
             for (auto axis : reduction_axes)
             {
                 NODE_VALIDATION_CHECK(this,
-                                      axis < size_t(input_rank),
+                                      axis < input_rank.get_length(),
                                       "Reduction axis (",
                                       axis,
                                       ") is out of bounds ",
@@ -97,7 +104,8 @@ NodeVector op::NormalizeL2::decompose_op() const
     // Calculate l2 norm across axes determined by axes input
     auto builder_bias_mode =
         (m_eps_mode == EpsMode::MAX) ? builder::BiasMode::MAX : builder::BiasMode::ADD;
-    Output<Node> norm = builder::l2_norm(data, reduction_axes, m_eps, builder_bias_mode, true);
+    Output<Node> norm =
+        builder::opset1::l2_norm(data, reduction_axes, m_eps, builder_bias_mode, true);
 
     data = make_shared<op::Divide>(data, norm, AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 

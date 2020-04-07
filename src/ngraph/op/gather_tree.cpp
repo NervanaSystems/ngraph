@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,6 +38,11 @@ shared_ptr<Node> op::v1::GatherTree::copy_with_new_args(const NodeVector& new_ar
         new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }
 
+bool ngraph::op::v1::GatherTree::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 void op::v1::GatherTree::validate_and_infer_types()
 {
     const auto& step_ids_rank = get_input_partial_shape(0);
@@ -47,30 +52,30 @@ void op::v1::GatherTree::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           step_ids_rank.rank().is_dynamic() ||
-                              static_cast<size_t>(step_ids_rank.rank()) == 3,
+                              step_ids_rank.rank().get_length() == 3,
                           "step_ids input rank must equal to 3 (step_ids rank: ",
-                          static_cast<size_t>(step_ids_rank.rank()),
+                          step_ids_rank.rank().get_length(),
                           ")");
 
     NODE_VALIDATION_CHECK(this,
                           parent_idx_rank.rank().is_dynamic() ||
-                              static_cast<size_t>(parent_idx_rank.rank()) == 3,
+                              parent_idx_rank.rank().get_length() == 3,
                           "parent_idx input rank must equal to 3 (parent_idx rank: ",
-                          static_cast<size_t>(parent_idx_rank.rank()),
+                          parent_idx_rank.rank().get_length(),
                           ")");
 
     NODE_VALIDATION_CHECK(this,
                           max_seq_len_rank.rank().is_dynamic() ||
-                              static_cast<size_t>(max_seq_len_rank.rank()) == 1,
+                              max_seq_len_rank.rank().get_length() == 1,
                           "max_seq_len input rank must equal to 1 (max_seq_len rank: ",
-                          static_cast<size_t>(max_seq_len_rank.rank()),
+                          max_seq_len_rank.rank().get_length(),
                           ")");
 
     NODE_VALIDATION_CHECK(this,
                           end_token_rank.rank().is_dynamic() ||
-                              static_cast<size_t>(end_token_rank.rank()) == 0,
+                              end_token_rank.rank().get_length() == 0,
                           "end_token input rank must be scalar (end_token rank: ",
-                          static_cast<size_t>(end_token_rank.rank()),
+                          end_token_rank.rank().get_length(),
                           ")");
 
     const auto& step_ids_et = get_input_element_type(0);
@@ -78,7 +83,7 @@ void op::v1::GatherTree::validate_and_infer_types()
 }
 
 void op::v1::GatherTree::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                           const NodeVector& /* deltas */)
+                                           const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints is not implemented for GatherTree");
 }

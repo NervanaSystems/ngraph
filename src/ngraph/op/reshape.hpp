@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -95,13 +95,13 @@ namespace ngraph
                 const AxisVector& get_input_order() const { return m_input_order; }
                 void set_input_order(const AxisVector& input_order) { m_input_order = input_order; }
                 /// \return The shape of the output tensor.
-                const Shape& get_output_shape() const { return m_output_shape; }
+                const Shape& get_reshape_output_shape() const { return m_output_shape; }
                 void set_output_shape(const Shape& output_shape) { m_output_shape = output_shape; }
                 bool get_is_transpose() const { return m_is_transpose; }
                 void set_is_transpose(bool is_transpose) { m_is_transpose = is_transpose; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 AxisVector m_input_order;
                 Shape m_output_shape;
@@ -133,10 +133,11 @@ namespace ngraph
                 ///        A value of -1 is allowed for at most one dimension, in which case the
                 ///        dimension size is inferred based on element count of input tensor.
                 /// \param special_zero Treats zeros in `pattern` as wildcard flags indicating a
-                /// copy
-                /// from input shape at the same index.
+                ///        copy from input shape at the same index.
+                ///
                 Reshape(const Output<Node>& arg, const Output<Node>& pattern, bool special_zero);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 size_t get_version() const override { return 1; }
@@ -147,7 +148,7 @@ namespace ngraph
                 void set_special_zero(bool special_zero) { m_special_zero = special_zero; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             private:
                 bool m_special_zero;

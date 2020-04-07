@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
 //*****************************************************************************
 
 #include "ngraph/op/fused/lstm_sequence.hpp"
+
+#include "ngraph/attribute_visitor.hpp"
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/frontend/onnx_import/utils/reshape.hpp"
@@ -25,12 +28,24 @@
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace ngraph;
 using namespace std;
 
 constexpr NodeTypeInfo op::LSTMSequence::type_info;
+bool ngraph::op::v0::LSTMSequence::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("hidden_size", m_hidden_size);
+    visitor.on_attribute("activations", m_activations);
+    visitor.on_attribute("activations_alpha", m_activations_alpha);
+    visitor.on_attribute("activations_beta", m_activations_beta);
+    visitor.on_attribute("clip", m_clip_threshold);
+    visitor.on_attribute("direction", m_direction);
+
+    visitor.on_attribute("input_forget", m_input_forget);
+    visitor.on_attribute("weights_format", m_weights_format);
+    return true;
+}
 NodeVector op::LSTMSequence::decompose_op() const
 {
     NodeVector results;
@@ -101,27 +116,27 @@ shared_ptr<Node> op::LSTMSequence::copy_with_new_args(const NodeVector& new_args
     }
 }
 
-shared_ptr<Node> op::LSTMSequence::get_masked_node(const shared_ptr<Node>& data,
+shared_ptr<Node> op::LSTMSequence::get_masked_node(const Output<Node>& data,
                                                    int32_t time_step,
                                                    size_t batch_axis,
-                                                   const shared_ptr<Node>& default_value) const
+                                                   const Output<Node>& default_value) const
 {
-    shared_ptr<Node> mask_value = default_value;
+    Output<Node> mask_value = default_value;
     // Create zero mask value node.
-    if (!mask_value)
+    if (!mask_value.get_node_shared_ptr())
     {
-        mask_value = op::Constant::create(data->get_element_type(),
-                                          data->get_shape(),
-                                          vector<float>(shape_size(data->get_shape()), 0.f));
+        mask_value = op::Constant::create(data.get_element_type(),
+                                          data.get_shape(),
+                                          vector<float>(shape_size(data.get_shape()), 0.f));
     }
 
     // Create predicate nodes. The condition is whether current time step value
     // is greater than sequence length for respective batch inputs.
     shared_ptr<Node> curr_time_step_node = op::Constant::create(
-        element::i32, data->get_shape(), vector<int32_t>(shape_size(data->get_shape()), time_step));
+        element::i32, data.get_shape(), vector<int32_t>(shape_size(data.get_shape()), time_step));
 
-    shared_ptr<Node> batch_seq_length =
-        op::legacy_style_broadcast_for_binary_operation(
+    Output<Node> batch_seq_length =
+        builder::legacy_broadcast_for_binary_operation(
             curr_time_step_node, input_value(3).get_node_shared_ptr(), batch_axis)
             .at(1);
 
@@ -197,8 +212,8 @@ NodeVector op::LSTMSequence::lstm_pass(bool is_reverse) const
                                                                m_clip_threshold,
                                                                m_input_forget);
 
-        shared_ptr<Node> H = get_output_element(lstm_cell, 0);
-        shared_ptr<Node> C = get_output_element(lstm_cell, 1);
+        Output<Node> H = lstm_cell->output(0);
+        Output<Node> C = lstm_cell->output(1);
 
         // Expand tensors with empty outermost dim, so we can later concatenate
         // them.
@@ -246,3 +261,24 @@ shared_ptr<Node> op::LSTMSequence::prepare_input(Output<Node> node, bool is_reve
     // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
     return builder::squeeze(tmp);
 }
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::v0::LSTMSequence::direction>& EnumNames<op::v0::LSTMSequence::direction>::get()
+    {
+        static auto enum_names = EnumNames<op::v0::LSTMSequence::direction>(
+            "op::v0::LSTMSequence::direction",
+            {{"forward", op::v0::LSTMSequence::direction::FORWARD},
+             {"reverse", op::v0::LSTMSequence::direction::REVERSE},
+             {"bidirectional", op::v0::LSTMSequence::direction::BIDIRECTIONAL}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v0::LSTMSequence::direction>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::v0::LSTMSequence::direction& type)
+    {
+        return s << as_string(type);
+    }
+} // namespace ngraph

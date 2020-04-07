@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -94,7 +95,7 @@ bool op::v1::Select::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-void op::v1::Select::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::Select::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (get_auto_broadcast().m_type != op::AutoBroadcastType::NONE)
     {
@@ -156,7 +157,7 @@ shared_ptr<Node> op::v0::Select::copy_with_new_args(const NodeVector& new_args) 
     return make_shared<v0::Select>(new_args.at(0), new_args.at(1), new_args.at(2));
 }
 
-void op::v0::Select::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Select::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

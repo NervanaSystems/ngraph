@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ PartialShape ngraph::project(const PartialShape& shape, const AxisSet& axes)
     {
         std::vector<Dimension> result_dims;
 
-        for (size_t i = 0; i < size_t(shape.rank()); i++)
+        for (size_t i = 0; i < shape.rank().get_length(); i++)
         {
             if (axes.find(i) != axes.end())
             {
@@ -54,7 +54,7 @@ PartialShape ngraph::reduce(const PartialShape& shape, const AxisSet& deleted_ax
     {
         AxisSet axes;
 
-        for (size_t i = 0; i < size_t(shape.rank()); i++)
+        for (size_t i = 0; i < shape.rank().get_length(); i++)
         {
             if (deleted_axes.find(i) == deleted_axes.end())
             {
@@ -82,7 +82,7 @@ PartialShape
         size_t original_pos = 0;
 
         for (size_t result_pos = 0;
-             result_pos < size_t(shape.rank()) + new_axis_pos_value_pairs.size();
+             result_pos < shape.rank().get_length() + new_axis_pos_value_pairs.size();
              result_pos++)
         {
             auto search_it = std::find_if(

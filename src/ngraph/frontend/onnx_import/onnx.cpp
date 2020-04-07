@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,25 +52,25 @@ namespace ngraph
             } // namespace error
         }     // namespace detail
 
-        std::shared_ptr<Function> import_onnx_model(std::istream& sin, const Weights& weights)
+        std::shared_ptr<Function> import_onnx_model(std::istream& stream)
         {
             onnx::ModelProto model_proto;
             // Try parsing input as a binary protobuf message
-            if (!model_proto.ParseFromIstream(&sin))
+            if (!model_proto.ParseFromIstream(&stream))
             {
                 // Rewind to the beginning and clear stream state.
-                sin.clear();
-                sin.seekg(0);
-                google::protobuf::io::IstreamInputStream iistream(&sin);
+                stream.clear();
+                stream.seekg(0);
+                google::protobuf::io::IstreamInputStream iistream(&stream);
                 // Try parsing input as a prototxt message
                 if (!google::protobuf::TextFormat::Parse(&iistream, &model_proto))
                 {
-                    throw detail::error::stream_parse{sin};
+                    throw detail::error::stream_parse{stream};
                 }
             }
 
             Model model{model_proto};
-            Graph graph{model_proto.graph(), model, weights};
+            Graph graph{model_proto.graph(), model};
             auto function = std::make_shared<Function>(
                 graph.get_ng_outputs(), graph.get_ng_parameters(), graph.get_name());
             for (std::size_t i{0}; i < function->get_output_size(); ++i)
@@ -80,22 +80,14 @@ namespace ngraph
             return function;
         }
 
-        std::shared_ptr<Function> import_onnx_model(const std::string& path, const Weights& weights)
+        std::shared_ptr<Function> import_onnx_model(const std::string& file_path)
         {
-            std::ifstream ifs{path, std::ios::in | std::ios::binary};
+            std::ifstream ifs{file_path, std::ios::in | std::ios::binary};
             if (!ifs.is_open())
             {
-                throw detail::error::file_open{path};
+                throw detail::error::file_open{file_path};
             }
-            return import_onnx_model(ifs, weights);
-        }
-
-        void register_operator(const std::string& name,
-                               std::int64_t version,
-                               const std::string& domain,
-                               Operator fn)
-        {
-            OperatorsBridge::register_operator(name, version, domain, std::move(fn));
+            return import_onnx_model(ifs);
         }
 
         std::set<std::string> get_supported_operators(std::int64_t version,

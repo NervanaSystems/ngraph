@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/pass/pass_config.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
@@ -32,11 +33,11 @@ pass::PassConfig::PassConfig()
     // E.g., NGRAPH_PASS_ENABLES="CoreFusion:0;LikeReplacement:1;CPUCollapseDims" would
     //       set disables on CoreFusion and enables on LikeReplacement and CPUCollapseDims
     //
-    const char* env_str = getenv("NGRAPH_PASS_ENABLES");
-    if (env_str)
+    string pass_enables = getenv_string("NGRAPH_PASS_ENABLES");
+    if (!pass_enables.empty())
     {
         stringstream ss;
-        ss << env_str;
+        ss << pass_enables;
         while (ss.good())
         {
             string substr;
@@ -60,11 +61,11 @@ pass::PassConfig::PassConfig()
     //  would set false on "OptimizeForMemory", true on "MemoryAssignment::ReuseMemory" and true on
     //  "UseDefaultLayouts"
     //
-    env_str = getenv("NGRAPH_PASS_ATTRIBUTES");
-    if (env_str)
+    static const string pass_attributes = getenv_string("NGRAPH_PASS_ATTRIBUTES");
+    if (!pass_attributes.empty())
     {
         stringstream ss;
-        ss << env_str;
+        ss << pass_attributes;
         while (ss.good())
         {
             string substr;

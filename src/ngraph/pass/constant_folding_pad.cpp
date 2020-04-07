@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,10 +26,10 @@ shared_ptr<op::Constant> fold_constant_pad(shared_ptr<op::Constant> constant,
                                            shared_ptr<op::Pad> pad,
                                            NodeExecutorTy func)
 {
-    auto out_shape = pad->get_shape();
-    vector<T> out_vec(shape_size(out_shape));
-    auto pad_value = std::static_pointer_cast<op::Constant>(
-        pad->input(1).get_source_output().get_node_shared_ptr());
+    const Shape& out_shape = pad->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
+    T* data_ptr = buffer.get_ptr<T>();
+    auto pad_value = std::static_pointer_cast<op::Constant>(pad->get_input_node_shared_ptr(1));
 
     if (func != nullptr)
     {
@@ -38,7 +38,7 @@ shared_ptr<op::Constant> fold_constant_pad(shared_ptr<op::Constant> constant,
         inputs.push_back(const_cast<void*>(pad_value->get_data_ptr()));
 
         vector<void*> outputs;
-        outputs.push_back(out_vec.data());
+        outputs.push_back(data_ptr);
 
         func(inputs, outputs);
     }
@@ -46,7 +46,7 @@ shared_ptr<op::Constant> fold_constant_pad(shared_ptr<op::Constant> constant,
     {
         runtime::reference::pad<T>(constant->get_data_ptr<T>(),
                                    pad_value->get_data_ptr<T>(),
-                                   out_vec.data(),
+                                   data_ptr,
                                    constant->get_shape(),
                                    out_shape,
                                    pad->get_padding_below(),
@@ -54,7 +54,7 @@ shared_ptr<op::Constant> fold_constant_pad(shared_ptr<op::Constant> constant,
                                    pad->get_pad_mode());
     }
 
-    return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
+    return make_shared<op::Constant>(constant->get_element_type(), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_pad()

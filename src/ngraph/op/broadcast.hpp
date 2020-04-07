@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,8 +48,8 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return A set containing the indices of the broadcast axes (0-based).
                 const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
@@ -65,7 +65,7 @@ namespace ngraph
                           const AxisSet& broadcast_axes);
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 virtual void infer_shape() {}
                 Shape m_shape;
@@ -93,8 +93,8 @@ namespace ngraph
                               const Output<Node>& like_arg,
                               const AxisSet& initial_broadcast_axes);
                 bool visit_attributes(AttributeVisitor& visitor) override;
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 void infer_shape() override;
                 const AxisSet& get_initial_broadcast_axes() const
@@ -155,8 +155,8 @@ namespace ngraph
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return Broadcast Specification.
                 const AutoBroadcastSpec& get_broadcast_spec() const { return m_broadcast_spec; }
@@ -170,7 +170,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             private:
                 AutoBroadcastSpec m_broadcast_spec;

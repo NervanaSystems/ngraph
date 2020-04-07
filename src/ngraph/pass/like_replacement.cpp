@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -70,15 +70,6 @@ bool pass::LikeReplacement::run_on_function(shared_ptr<Function> function_ptr)
         if (handler != dispatcher.end())
         {
             clobbered = handler->second(n) || clobbered;
-        }
-
-        // Here we're checking on a common base class of a family of template classes,
-        // which is more than type info can handle.
-        auto sclb = as_type_ptr<op::ScalarConstantLikeBase>(n);
-        if (sclb != nullptr)
-        {
-            replace_node(sclb, sclb->as_constant());
-            clobbered = true;
         }
     }
 

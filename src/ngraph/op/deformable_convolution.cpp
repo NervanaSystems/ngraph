@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,8 +35,8 @@ op::v1::DeformableConvolution::DeformableConvolution(const Output<Node>& arg,
                                                      const CoordinateDiff& pads_end,
                                                      const Strides& dilations,
                                                      const PadType& auto_pad,
-                                                     const size_t group,
-                                                     const size_t deformable_group)
+                                                     const int64_t group,
+                                                     const int64_t deformable_group)
     : Op({arg, deformable_values, filters})
     , m_strides(strides)
     , m_dilations(dilations)
@@ -47,6 +47,18 @@ op::v1::DeformableConvolution::DeformableConvolution(const Output<Node>& arg,
     , m_deformable_group(deformable_group)
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::v1::DeformableConvolution::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("dilations", m_dilations);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    visitor.on_attribute("group", m_group);
+    visitor.on_attribute("deformable_group", m_deformable_group);
+    return true;
 }
 
 void op::v1::DeformableConvolution::validate_and_infer_types()
@@ -101,7 +113,7 @@ void op::v1::DeformableConvolution::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(
             this,
-            static_cast<size_t>(deformable_values_shape.rank()) >= 3u,
+            deformable_values_shape.rank().get_length() >= 3u,
             "The deformable values tensor rank is expected to be at least 3, got: ",
             deformable_values_shape.rank());
     }
@@ -109,7 +121,7 @@ void op::v1::DeformableConvolution::validate_and_infer_types()
     if (m_group > 1 && data_batch_shape[1].is_static() && filters_shape[0].is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(data_batch_shape[1]) % m_group == 0,
+                              data_batch_shape[1].get_length() % m_group == 0,
                               "The input data shape must be evenly divisible by the 'group' value "
                               "along the channels axis. Current input shape: ",
                               data_batch_shape,
@@ -118,7 +130,7 @@ void op::v1::DeformableConvolution::validate_and_infer_types()
 
         NODE_VALIDATION_CHECK(
             this,
-            static_cast<size_t>(filters_shape[0]) % m_group == 0,
+            filters_shape[0].get_length() % m_group == 0,
             "The weights shape must be evenly divisible by the 'group' value along "
             "the channels axis. Current weights shape: ",
             filters_shape,
@@ -130,7 +142,7 @@ void op::v1::DeformableConvolution::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(
             this,
-            static_cast<size_t>(deformable_values_shape[1]) % m_deformable_group == 0,
+            deformable_values_shape[1].get_length() % m_deformable_group == 0,
             "The deformable values input must be evenly divisible by the 'deformable group' value "
             "along the channels axis. Current input shape: ",
             deformable_values_shape,

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ namespace ngraph
                 vertexai::plaidml::variable op_input(std::size_t idx) const
                 {
                     const auto& ti =
-                        m_build->bindings.at(&op().input(idx).get_source_output().get_tensor());
+                        m_build->bindings.at(&op().get_input_tensor(idx).get_source_output());
                     return ti.var;
                 }
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,10 +15,10 @@
 //*****************************************************************************
 
 #include "ngraph/op/fused/squared_difference.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
 using namespace std;
@@ -33,6 +33,12 @@ op::SquaredDifference::SquaredDifference(const Output<Node>& x1,
     , m_autobroadcast(auto_broadcast)
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::SquaredDifference::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("auto_broadcast", m_autobroadcast);
+    return true;
 }
 
 NodeVector op::SquaredDifference::decompose_op() const

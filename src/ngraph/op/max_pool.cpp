@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/validation_util.hpp"
@@ -251,7 +252,7 @@ shared_ptr<Node> op::v0::MaxPoolBackprop::copy_with_new_args(const NodeVector& n
                                                 m_padding_above);
 }
 
-void op::v0::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (m_ceil_mode)
     {
@@ -301,6 +302,17 @@ op::v1::MaxPool::MaxPool(const Output<Node>& arg,
                          op::RoundingType rounding_type)
     : v1::MaxPool(arg, strides, pads_begin, pads_end, kernel, rounding_type, op::PadType::EXPLICIT)
 {
+}
+
+bool ngraph::op::v1::MaxPool::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("kernel", m_kernel);
+    visitor.on_attribute("rounding_type", m_rounding_type);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    return true;
 }
 
 void op::v1::MaxPool::validate_and_infer_types()
@@ -459,7 +471,7 @@ shared_ptr<Node> op::v1::MaxPoolBackprop::copy_with_new_args(const NodeVector& n
         new_args.at(0), new_args.at(1), m_strides, m_pads_begin, m_pads_end, m_kernel);
 }
 
-void op::v1::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     if (m_rounding_type == op::RoundingType::CEIL)
     {

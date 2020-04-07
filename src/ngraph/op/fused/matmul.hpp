@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ namespace ngraph
                        const bool& transpose_a = 0,
                        const bool& transpose_b = 0);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual void pre_validate_and_infer_types() override;
 
                 virtual NodeVector decompose_op() const override;

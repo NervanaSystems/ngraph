@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,9 +26,14 @@ add_executable(nbench ${SRC})
 if (APPLE)
     set_property(TARGET nbench APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-rpath,@loader_path/../lib")
 endif()
-target_link_libraries(nbench PRIVATE ngraph)
+
+find_package(Threads REQUIRED)
+target_link_libraries(nbench PRIVATE ngraph Threads::Threads)
 if (NGRAPH_CPU_ENABLE)
     target_link_libraries(nbench PRIVATE cpu_backend)
+endif()
+if (NGRAPH_GPU_ENABLE)
+    target_link_libraries(nbench PRIVATE gpu_backend)
 endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(nbench PRIVATE interpreter_backend)

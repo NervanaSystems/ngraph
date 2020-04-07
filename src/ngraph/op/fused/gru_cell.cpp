@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -273,7 +273,7 @@ NodeVector op::GRUCell::decompose_op() const
 void op::GRUCell::add_default_bias_input()
 {
     Output<Node> B =
-        op::Constant::create(input(0).get_element_type(),
+        op::Constant::create(get_input_element_type(0),
                              Shape{2 * s_gates_count * get_hidden_size()},
                              vector<float>(2 * s_gates_count * get_hidden_size(), 0.f));
     set_argument(4, B);

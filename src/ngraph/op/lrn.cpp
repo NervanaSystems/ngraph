@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/lrn.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/multiply.hpp"
 
@@ -79,7 +80,8 @@ void op::LRN::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(
         this,
-        static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape_rank),
+        axes_shape.is_dynamic() || input_shape_rank.is_dynamic() ||
+            axes_shape[0].get_length() <= input_shape_rank.get_length(),
         "Number of elements of axes must be >= 0 and <= argument rank (axes_shape[0]: ",
         axes_shape[0],
         ").");
@@ -90,7 +92,7 @@ void op::LRN::validate_and_infer_types()
         for (auto axis : reduction_axes)
         {
             NODE_VALIDATION_CHECK(this,
-                                  axis < size_t(input_shape_rank),
+                                  axis < input_shape_rank.get_length(),
                                   "Reduction axis (",
                                   axis,
                                   ") is out of bounds ",
@@ -104,10 +106,19 @@ void op::LRN::validate_and_infer_types()
 
     const auto& axes_type = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
-                          axes_type.compatible(element::Type_t::i64),
-                          "Axes input must have element type i64 (axes type: ",
+                          axes_type.is_integral_number(),
+                          "Axes input must be integral numbers, but are: ",
                           axes_type,
                           ").");
+}
+
+bool ngraph::op::v0::LRN::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("alpha", m_alpha);
+    visitor.on_attribute("beta", m_beta);
+    visitor.on_attribute("bias", m_bias);
+    visitor.on_attribute("size", m_size);
+    return true;
 }
 
 shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
@@ -116,7 +127,8 @@ shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<op::LRN>(new_args.at(0), new_args.at(1), m_alpha, m_beta, m_bias, m_size);
 }
 
-void op::LRN::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
+void op::LRN::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                const OutputVector& /* deltas */)
 {
     throw ngraph_error("NYI");
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,10 @@ namespace ngraph
             FloatUnion() { i = 0; }
             FloatUnion(float val) { f = val; }
             FloatUnion(uint32_t val) { i = val; }
+            FloatUnion(uint32_t s, uint32_t e, uint32_t f)
+                : FloatUnion(s << 31 | e << 23 | f)
+            {
+            }
             float f;
             uint32_t i;
         };

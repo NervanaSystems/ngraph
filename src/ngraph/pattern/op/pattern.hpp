@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,16 +26,54 @@ namespace ngraph
     {
         namespace op
         {
-            using Predicate = std::function<bool(std::shared_ptr<Node>)>;
+            class Label;
+        }
+
+        class Matcher;
+        class MatchState;
+
+        using RPatternValueMap = std::map<std::shared_ptr<Node>, OutputVector>;
+        using PatternValueMap = std::map<std::shared_ptr<Node>, Output<Node>>;
+        using PatternValueMaps = std::vector<PatternValueMap>;
+
+        using PatternMap = std::map<std::shared_ptr<Node>, std::shared_ptr<Node>>;
+
+        PatternMap as_pattern_map(const PatternValueMap& pattern_value_map);
+        PatternValueMap as_pattern_value_map(const PatternMap& pattern_map);
+
+        template <typename T>
+        std::function<bool(std::shared_ptr<Node>)> has_class()
+        {
+            auto pred = [](std::shared_ptr<Node> node) -> bool { return is_type<T>(node); };
+
+            return pred;
+        }
+
+        namespace op
+        {
+            using NodePredicate = std::function<bool(std::shared_ptr<Node>)>;
+            using ValuePredicate = std::function<bool(const Output<Node>& value)>;
+
+            NGRAPH_API
+            ValuePredicate as_value_predicate(NodePredicate pred);
 
             class NGRAPH_API Pattern : public Node
             {
             public:
                 /// \brief \p a base class for \sa Skip and \sa Label
                 ///
-                Pattern(const NodeVector& nodes, Predicate pred)
-                    : Node(nodes)
+                Pattern(const OutputVector& patterns, ValuePredicate pred)
+                    : Node(patterns)
                     , m_predicate(pred)
+                {
+                    if (!m_predicate)
+                    {
+                        m_predicate = [](const Output<Node>&) { return true; };
+                    }
+                }
+
+                Pattern(const OutputVector& patterns)
+                    : Pattern(patterns, nullptr)
                 {
                 }
 
@@ -45,10 +83,11 @@ namespace ngraph
                     throw ngraph_error("Uncopyable");
                 }
 
-                Predicate get_predicate() const;
+                ValuePredicate get_predicate() const;
 
+                bool is_pattern() const override { return true; }
             protected:
-                std::function<bool(std::shared_ptr<Node>)> m_predicate;
+                ValuePredicate m_predicate;
             };
         }
     }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,9 +40,18 @@
 using namespace std;
 using namespace ngraph;
 
-#define TI(x) type_index(typeid(x))
+bool is_uniform_constant(const Input<Node>& input)
+{
+    bool rc = false;
+    auto node = input.get_source_output().get_node();
+    if (node->get_type_info() == op::Constant::type_info)
+    {
+        auto constant = as_type<op::Constant>(node);
+        rc = constant->get_all_data_elements_bitwise_identical();
+    }
+    return rc;
+}
 
-extern template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
 template <typename T>
 static shared_ptr<pattern::Matcher>
     create_binary_matcher(shared_ptr<pattern::op::Label> label,
@@ -52,11 +61,6 @@ static shared_ptr<pattern::Matcher>
     auto bcst_label = make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
     auto matcher = make_shared<pattern::Matcher>(make_shared<T>(label, bcst_label));
     return matcher;
-}
-
-static shared_ptr<pattern::op::Label> get_broadcast_label(shared_ptr<pattern::Matcher> matcher)
-{
-    return static_pointer_cast<pattern::op::Label>(matcher->get_pattern()->get_argument(1));
 }
 
 //`simplify_concat` identifies slices-concat sequences
@@ -74,7 +78,7 @@ static bool simplify_concat(shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_concat for " << n->get_name();
 
-    shared_ptr<Node> branch_tip;
+    Output<Node> branch_tip;
 
     auto ltip = make_shared<pattern::op::Label>(element::i32, Shape{2, 1});
 
@@ -89,21 +93,21 @@ static bool simplify_concat(shared_ptr<Node> n)
     Coordinate prev_lower_bounds;
     Shape prev_slice_shape;
 
-    for (auto carg : n->get_arguments())
+    for (auto carg : n->input_values())
     {
         if (!matcher->match(carg))
         {
-            NGRAPH_DEBUG << carg->get_name() << " doesn't match";
+            NGRAPH_DEBUG << carg << " doesn't match";
             return false;
         }
 
-        auto slice = static_pointer_cast<op::Slice>(matcher->get_pattern_map()[lslice]);
-        if (branch_tip)
+        auto& pattern_value_map = matcher->get_pattern_value_map();
+        auto slice = as_type_ptr<op::Slice>(pattern_value_map[lslice].get_node_shared_ptr());
+        if (branch_tip != Output<Node>())
         {
-            if (branch_tip != matcher->get_pattern_map()[ltip])
+            if (branch_tip != pattern_value_map[ltip])
             {
-                NGRAPH_DEBUG << branch_tip->get_name() << " doesn't match "
-                             << matcher->get_pattern_map()[ltip]->get_name();
+                NGRAPH_DEBUG << branch_tip << " doesn't match " << pattern_value_map[ltip];
                 return false;
             }
 
@@ -112,7 +116,7 @@ static bool simplify_concat(shared_ptr<Node> n)
             auto cur_lower_bounds = slice->get_lower_bounds();
             if (cur_lower_bounds < prev_lower_bounds)
             {
-                NGRAPH_DEBUG << slice->get_name() << " is in the wrong order";
+                NGRAPH_DEBUG << slice << " is in the wrong order";
                 return false;
             }
             prev_lower_bounds.assign(cur_lower_bounds.begin(), cur_lower_bounds.end());
@@ -120,45 +124,44 @@ static bool simplify_concat(shared_ptr<Node> n)
             // slice shapes need to match
             if (slice->get_shape() != prev_slice_shape)
             {
-                NGRAPH_DEBUG << slice->get_name()
-                             << " doesn't match the shape of the previous slice";
+                NGRAPH_DEBUG << slice << " doesn't match the shape of the previous slice";
                 return false;
             }
         }
         else
         {
-            branch_tip = matcher->get_pattern_map()[ltip];
+            branch_tip = pattern_value_map[ltip];
             prev_lower_bounds.assign(slice->get_lower_bounds().begin(),
                                      slice->get_lower_bounds().end());
             prev_slice_shape.assign(slice->get_shape().begin(), slice->get_shape().end());
-            NGRAPH_DEBUG << "setting branch_tip to " << branch_tip->get_name();
+            NGRAPH_DEBUG << "setting branch_tip to " << branch_tip;
         }
 
         if (slice->get_users(true).size() > 1)
         {
-            NGRAPH_DEBUG << slice->get_name() << " has more than one user";
+            NGRAPH_DEBUG << slice << " has more than one user";
             return false;
         }
 
         if (shape_size(slice->get_strides()) != 1)
         {
-            NGRAPH_DEBUG << slice->get_name() << " is strided";
+            NGRAPH_DEBUG << slice << " is strided";
             return false;
         }
 
         // check that no other node uses slices and reshapes
-        if (auto rcarg = as_type_ptr<op::Reshape>(carg))
+        if (auto rcarg = as_type_ptr<op::Reshape>(carg.get_node_shared_ptr()))
         {
-            auto default_shape = get_default_order(rcarg->get_argument(0)->get_shape());
+            auto default_shape = get_default_order(rcarg->input_value(0).get_shape());
             if (default_shape != rcarg->get_input_order())
             {
-                NGRAPH_DEBUG << carg->get_name() << " reshape also does transposes";
+                NGRAPH_DEBUG << carg << " reshape also does transposes";
                 return false;
             }
 
             if (rcarg->get_users(true).size() > 1)
             {
-                NGRAPH_DEBUG << rcarg->get_name() << " has more than one user";
+                NGRAPH_DEBUG << rcarg << " has more than one user";
                 return false;
             }
         }
@@ -167,10 +170,10 @@ static bool simplify_concat(shared_ptr<Node> n)
     auto concat = static_pointer_cast<op::Concat>(n);
     auto concat_axis = concat->get_concatenation_axis();
 
-    auto slice_shape = branch_tip->get_users(true).at(0)->get_shape();
+    auto slice_shape = branch_tip.get_node_shared_ptr()->get_users(true).at(0)->get_shape();
     size_t slice_axis = numeric_limits<size_t>::max();
 
-    auto btip_shape = branch_tip->get_shape();
+    auto btip_shape = branch_tip.get_shape();
 
     // slices should cover all elements
     if (shape_size(btip_shape) != shape_size(n->get_shape()))
@@ -235,9 +238,111 @@ static bool simplify_concat(shared_ptr<Node> n)
             }
         }
     }
-
-    replace_node(n, replacement);
+    n->output(0).replace(replacement);
     return true;
+}
+
+static bool is_uniform_constant(const op::Constant* constant, int value)
+{
+    bool rc = false;
+    if (constant && constant->get_all_data_elements_bitwise_identical())
+    {
+        switch (constant->get_element_type())
+        {
+        case ngraph::element::Type_t::undefined:
+        {
+            throw runtime_error("is_value type not supported");
+        }
+        case ngraph::element::Type_t::dynamic: { throw runtime_error("is_value type not supported");
+        }
+        case ngraph::element::Type_t::boolean: break;
+        case ngraph::element::Type_t::bf16:
+            rc = *static_cast<const bfloat16*>(constant->get_data_ptr()) ==
+                 bfloat16(static_cast<float>(value));
+            break;
+        case ngraph::element::Type_t::f16:
+            rc = *static_cast<const float16*>(constant->get_data_ptr()) ==
+                 float16(static_cast<float>(value));
+            break;
+        case ngraph::element::Type_t::f32:
+            rc = *static_cast<const float*>(constant->get_data_ptr()) == static_cast<float>(value);
+            break;
+        case ngraph::element::Type_t::f64:
+            rc =
+                *static_cast<const double*>(constant->get_data_ptr()) == static_cast<double>(value);
+            break;
+        case ngraph::element::Type_t::i8:
+            rc =
+                *static_cast<const int8_t*>(constant->get_data_ptr()) == static_cast<int8_t>(value);
+            break;
+        case ngraph::element::Type_t::i16:
+            rc = *static_cast<const int16_t*>(constant->get_data_ptr()) ==
+                 static_cast<int16_t>(value);
+            break;
+        case ngraph::element::Type_t::i32:
+            rc = *static_cast<const int32_t*>(constant->get_data_ptr()) ==
+                 static_cast<int32_t>(value);
+            break;
+        case ngraph::element::Type_t::i64:
+            rc = *static_cast<const int64_t*>(constant->get_data_ptr()) ==
+                 static_cast<int64_t>(value);
+            break;
+        case ngraph::element::Type_t::u1: throw runtime_error("is_value type not supported");
+        case ngraph::element::Type_t::u8:
+            rc = *static_cast<const uint8_t*>(constant->get_data_ptr()) ==
+                 static_cast<uint8_t>(value);
+            break;
+        case ngraph::element::Type_t::u16:
+            rc = *static_cast<const uint16_t*>(constant->get_data_ptr()) ==
+                 static_cast<uint16_t>(value);
+            break;
+        case ngraph::element::Type_t::u32:
+            rc = *static_cast<const uint32_t*>(constant->get_data_ptr()) ==
+                 static_cast<uint32_t>(value);
+            break;
+        case ngraph::element::Type_t::u64:
+            rc = *static_cast<const uint64_t*>(constant->get_data_ptr()) ==
+                 static_cast<uint64_t>(value);
+            break;
+        }
+    }
+    return rc;
+}
+
+static shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
+{
+    set<Node::type_info_t> nomath = {op::Broadcast::type_info, op::Reshape::type_info};
+    while (nomath.find(op->get_type_info()) != nomath.end())
+    {
+        op = op->get_input_node_shared_ptr(0);
+    }
+    return as_type_ptr<op::Constant>(op);
+}
+
+static bool is_input_uniform_constant(shared_ptr<Node> op,
+                                      int constant_value,
+                                      shared_ptr<Node>& constant,
+                                      Output<Node>& value)
+{
+    bool rc = false;
+    auto c = get_constant(op->get_input_node_shared_ptr(0));
+    if (is_uniform_constant(c.get(), constant_value))
+    {
+        constant = op->get_input_node_shared_ptr(0);
+        value = op->input(1).get_source_output();
+        rc = true;
+    }
+    else
+    {
+        c = get_constant(op->get_input_node_shared_ptr(1));
+        if (is_uniform_constant(c.get(), constant_value))
+        {
+            constant = op->get_input_node_shared_ptr(1);
+            value = op->input(0).get_source_output();
+            rc = true;
+        }
+    }
+    return rc;
 }
 
 //`simplify_multiply` optimizes the following 4 *base* cases
@@ -249,33 +354,28 @@ static bool simplify_concat(shared_ptr<Node> n)
 // a * broadcast(1) -> a
 static bool simplify_multiply(shared_ptr<Node> n)
 {
-    NGRAPH_DEBUG << "In simplify_multiply for " << n->get_name();
-    auto iconst = make_zero(element::i32, Shape{});
-    auto label = make_shared<pattern::op::Label>(iconst);
-    auto const_label_zero = make_shared<pattern::op::Label>(iconst, is_zero, NodeVector{iconst});
-    auto const_label_one = make_shared<pattern::op::Label>(iconst, is_one, NodeVector{iconst});
-
-    auto matcher_const_zero = create_binary_matcher<op::Multiply>(label, const_label_zero);
-    auto matcher_const_one = create_binary_matcher<op::Multiply>(label, const_label_one);
-
-    if (matcher_const_zero->match(n))
+    bool rc = false;
+    auto multiply = as_type_ptr<op::Multiply>(n);
+    if (multiply)
     {
-        auto bcst_label = get_broadcast_label(matcher_const_zero);
-        auto bcst_or_cnst = matcher_const_zero->get_pattern_map()[bcst_label];
-        NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << bcst_or_cnst->get_name();
-        replace_node(n, bcst_or_cnst);
-        return true;
+        shared_ptr<Node> constant;
+        Output<Node> value;
+        if (is_input_uniform_constant(multiply, 0, constant, value))
+        {
+            replace_node(multiply, constant);
+            rc = true;
+        }
+        else
+        {
+            if (is_input_uniform_constant(multiply, 1, constant, value))
+            {
+                multiply->output(0).replace(value);
+                rc = true;
+            }
+        }
     }
 
-    if (matcher_const_one->match(n))
-    {
-        auto x = matcher_const_one->get_pattern_map()[label];
-        NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
-        replace_node(n, x);
-        return true;
-    }
-
-    return false;
+    return rc;
 }
 
 //`simplify_add` optimizes the following 2 *base* cases
@@ -285,32 +385,20 @@ static bool simplify_multiply(shared_ptr<Node> n)
 // a + broadcast(0) -> a
 static bool simplify_add(shared_ptr<Node> n)
 {
-    NGRAPH_DEBUG << "In simplify_add for " << n->get_name();
-    auto iconst = make_zero(element::i32, Shape{});
-    auto label = make_shared<pattern::op::Label>(iconst);
-    auto const_label = make_shared<pattern::op::Label>(iconst, nullptr, NodeVector{iconst});
-    auto matcher = create_binary_matcher<op::Add>(label, const_label);
-
-    if (matcher->match(n))
+    bool rc = false;
+    auto add = as_type_ptr<op::Add>(n);
+    if (add)
     {
-        auto pattern_map = matcher->get_pattern_map();
-        auto x = pattern_map[label];
-        auto cnst = pattern_map[const_label];
-        NGRAPH_DEBUG << "Node " << n->get_name() << " matched \" arg + 0 \" \n"
-                     << " arg : " << x->get_name() << " , const : " << cnst->get_name();
-
-        if (is_zero(cnst))
+        shared_ptr<Node> constant;
+        Output<Node> value;
+        if (is_input_uniform_constant(add, 0, constant, value))
         {
-            NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
-            replace_node(n, x);
-            return true;
-        }
-        else
-        {
-            NGRAPH_DEBUG << cnst->get_name() << " not equal to 0 ";
+            add->output(0).replace(value);
+            rc = true;
         }
     }
-    return false;
+
+    return rc;
 }
 
 //`simplify_log` optimizes `log(exp(x)/y)` into `x - log(y)`
@@ -455,20 +543,20 @@ static bool simplify_reduction(shared_ptr<Node> n)
     return true;
 }
 
-static unordered_map<type_index, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
+static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
 {
-    return unordered_map<type_index, function<bool(shared_ptr<Node>)>>(
-        {{TI(op::Add), simplify_add},
-         {TI(op::Multiply), simplify_multiply},
-         {TI(op::Concat), simplify_concat},
-         {TI(op::Sum),
+    return unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>>(
+        {{op::Add::type_info, simplify_add},
+         {op::Multiply::type_info, simplify_multiply},
+         {op::Concat::type_info, simplify_concat},
+         {op::Sum::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::Sum, get_sum_constant>}},
-         {TI(op::Product),
+         {op::Product::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::Product, get_prod_constant>}},
-         {TI(op::Log), simplify_log}});
+         {op::Log::type_info, simplify_log}});
 }
 
-static unordered_map<type_index, function<bool(shared_ptr<Node>)>> ops_to_simplifiers =
+static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> ops_to_simplifiers =
     initialize_ops_to_simplifiers();
 
 bool pass::AlgebraicSimplification::run_on_function(shared_ptr<Function> f)
@@ -481,14 +569,11 @@ bool pass::AlgebraicSimplification::run_on_function(shared_ptr<Function> f)
             continue;
         }
 
-        const Node& node = *n;
-        auto eh = ops_to_simplifiers.find(TI(node));
-        if (eh == ops_to_simplifiers.end())
+        auto eh = ops_to_simplifiers.find(n->get_type_info());
+        if (eh != ops_to_simplifiers.end())
         {
-            continue;
+            replaced = eh->second(n) || replaced;
         }
-
-        replaced = eh->second(n) || replaced;
     }
     return replaced;
 }

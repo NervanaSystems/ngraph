@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/util/binary_elementwise_comparison.hpp"
+#include "ngraph/attribute_visitor.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -58,6 +59,6 @@ void op::util::BinaryElementwiseComparison::validate_and_infer_types()
 
 bool op::util::BinaryElementwiseComparison::visit_attributes(AttributeVisitor& visitor)
 {
-    visitor.on_attribute("autob", m_autob);
+    visitor.on_attribute("auto_broadcast", m_autob);
     return true;
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,9 @@
 #include <cstdint>
 #include <vector>
 
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/split.hpp"
-#include "ngraph/op/variadic_split.hpp"
+#include "default_opset.hpp"
+#include "ngraph/builder/split.hpp"
 #include "split.hpp"
-#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -35,28 +33,18 @@ namespace ngraph
                 {
                     const auto input = node.get_ng_inputs().at(0);
                     const auto axis = node.get_attribute_value<int64_t>("axis", 0);
-                    const auto axis_node =
-                        ngraph::op::Constant::create(element::i64, Shape{}, {axis});
 
-                    std::shared_ptr<ngraph::Node> split;
                     if (node.has_attribute("split"))
                     {
                         const auto splits =
                             node.get_attribute_value<std::vector<std::size_t>>("split");
-
-                        const auto split_lengths = ngraph::op::Constant::create(
-                            element::u64, Shape{splits.size()}, splits);
-
-                        split = std::make_shared<ngraph::op::v1::VariadicSplit>(
-                            input, axis_node, split_lengths);
+                        return ngraph::builder::opset1::split(input, splits, axis);
                     }
                     else
                     {
                         const auto outputs_number = node.get_output_names().size();
-                        split = std::make_shared<ngraph::op::v1::Split>(
-                            input, axis_node, outputs_number);
+                        return ngraph::builder::opset1::split(input, outputs_number, axis);
                     }
-                    return common::get_outputs(split);
                 }
 
             } // namespace set_1

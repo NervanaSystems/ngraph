@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,6 +48,12 @@ void op::CTCGreedyDecoder::validate_and_infer_types()
     {
         set_output_type(0, input_et, PartialShape::dynamic());
     }
+}
+
+bool op::CTCGreedyDecoder::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("ctc_merge_repeated", m_ctc_merge_repeated);
+    return true;
 }
 
 shared_ptr<Node> op::CTCGreedyDecoder::copy_with_new_args(const NodeVector& new_args) const

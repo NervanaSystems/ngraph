@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,13 +53,14 @@ namespace ngraph
                     const Output<Node>& arg1,
                     const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual bool is_commutative() const override { return true; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         } // namespace v0
 
@@ -94,13 +95,14 @@ namespace ngraph
                     const AutoBroadcastSpec& auto_broadcast =
                         AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual bool is_commutative() const override { return true; }
                 size_t get_version() const override { return 1; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
 
         } // namespace v1

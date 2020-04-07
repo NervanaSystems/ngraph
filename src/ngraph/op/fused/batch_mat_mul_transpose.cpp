@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/util.hpp"
@@ -150,12 +149,12 @@ void op::BatchMatMulTranspose::validate_and_infer_types()
 }
 
 void op::BatchMatMulTranspose::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                 const NodeVector& deltas)
+                                                 const OutputVector& deltas)
 {
     auto delta = deltas.at(0); // NxIxK
 
-    auto arg0 = input(0).get_source_output().get_node_shared_ptr(); // NxIxJ (maybe transposed)
-    auto arg1 = input(1).get_source_output().get_node_shared_ptr(); // NxJxK (maybe transposed)
+    auto arg0 = get_input_node_shared_ptr(0); // NxIxJ (maybe transposed)
+    auto arg1 = get_input_node_shared_ptr(1); // NxJxK (maybe transposed)
 
     // If arg1 is already transposed, it does not need to be transposed again
     auto delta_dot_arg1 =

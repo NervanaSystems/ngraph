@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ namespace ngraph
             SYMMETRIC
         };
 
+        NGRAPH_API
         std::ostream& operator<<(std::ostream& s, const PadMode& type);
     }
 
@@ -76,6 +77,7 @@ namespace ngraph
             NOTSET = EXPLICIT,
         };
 
+        NGRAPH_API
         std::ostream& operator<<(std::ostream& s, const PadType& type);
     }
 
@@ -101,6 +103,7 @@ namespace ngraph
             CEIL = 1,
         };
 
+        NGRAPH_API
         std::ostream& operator<<(std::ostream& s, const RoundingType& type);
     }
 
@@ -166,6 +169,7 @@ namespace ngraph
             PDPD
         };
 
+        NGRAPH_API
         std::ostream& operator<<(std::ostream& s, const AutoBroadcastType& type);
     }
 
@@ -194,6 +198,7 @@ namespace ngraph
             MAX
         };
 
+        NGRAPH_API
         std::ostream& operator<<(std::ostream& s, const EpsMode& type);
     }
 
@@ -221,6 +226,8 @@ namespace ngraph
             // Sort result based on element values
             SORT_VALUES,
         };
+
+        NGRAPH_API
         std::ostream& operator<<(std::ostream& s, const TopKSortType& type);
     }
 
@@ -280,15 +287,15 @@ namespace ngraph
     }
 
     template <>
-    class AttributeAdapter<op::AutoBroadcastSpec> : public ValueReference<op::AutoBroadcastSpec>,
-                                                    public ValueAccessor<void>
+    class NGRAPH_API AttributeAdapter<op::AutoBroadcastSpec>
+        : public ValueReference<op::AutoBroadcastSpec>, public ValueAccessor<void>
     {
     public:
         AttributeAdapter(op::AutoBroadcastSpec& value)
             : ValueReference<op::AutoBroadcastSpec>(value)
         {
         }
-        NGRAPH_API
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastSpec>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };

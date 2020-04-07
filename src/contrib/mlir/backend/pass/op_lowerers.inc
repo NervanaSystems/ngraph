@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,18 +27,31 @@
 MLIR_OP(NGAddOp             , true                  )
 MLIR_OP(NGArgMaxRedOp       , false                 )
 MLIR_OP(NGArgMinRedOp       , false                 )
-MLIR_OP(NGConcatOp          , false                 )
+MLIR_OP(NGAvgPoolOp         , false                 )
+MLIR_OP(NGAvgPoolBackpropOp , false                 )
+MLIR_OP(NGConcatOp          , true                  )
 MLIR_OP(NGConvolutionOp     , false                 )
+MLIR_OP(NGConvBiasOp        , false                 )
 MLIR_OP(NGDivOp             , true                  )
 MLIR_OP(NGDotOp             , false                 )
 MLIR_OP(NGGatherOp          , false                 )
+MLIR_OP(NGGemmOp            , false                 )
 MLIR_OP(NGGreaterOp         , true                  )
+MLIR_OP(NGGroupConvOp       , false                 )
 MLIR_OP(NGLessOp            , true                  )
+MLIR_OP(NGGreaterEqOp       , true                  )
+MLIR_OP(NGLessEqOp          , true                  )
+MLIR_OP(NGEqOp              , true                  )
+MLIR_OP(NGNotEqOp           , true                  )
+MLIR_OP(NGMatMulOp          , false                 )
 MLIR_OP(NGMulOp             , true                  )
 MLIR_OP(NGMaxOp             , true                  )
+MLIR_OP(NGMaxPoolOp         , false                 )
+MLIR_OP(NGMaxPoolBackpropOp , false                 )
 MLIR_OP(NGMinOp             , true                  )
 MLIR_OP(NGNegOp             , true                  )
 MLIR_OP(NGReluOp            , true                  )
+MLIR_OP(NGSoftMaxOp         , false                 )
 MLIR_OP(NGSubOp             , true                  )
 MLIR_LAST_OP(NGReturnOp     , false                 )
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 #pragma once
 
 #include <functional>
-#include <map>
 #include <mutex>
+#include <unordered_map>
 
 #include "ngraph/ngraph_visibility.hpp"
 
@@ -32,7 +32,7 @@ namespace ngraph
     {
     public:
         using Factory = std::function<BASE_TYPE*()>;
-        using FactoryMap = std::map<decltype(BASE_TYPE::type_info), Factory>;
+        using FactoryMap = std::unordered_map<typename BASE_TYPE::type_info_t, Factory>;
 
         // \brief Get the default factory for DERIVED_TYPE. Specialize as needed.
         template <typename DERIVED_TYPE>
@@ -42,7 +42,7 @@ namespace ngraph
         }
 
         /// \brief Register a custom factory for type_info
-        void register_factory(const decltype(BASE_TYPE::type_info) & type_info, Factory factory)
+        void register_factory(const typename BASE_TYPE::type_info_t& type_info, Factory factory)
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             m_factory_map[type_info] = factory;
@@ -63,7 +63,7 @@ namespace ngraph
         }
 
         /// \brief Check to see if a factory is registered
-        bool has_factory(const decltype(BASE_TYPE::type_info) & info)
+        bool has_factory(const typename BASE_TYPE::type_info_t& info)
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             return m_factory_map.find(info) != m_factory_map.end();
@@ -77,7 +77,7 @@ namespace ngraph
         }
 
         /// \brief Create an instance for type_info
-        BASE_TYPE* create(const decltype(BASE_TYPE::type_info) & type_info)
+        BASE_TYPE* create(const typename BASE_TYPE::type_info_t& type_info) const
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             auto it = m_factory_map.find(type_info);
@@ -86,7 +86,7 @@ namespace ngraph
 
         /// \brief Create an instance using factory for DERIVED_TYPE
         template <typename DERIVED_TYPE>
-        BASE_TYPE* create()
+        BASE_TYPE* create() const
         {
             return create(DERIVED_TYPE::type_info);
         }

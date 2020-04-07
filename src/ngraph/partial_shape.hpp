@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -286,15 +286,15 @@ namespace ngraph
     std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
 
     template <>
-    class AttributeAdapter<PartialShape> : public ValueReference<PartialShape>,
-                                           public ValueAccessor<void>
+    class NGRAPH_API AttributeAdapter<PartialShape> : public ValueReference<PartialShape>,
+                                                      public ValueAccessor<void>
     {
     public:
         AttributeAdapter(PartialShape& value)
             : ValueReference<PartialShape>(value)
         {
         }
-        NGRAPH_API
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<PartialShape>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };

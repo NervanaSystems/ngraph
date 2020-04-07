@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ ngraph::Node* ngraph::OpSet::create(const std::string& name) const
     auto type_info_it = m_name_type_info_map.find(name);
     return type_info_it == m_name_type_info_map.end()
                ? nullptr
-               : FactoryRegistry<Node>::get().create(type_info_it->second);
+               : m_factory_registry.create(type_info_it->second);
 }
 
 const ngraph::OpSet& ngraph::get_opset0()
@@ -51,15 +51,36 @@ const ngraph::OpSet& ngraph::get_opset0()
 const ngraph::OpSet& ngraph::get_opset1()
 {
     static std::mutex init_mutex;
+    static bool opset_is_initialized = false;
     static OpSet opset;
-    if (opset.size() == 0)
+    if (!opset_is_initialized)
     {
         std::lock_guard<std::mutex> guard(init_mutex);
-        if (opset.size() == 0)
+        if (!opset_is_initialized)
         {
 #define NGRAPH_OP(NAME, NAMESPACE) opset.insert<NAMESPACE::NAME>();
 #include "ngraph/opsets/opset1_tbl.hpp"
 #undef NGRAPH_OP
+            opset_is_initialized = true;
+        }
+    }
+    return opset;
+}
+
+const ngraph::OpSet& ngraph::get_opset2()
+{
+    static std::mutex init_mutex;
+    static bool opset_is_initialized = false;
+    static OpSet opset;
+    if (!opset_is_initialized)
+    {
+        std::lock_guard<std::mutex> guard(init_mutex);
+        if (!opset_is_initialized)
+        {
+#define NGRAPH_OP(NAME, NAMESPACE) opset.insert<NAMESPACE::NAME>();
+#include "ngraph/opsets/opset2_tbl.hpp"
+#undef NGRAPH_OP
+            opset_is_initialized = true;
         }
     }
     return opset;

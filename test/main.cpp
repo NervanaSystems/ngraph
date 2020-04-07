@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,11 +63,7 @@ int main(int argc, char** argv)
     ngraph::runtime::ngmlir::initializeNGraphMLIR();
 #endif
 
-    auto start = std::chrono::system_clock::now();
     int rc = RUN_ALL_TESTS();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now() - start);
-    NGRAPH_DEBUG_PRINT("[MAIN] Tests finished: Time: %d ms Exit code: %d", elapsed.count(), rc);
 
     return rc;
 }

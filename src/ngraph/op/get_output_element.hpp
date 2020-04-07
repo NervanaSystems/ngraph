@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ namespace ngraph
 {
     namespace op
     {
+        NGRAPH_API
         NodeVector get_output_elements(const std::shared_ptr<Node>& mon);
 
         namespace v0
@@ -42,37 +43,30 @@ namespace ngraph
                 /// Return the equilent Output<Node>
                 Output<Node> get_as_output() const;
 
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& inputs) const override;
                 void validate_and_infer_types() override;
 
                 /// \return The index of the tuple element to get.
                 size_t get_n() const { return m_n; }
-                virtual NodeVector get_arguments() const override;
+                NodeVector get_arguments() const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
                 size_t m_n;
             };
         }
         using v0::GetOutputElement;
     }
 
-    inline std::shared_ptr<Node> get_output_element(const Output<Node>& output,
-                                                    bool for_get_output_element = false)
+    inline std::shared_ptr<Node> get_output_element(const Output<Node>& output)
     {
-        return (for_get_output_element ||
-                (output.get_index() == 0 && output.get_node()->get_output_size() == 1))
-                   ? output.get_node_shared_ptr()
-                   : std::make_shared<op::GetOutputElement>(output.get_node_shared_ptr(),
-                                                            output.get_index());
+        return output.get_node_shared_ptr()->get_output_as_single_output_node(output.get_index());
     }
 
-    inline std::shared_ptr<Node> get_output_element(const std::shared_ptr<Node> node, size_t i = 0)
+    inline std::shared_ptr<Node> get_output_element(std::shared_ptr<Node> node, size_t i = 0)
     {
-        return ((i == 0) && node->get_output_size() == 1)
-                   ? node
-                   : std::make_shared<op::GetOutputElement>(node, i);
+        return node->get_output_as_single_output_node(i);
     }
 }

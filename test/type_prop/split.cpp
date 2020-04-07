@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,10 +53,10 @@ TEST(type_prop, split)
     const auto axis = op::Constant::create(element::i64, Shape{}, {1});
     const auto split = make_shared<op::Split>(data, axis, 2);
     EXPECT_EQ(split->outputs().size(), 2);
-    EXPECT_EQ(split->output(0).get_shape(), (Shape{2, 3}));
-    EXPECT_EQ(split->output(1).get_shape(), (Shape{2, 3}));
-    EXPECT_EQ(split->output(0).get_element_type(), element::i32);
-    EXPECT_EQ(split->output(1).get_element_type(), element::i32);
+    EXPECT_EQ(split->get_output_shape(0), (Shape{2, 3}));
+    EXPECT_EQ(split->get_output_shape(1), (Shape{2, 3}));
+    EXPECT_EQ(split->get_output_element_type(0), element::i32);
+    EXPECT_EQ(split->get_output_element_type(1), element::i32);
 }
 
 TEST(type_prop, split_axis_must_be_scalar)

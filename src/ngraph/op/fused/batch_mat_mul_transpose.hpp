@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,48 +24,52 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Matrix multiply for a batch of Rank 2 tensors each with potential
-        /// transpose.
-        ///
-        /// The inputs are expected to be Rank 3, where the first dim is the
-        /// batch size and must be the same for both inputs. The last two dims
-        /// are the shape of matrices, i.e. `(batch_size, :, :)`.
-        /// For example, for `a` with shape `(batch_size, n, k)`, and `b` with
-        /// shape `(batch_size, k, m)`, the result of BatchMatMul will have shape
-        /// `(batch_size, n, m)`, and `BatchMatMulTranspose(a, b)[i] = Dot(a[i], b[i])`.
-        class NGRAPH_API BatchMatMulTranspose : public ngraph::op::util::FusedOp
+        namespace v0
         {
-        public:
-            static constexpr NodeTypeInfo type_info{"BatchMatMulTranspose", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            BatchMatMulTranspose() = default;
-            /// \brief Constructs a batch of matmul product operation.
+            /// \brief Matrix multiply for a batch of Rank 2 tensors each with potential
+            /// transpose.
             ///
-            /// \param arg0 The node producing the first argument.
-            /// \param arg1 The node producing the second argument.
-            /// \param transpose_0 Apply transpose to arg0.
-            /// \param transpose_1 Apply transpose to arg1.
-            BatchMatMulTranspose(const Output<Node>& arg0,
-                                 const Output<Node>& arg1,
-                                 bool transpose_0 = false,
-                                 bool transpose_1 = false);
+            /// The inputs are expected to be Rank 3, where the first dim is the
+            /// batch size and must be the same for both inputs. The last two dims
+            /// are the shape of matrices, i.e. `(batch_size, :, :)`.
+            /// For example, for `a` with shape `(batch_size, n, k)`, and `b` with
+            /// shape `(batch_size, k, m)`, the result of BatchMatMul will have shape
+            /// `(batch_size, n, m)`, and `BatchMatMulTranspose(a, b)[i] = Dot(a[i], b[i])`.
+            class NGRAPH_API BatchMatMulTranspose : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"BatchMatMulTranspose", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                BatchMatMulTranspose() = default;
+                /// \brief Constructs a batch of matmul product operation.
+                ///
+                /// \param arg0 The node producing the first argument.
+                /// \param arg1 The node producing the second argument.
+                /// \param transpose_0 Apply transpose to arg0.
+                /// \param transpose_1 Apply transpose to arg1.
+                BatchMatMulTranspose(const Output<Node>& arg0,
+                                     const Output<Node>& arg1,
+                                     bool transpose_0 = false,
+                                     bool transpose_1 = false);
 
-            bool get_transpose_arg0() const { return m_transpose_arg0; }
-            bool get_transpose_arg1() const { return m_transpose_arg1; }
-            virtual void validate_and_infer_types() override;
+                bool get_transpose_arg0() const { return m_transpose_arg0; }
+                bool get_transpose_arg1() const { return m_transpose_arg1; }
+                virtual void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            virtual NodeVector decompose_op() const override;
+                virtual NodeVector decompose_op() const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
 
-        private:
-            bool m_transpose_arg0;
-            bool m_transpose_arg1;
-        };
+            private:
+                bool m_transpose_arg0;
+                bool m_transpose_arg1;
+            };
+        }
+        using v0::BatchMatMulTranspose;
     }
 }

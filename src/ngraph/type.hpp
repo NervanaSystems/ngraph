@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,11 @@
 
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "ngraph/ngraph_visibility.hpp"
 
@@ -101,4 +103,13 @@ namespace ngraph
         return is_type<Type>(value) ? std::static_pointer_cast<Type>(value)
                                     : std::shared_ptr<Type>();
     }
+}
+
+namespace std
+{
+    template <>
+    struct NGRAPH_API hash<ngraph::DiscreteTypeInfo>
+    {
+        size_t operator()(const ngraph::DiscreteTypeInfo& k) const;
+    };
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -83,7 +83,8 @@ std::ostream& ngraph::operator<<(std::ostream& str, const PartialShape& shape)
 PartialShape PartialShape::dynamic(Rank r)
 {
     return PartialShape(
-        r.is_static(), std::vector<Dimension>(r.is_static() ? size_t(r) : 0, Dimension::dynamic()));
+        r.is_static(),
+        std::vector<Dimension>(r.is_static() ? r.get_length() : 0, Dimension::dynamic()));
 }
 
 bool PartialShape::compatible(const PartialShape& s) const
@@ -94,7 +95,7 @@ bool PartialShape::compatible(const PartialShape& s) const
         return true;
     }
     // If we do know *this's rank and s's rank, and they are unequal, they are incompatible.
-    else if (size_t(rank()) != size_t(s.rank()))
+    else if (rank().get_length() != s.rank().get_length())
     {
         return false;
     }
@@ -102,7 +103,7 @@ bool PartialShape::compatible(const PartialShape& s) const
     // are elementwise compatible everywhere.
     else
     {
-        for (size_t i = 0; i < size_t(rank()); i++)
+        for (size_t i = 0; i < rank().get_length(); i++)
         {
             if (!m_dimensions[i].compatible(s.m_dimensions[i]))
             {
@@ -123,14 +124,14 @@ bool PartialShape::same_scheme(const PartialShape& s) const
     }
     else if (rank().is_static() && s.rank().is_static())
     {
-        if (size_t(rank()) != size_t(s.rank()))
+        if (rank().get_length() != s.rank().get_length())
         {
             return false;
         }
 
         bool success = true;
 
-        for (size_t i = 0; i < size_t(rank()); i++)
+        for (size_t i = 0; i < rank().get_length(); i++)
         {
             success &= (*this)[i].same_scheme(s[i]);
         }
@@ -149,11 +150,11 @@ bool PartialShape::relaxes(const PartialShape& s) const
     {
         return true;
     }
-    else if (s.rank().is_static() && size_t(rank()) == size_t(s.rank()))
+    else if (s.rank().is_static() && rank().get_length() == s.rank().get_length())
     {
         bool all_relax = true;
 
-        for (size_t i = 0; i < size_t(rank()); i++)
+        for (size_t i = 0; i < rank().get_length(); i++)
         {
             all_relax &= ((*this)[i].relaxes(s[i]));
         }
@@ -172,11 +173,11 @@ bool PartialShape::refines(const PartialShape& s) const
     {
         return true;
     }
-    else if (rank().is_static() && size_t(rank()) == size_t(s.rank()))
+    else if (rank().is_static() && rank().get_length() == s.rank().get_length())
     {
         bool all_refine = true;
 
-        for (size_t i = 0; i < size_t(rank()); i++)
+        for (size_t i = 0; i < rank().get_length(); i++)
         {
             all_refine &= ((*this)[i].refines(s[i]));
         }
@@ -198,12 +199,12 @@ bool PartialShape::merge_rank(Rank r)
     else if (!m_rank_is_static)
     {
         m_rank_is_static = true;
-        m_dimensions = std::vector<Dimension>(size_t(r), Dimension::dynamic());
+        m_dimensions = std::vector<Dimension>(r.get_length(), Dimension::dynamic());
         return true;
     }
     else
     {
-        return (m_dimensions.size() == size_t(r));
+        return (m_dimensions.size() == r.get_length());
     }
 }
 
@@ -214,7 +215,13 @@ Shape PartialShape::to_shape() const
         throw std::invalid_argument("to_shape was called on a dynamic shape.");
     }
 
-    return Shape(m_dimensions.begin(), m_dimensions.end());
+    std::vector<size_t> dimensions_to_shape(m_dimensions.size());
+    std::transform(m_dimensions.begin(),
+                   m_dimensions.end(),
+                   dimensions_to_shape.begin(),
+                   [](const Dimension& d) { return d.get_length(); });
+
+    return Shape(dimensions_to_shape.begin(), dimensions_to_shape.end());
 }
 
 bool PartialShape::merge_into(PartialShape& dst, const PartialShape& src)
@@ -229,7 +236,7 @@ bool PartialShape::merge_into(PartialShape& dst, const PartialShape& src)
         // No change to dst.
         return true;
     }
-    else if (size_t(dst.rank()) != size_t(src.rank()))
+    else if (dst.rank().get_length() != src.rank().get_length())
     {
         // Mismatching static ranks, cannot merge.
         return false;
@@ -238,7 +245,7 @@ bool PartialShape::merge_into(PartialShape& dst, const PartialShape& src)
     {
         // Ranks are both static, and they match.
         bool success = true;
-        for (size_t i = 0; i < size_t(dst.rank()); i++)
+        for (size_t i = 0; i < dst.rank().get_length(); i++)
         {
             success &= Dimension::merge(dst[i], dst[i], src[i]);
         }
@@ -263,8 +270,8 @@ bool PartialShape::broadcast_merge_into(PartialShape& dst,
         else
         {
             // Ranks are both static.
-            auto dst_rank = size_t(dst.rank());
-            auto src_rank = size_t(src.rank());
+            auto dst_rank = dst.rank().get_length();
+            auto src_rank = src.rank().get_length();
             auto new_rank = std::max(dst_rank, src_rank);
             std::vector<Dimension> dims(new_rank);
             bool success = true;
@@ -289,8 +296,8 @@ bool PartialShape::broadcast_merge_into(PartialShape& dst,
         else
         {
             // Ranks are both static.
-            auto dst_rank = size_t(dst.rank());
-            auto src_rank = size_t(src.rank());
+            auto dst_rank = dst.rank().get_length();
+            auto src_rank = src.rank().get_length();
             if (dst_rank == src_rank && dst.compatible(src))
                 return true;
 
@@ -305,7 +312,7 @@ bool PartialShape::broadcast_merge_into(PartialShape& dst,
             }
 
             size_t len = src_rank;
-            while (len > 0 && src[len - 1].is_static() && size_t(src[len - 1]) == 1)
+            while (len > 0 && src[len - 1].is_static() && src[len - 1].get_length() == 1)
             {
                 --len;
             }
@@ -331,7 +338,7 @@ bool PartialShape::all_non_negative() const
 {
     for (auto& d : m_dimensions)
     {
-        if (d.is_static() && int64_t(d) < 0)
+        if (d.is_static() && d.get_length() < 0)
         {
             return false;
         }

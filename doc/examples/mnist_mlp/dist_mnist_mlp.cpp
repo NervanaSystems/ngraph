@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -173,10 +173,10 @@ int main(int argc, char* argv[])
     // Updates
     ngraph::autodiff::Adjoints adjoints(OutputVector{loss},
                                         OutputVector{delta});
-    auto grad_W0 = adjoints.backprop_node(W0);
-    auto grad_b0 = adjoints.backprop_node(b0);
-    auto grad_W1 = adjoints.backprop_node(W1);
-    auto grad_b1 = adjoints.backprop_node(b1);
+    auto grad_W0 = adjoints.backprop_output(W0);
+    auto grad_b0 = adjoints.backprop_output(b0);
+    auto grad_W1 = adjoints.backprop_output(W1);
+    auto grad_b1 = adjoints.backprop_output(b1);
 
     auto avg_grad_W0 = std::make_shared<op::AllReduce>(grad_W0);
     auto avg_grad_b0 = std::make_shared<op::AllReduce>(grad_b0);

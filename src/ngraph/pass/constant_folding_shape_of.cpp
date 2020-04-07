@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,15 +31,15 @@ void pass::ConstantFolding::construct_constant_shape_of()
         NGRAPH_DEBUG << "In callback for constant_shape_of_callback against node = "
                      << m.get_match_root()->get_name();
 
-        auto pattern_map = m.get_pattern_map();
+        auto pattern_value_map = m.get_pattern_value_map();
 
-        auto arg_match = pattern_map[arg_label];
+        auto arg_match = pattern_value_map[arg_label];
 
-        if (arg_match->get_output_partial_shape(0).is_static())
+        if (arg_match.get_partial_shape().is_static())
         {
             NGRAPH_CHECK(revalidate_and_ensure_static(m.get_match_root()));
 
-            auto arg_shape = arg_match->get_output_shape(0);
+            auto arg_shape = arg_match.get_shape();
             auto replacement =
                 make_shared<op::Constant>(element::i64, Shape{arg_shape.size()}, arg_shape.data());
 

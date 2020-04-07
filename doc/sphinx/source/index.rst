@@ -1,4 +1,4 @@
-.. Copyright 2017-2019 Intel Corporation
+.. Copyright 2017-2020 Intel Corporation
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -46,7 +46,6 @@ nGraph Compiler Stack Documentation
    frameworks/tensorflow_connect.rst
    frameworks/onnx_integ.rst
    frameworks/paddle_integ.rst
-   frameworks/other/index.rst
 
 .. toctree::
    :maxdepth: 1
@@ -68,8 +67,7 @@ nGraph Compiler Stack Documentation
    :caption: Backend Support
 
    Basic Concepts <backends/index.rst>
-   backends/plaidml-ng-api/index.rst
-   Integrating Other Backends <backends/cpp-api.rst>
+   Adding New Backends <backends/cpp-api.rst>
 
 
 .. toctree::
@@ -89,9 +87,14 @@ nGraph Compiler Stack Documentation
 
 .. toctree::
    :maxdepth: 1
-   :caption: Debugging Graphs
+   :caption: Diagnostics
 
-   inspection/index.rst
+   inspection/debug_core.rst
+   inspection/debug_tf.rst
+   inspection/debug_onnx.rst
+   inspection/debug_paddle.rst
+   inspection/viz_tools.rst 
+   inspection/profiling.rst
 
 
 .. toctree::

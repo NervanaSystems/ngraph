@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "psroi_pooling.hpp"
+#include "ngraph/attribute_visitor.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -38,6 +39,17 @@ op::PSROIPooling::PSROIPooling(const Output<Node>& input,
     , m_mode(mode)
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::PSROIPooling::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("output_dim", m_output_dim);
+    visitor.on_attribute("group_size", m_group_size);
+    visitor.on_attribute("spatial_scale", m_spatial_scale);
+    visitor.on_attribute("mode", m_mode);
+    visitor.on_attribute("spatial_bins_x", m_spatial_bins_x);
+    visitor.on_attribute("spatial_bins_y", m_spatial_bins_y);
+    return true;
 }
 
 void op::PSROIPooling::validate_and_infer_types()

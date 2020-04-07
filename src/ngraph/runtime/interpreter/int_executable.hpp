@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@
 #ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
 #endif
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
@@ -96,6 +97,7 @@
 #include "ngraph/runtime/reference/result.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
+#include "ngraph/runtime/reference/round.hpp"
 #include "ngraph/runtime/reference/scatter_add.hpp"
 #include "ngraph/runtime/reference/scatter_nd_add.hpp"
 #include "ngraph/runtime/reference/select.hpp"
@@ -127,27 +129,23 @@ namespace ngraph
             class INTBackend;
             class INTExecutable;
 
-            namespace
+            // This expands the op list in op_tbl.hpp into a list of enumerations that look like
+            // this:
+            // Abs,
+            // Acos,
+            // ...
+            enum class OP_TYPEID
             {
-                // This expands the op list in op_tbl.hpp into a list of enumerations that look like
-                // this:
-                // Abs,
-                // Acos,
-                // ...
-                enum class OP_TYPEID
-                {
 #define NGRAPH_OP(NAME, NAMESPACE) ID_SUFFIX(NAME),
 #include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
 #undef NGRAPH_OP
-                    UnknownOp
-                };
-            }
-
+                UnknownOp
+            };
         } // namespace interpreter
     }     // namespace runtime
 } // namespace ngraph
 
-class ngraph::runtime::interpreter::INTExecutable : public Executable
+class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTExecutable : public Executable
 {
     friend class INTBackend;
 
@@ -174,7 +172,7 @@ public:
     std::vector<std::shared_ptr<runtime::Tensor>>
         create_output_tensor(size_t output_index, size_t pipeline_depth) override;
 
-private:
+protected:
     INTExecutable(const std::string& model_string);
 
     std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
@@ -189,15 +187,15 @@ private:
     std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
 
-    static OP_TYPEID get_typeid(const NodeTypeInfo& type_info);
+    static OP_TYPEID get_typeid(const Node& node);
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
 
-    void generate_calls(const element::Type& type,
-                        const Node& op,
-                        const std::vector<std::shared_ptr<HostTensor>>& outputs,
-                        const std::vector<std::shared_ptr<HostTensor>>& inputs);
+    virtual void generate_calls(const element::Type& type,
+                                const Node& op,
+                                const std::vector<std::shared_ptr<HostTensor>>& outputs,
+                                const std::vector<std::shared_ptr<HostTensor>>& inputs);
 
     template <typename T>
     void op_engine(const Node& node,
@@ -211,9 +209,8 @@ private:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-// #pragma GCC diagnostic error "-Wcovered-switch-default"
 #endif
-        switch (get_typeid(node.get_type_info()))
+        switch (get_typeid(node))
         {
         case OP_TYPEID::Abs:
         {
@@ -775,11 +772,6 @@ private:
                            dot->get_reduction_axes_count());
             break;
         }
-        case OP_TYPEID::DynReshape:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
         case OP_TYPEID::DynSlice:
         {
             throw unsupported_op("Unsupported op '" + node.description() + "'");
@@ -1193,8 +1185,8 @@ private:
             reference::pad(args[0]->get_data_ptr<const T>(),
                            args[1]->get_data_ptr<const T>(),
                            out[0]->get_data_ptr<T>(),
-                           node.input(0).get_shape(),
-                           node.output(0).get_shape(),
+                           node.get_input_shape(0),
+                           node.get_output_shape(0),
                            pad->get_padding_below(),
                            pad->get_padding_above(),
                            pad->get_pad_mode());
@@ -1520,11 +1512,6 @@ private:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
-        case OP_TYPEID::Reciprocal:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
         case OP_TYPEID::Relu:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1599,6 +1586,13 @@ private:
             {
                 throw ngraph_error("only int32 indices are supported");
             }
+            break;
+        }
+        case OP_TYPEID::Round:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::round<T>(
+                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::ScatterAdd:
@@ -1843,7 +1837,6 @@ private:
         case OP_TYPEID::MatMul:
         case OP_TYPEID::Split:
         case OP_TYPEID::DynBroadcast:
-        case OP_TYPEID::Transpose:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::Tile:
         case OP_TYPEID::DynReplaceSlice:
@@ -1864,12 +1857,10 @@ private:
         case OP_TYPEID::Gelu:
         case OP_TYPEID::GeluBackpropFactor:
         case OP_TYPEID::Gemm:
-        case OP_TYPEID::GroupConvolutionTranspose:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::Interpolate:
         case OP_TYPEID::LayerNorm:
         case OP_TYPEID::LayerNormBackprop:
-        case OP_TYPEID::LogSoftmax:
         case OP_TYPEID::LSTMCell:
         case OP_TYPEID::LSTMSequence:
         case OP_TYPEID::MVN:
@@ -1880,6 +1871,7 @@ private:
         case OP_TYPEID::RNNCell:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ScaleShift:
+        case OP_TYPEID::ScatterND:
         case OP_TYPEID::Selu:
         case OP_TYPEID::ShuffleChannels:
         case OP_TYPEID::SoftmaxCrossEntropy:
@@ -1887,6 +1879,7 @@ private:
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Stack:
         case OP_TYPEID::Unsqueeze:
         // Tensor Iterator not yet supported
         case OP_TYPEID::TensorIterator:

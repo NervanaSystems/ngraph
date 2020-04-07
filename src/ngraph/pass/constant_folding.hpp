@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
 
 #pragma once
 
+#include "ngraph/log.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -56,7 +58,12 @@ public:
         RANGE,
         SELECT,
         SQUEEZE,
-        UNSQUEEZE
+        UNSQUEEZE,
+        SPLIT,
+        VARIADIC_SPLIT,
+        ONE_HOT,
+        TILE,
+        NON_ZERO
     };
 
     ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
@@ -65,6 +72,8 @@ public:
         m_cfmap = cfmap;
         m_enable_shape_inference = true;
 
+        construct_constant_split();
+        construct_constant_variadic_split();
         construct_constant_reshape();
         construct_constant_broadcast();
         construct_constant_dyn_broadcast();
@@ -89,6 +98,9 @@ public:
         construct_constant_select();
         construct_constant_squeeze();
         construct_constant_unsqueeze();
+        construct_constant_one_hot();
+        construct_constant_tile();
+        construct_constant_non_zero();
     }
 
     // this allows to specify the order in which matchers will be run
@@ -130,6 +142,11 @@ public:
             case CFTransformations::SELECT: construct_constant_select(); break;
             case CFTransformations::SQUEEZE: construct_constant_squeeze(); break;
             case CFTransformations::UNSQUEEZE: construct_constant_unsqueeze(); break;
+            case CFTransformations::SPLIT: construct_constant_split(); break;
+            case CFTransformations::VARIADIC_SPLIT: construct_constant_variadic_split(); break;
+            case CFTransformations::ONE_HOT: construct_constant_one_hot(); break;
+            case CFTransformations::TILE: construct_constant_tile(); break;
+            case CFTransformations::NON_ZERO: construct_constant_non_zero(); break;
             }
         }
     }
@@ -159,6 +176,11 @@ private:
     void construct_constant_select();
     void construct_constant_squeeze();
     void construct_constant_unsqueeze();
+    void construct_constant_split();
+    void construct_constant_variadic_split();
+    void construct_constant_one_hot();
+    void construct_constant_tile();
+    void construct_constant_non_zero();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
 };

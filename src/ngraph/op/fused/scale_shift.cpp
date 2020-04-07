@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 #include "scale_shift.hpp"
+
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -38,7 +39,7 @@ NodeVector op::ScaleShift::decompose_op() const
     auto shift = input_value(2);
 
     // broadcast all data
-    auto broadcasted_nodes = numpy_style_broadcast_values({data, scale, shift});
+    auto broadcasted_nodes = builder::numpy_broadcast_outputs({data, scale, shift});
     data = broadcasted_nodes[0];
     scale = broadcasted_nodes[1];
     shift = broadcasted_nodes[2];

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
@@ -100,12 +101,13 @@ namespace ngraph
                 element::Type get_index_element_type() const { return m_index_element_type; }
                 bool get_compute_max() const { return m_compute_max; }
                 SortType get_sort() const { return m_sort; }
+                size_t get_default_output_index() const override { return no_default_index(); }
             protected:
                 element::Type m_index_element_type;
                 bool m_compute_max{false};
                 SortType m_sort{SortType::NONE};
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
             };
         } // namespace v0
 
@@ -154,14 +156,20 @@ namespace ngraph
                      const SortType sort,
                      const element::Type& index_element_type = element::i32);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual size_t get_version() const override { return 1; }
-                size_t get_axis() const { return m_axis; }
-                void set_axis(const size_t axis) { m_axis = axis; }
+                /// \brief Returns axis value after normalization
+                /// \note If input rank required to normalization is dynamic, the exception is
+                /// thrown
+                uint64_t get_axis() const;
+                /// \brief Returns axis value before normalization
+                int64_t get_provided_axis() const { return m_axis; }
+                void set_axis(const int64_t axis);
                 Mode get_mode() const { return m_mode; }
                 void set_mode(const Mode mode) { m_mode = mode; }
                 SortType get_sort_type() const { return m_sort; }
@@ -178,15 +186,16 @@ namespace ngraph
                 ///       and returned. If the input is not constant(dynamic) this method returns 0
                 size_t get_k() const;
                 void set_k(size_t k);
-
+                size_t get_default_output_index() const override { return no_default_index(); }
             protected:
                 int64_t m_axis;
+                uint64_t m_normalized_axis;
                 Mode m_mode;
                 SortType m_sort;
                 element::Type m_index_element_type;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 size_t read_k_from_constant_node(const std::shared_ptr<Node>& node,
                                                  const element::Type& k_element_type) const;
@@ -201,4 +210,21 @@ namespace ngraph
 
         using v0::TopK;
     } // op
+
+    NGRAPH_API
+    std::ostream& operator<<(std::ostream& s, const op::v1::TopK::Mode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v1::TopK::Mode>
+        : public EnumAttributeAdapterBase<op::v1::TopK::Mode>
+    {
+    public:
+        AttributeAdapter(op::v1::TopK::Mode& value)
+            : EnumAttributeAdapterBase<op::v1::TopK::Mode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::v1::TopK::Mode>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 } // ngraph

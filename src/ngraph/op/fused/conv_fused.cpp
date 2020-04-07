@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,8 +48,7 @@ static void validate_convbias_shapes(const Node* node,
                           ").");
 
     NODE_VALIDATION_CHECK(node,
-                          bias_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(bias_shape.rank()) == 1,
+                          bias_shape.rank().is_dynamic() || bias_shape.rank().get_length() == 1,
                           "Bias must have a rank of 1 (bias_shape: ",
                           bias_shape,
                           ").");
@@ -226,7 +225,8 @@ NodeVector op::ConvolutionBias::decompose_op() const
     }
 }
 
-void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
     if (m_with_relu)
@@ -264,8 +264,8 @@ void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints, const 
                                                             m_padding_below,
                                                             m_padding_above,
                                                             m_data_dilation_strides);
-    auto filter_delta = make_shared<op::GetOutputElement>(filter_bias_backprop, 0);
-    auto bias_delta = make_shared<op::GetOutputElement>(filter_bias_backprop, 1);
+    auto filter_delta = Output<Node>(filter_bias_backprop, 0);
+    auto bias_delta = Output<Node>(filter_bias_backprop, 1);
 
     adjoints.add_delta(filter, filter_delta);
     adjoints.add_delta(bias, bias_delta);

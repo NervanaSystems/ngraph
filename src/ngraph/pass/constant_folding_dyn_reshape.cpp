@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,24 +24,74 @@
 using namespace std;
 using namespace ngraph;
 
-template <class T>
+template <typename T, typename R>
 shared_ptr<op::Constant> fold_constant_dyn_reshape(shared_ptr<op::Constant> constant_data,
-                                                   shared_ptr<op::v1::Reshape> dyn_reshape)
+                                                   R dyn_reshape)
 {
-    auto out_shape = dyn_reshape->get_shape();
+    // v1::Reshape and v0::DynReshape do not allow data transposes.
+    return make_shared<op::Constant>(dyn_reshape->get_element_type(),
+                                     dyn_reshape->get_shape(),
+                                     constant_data->get_data_ptr<T>());
+}
 
-    AxisVector input_order(constant_data->get_shape().size());
-    std::iota(input_order.begin(), input_order.end(), 0);
-
-    vector<T> out_vec(shape_size(out_shape));
-
-    runtime::reference::reshape<T>(constant_data->get_data_ptr<T>(),
-                                   out_vec.data(),
-                                   constant_data->get_shape(),
-                                   input_order,
-                                   out_shape);
-
-    return make_shared<op::Constant>(dyn_reshape->get_element_type(), out_shape, out_vec);
+template <typename R>
+std::shared_ptr<Node> do_fold(R dyn_reshape_match, shared_ptr<op::Constant> constant_data_match)
+{
+    std::shared_ptr<Node> replacement;
+    auto type = dyn_reshape_match->get_element_type();
+    switch (type)
+    {
+    case element::Type_t::undefined:
+        NGRAPH_CHECK(false,
+                     "Encountered 'undefined' element type in constant_dyn_reshape_callback");
+        break;
+    case element::Type_t::dynamic:
+        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_dyn_reshape_callback");
+        break;
+    case element::Type_t::u1:
+        NGRAPH_CHECK(false, "Encountered 'u1' element type in constant_dyn_reshape_callback");
+        break;
+    case element::Type_t::boolean:
+        replacement = fold_constant_dyn_reshape<char>(constant_data_match, dyn_reshape_match);
+        break;
+    case element::Type_t::bf16:
+        replacement = fold_constant_dyn_reshape<bfloat16>(constant_data_match, dyn_reshape_match);
+        break;
+    case element::Type_t::f16:
+        replacement = fold_constant_dyn_reshape<float16>(constant_data_match, dyn_reshape_match);
+        break;
+    case element::Type_t::f32:
+        replacement = fold_constant_dyn_reshape<float>(constant_data_match, dyn_reshape_match);
+        break;
+    case element::Type_t::f64:
+        replacement = fold_constant_dyn_reshape<double>(constant_data_match, dyn_reshape_match);
+        break;
+    case element::Type_t::i8:
+        replacement = fold_constant_dyn_reshape<int8_t>(constant_data_match, dyn_reshape_match);
+        break;
+    case element::Type_t::i16:
+        replacement = fold_constant_dyn_reshape<int16_t>(constant_data_match, dyn_reshape_match);
+        break;
+    case element::Type_t::i32:
+        replacement = fold_constant_dyn_reshape<int32_t>(constant_data_match, dyn_reshape_match);
+        break;
+    case element::Type_t::i64:
+        replacement = fold_constant_dyn_reshape<int64_t>(constant_data_match, dyn_reshape_match);
+        break;
+    case element::Type_t::u8:
+        replacement = fold_constant_dyn_reshape<uint8_t>(constant_data_match, dyn_reshape_match);
+        break;
+    case element::Type_t::u16:
+        replacement = fold_constant_dyn_reshape<uint16_t>(constant_data_match, dyn_reshape_match);
+        break;
+    case element::Type_t::u32:
+        replacement = fold_constant_dyn_reshape<uint32_t>(constant_data_match, dyn_reshape_match);
+        break;
+    case element::Type_t::u64:
+        replacement = fold_constant_dyn_reshape<uint64_t>(constant_data_match, dyn_reshape_match);
+        break;
+    }
+    return replacement;
 }
 
 void pass::ConstantFolding::construct_constant_dyn_reshape()
@@ -50,95 +100,31 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
     auto constant_shape_label =
         make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
-    auto dyn_reshape =
+    auto reshape_v1 =
         make_shared<op::v1::Reshape>(constant_data_label, constant_shape_label, false);
 
     // Note: No need to capture or consider constant_shape_label, because
     // shape propagation will have transferred the info to dyn_reshape's
     // output.
-    auto constant_dyn_reshape_callback = [constant_data_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for constant_dyn_reshape_callback against node = "
+    auto constant_reshape_v1_callback = [constant_data_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_reshape_v1_callback against node = "
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
 
         auto constant_data_match =
             static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
-        auto dyn_reshape_match = static_pointer_cast<op::v1::Reshape>(m.get_match_root());
-
-        NGRAPH_CHECK(revalidate_and_ensure_static(dyn_reshape_match));
-
-        std::shared_ptr<Node> replacement;
-        auto type = dyn_reshape_match->get_element_type();
-        switch (type)
-        {
-        case element::Type_t::undefined:
-            NGRAPH_CHECK(false,
-                         "Encountered 'undefined' element type in constant_dyn_reshape_callback");
-            break;
-        case element::Type_t::dynamic:
-            NGRAPH_CHECK(false,
-                         "Encountered 'dynamic' element type in constant_dyn_reshape_callback");
-            break;
-        case element::Type_t::u1:
-            NGRAPH_CHECK(false, "Encountered 'u1' element type in constant_dyn_reshape_callback");
-            break;
-        case element::Type_t::boolean:
-            replacement = fold_constant_dyn_reshape<char>(constant_data_match, dyn_reshape_match);
-            break;
-        case element::Type_t::bf16:
-            replacement =
-                fold_constant_dyn_reshape<bfloat16>(constant_data_match, dyn_reshape_match);
-            break;
-        case element::Type_t::f16:
-            replacement =
-                fold_constant_dyn_reshape<float16>(constant_data_match, dyn_reshape_match);
-            break;
-        case element::Type_t::f32:
-            replacement = fold_constant_dyn_reshape<float>(constant_data_match, dyn_reshape_match);
-            break;
-        case element::Type_t::f64:
-            replacement = fold_constant_dyn_reshape<double>(constant_data_match, dyn_reshape_match);
-            break;
-        case element::Type_t::i8:
-            replacement = fold_constant_dyn_reshape<int8_t>(constant_data_match, dyn_reshape_match);
-            break;
-        case element::Type_t::i16:
-            replacement =
-                fold_constant_dyn_reshape<int16_t>(constant_data_match, dyn_reshape_match);
-            break;
-        case element::Type_t::i32:
-            replacement =
-                fold_constant_dyn_reshape<int32_t>(constant_data_match, dyn_reshape_match);
-            break;
-        case element::Type_t::i64:
-            replacement =
-                fold_constant_dyn_reshape<int64_t>(constant_data_match, dyn_reshape_match);
-            break;
-        case element::Type_t::u8:
-            replacement =
-                fold_constant_dyn_reshape<uint8_t>(constant_data_match, dyn_reshape_match);
-            break;
-        case element::Type_t::u16:
-            replacement =
-                fold_constant_dyn_reshape<uint16_t>(constant_data_match, dyn_reshape_match);
-            break;
-        case element::Type_t::u32:
-            replacement =
-                fold_constant_dyn_reshape<uint32_t>(constant_data_match, dyn_reshape_match);
-            break;
-        case element::Type_t::u64:
-            replacement =
-                fold_constant_dyn_reshape<uint64_t>(constant_data_match, dyn_reshape_match);
-            break;
-        }
-
+        auto match_root = m.get_match_root();
+        NGRAPH_CHECK(revalidate_and_ensure_static(match_root));
+        shared_ptr<Node> replacement;
+        replacement =
+            do_fold(static_pointer_cast<op::v1::Reshape>(match_root), constant_data_match);
         replace_node(m.get_match_root(), replacement);
         return true;
     };
 
-    auto dyn_reshape_matcher =
-        make_shared<pattern::Matcher>(dyn_reshape, "ConstantFolding.ConstantDynReshape");
+    auto reshape_v1_matcher =
+        make_shared<pattern::Matcher>(reshape_v1, "ConstantFolding.ConstantReshapev1");
     this->add_matcher(
-        dyn_reshape_matcher, constant_dyn_reshape_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+        reshape_v1_matcher, constant_reshape_v1_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }

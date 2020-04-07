@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 #include "ngraph/runtime/allocator.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/cpu/cpu_executable.hpp"
 
 namespace ngraph
 {
@@ -78,42 +79,6 @@ namespace ngraph
                 std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>>
                     m_exec_map;
                 Allocator* m_allocator;
-            };
-
-            class CPU_BACKEND_API CPU_Executable : public runtime::Executable
-            {
-            public:
-                CPU_Executable(std::shared_ptr<Function> func,
-                               ngraph::pass::PassConfig& pass_config,
-                               Allocator* allocator,
-                               bool performance_counters_enabled);
-                bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
-
-                std::shared_ptr<CPU_CallFrame> get_call_frame();
-
-                std::vector<PerformanceCounter> get_performance_data() const override;
-
-                std::shared_ptr<runtime::Tensor> create_input_tensor(size_t input_index) override;
-
-                std::shared_ptr<runtime::Tensor> create_output_tensor(size_t output_index) override;
-
-                std::vector<std::shared_ptr<runtime::Tensor>>
-                    create_input_tensor(size_t input_index, size_t pipeline_depth) override;
-
-                std::vector<std::shared_ptr<runtime::Tensor>>
-                    create_output_tensor(size_t output_index, size_t pipeline_depth) override;
-
-            private:
-                std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
-                std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
-                class FunctionInstance
-                {
-                public:
-                    std::shared_ptr<CPU_ExternalFunction> m_external_function = nullptr;
-                    std::shared_ptr<CPU_CallFrame> m_call_frame = nullptr;
-                    bool m_performance_counters_enabled = false;
-                } m_function_instance;
             };
         }
     }

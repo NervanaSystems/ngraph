@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,6 +33,12 @@ shared_ptr<Node> op::v1::LogicalXor::copy_with_new_args(const NodeVector& new_ar
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::LogicalXor>(new_args.at(0), new_args.at(1), this->get_autob());
+}
+
+bool ngraph::op::v1::LogicalXor::visit_attributes(AttributeVisitor& visitor)
+{
+    BinaryElementwiseLogical::visit_attributes(visitor);
+    return true;
 }
 
 constexpr NodeTypeInfo op::v0::Xor::type_info;

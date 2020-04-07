@@ -4,13 +4,13 @@
 # Default rule: @diyessi gets everything.
 *                                   @diyessi
 
-/cmake/                             @silee2 @aslepko
+/cmake/                             @silee2
 
-/.ci/                               @aslepko
-/.ci/travis/                        @aslepko @postrational
-/.ci/onnx/                          @aslepko @postrational
-/contrib/docker/                    @aslepko
-/.travis.yml                        @aslepko @postrational
+/.ci/                               @raramer01
+/.ci/travis/                        @postrational
+/.ci/onnx/                          @postrational
+/contrib/docker/                    @raramer01
+/.travis.yml                        @postrational
 
 /.clang-format                      @rkimballn1
 /.gitattributes                     @rkimballn1
@@ -19,8 +19,8 @@
 
 /doc/                               @indie
 /doc/examples/mnist_mlp/dist_*      @wenzhe-nrv @indie
-/doc/*/*/frameworks/tensorflow_connect.rst      @shresthamalik @avijit-nervana @sayantan-nervana
-/doc/*/*/backends/plaidml-ng-api/   @flaub @brianretford @dgkutnic
+/doc/*/*/frameworks/tensorflow_connect.rst      @shresthamalik
+/doc/*/*/backends/plaidml-ng-api/   @diyessi
 /doc/*/*/inspection/                @diyessi
 /doc/examples/onnx/                 @arogowie-intel @tsocha
 /README.md                          @indie
@@ -29,40 +29,39 @@ project/governance.rst              @adstraw
 /changes.md                         @indie @diyessi
 project/doc-contributor-README.rst  @indie
 
-/licenses/                          @diyessi @raramer01 @aslepko
-/LICENSE                            @diyessi @raramer01 @aslepko
+/licenses/                          @diyessi @raramer01
+/LICENSE                            @diyessi @raramer01
 
 /python/                            @postrational
 
 /src/resource/                      @rkimballn1
 /src/tools/                         @rkimballn1
 /src/ngraph/autodiff/               @diyessi
-/src/ngraph/builder/                @mbrookhart
+/src/ngraph/builder/                @silee2
 /src/ngraph/codegen/                @rkimballn1
 /src/ngraph/distributed.*           @wenzhe-nrv @diyessi
-/src/ngraph/frontend/fluid/         @silee2
-/src/ngraph/frontend/onnxifi/       @postrational
+/src/ngraph/frontend/ATen/          @silee2
 /src/ngraph/frontend/onnx_import/   @postrational
-/src/ngraph/op/                     @diyessi
+/src/ngraph/op/                     @diyessi @postrational
 /src/ngraph/op/allreduce.*pp        @wenzhe-nrv @diyessi
 /src/ngraph/op/experimental/layers  @ilyachur
 /src/ngraph/pass/                   @diyessi
 /src/ngraph/pattern/                @diyessi
 /src/ngraph/runtime/                @rkimballn1
-/src/ngraph/runtime/cpu/            @jbobba
-/src/contrib/mlir/                  @nmostafa @dcaballe
-/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba
+/src/ngraph/runtime/cpu/            @silee2
+/src/contrib/mlir/                  @silee2
+/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv
 /src/ngraph/runtime/dynamic/        @diyessi
-/src/ngraph/runtime/intelgpu/       @dmyershov
+/src/ngraph/runtime/gpu/            @rkimballn1
 /src/ngraph/runtime/interpreter/    @rkimballn1
-/src/ngraph/runtime/plaidml/        @earhart @dgkutnic
+/src/ngraph/runtime/plaidml/        @diyessi
 /src/ngraph/runtime/reference/      @diyessi
 /src/ngraph/runtime/reference/allreduce.*pp      @wenzhe-nrv @diyessi
 /src/ngraph/type/                   @diyessi
 /src/ngraph/serializer.*pp          @rkimballn1
 
-/test/backend/distributed.in.cpp    @wenzhe-nrv @diyessi @jianyinglang
-/test/mlir/                         @nmostafa @dcaballe
+/test/backend/distributed.in.cpp    @wenzhe-nrv @diyessi
+/test/mlir/                         @silee2
 
 # Putting this last so it's not overridden by directory rules
 CMakeLists.txt                      @silee2
