@@ -52,20 +52,20 @@ namespace ngraph
             } // namespace error
         }     // namespace detail
 
-        std::shared_ptr<Function> import_onnx_model(std::istream& sin)
+        std::shared_ptr<Function> import_onnx_model(std::istream& stream)
         {
             ONNX_NAMESPACE::ModelProto model_proto;
             // Try parsing input as a binary protobuf message
-            if (!model_proto.ParseFromIstream(&sin))
+            if (!model_proto.ParseFromIstream(&stream))
             {
                 // Rewind to the beginning and clear stream state.
-                sin.clear();
-                sin.seekg(0);
-                google::protobuf::io::IstreamInputStream iistream(&sin);
+                stream.clear();
+                stream.seekg(0);
+                google::protobuf::io::IstreamInputStream iistream(&stream);
                 // Try parsing input as a prototxt message
                 if (!google::protobuf::TextFormat::Parse(&iistream, &model_proto))
                 {
-                    throw detail::error::stream_parse{sin};
+                    throw detail::error::stream_parse{stream};
                 }
             }
 
@@ -80,22 +80,14 @@ namespace ngraph
             return function;
         }
 
-        std::shared_ptr<Function> import_onnx_model(const std::string& path)
+        std::shared_ptr<Function> import_onnx_model(const std::string& file_path)
         {
-            std::ifstream ifs{path, std::ios::in | std::ios::binary};
+            std::ifstream ifs{file_path, std::ios::in | std::ios::binary};
             if (!ifs.is_open())
             {
-                throw detail::error::file_open{path};
+                throw detail::error::file_open{file_path};
             }
             return import_onnx_model(ifs);
-        }
-
-        void register_operator(const std::string& name,
-                               std::int64_t version,
-                               const std::string& domain,
-                               Operator fn)
-        {
-            OperatorsBridge::register_operator(name, version, domain, std::move(fn));
         }
 
         std::set<std::string> get_supported_operators(std::int64_t version,

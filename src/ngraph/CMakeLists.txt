@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 set (SRC
+    assertion.cpp
     assertion.hpp
     attribute_adapter.cpp
     attribute_adapter.hpp
@@ -80,6 +81,8 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
+    distributed/null.cpp
+    distributed/null.hpp
     distributed.cpp
     distributed.hpp
     enum_names.hpp
@@ -184,8 +187,6 @@ set (SRC
     op/experimental/dyn_pad.hpp
     op/experimental/dyn_replace_slice.cpp
     op/experimental/dyn_replace_slice.hpp
-    op/experimental/dyn_reshape.cpp
-    op/experimental/dyn_reshape.hpp
     op/experimental/dyn_slice.cpp
     op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
@@ -269,6 +270,8 @@ set (SRC
     op/negative.hpp
     op/non_max_suppression.cpp
     op/non_max_suppression.hpp
+    op/non_zero.cpp
+    op/non_zero.hpp
     op/not.cpp
     op/not.hpp
     op/not_equal.cpp
@@ -299,6 +302,8 @@ set (SRC
     op/reduce_mean.hpp
     op/reduce_sum.cpp
     op/reduce_sum.hpp
+    op/roi_align.hpp
+    op/roi_align.cpp
     op/round.cpp
     op/round.hpp
     op/quantize.cpp
@@ -485,6 +490,7 @@ set (SRC
     pass/constant_folding_dyn_slice.cpp
     pass/constant_folding_gather.cpp
     pass/constant_folding_logical_reduction.cpp
+    pass/constant_folding_non_zero.cpp
     pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
@@ -570,6 +576,8 @@ set (SRC
     pattern/matcher.hpp
     pattern/op/any.cpp
     pattern/op/any.hpp
+    pattern/op/any_output.cpp
+    pattern/op/any_output.hpp
     pattern/op/any_of.cpp
     pattern/op/any_of.hpp
     pattern/op/branch.cpp
@@ -656,6 +664,11 @@ else()
     add_library(ngraph SHARED ${SRC})
 endif()
 
+set_target_properties(ngraph PROPERTIES
+                      CXX_VISIBILITY_PRESET hidden
+                      C_VISIBILITY_PRESET hidden
+                      VISIBILITY_INLINES_HIDDEN ON)
+
 if(NOT NGRAPH_JSON_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
 endif()
@@ -725,8 +738,7 @@ target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH
 add_library(ngraph::ngraph ALIAS ngraph)
 
 if (NOT WIN32)
-    find_package(Threads REQUIRED)
-    target_link_libraries(ngraph PUBLIC dl Threads::Threads)
+    target_link_libraries(ngraph PRIVATE dl)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
@@ -749,10 +761,9 @@ endif()
 
 # nGraph
 install(TARGETS ngraph EXPORT ngraphTargets
-        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB}
-        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB}
-        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB}
-        COMPONENT ngraph)
+        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph
+        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph
+        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION ${NGRAPH_INSTALL_INCLUDE}/ngraph
     COMPONENT ngraph

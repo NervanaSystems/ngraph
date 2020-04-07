@@ -141,7 +141,7 @@ using namespace ngraph;
 
 static bool s_use_ref_kernels = getenv_bool("NGRAPH_CPU_USE_REF_KERNELS");
 
-static string eigen_vector_format(const runtime::cpu::TensorViewWrapper& tvi)
+static string eigen_vector_format(const runtime::cpu::TensorWrapper& tvi)
 {
     return "fmt::V{" + to_string(tvi.get_size()) + "}";
 }
@@ -185,7 +185,7 @@ namespace ngraph
                                               size_t& index,
                                               std::vector<std::size_t>& deps,
                                               size_t& scratchpad_size,
-                                              const std::vector<TensorViewWrapper>& args)
+                                              const std::vector<TensorWrapper>& args)
             {
                 writer << "if (ctx->first_iteration)\n";
                 writer.block_begin();
@@ -387,8 +387,8 @@ namespace ngraph
                                         const Shape& shape_a,
                                         const Shape& shape_b,
                                         const Shape& shape_c,
-                                        const std::vector<TensorViewWrapper>& args,
-                                        const std::vector<TensorViewWrapper>& out,
+                                        const std::vector<TensorWrapper>& args,
+                                        const std::vector<TensorWrapper>& out,
                                         const bool transpose_a,
                                         const bool transpose_b,
                                         CodeWriter& writer)
@@ -688,8 +688,8 @@ namespace ngraph
             void CPU_Emitter::emitBatchNorm(CPU_ExternalFunction* external_function,
                                             CodeWriter& writer,
                                             const ngraph::Node* node,
-                                            const std::vector<TensorViewWrapper>& args,
-                                            const std::vector<TensorViewWrapper>& out,
+                                            const std::vector<TensorWrapper>& args,
+                                            const std::vector<TensorWrapper>& out,
                                             bool /* append_relu */,
                                             bool training)
             {
@@ -1926,8 +1926,8 @@ namespace ngraph
                 writer.block_end();
             }
 
-            static void emitArgMinArgMax(const std::vector<TensorViewWrapper>& args,
-                                         const std::vector<TensorViewWrapper>& out,
+            static void emitArgMinArgMax(const std::vector<TensorWrapper>& args,
+                                         const std::vector<TensorWrapper>& out,
                                          size_t reduction_axis,
                                          const char* kernel_name,
                                          CodeWriter& writer)
@@ -3916,11 +3916,11 @@ namespace ngraph
                 // dz/dy = dz/dg * dg/dy = f(x) * g'(y)
                 auto sigmoid_mul_backprop =
                     static_cast<const ngraph::op::SigmoidMultiplyBackprop*>(node);
-                const TensorViewWrapper& data_0 = args[0];
-                const TensorViewWrapper& data_1 = args[1];
-                const TensorViewWrapper& delta = args[2];
-                const TensorViewWrapper& input_0_delta = out[0];
-                const TensorViewWrapper& input_1_delta = out[1];
+                const TensorWrapper& data_0 = args[0];
+                const TensorWrapper& data_1 = args[1];
+                const TensorWrapper& delta = args[2];
+                const TensorWrapper& input_0_delta = out[0];
+                const TensorWrapper& input_1_delta = out[1];
                 std::string numer_0 = "numer_0";
                 std::string denom_0 = "denom_0";
                 std::string numer_1 = "numer_1";
@@ -4691,7 +4691,7 @@ std::string
     return ss.str();
 }
 
-std::string runtime::cpu::CPU_Emitter::emit_vector(const runtime::cpu::TensorViewWrapper& tvi,
+std::string runtime::cpu::CPU_Emitter::emit_vector(const runtime::cpu::TensorWrapper& tvi,
                                                    const string& name)
 {
     stringstream ss;
@@ -4702,7 +4702,7 @@ std::string runtime::cpu::CPU_Emitter::emit_vector(const runtime::cpu::TensorVie
     return ss.str();
 }
 
-string runtime::cpu::CPU_Emitter::emit_array1d(const runtime::cpu::TensorViewWrapper& tvi,
+string runtime::cpu::CPU_Emitter::emit_array1d(const runtime::cpu::TensorWrapper& tvi,
                                                const string& name)
 {
     stringstream ss;
@@ -4713,7 +4713,7 @@ string runtime::cpu::CPU_Emitter::emit_array1d(const runtime::cpu::TensorViewWra
     return ss.str();
 }
 
-string runtime::cpu::CPU_Emitter::emit_matrix(const runtime::cpu::TensorViewWrapper& tvi,
+string runtime::cpu::CPU_Emitter::emit_matrix(const runtime::cpu::TensorWrapper& tvi,
                                               const string& name)
 {
     stringstream ss;
