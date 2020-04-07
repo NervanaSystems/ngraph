@@ -1033,7 +1033,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_resize_opset10_import_only)
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_resize_opset10_ie)
 {
     const auto resize_fn = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/resize_opset10.prototxt"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/resize_opset10_simple.prototxt"));
 
     // Input data shape (2, 2)
     // Scales input constant values {1.0, 2.0}
