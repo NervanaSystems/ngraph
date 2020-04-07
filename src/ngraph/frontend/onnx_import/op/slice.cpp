@@ -54,7 +54,7 @@ namespace ngraph
                     }
 
                     std::shared_ptr<ngraph::Node>
-                        adjust_indices_if_needed(std::shared_ptr<ngraph::Node> input,
+                        adjust_indices_if_needed(const std::shared_ptr<ngraph::Node>& input,
                                                  const std::vector<int64_t>& axes,
                                                  uint64_t slice_indices_length,
                                                  int64_t value)
