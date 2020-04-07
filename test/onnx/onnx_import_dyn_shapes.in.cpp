@@ -780,7 +780,6 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, flatten_axis)
 
     for (size_t r = AXIS; r <= RANKS_TO_TEST + AXIS; ++r)
     {
-        // size_t r = 3;
         const Shape shape(r, 2);
         const auto elems_in_tensor = shape_size(shape);
 
@@ -808,7 +807,6 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, flatten_neg_axis)
 
     for (size_t r = -AXIS; r <= RANKS_TO_TEST + -AXIS; ++r)
     {
-        // size_t r = 4;
         const Shape shape(r, 2);
         const auto elems_in_tensor = shape_size(shape);
 
@@ -823,4 +821,105 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, flatten_neg_axis)
 
         test_case.run();
     }
+}
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_convtranspose_dyn_data)
+{
+    auto ct_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/convtranspose_dyn_data.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(ct_fn, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    test_case.add_input<float>(Shape{1, 2, 3, 3},
+                               {0.f,
+                                0.25f,
+                                0.5f,
+                                0.75f,
+                                1.f,
+                                1.25f,
+                                1.5f,
+                                1.75f,
+                                2.f,
+                                2.25f,
+                                2.5f,
+                                2.75f,
+                                3.f,
+                                3.25f,
+                                3.5f,
+                                3.75f,
+                                4.f,
+                                4.25f});
+    test_case.add_input<float>({0.f,   0.25f, 0.5f,  0.75f, 1.f,   1.25f, 1.5f,  .75f,  2.f,
+                                2.25f, 2.5f,  2.75f, 3.f,   3.25f, 3.5f,  3.75f, 4.f,   4.25f,
+                                4.5f,  4.75f, 5.f,   5.25f, 5.5f,  5.75f, 6.f,   6.25f, 6.5f,
+                                6.75f, 7.f,   7.25f, 7.5f,  7.75f, 8.f,   8.25f, 8.5f,  8.75f});
+    test_case.add_input<float>({0.f, 0.25f, 0.5f, 0.75f});
+    test_case.add_expected_output<float>(Shape{1, 4, 2, 2},
+                                         {1.25f,
+                                          1.625f,
+                                          5.25f,
+                                          5.25f,
+                                          9.9375f,
+                                          8.625f,
+                                          25.75f,
+                                          20.6875f,
+                                          87.8125f,
+                                          62.875f,
+                                          157.625f,
+                                          112.0625f,
+                                          126.875f,
+                                          90.125f,
+                                          223.6875f,
+                                          157.875f});
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_convtranspose_dyn_filters)
+{
+    auto ct_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/convtranspose_dyn_filters.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(ct_fn, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    test_case.add_input<float>({0.f,
+                                0.25f,
+                                0.5f,
+                                0.75f,
+                                1.f,
+                                1.25f,
+                                1.5f,
+                                1.75f,
+                                2.f,
+                                2.25f,
+                                2.5f,
+                                2.75f,
+                                3.f,
+                                3.25f,
+                                3.5f,
+                                3.75f,
+                                4.f,
+                                4.25f});
+    test_case.add_input<float>(Shape{2, 2, 3, 3},
+                               {0.f,   0.25f, 0.5f,  0.75f, 1.f,   1.25f, 1.5f,  .75f,  2.f,
+                                2.25f, 2.5f,  2.75f, 3.f,   3.25f, 3.5f,  3.75f, 4.f,   4.25f,
+                                4.5f,  4.75f, 5.f,   5.25f, 5.5f,  5.75f, 6.f,   6.25f, 6.5f,
+                                6.75f, 7.f,   7.25f, 7.5f,  7.75f, 8.f,   8.25f, 8.5f,  8.75f});
+    test_case.add_input<float>({0.f, 0.25f, 0.5f, 0.75f});
+    test_case.add_expected_output<float>(Shape{1, 4, 2, 2},
+                                         {1.25f,
+                                          1.625f,
+                                          5.25f,
+                                          5.25f,
+                                          9.9375f,
+                                          8.625f,
+                                          25.75f,
+                                          20.6875f,
+                                          87.8125f,
+                                          62.875f,
+                                          157.625f,
+                                          112.0625f,
+                                          126.875f,
+                                          90.125f,
+                                          223.6875f,
+                                          157.875f});
+    test_case.run();
 }
