@@ -36,3 +36,4 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, get_function_op_with_version)
     auto func = schema->GetFunction();
     EXPECT_EQ(func->name(), "MeanVarianceNormalization");
 }
+

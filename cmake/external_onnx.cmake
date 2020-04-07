@@ -37,6 +37,8 @@ set(NGRAPH_ONNX_NAMESPACE ngraph_onnx)
 add_definitions(-DONNX_BUILD_SHARED_LIBS=ON)
 add_definitions(-DONNX_NAMESPACE=${NGRAPH_ONNX_NAMESPACE})
 
+set(CMAKE_CXX_FLAGS ${CMAKE_ORIGINAL_CXX_FLAGS})
+
 FetchContent_Declare(
     ext_onnx
     GIT_REPOSITORY ${ONNX_GIT_REPO_URL}
