@@ -625,6 +625,20 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_default_steps)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_slice_2d_default_steps_dyn_begin_end)
+{
+    auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/slice_2d_default_steps_dyn_begin_end.prototxt"));
+
+    auto test_case =
+        ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+    test_case.add_input<float>({1, 2, 3, 4});
+    test_case.add_input<int64_t>({2}, {1, 1});
+    test_case.add_input<int64_t>({2}, {2, 2});
+    test_case.add_expected_output<float>(Shape{1, 1}, {4});
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_clamp_neg_ends)
 {
     auto function = onnx_import::import_onnx_model(
@@ -676,6 +690,25 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_3d_input_12_axes)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_3d_input_20_axes)
+{
+    auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/slice_3d_input_20_axes.prototxt"));
+
+    auto test_case =
+        ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+
+    const Shape input_shape{4, 3, 2};
+    std::vector<float> input_values(shape_size(input_shape));
+    std::iota(input_values.begin(), input_values.end(), 0);
+    test_case.add_input<float>(input_shape, input_values);
+    test_case.add_input<int64_t>({0, 1});
+    test_case.add_input<int64_t>({1, 3});
+    test_case.add_input<int64_t>({1, 1});
+    test_case.add_expected_output<float>(Shape{2, 3, 1}, {6, 8, 10, 12, 14, 16});
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_4d_input_23_axes)
 {
     auto function = onnx_import::import_onnx_model(file_util::path_join(
@@ -691,6 +724,49 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_4d_input_23_axes)
     test_case.add_input<int64_t>({0, 0});
     test_case.add_input<int64_t>({1, 1});
     test_case.add_expected_output<float>(Shape{2, 2, 1, 1}, {0, 4, 8, 12});
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_4d_input_0231_axes_ends_max)
+{
+    auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/slice_4d_input_0231_axes_ends_max.prototxt"));
+
+    auto test_case =
+        ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+
+    const Shape input_shape{2, 2, 2, 2};
+    std::vector<float> input_values(shape_size(input_shape));
+    std::iota(input_values.begin(), input_values.end(), 0);
+    test_case.add_input<float>(input_values);
+    test_case.add_input<int64_t>({0, 1, 1, 0});
+    test_case.add_input<int64_t>({std::numeric_limits<int64_t>::max(),
+                                  std::numeric_limits<int64_t>::max(),
+                                  std::numeric_limits<int64_t>::max(),
+                                  std::numeric_limits<int64_t>::max()});
+    test_case.add_expected_output<float>(Shape{2, 2, 1, 1}, {3, 7, 11, 15});
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_4d_input_2103_axes_ends_max)
+{
+    auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/slice_4d_input_2103_axes.prototxt"));
+
+    auto test_case =
+        ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+
+    const Shape input_shape{2, 2, 2, 5};
+    std::vector<float> input_values(shape_size(input_shape));
+    std::iota(input_values.begin(), input_values.end(), 0);
+    test_case.add_input<float>(input_values);
+    test_case.add_input<int64_t>({1, 0, 0, 1});
+    test_case.add_input<int64_t>({2,
+                                  std::numeric_limits<int64_t>::max(),
+                                  std::numeric_limits<int64_t>::max(),
+                                  std::numeric_limits<int64_t>::max()});
+    test_case.add_input<int64_t>({1, 1, 1, 2});
+    test_case.add_expected_output<float>(Shape{2, 2, 1, 2}, {6, 8, 16, 18, 26, 28, 36, 38});
     test_case.run();
 }
 

@@ -161,7 +161,7 @@ TEST(type_prop, strided_slice_end_incorrect_shape)
     }
 }
 
-TEST(type_prop, strided_slice_default_stride)
+TEST(type_prop, strided_slice_default_stride_dynamic_shape_input)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
     auto begin = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
@@ -181,9 +181,7 @@ TEST(type_prop, strided_slice_default_stride)
     }
     catch (const CheckFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("First dimension of begin or end inputs must be static in "
-                                         "order to calculate default strides value"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Begin input must be 1D"));
     }
     catch (...)
     {

@@ -51,18 +51,18 @@ namespace ngraph
                 ROIAlign(const Output<Node>& input,
                          const Output<Node>& rois,
                          const Output<Node>& batch_indices,
-                         const size_t pooled_h,
-                         const size_t pooled_w,
-                         const size_t sampling_ratio,
+                         const int pooled_h,
+                         const int pooled_w,
+                         const int sampling_ratio,
                          const float spatial_scale,
                          const std::string& mode);
 
                 ROIAlign(const Output<Node>& input,
                          const Output<Node>& rois,
                          const Output<Node>& batch_indices,
-                         const size_t pooled_h,
-                         const size_t pooled_w,
-                         const size_t sampling_ratio,
+                         const int pooled_h,
+                         const int pooled_w,
+                         const int sampling_ratio,
                          const float spatial_scale,
                          const PoolingMode mode);
 
@@ -71,18 +71,18 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
-                size_t get_pooled_h() const { return m_pooled_h; }
-                size_t get_pooled_w() const { return m_pooled_w; }
-                size_t get_sampling_ratio() const { return m_sampling_ratio; }
+                int get_pooled_h() const { return m_pooled_h; }
+                int get_pooled_w() const { return m_pooled_w; }
+                int get_sampling_ratio() const { return m_sampling_ratio; }
                 float get_spatial_scale() const { return m_spatial_scale; }
                 PoolingMode get_mode() const { return m_mode; }
             private:
                 PoolingMode mode_from_string(const std::string& mode) const;
 
             private:
-                size_t m_pooled_h;
-                size_t m_pooled_w;
-                size_t m_sampling_ratio;
+                int m_pooled_h;
+                int m_pooled_w;
+                int m_sampling_ratio;
                 float m_spatial_scale;
                 PoolingMode m_mode;
             };

@@ -14,22 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-#include "ngraph/op/passthrough.hpp"
-#include "pyngraph/ops/passthrough.hpp"
-
-namespace py = pybind11;
-
-void regclass_pyngraph_op_Passthrough(py::module m)
-{
-    py::class_<ngraph::op::Passthrough, std::shared_ptr<ngraph::op::Passthrough>, ngraph::Node>
-        pass{m, "Passthrough"};
-    pass.doc() = "ngraph.impl.op.Passthrough wraps ngraph::op::Passthrough";
-    pass.def(py::init<const std::string&,
-                      const std::string&,
-                      const std::string&,
-                      const std::vector<ngraph::Output<ngraph::Node>>&,
-                      std::vector<std::tuple<ngraph::element::Type, ngraph::PartialShape>>>());
-}
+/// \file This file is used to generate a series of .cpp files, one for each .hpp
+/// file in ngraph, so the line below `#include "${HEADER}"` is expanded out to something
+/// like `#include "/home/user/ngraph/src/ngraph/shape.hpp"`. The .cpp files are generated into
+/// build/test/include_test/<headers>
+/// The resulting .cpp file only includes this single file and then tries to compile it. If this
+/// header file (shape.hpp in this example) does not #include everything it needs then the compile
+/// will fail. You will need to add any missing #includes to make shape.hpp self-sufficient.
+#define NGRAPH_OP(...)
+#include "${HEADER}"
+#undef NGRAPH_OP

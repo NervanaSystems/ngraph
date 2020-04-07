@@ -38,14 +38,15 @@ void op::Squeeze::pre_validate_and_infer_types()
     auto data = input_value(0);
     auto axes_node = input_value(1).get_node_shared_ptr();
 
-    bool dynamic_data_rank = data.get_partial_shape().rank().is_dynamic();
-    bool dynamic_data_shape = data.get_partial_shape().is_dynamic();
+    bool data_has_dynamic_rank = data.get_partial_shape().rank().is_dynamic();
+    bool data_has_dynamic_shape = data.get_partial_shape().is_dynamic();
 
     auto axes_constant = as_type_ptr<op::v0::Constant>(axes_node);
     bool axes_is_empty_constant =
         (axes_constant) ? axes_constant->cast_vector<int64_t>().empty() : false;
 
-    if (dynamic_data_rank || !axes_constant || (dynamic_data_shape && axes_is_empty_constant))
+    if (data_has_dynamic_rank || !axes_constant ||
+        (data_has_dynamic_shape && axes_is_empty_constant))
     {
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
         return;
@@ -81,7 +82,7 @@ void op::Squeeze::pre_validate_and_infer_types()
         set<size_t, greater<size_t>> unique_axes(begin(axes), end(axes));
         for (uint64_t axis : unique_axes)
         {
-            if (!dynamic_data_shape)
+            if (!data_has_dynamic_shape)
             {
                 auto data_shape = data.get_shape();
                 NODE_VALIDATION_CHECK(
