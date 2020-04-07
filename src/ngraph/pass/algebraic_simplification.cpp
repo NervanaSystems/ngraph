@@ -27,6 +27,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
@@ -543,6 +544,33 @@ static bool simplify_reduction(shared_ptr<Node> n)
     return true;
 }
 
+// `simplify_transpose` optimizes `transpose(tensor({1, ?}`))
+static bool simplify_transpose(shared_ptr<Node> n)
+{
+    NGRAPH_DEBUG << "In simplify_transpose for " << n->get_name();
+    auto transpose = as_type_ptr<op::Transpose>(n);
+
+    bool rc = false;
+    if (transpose)
+    {
+        auto perm = as_type_ptr<op::Constant>(n->get_argument(1));
+        if (perm != NULL && perm->get_vector<int64_t>() == std::vector<int64_t>{1, 0})
+        {
+            NGRAPH_DEBUG << "where is the bug";
+            auto data = n->get_argument(0);
+            auto data_shape = n->input_value(0).get_partial_shape();
+
+            if (data_shape.rank().get_length() == 2 && data_shape[0].get_length() == 1)
+            {
+                replace_node(n, data);
+                rc = true;
+            }
+        }
+    }
+
+    return rc;
+}
+
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
 {
     return unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>>(
@@ -553,7 +581,8 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::Sum, get_sum_constant>}},
          {op::Product::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::Product, get_prod_constant>}},
-         {op::Log::type_info, simplify_log}});
+         {op::Log::type_info, simplify_log},
+         {op::Transpose::type_info, simplify_transpose}});
 }
 
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> ops_to_simplifiers =

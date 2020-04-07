@@ -32,6 +32,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -595,4 +596,53 @@ TEST(algebraic_simplification, pass_property)
 
     ASSERT_TRUE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
     ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+}
+
+TEST(algebraic_simplification, transpose_static_shape)
+{
+    // add a simple graph with transpose
+    Shape shape_in{1, 2};
+    auto param = make_shared<op::Parameter>(element::boolean, shape_in);
+    auto constant_perm = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 0});
+    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto f = make_shared<Function>(transpose, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
+}
+
+TEST(algebraic_simplification, transpose_partial_shape)
+{
+    // add a simple graph with transpose
+    auto ps = PartialShape{1, Dimension::dynamic()};
+    auto param = make_shared<op::Parameter>(element::boolean, ps);
+    auto constant_perm = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 0});
+    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto f = make_shared<Function>(transpose, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
+}
+
+TEST(algebraic_simplification, transpose_with_shape_do_not_match)
+{
+    // add a simple graph with transpose
+    // the parameter's shape[0] is not 1
+    Shape shape_in{2, 4};
+    auto param = make_shared<op::Parameter>(element::boolean, shape_in);
+    auto constant_perm = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 0});
+    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto f = make_shared<Function>(transpose, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 1);
 }
