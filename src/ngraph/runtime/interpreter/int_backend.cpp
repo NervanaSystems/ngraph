@@ -25,13 +25,15 @@
 #include "ngraph/runtime/interpreter/int_executable.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend()
 {
-    runtime::BackendManager::register_backend("INTERPRETER", [](const std::string& /* config */) {
+    runtime::BackendManager::register_backend("INTERPRETER", [](const std::string& config) {
+        NGRAPH_INFO << "config string " << config;
         return std::make_shared<runtime::interpreter::INTBackend>();
     });
 }
