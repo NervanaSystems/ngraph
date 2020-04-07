@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace pass
     {
-        /// \brief The Validate pass performs santify check on attributes and inputs, and
+        /// \brief The Validate pass performs sanity check on attributes and inputs, and
         /// computes output shapes and element type for all computation nodes in a given
         /// computation graph.
         ///
