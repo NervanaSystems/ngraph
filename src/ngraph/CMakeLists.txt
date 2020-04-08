@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 set (SRC
+    assertion.cpp
     assertion.hpp
     attribute_adapter.cpp
     attribute_adapter.hpp
@@ -186,8 +187,6 @@ set (SRC
     op/experimental/dyn_pad.hpp
     op/experimental/dyn_replace_slice.cpp
     op/experimental/dyn_replace_slice.hpp
-    op/experimental/dyn_reshape.cpp
-    op/experimental/dyn_reshape.hpp
     op/experimental/dyn_slice.cpp
     op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
@@ -247,6 +246,8 @@ set (SRC
     op/greater.hpp
     op/greater_eq.cpp
     op/greater_eq.hpp
+    op/group_conv.hpp
+    op/group_conv.cpp
     op/less.cpp
     op/less.hpp
     op/less_eq.cpp
@@ -271,6 +272,8 @@ set (SRC
     op/negative.hpp
     op/non_max_suppression.cpp
     op/non_max_suppression.hpp
+    op/non_zero.cpp
+    op/non_zero.hpp
     op/not.cpp
     op/not.hpp
     op/not_equal.cpp
@@ -301,6 +304,8 @@ set (SRC
     op/reduce_mean.hpp
     op/reduce_sum.cpp
     op/reduce_sum.hpp
+    op/roi_align.hpp
+    op/roi_align.cpp
     op/round.cpp
     op/round.hpp
     op/quantize.cpp
@@ -343,6 +348,8 @@ set (SRC
     op/slice.hpp
     op/softmax.cpp
     op/softmax.hpp
+    op/split.cpp
+    op/split.hpp
     op/strided_slice.cpp
     op/strided_slice.hpp
     op/sqrt.cpp
@@ -390,7 +397,6 @@ set (SRC
     op/fused/grn.cpp
     op/fused/grn.hpp
     op/fused/group_conv.hpp
-    op/fused/group_conv.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
     op/fused/layer_norm.cpp
@@ -429,7 +435,6 @@ set (SRC
     op/fused/space_to_batch.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
-    op/fused/split.cpp
     op/fused/split.hpp
     op/fused/squared_difference.cpp
     op/fused/squared_difference.hpp
@@ -487,6 +492,7 @@ set (SRC
     pass/constant_folding_dyn_slice.cpp
     pass/constant_folding_gather.cpp
     pass/constant_folding_logical_reduction.cpp
+    pass/constant_folding_non_zero.cpp
     pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
@@ -736,8 +742,7 @@ target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH
 add_library(ngraph::ngraph ALIAS ngraph)
 
 if (NOT WIN32)
-    find_package(Threads REQUIRED)
-    target_link_libraries(ngraph PUBLIC dl Threads::Threads)
+    target_link_libraries(ngraph PRIVATE dl)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)

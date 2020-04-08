@@ -62,13 +62,12 @@ void op::Concat::validate_and_infer_types()
         {
             if (get_concatenation_axis() < 0)
             {
-                set_concatenation_axis(get_axis() < 0
-                                           ? get_axis() + static_cast<int64_t>(this_input_rank)
-                                           : get_axis());
+                set_concatenation_axis(get_axis() < 0 ? get_axis() + this_input_rank.get_length()
+                                                      : get_axis());
             }
             auto concat_axis = get_concatenation_axis();
             NODE_VALIDATION_CHECK(this,
-                                  concat_axis < static_cast<int64_t>(this_input_rank),
+                                  concat_axis < this_input_rank.get_length(),
                                   "Concatenation axis (",
                                   concat_axis,
                                   ") is out of bounds for ",
@@ -107,7 +106,7 @@ void op::Concat::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::Concat::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Concat::clone_with_new_inputs(const OutputVector& new_args) const
 {
     // TODO(amprocte): Should we check the new_args count here?
     return make_shared<Concat>(new_args, m_axis);
