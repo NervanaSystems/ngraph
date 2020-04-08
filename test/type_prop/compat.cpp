@@ -47,7 +47,8 @@ public:
 
 protected:
     // Deprecated method
-    virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override
+    virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                   const OutputVector& deltas) override
     {
         adjoints.add_delta(input_value(0), input_value(0) * deltas.at(0));
     }
