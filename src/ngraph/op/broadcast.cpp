@@ -139,8 +139,10 @@ void op::v1::Broadcast::validate_and_infer_types()
     }
 
     PartialShape result_shape{PartialShape::dynamic()};
-    shared_ptr<op::v0::Constant> shape_constant;
-    if (shape_constant = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr()))
+
+    const auto shape_constant = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr());
+
+    if (shape_constant)
     {
         result_shape = shape_constant->get_shape_val();
     }
@@ -230,11 +232,9 @@ void op::v1::Broadcast::validate_and_infer_types()
         {
             auto arg_shape = get_input_shape(0);
 
-            if (input_value(1).get_node_shared_ptr()->is_constant())
+            if (shape_constant)
             {
-                auto target_shape =
-                    static_pointer_cast<op::v0::Constant>(input_value(1).get_node_shared_ptr())
-                        ->get_shape_val();
+                const auto target_shape = shape_constant->get_shape_val();
                 auto start_axis = (m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
                                       ? m_broadcast_spec.m_axis
                                       : target_shape.size() - arg_shape.size();
