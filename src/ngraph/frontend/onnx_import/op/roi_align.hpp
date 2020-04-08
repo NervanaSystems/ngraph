@@ -14,22 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/op/passthrough.hpp"
-#include "pyngraph/ops/passthrough.hpp"
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
-namespace py = pybind11;
-
-void regclass_pyngraph_op_Passthrough(py::module m)
+namespace ngraph
 {
-    py::class_<ngraph::op::Passthrough, std::shared_ptr<ngraph::op::Passthrough>, ngraph::Node>
-        pass{m, "Passthrough"};
-    pass.doc() = "ngraph.impl.op.Passthrough wraps ngraph::op::Passthrough";
-    pass.def(py::init<const std::string&,
-                      const std::string&,
-                      const std::string&,
-                      const std::vector<ngraph::Output<ngraph::Node>>&,
-                      std::vector<std::tuple<ngraph::element::Type, ngraph::PartialShape>>>());
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector roi_align(const Node& node);
+
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
