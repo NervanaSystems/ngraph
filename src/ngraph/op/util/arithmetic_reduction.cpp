@@ -98,7 +98,7 @@ void op::util::ArithmeticReduction::validate_and_infer_types()
         }
 
         std::vector<Dimension> dims;
-        for (size_t i = 0; i < size_t(input_rank); i++)
+        for (size_t i = 0; i < input_rank.get_length(); i++)
         {
             if (reduction_axes.count(i) == 0)
             {

@@ -101,6 +101,7 @@ namespace ngraph
                 element::Type get_index_element_type() const { return m_index_element_type; }
                 bool get_compute_max() const { return m_compute_max; }
                 SortType get_sort() const { return m_sort; }
+                size_t get_default_output_index() const override { return no_default_index(); }
             protected:
                 element::Type m_index_element_type;
                 bool m_compute_max{false};
@@ -155,6 +156,7 @@ namespace ngraph
                      const SortType sort,
                      const element::Type& index_element_type = element::i32);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -184,7 +186,7 @@ namespace ngraph
                 ///       and returned. If the input is not constant(dynamic) this method returns 0
                 size_t get_k() const;
                 void set_k(size_t k);
-
+                size_t get_default_output_index() const override { return no_default_index(); }
             protected:
                 int64_t m_axis;
                 uint64_t m_normalized_axis;
@@ -208,4 +210,21 @@ namespace ngraph
 
         using v0::TopK;
     } // op
+
+    NGRAPH_API
+    std::ostream& operator<<(std::ostream& s, const op::v1::TopK::Mode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v1::TopK::Mode>
+        : public EnumAttributeAdapterBase<op::v1::TopK::Mode>
+    {
+    public:
+        AttributeAdapter(op::v1::TopK::Mode& value)
+            : EnumAttributeAdapterBase<op::v1::TopK::Mode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::v1::TopK::Mode>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 } // ngraph

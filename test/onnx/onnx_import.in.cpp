@@ -36,7 +36,10 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
+#include "ngraph/frontend/onnx_import/onnx_utils.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/constant_folding.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
@@ -931,7 +934,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_mean)
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(inputs);
-    test_case.add_expected_output(expected_output);
+    test_case.add_expected_output(Shape{}, expected_output);
     test_case.run();
 }
 
@@ -2050,4 +2053,89 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_round)
         {0.f, 0.f, 1.f, 1.f, 2.f, 2.f, 2.f, 2.f, 3.f, -1.f, -2.f, -2.f, -2.f, -2.f, -3.f});
 
     test_case.run();
+}
+
+namespace
+{
+    void test_non_zero_constant_folding(std::shared_ptr<ngraph::Function> function,
+                                        const std::vector<int64_t> expected_output,
+                                        const PartialShape expected_shape = PartialShape::dynamic())
+    {
+        ngraph::pass::Manager pass_manager;
+        pass_manager.register_pass<pass::ConstantFolding>();
+        pass_manager.run_passes(function);
+
+        for (auto ng_node : function->get_ordered_ops())
+        {
+            if (ng_node->is_constant())
+            {
+                const auto folded_non_zero = as_type_ptr<op::Constant>(ng_node);
+                const auto values = folded_non_zero->cast_vector<int64_t>();
+
+                EXPECT_TRUE(ngraph::test::all_close(expected_output, values));
+
+                if (expected_shape.is_static())
+                {
+                    EXPECT_EQ(folded_non_zero->get_output_shape(0), expected_shape.to_shape());
+                }
+
+                return;
+            }
+        }
+
+        FAIL() << "NonZero constant folding failed.";
+    }
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_scalar)
+{
+    const auto fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/non_zero_scalar.prototxt"));
+
+    test_non_zero_constant_folding(fn, {0}, Shape{1, 1});
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_1d)
+{
+    const auto fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/non_zero_1d.prototxt"));
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(fn);
+
+    test_non_zero_constant_folding(fn, {1, 2, 4}, Shape{1, 3});
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_1d_float)
+{
+    const auto fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/non_zero_1d_float.prototxt"));
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(fn);
+
+    test_non_zero_constant_folding(fn, {0, 1, 3, 4, 5, 6, 7, 8, 9});
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_3d)
+{
+    const auto fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/non_zero_3d.prototxt"));
+
+    // Vertical slices are 3D indices of non-zero elements in the input tensor
+    // {0, 0, 0, 1, 1, 2, 2}
+    // {0, 0, 1, 0, 1, 0, 1}
+    // {0, 1, 1, 1, 0, 0, 1}
+    test_non_zero_constant_folding(fn,
+                                   {0, 0, 0, 1, 1, 2, 2, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1});
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_non_zero_2d_bool)
+{
+    const auto fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/non_zero_2d_bool.prototxt"));
+
+    test_non_zero_constant_folding(fn, {0, 1, 1, 0});
 }

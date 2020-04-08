@@ -14,38 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
 #include <memory>
 
-#include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/type/element_type.hpp"
+#include "ngraph/opsets/opset3.hpp"
+#include "non_zero.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace cpu
+        namespace op
         {
-            class TensorViewWrapper;
-        }
-    }
-}
+            namespace set_1
+            {
+                NodeVector non_zero(const Node& node)
+                {
+                    const auto data = node.get_ng_inputs().at(0);
+                    return {std::make_shared<ngraph::opset3::NonZero>(data)};
+                }
 
-class ngraph::runtime::cpu::TensorViewWrapper
-{
-public:
-    TensorViewWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
+            } // namespace set_1
 
-    size_t get_size() const;
-    const Shape& get_shape() const;
-    Strides get_strides() const;
-    const element::Type& get_element_type() const;
-    const std::string& get_name() const;
-    const std::string& get_type() const;
-    const std::shared_ptr<descriptor::Tensor> get_tensor() const;
+        } // namespace op
 
-private:
-    std::shared_ptr<descriptor::Tensor> m_tensor;
-    std::string m_alias;
-};
+    } // namespace onnx_import
+
+} // namespace ngraph

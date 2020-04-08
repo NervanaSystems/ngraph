@@ -182,6 +182,11 @@ static PartialShape infer_output_shape(const op::Range* node, const element::Typ
     return result;
 }
 
+bool ngraph::op::v0::Range::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 void op::Range::validate_and_infer_types()
 {
     set_input_is_relevant_to_shape(0);

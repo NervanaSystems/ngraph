@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-cmake_minimum_required (VERSION 3.4)
+cmake_minimum_required (VERSION 3.11)
 
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -143,6 +143,7 @@ option(NGRAPH_DYNAMIC_COMPONENTS_ENABLE "Enable dynamic loading of components" T
 option(NGRAPH_NATIVE_ARCH_ENABLE "Enable build for native archtecture" TRUE)
 option(NGRAPH_EXPORT_TARGETS_ENABLE "Enable exporting nGraph cmake export targets" TRUE)
 option(NGRAPH_WARNINGS_AS_ERRORS "Make all nGraph compile-time warnings into errors" FALSE)
+option(NGRAPH_STRICT_ERROR_CHECKING "Turn error checking up to 11" FALSE)
 if (NGRAPH_CPU_ENABLE)
     option(NGRAPH_TBB_ENABLE "Control usage of TBB for CPU backend" TRUE)
 endif()
@@ -217,6 +218,7 @@ NORMALIZE_BOOL(NGRAPH_CPU_STATIC_LIB_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
 NORMALIZE_BOOL(NGRAPH_EXPORT_TARGETS_ENABLE)
 NORMALIZE_BOOL(NGRAPH_WARNINGS_AS_ERRORS)
+NORMALIZE_BOOL(NGRAPH_STRICT_ERROR_CHECKING)
 if (NGRAPH_CPU_ENABLE)
     NORMALIZE_BOOL(NGRAPH_TBB_ENABLE)
 endif()
@@ -245,6 +247,7 @@ message(STATUS "NGRAPH_PLAIDML_ENABLE:                ${NGRAPH_PLAIDML_ENABLE}")
 message(STATUS "NGRAPH_PLAIDML_STATIC_LIB_ENABLE:     ${NGRAPH_PLAIDML_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:           ${NGRAPH_PYTHON_BUILD_ENABLE}")
 message(STATUS "NGRAPH_STATIC_LIB_ENABLE:             ${NGRAPH_STATIC_LIB_ENABLE}")
+message(STATUS "NGRAPH_STRICT_ERROR_CHECKING:         ${NGRAPH_STRICT_ERROR_CHECKING}")
 message(STATUS "NGRAPH_USE_LEGACY_MKLDNN:             ${NGRAPH_USE_LEGACY_MKLDNN}")
 if (NGRAPH_CPU_ENABLE)
     message(STATUS "NGRAPH_TBB_ENABLE:                    ${NGRAPH_TBB_ENABLE}")
@@ -322,10 +325,10 @@ endif()
 message(STATUS "Installation directory: ${CMAKE_INSTALL_PREFIX}")
 
 # Destinations
-set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_LIBDIR}")
-set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_INCLUDEDIR}")
-set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_DOCDIR}")
-set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_BINDIR}")
+set(NGRAPH_INSTALL_LIB "${NGRAPH_COMPONENT_PREFIX}${CMAKE_INSTALL_LIBDIR}")
+set(NGRAPH_INSTALL_INCLUDE "${NGRAPH_COMPONENT_PREFIX}${CMAKE_INSTALL_INCLUDEDIR}")
+set(NGRAPH_INSTALL_DOC "${NGRAPH_COMPONENT_PREFIX}${CMAKE_INSTALL_DOCDIR}")
+set(NGRAPH_INSTALL_BIN "${NGRAPH_COMPONENT_PREFIX}${CMAKE_INSTALL_BINDIR}")
 if (LINUX)
     if (DEFINED NGRAPH_RPATH)
         set(CMAKE_BUILD_RPATH "$ORIGIN:${NGRAPH_RPATH}")
@@ -384,10 +387,10 @@ if (WIN32)
 else()
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
     set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
-    # These can be uncommented once we have visibility fully in place
-    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
-    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden")
-endif()
+    set(CMAKE_CXX_VISIBILITY_PRESET default)
+    set(CMAKE_C_VISIBILITY_PRESET default)
+    set(CMAKE_VISIBILITY_INLINES_HIDDEN OFF)
+    endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$" AND NOT NGRAPH_BUILD_DIR)
     message( STATUS "Setting clang flags...")
@@ -426,7 +429,6 @@ endif()
 if(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOMINMAX")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS")
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
@@ -569,7 +571,7 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     endif()
     include(cmake/external_onnx.cmake)
     if (TARGET ext_protobuf)
-        add_dependencies(ext_onnx ext_protobuf)
+        add_dependencies(onnx ext_protobuf)
     endif()
 endif()
 
@@ -639,7 +641,7 @@ if (NGRAPH_EXPORT_TARGETS_ENABLE)
     install(EXPORT ngraphTargets
         FILE ngraphTargets.cmake
         NAMESPACE ngraph::
-        DESTINATION cmake
+        DESTINATION ${NGRAPH_COMPONENT_PREFIX}cmake
         COMPONENT ngraph)
 
     configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/share/ngraphConfig.cmake.in
@@ -652,14 +654,15 @@ if (NGRAPH_EXPORT_TARGETS_ENABLE)
 
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
-        DESTINATION cmake
+        DESTINATION ${NGRAPH_COMPONENT_PREFIX}cmake
         COMPONENT ngraph)
 endif()
 
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/licenses
-    DESTINATION "."
+    DESTINATION "${NGRAPH_COMPONENT_PREFIX}."
     COMPONENT ngraph
 )
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION "." COMPONENT ngraph)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/VERSION DESTINATION "." COMPONENT ngraph)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION "${NGRAPH_COMPONENT_PREFIX}." COMPONENT ngraph)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/VERSION DESTINATION "${NGRAPH_COMPONENT_PREFIX}." COMPONENT ngraph)
