@@ -51,12 +51,9 @@ namespace ngraph
                 value_shape,
                 reduction_axes,
                 ngraph::opset1::Constant::create(element::i64, {}, {0}));
+
             return std::make_shared<ngraph::opset1::ReduceProd>(
-                dim_values,
-                std::make_shared<ngraph::opset1::Range>(
-                    ngraph::opset1::Constant::create(element::i64, {}, {0}),
-                    std::make_shared<ngraph::opset1::ShapeOf>(dim_values),
-                    ngraph::opset1::Constant::create(element::i64, {}, {1})));
+                dim_values, ngraph::opset1::Constant::create(element::i64, {}, {0}));
         }
 
         std::shared_ptr<Node> l2_norm(const Output<Node>& node, const AxisSet& reduction_axes)
@@ -134,6 +131,8 @@ namespace ngraph
         {
             std::shared_ptr<Node> value_elems_sum;
             std::shared_ptr<Node> elems_number;
+            const auto value_elem_type = value.get_element_type();
+
             if (value.get_partial_shape().is_static())
             {
                 value_elems_sum = std::make_shared<ngraph::opset1::ReduceSum>(
@@ -143,7 +142,7 @@ namespace ngraph
                     keep_dims);
                 auto elems_number_value = get_num_elements(value.get_shape(), reduction_axes);
                 elems_number = ngraph::opset1::Constant::create(
-                    value.get_element_type(), Shape{}, {elems_number_value});
+                    value_elem_type, Shape{}, {elems_number_value});
             }
             else
             {
@@ -152,7 +151,8 @@ namespace ngraph
                 value_elems_sum = std::make_shared<ngraph::opset1::ReduceSum>(
                     value, reduction_axes_const, keep_dims);
                 elems_number = get_num_elements(value, reduction_axes_const);
-                elems_number = std::make_shared<ngraph::opset1::ConvertLike>(elems_number, value);
+                elems_number =
+                    std::make_shared<ngraph::opset1::Convert>(elems_number, value_elem_type);
             }
 
             return std::make_shared<ngraph::opset1::Divide>(value_elems_sum, elems_number)

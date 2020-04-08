@@ -315,6 +315,7 @@ set(MULTI_TEST_SRC
     backend/batch_norm.in.cpp
     backend/broadcast.in.cpp
     backend/builder_flatten.in.cpp
+    backend/builder_opset1.in.cpp
     backend/ceiling.in.cpp
     backend/comparison.in.cpp
     backend/computation_reuse.in.cpp
