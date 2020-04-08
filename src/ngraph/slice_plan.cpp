@@ -229,7 +229,7 @@ SlicePlan ngraph::make_slice_plan(const Shape& input_shape,
 
 bool SlicePlan::operator==(const ngraph::SlicePlan& other) const
 {
-    bool equal = false;
+    bool equal = true;
     equal &= begins == other.begins;
     equal &= ends == other.ends;
     equal &= strides == other.strides;
