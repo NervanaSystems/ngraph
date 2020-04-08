@@ -195,6 +195,15 @@ shared_ptr<Node> builder::opset1::reorder_axes(const Output<Node>& value, vector
 
 shared_ptr<Node> builder::opset1::transpose(const Output<Node>& value)
 {
+    // This part is left to preserve backward compatibility and ensure passing ONNX tests.
+    if (value.get_partial_shape().is_static())
+    {
+        vector<size_t> axes_order(value.get_shape().size());
+        iota(begin(axes_order), end(axes_order), 0);
+        reverse(begin(axes_order), end(axes_order));
+        return builder::opset1::reorder_axes(value, axes_order);
+    }
+
     const auto input_rank =
         std::make_shared<ngraph::opset1::ShapeOf>(std::make_shared<ngraph::opset1::ShapeOf>(value));
     const auto neg_one = ngraph::opset1::Constant::create(element::i64, Shape{}, {-1});
