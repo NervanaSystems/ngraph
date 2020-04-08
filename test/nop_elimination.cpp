@@ -123,8 +123,10 @@ TEST(nop_elimination, reshape_elimination_v1)
 {
     auto generate_func = [](bool zero) {
         auto arg = std::make_shared<op::Parameter>(element::i64, PartialShape{8, 16, 2, 3});
-        auto pattern = op::Constant::create(element::i64, Shape{4}, vector<int64_t>{8, 16, 2, 3});
-        auto reshape_v1 = std::make_shared<op::v1::Reshape>(arg, pattern, zero);
+        auto pattern_org = op::Constant::create(element::i64, Shape{3}, vector<int64_t>{8, 16, 6});
+        auto pattern = op::Constant::create(element::i64, Shape{3}, vector<int64_t>{8, 16, 6});
+        auto reshape_v1_org = std::make_shared<op::v1::Reshape>(arg, pattern_org, zero);
+        auto reshape_v1 = std::make_shared<op::v1::Reshape>(reshape_v1_org, pattern, zero);
         auto abs = std::make_shared<op::Abs>(reshape_v1);
         return std::make_shared<Function>(NodeVector{abs}, ParameterVector{arg});
     };
@@ -138,10 +140,10 @@ TEST(nop_elimination, reshape_elimination_v1)
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(func);
     pass_manager.run_passes(func_zero);
-    ASSERT_TRUE(count_ops_of_type<op::v1::Reshape>(nopass_func) == 1);
-    ASSERT_TRUE(count_ops_of_type<op::v1::Reshape>(func) == 0);
-    ASSERT_TRUE(count_ops_of_type<op::v1::Reshape>(nopass_func_zero) == 1);
-    ASSERT_TRUE(count_ops_of_type<op::v1::Reshape>(func_zero) == 0);
+    ASSERT_TRUE(count_ops_of_type<op::v1::Reshape>(nopass_func) == 2);
+    ASSERT_TRUE(count_ops_of_type<op::v1::Reshape>(func) == 1);
+    ASSERT_TRUE(count_ops_of_type<op::v1::Reshape>(nopass_func_zero) == 2);
+    ASSERT_TRUE(count_ops_of_type<op::v1::Reshape>(func_zero) == 1);
 }
 
 TEST(nop_elimination, reshape_elimination_v1_dynamic)

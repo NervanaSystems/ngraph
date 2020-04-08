@@ -132,7 +132,7 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
     // check if reshape is not identity op
     if (node_input->get_output_partial_shape(0).is_dynamic() ||
         node->get_output_partial_shape(0).is_dynamic() ||
-        node->get_output_shape(0) != node->get_output_shape(0))
+        node_input->get_output_shape(0) != node->get_output_shape(0))
     {
         NGRAPH_DEBUG << "Not a no-op; Shapes are different!";
         return false;
