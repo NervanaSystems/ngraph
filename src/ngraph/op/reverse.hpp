@@ -63,7 +63,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The set of axes to reverse.
                 const AxisSet& get_reversed_axes() const { return m_reversed_axes; }
@@ -112,7 +112,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The second input data interpretation mode.
                 Mode get_mode() const { return m_mode; }

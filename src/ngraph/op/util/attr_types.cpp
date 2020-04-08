@@ -43,7 +43,6 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-
     template <>
     EnumNames<op::PadType>& EnumNames<op::PadType>::get()
     {
@@ -61,7 +60,6 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-
     template <>
     EnumNames<op::RoundingType>& EnumNames<op::RoundingType>::get()
     {
@@ -77,7 +75,6 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-
     template <>
     EnumNames<op::AutoBroadcastType>& EnumNames<op::AutoBroadcastType>::get()
     {
@@ -95,7 +92,6 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-
     template <>
     EnumNames<op::EpsMode>& EnumNames<op::EpsMode>::get()
     {
@@ -110,7 +106,6 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-
     template <>
     EnumNames<op::TopKSortType>& EnumNames<op::TopKSortType>::get()
     {
@@ -128,7 +123,6 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-
     op::AutoBroadcastType op::AutoBroadcastSpec::type_from_string(const std::string& type) const
     {
         static const std::map<std::string, AutoBroadcastType> allowed_values = {
