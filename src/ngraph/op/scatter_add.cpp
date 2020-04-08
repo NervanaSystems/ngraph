@@ -26,7 +26,7 @@ static int UPDATES = 2;
 
 constexpr NodeTypeInfo op::ScatterAdd::type_info;
 
-shared_ptr<Node> op::ScatterAdd::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ScatterAdd::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ScatterAdd>(new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));

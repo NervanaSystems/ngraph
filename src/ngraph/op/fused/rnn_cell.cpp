@@ -194,7 +194,7 @@ Output<Node> op::RNNCell::get_default_bias_input() const
                              vector<float>(s_gates_count * get_hidden_size(), 0.f))};
 }
 
-shared_ptr<Node> op::RNNCell::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::RNNCell::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 4)
