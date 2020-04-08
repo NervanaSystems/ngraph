@@ -140,7 +140,7 @@ namespace ngraph
                 virtual NodeVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 std::vector<float> get_activations_alpha() const { return m_activations_alpha; }
                 std::vector<float> get_activations_beta() const { return m_activations_beta; }

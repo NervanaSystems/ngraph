@@ -99,7 +99,7 @@ NodeVector op::MVN::decompose_op() const
     }
 }
 
-shared_ptr<Node> op::MVN::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::MVN::clone_with_new_inputs(const OutputVector& new_args) const
 {
     NODE_VALIDATION_CHECK(this,
                           new_args.size() == 1,

@@ -61,7 +61,7 @@ NodeVector op::Elu::decompose_op() const
             alpha_node};
 }
 
-shared_ptr<Node> op::Elu::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Elu::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Elu>(new_args.at(0), m_alpha);
