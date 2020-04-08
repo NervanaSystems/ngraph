@@ -230,6 +230,9 @@ mlir::Type NgDialectConversionPass::getMlirType(const element::Type& type)
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
 
+    auto signedness = type.is_signed() ? mlir::NGIntegerType::SignednessSemantics::Signed
+                                       : mlir::NGIntegerType::SignednessSemantics::Unsigned;
+
     switch (type)
     {
     case ngraph::element::Type_t::undefined:
@@ -240,31 +243,16 @@ mlir::Type NgDialectConversionPass::getMlirType(const element::Type& type)
     case ngraph::element::Type_t::f16: return mlir::NGFloatType::getF16(m_context);
     case ngraph::element::Type_t::f32: return mlir::NGFloatType::getF32(m_context);
     case ngraph::element::Type_t::f64: return mlir::NGFloatType::getF64(m_context);
-    case ngraph::element::Type_t::i8:
-        return mlir::NGIntegerType::get(
-            8, mlir::NGIntegerType::SignednessSemantics::Signed, m_context);
+    case ngraph::element::Type_t::i8: return mlir::NGIntegerType::get(8, signedness, m_context);
     case ngraph::element::Type_t::u8:
     case ngraph::element::Type_t::boolean:
-        return mlir::NGIntegerType::get(
-            8, mlir::NGIntegerType::SignednessSemantics::Unsigned, m_context);
-    case ngraph::element::Type_t::i16:
-        return mlir::NGIntegerType::get(
-            16, mlir::NGIntegerType::SignednessSemantics::Signed, m_context);
-    case ngraph::element::Type_t::u16:
-        return mlir::NGIntegerType::get(
-            16, mlir::NGIntegerType::SignednessSemantics::Unsigned, m_context);
-    case ngraph::element::Type_t::i32:
-        return mlir::NGIntegerType::get(
-            32, mlir::NGIntegerType::SignednessSemantics::Signed, m_context);
-    case ngraph::element::Type_t::u32:
-        return mlir::NGIntegerType::get(
-            32, mlir::NGIntegerType::SignednessSemantics::Unsigned, m_context);
-    case ngraph::element::Type_t::i64:
-        return mlir::NGIntegerType::get(
-            64, mlir::NGIntegerType::SignednessSemantics::Signed, m_context);
-    case ngraph::element::Type_t::u64:
-        return mlir::NGIntegerType::get(
-            64, mlir::NGIntegerType::SignednessSemantics::Unsigned, m_context);
+        return mlir::NGIntegerType::get(8, signedness, m_context);
+    case ngraph::element::Type_t::i16: return mlir::NGIntegerType::get(16, signedness, m_context);
+    case ngraph::element::Type_t::u16: return mlir::NGIntegerType::get(16, signedness, m_context);
+    case ngraph::element::Type_t::i32: return mlir::NGIntegerType::get(32, signedness, m_context);
+    case ngraph::element::Type_t::u32: return mlir::NGIntegerType::get(32, signedness, m_context);
+    case ngraph::element::Type_t::i64: return mlir::NGIntegerType::get(64, signedness, m_context);
+    case ngraph::element::Type_t::u64: return mlir::NGIntegerType::get(64, signedness, m_context);
     }
     NGRAPH_CHECK(false, "Unreachable");
     return mlir::Type();
