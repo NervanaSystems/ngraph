@@ -30,7 +30,7 @@ namespace ngraph
             class NGRAPH_API FusedOp : public Op
             {
             public:
-                bool supports_decompose() const override { return true; }
+                bool supports_decompose() const final { return true; }
                 // Fused op decomposition can be performed in the presence of
                 // partial shapes
                 virtual bool can_decompose_with_partial_shapes() { return false; }
