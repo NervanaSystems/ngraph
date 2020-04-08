@@ -30,7 +30,6 @@ NGraphOpsDialect::NGraphOpsDialect(mlir::MLIRContext* ctx)
     : mlir::Dialect(getDialectNamespace(), ctx)
 {
     addTypes<NGTensorType>();
-    addTypes<NGIntegerType>();
     addTypes<NGBoolType>();
 
     addOperations<
