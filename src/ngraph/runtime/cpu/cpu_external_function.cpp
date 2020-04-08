@@ -89,7 +89,6 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/softmax_crossentropy.hpp"
@@ -98,6 +97,7 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
@@ -1191,13 +1191,15 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         if (getenv_bool("NGRAPH_MLIR") && getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             if (typeid(ngraph::op::MatMul) == typeid(node) &&
-                node.get_input_element_type(0) == element::f32)
+                node.get_input_element_type(0) == element::f32 &&
+                node.get_input_shape(0).size() == 2 && node.get_input_shape(1).size() == 2)
             {
                 return true;
             }
 
             if (typeid(ngraph::op::Gemm) == typeid(node) &&
-                node.get_input_element_type(0) == element::f32)
+                node.get_input_element_type(0) == element::f32 &&
+                node.get_input_shape(0).size() == 2 && node.get_input_shape(1).size() == 2)
             {
                 return true;
             }
@@ -1277,6 +1279,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(VanillaRNNFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(RNNFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(AlgebraicSimplification, true, ngraph::pass)

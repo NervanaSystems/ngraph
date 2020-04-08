@@ -36,8 +36,8 @@
 #include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/parameter.hpp"
@@ -992,8 +992,12 @@ TEST(cpu_fusion, conv_horizontal_fusion)
     auto cpu_results = execute(cpu_f, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 
-    size_t cpu_cb = count_ops_of_type<op::ConvolutionBias>(cpu_f);
-    ASSERT_EQ(cpu_cb, 1);
+    size_t cpu_ck = count_ops_of_type<op::CompiledKernel>(cpu_f);
+    if (!cpu_ck)
+    {
+        size_t cpu_cb = count_ops_of_type<op::ConvolutionBias>(cpu_f);
+        ASSERT_EQ(cpu_cb, 1);
+    }
 }
 
 // ConvolutionBiasAdd relies on an in-place fused MKLDNN kernel.
@@ -4007,6 +4011,30 @@ TEST(cpu_fusion, rnn_fusion_2rnn_layer_3lstm_cell)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
+}
+
+TEST(cpu_fusion, vanilla_rnn_cpu_vs_inter)
+{
+    const std::string file_name("tensorflow/rnn/vanilla_rnn_3_time_step.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+    auto lstm_ops = get_ops_of_type<op::Rnn>(cpu_f);
+    EXPECT_EQ(lstm_ops.size(), 3);
 }
 
 TEST(cpu_fusion, validate_fuse_gru_inputs)

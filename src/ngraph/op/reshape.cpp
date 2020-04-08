@@ -108,7 +108,7 @@ void op::Reshape::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), m_output_shape);
 }
 
-shared_ptr<Node> op::Reshape::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Reshape::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Reshape>(new_args.at(0), m_input_order, m_output_shape);
@@ -201,7 +201,17 @@ void op::v1::Reshape::validate_and_infer_types()
 
         if (!(zero_dims && m_special_zero) && !negative_dims)
         {
-            set_output_type(0, get_input_element_type(0), const_shape->get_shape_val());
+            auto output_shape = const_shape->get_shape_val();
+            if (get_input_partial_shape(0).is_static())
+            {
+                NODE_VALIDATION_CHECK(this,
+                                      shape_size(get_input_shape(0)) == shape_size(output_shape),
+                                      "Requested output shape ",
+                                      output_shape,
+                                      " is incompatible with input shape ",
+                                      get_input_shape(0));
+            }
+            set_output_type(0, get_input_element_type(0), output_shape);
         }
         else
         {
@@ -277,7 +287,7 @@ void op::v1::Reshape::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::v1::Reshape::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Reshape::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::Reshape>(new_args.at(0), new_args.at(1), m_special_zero);

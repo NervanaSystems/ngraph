@@ -34,7 +34,7 @@ op::v0::Product::Product(const Output<Node>& arg, const Output<Node>& reduction_
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v0::Product::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Product::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v0::Product>(new_args.at(0), get_reduction_axes());
