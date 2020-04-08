@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <ops.hpp>
 #include "constant_folding.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/runtime/reference/gather.hpp"
 
