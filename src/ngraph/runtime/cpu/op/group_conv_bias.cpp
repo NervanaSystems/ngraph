@@ -115,7 +115,7 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
 {
     constructor_validate_and_infer_types();
 
-    if (conv->output(0).get_element_type() != bias.get_element_type())
+    if (conv->get_output_element_type(0) != bias.get_element_type())
     {
         throw ngraph_error("GroupConvolution's element type isn't equal to bias!");
     }
