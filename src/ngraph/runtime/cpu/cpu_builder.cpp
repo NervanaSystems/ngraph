@@ -564,7 +564,7 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Sqrt)
             {
-                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sqrt);
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::checked_sqrt);
             }
 
             template <>

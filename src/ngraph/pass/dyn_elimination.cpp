@@ -20,7 +20,6 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_replace_slice.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
@@ -43,7 +42,6 @@ pass::DynElimination::DynElimination()
     construct_dyn_broadcast();
     construct_dyn_replace_slice();
     construct_dyn_slice();
-    construct_dyn_reshape();
     construct_range();
 }
 
@@ -297,49 +295,6 @@ void pass::DynElimination::construct_dyn_replace_slice()
     auto dyn_replace_slice_matcher =
         make_shared<pattern::Matcher>(dyn_replace_slice_pat, "DynElimination.DynReplaceShape");
     add_matcher(dyn_replace_slice_matcher, dyn_replace_slice_callback, all_pass_property_off);
-}
-
-void pass::DynElimination::construct_dyn_reshape()
-{
-    auto data_arg_label = make_shared<pattern::op::Label>(element::f32, Shape{1, 2, 3});
-    auto shape_arg_label =
-        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
-
-    auto dyn_reshape = make_shared<op::DynReshape>(data_arg_label, shape_arg_label);
-
-    auto dyn_reshape_callback = [data_arg_label, shape_arg_label](pattern::Matcher& m) {
-        auto pattern_map = m.get_pattern_map();
-
-        auto data_arg = pattern_map[data_arg_label];
-        auto shape_arg = static_pointer_cast<op::Constant>(pattern_map[shape_arg_label]);
-        auto dyn_reshape_node = static_pointer_cast<op::DynReshape>(m.get_match_root());
-
-        // TODO(amprocte): Can't handle the case where data rank is dynamic even if we know the
-        // output shape, because static Reshape requries an axis permutation (here an identity) to
-        // be given. See if we can come up with a workaround.
-        if (data_arg->get_output_partial_shape(0).rank().is_dynamic())
-        {
-            return false;
-        }
-
-        if (dyn_reshape_node->get_output_partial_shape(0).is_dynamic())
-        {
-            return false;
-        }
-
-        auto& result_shape = dyn_reshape_node->get_output_shape(0);
-        AxisVector perm(data_arg->get_output_partial_shape(0).rank().get_length());
-        std::iota(perm.begin(), perm.end(), 0);
-
-        auto replacement = std::make_shared<op::Reshape>(data_arg, perm, result_shape);
-
-        replace_node(dyn_reshape_node, replacement);
-        return true;
-    };
-
-    auto dyn_reshape_matcher =
-        make_shared<pattern::Matcher>(dyn_reshape, "DynElimination.DynReshape");
-    add_matcher(dyn_reshape_matcher, dyn_reshape_callback, all_pass_property_off);
 }
 
 template <typename T>

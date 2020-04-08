@@ -40,5 +40,12 @@ TEST(type_prop, unsqueeze_dynamic)
     auto unsqueeze = make_shared<op::Unsqueeze>(param, axes_node);
 
     ASSERT_EQ(unsqueeze->get_element_type(), element::f32);
-    EXPECT_TRUE(unsqueeze->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(7)));
+    EXPECT_TRUE(
+        unsqueeze->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(),
+                                                                        1,
+                                                                        1,
+                                                                        Dimension::dynamic(),
+                                                                        Dimension::dynamic(),
+                                                                        Dimension::dynamic(),
+                                                                        Dimension::dynamic()}));
 }

@@ -36,8 +36,8 @@
 #include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/parameter.hpp"
@@ -831,6 +831,7 @@ static void test_batchnorm_fprop_relu(Shape input_shape)
 
 TEST(cpu_fusion, batchnorm_fprop_relu)
 {
+    DisableRemoveGOE nogoe;
     test_batchnorm_fprop_relu(Shape{1, 2, 2, 2});
     test_batchnorm_fprop_relu(Shape{1, 2, 2, 2, 2});
     test_batchnorm_fprop_relu(Shape{2, 2, 2, 4, 4});
@@ -991,8 +992,12 @@ TEST(cpu_fusion, conv_horizontal_fusion)
     auto cpu_results = execute(cpu_f, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 
-    size_t cpu_cb = count_ops_of_type<op::ConvolutionBias>(cpu_f);
-    ASSERT_EQ(cpu_cb, 1);
+    size_t cpu_ck = count_ops_of_type<op::CompiledKernel>(cpu_f);
+    if (!cpu_ck)
+    {
+        size_t cpu_cb = count_ops_of_type<op::ConvolutionBias>(cpu_f);
+        ASSERT_EQ(cpu_cb, 1);
+    }
 }
 
 // ConvolutionBiasAdd relies on an in-place fused MKLDNN kernel.
@@ -1211,6 +1216,7 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
 
 TEST(cpu_fusion, fuse_deconv)
 {
+    DisableRemoveGOE nogoe;
     bool use_deconv_fuse = (getenv_bool("NGRAPH_DECONV_FUSE"));
     if (!use_deconv_fuse)
     {
@@ -3762,6 +3768,7 @@ TEST(cpu_fusion, fuse_rnn_across_layer_2layer_3timestep)
 
 TEST(cpu_fusion, fuse_bi_directional_rnn)
 {
+    DisableRemoveGOE nogoe;
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
@@ -3829,6 +3836,7 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
 
 TEST(cpu_fusion, fuse_lstm_cells)
 {
+    DisableRemoveGOE nogoe;
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     const string json_path =
@@ -3866,6 +3874,7 @@ TEST(cpu_fusion, fuse_2_layer_rnn)
 
 TEST(cpu_fusion, fuse_1_layer_rnn)
 {
+    DisableRemoveGOE nogoe;
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
@@ -3934,6 +3943,7 @@ TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
 
 TEST(cpu_fusion, lstm_cell)
 {
+    DisableRemoveGOE nogoe;
     auto make_function = []() {
         const size_t batch_size = 3;
         const size_t input_size = 4;
@@ -4001,6 +4011,30 @@ TEST(cpu_fusion, rnn_fusion_2rnn_layer_3lstm_cell)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
+}
+
+TEST(cpu_fusion, vanilla_rnn_cpu_vs_inter)
+{
+    const std::string file_name("tensorflow/rnn/vanilla_rnn_3_time_step.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+    auto lstm_ops = get_ops_of_type<op::Rnn>(cpu_f);
+    EXPECT_EQ(lstm_ops.size(), 3);
 }
 
 TEST(cpu_fusion, validate_fuse_gru_inputs)

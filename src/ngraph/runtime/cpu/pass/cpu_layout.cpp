@@ -39,8 +39,8 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/op.hpp"
@@ -99,9 +99,9 @@ static shared_ptr<Node>
                            to_string(node->get_input_size()) + ")");
     }
 
-    for (const descriptor::Input& input : node->get_inputs())
+    for (auto input : node->inputs())
     {
-        const auto& output = input.get_output();
+        auto output = input.get_source_output();
         auto tv = output.get_tensor_ptr();
         auto tvl =
             std::dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
@@ -128,8 +128,7 @@ static shared_ptr<Node>
         {
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
             layout->set_mkldnn_md(required_mds[index]);
-            auto new_node = std::shared_ptr<Node>(
-                new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
+            auto new_node = make_shared<runtime::cpu::op::ConvertLayout>(output, layout);
             new_args.push_back(new_node);
             replace_node = true;
 #if MKLDNN_VERSION_MAJOR < 1
@@ -145,7 +144,7 @@ static shared_ptr<Node>
         }
         else
         {
-            new_args.push_back(output.get_node());
+            new_args.push_back(output);
         }
         index++;
     }
@@ -199,9 +198,9 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
     OutputVector new_args;
     bool replace_node = false;
     uint32_t index = 0;
-    for (descriptor::Input& input : node->get_inputs())
+    for (auto input : node->inputs())
     {
-        const auto& output = input.get_output();
+        auto output = input.get_source_output();
         auto tv = output.get_tensor_ptr();
         auto et = tv->get_element_type();
         auto shape = tv->get_shape();
@@ -216,33 +215,25 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
             {
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
                 layout->set_mkldnn_md(native_md);
-                auto new_node = std::shared_ptr<Node>(new runtime::cpu::op::ConvertLayout(
-                    output.get_node(), output.get_index(), layout));
-                new_args.push_back(new_node);
+                auto new_node = make_shared<runtime::cpu::op::ConvertLayout>(output, layout);
+                new_args.push_back(new_node->output(0));
                 if (use_replace)
                 {
                     replace_node = true;
                 }
                 else
                 {
-                    input.replace_output(new_node->get_outputs().at(0));
+                    input.replace_source_output(new_node->output(0));
                 }
-
-#if MKLDNN_VERSION_MAJOR < 1
-                NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
-                             << output.get_node()->get_name()
-                             << "(layout: " << cpu_tvl->get_mkldnn_md().data.format << ") and "
-                             << node->get_name() << "(layout: default)";
-#endif
             }
             else
             {
-                new_args.push_back(output.get_node());
+                new_args.push_back(output);
             }
         }
         else
         {
-            new_args.push_back(output.get_node());
+            new_args.push_back(output);
         }
         index++;
     }
