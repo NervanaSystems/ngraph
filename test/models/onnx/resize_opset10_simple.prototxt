@@ -1,0 +1,66 @@
+ir_version: 6
+producer_name: "test_model"
+graph {
+  node {
+    output: "scales"
+    op_type: "Constant"
+    attribute {
+      name: "value"
+      t {
+        dims: 2
+        data_type: 1
+        float_data: 1.0
+        float_data: 2.0
+        name: "scales_const"
+      }
+      type: TENSOR
+    }
+  }
+  node {
+    input: "X"
+    input: "scales"
+    output: "output"
+    op_type: "Resize"
+    attribute {
+      name: "mode"
+      s: "nearest"
+      type: STRING
+    }
+  }
+  name: "test_model"
+  input {
+    name: "X"
+    type {
+      tensor_type {
+        elem_type: 1
+        shape {
+          dim {
+            dim_value: 2
+          }
+          dim {
+            dim_value: 2
+          }
+        }
+      }
+    }
+  }
+  output {
+    name: "output"
+    type {
+      tensor_type {
+        elem_type: 1
+        shape {
+          dim {
+            dim_value: 2
+          }
+          dim {
+            dim_value: 4
+          }
+        }
+      }
+    }
+  }
+}
+opset_import {
+  version: 10
+}
