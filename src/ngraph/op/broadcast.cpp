@@ -60,14 +60,13 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
 
     if (m_broadcast_spec.m_type == AutoBroadcastType::NONE)
     {
-        if (get_input_partial_shape(1).is_static() &&
-            input_value(2).get_node_shared_ptr()->is_constant())
+        const auto axes_mapping_constant =
+            as_type_ptr<op::v0::Constant>(input_value(2).get_node_shared_ptr());
+        if (get_input_partial_shape(1).is_static() && axes_mapping_constant)
         {
             auto target_shape = get_input_shape(1);
             NGRAPH_CHECK(target_shape.size() == 1);
-            auto axes_mapping_val =
-                static_pointer_cast<op::v0::Constant>(input_value(2).get_node_shared_ptr())
-                    ->get_axis_vector_val();
+            auto axes_mapping_val = axes_mapping_constant->get_axis_vector_val();
 
             std::vector<size_t> axes(target_shape[0]);
             std::iota(axes.begin(), axes.end(), 0);
