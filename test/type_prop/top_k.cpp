@@ -121,7 +121,7 @@ TEST(type_prop, topk_rank_dynamic_ok)
         auto badout = Output<Node>(topk);
         FAIL() << "No default output for topk";
     }
-    catch (const NodeValidationFailure& error)
+    catch (const NodeValidationFailure&)
     {
     }
 }
