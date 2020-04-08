@@ -468,6 +468,7 @@ set (SRC
     op/util/rnn_cell_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
+    op/util/value_propagarion.hpp
     ops.hpp
     opsets/opset.cpp
     partial_shape.cpp
@@ -486,6 +487,7 @@ set (SRC
     pass/constant_folding_broadcast.cpp
     pass/constant_folding_concat.cpp
     pass/constant_folding_convert.cpp
+    pass/constant_folding_default.cpp
     pass/constant_folding_dequantize.cpp
     pass/constant_folding_dyn_broadcast.cpp
     pass/constant_folding_dyn_reshape.cpp

@@ -101,6 +101,7 @@ public:
         construct_constant_one_hot();
         construct_constant_tile();
         construct_constant_non_zero();
+        construct_constant_default();
     }
 
 private:
@@ -133,6 +134,7 @@ private:
     void construct_constant_one_hot();
     void construct_constant_tile();
     void construct_constant_non_zero();
+    void construct_constant_default();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
 };
