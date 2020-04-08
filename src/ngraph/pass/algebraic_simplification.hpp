@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -27,13 +27,12 @@ namespace ngraph
     }
 }
 
-class NGRAPH_API ngraph::pass::AlgebraicSimplification : public FunctionPass
+class NGRAPH_API ngraph::pass::AlgebraicSimplification : public GraphRewrite
 {
 public:
     AlgebraicSimplification()
-        : FunctionPass()
+        : GraphRewrite()
     {
-        set_property(PassProperty::REQUIRE_STATIC_SHAPE, true);
     }
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 };
