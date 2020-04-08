@@ -14,4 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/group_conv.hpp"
+#include "ngraph/assertion.hpp"
+
+const char* ngraph::AssertionFailure::what() const noexcept
+{
+    return m_what.c_str();
+}
