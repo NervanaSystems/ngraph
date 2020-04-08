@@ -37,15 +37,16 @@ bool ngraph::op::v1::Transpose::visit_attributes(AttributeVisitor& visitor)
 
 void op::v1::Transpose::validate_and_infer_types()
 {
+    const auto& input_order_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(1).compatible(element::i64),
-                          "Input order must have element type i64.");
+                          input_order_et.is_dynamic() || input_order_et.is_integral_number(),
+                          "Input order must have an integral number element type.");
 
-    auto& input_order_shape = get_input_partial_shape(1);
+    const auto& input_order_shape = get_input_partial_shape(1);
     NODE_VALIDATION_CHECK(
         this, input_order_shape.rank().compatible(1), "Input order must be a vector.");
 
-    auto& arg_shape = get_input_partial_shape(0);
+    const auto& arg_shape = get_input_partial_shape(0);
     NODE_VALIDATION_CHECK(this,
                           input_order_shape.compatible(PartialShape{arg_shape.rank()}),
                           "Input order must have shape [n], where n is the rank of arg.");
