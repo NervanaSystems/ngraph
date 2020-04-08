@@ -179,7 +179,7 @@ void op::ConvolutionBias::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ConvolutionBias::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {
@@ -320,8 +320,8 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node>
-    op::ConvolutionBiasBackpropFiltersBias::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ConvolutionBiasBackpropFiltersBias::clone_with_new_inputs(
+    const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {
@@ -437,7 +437,8 @@ void op::ConvolutionBiasAdd::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-std::shared_ptr<Node> op::ConvolutionBiasAdd::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node>
+    op::ConvolutionBiasAdd::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 4)
     {

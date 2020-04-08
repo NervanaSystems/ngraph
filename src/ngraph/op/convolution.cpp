@@ -124,7 +124,7 @@ void op::v1::Convolution::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<Node> op::v1::Convolution::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Convolution::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::Convolution>(new_args.at(0),
@@ -510,7 +510,7 @@ void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
 }
 
 shared_ptr<Node>
-    op::v1::ConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
+    op::v1::ConvolutionBackpropData::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 3)
@@ -656,7 +656,7 @@ void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
 }
 
 shared_ptr<Node>
-    op::v1::ConvolutionBackpropFilters::copy_with_new_args(const NodeVector& new_args) const
+    op::v1::ConvolutionBackpropFilters::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::ConvolutionBackpropFilters>(new_args.at(0),
@@ -846,7 +846,7 @@ op::v0::Convolution::Convolution(const Output<Node>& data_batch, const Output<No
 {
 }
 
-shared_ptr<Node> op::v0::Convolution::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Convolution::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::Convolution>(new_args.at(0),
@@ -1078,7 +1078,7 @@ void op::v0::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
 }
 
 shared_ptr<Node>
-    op::v0::ConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
+    op::v0::ConvolutionBackpropData::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::ConvolutionBackpropData>(m_data_batch_shape,
@@ -1241,7 +1241,7 @@ void op::v0::ConvolutionBackpropFilters::validate_and_infer_types()
 }
 
 shared_ptr<Node>
-    op::v0::ConvolutionBackpropFilters::copy_with_new_args(const NodeVector& new_args) const
+    op::v0::ConvolutionBackpropFilters::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::ConvolutionBackpropFilters>(new_args.at(0),
