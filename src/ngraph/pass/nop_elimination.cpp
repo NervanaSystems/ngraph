@@ -37,7 +37,7 @@
 using namespace std;
 using namespace ngraph;
 
-#define TI(x) std::type_index(typeid(x))
+#define TI(x) x::type_info
 
 static bool remove_update_name(const std::shared_ptr<Node>& node,
                                const std::shared_ptr<Node>& node_input)
@@ -45,7 +45,7 @@ static bool remove_update_name(const std::shared_ptr<Node>& node,
     bool has_result_output = false;
     for (auto& output : node->output(0).get_target_inputs())
     {
-        if (dynamic_cast<op::Result*>(output.get_node()))
+        if (as_type<op::Result>(output.get_node()))
         {
             has_result_output = true;
         }
@@ -146,7 +146,7 @@ static bool eliminate_stop_gradient(const std::shared_ptr<Node>& node)
     return true;
 }
 
-static const std::unordered_map<std::type_index, std::function<bool(const std::shared_ptr<Node>&)>>
+static const std::unordered_map<NodeTypeInfo, std::function<bool(const std::shared_ptr<Node>&)>>
     dispatcher{{TI(op::v0::Pad), &eliminate_pad},
                {TI(op::Sum), &eliminate_sum},
                {TI(op::Convert), &eliminate_convert},
@@ -164,7 +164,7 @@ bool pass::NopElimination::run_on_function(std::shared_ptr<Function> function)
     {
         // Work around a warning [-Wpotentially-evaluated-expression]
         const Node& node = *n;
-        auto handler = dispatcher.find(TI(node));
+        auto handler = dispatcher.find(node.get_type_info());
         if (handler != dispatcher.end())
         {
             clobbered = handler->second(n) || clobbered;
