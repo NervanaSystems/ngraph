@@ -376,7 +376,7 @@ namespace ngraph
 
         /// Checks that there is exactly one output and returns its tensor.
         descriptor::Tensor& get_output_tensor() const NGRAPH_DEPRECATED(
-            "use node->output(0).get_tensor() instead; insert a check that the node has only one "
+            "use node->get_output_tensor(0) instead; insert a check that the node has only one "
             "output, or update calling code not to assume only one output");
 
         /// Returns the tensor of output i
