@@ -105,55 +105,6 @@ public:
         construct_constant_non_zero();
     }
 
-    // this allows to specify the order in which matchers will be run
-    // and also allows to register the same matcher more than once
-    ConstantFolding(const std::vector<CFTransformations>& transformations,
-                    const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
-        : GraphRewrite()
-    {
-        m_cfmap = cfmap;
-        for (auto cft : transformations)
-        {
-            switch (cft)
-            {
-            case CFTransformations::RESHAPE: construct_constant_reshape(); break;
-            case CFTransformations::BROADCAST: construct_constant_broadcast(); break;
-            case CFTransformations::DYN_BROADCAST: construct_constant_dyn_broadcast(); break;
-            case CFTransformations::PAD: construct_constant_pad(); break;
-            case CFTransformations::UNARY: construct_constant_unary(); break;
-            case CFTransformations::BINARY: construct_constant_binary(); break;
-            case CFTransformations::DEQUANTIZE: construct_constant_dequantize(); break;
-            case CFTransformations::QUANTIZE: construct_constant_quantize(); break;
-            case CFTransformations::CONVERT: construct_constant_convert(); break;
-            case CFTransformations::SHAPE_OF: construct_constant_shape_of(); break;
-            case CFTransformations::REVERSE: construct_constant_reverse(); break;
-            case CFTransformations::ARITHMETIC_REDUCTION:
-                construct_constant_arithmetic_reduction();
-                break;
-            case CFTransformations::LOGICAL_REDUCTION:
-                construct_constant_logical_reduction();
-                break;
-            case CFTransformations::CONCAT: construct_constant_concat(); break;
-            case CFTransformations::GATHER: construct_constant_gather(); break;
-            case CFTransformations::SCATTER: construct_constant_scatter_elements_update(); break;
-            case CFTransformations::SLICE: construct_constant_slice(); break;
-            case CFTransformations::DYN_SLICE: construct_constant_dyn_slice(); break;
-            case CFTransformations::STRIDED_SLICE: construct_constant_strided_slice(); break;
-            case CFTransformations::DYN_RESHAPE: construct_constant_dyn_reshape(); break;
-            case CFTransformations::TRANSPOSE: construct_constant_transpose(); break;
-            case CFTransformations::RANGE: construct_constant_range(); break;
-            case CFTransformations::SELECT: construct_constant_select(); break;
-            case CFTransformations::SQUEEZE: construct_constant_squeeze(); break;
-            case CFTransformations::UNSQUEEZE: construct_constant_unsqueeze(); break;
-            case CFTransformations::SPLIT: construct_constant_split(); break;
-            case CFTransformations::VARIADIC_SPLIT: construct_constant_variadic_split(); break;
-            case CFTransformations::ONE_HOT: construct_constant_one_hot(); break;
-            case CFTransformations::TILE: construct_constant_tile(); break;
-            case CFTransformations::NON_ZERO: construct_constant_non_zero(); break;
-            }
-        }
-    }
-
 private:
     void construct_constant_reshape();
     void construct_constant_broadcast();
