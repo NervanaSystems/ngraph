@@ -227,3 +227,16 @@ SlicePlan ngraph::make_slice_plan(const Shape& input_shape,
     }
     return p;
 }
+
+bool SlicePlan::operator==(const ngraph::SlicePlan& other) const
+{
+    bool equal = true;
+    equal &= begins == other.begins;
+    equal &= ends == other.ends;
+    equal &= strides == other.strides;
+    equal &= reshape_in_shape == other.reshape_in_shape;
+    equal &= reshape_out_shape == other.reshape_out_shape;
+    equal &= reverse_axes == other.reverse_axes;
+
+    return equal;
+}
