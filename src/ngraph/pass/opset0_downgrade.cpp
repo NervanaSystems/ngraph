@@ -236,8 +236,8 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ConvolutionBackpropData> node)
     {
-        const auto data_arg = node->input(0).get_source_output();
-        const auto filters_arg = node->input(1).get_source_output();
+        const auto data_arg = node->input_value(0);
+        const auto filters_arg = node->input_value(1);
 
         auto data_pshape = data_arg.get_partial_shape();
         auto filters_pshape = filters_arg.get_partial_shape();

@@ -228,8 +228,7 @@ TEST(pattern, graph_rewrite)
         auto graph = b + sum;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->input(1).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
+        ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(sum->output(0)
                         .get_target_inputs()
                         .empty()); // graph's input is removed from sum's target inptus
@@ -245,8 +244,7 @@ TEST(pattern, graph_rewrite)
         auto graph = b + mul;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->input(1).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
+        ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(mul->output(0)
                         .get_target_inputs()
                         .empty()); // graph's input is removed from sum's target inputs
@@ -261,8 +259,7 @@ TEST(pattern, graph_rewrite)
         auto graph = ((((a * iconst1) * iconst1) * iconst1) * iconst1) + b;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(0), a);
-        ASSERT_EQ(graph->input(0).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
+        ASSERT_EQ(graph->input_value(0), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(a->output(0).get_target_inputs().count(
             graph->input(0))); // a's output feeds into graph's input
     }
@@ -275,8 +272,7 @@ TEST(pattern, graph_rewrite)
         auto graph = b + (iconst0 + ((a + iconst0) * iconst1));
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->input(1).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
+        ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(a->output(0).get_target_inputs().count(
             graph->input(1))); // a's output feeds into graph's input
     }
@@ -288,8 +284,7 @@ TEST(pattern, graph_rewrite)
         auto graph = b + (iconst1 * (iconst1 * (iconst1 * (iconst1 * a))));
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->input(1).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
+        ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(a->output(0).get_target_inputs().count(
             graph->input(1))); // a's output feeds into graph's input
     }
