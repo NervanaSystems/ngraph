@@ -89,7 +89,7 @@ public:
     bool get_enable_turbo() const { return m_enable_turbo; }
     const vector<uint64_t>& get_hyper_parameters() const { return m_hyper_parameters; }
     const vector<int64_t>& get_ultra_parameters() const { return m_ultra_parameters; }
-    shared_ptr<Node> copy_with_new_args(const NodeVector& args) const override
+    shared_ptr<Node> clone_with_new_inputs(const OutputVector& args) const override
     {
         return make_shared<Oracle>(args[0],
                                    args[1],

@@ -42,7 +42,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool get_ctc_merge_repeated() const { return m_ctc_merge_repeated; }
             private:
