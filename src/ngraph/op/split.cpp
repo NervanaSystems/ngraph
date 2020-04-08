@@ -18,7 +18,7 @@
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/split.hpp"
+#include "ngraph/op/split.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -116,7 +116,7 @@ shared_ptr<Node> op::v0::Split::copy_with_new_args(const NodeVector& new_args) c
 constexpr NodeTypeInfo op::v1::Split::type_info;
 
 op::v1::Split::Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_splits)
-    : FusedOp({data, axis})
+    : Op({data, axis})
     , m_num_splits{num_splits}
 {
     constructor_validate_and_infer_types();
