@@ -1038,7 +1038,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_resize_opset10_ie)
     // Input data shape (2, 2)
     // Scales input constant values {1.0, 2.0}
 
-    Shape expected_output_shape{2, 2};
+    Shape expected_output_shape{2, 4};
     EXPECT_EQ(resize_fn->get_output_size(), 1);
     EXPECT_EQ(resize_fn->get_output_shape(0), expected_output_shape);
     EXPECT_EQ(count_ops_of_type<onnx_import::default_opset::Interpolate>(resize_fn), 1);
