@@ -44,6 +44,13 @@ op::DepthToSpace::DepthToSpace(const Output<Node>& data,
 {
 }
 
+bool op::DepthToSpace::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("blocksize", m_blocksize);
+    visitor.on_attribute("m_mode", m_mode);
+    return true;
+}
+
 NodeVector op::DepthToSpace::decompose_op() const
 {
     auto data = input_value(0);
@@ -59,7 +66,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     {
         // Insert batch axis
         data_shape.insert(data_shape.begin(), 1);
-        data = builder::reshape(data, data_shape);
+        data = builder::opset1::reshape(data, data_shape);
     }
     const size_t n_dim = data_shape.at(0);
     const size_t c_dim = data_shape.at(1);
@@ -102,7 +109,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     case DepthToSpaceMode::DEPTH_FIRST:
     {
         dispersed_shape.insert(dispersed_shape.begin() + 1, c_flat);
-        flat_node = builder::reshape(data, dispersed_shape);
+        flat_node = builder::opset1::reshape(data, dispersed_shape);
 
         axes_order.push_back(1);
         for (int i = spatial_dim_index; i < data_shape.size(); ++i)
@@ -111,7 +118,7 @@ NodeVector op::DepthToSpace::decompose_op() const
             axes_order.push_back(i);
         }
 
-        flat_node = builder::reorder_axes(flat_node, axes_order);
+        flat_node = builder::opset1::reorder_axes(flat_node, axes_order);
         break;
     }
     // x' = reshape(data, [N, block_size, block_size, ..., block_size, C / (block_size ^ K), D1, D2,
@@ -123,7 +130,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     default:
     {
         dispersed_shape.insert(dispersed_shape.begin() + spatial_dims + 1, c_flat);
-        flat_node = builder::reshape(data, dispersed_shape);
+        flat_node = builder::opset1::reshape(data, dispersed_shape);
 
         axes_order.push_back(spatial_dims + 1);
         for (int i = 2; i < data_shape.size(); ++i)
@@ -131,7 +138,7 @@ NodeVector op::DepthToSpace::decompose_op() const
             axes_order.push_back(spatial_dims + i);
             axes_order.push_back(i - 1);
         }
-        flat_node = builder::reorder_axes(flat_node, axes_order);
+        flat_node = builder::opset1::reorder_axes(flat_node, axes_order);
     }
     }
     Shape squeezed_shape{n_dim, c_flat};
@@ -139,7 +146,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     {
         squeezed_shape.push_back(data_shape.at(i) * bs);
     }
-    flat_node = builder::reshape(flat_node, squeezed_shape);
+    flat_node = builder::opset1::reshape(flat_node, squeezed_shape);
 
     return NodeVector{flat_node};
 }
@@ -153,14 +160,28 @@ shared_ptr<Node> op::DepthToSpace::copy_with_new_args(const NodeVector& new_args
     return make_shared<DepthToSpace>(new_args.at(0), m_mode, m_blocksize);
 }
 
+namespace ngraph
+{
+    template <>
+    EnumNames<op::DepthToSpace::DepthToSpaceMode>&
+        EnumNames<op::DepthToSpace::DepthToSpaceMode>::get()
+    {
+        static auto enum_names = EnumNames<op::DepthToSpace::DepthToSpaceMode>(
+            "op::DepthToSpace::DepthToSpaceMode",
+            {{"blocks_first", op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST},
+             {"depth_first", op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::DepthToSpace::DepthToSpaceMode>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::DepthToSpace::DepthToSpaceMode& type)
+    {
+        return s << as_string(type);
+    }
+}
+
 op::DepthToSpace::DepthToSpaceMode op::DepthToSpace::mode_from_string(const std::string& mode) const
 {
-    static const std::map<std::string, DepthToSpaceMode> allowed_values = {
-        {"blocks_first", DepthToSpaceMode::BLOCKS_FIRST},
-        {"depth_first", DepthToSpaceMode::DEPTH_FIRST}};
-
-    NODE_VALIDATION_CHECK(
-        this, allowed_values.count(mode) > 0, "Invalid 'depth_to_space_mode' value passed in.");
-
-    return allowed_values.at(mode);
+    return as_enum<DepthToSpaceMode>(mode);
 }

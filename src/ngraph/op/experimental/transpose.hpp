@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v1
         {
             /// \brief Tensor transpose operation.
             class NGRAPH_API Transpose : public Op
@@ -42,6 +42,7 @@ namespace ngraph
                 ///                    value must contain every integer in the range [0,n-1].
                 Transpose(const Output<Node>& arg, const Output<Node>& input_order);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -52,6 +53,6 @@ namespace ngraph
                                                const OutputVector& deltas) override;
             };
         }
-        using v0::Transpose;
+        using v1::Transpose;
     }
 }

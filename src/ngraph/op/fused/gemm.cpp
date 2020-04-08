@@ -15,12 +15,13 @@
 //*****************************************************************************
 #include "ngraph/op/fused/gemm.hpp"
 
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -51,36 +52,34 @@ NodeVector op::Gemm::decompose_op() const
 
     if (m_transA)
     {
-        A = ngraph::builder::transpose(A);
+        A = builder::transpose(A);
     }
     if (m_transB)
     {
-        B = ngraph::builder::transpose(B);
+        B = builder::transpose(B);
     }
 
-    A = ngraph::builder::flatten(A, 1);
-    B = ngraph::builder::flatten(B, 1);
+    A = builder::flatten(A, 1);
+    B = builder::flatten(B, 1);
 
     // A' * B'
-    std::shared_ptr<ngraph::Node> a_dot_b = std::make_shared<ngraph::op::Dot>(A, B);
+    std::shared_ptr<Node> a_dot_b = std::make_shared<op::Dot>(A, B);
 
     // alpha
-    std::shared_ptr<ngraph::Node> alpha_node = std::make_shared<ngraph::op::Constant>(
+    std::shared_ptr<Node> alpha_node = std::make_shared<op::Constant>(
         a_dot_b->get_element_type(), a_dot_b->get_shape(), std::vector<double>{m_alpha});
     // alpha * A' * B'
-    a_dot_b = std::make_shared<ngraph::op::Multiply>(alpha_node, a_dot_b);
+    a_dot_b = std::make_shared<op::Multiply>(alpha_node, a_dot_b);
 
     // beta * C
-    std::shared_ptr<ngraph::Node> beta_node = std::make_shared<ngraph::op::Constant>(
+    std::shared_ptr<Node> beta_node = std::make_shared<op::Constant>(
         C.get_element_type(), C.get_shape(), std::vector<double>{m_beta});
-    C = std::make_shared<ngraph::op::Multiply>(beta_node, C);
+    C = std::make_shared<op::Multiply>(beta_node, C);
 
     // alpha * A' * B' + beta * C
-    OutputVector broadcasted_nodes =
-        ngraph::op::numpy_style_broadcast_values(OutputVector{a_dot_b, C});
     // The input tensor `C` should be "unidirectionally broadcastable" to the `a_dot_b` tensor.
-    // Numpy style broadcast is bidirectional, so we only use the second output from broadcasting.
-    return {std::make_shared<ngraph::op::Add>(a_dot_b, broadcasted_nodes.at(1))};
+    auto broadcasted_c = builder::numpy_broadcast(C, a_dot_b->get_shape());
+    return {std::make_shared<op::Add>(a_dot_b, broadcasted_c)};
 }
 
 shared_ptr<Node> op::Gemm::copy_with_new_args(const NodeVector& new_args) const

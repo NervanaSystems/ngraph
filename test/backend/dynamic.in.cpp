@@ -181,7 +181,7 @@ static void to_vector_test(const PartialShape& input_pshape, const std::vector<S
     x_new_shape = make_shared<op::Product>(x_new_shape, AxisSet{0});
     x_new_shape = make_shared<op::Reshape>(x_new_shape, AxisVector{}, Shape{1});
 
-    auto x_reshaped = make_shared<op::DynReshape>(x, x_new_shape);
+    auto x_reshaped = make_shared<op::v1::Reshape>(x, x_new_shape, true);
 
     auto f = make_shared<Function>(NodeVector{x_reshaped}, ParameterVector{x});
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
@@ -240,7 +240,7 @@ static void reverse_shape_test(const PartialShape& input_pshape,
     shared_ptr<Node> x_new_shape = make_shared<op::ShapeOf>(x);
     x_new_shape = make_shared<op::Reverse>(x_new_shape, AxisSet{0});
 
-    auto x_reshaped = make_shared<op::DynReshape>(x, x_new_shape);
+    auto x_reshaped = make_shared<op::v1::Reshape>(x, x_new_shape, true);
 
     auto f = make_shared<Function>(NodeVector{x_reshaped}, ParameterVector{x});
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);

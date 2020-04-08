@@ -21,19 +21,16 @@ We are pleased to announce the release of version |version|.
 Core updates for |version|
 --------------------------
 
-+ New ops
-+ Provenance improvements from 0.25.1
-+ More dynamic shape ops
-+ More informative errors
-
-
++ Constant folding improvements
++ Pattern refactoring
++ Serialization bug-fixes
++ Build improvements
 
 Latest documentation updates
 ----------------------------
 
-+ Additional details on quantization
-+ Index updates
-+ API updates
++ Improved documentation on `Pad` op
+
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
 
@@ -42,6 +39,26 @@ Latest documentation updates
 Changelog on Previous Releases
 ==============================
 
+0.28
+----
+
++ Better debugging documentation
++ Dynamic Shapes and APIs
++ Provenance
++ Add linkages and overview for quantization APIs
++ New ngraph.ai themed illustrations
+
+0.27.1
+------
+
++ Fixes broken serializer for Sum and Product
++ New ops
++ Provenance improvements from 0.25.1
++ More dynamic shape ops
++ More informative errors
++ Additional details on quantization
++ Index updates
++ API updates
 + All ops support ``Output<Node>`` arguments
 + Additional ops
 + ONNX handling unknown domains

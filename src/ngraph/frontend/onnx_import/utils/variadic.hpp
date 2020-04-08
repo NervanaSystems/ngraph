@@ -22,7 +22,6 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -40,18 +39,22 @@ namespace ngraph
             ///
             /// \return nGraph node equivalent of the ONNX operation
             template <class T>
-            inline NodeVector make_ng_variadic_op(const Node& node)
+            inline NodeVector
+                make_ng_variadic_op(const Node& node,
+                                    const ngraph::op::AutoBroadcastSpec& auto_broadcast =
+                                        ngraph::op::AutoBroadcastSpec::NUMPY)
             {
-                NodeVector ng_inputs{node.get_ng_inputs()};
+                const NodeVector ng_inputs{node.get_ng_inputs()};
 
                 // Templated binary operation - Creates Add, Minimum, Maximum, etc.
-                auto binary_operation = [](const std::shared_ptr<ngraph::Node>& arg0,
-                                           const std::shared_ptr<ngraph::Node>& arg1) {
-                    return std::make_shared<T>(arg0, arg1);
-                };
+                const auto binary_operation =
+                    [&auto_broadcast](const std::shared_ptr<ngraph::Node>& arg0,
+                                      const std::shared_ptr<ngraph::Node>& arg1) {
+                        return std::make_shared<T>(arg0, arg1, auto_broadcast);
+                    };
 
                 // Create a result node as a series of binary operations
-                auto result = std::accumulate(
+                const auto result = std::accumulate(
                     std::next(std::begin(ng_inputs)), // First operand value - the second input
                     std::end(ng_inputs),              // Last value - final input
                     ng_inputs.front(),                // Initial value - first input

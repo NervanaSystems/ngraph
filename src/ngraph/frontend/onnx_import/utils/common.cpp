@@ -17,9 +17,8 @@
 
 #include "common.hpp"
 #include "default_opset.hpp"
-#include "ngraph/op/get_output_element.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/opsets/opset0.hpp"
-#include "validation_util.hpp"
 
 namespace ngraph
 {
@@ -48,56 +47,6 @@ namespace ngraph
                 throw ngraph_error("unsupported element type: " +
                                    onnx::TensorProto_DataType_Name(
                                        static_cast<onnx::TensorProto_DataType>(onnx_type)));
-            }
-
-            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
-                                      std::int64_t axis,
-                                      std::int64_t tensor_rank)
-            {
-                // Accepted range of value for axis is [-tensor_rank, tensor_rank-1].
-                return validate_axis(node, axis, tensor_rank, -tensor_rank, tensor_rank - 1);
-            }
-
-            std::size_t validate_axis(const ngraph::onnx_import::Node& node,
-                                      std::int64_t axis,
-                                      std::int64_t tensor_rank,
-                                      std::int64_t axis_range_min,
-                                      std::int64_t axis_range_max)
-            {
-                return ngraph::normalize_axis(
-                    node.get_description(), axis, tensor_rank, axis_range_min, axis_range_max);
-            }
-
-            std::vector<std::size_t> validate_axes(const ngraph::onnx_import::Node& node,
-                                                   std::vector<std::int64_t> axes,
-                                                   std::int64_t tensor_rank)
-            {
-                std::vector<std::size_t> new_axes;
-
-                for (auto a : axes)
-                {
-                    new_axes.push_back(validate_axis(node, a, tensor_rank));
-                }
-
-                return new_axes;
-            }
-
-            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
-            {
-                const auto outputs_number = node->get_output_size();
-                ngraph::NodeVector outputs(outputs_number);
-                for (int i = 0; i < outputs_number; ++i)
-                {
-                    if (node->output(i).get_node_shared_ptr()->get_output_size() == 1)
-                    {
-                        outputs[i] = node->get_output_as_single_output_node(i);
-                    }
-                    else
-                    {
-                        outputs[i] = std::make_shared<ngraph::opset0::GetOutputElement>(node, i);
-                    }
-                }
-                return outputs;
             }
 
         } // namespace  common

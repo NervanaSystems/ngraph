@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <memory>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "space_to_depth.hpp"
@@ -41,6 +42,13 @@ op::SpaceToDepth::SpaceToDepth(const Output<Node>& data, const std::string& mode
 {
 }
 
+bool ngraph::op::v0::SpaceToDepth::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("block_size", m_blocksize);
+    visitor.on_attribute("mode", m_mode);
+    return true;
+}
+
 NodeVector op::SpaceToDepth::decompose_op() const
 {
     auto data = input_value(0);
@@ -58,7 +66,7 @@ NodeVector op::SpaceToDepth::decompose_op() const
     {
         // Insert batch axis
         data_shape.insert(data_shape.begin(), 1);
-        data = builder::reshape(data, data_shape);
+        data = builder::opset1::reshape(data, data_shape);
     }
 
     const size_t n_dim = data_shape.at(0);
@@ -87,7 +95,7 @@ NodeVector op::SpaceToDepth::decompose_op() const
         dispersed_shape.push_back(data_shape.at(i + spatial_dim_index) / m_blocksize);
         dispersed_shape.push_back(m_blocksize);
     }
-    auto flat_node = builder::reshape(data, dispersed_shape);
+    auto flat_node = builder::opset1::reshape(data, dispersed_shape);
     // calculate axes to transpose
     // [0, 3, 5, ..., spatial_dims + (spatial_dims + 1), 2, 4, ..., K + K])
     vector<size_t> axes_order{0};
@@ -121,14 +129,14 @@ NodeVector op::SpaceToDepth::decompose_op() const
     default: { axes_order.insert(axes_order.begin() + spatial_dims + 1, 1);
     }
     }
-    flat_node = builder::reorder_axes(flat_node, axes_order);
+    flat_node = builder::opset1::reorder_axes(flat_node, axes_order);
     Shape squeezed_shape{n_dim};
     for (int i = 0; i < spatial_dims; ++i)
     {
         squeezed_shape.push_back(data_shape.at(spatial_dim_index + i) / m_blocksize);
     }
     squeezed_shape.insert(squeezed_shape.begin() + 1, c_dim * std::pow(m_blocksize, spatial_dims));
-    flat_node = builder::reshape(flat_node, squeezed_shape);
+    flat_node = builder::opset1::reshape(flat_node, squeezed_shape);
 
     return NodeVector{flat_node};
 }
@@ -153,3 +161,24 @@ op::SpaceToDepth::SpaceToDepthMode op::SpaceToDepth::mode_from_string(const std:
 
     return allowed_values.at(mode);
 }
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::v0::SpaceToDepth::SpaceToDepthMode>&
+        EnumNames<op::v0::SpaceToDepth::SpaceToDepthMode>::get()
+    {
+        static auto enum_names = EnumNames<op::v0::SpaceToDepth::SpaceToDepthMode>(
+            "op::v0::SpaceToDepth::SpaceToDepthMode",
+            {{"blocks_first", op::v0::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST},
+             {"depth_first", op::v0::SpaceToDepth::SpaceToDepthMode::DEPTH_FIRST}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v0::SpaceToDepth::SpaceToDepthMode>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::v0::SpaceToDepth::SpaceToDepthMode& type)
+    {
+        return s << as_string(type);
+    }
+} // namespace ngraph

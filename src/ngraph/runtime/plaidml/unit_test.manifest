@@ -253,12 +253,17 @@ model_cum_sum_2d_axis_input
 model_cum_sum_2d_dynamic_axis_input
 model_cum_sum_3d_exclusive_reverse
 
+# unsupported op: `Round`
+round
+round_2D
+
 # onnx tests
 model_quant_conv_linear_2d
 model_quant_conv_linear_3d
 model_conv_integer
 model_conv_integer_zero_point_zero
 model_conv_integer_pads
+model_convtranspose_groups_pads_bias
 model_lstm_fwd_hardsigmoid_activation
 model_lstm_fwd_with_clip
 model_lstm_fwd_mixed_seq
@@ -277,6 +282,9 @@ model_argmax_int32
 model_argmin_int32
 model_lp_norm_default
 model_instance_normalization
+model_round
+arg_max_dyn_shape               # unsupported op `TopK`
+arg_min_no_keep_dims_dyn_shape  # unsupported op `TopK`
 
 # passing locally, fails closeness checks in CI which may be too strict
 elu
