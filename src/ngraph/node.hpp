@@ -394,6 +394,8 @@ namespace ngraph
         const std::vector<descriptor::Input*>& get_output_inputs(size_t i) const
             NGRAPH_DEPRECATED("use node->output(i).get_target_inputs() instead");
 
+        std::set<Input<Node>> get_output_target_inputs(size_t i) const;
+
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
 
