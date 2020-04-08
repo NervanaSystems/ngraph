@@ -29,7 +29,7 @@ namespace ngraph
             class NGRAPH_API ValuePropagation
             {
             public:
-                virtual OutputVector fold_constant(const std::shared_ptr<Node> & node) = 0;
+                virtual OutputVector fold_constant(const std::shared_ptr<Node>& node) = 0;
             };
         }
     }
