@@ -26,6 +26,7 @@ set(NGRAPH_PROTOBUF_GIT_REPO_URL "https://github.com/protocolbuffers/protobuf")
 
 if(CMAKE_CROSSCOMPILING)
     find_program(SYSTEM_PROTOC protoc PATHS ENV PATH)
+
     if(SYSTEM_PROTOC)
         execute_process(COMMAND ${SYSTEM_PROTOC} --version OUTPUT_VARIABLE PROTOC_VERSION)
         string(REPLACE " " ";" PROTOC_VERSION ${PROTOC_VERSION})
@@ -123,24 +124,54 @@ else()
         set(BUILD_FLAGS "CXXFLAGS=-std=c++${NGRAPH_CXX_STANDARD} -fPIC")
     endif()
 
-    ExternalProject_Add(
-        ext_protobuf
-        PREFIX protobuf
-        GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
-        GIT_TAG ${NGRAPH_PROTOBUF_GIT_TAG}
-        UPDATE_COMMAND ""
-        PATCH_COMMAND ""
-        CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure ${PROTOBUF_SYSTEM_PROTOC} ${PROTOBUF_SYSTEM_PROCESSOR} CXX=${CMAKE_CXX_COMPILER} --prefix=${EXTERNAL_PROJECTS_ROOT}/protobuf --disable-shared
-        BUILD_COMMAND ${MAKE_UTIL} "${BUILD_FLAGS}"
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
-        EXCLUDE_FROM_ALL TRUE
-        BUILD_BYPRODUCTS ${Protobuf_PROTOC_EXECUTABLE} ${Protobuf_LIBRARY}
-        )
+    if(PROTOC_VERSION VERSION_GREATER "3.0" AND CMAKE_CROSSCOMPILING)
+        ExternalProject_Add(
+            ext_protobuf
+            PREFIX protobuf
+            GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
+            GIT_TAG ${NGRAPH_PROTOBUF_GIT_TAG}
+            UPDATE_COMMAND ""
+            PATCH_COMMAND ""
+            CMAKE_GENERATOR ${CMAKE_GENERATOR}
+            CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+            CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
+            CMAKE_ARGS
+                ${NGRAPH_FORWARD_CMAKE_ARGS}
+                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                -DCMAKE_CXX_FLAGS=${CMAKE_ORIGINAL_CXX_FLAGS}
+                -Dprotobuf_WITH_ZLIB=OFF
+                -Dprotobuf_BUILD_TESTS=OFF
+                -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/protobuf
+            TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
+            STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
+            DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
+            SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
+            SOURCE_SUBDIR "cmake"
+            BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/build"
+            INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
+            EXCLUDE_FROM_ALL TRUE
+            BUILD_BYPRODUCTS ${Protobuf_PROTOC_EXECUTABLE} ${Protobuf_LIBRARY}
+            )
+    else()
+        ExternalProject_Add(
+            ext_protobuf
+            PREFIX protobuf
+            GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
+            GIT_TAG ${NGRAPH_PROTOBUF_GIT_TAG}
+            UPDATE_COMMAND ""
+            PATCH_COMMAND ""
+            CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure ${PROTOBUF_SYSTEM_PROTOC} ${PROTOBUF_SYSTEM_PROCESSOR} CXX=${CMAKE_CXX_COMPILER} --prefix=${EXTERNAL_PROJECTS_ROOT}/protobuf --disable-shared
+            BUILD_COMMAND ${MAKE_UTIL} "${BUILD_FLAGS}"
+            TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
+            STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
+            DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
+            SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
+            BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
+            INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
+            EXCLUDE_FROM_ALL TRUE
+            BUILD_BYPRODUCTS ${Protobuf_PROTOC_EXECUTABLE} ${Protobuf_LIBRARY}
+            )
+    endif()
 endif()
 
 # -----------------------------------------------------------------------------
