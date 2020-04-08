@@ -50,10 +50,10 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
             return true;
         }
-        else if (partial_shape.rank().is_static() && original_shape_of_node->is_foldable())
+        else if (partial_shape.rank().is_static() && original_shape_of_node->get_is_foldable())
         {
             auto shape_of = make_shared<op::ShapeOf>(arg_match);
-            shape_of->block_recurrent_constant_folding();
+            shape_of->set_is_foldable(false);
             auto dimensions = OutputVector{};
             auto output_dimensions = vector<Dimension>(partial_shape);
             for (size_t i = 0; i < output_dimensions.size(); ++i)
