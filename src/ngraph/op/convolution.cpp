@@ -302,9 +302,11 @@ void op::v1::ConvolutionBackpropData::infer_conv_backprop_output_spatial_shape(
     vector<Dimension>& output_spatial_shape)
 {
     size_t num_spatial_dims = input_data_shape.size();
-    NGRAPH_CHECK(filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
-                 dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
-                 pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
+    NODE_VALIDATION_CHECK(
+        this,
+        filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
+            dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
+            pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
 
     for (size_t i = 0; i < num_spatial_dims; ++i)
     {
