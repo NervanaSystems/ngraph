@@ -239,52 +239,46 @@ endif()
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
 
-if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
-    message(STATUS "NGRAPH_UNIT_TEST_OPENVINO_ENABLE = TRUE")
-    add_definitions(-DNGRAPH_UNIT_TEST_OPENVINO_ENABLE)
-
-    if (NGRAPH_IE_ENABLE)
-        if (ENABLE_MKL_DNN)
-            message(STATUS "NGRAPH_TESTS: IE:CPU enabled")
-            set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:CPU")
-        endif()
-
-        if (ENABLE_CLDNN)
-            message(STATUS "NGRAPH_TESTS: IE:GPU enabled")
-            set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:GPU")
+if (NGRAPH_IE_ENABLE)
+    if (ENABLE_MKL_DNN)
+        message(STATUS "NGRAPH_TESTS: IE:CPU enabled")
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:CPU")
     endif()
 
+    if (ENABLE_CLDNN)
+        message(STATUS "NGRAPH_TESTS: IE:GPU enabled")
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:GPU")
     endif()
-else()
-    if (NGRAPH_INTERPRETER_ENABLE)
-        list(APPEND SRC
-            backend_debug_api.cpp
-            builder.cpp
-            backend_api.cpp)
-            set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
-    endif()
+endif()
 
-    if (NGRAPH_CPU_ENABLE)
-        list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
-        list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp cpu_debug_tracer.cpp)
-        if (NOT NGRAPH_DEX_ONLY)
-            list(APPEND SRC cpu_codegen.cpp)
-        endif()
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
-    endif()
+if (NGRAPH_INTERPRETER_ENABLE)
+    list(APPEND SRC
+        backend_debug_api.cpp
+        builder.cpp
+        backend_api.cpp)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
+endif()
 
-    if(NGRAPH_GPU_ENABLE)
-        list(APPEND SRC gpu_test.cpp gpu_fusion.cpp)
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
+if (NGRAPH_CPU_ENABLE)
+    list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
+    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp cpu_debug_tracer.cpp)
+    if (NOT NGRAPH_DEX_ONLY)
+        list(APPEND SRC cpu_codegen.cpp)
     endif()
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
+endif()
 
-    if (NGRAPH_PLAIDML_ENABLE)
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
-    endif()
+if(NGRAPH_GPU_ENABLE)
+    list(APPEND SRC gpu_test.cpp gpu_fusion.cpp)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
+endif()
 
-    if (NGRAPH_GENERIC_CPU_ENABLE)
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
-    endif()
+if (NGRAPH_PLAIDML_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
+endif()
+
+if (NGRAPH_GENERIC_CPU_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
 endif()
 
 add_definitions("-DTEST_FILES=\"${CMAKE_CURRENT_SOURCE_DIR}/files\"")
@@ -405,7 +399,7 @@ set(MULTI_TEST_SRC
     backend/zero_sized.in.cpp
 )
 
-if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
+if (NGRAPH_IE_ENABLE)
     set(MULTI_TEST_SRC
             backend/abc.in.cpp
             backend/abs.in.cpp
@@ -655,7 +649,7 @@ if (NGRAPH_MLIR_ENABLE)
     target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
 endif()
 
-if (NOT NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
+if (NOT NGRAPH_IE_ENABLE)
     # If all the runtime libraries are installed into one location, that will make life easier.
     if (MSVC)
         add_custom_target(unit-test-check
