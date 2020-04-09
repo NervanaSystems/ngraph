@@ -107,7 +107,6 @@ set(SRC
     shape.cpp
     specialize_function.cpp
     tensor.cpp
-    transpose_elimination.cpp
     type_prop/all.cpp
     type_prop/any.cpp
     type_prop/avg_pool.cpp
