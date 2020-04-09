@@ -53,7 +53,7 @@ void op::EmbeddingLookup::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<Node> op::EmbeddingLookup::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::EmbeddingLookup::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<EmbeddingLookup>(new_args.at(0), new_args.at(1));

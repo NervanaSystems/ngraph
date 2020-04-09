@@ -59,6 +59,27 @@ TEST(type_prop, group_conv_backprop_data_output_shape)
     EXPECT_EQ(gcbd->get_auto_pad(), op::PadType::SAME_UPPER);
 }
 
+TEST(type_prop, group_conv_bprop_data_v1_output_partial_shape_dynamic_static_rank)
+{
+    PartialShape shape_filter{4, 5, 2, 3, 3};
+    auto filters = make_shared<op::Parameter>(element::f32, shape_filter);
+    PartialShape shape_data{Dimension(), 20, 224, 224};
+    auto data = make_shared<op::Parameter>(element::f32, shape_data);
+    auto strides = Strides{2, 2};
+    auto dilations = Strides{1, 1};
+    auto padding_begin = CoordinateDiff{1, 1};
+    auto padding_end = CoordinateDiff{1, 1};
+
+    auto conv1 = make_shared<op::v1::GroupConvolutionBackpropData>(
+        data, filters, strides, padding_begin, padding_end, dilations);
+
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).rank().is_static());
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).rank().same_scheme(Rank{4}));
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).is_dynamic());
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), 8, 447, 447}));
+}
+
 TEST(type_prop, group_conv_backprop_data_invalid_params)
 {
     // GROUPS x C_IN x C_OUT x kH x kW
