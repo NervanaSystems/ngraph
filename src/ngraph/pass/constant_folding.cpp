@@ -31,3 +31,11 @@ bool ngraph::pass::revalidate_and_ensure_static(shared_ptr<Node> n)
     }
     return true;
 }
+
+void ngraph::pass::ConstantFolding::construct_constant_default()
+{
+    add_handler(
+        "Constant folding defaults",
+        [](const std::shared_ptr<Node>& node) -> bool { return node->constant_fold_default(); },
+        ngraph::pass::PassProperty::NONE);
+}

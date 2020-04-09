@@ -50,6 +50,7 @@ namespace ngraph
 
         enum class PassProperty : uint32_t
         {
+            NONE = 0x0,
             // Pass requires node shapes to be static
             REQUIRE_STATIC_SHAPE = 0x1,
             // Pass transformation will change the function's dynamic state
