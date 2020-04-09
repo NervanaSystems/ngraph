@@ -98,7 +98,7 @@ NodeVector op::HardSigmoid::decompose_op() const
         std::make_shared<op::v1::Maximum>(alpha_x_plus_beta, zero_node), one_node)};
 }
 
-shared_ptr<Node> op::HardSigmoid::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::HardSigmoid::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
 

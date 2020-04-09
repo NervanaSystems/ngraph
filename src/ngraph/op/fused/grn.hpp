@@ -48,7 +48,7 @@ namespace ngraph
                 virtual NodeVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 float m_bias = 1.0f;

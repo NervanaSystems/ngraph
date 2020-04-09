@@ -73,6 +73,7 @@ public:
         m_cfmap = cfmap;
         m_enable_shape_inference = true;
 
+        construct_constant_shape_of();
         construct_constant_split();
         construct_constant_variadic_split();
         construct_constant_reshape();
@@ -84,11 +85,11 @@ public:
         construct_constant_quantize();
         construct_constant_dequantize();
         construct_constant_convert();
-        construct_constant_shape_of();
         construct_constant_reverse();
         construct_constant_arithmetic_reduction();
         construct_constant_logical_reduction();
         construct_constant_concat();
+        construct_constant_gather_with_subgraph();
         construct_constant_gather();
         construct_constant_scatter_elements_update();
         construct_constant_slice();
@@ -120,6 +121,7 @@ private:
     void construct_constant_arithmetic_reduction();
     void construct_constant_logical_reduction();
     void construct_constant_concat();
+    void construct_constant_gather_with_subgraph();
     void construct_constant_gather();
     void construct_constant_scatter_elements_update();
     void construct_constant_slice();
