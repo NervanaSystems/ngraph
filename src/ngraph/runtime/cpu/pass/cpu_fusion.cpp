@@ -45,8 +45,8 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
@@ -544,7 +544,7 @@ static bool switch_nodes(std::shared_ptr<ngraph::Node> node1,
         return false;
     }
 
-    auto target_inputs = node2->output(0).get_target_inputs();
+    auto target_inputs = node2->get_output_target_inputs(0);
     // Remove the control_dependency, which shouldn't be there, but in case
     // Other control_dependencies will work out fine even after switch.
     node2->remove_control_dependency(node1);

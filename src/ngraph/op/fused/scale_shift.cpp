@@ -47,7 +47,7 @@ NodeVector op::ScaleShift::decompose_op() const
     return {scale * data + shift};
 }
 
-shared_ptr<Node> op::ScaleShift::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ScaleShift::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {
