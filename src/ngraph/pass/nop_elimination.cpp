@@ -26,6 +26,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/non_zero.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
@@ -67,6 +68,13 @@ static bool remove_update_name(const std::shared_ptr<Node>& node,
 static bool eliminate_pad(const std::shared_ptr<Node>& node)
 {
     auto pad = std::static_pointer_cast<op::v0::Pad>(node);
+    // skip if shapes are dynamic
+    if (pad->get_input_partial_shape(0).is_dynamic() ||
+        pad->get_output_partial_shape(0).is_dynamic())
+    {
+        return false;
+    }
+
     if (pad->get_input_shape(0) == pad->get_output_shape(0))
     {
         return remove_update_name(node, node->get_argument(0));
@@ -76,7 +84,7 @@ static bool eliminate_pad(const std::shared_ptr<Node>& node)
 
 static bool eliminate_sum(const std::shared_ptr<Node>& node)
 {
-    auto sum = std::static_pointer_cast<op::Sum>(node);
+    auto sum = std::static_pointer_cast<op::v0::Sum>(node);
     if (sum->get_reduction_axes().empty())
     {
         return remove_update_name(node, node->get_argument(0));
@@ -86,8 +94,18 @@ static bool eliminate_sum(const std::shared_ptr<Node>& node)
 
 static bool eliminate_convert(const std::shared_ptr<Node>& node)
 {
-    auto convert = std::static_pointer_cast<op::Convert>(node);
-    if (convert->get_convert_element_type() == convert->get_argument(0)->get_element_type())
+    auto is_out_type_agnostic = [](const std::shared_ptr<Node>& node) {
+        static const std::set<NodeTypeInfo> type_agnostic{TI(op::v3::NonZero)};
+        if (node->output(0).get_target_inputs().size() != 1)
+        {
+            return false;
+        }
+        auto& out = *node->output(0).get_target_inputs().begin();
+        return type_agnostic.count(out.get_node()->get_type_info()) == 1;
+    };
+    auto convert = std::static_pointer_cast<op::v0::Convert>(node);
+    if (convert->get_convert_element_type() == convert->get_argument(0)->get_element_type() ||
+        is_out_type_agnostic(node))
     {
         return remove_update_name(node, node->get_argument(0));
     }
@@ -96,7 +114,13 @@ static bool eliminate_convert(const std::shared_ptr<Node>& node)
 
 static bool eliminate_slice(const std::shared_ptr<Node>& node)
 {
-    auto slice = std::static_pointer_cast<op::Slice>(node);
+    auto slice = std::static_pointer_cast<op::v0::Slice>(node);
+    // skip if shapes are dynamic
+    if (slice->get_input_partial_shape(0).is_dynamic() ||
+        slice->get_output_partial_shape(0).is_dynamic())
+    {
+        return false;
+    }
     if (slice->get_input_shape(0) == slice->get_output_shape(0))
     {
         return remove_update_name(node, node->get_argument(0));
@@ -107,6 +131,12 @@ static bool eliminate_slice(const std::shared_ptr<Node>& node)
 static bool eliminate_broadcast(const std::shared_ptr<Node>& node)
 {
     auto broadcast = std::static_pointer_cast<op::v0::Broadcast>(node);
+    // skip if shapes are dynamic
+    if (broadcast->get_input_partial_shape(0).is_dynamic() ||
+        broadcast->get_output_partial_shape(0).is_dynamic())
+    {
+        return false;
+    }
     if (broadcast->get_input_shape(0) == broadcast->get_output_shape(0))
     {
         return remove_update_name(node, node->get_argument(0));
@@ -142,16 +172,16 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
 
 static bool eliminate_stop_gradient(const std::shared_ptr<Node>& node)
 {
-    replace_node(node, node->get_argument(0));
+    remove_update_name(node, node->get_argument(0));
     return true;
 }
 
 static const std::unordered_map<NodeTypeInfo, std::function<bool(const std::shared_ptr<Node>&)>>
     dispatcher{{TI(op::v0::Pad), &eliminate_pad},
-               {TI(op::Sum), &eliminate_sum},
-               {TI(op::Convert), &eliminate_convert},
-               {TI(op::Slice), &eliminate_slice},
-               {TI(op::StopGradient), &eliminate_stop_gradient},
+               {TI(op::v0::Sum), &eliminate_sum},
+               {TI(op::v0::Convert), &eliminate_convert},
+               {TI(op::v0::Slice), &eliminate_slice},
+               {TI(op::v0::StopGradient), &eliminate_stop_gradient},
                {TI(op::v1::Reshape), &eliminate_reshape_v1},
                {TI(op::v0::Concat), &eliminate_concat},
                {TI(op::v0::Broadcast), &eliminate_broadcast}};

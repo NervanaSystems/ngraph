@@ -33,28 +33,28 @@ TEST(nop_elimination, eliminate_pad)
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     CoordinateDiff padding_below{0};
     CoordinateDiff padding_above{0};
-    auto p = make_shared<op::Pad>(A, B, padding_below, padding_above);
-    auto f = make_shared<Function>(make_shared<op::Abs>(p), ParameterVector{A, B});
+    auto p = make_shared<op::v0::Pad>(A, B, padding_below, padding_above);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(p), ParameterVector{A, B});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Pad>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Pad>(f), 0);
 }
 
 TEST(nop_elimination, eliminate_sum)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto s = make_shared<op::Sum>(A, AxisSet{});
-    auto f = make_shared<Function>(make_shared<op::Abs>(s), ParameterVector{A});
+    auto s = make_shared<op::v0::Sum>(A, AxisSet{});
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(s), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Sum>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Sum>(f), 0);
 }
 
 TEST(nop_elimination, eliminate_convert)
@@ -62,55 +62,56 @@ TEST(nop_elimination, eliminate_convert)
     Shape shape{};
     auto type = element::f32;
     auto A = make_shared<op::Parameter>(type, shape);
-    auto c = make_shared<op::Convert>(A, element::f32);
-    auto f = make_shared<Function>(make_shared<op::Abs>(c), ParameterVector{A});
+    auto c = make_shared<op::v0::Convert>(A, element::f32);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(c), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Convert>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 0);
 }
 
 TEST(nop_elimination, eliminate_slice)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto s = make_shared<op::Slice>(A, Coordinate{0, 0}, Coordinate{2, 2});
-    auto f = make_shared<Function>(make_shared<op::Abs>(s), ParameterVector{A});
+    auto s = make_shared<op::v0::Slice>(A, Coordinate{0, 0}, Coordinate{2, 2});
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(s), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Slice>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Slice>(f), 0);
 }
 
 TEST(nop_elimination, eliminate_broadcast)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto b = make_shared<op::Broadcast>(A, shape, AxisSet{});
-    auto f = make_shared<Function>(make_shared<op::Abs>(b), ParameterVector{A});
+    auto b = make_shared<op::v0::Broadcast>(A, shape, AxisSet{});
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(b), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Broadcast>(f), 0);
 }
 
 TEST(nop_elimination, eliminate_stop_gradient)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::StopGradient>(A), ParameterVector{A});
+    auto s = make_shared<op::v0::StopGradient>(A);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(s), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::StopGradient>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::StopGradient>(f), 0);
 }
 
 TEST(nop_elimination, pass_property)
@@ -127,7 +128,7 @@ TEST(nop_elimination, reshape_elimination_v1)
         auto pattern = op::Constant::create(element::i64, Shape{3}, vector<int64_t>{8, 16, 6});
         auto reshape_v1_org = std::make_shared<op::v1::Reshape>(arg, pattern_org, zero);
         auto reshape_v1 = std::make_shared<op::v1::Reshape>(reshape_v1_org, pattern, zero);
-        auto abs = std::make_shared<op::Abs>(reshape_v1);
+        auto abs = std::make_shared<op::v0::Abs>(reshape_v1);
         return std::make_shared<Function>(NodeVector{abs}, ParameterVector{arg});
     };
 
@@ -151,7 +152,7 @@ TEST(nop_elimination, reshape_elimination_v1_dynamic)
     auto arg = std::make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
     auto pattern = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
     auto reshape_v1 = std::make_shared<op::v1::Reshape>(arg, pattern, false);
-    auto abs = std::make_shared<op::Abs>(reshape_v1);
+    auto abs = std::make_shared<op::v0::Abs>(reshape_v1);
     auto f = std::make_shared<Function>(NodeVector{abs}, ParameterVector{arg, pattern});
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
@@ -163,42 +164,59 @@ TEST(nop_elimination, concat_elimination_single_node)
 {
     int64_t a = 0;
     auto A = make_shared<op::Parameter>(element::f32, Shape{2, 3});
-    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A}, a), ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::v0::Concat>(NodeVector{A}, a), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Validate>();
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v0::Concat>(f), 1);
 }
 
 TEST(nop_elimination, concat_elimination_single_input)
 {
     int64_t a = 0;
     auto A = make_shared<op::Parameter>(element::f32, Shape{2, 3});
-    auto B = make_shared<op::Concat>(NodeVector{A}, a);
-    auto f = make_shared<Function>(make_shared<op::Abs>(B), ParameterVector{A});
+    auto B = make_shared<op::v0::Concat>(NodeVector{A}, a);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(B), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Validate>();
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Concat>(f), 0);
 }
 
 TEST(nop_elimination, concat_elimination_single_input_dynamic)
 {
     int64_t a = 0;
     auto A = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 3});
-    auto B = make_shared<op::Concat>(NodeVector{A}, a);
-    auto f = make_shared<Function>(make_shared<op::Abs>(B), ParameterVector{A});
+    auto B = make_shared<op::v0::Concat>(NodeVector{A}, a);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(B), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Validate>();
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Concat>(f), 0);
+}
+
+TEST(nop_elimination, convert_nonzero)
+{
+    Shape shape{};
+    auto type = element::f64;
+    auto A = make_shared<op::Parameter>(type, shape);
+    auto c = make_shared<op::v0::Convert>(A, element::f32);
+    auto z = make_shared<op::v3::NonZero>(c);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(z), ParameterVector{A});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::NopElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 0);
 }
