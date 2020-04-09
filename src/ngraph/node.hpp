@@ -130,6 +130,10 @@ namespace ngraph
         friend class Output;
 
     public:
+        /// \brief Verifies that attributes and inputs are consistent and computes output shapes
+        /// and element types. Must be implemented by concrete child classes so that it
+        /// can be run any number of times.
+        ///
         /// Throws if the node is invalid.
         virtual void validate_and_infer_types();
 
