@@ -61,7 +61,7 @@ namespace ngraph
                               uint64_t fixed_seed);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \brief Returns the fixed seed value to be supplied to the random number
                 ///        generator if `use_fixed_seed` is `true`. If `use_fixed_seed` is `false`,
@@ -81,7 +81,6 @@ namespace ngraph
                                                const OutputVector& /* deltas */) override
                 {
                 }
-
                 uint64_t m_fixed_seed;
             };
         }

@@ -187,7 +187,19 @@ extern "C" void
                      {MKLDNN_ARG_DST_ITER, *ctx->mkldnn_memories[deps[7]]},
                      {MKLDNN_ARG_DST_ITER_C, *ctx->mkldnn_memories[deps[8]]},
                      {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[9]]}};
+
         break;
+    case OpType::VANILLA_RNN:
+        exec_args = {{MKLDNN_ARG_SRC_LAYER, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_SRC_ITER, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_WEIGHTS_LAYER, *ctx->mkldnn_memories[deps[2]]},
+                     {MKLDNN_ARG_WEIGHTS_ITER, *ctx->mkldnn_memories[deps[3]]},
+                     {MKLDNN_ARG_BIAS, *ctx->mkldnn_memories[deps[4]]},
+                     {MKLDNN_ARG_DST_LAYER, *ctx->mkldnn_memories[deps[5]]},
+                     {MKLDNN_ARG_DST_ITER, *ctx->mkldnn_memories[deps[6]]},
+                     {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[7]]}};
+        break;
+
     case OpType::MAXPOOLBACKPROPFORWARD:
     case OpType::MAXPOOLWITHINDICES:
         exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},

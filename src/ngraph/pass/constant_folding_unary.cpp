@@ -52,16 +52,6 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
                                              shared_ptr<Node> unary,
                                              NodeExecutorTy func)
 {
-    // check sqrt arg
-    if (is_type<op::Sqrt>(unary))
-    {
-        std::vector<T> values{constant->get_vector<T>()};
-        if (std::any_of(values.begin(), values.end(), [](T i) { return i < T(0); }))
-        {
-            throw ngraph_error("Square root of negative value");
-        }
-    }
-
     const Shape& out_shape = unary->get_shape();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
 
@@ -123,6 +113,11 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         }
         else if (is_type<op::Sqrt>(unary))
         {
+            std::vector<T> values{constant->get_vector<T>()};
+            if (std::any_of(values.begin(), values.end(), [](T i) { return i < T(0); }))
+            {
+                throw ngraph_error("Square root of negative value");
+            }
             runtime::reference::sqrt<T>(
                 constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }

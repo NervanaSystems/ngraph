@@ -184,6 +184,7 @@ int main(int argc, char** argv)
     bool visualize = false;
     int warmup_iterations = 1;
     bool copy_data = true;
+    bool dump_results = false;
     bool dot_file = false;
     bool double_buffer = false;
 
@@ -222,6 +223,10 @@ int main(int argc, char** argv)
         else if (arg == "--no_copy_data")
         {
             copy_data = false;
+        }
+        else if (arg == "--dump_results")
+        {
+            dump_results = true;
         }
         else if (arg == "-v" || arg == "--visualize")
         {
@@ -292,6 +297,7 @@ OPTIONS
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
+        --dump_results            Dump result tensors to standard output.
         --dot                     Generate Graphviz dot file
         --double_buffer           Double buffer inputs and outputs
 )###";
@@ -378,7 +384,7 @@ OPTIONS
                     {
                         total_constant_count++;
                         const Shape& shape = node->get_output_shape(0);
-                        size_t const_size = node->output(0).get_element_type().size();
+                        size_t const_size = node->get_output_element_type(0).size();
                         if (shape.size() == 0)
                         {
                             total_constant_bytes += const_size;
@@ -393,7 +399,7 @@ OPTIONS
                     {
                         total_parameter_count++;
                         const Shape& shape = node->get_output_shape(0);
-                        size_t size = node->output(0).get_element_type().size() * shape_size(shape);
+                        size_t size = node->get_output_element_type(0).size() * shape_size(shape);
                         total_parameter_bytes += size;
                     }
                     else if (is_type<op::Result>(node))
@@ -441,13 +447,20 @@ OPTIONS
                 vector<runtime::PerformanceCounter> perf_data;
                 if (double_buffer)
                 {
+                    NGRAPH_CHECK(!dump_results,
+                                 "'dump_results' not implemented in double buffer mode");
                     perf_data = run_benchmark_pipelined(
                         f, backend, iterations, timing_detail, warmup_iterations, copy_data);
                 }
                 else
                 {
-                    perf_data = run_benchmark(
-                        f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                    perf_data = run_benchmark(f,
+                                              backend,
+                                              iterations,
+                                              timing_detail,
+                                              warmup_iterations,
+                                              copy_data,
+                                              dump_results);
                 }
                 auto perf_shape = to_perf_shape(f, perf_data);
                 aggregate_perf_data.insert(

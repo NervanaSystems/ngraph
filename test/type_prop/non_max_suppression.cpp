@@ -163,3 +163,19 @@ TEST(type_prop, nms_output_shape_3)
     ASSERT_EQ(nms->get_element_type(), element::i64);
     ASSERT_EQ(nms->get_shape(), (Shape{1, 3}));
 }
+
+TEST(type_prop, nms_dynamic_boxes_and_scores)
+{
+    const auto boxes = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    const auto scores = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    const auto max_output_boxes_per_class = op::Constant::create(element::i16, Shape{}, {3});
+    const auto iou_threshold = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto score_threshold = make_shared<op::Parameter>(element::f32, Shape{});
+
+    const auto nms = make_shared<op::v1::NonMaxSuppression>(
+        boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold);
+
+    ASSERT_EQ(nms->get_element_type(), element::i64);
+    ASSERT_TRUE(
+        nms->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(), 3}));
+}
