@@ -65,7 +65,7 @@ namespace ngraph
         return output.get_node_shared_ptr()->get_output_as_single_output_node(output.get_index());
     }
 
-    inline std::shared_ptr<Node> get_output_element(std::shared_ptr<Node> node, size_t i = 0)
+    inline std::shared_ptr<Node> get_output_element(const std::shared_ptr<Node> node, size_t i = 0)
     {
         return node->get_output_as_single_output_node(i);
     }

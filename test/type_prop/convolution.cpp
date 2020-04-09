@@ -2841,6 +2841,27 @@ TEST(type_prop, conv_bprop_data_v1_output_partial_shape_dynamic)
     ASSERT_TRUE(conv1->get_output_partial_shape(0).is_dynamic());
 }
 
+TEST(type_prop, conv_bprop_data_v1_output_partial_shape_dynamic_static_rank)
+{
+    PartialShape shape_filter{20, 10, 3, 3};
+    auto filters = make_shared<op::Parameter>(element::f32, shape_filter);
+    PartialShape shape_delta{Dimension(), 20, 224, 224};
+    auto deltas = make_shared<op::Parameter>(element::f32, shape_delta);
+    auto strides = Strides{2, 2};
+    auto dilations = Strides{1, 1};
+    auto padding_begin = CoordinateDiff{1, 1};
+    auto padding_end = CoordinateDiff{1, 1};
+
+    auto conv1 = make_shared<op::v1::ConvolutionBackpropData>(
+        deltas, filters, strides, padding_begin, padding_end, dilations);
+
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).rank().is_static());
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).rank().same_scheme(Rank{4}));
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).is_dynamic());
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), 10, 447, 447}));
+}
+
 TEST(type_prop, conv_v1_partial_rank)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
@@ -2861,98 +2882,6 @@ TEST(type_prop, conv_v1_partial_rank)
                                                  window_dilation_strides);
 
     ASSERT_TRUE(conv->get_output_partial_shape(0).is_dynamic());
-}
-
-TEST(type_prop, conv_v1_incorrect_auto_pad)
-{
-    PartialShape data_batch_shape{
-        0, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
-    PartialShape filters_shape{PartialShape::dynamic()};
-    Strides window_movement_strides{1, 1};
-    Strides window_dilation_strides{1, 1};
-    CoordinateDiff pads_begin{0, 0};
-    CoordinateDiff pads_end{0, 0};
-
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
-
-    try
-    {
-        auto conv = make_shared<op::v1::Convolution>(param0,
-                                                     param1,
-                                                     window_movement_strides,
-                                                     CoordinateDiff{1, 0},
-                                                     pads_end,
-                                                     window_dilation_strides,
-                                                     op::PadType::VALID);
-
-        FAIL() << "Incorrect padding not detected";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Non-zero padding should not be used along with auto pad modes"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-
-    try
-    {
-        auto conv = make_shared<op::v1::Convolution>(param0,
-                                                     param1,
-                                                     window_movement_strides,
-                                                     pads_begin,
-                                                     CoordinateDiff{0, -1},
-                                                     window_dilation_strides,
-                                                     op::PadType::VALID);
-
-        FAIL() << "Incorrect padding not detected";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Non-zero padding should not be used along with auto pad modes"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, conv_double_validate_with_pad)
-{
-    PartialShape data_batch_shape{1, 3, 64, 64};
-    PartialShape filters_shape{4, 3, 5, 5};
-    Strides window_movement_strides{1, 1};
-    Strides window_dilation_strides{1, 1};
-    CoordinateDiff pads_begin{0, 0};
-    CoordinateDiff pads_end{0, 0};
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
-
-    auto conv = make_shared<op::v1::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 pads_begin,
-                                                 pads_end,
-                                                 window_dilation_strides,
-                                                 op::PadType::SAME_UPPER);
-    ASSERT_EQ(conv->get_pads_begin()[0], 2);
-    ASSERT_EQ(conv->get_pads_begin()[1], 2);
-    ASSERT_EQ(conv->get_pads_end()[0], 2);
-    ASSERT_EQ(conv->get_pads_end()[1], 2);
-    try
-    {
-        conv->validate_and_infer_types();
-    }
-    catch (...)
-    {
-        FAIL() << "Double validate failure";
-    }
 }
 
 TEST(type_prop, deformable_conv_incorrect_group)

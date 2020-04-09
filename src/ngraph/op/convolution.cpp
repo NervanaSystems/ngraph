@@ -57,25 +57,6 @@ bool op::v1::Convolution::visit_attributes(AttributeVisitor& visitor)
 
 void op::v1::Convolution::validate_and_infer_types()
 {
-    if (m_auto_pad != PadType::EXPLICIT)
-    {
-        NODE_VALIDATION_CHECK(this,
-                              std::all_of(m_pads_begin.begin(),
-                                          m_pads_begin.end(),
-                                          [](std::ptrdiff_t i) { return (i == 0); }),
-                              " ",
-                              "pads_begin: (",
-                              m_pads_begin,
-                              ") Non-zero padding should not be used along with auto pad modes.");
-        NODE_VALIDATION_CHECK(this,
-                              std::all_of(m_pads_end.begin(),
-                                          m_pads_end.end(),
-                                          [](std::ptrdiff_t i) { return (i == 0); }),
-                              " ",
-                              "pads_end: (",
-                              m_pads_end,
-                              ") Non-zero padding should not be used along with auto pad modes.");
-    }
     const PartialShape& data_batch_shape = get_input_partial_shape(0);
     element::Type data_batch_et = get_input_element_type(0);
     const PartialShape& filters_shape = get_input_partial_shape(1);
@@ -116,8 +97,6 @@ void op::v1::Convolution::validate_and_infer_types()
                                m_auto_pad,
                                m_pads_end,
                                m_pads_begin);
-            // auto padding has now been made explicit, so set to explicit for future validations
-            m_auto_pad = PadType::EXPLICIT;
         }
     }
 
@@ -145,7 +124,7 @@ void op::v1::Convolution::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<Node> op::v1::Convolution::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Convolution::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::Convolution>(new_args.at(0),
@@ -291,6 +270,39 @@ void op::v1::ConvolutionBackpropData::set_output_shape(const Shape& shape)
             ->output(0));
 }
 
+void op::v1::ConvolutionBackpropData::infer_conv_backprop_output_spatial_shape(
+    const vector<Dimension>& input_data_shape,
+    const vector<Dimension>& filters_shape,
+    const Strides& strides,
+    const Strides& dilations,
+    const CoordinateDiff& pads_begin,
+    const CoordinateDiff& pads_end,
+    const CoordinateDiff& output_padding,
+    vector<Dimension>& output_spatial_shape)
+{
+    size_t num_spatial_dims = input_data_shape.size();
+    NODE_VALIDATION_CHECK(
+        this,
+        filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
+            dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
+            pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
+
+    for (size_t i = 0; i < num_spatial_dims; ++i)
+    {
+        if (input_data_shape[i].is_static() && filters_shape[i].is_static())
+        {
+            int64_t val = strides[i] * (input_data_shape[i].get_length() - 1) +
+                          dilations[i] * (filters_shape[i].get_length() - 1) + 1 - pads_begin[i] -
+                          pads_end[i] + output_padding[i];
+            output_spatial_shape.push_back(val);
+        }
+        else
+        {
+            output_spatial_shape.push_back(Dimension::dynamic());
+        }
+    }
+}
+
 void op::v1::ConvolutionBackpropData::validate_and_infer_types()
 {
     auto data_pshape = get_input_partial_shape(0);
@@ -311,10 +323,8 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
         filters_et,
         ").");
 
-    if (data_pshape.is_static() && filters_pshape.is_static())
+    if (data_pshape.rank().is_static() && filters_pshape.rank().is_static())
     {
-        const Shape& data_shape = data_pshape.to_shape();
-
         if (m_pads_begin.size() == 0)
         {
             m_pads_begin = conv_default_padding(this, data_pshape, filters_pshape);
@@ -336,7 +346,7 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
             m_dilations = conv_default_strides(this, data_pshape, filters_pshape);
         }
 
-        const size_t num_spatial_dims = data_shape.size() - 2;
+        const auto num_spatial_dims = data_pshape.rank().get_length() - 2;
 
         NODE_VALIDATION_CHECK(this,
                               m_strides.size() == num_spatial_dims,
@@ -403,15 +413,13 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
                               "> Expected: ",
                               PadType::VALID);
 
-        if (data_pshape.is_static() && filters_pshape.is_static())
+        if (data_pshape.rank().is_static() && filters_pshape.is_static())
         {
-            const Shape& filters_shape = filters_pshape.to_shape();
-            const Shape& data_shape = data_pshape.to_shape();
+            vector<Dimension> data_shape{data_pshape}, filters_shape{filters_pshape}, output_shape;
 
-            Shape output_shape;
-            opset1::infer_conv_backprop_output_spatial_shape(
-                Shape{std::next(data_shape.begin(), 2), std::end(data_shape)},
-                Shape{std::next(filters_shape.begin(), 2), std::end(filters_shape)},
+            infer_conv_backprop_output_spatial_shape(
+                vector<Dimension>{std::next(data_shape.begin(), 2), std::end(data_shape)},
+                vector<Dimension>{std::next(filters_shape.begin(), 2), std::end(filters_shape)},
                 m_strides,
                 m_dilations,
                 m_pads_begin,
@@ -423,7 +431,7 @@ void op::v1::ConvolutionBackpropData::validate_and_infer_types()
             output_shape.insert(output_shape.begin(), filters_shape.at(1));
             // N
             output_shape.insert(output_shape.begin(), data_shape.at(0));
-            output_pshape = output_shape;
+            output_pshape = PartialShape{output_shape};
         }
         else
         {
@@ -502,7 +510,7 @@ void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
 }
 
 shared_ptr<Node>
-    op::v1::ConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
+    op::v1::ConvolutionBackpropData::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 3)
@@ -648,7 +656,7 @@ void op::v1::ConvolutionBackpropFilters::validate_and_infer_types()
 }
 
 shared_ptr<Node>
-    op::v1::ConvolutionBackpropFilters::copy_with_new_args(const NodeVector& new_args) const
+    op::v1::ConvolutionBackpropFilters::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::ConvolutionBackpropFilters>(new_args.at(0),
@@ -838,7 +846,7 @@ op::v0::Convolution::Convolution(const Output<Node>& data_batch, const Output<No
 {
 }
 
-shared_ptr<Node> op::v0::Convolution::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Convolution::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::Convolution>(new_args.at(0),
@@ -1070,7 +1078,7 @@ void op::v0::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
 }
 
 shared_ptr<Node>
-    op::v0::ConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
+    op::v0::ConvolutionBackpropData::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::ConvolutionBackpropData>(m_data_batch_shape,
@@ -1233,7 +1241,7 @@ void op::v0::ConvolutionBackpropFilters::validate_and_infer_types()
 }
 
 shared_ptr<Node>
-    op::v0::ConvolutionBackpropFilters::copy_with_new_args(const NodeVector& new_args) const
+    op::v0::ConvolutionBackpropFilters::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::ConvolutionBackpropFilters>(new_args.at(0),

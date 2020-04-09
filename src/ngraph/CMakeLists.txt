@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 set (SRC
+    assertion.cpp
     assertion.hpp
     attribute_adapter.cpp
     attribute_adapter.hpp
@@ -245,6 +246,8 @@ set (SRC
     op/greater.hpp
     op/greater_eq.cpp
     op/greater_eq.hpp
+    op/group_conv.hpp
+    op/group_conv.cpp
     op/less.cpp
     op/less.hpp
     op/less_eq.cpp
@@ -301,6 +304,8 @@ set (SRC
     op/reduce_mean.hpp
     op/reduce_sum.cpp
     op/reduce_sum.hpp
+    op/roi_align.hpp
+    op/roi_align.cpp
     op/round.cpp
     op/round.hpp
     op/quantize.cpp
@@ -343,6 +348,8 @@ set (SRC
     op/slice.hpp
     op/softmax.cpp
     op/softmax.hpp
+    op/split.cpp
+    op/split.hpp
     op/strided_slice.cpp
     op/strided_slice.hpp
     op/sqrt.cpp
@@ -390,7 +397,6 @@ set (SRC
     op/fused/grn.cpp
     op/fused/grn.hpp
     op/fused/group_conv.hpp
-    op/fused/group_conv.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
     op/fused/layer_norm.cpp
@@ -429,7 +435,6 @@ set (SRC
     op/fused/space_to_batch.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
-    op/fused/split.cpp
     op/fused/split.hpp
     op/fused/squared_difference.cpp
     op/fused/squared_difference.hpp
