@@ -2629,6 +2629,19 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
+        case OP_TYPEID::ROIAlign_v3:
+        {
+            const auto pooled_h = node_js.at("pooled_h").get<size_t>();
+            const auto pooled_w = node_js.at("pooled_w").get<size_t>();
+            const auto sampling_ratio = node_js.at("sampling_ratio").get<size_t>();
+            const auto spatial_scale = node_js.at("spatial_scale").get<float>();
+            const auto mode = node_js.at("mode").get<op::ROIAlign::PoolingMode>();
+
+            node = make_shared<op::ROIAlign>(
+                args[0], args[1], args[2], pooled_h, pooled_w, sampling_ratio, spatial_scale, mode);
+
+            break;
+        }
         case OP_TYPEID::ROIPooling: { break;
         }
         case OP_TYPEID::RegionYolo: { break;
@@ -2654,6 +2667,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::ScatterAdd:
         {
             node = make_shared<op::ScatterAdd>(args[0], args[1], args[2]);
+            break;
+        }
+        case OP_TYPEID::ScatterElementsUpdate_v3:
+        {
+            node = make_shared<op::v3::ScatterElementsUpdate>(args[0], args[1], args[2], args[3]);
             break;
         }
         case OP_TYPEID::ScatterND:
@@ -4386,6 +4404,16 @@ json JSONSerializer::serialize_node(const Node& n)
         node["activations_beta"] = tmp->get_activations_beta();
         break;
     }
+    case OP_TYPEID::ROIAlign_v3:
+    {
+        auto tmp = static_cast<const op::ROIAlign*>(&n);
+        node["pooled_h"] = tmp->get_pooled_h();
+        node["pooled_w"] = tmp->get_pooled_w();
+        node["sampling_ratio"] = tmp->get_sampling_ratio();
+        node["spatial_scale"] = tmp->get_spatial_scale();
+        node["mode"] = tmp->get_mode();
+        break;
+    }
     case OP_TYPEID::ScalarConstantLike:
     {
         auto tmp = static_cast<const op::ScalarConstantLike*>(&n);
@@ -4397,6 +4425,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::ScaleShift: { break;
     }
     case OP_TYPEID::ScatterAdd: { break;
+    }
+    case OP_TYPEID::ScatterElementsUpdate_v3: { break;
     }
     case OP_TYPEID::ScatterND: { break;
     }

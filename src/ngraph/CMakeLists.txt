@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 set (SRC
+    assertion.cpp
     assertion.hpp
     attribute_adapter.cpp
     attribute_adapter.hpp
@@ -246,6 +247,8 @@ set (SRC
     op/greater.hpp
     op/greater_eq.cpp
     op/greater_eq.hpp
+    op/group_conv.hpp
+    op/group_conv.cpp
     op/less.cpp
     op/less.hpp
     op/less_eq.cpp
@@ -302,6 +305,8 @@ set (SRC
     op/reduce_mean.hpp
     op/reduce_sum.cpp
     op/reduce_sum.hpp
+    op/roi_align.hpp
+    op/roi_align.cpp
     op/round.cpp
     op/round.hpp
     op/quantize.cpp
@@ -326,6 +331,8 @@ set (SRC
     op/reverse_sequence.hpp
     op/scatter_add.cpp
     op/scatter_add.hpp
+    op/scatter_elements_update.cpp
+    op/scatter_elements_update.hpp
     op/scatter_nd_add.cpp
     op/scatter_nd_add.hpp
     op/select.cpp
@@ -344,6 +351,8 @@ set (SRC
     op/slice.hpp
     op/softmax.cpp
     op/softmax.hpp
+    op/split.cpp
+    op/split.hpp
     op/strided_slice.cpp
     op/strided_slice.hpp
     op/sqrt.cpp
@@ -391,7 +400,6 @@ set (SRC
     op/fused/grn.cpp
     op/fused/grn.hpp
     op/fused/group_conv.hpp
-    op/fused/group_conv.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
     op/fused/layer_norm.cpp
@@ -430,7 +438,6 @@ set (SRC
     op/fused/space_to_batch.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
-    op/fused/split.cpp
     op/fused/split.hpp
     op/fused/squared_difference.cpp
     op/fused/squared_difference.hpp
@@ -487,6 +494,7 @@ set (SRC
     pass/constant_folding_dyn_reshape.cpp
     pass/constant_folding_dyn_slice.cpp
     pass/constant_folding_gather.cpp
+    pass/constant_folding_scatter.cpp
     pass/constant_folding_logical_reduction.cpp
     pass/constant_folding_non_zero.cpp
     pass/constant_folding_one_hot.cpp
