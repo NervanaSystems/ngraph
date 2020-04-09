@@ -1087,9 +1087,16 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_resize_opset10_ie_backend_create)
 
     Inputs inputs{std::vector<float>{1.f, 2.f, 3.f, 4.f}};
     Outputs expected_outputs{std::vector<float>{1.f, 1.f, 2.f, 2.f, 3.f, 3.f, 4.f, 4.f}};
-    
+
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto handle = backend->compile(resize_fn);
+
+    auto result = backend->create_tensor(element::f32, expected_output_shape);
+    auto data = backend->create_tensor(element::f32, Shape{2, 2});
+    copy_data(data, test::NDArray<float, 2>({{1.f, 2.f}, {3.f, 4.f}}).get_vector());
+
+    handle->call_with_validate({result}, {data});
+    // EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected_outputs));
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_shape)
