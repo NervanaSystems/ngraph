@@ -31,14 +31,10 @@ static unordered_set<string>& get_blacklist(const string& backend)
     return s_blacklists[backend];
 }
 
-string ngraph::prepend_disabled(const string& bn, const string& test_name, const string& manifest)
+string ngraph::prepend_disabled(const string& backend_name,
+                                const string& test_name,
+                                const string& manifest)
 {
-    string backend_name = bn;
-    auto pos = backend_name.find('_');
-    if (pos != string::npos)
-    {
-        backend_name = backend_name.replace(pos, 1, ":");
-    }
     string rc = test_name;
     unordered_set<string>& blacklist = get_blacklist(backend_name);
     if (blacklist.empty() && !manifest.empty())
