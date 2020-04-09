@@ -54,6 +54,7 @@ TEST(intervals, equals)
     Interval a(2);
     Interval b(a);
     EXPECT_TRUE(a == b);
+    EXPECT_FALSE(a != b);
     Interval c(2, 4);
     b = c;
     EXPECT_TRUE(b == c);
