@@ -1071,6 +1071,27 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_resize_opset10_ie_explicit)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_resize_opset10_ie_backend_create)
+{
+    const auto resize_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/resize_opset10_simple.prototxt"));
+
+    // Input data shape (2, 2)
+    // Scales input constant values {1.0, 2.0}
+
+    Shape expected_output_shape{2, 4};
+    EXPECT_EQ(resize_fn->get_output_size(), 1);
+    EXPECT_EQ(resize_fn->get_output_shape(0), expected_output_shape);
+    EXPECT_EQ(count_ops_of_type<onnx_import::default_opset::Interpolate>(resize_fn), 1);
+    EXPECT_EQ(count_ops_of_type<onnx_import::default_opset::Constant>(resize_fn), 1);
+
+    Inputs inputs{std::vector<float>{1.f, 2.f, 3.f, 4.f}};
+    Outputs expected_outputs{std::vector<float>{1.f, 1.f, 2.f, 2.f, 3.f, 3.f, 4.f, 4.f}};
+    
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto handle = backend->compile(resize_fn);
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_shape)
 {
     auto function =
