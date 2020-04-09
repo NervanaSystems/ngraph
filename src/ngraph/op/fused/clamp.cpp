@@ -51,7 +51,7 @@ NodeVector op::Clamp::decompose_op() const
         clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
 }
 
-shared_ptr<Node> op::Clamp::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Clamp::clone_with_new_inputs(const OutputVector& new_args) const
 {
     NODE_VALIDATION_CHECK(this,
                           new_args.size() == 1,

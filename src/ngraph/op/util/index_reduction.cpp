@@ -35,25 +35,6 @@ op::util::IndexReduction::IndexReduction(const Output<Node>& arg,
     set_index_element_type(index_element_type);
 }
 
-op::util::IndexReduction::IndexReduction(const std::shared_ptr<Node>& arg,
-                                         uint64_t axis,
-                                         const element::Type& index_element_type)
-    : Op(check_single_output_args({arg}))
-{
-    set_reduction_axis(axis);
-    set_index_element_type(index_element_type);
-}
-
-op::util::IndexReduction::IndexReduction(const std::string& node_type,
-                                         const std::shared_ptr<Node>& arg,
-                                         uint64_t axis,
-                                         const element::Type& index_element_type)
-    : Op(node_type, check_single_output_args({arg}))
-{
-    set_reduction_axis(axis);
-    set_index_element_type(index_element_type);
-}
-
 uint64_t op::util::IndexReduction::get_reduction_axis() const
 {
     return m_axis;

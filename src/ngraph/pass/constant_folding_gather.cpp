@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/runtime/reference/gather.hpp"
 
@@ -115,7 +116,7 @@ void pass::ConstantFolding::construct_constant_gather()
 
     auto constant_gather_callback = [data_label, indices_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_gather_callback against node = "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_root();
 
         auto pattern_map = m.get_pattern_map();
 
@@ -192,4 +193,58 @@ void pass::ConstantFolding::construct_constant_gather()
         make_shared<pattern::Matcher>(gather_v1, "ConstantFolding.ConstantGatherV1");
     this->add_matcher(
         gather_matcher_v1, constant_gather_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+}
+
+void pass::ConstantFolding::construct_constant_gather_with_subgraph()
+{
+    auto concat_label = make_shared<pattern::op::Label>(
+        element::f32, Shape{2, 3, 4}, pattern::has_class<op::Concat>());
+    auto indices_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{5}, pattern::has_class<op::Constant>());
+    auto axis_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
+    auto gather_v1 = make_shared<op::v1::Gather>(concat_label, indices_label, axis_label);
+
+    auto concat_gather_callback = [concat_label, indices_label, axis_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_constant_gather_with_subgraph against node = "
+                     << m.get_match_root();
+
+        auto pattern_map = m.get_pattern_map();
+
+        const auto concat = static_pointer_cast<op::Concat>(pattern_map[concat_label]);
+
+        const auto indices = static_pointer_cast<op::Constant>(pattern_map[indices_label]);
+        const auto axis = static_pointer_cast<op::Constant>(pattern_map[axis_label]);
+        const auto gather = m.get_match_root();
+
+        // only along axis=0
+        if (axis->cast_vector<int64_t>()[0] != 0 || concat->get_axis() != 0)
+            return false;
+        // only single indices are accepted
+        const auto indices_shape = indices->get_shape();
+        if (indices_shape.size() > 1 || (indices_shape.size() == 1 && indices_shape[0] > 1))
+            return false;
+        // concat inputs are 1D and their count is equal to Concat output shape
+        if (concat->get_output_partial_shape(0).is_dynamic())
+            return false;
+        const auto concat_inputs = concat->inputs();
+        // concat inputs must be single elements
+        if (concat_inputs.size() != shape_size(concat->get_shape()))
+            return false;
+
+        const int64_t rank = concat->get_shape()[0];
+        const int64_t raw_index = indices->cast_vector<int64_t>()[0];
+        const int64_t positive_index = raw_index < 0 ? rank + raw_index : raw_index;
+        // gather takes exactly one element out of the Concat output
+        const auto gathered =
+            concat_inputs[positive_index].get_source_output().get_node_shared_ptr();
+
+        replace_node(m.get_match_root(), gathered);
+        return true;
+    };
+
+    auto gather_matcher_v1 = make_shared<pattern::Matcher>(
+        gather_v1, "ConstantFolding.ConstantGatherV1WithDynamicSubgraph");
+    this->add_matcher(
+        gather_matcher_v1, concat_gather_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
