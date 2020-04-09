@@ -30,7 +30,7 @@ namespace ngraph
         /// the backend.
         ///
         /// \details By default, the pass decomposes a fused op if it is not
-        /// supported by the backend and runs recusrsively until no more fused ops
+        /// supported by the backend and runs recursively until no more fused ops
         /// can be found or the new ops are supported by the backend.
         /// If the backend supports a fused op, then it can provide a callback
         /// function while registering the pass. The callback function can then
