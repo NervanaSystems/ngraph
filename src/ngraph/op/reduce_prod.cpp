@@ -35,7 +35,7 @@ shared_ptr<Node> op::v1::ReduceProd::get_default_value() const
     return ngraph::make_constant_from_string("1", get_element_type(), get_shape());
 }
 
-shared_ptr<Node> op::v1::ReduceProd::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::ReduceProd::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ReduceProd>(new_args.at(0), new_args.at(1), get_keep_dims());

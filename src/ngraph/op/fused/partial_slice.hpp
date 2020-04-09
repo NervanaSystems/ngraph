@@ -53,7 +53,7 @@ namespace ngraph
                 void pre_validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const AxisVector& get_axes() const { return m_axes; }
                 const std::vector<int64_t>& get_lower_bounds() const { return m_lower_bounds; }
@@ -96,7 +96,7 @@ namespace ngraph
                 void pre_validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const AxisVector& get_axes() const { return m_axes; }
                 const std::vector<int64_t>& get_lower_bounds() const { return m_lower_bounds; }

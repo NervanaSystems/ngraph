@@ -119,7 +119,7 @@ void op::v0::Pad::validate_and_infer_types()
     set_output_type(0, result_et, PartialShape(result_dims));
 }
 
-shared_ptr<Node> op::v0::Pad::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Pad::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::Pad>(
@@ -346,7 +346,7 @@ void op::v1::Pad::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::v1::Pad::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Pad::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     const auto arg_pad_value_provided = get_input_size() == 4;

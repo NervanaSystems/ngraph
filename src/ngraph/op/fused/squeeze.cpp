@@ -123,7 +123,7 @@ NodeVector op::Squeeze::decompose_op() const
     return {make_shared<op::Reshape>(data, input_order, output_data_shape)};
 }
 
-shared_ptr<Node> op::Squeeze::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Squeeze::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {
