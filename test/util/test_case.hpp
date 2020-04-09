@@ -146,18 +146,18 @@ namespace ngraph
 
                 // Debug
 
-                for(auto op : m_function->get_ordered_ops()){
-                    std::cout<< op->get_name() <<std::endl;
-                    std::cout<< op->get_output_element_type(0)<<std::endl;
-                    std::cout<< op->get_output_partial_shape(0)<<std::endl;
-
+                for (auto op : m_function->get_ordered_ops())
+                {
+                    std::cout << op->get_name() << std::endl;
+                    std::cout << op->get_output_element_type(0) << std::endl;
+                    std::cout << op->get_output_partial_shape(0) << std::endl;
                 }
-                std::cout<<"Results"<< std::endl;
-                for(auto op : results){
-                    std::cout<< op->get_name() <<std::endl;
-                    std::cout<< op->get_output_element_type(0)<<std::endl;
-                    std::cout<< op->get_output_partial_shape(0)<<std::endl;
-
+                std::cout << "Results" << std::endl;
+                for (auto op : results)
+                {
+                    std::cout << op->get_name() << std::endl;
+                    std::cout << op->get_output_element_type(0) << std::endl;
+                    std::cout << op->get_output_partial_shape(0) << std::endl;
                 }
 
                 NGRAPH_CHECK(m_output_index < results.size(),

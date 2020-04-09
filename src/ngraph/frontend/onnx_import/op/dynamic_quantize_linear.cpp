@@ -71,6 +71,7 @@ namespace ngraph
                     // Add inputs to node and graph
                     for (std::shared_ptr<ngraph::Node> input : node.get_ng_inputs())
                     {
+                        std::cout << "Given para" << input->get_name() << std::endl;
                         new_node->add_input(input->get_name());
                         onnx::ValueInfoProto* proto_input = graph.add_input();
                         proto_input->set_name(input->get_name());
@@ -118,16 +119,39 @@ namespace ngraph
                     auto function = ngraph::onnx_import::import_onnx_model(path);
                     std::vector<std::shared_ptr<ngraph::Node>> nodes = function->get_ordered_ops();
 
+                    std::string para_name;
+
                     // Delete parameters and outputs
                     for (int i = nodes.size() - 1; i >= 0; --i)
                     {
                         if (nodes.at(i)->is_output() || nodes.at(i)->is_parameter())
-                        {   
-                            std::cout <<"Removed: "<< nodes.at(i)->get_name() << std::endl;
+                        {
+                            if (nodes.at(i)->is_parameter())
+                            {
+                                para_name = nodes.at(i)->get_name();
+                            }
+                            std::cout << "Removed: " << nodes.at(i)->get_name() << std::endl;
                             nodes.erase(nodes.begin() + i);
-                             
                         }
                     }
+                    for (int i = nodes.size() - 1; i >= 0; --i)
+                    {
+                        for (auto& input : nodes.at(i)->inputs())
+                        {
+                            std::cout << "Input " << input.get_shape() << std::endl;
+                            if (input.get_shape() == node.get_ng_inputs().at(0)->get_shape())
+                            {
+                                input.replace_source_output(node.get_ng_inputs().at(0));
+                                std::cout << "Replaced " << input << std::endl;
+                            }
+                        }
+                    }
+                    for (int i = nodes.size() - 4; i >= 0; --i)
+                    {
+                        nodes.erase(nodes.begin() + i);
+                    }
+
+                    std::reverse(nodes.begin(), nodes.end());
                     return NodeVector{nodes};
                 }
             } // namespace set_1
