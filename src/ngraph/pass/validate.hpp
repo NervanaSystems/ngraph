@@ -22,8 +22,8 @@ namespace ngraph
 {
     namespace pass
     {
-        /// \brief The Validate pass performs sanity check on attributes and inputs, and
-        /// computes output shapes and element type for all computation nodes in a given
+        /// \brief The Validate pass performs sanity checks on attributes and inputs, and
+        /// computes output shapes and element types for all computation nodes in a given
         /// computation graph.
         ///
         /// \details The verification and inference is done via invoking each node's specific
@@ -31,7 +31,7 @@ namespace ngraph
         ///
         /// By default, the \ref ngraph::pass::Manager runs this pass after executing every
         /// optimization pass. This is to ensure that any update to the graph by an optimization
-        /// pass will not break the shape and data type requirement on a compuatation node.
+        /// pass does not break the shape and data type requirement on a computation node.
         /// This default validation run can be changed via calling the
         /// \link ngraph::pass::Manager::set_per_pass_validation(bool) \endlink function.
         class NGRAPH_API Validate : public FunctionPass
