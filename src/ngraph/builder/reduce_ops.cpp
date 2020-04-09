@@ -129,27 +129,20 @@ namespace ngraph
                                                     const AxisSet& reduction_axes,
                                                     bool keep_dims)
         {
-            std::shared_ptr<Node> value_elems_sum;
             std::shared_ptr<Node> elems_number;
             const auto value_elem_type = value.get_element_type();
-
+            const auto reduction_axes_const = ngraph::opset1::Constant::create(
+                element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector());
+            const auto value_elems_sum =
+                std::make_shared<ngraph::opset1::ReduceSum>(value, reduction_axes_const, keep_dims);
             if (value.get_partial_shape().is_static())
             {
-                value_elems_sum = std::make_shared<ngraph::opset1::ReduceSum>(
-                    value,
-                    ngraph::opset1::Constant::create(
-                        element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector()),
-                    keep_dims);
-                auto elems_number_value = get_num_elements(value.get_shape(), reduction_axes);
+                const auto elems_number_value = get_num_elements(value.get_shape(), reduction_axes);
                 elems_number = ngraph::opset1::Constant::create(
                     value_elem_type, Shape{}, {elems_number_value});
             }
             else
             {
-                const auto reduction_axes_const = ngraph::opset1::Constant::create(
-                    element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector());
-                value_elems_sum = std::make_shared<ngraph::opset1::ReduceSum>(
-                    value, reduction_axes_const, keep_dims);
                 elems_number = get_num_elements(value, reduction_axes_const);
                 elems_number =
                     std::make_shared<ngraph::opset1::Convert>(elems_number, value_elem_type);
