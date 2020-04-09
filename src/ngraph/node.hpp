@@ -335,7 +335,7 @@ namespace ngraph
         const element::Type& get_output_element_type(size_t i) const;
 
         /// Checks that there is exactly one output and returns its element type
-        // TODO: deprecate in favor of node->output(0).get_element_type() with a suitable check in
+        // TODO: deprecate in favor of node->get_output_element_type(0) with a suitable check in
         // the calling code, or updates to the calling code if it is making an invalid assumption
         // of only one output.
         const element::Type& get_element_type() const;
@@ -376,7 +376,7 @@ namespace ngraph
 
         /// Checks that there is exactly one output and returns its tensor.
         descriptor::Tensor& get_output_tensor() const NGRAPH_DEPRECATED(
-            "use node->output(0).get_tensor() instead; insert a check that the node has only one "
+            "use node->get_output_tensor(0) instead; insert a check that the node has only one "
             "output, or update calling code not to assume only one output");
 
         /// Returns the tensor of output i
@@ -393,6 +393,8 @@ namespace ngraph
         /// Returns the set of inputs using output i
         const std::vector<descriptor::Input*>& get_output_inputs(size_t i) const
             NGRAPH_DEPRECATED("use node->output(i).get_target_inputs() instead");
+
+        std::set<Input<Node>> get_output_target_inputs(size_t i) const;
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
