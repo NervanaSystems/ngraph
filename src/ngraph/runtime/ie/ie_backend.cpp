@@ -37,7 +37,7 @@ runtime::ie::IE_Backend::IE_Backend(const string& configuration_string)
     auto separator = config.find(":");
     if (separator != config.npos)
     {
-        config = config.substr(separator);
+        config = config.substr(separator + 1);
     }
     m_device = config;
 }

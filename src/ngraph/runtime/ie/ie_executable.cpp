@@ -75,6 +75,7 @@ namespace
 }
 
 runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
+    : m_device{device}
 {
     const auto& opset = get_opset1();
     pass::Manager passes;
@@ -108,7 +109,6 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
 #endif
 
     m_network = InferenceEngine::CNNNetwork(func);
-    m_device = device == "IE" ? "CPU" : device;
     set_parameters_and_results(*func);
 }
 
