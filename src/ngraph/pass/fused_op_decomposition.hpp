@@ -39,10 +39,10 @@ namespace ngraph
         /// and debugging.
         ///
         /// In the example shown below, the original graph has a fused GeLU op.
-        /// After applying this pass, the GeLU op is decomposed into new ops which together
-        /// perform the same operation as GeLU.
+        /// After applying this pass, the GeLU op is decomposed into group of ops which
+        /// together perform the same operation as GeLU.
         /// <table>
-        /// <tr><th>Before the pass:</th>
+        /// <tr><th>Before the pass</th>
         ///      <th> After the pass</th>
         /// </tr>
         /// <tr>
