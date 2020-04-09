@@ -108,7 +108,7 @@ static bool cse_reshape(shared_ptr<Node> a, shared_ptr<Node> b)
     const op::Reshape* reshape_a = static_cast<ngraph::op::Reshape*>(a.get());
     const op::Reshape* reshape_b = static_cast<ngraph::op::Reshape*>(b.get());
 
-    return (a->input(0).get_source_output() == b->input(0).get_source_output()) &&
+    return (a->input_value(0) == b->input_value(0)) &&
            (reshape_a->get_input_order() == reshape_b->get_input_order()) &&
            (reshape_a->get_output_shape(0) == reshape_b->get_output_shape(0));
 }
@@ -120,7 +120,7 @@ static bool cse_broadcast(shared_ptr<Node> a, shared_ptr<Node> b)
     const op::Broadcast* broadcast_a = static_cast<ngraph::op::Broadcast*>(a.get());
     const op::Broadcast* broadcast_b = static_cast<ngraph::op::Broadcast*>(b.get());
 
-    return (a->input(0).get_source_output() == b->input(0).get_source_output()) &&
+    return (a->input_value(0) == b->input_value(0)) &&
            (broadcast_a->get_broadcast_axes() == broadcast_b->get_broadcast_axes()) &&
            (broadcast_a->get_broadcast_shape() == broadcast_b->get_broadcast_shape());
 }
@@ -129,17 +129,15 @@ static bool cse_unarywise(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_unarywise for " << a->get_name() << " and " << b->get_name();
 
-    return a->input(0).get_source_output() == b->input(0).get_source_output();
+    return a->input_value(0) == b->input_value(0);
 }
 
 static bool cse_binarywise(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_binary for " << a->get_name() << " and " << b->get_name();
 
-    return (a->input(0).get_source_output() == b->input(0).get_source_output() &&
-            a->input(1).get_source_output() == b->input(1).get_source_output()) ||
-           (a->input(1).get_source_output() == b->input(0).get_source_output() &&
-            a->input(0).get_source_output() == b->input(1).get_source_output());
+    return (a->input_value(0) == b->input_value(0) && a->input_value(1) == b->input_value(1)) ||
+           (a->input_value(1) == b->input_value(0) && a->input_value(0) == b->input_value(1));
 }
 
 static bool cse_reduction(shared_ptr<Node> a, shared_ptr<Node> b)
@@ -151,7 +149,7 @@ static bool cse_reduction(shared_ptr<Node> a, shared_ptr<Node> b)
     const op::util::ArithmeticReduction* ar_b =
         static_cast<op::util::ArithmeticReduction*>(b.get());
 
-    return ar_a->input(0).get_source_output() == ar_b->input(0).get_source_output() &&
+    return ar_a->input_value(0) == ar_b->input_value(0) &&
            ar_a->get_reduction_axes() == ar_b->get_reduction_axes();
 }
 
@@ -162,7 +160,7 @@ static bool cse_one_hot(shared_ptr<Node> a, shared_ptr<Node> b)
     const op::OneHot* one_hot_a = static_cast<ngraph::op::OneHot*>(a.get());
     const op::OneHot* one_hot_b = static_cast<ngraph::op::OneHot*>(b.get());
 
-    return (a->input(0).get_source_output() == b->input(0).get_source_output()) &&
+    return (a->input_value(0) == b->input_value(0)) &&
            (one_hot_a->get_one_hot_axis() == one_hot_b->get_one_hot_axis()) &&
            (a->get_shape() == b->get_shape());
 }

@@ -32,23 +32,6 @@ op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const Output<Node>&
 {
 }
 
-op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const shared_ptr<Node>& arg0,
-                                                             const shared_ptr<Node>& arg1,
-                                                             const AutoBroadcastSpec& autob)
-    : Op(check_single_output_args({arg0, arg1}))
-    , m_autob(autob)
-{
-}
-
-op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const string& node_type,
-                                                             const shared_ptr<Node>& arg0,
-                                                             const shared_ptr<Node>& arg1,
-                                                             const AutoBroadcastSpec& autob)
-    : Op(node_type, check_single_output_args({arg0, arg1}))
-    , m_autob(autob)
-{
-}
-
 void op::util::BinaryElementwiseLogical::validate_and_infer_types()
 {
     validate_and_infer_elementwise_logical(m_autob);

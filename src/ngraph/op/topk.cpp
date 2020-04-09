@@ -208,7 +208,7 @@ void op::v0::TopK::validate_and_infer_types()
     set_output_type(1, input_element_type, output_shape);
 }
 
-shared_ptr<Node> op::v0::TopK::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::TopK::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<TopK>(new_args.at(0),
@@ -388,7 +388,7 @@ void op::v1::TopK::generate_adjoints(autodiff::Adjoints& /*adjoints*/,
     throw ngraph_error("Forward-propagation-only operation");
 }
 
-shared_ptr<Node> op::v1::TopK::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::TopK::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     auto new_v1_topk =

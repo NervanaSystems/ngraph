@@ -49,7 +49,7 @@ namespace ngraph
                 virtual NodeVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const AutoBroadcastSpec& get_autob() const override { return m_autobroadcast; }
                 void set_autob(const AutoBroadcastSpec& auto_broadcast)
