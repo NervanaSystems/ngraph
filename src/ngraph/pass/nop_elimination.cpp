@@ -94,20 +94,23 @@ static bool eliminate_sum(const std::shared_ptr<Node>& node)
 
 static bool eliminate_convert(const std::shared_ptr<Node>& node)
 {
-    auto is_out_type_agnostic = [](const std::shared_ptr<Node>& node) {
-        static const std::set<NodeTypeInfo> type_agnostic{TI(op::v3::NonZero)};
-        if (node->output(0).get_target_inputs().size() != 1)
-        {
-            return false;
-        }
-        auto& out = *node->output(0).get_target_inputs().begin();
-        return type_agnostic.count(out.get_node()->get_type_info()) == 1;
-    };
-    auto convert = std::static_pointer_cast<op::v0::Convert>(node);
-    if (convert->get_convert_element_type() == convert->get_argument(0)->get_element_type() ||
-        is_out_type_agnostic(node))
+    bool is_out_type_agnostic = false;
+    static const std::set<NodeTypeInfo> type_agnostic{TI(op::v3::NonZero)};
+    if (node->output(0).get_target_inputs().size() == 1)
     {
-        return remove_update_name(node, node->get_argument(0));
+        auto& out = *node->output(0).get_target_inputs().begin();
+        is_out_type_agnostic = type_agnostic.count(out.get_node()->get_type_info()) == 1;
+    }
+    auto convert = std::static_pointer_cast<op::v0::Convert>(node);
+    auto input = node->get_argument(0);
+    if (convert->get_convert_element_type() == convert->get_argument(0)->get_element_type() ||
+        is_out_type_agnostic)
+    {
+        if (is_out_type_agnostic && as_type_ptr<op::v0::Convert>(input))
+        {
+            input = input->get_argument(0);
+        }
+        return remove_update_name(node, input);
     }
     return false;
 }

@@ -208,13 +208,15 @@ TEST(nop_elimination, concat_elimination_single_input_dynamic)
 TEST(nop_elimination, convert_nonzero)
 {
     Shape shape{};
-    auto type = element::f64;
+    auto type = element::from<char>();
     auto A = make_shared<op::Parameter>(type, shape);
-    auto c = make_shared<op::v0::Convert>(A, element::f32);
+    auto c1 = make_shared<op::v0::Convert>(A, element::from<uint8_t>());
+    auto c = make_shared<op::v0::Convert>(c1, element::f32);
     auto z = make_shared<op::v3::NonZero>(c);
     auto f = make_shared<Function>(make_shared<op::v0::Abs>(z), ParameterVector{A});
 
     pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Validate>();
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
