@@ -216,7 +216,9 @@ Interval::value_type Interval::clip_times(value_type a, value_type b)
         return s_max;
     }
     else
+    {
         return a * b;
+    }
 }
 
 constexpr Interval::value_type Interval::s_max;
