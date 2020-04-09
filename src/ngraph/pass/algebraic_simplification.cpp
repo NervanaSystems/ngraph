@@ -556,7 +556,6 @@ static bool simplify_transpose(shared_ptr<Node> n)
         auto perm = as_type_ptr<op::Constant>(n->get_argument(1));
         if (perm != NULL && perm->get_vector<int64_t>() == std::vector<int64_t>{1, 0})
         {
-            NGRAPH_DEBUG << "where is the bug";
             auto data = n->get_argument(0);
             auto data_shape = n->input_value(0).get_partial_shape();
 
