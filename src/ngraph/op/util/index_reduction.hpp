@@ -38,15 +38,6 @@ namespace ngraph
                                uint64_t axis,
                                const element::Type& index_element_type);
 
-                IndexReduction(const std::shared_ptr<Node>& arg,
-                               uint64_t axis,
-                               const element::Type& index_element_type);
-
-                IndexReduction(const std::string& node_type,
-                               const std::shared_ptr<Node>& arg,
-                               uint64_t axis,
-                               const element::Type& index_element_type);
-
             public:
                 uint64_t get_reduction_axis() const;
                 void set_reduction_axis(uint64_t value);

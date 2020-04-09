@@ -38,7 +38,7 @@ op::v0::Gather::Gather(const Output<Node>& params, const Output<Node>& indices, 
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v0::Gather::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Gather::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::Gather>(new_args.at(PARAMS), new_args.at(INDICES), m_axis);
@@ -204,7 +204,7 @@ void op::v1::Gather::generate_adjoints(autodiff::Adjoints& /* adjoints */,
     throw ngraph_error("Not yet implemented");
 }
 
-shared_ptr<Node> op::v1::Gather::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Gather::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::Gather>(new_args.at(PARAMS), new_args.at(INDICES), new_args.at(AXIS));
