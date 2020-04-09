@@ -16,6 +16,7 @@
 
 #include "constant_folding.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/ops.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -35,7 +36,9 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
         auto arg_match = pattern_value_map[arg_label];
 
-        if (arg_match.get_partial_shape().is_static())
+        auto partial_shape = arg_match.get_partial_shape();
+        auto original_shape_of_node = as_type_ptr<op::ShapeOf>(m.get_match_root());
+        if (partial_shape.is_static())
         {
             NGRAPH_CHECK(revalidate_and_ensure_static(m.get_match_root()));
 
@@ -43,6 +46,38 @@ void pass::ConstantFolding::construct_constant_shape_of()
             auto replacement =
                 make_shared<op::Constant>(element::i64, Shape{arg_shape.size()}, arg_shape.data());
 
+            replace_node(m.get_match_root(), replacement);
+
+            return true;
+        }
+        else if (partial_shape.rank().is_static() && original_shape_of_node->get_is_foldable())
+        {
+            auto shape_of = make_shared<op::ShapeOf>(arg_match);
+            shape_of->set_is_foldable(false);
+            auto dimensions = OutputVector{};
+            auto output_dimensions = vector<Dimension>(partial_shape);
+            for (size_t i = 0; i < output_dimensions.size(); ++i)
+            {
+                if (output_dimensions[i].is_static())
+                {
+                    auto temp = op::Constant::create(
+                        element::i64,
+                        Shape{1},
+                        {static_cast<int64_t>(output_dimensions[i].get_length())});
+                    temp->set_friendly_name("ConstDim/" + temp->get_name());
+                    dimensions.push_back(temp);
+                }
+                else
+                {
+                    auto index = op::Constant::create(element::i64, Shape{1}, {i});
+                    auto axis = op::Constant::create(element::i64, Shape{}, {0});
+                    auto temp = make_shared<op::v1::Gather>(shape_of, index, axis);
+                    temp->set_friendly_name("DynDim/" + temp->get_name());
+                    dimensions.push_back(temp);
+                }
+            }
+
+            auto replacement = std::make_shared<op::Concat>(dimensions, 0);
             replace_node(m.get_match_root(), replacement);
 
             return true;
