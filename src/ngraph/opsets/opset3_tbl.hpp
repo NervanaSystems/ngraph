@@ -22,3 +22,4 @@
 #include "opset2_tbl.hpp"
 NGRAPH_OP(NonZero, ngraph::op::v3)
 NGRAPH_OP(ROIAlign, ngraph::op::v3)
+NGRAPH_OP(ScatterElementsUpdate, ngraph::op::v3)
