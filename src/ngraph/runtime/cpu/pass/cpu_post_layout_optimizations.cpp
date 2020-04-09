@@ -22,7 +22,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"

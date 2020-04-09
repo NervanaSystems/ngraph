@@ -62,7 +62,7 @@ NodeVector op::v1::Mod::decompose_op() const
     return {make_shared<op::v1::Multiply>(dividend_sign, mod, m_auto_broadcast)};
 }
 
-shared_ptr<Node> op::v1::Mod::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Mod::clone_with_new_inputs(const OutputVector& new_args) const
 {
     return make_shared<Mod>(new_args.at(0), new_args.at(1), m_auto_broadcast);
 }

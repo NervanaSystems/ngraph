@@ -176,6 +176,7 @@ set(SRC
     type_prop/rnn_cell.cpp
     type_prop/scale_shift.cpp
     type_prop/scatter_add.cpp
+    type_prop/scatter_elements_update.cpp
     type_prop/scatter_nd.cpp
     type_prop/select.cpp
     type_prop/shape_of.cpp
