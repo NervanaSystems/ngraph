@@ -384,7 +384,7 @@ OPTIONS
                     {
                         total_constant_count++;
                         const Shape& shape = node->get_output_shape(0);
-                        size_t const_size = node->output(0).get_element_type().size();
+                        size_t const_size = node->get_output_element_type(0).size();
                         if (shape.size() == 0)
                         {
                             total_constant_bytes += const_size;
@@ -399,7 +399,7 @@ OPTIONS
                     {
                         total_parameter_count++;
                         const Shape& shape = node->get_output_shape(0);
-                        size_t size = node->output(0).get_element_type().size() * shape_size(shape);
+                        size_t size = node->get_output_element_type(0).size() * shape_size(shape);
                         total_parameter_bytes += size;
                     }
                     else if (is_type<op::Result>(node))

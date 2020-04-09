@@ -51,7 +51,7 @@ NodeVector op::SquaredDifference::decompose_op() const
     return {difference * difference};
 }
 
-shared_ptr<Node> op::SquaredDifference::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::SquaredDifference::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
 
