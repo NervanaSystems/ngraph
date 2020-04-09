@@ -26,20 +26,21 @@ namespace ngraph
     namespace pass
     {
         /// \brief  The FusedOpDecomposition pass is used to decompose a fused op
-        /// if it is not supported by the backend.
+        /// into a sub-graph of supported ops if the fused op is not supported by
+        /// the backend.
         ///
-        /// \details The pass is run on each node in the computation graph. If the
-        /// node is a fused op and is not supported by the backend, the pass
-        /// decomposes it and is run recusrsively until no more fused ops
+        /// \details By default, the pass decomposes a fused op if it is not
+        /// supported by the backend and runs recusrsively until no more fused ops
         /// can be found or the new ops are supported by the backend.
+        /// If the backend supports a fused op, then it can provide a callback
+        /// function while registering the pass. The callback function can then
+        /// provide logic to prevent decomposing the supported op.
         /// It also adds provenance tags along the way to each op for easy reference
         /// and debugging.
-        /// The backend can optionally provide a callback function to indicate if a
-        /// fused op is supported or not while registering the pass.
         ///
-        /// In the example shown below, the original graph has a fused Gelu op.
-        /// After applying this pass, the Gelu op is decomposed into new ops which together
-        /// perform the same operation as Gelu.
+        /// In the example shown below, the original graph has a fused GeLU op.
+        /// After applying this pass, the GeLU op is decomposed into new ops which together
+        /// perform the same operation as GeLU.
         /// <table>
         /// <tr><th>Before the pass:</th>
         ///      <th> After the pass</th>
