@@ -70,5 +70,5 @@ std::shared_ptr<ngraph::Node>
             "Passthrough node input counts cannot be changed for a given Passthrough function"};
     }
     return std::make_shared<Passthrough>(
-        m_logical_type, m_language, m_function, as_output_vector(new_args), m_output_shapes);
+        m_logical_type, m_language, m_function, new_args, m_output_shapes);
 }
