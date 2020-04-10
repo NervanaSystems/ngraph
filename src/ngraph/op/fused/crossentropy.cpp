@@ -181,7 +181,7 @@ NodeVector op::CrossEntropy::decompose_op() const
     }
 }
 
-shared_ptr<Node> op::CrossEntropy::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::CrossEntropy::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<CrossEntropy>(new_args.at(0), new_args.at(1), m_soft_label, m_ignore_index);
@@ -230,7 +230,7 @@ void op::CrossEntropyBackprop::pre_validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 }
 
-shared_ptr<Node> op::CrossEntropyBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::CrossEntropyBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<CrossEntropyBackprop>(

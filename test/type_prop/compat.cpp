@@ -35,7 +35,7 @@ public:
 
     // Test for API compatibility
     bool visit_attributes(AttributeVisitor& visitor) override { return true; }
-    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
+    std::shared_ptr<Node> clone_with_new_inputs(const OutputVector& new_args) const override
     {
         return make_shared<CompatOp>(new_args.at(0));
     }
@@ -47,7 +47,8 @@ public:
 
 protected:
     // Deprecated method
-    virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override
+    virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                   const OutputVector& deltas) override
     {
         adjoints.add_delta(input_value(0), input_value(0) * deltas.at(0));
     }

@@ -95,7 +95,7 @@ void op::v3::ScatterElementsUpdate::validate_and_infer_types()
         const auto axis_input = as_type_ptr<op::v0::Constant>(input_value(3).get_node_shared_ptr());
         auto axis = axis_input->cast_vector<int64_t>().at(0);
 
-        const auto data_rank_length = static_cast<int64_t>(data_shape.rank());
+        int64_t data_rank_length = data_shape.rank().get_length();
         NODE_VALIDATION_CHECK(
             this,
             (-data_rank_length <= axis) && (axis <= data_rank_length - 1),
@@ -108,6 +108,11 @@ void op::v3::ScatterElementsUpdate::validate_and_infer_types()
             data_rank_length - 1,
             "]. Got axis value: ",
             axis);
+    }
+
+    if (data_shape.is_dynamic())
+    {
+        set_input_is_relevant_to_shape(0);
     }
 
     set_output_size(1);

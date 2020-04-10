@@ -332,8 +332,6 @@ set (SRC
     op/scatter_add.hpp
     op/scatter_elements_update.cpp
     op/scatter_elements_update.hpp
-    op/scatter_update.cpp
-    op/scatter_update.hpp
     op/scatter_nd_add.cpp
     op/scatter_nd_add.hpp
     op/select.cpp
@@ -470,8 +468,6 @@ set (SRC
     op/util/logical_reduction.hpp
     op/util/rnn_cell_base.cpp
     op/util/rnn_cell_base.hpp
-    op/util/scatter.cpp
-    op/util/scatter.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
     ops.hpp

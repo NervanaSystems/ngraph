@@ -66,7 +66,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;
 
@@ -185,6 +185,29 @@ namespace ngraph
                                              const Strides& dilations,
                                              const PadType& auto_pad = PadType::EXPLICIT,
                                              const CoordinateDiff& output_padding = {});
+                ///
+                /// \brief      Calculates output spatial features size.
+                ///
+                /// \param[in]  input_data_shape      The input data partial shape
+                /// \param[in]  filters_shape         The filters partial shape
+                /// \param[in]  strides               The strides values.
+                /// \param[in]  dilations             The dilations values.
+                /// \param[in]  pads_begin            The paddings at the beginning of axis.
+                /// \param[in]  pads_end              The paddings at the end of axis.
+                /// \param[in]  output_padding    The output padding values.
+                /// \param      output_spatial_shape  The placeholder for computed output spatial
+                /// partial
+                /// shape.
+                ///
+                void infer_conv_backprop_output_spatial_shape(
+                    const std::vector<Dimension>& input_data_shape,
+                    const std::vector<Dimension>& filters_shape,
+                    const Strides& strides,
+                    const Strides& dilations,
+                    const CoordinateDiff& pads_begin,
+                    const CoordinateDiff& pads_end,
+                    const CoordinateDiff& output_padding,
+                    std::vector<Dimension>& output_spatial_shape);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual bool is_dynamic() const override;
@@ -194,7 +217,7 @@ namespace ngraph
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The spatial shape of the output.
                 const PartialShape get_convolution_output_shape() const;
@@ -276,7 +299,7 @@ namespace ngraph
                 size_t get_groups() const { return m_groups; };
                 const PadType& get_pad_type() const { return m_pad_type; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual NodeVector decompose_op() const override;
 
@@ -328,7 +351,7 @@ namespace ngraph
                 const CoordinateDiff& get_padding_above() const { return m_padding_above; }
                 size_t get_groups() const { return m_groups; };
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual NodeVector decompose_op() const override;
 
@@ -370,7 +393,7 @@ namespace ngraph
                 const CoordinateDiff& get_padding_above() const { return m_padding_above; }
                 size_t get_groups() const { return m_groups; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual NodeVector decompose_op() const override;
 
