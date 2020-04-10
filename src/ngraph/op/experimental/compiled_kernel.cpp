@@ -75,10 +75,17 @@ shared_ptr<Node>
     return std::move(ck);
 }
 
-ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
+ngraph::op::CompiledKernel::CompiledKernel(const OutputVector& node_list,
                                            const OutputVector& outputs,
                                            const OutputVector& args)
-    : Op(args)
+    : CompiledKernel(as_node_vector(node_list), as_node_vector(outputs), as_node_vector(args))
+{
+}
+
+ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
+                                           const NodeVector& outputs,
+                                           const NodeVector& args)
+    : Op(check_single_output_args({args}))
     , m_node_list(node_list)
     , m_output_nodes(outputs)
 {
@@ -90,12 +97,11 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     {
         auto& o = outputs.at(i);
 
-        if (std::find(node_list.begin(), node_list.end(), o.get_node_shared_ptr()) ==
-            node_list.end())
+        if (std::find(node_list.begin(), node_list.end(), o) == node_list.end())
         {
-            NODE_VALIDATION_CHECK(this, false, o, " isn't in node_list");
+            throw ngraph_error(o->get_name() + " isn't in node_list");
         }
-        set_output_type(i, o.get_element_type(), o.get_shape());
+        set_output_type(i, o->get_element_type(), o->get_shape());
     }
 }
 

@@ -37,13 +37,16 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 CompiledKernel() = default;
                 CompiledKernel(const NodeVector& node_list,
+                               const NodeVector& outputs,
+                               const NodeVector& args);
+                CompiledKernel(const OutputVector& node_list,
                                const OutputVector& outputs,
                                const OutputVector& args);
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const NodeVector& get_node_list() const { return m_node_list; }
-                const OutputVector& get_kernel_outputs() const { return m_output_nodes; }
+                const NodeVector& get_kernel_outputs() const { return m_output_nodes; }
                 // For node B inside CompiledKernel ck such that A->B and A is outside of ck:
                 // replace input to B with a dummy Parameter Op and add an entry to ck's
                 // m_input_map.
@@ -56,7 +59,7 @@ namespace ngraph
 
             private:
                 NodeVector m_node_list;
-                OutputVector m_output_nodes;
+                NodeVector m_output_nodes;
                 // Used to store the information of internal nodes that have input coming from
                 // outside of CK
                 std::unordered_map<std::shared_ptr<Node>, size_t> m_input_map;
