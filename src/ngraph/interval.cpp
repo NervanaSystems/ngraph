@@ -114,20 +114,7 @@ Interval Interval::operator*(const Interval& interval) const
 
 Interval& Interval::operator*=(const Interval& interval)
 {
-    if (empty())
-    {
-    }
-    else if (interval.empty())
-    {
-        *this = interval;
-    }
-    else
-    {
-        m_min_val = clip_times(m_min_val, interval.m_min_val);
-        m_max_val = clip_times(m_max_val, interval.m_max_val);
-        canonicalize();
-    }
-    return *this;
+    return *this = *this * interval;
 }
 
 Interval Interval::operator&(const Interval& interval) const
