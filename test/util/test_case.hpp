@@ -144,31 +144,13 @@ namespace ngraph
             {
                 auto results = m_function->get_results();
 
-                // Debug
-
-                for (auto op : m_function->get_ordered_ops())
-                {
-                    std::cout << op->get_name() << std::endl;
-                    std::cout << op->get_output_element_type(0) << std::endl;
-                    std::cout << op->get_output_partial_shape(0) << std::endl;
-                }
-                std::cout << "Results" << std::endl;
-                for (auto op : results)
-                {
-                    std::cout << op->get_name() << std::endl;
-                    std::cout << op->get_output_element_type(0) << std::endl;
-                    std::cout << op->get_output_partial_shape(0) << std::endl;
-                }
-
                 NGRAPH_CHECK(m_output_index < results.size(),
                              "All function results already have expected outputs.");
 
                 auto function_output_type = results.at(m_output_index)->get_element_type();
 
                 const auto& output_pshape = results.at(m_output_index)->get_output_partial_shape(0);
-                // Debug
-                std::cout << "expected " << expected_shape << std::endl;
-                std::cout << "result " << output_pshape << std::endl;
+
                 NGRAPH_CHECK(output_pshape.compatible(expected_shape),
                              "Passed output shape is not compatible with nGraph function.");
 

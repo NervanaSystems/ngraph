@@ -166,7 +166,7 @@ namespace ngraph
                          "nGraph does not support the following ONNX operations: ",
                          detail::to_string(unknown_operators));
 
-            std::cout << " Process ONNX graph nodes, convert to nGraph nodes" << std::endl;
+            // Process ONNX graph nodes, convert to nGraph nodes
             for (const auto& node_proto : m_graph_proto->node())
             {
                 m_nodes.emplace_back(node_proto, *this);
@@ -174,18 +174,12 @@ namespace ngraph
 
                 NodeVector ng_nodes{node.get_ng_nodes()};
 
-                for (auto n : ng_nodes)
-                {
-                    std::cout << "op from onnx to ngraph " << n->get_name() << std::endl;
-                }
                 // Iterate over the number of outputs for given node in graph.
                 // Some of them may be optional and trimmed. See:
                 // https://github.com/onnx/onnx/blob/master/docs/IR.md#optional-inputs-and-outputs
                 for (std::size_t i{0}; i < node.get_outputs_size(); ++i)
                 {
                     m_ng_node_cache[node.output(i)] = ng_nodes.at(i);
-                    std::cout << "save in cache" << node.output(i) << " "
-                              << ng_nodes.at(i)->get_name() << std::endl;
                 }
             }
         }

@@ -92,8 +92,6 @@ void Function::init()
                            auto it = std::find(m_parameters.begin(), m_parameters.end(), node);
                            if (it == m_parameters.end())
                            {
-                               std::cout << "Function references undeclared parameter "
-                                         << node->get_friendly_name() << std::endl;
                                throw ngraph_error("Function references undeclared parameter");
                            }
                        }

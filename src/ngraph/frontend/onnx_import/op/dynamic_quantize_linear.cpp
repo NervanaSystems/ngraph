@@ -71,7 +71,6 @@ namespace ngraph
                     // Add inputs to node and graph
                     for (std::shared_ptr<ngraph::Node> input : node.get_ng_inputs())
                     {
-                        std::cout << "Given para" << input->get_name() << std::endl;
                         new_node->add_input(input->get_name());
                         onnx::ValueInfoProto* proto_input = graph.add_input();
                         proto_input->set_name(input->get_name());
@@ -130,7 +129,6 @@ namespace ngraph
                             {
                                 para_name = nodes.at(i)->get_name();
                             }
-                            std::cout << "Removed: " << nodes.at(i)->get_name() << std::endl;
                             nodes.erase(nodes.begin() + i);
                         }
                     }
@@ -138,21 +136,14 @@ namespace ngraph
                     {
                         for (auto& input : nodes.at(i)->inputs())
                         {
-                            std::cout << "Input " << input.get_shape() << std::endl;
                             if (input.get_shape() == node.get_ng_inputs().at(0)->get_shape())
                             {
                                 input.replace_source_output(node.get_ng_inputs().at(0));
-                                std::cout << "Replaced " << input << std::endl;
                             }
                         }
                     }
-                    for (int i = nodes.size() - 4; i >= 0; --i)
-                    {
-                        nodes.erase(nodes.begin() + i);
-                    }
 
-                    std::reverse(nodes.begin(), nodes.end());
-                    return NodeVector{nodes};
+                    return NodeVector{nodes.at(16), nodes.at(9), nodes.at(15)};
                 }
             } // namespace set_1
 
