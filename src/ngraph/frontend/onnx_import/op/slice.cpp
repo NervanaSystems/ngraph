@@ -42,7 +42,7 @@ namespace ngraph
             {
                 namespace
                 {
-                    std::vector<int64_t> axes_to_mask(const std::vector<int64_t>& axes,
+                    std::vector<int64_t> axes_to_mask(const std::vector<uint64_t>& axes,
                                                       uint64_t slice_indices_length)
                     {
                         std::vector<int64_t> mask(slice_indices_length, 1);
@@ -55,7 +55,7 @@ namespace ngraph
 
                     std::shared_ptr<ngraph::Node>
                         adjust_indices_if_needed(const std::shared_ptr<ngraph::Node>& input,
-                                                 const std::vector<int64_t>& axes,
+                                                 const std::vector<uint64_t>& axes,
                                                  uint64_t slice_indices_length,
                                                  int64_t value)
                     {
@@ -84,7 +84,7 @@ namespace ngraph
                         // axes: [2, 3] - apply slice values to 2 and 3 dimension of input data
                         // expected_output_shape: {3, 3, 1, 1}
                         OutputVector adjusted_indices(slice_indices_length);
-                        std::vector<int64_t> target_axes(axes);
+                        std::vector<uint64_t> target_axes(axes);
                         const auto gather_axis =
                             default_opset::Constant::create(element::i64, {}, {0});
 
@@ -125,6 +125,7 @@ namespace ngraph
                 {
                     NodeVector inputs{node.get_ng_inputs()};
                     const auto data = inputs.at(0);
+                    const auto data_rank = data->get_output_partial_shape(0).rank();
 
                     auto starts = inputs.at(1);
                     auto ends = inputs.at(2);
@@ -138,7 +139,6 @@ namespace ngraph
                     }
                     else
                     {
-                        const auto data_rank = data->get_output_partial_shape(0).rank();
                         NGRAPH_CHECK(data_rank.is_static(),
                                      "Data rank must be static when axes input is not provided");
                         const size_t data_rank_value = data_rank.get_length();
@@ -149,7 +149,22 @@ namespace ngraph
                     }
 
                     const auto axes_const = as_type_ptr<default_opset::Constant>(axes);
-                    auto axes_vec = axes_const->cast_vector<int64_t>();
+                    auto raw_axes_vec = axes_const->cast_vector<int64_t>();
+                    std::vector<uint64_t> axes_vec;
+                    if (data_rank.is_static())
+                    {
+                        axes_vec = normalize_axes(node.get_description(), raw_axes_vec, data_rank);
+                    }
+                    else
+                    {
+                        NGRAPH_CHECK(std::all_of(std::begin(raw_axes_vec),
+                                                 std::end(raw_axes_vec),
+                                                 [](int64_t axis) { return axis >= 0; }),
+                                     "All axes must be positive when data rank is unknown");
+                        axes_vec =
+                            std::vector<uint64_t>(std::begin(axes_vec), std::begin(axes_vec));
+                    }
+
                     const uint64_t slice_indices_length =
                         *std::max_element(std::begin(axes_vec), std::end(axes_vec)) + 1;
                     const auto begin_end_mask = axes_to_mask(axes_vec, slice_indices_length);

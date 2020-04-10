@@ -653,6 +653,25 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_3d_input)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_3d_input_neg_axes)
+{
+    auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/slice_3d_input_neg_axes.prototxt"));
+
+    auto test_case =
+        ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+
+    const Shape input_shape{3, 4, 1};
+    std::vector<float> input_values(shape_size(input_shape));
+    std::iota(input_values.begin(), input_values.end(), 0);
+    test_case.add_input<float>(input_values);
+    test_case.add_input<int64_t>({0, 0});
+    test_case.add_input<int64_t>({2, 3});
+    test_case.add_input<int64_t>({1, 1});
+    test_case.add_expected_output<float>(Shape{2, 3, 1}, {0, 1, 2, 4, 5, 6});
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_3d_input_12_axes)
 {
     auto function = onnx_import::import_onnx_model(file_util::path_join(
