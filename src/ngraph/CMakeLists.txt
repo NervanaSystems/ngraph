@@ -60,7 +60,6 @@ set (SRC
     chrome_trace.cpp
     chrome_trace.hpp
     code_writer.hpp
-    component_manager.hpp
     coordinate.cpp
     coordinate.hpp
     coordinate_diff.cpp
