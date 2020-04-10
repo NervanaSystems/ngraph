@@ -183,7 +183,16 @@ namespace ngraph
 {
     std::ostream& operator<<(std::ostream& str, const Interval& interval)
     {
-        return str << "Interval(" << interval.get_min_val() << ", " << interval.get_max_val()
-                   << ")";
+        str << "Interval(" << interval.get_min_val() << ", ";
+        auto max_val = interval.get_max_val();
+        if (max_val == Interval::s_max)
+        {
+            str << "...";
+        }
+        else
+        {
+            str << max_val;
+        }
+        return str << ")";
     }
 }

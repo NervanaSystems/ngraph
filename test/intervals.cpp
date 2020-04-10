@@ -43,6 +43,7 @@ TEST(intervals, contains)
     EXPECT_FALSE(x.contains(x.get_min_val() - 1));
     Interval empty(1, -1);
     EXPECT_TRUE(empty.empty());
+    EXPECT_TRUE(Interval().contains(x));
 }
 
 TEST(intervals, equals)
@@ -59,6 +60,16 @@ TEST(intervals, equals)
     b = c;
     EXPECT_TRUE(b == c);
     EXPECT_FALSE(b != c);
+    EXPECT_EQ(Interval() & Interval(3), Interval(3));
+    EXPECT_EQ(Interval() + Interval(5), Interval(5, Interval::s_max));
+    EXPECT_TRUE(Interval(5, 3).empty());
+    EXPECT_TRUE((Interval(3) & Interval(4)).empty());
+    // All empty intervals are the same and stay empty
+    EXPECT_EQ(Interval(5, 3), Interval(8, 1));
+    EXPECT_EQ(Interval(5, 1) + Interval(2, 4), Interval(3, 1));
+    EXPECT_EQ(Interval(5, 1) * Interval(2, 4), Interval(3, 1));
+    EXPECT_EQ(Interval(5, 1) - Interval(2, 4), Interval(3, 1));
+    EXPECT_EQ(Interval(5, 1) & Interval(2, 4), Interval(3, 1));
 }
 
 TEST(intervals, arithmetic)
@@ -83,7 +94,8 @@ TEST(intervals, arithmetic)
     EXPECT_TRUE(a_times_b == a_times);
     Interval::value_type min_times = numeric_limits<Interval::value_type>::max();
     Interval::value_type max_times = numeric_limits<Interval::value_type>::min();
-
+    // Manually collect sum, difference, and product min/max ranges and verify they correspond to
+    // the computed intervals and that they are all members of the computed intervals.
     for (auto a_i = a.get_min_val(); a_i <= a.get_max_val(); ++a_i)
     {
         for (auto b_i = b.get_min_val(); b_i <= b.get_max_val(); ++b_i)
@@ -144,7 +156,8 @@ TEST(intervals, sets)
     EXPECT_TRUE(a_int_b == a_int);
     Interval::value_type min_int = numeric_limits<Interval::value_type>::max();
     Interval::value_type max_int = numeric_limits<Interval::value_type>::min();
-
+    // Manually collect the min/max of the intersection and make sure this corresponds to the
+    // computed intersection
     for (auto a_i = a.get_min_val(); a_i <= a.get_max_val(); ++a_i)
     {
         for (auto b_i = b.get_min_val(); b_i <= b.get_max_val(); ++b_i)
