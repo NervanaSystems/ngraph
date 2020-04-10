@@ -44,7 +44,7 @@ constexpr NodeTypeInfo op::ConvolutionAdd::type_info;
 op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
                                    const Output<Node>& sum_input,
                                    bool with_relu)
-    : Op({conv->input(0).get_source_output(), conv->input(1).get_source_output(), sum_input})
+    : Op({conv->input_value(0), conv->input_value(1), sum_input})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())

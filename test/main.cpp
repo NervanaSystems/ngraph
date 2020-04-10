@@ -57,7 +57,9 @@ int main(int argc, char** argv)
 #ifdef NGRAPH_INTERPRETER_ENABLE
     ngraph_register_interpreter_backend();
 #endif
-
+#ifdef NGRAPH_IE_ENABLE
+    ngraph_register_ie_backend();
+#endif
 #ifdef NGRAPH_MLIR_ENABLE
     // Initialize MLIR
     ngraph::runtime::ngmlir::initializeNGraphMLIR();

@@ -39,9 +39,10 @@ namespace ngraph
                     const auto& rois = inputs[1];
                     const auto& num_rois = inputs[2];
 
-                    const auto pooled_h = node.get_attribute_value<int>("output_height", 1);
-                    const auto pooled_w = node.get_attribute_value<int>("output_width", 1);
-                    const auto sampling_ratio = node.get_attribute_value<int>("sampling_ratio", 1);
+                    const auto pooled_h = node.get_attribute_value<int64_t>("output_height", 1);
+                    const auto pooled_w = node.get_attribute_value<int64_t>("output_width", 1);
+                    const auto sampling_ratio =
+                        node.get_attribute_value<int64_t>("sampling_ratio", 1);
                     const auto spatial_scale =
                         node.get_attribute_value<float>("spatial_scale", 1.0f);
                     const auto mode = node.get_attribute_value<std::string>("mode", "avg");
