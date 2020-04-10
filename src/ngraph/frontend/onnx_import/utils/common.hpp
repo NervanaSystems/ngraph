@@ -68,6 +68,16 @@ namespace ngraph
                 return range;
             }
 
+            /// \brief      Return a monotonic sequence which end is determined by value rank.
+            ///
+            /// \param[in]  value        The value node which rank detemines end of the sequence.
+            /// \param[in]  start_value  The start value of the sequence.
+            /// \param[in]  step         The step value for the sequence.
+            ///
+            /// \return     The node which constains vector of monotonic requence.
+            std::shared_ptr<ngraph::Node> get_monotonic_range_along_node_rank(
+                const Output<ngraph::Node>& value, int64_t start_value = 0, int64_t step = 1);
+
             /// \brief Creates a shifted square identity matrix.
             /// \note Shifting in the context of this operator means that
             ///       the matrix can be created with elements equal to 1 not only in the main
