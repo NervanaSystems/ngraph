@@ -14,15 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/type.hpp"
-#include "ngraph/util.hpp"
+#pragma once
 
-namespace std
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
+
+namespace ngraph
 {
-    size_t std::hash<ngraph::DiscreteTypeInfo>::operator()(const ngraph::DiscreteTypeInfo& k) const
+    namespace onnx_import
     {
-        size_t name_hash = hash<string>()(string(k.name));
-        size_t version_hash = hash<decltype(k.version)>()(k.version);
-        return ngraph::hash_combine(vector<size_t>{name_hash, version_hash});
-    }
-}
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector scatter_elements(const Node& node);
+
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

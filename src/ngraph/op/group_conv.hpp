@@ -185,6 +185,29 @@ namespace ngraph
                                              const Strides& dilations,
                                              const PadType& auto_pad = PadType::EXPLICIT,
                                              const CoordinateDiff& output_padding = {});
+                ///
+                /// \brief      Calculates output spatial features size.
+                ///
+                /// \param[in]  input_data_shape      The input data partial shape
+                /// \param[in]  filters_shape         The filters partial shape
+                /// \param[in]  strides               The strides values.
+                /// \param[in]  dilations             The dilations values.
+                /// \param[in]  pads_begin            The paddings at the beginning of axis.
+                /// \param[in]  pads_end              The paddings at the end of axis.
+                /// \param[in]  output_padding    The output padding values.
+                /// \param      output_spatial_shape  The placeholder for computed output spatial
+                /// partial
+                /// shape.
+                ///
+                void infer_conv_backprop_output_spatial_shape(
+                    const std::vector<Dimension>& input_data_shape,
+                    const std::vector<Dimension>& filters_shape,
+                    const Strides& strides,
+                    const Strides& dilations,
+                    const CoordinateDiff& pads_begin,
+                    const CoordinateDiff& pads_end,
+                    const CoordinateDiff& output_padding,
+                    std::vector<Dimension>& output_spatial_shape);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual bool is_dynamic() const override;
