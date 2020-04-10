@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/util/scatter.hpp"
 
 namespace ngraph
 {
@@ -38,7 +37,7 @@ namespace ngraph
                 ScatterAdd(const Output<Node>& inputs,
                            const Output<Node>& indices,
                            const Output<Node>& updates)
-                    : Op({inputs, indices, updates})
+                        : Op({inputs, indices, updates})
                 {
                     constructor_validate_and_infer_types();
                 }
@@ -51,36 +50,7 @@ namespace ngraph
                     throw ngraph_error("Not yet implemented");
                 }
                 virtual std::shared_ptr<Node>
-                    clone_with_new_inputs(const OutputVector& new_args) const override;
-            };
-        }
-        namespace v2
-        {
-            /// \brief Add updates to slices from inputs addressed by indices
-            class NGRAPH_API ScatterAdd : public util::Scatter
-            {
-            public:
-                static constexpr NodeTypeInfo type_info{"ScatterAdd", 0};
-
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
-                ScatterAdd() = default;
-
-                /// \param inputs Tensor
-                /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-                /// \param updates Tensor: Must have same type as inputs
-                ScatterAdd(const Output<Node>& inputs,
-                           const Output<Node>& indices,
-                           const Output<Node>& updates,
-                           const Output<Node>& axis);
-
-                void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const OutputVector& /* deltas */) override
-                {
-                    throw ngraph_error("Not yet implemented");
-                }
-
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
         using v0::ScatterAdd;

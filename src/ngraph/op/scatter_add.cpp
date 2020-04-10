@@ -26,14 +26,13 @@ static int UPDATES = 2;
 
 constexpr NodeTypeInfo op::ScatterAdd::type_info;
 
-shared_ptr<Node> op::v0::ScatterAdd::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ScatterAdd::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v0::ScatterAdd>(
-        new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
+    return make_shared<ScatterAdd>(new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
 }
 
-void op::v0::ScatterAdd::validate_and_infer_types()
+void op::ScatterAdd::validate_and_infer_types()
 {
     element::Type inputs_et = get_input_element_type(INPUTS);
     element::Type indices_et = get_input_element_type(INDICES);
@@ -48,15 +47,15 @@ void op::v0::ScatterAdd::validate_and_infer_types()
                           "Indices element type must be i64 or i32");
 
     NODE_VALIDATION_CHECK(
-        this, updates_et == inputs_et, "Updates element type must be the same as Inputs");
+            this, updates_et == inputs_et, "Updates element type must be the same as Inputs");
 
     // updates rank must be at indices rank + inputs rank - 1
     NODE_VALIDATION_CHECK(this,
                           inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
-                              updates_shape.rank().is_dynamic() ||
-                              updates_shape.rank().get_length() ==
-                                  indices_shape.rank().get_length() +
-                                      inputs_shape.rank().get_length() - 1,
+                          updates_shape.rank().is_dynamic() ||
+                          updates_shape.rank().get_length() ==
+                          indices_shape.rank().get_length() +
+                          inputs_shape.rank().get_length() - 1,
                           "Updates rank is expected to be indices rank + inputs rank - 1");
 
     bool compatible = true;
@@ -70,29 +69,12 @@ void op::v0::ScatterAdd::validate_and_infer_types()
         {
             compatible = compatible &&
                          updates_shape[indices_shape.rank().get_length() + i - 1].same_scheme(
-                             inputs_shape[i]);
+                                 inputs_shape[i]);
         }
     }
 
     NODE_VALIDATION_CHECK(
-        this, compatible, "Updates shape must be indices_shape + inputs_shape[1:]");
+            this, compatible, "Updates shape must be indices_shape + inputs_shape[1:]");
 
     set_output_type(0, inputs_et, inputs_shape);
-}
-
-constexpr NodeTypeInfo op::v2::ScatterAdd::type_info;
-
-shared_ptr<Node> op::v2::ScatterAdd::copy_with_new_args(const NodeVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<ScatterAdd>(new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
-}
-
-op::v2::ScatterAdd::ScatterAdd(const Output<Node>& inputs,
-                               const Output<Node>& indices,
-                               const Output<Node>& updates,
-                               const Output<Node>& axis)
-    : util::Scatter(inputs, indices, updates, axis)
-{
-    constructor_validate_and_infer_types();
 }

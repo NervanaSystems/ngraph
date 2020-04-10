@@ -153,4 +153,3 @@ NGRAPH_OP(VariadicSplit, ngraph::op::v1)
 NGRAPH_OP(Gelu, ngraph::op::v0)
 NGRAPH_OP(BatchToSpace, ngraph::op::v1)
 NGRAPH_OP(SpaceToBatch, ngraph::op::v1)
-

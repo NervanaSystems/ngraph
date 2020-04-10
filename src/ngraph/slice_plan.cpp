@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <iostream>
 
 #include "ngraph/check.hpp"
 #include "ngraph/slice_plan.hpp"
