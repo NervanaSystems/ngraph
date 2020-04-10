@@ -43,7 +43,7 @@ namespace ngraph
                                const OutputVector& outputs,
                                const OutputVector& args);
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const NodeVector& get_node_list() const { return m_node_list; }
                 const NodeVector& get_kernel_outputs() const { return m_output_nodes; }

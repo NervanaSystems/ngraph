@@ -50,7 +50,7 @@ bool op::v0::Divide::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::v0::Divide::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Divide::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v0::Divide>(
@@ -107,7 +107,7 @@ bool op::v1::Divide::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::v1::Divide::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Divide::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v1::Divide>(

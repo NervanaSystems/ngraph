@@ -39,7 +39,7 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/quantize.hpp"

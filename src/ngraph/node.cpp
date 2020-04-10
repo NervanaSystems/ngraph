@@ -740,6 +740,18 @@ const std::vector<descriptor::Input*>& Node::get_output_inputs(size_t i) const
     return m_outputs[i].get_inputs();
 }
 
+std::set<Input<Node>> Node::get_output_target_inputs(size_t i) const
+{
+    std::set<Input<Node>> result;
+
+    for (auto& input : m_outputs.at(i).get_inputs())
+    {
+        result.emplace(input->get_raw_pointer_node(), input->get_index());
+    }
+
+    return result;
+}
+
 descriptor::Tensor& Node::get_output_tensor(size_t i) const
 {
     NGRAPH_CHECK(

@@ -2055,6 +2055,54 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_round)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_scatter10_import_only)
+{
+    const auto scatter_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/scatter_opset10.prototxt"));
+
+    const Shape data_shape{2, 2};
+
+    EXPECT_EQ(scatter_fn->get_output_size(), 1);
+    EXPECT_EQ(scatter_fn->get_output_shape(0), data_shape);
+    EXPECT_EQ(count_ops_of_type<op::v3::ScatterElementsUpdate>(scatter_fn), 1);
+    EXPECT_EQ(count_ops_of_type<op::v0::Constant>(scatter_fn), 4);
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_scatter_elements_import_only)
+{
+    const auto scatter_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/scatter_elements_opset11.prototxt"));
+
+    const Shape data_shape{1, 5};
+
+    EXPECT_EQ(scatter_fn->get_output_size(), 1);
+    EXPECT_EQ(scatter_fn->get_output_shape(0), data_shape);
+    EXPECT_EQ(count_ops_of_type<op::v3::ScatterElementsUpdate>(scatter_fn), 1);
+    EXPECT_EQ(count_ops_of_type<op::v0::Constant>(scatter_fn), 4);
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_scatter_elements_const_folding)
+{
+    const auto scatter_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/scatter_elements_opset11.prototxt"));
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(scatter_fn);
+
+    const Shape data_shape{1, 5};
+
+    EXPECT_EQ(scatter_fn->get_output_size(), 1);
+    EXPECT_EQ(scatter_fn->get_output_shape(0), data_shape);
+    EXPECT_EQ(count_ops_of_type<op::v3::ScatterElementsUpdate>(scatter_fn), 0);
+    EXPECT_EQ(count_ops_of_type<op::v0::Constant>(scatter_fn), 1);
+
+    const auto result_node =
+        as_type_ptr<op::Constant>(scatter_fn->get_results().at(0)->get_argument(0));
+    const auto expected_output = std::vector<float>{1.0, 1.1, 3.0, 2.1, 5.0};
+    EXPECT_TRUE(ngraph::test::all_close(result_node->cast_vector<float>(), expected_output));
+}
+
 namespace
 {
     void test_non_zero_constant_folding(std::shared_ptr<ngraph::Function> function,

@@ -869,29 +869,6 @@ int64_t ngraph::normalize_axis(const std::string& node_description,
     return int64_t(axis);
 }
 
-void ngraph::opset1::infer_conv_backprop_output_spatial_shape(const Shape& input_data_shape,
-                                                              const Shape& filters_shape,
-                                                              const Strides& strides,
-                                                              const Strides& dilations,
-                                                              const CoordinateDiff& pads_begin,
-                                                              const CoordinateDiff& pads_end,
-                                                              const CoordinateDiff& output_padding,
-                                                              Shape& output_spatial_shape)
-{
-    size_t num_spatial_dims = input_data_shape.size();
-    NGRAPH_CHECK(filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
-                 dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
-                 pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
-
-    for (size_t i = 0; i < num_spatial_dims; ++i)
-    {
-        size_t val = strides[i] * (input_data_shape[i] - 1) +
-                     dilations[i] * (filters_shape[i] - 1) + 1 - pads_begin[i] - pads_end[i] +
-                     output_padding[i];
-        output_spatial_shape.push_back(val);
-    }
-}
-
 void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_shape,
                                                       const Shape& filters_shape,
                                                       const Shape& output_shape,
@@ -918,7 +895,7 @@ void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_sh
         int total_padding = strides[i] * (input_data_shape[i] - 1) +
                             dilations[i] * (filters_shape[i] - 1) + 1 - output_shape[i] +
                             output_padding[i];
-        if (auto_pad_type == op::PadType::SAME_UPPER)
+        if (auto_pad_type != op::PadType::SAME_UPPER)
         {
             pads_begin[i] = total_padding / 2;
             pads_end[i] = total_padding - pads_begin[i];
