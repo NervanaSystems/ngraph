@@ -76,14 +76,16 @@ vector<string> runtime::BackendManager::get_registered_backends()
     return rc;
 }
 
-shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
+shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(std::string config)
 {
     string type = config;
+    string options;
 
     // strip off attributes, IE:CPU becomes IE
     auto colon = type.find(":");
     if (colon != type.npos)
     {
+        options = type.substr(colon+1);
         type = type.substr(0, colon);
     }
 
@@ -137,7 +139,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         }
         throw runtime_error(ss.str());
     }
-    return it->second(config);
+    return it->second(options);
 }
 
 DL_HANDLE runtime::BackendManager::open_shared_library(string type)
