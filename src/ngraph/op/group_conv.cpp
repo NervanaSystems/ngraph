@@ -16,13 +16,12 @@
 
 #include <numeric>
 
-#include "group_conv.hpp"
-
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/validation_util.hpp"
@@ -48,7 +47,7 @@ op::v1::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
                                            const CoordinateDiff& pads_end,
                                            const Strides& dilations,
                                            const PadType& auto_pad)
-    : FusedOp({data_batch, filters})
+    : Op({data_batch, filters})
     , m_strides(strides)
     , m_dilations(dilations)
     , m_pads_begin(pads_begin)
@@ -97,12 +96,12 @@ void op::v1::GroupConvolution::validate_and_infer_types()
             m_dilations = conv_default_strides(this, data_batch_shape, filters_shape);
         }
 
-        if (m_pads_begin.size() == 0)
+        if (m_pads_begin.size() == 0 || m_auto_pad == PadType::VALID)
         {
             m_pads_begin = conv_default_padding(this, data_batch_shape, filters_shape);
         }
 
-        if (m_pads_end.size() == 0)
+        if (m_pads_end.size() == 0 || m_auto_pad == PadType::VALID)
         {
             m_pads_end = conv_default_padding(this, data_batch_shape, filters_shape);
         }
@@ -145,7 +144,7 @@ void op::v1::GroupConvolution::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<Node> op::v1::GroupConvolution::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::GroupConvolution::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::GroupConvolution>(new_args.at(0),
@@ -286,6 +285,37 @@ void op::v1::GroupConvolutionBackpropData::set_output_shape(const Shape& shape)
             ->output(0));
 }
 
+void op::v1::GroupConvolutionBackpropData::infer_conv_backprop_output_spatial_shape(
+    const vector<Dimension>& input_data_shape,
+    const vector<Dimension>& filters_shape,
+    const Strides& strides,
+    const Strides& dilations,
+    const CoordinateDiff& pads_begin,
+    const CoordinateDiff& pads_end,
+    const CoordinateDiff& output_padding,
+    vector<Dimension>& output_spatial_shape)
+{
+    size_t num_spatial_dims = input_data_shape.size();
+    NGRAPH_CHECK(filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
+                 dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
+                 pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
+
+    for (size_t i = 0; i < num_spatial_dims; ++i)
+    {
+        if (input_data_shape[i].is_static() && filters_shape[i].is_static())
+        {
+            int64_t val = strides[i] * (input_data_shape[i].get_length() - 1) +
+                          dilations[i] * (filters_shape[i].get_length() - 1) + 1 - pads_begin[i] -
+                          pads_end[i] + output_padding[i];
+            output_spatial_shape.push_back(val);
+        }
+        else
+        {
+            output_spatial_shape.push_back(Dimension::dynamic());
+        }
+    }
+}
+
 void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
 {
     const auto& data_pshape = get_input_partial_shape(0);
@@ -304,21 +334,23 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
         filters_et,
         ").");
 
-    if (data_pshape.is_static() && filters_pshape.is_static())
+    if (data_pshape.rank().is_static() && filters_pshape.rank().is_static())
     {
-        const Shape& data_shape = data_pshape.to_shape();
-        const Shape& filters_shape = filters_pshape.to_shape();
-        size_t groups{filters_shape.at(0)};
-        size_t input_channels{filters_shape.at(1)};
-        size_t n_data_channels{data_shape.at(1)};
+        if (filters_pshape[0].is_static() && filters_pshape[1].is_static() &&
+            data_pshape[1].is_static())
+        {
+            size_t groups{filters_pshape[0]};
+            size_t input_channels{filters_pshape[1]};
+            size_t n_data_channels{data_pshape[1]};
 
-        NODE_VALIDATION_CHECK(this,
-                              n_data_channels % groups == 0,
-                              "Number of data channels not a multiple of group size.");
-        NODE_VALIDATION_CHECK(this,
-                              n_data_channels / groups == input_channels,
-                              "Data second dimension has incompatible value "
-                              "with number of input channels.");
+            NODE_VALIDATION_CHECK(this,
+                                  n_data_channels % groups == 0,
+                                  "Number of data channels not a multiple of group size.");
+            NODE_VALIDATION_CHECK(this,
+                                  n_data_channels / groups == input_channels,
+                                  "Data second dimension has incompatible value "
+                                  "with number of input channels.");
+        }
 
         if (m_pads_begin.size() == 0)
         {
@@ -341,7 +373,7 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
             m_dilations = conv_default_strides(this, data_pshape, filters_pshape);
         }
 
-        const size_t num_spatial_dims = data_shape.size() - 2;
+        const auto num_spatial_dims = data_pshape.rank().get_length() - 2;
 
         NODE_VALIDATION_CHECK(this,
                               m_strides.size() == num_spatial_dims,
@@ -405,23 +437,20 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
     // and padding values.
     else
     {
-        NODE_VALIDATION_CHECK(this,
-                              m_auto_pad == PadType::VALID || m_auto_pad == PadType::EXPLICIT,
-                              "If output shape input is absent auto padding can't be used. "
-                              "Got auto_pad: <",
-                              m_auto_pad,
-                              "> Expected: ",
-                              PadType::VALID);
-
-        if (data_pshape.is_static() && filters_pshape.is_static())
+        if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER ||
+            m_auto_pad == PadType::VALID)
         {
-            const Shape& filters_shape = filters_pshape.to_shape();
-            const Shape& data_shape = data_pshape.to_shape();
+            m_pads_begin.assign(m_pads_begin.size(), 0);
+            m_pads_end.assign(m_pads_end.size(), 0);
+        }
 
-            Shape output_shape;
-            opset1::infer_conv_backprop_output_spatial_shape(
-                Shape{std::next(data_shape.begin(), 2), std::end(data_shape)},
-                Shape{std::next(filters_shape.begin(), 3), std::end(filters_shape)},
+        if (data_pshape.rank().is_static() && filters_pshape.is_static())
+        {
+            vector<Dimension> data_shape{data_pshape}, filters_shape{filters_pshape}, output_shape;
+
+            infer_conv_backprop_output_spatial_shape(
+                vector<Dimension>{std::next(data_shape.begin(), 2), std::end(data_shape)},
+                vector<Dimension>{std::next(filters_shape.begin(), 3), std::end(filters_shape)},
                 m_strides,
                 m_dilations,
                 m_pads_begin,
@@ -433,7 +462,7 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
             output_shape.insert(output_shape.begin(), filters_shape.at(0) * filters_shape.at(2));
             // N
             output_shape.insert(output_shape.begin(), data_shape.at(0));
-            output_pshape = output_shape;
+            output_pshape = PartialShape{output_shape};
         }
         else
         {
@@ -505,7 +534,7 @@ void op::v1::GroupConvolutionBackpropData::generate_adjoints(autodiff::Adjoints&
 }
 
 shared_ptr<Node>
-    op::v1::GroupConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
+    op::v1::GroupConvolutionBackpropData::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 3)
@@ -662,7 +691,7 @@ Shape op::v0::GroupConvolution::get_weights_dimensions() const
     return weights_shape_groups;
 }
 
-shared_ptr<Node> op::v0::GroupConvolution::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::GroupConvolution::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
 
@@ -789,7 +818,7 @@ void op::v0::GroupConvolutionBackpropData::pre_validate_and_infer_types()
 }
 
 shared_ptr<Node>
-    op::v0::GroupConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
+    op::v0::GroupConvolutionBackpropData::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {
@@ -887,8 +916,8 @@ void op::v0::GroupConvolutionBackpropFilters::pre_validate_and_infer_types()
     }
 }
 
-shared_ptr<Node>
-    op::v0::GroupConvolutionBackpropFilters::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::GroupConvolutionBackpropFilters::clone_with_new_inputs(
+    const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {

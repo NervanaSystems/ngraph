@@ -52,7 +52,8 @@ namespace ngraph
 
                 void validate_and_infer_types() override;
 
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 ResizeMethod get_resize_method() const { return m_resize_method; }
                 void set_resize_method(ResizeMethod resize_method)

@@ -110,7 +110,10 @@ namespace ngraph
                         node->get_element_type(), ngraph::Shape{}, value);
                 }
 
-                return ngraph::builder::opset1::reshape(node, Shape{});
+                const auto axis =
+                    default_opset::Constant::create(element::i64, ngraph::Shape{}, {0});
+
+                return std::make_shared<ngraph::opset1::Squeeze>(node, axis);
             }
 
         } // namespace  reshape

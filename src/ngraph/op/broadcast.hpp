@@ -164,7 +164,6 @@ namespace ngraph
                 {
                     m_broadcast_spec = broadcast_spec;
                 }
-
                 /// \return true and the AxisSet if broadcast axes can be fully determined.
                 std::pair<bool, AxisSet> get_broadcast_axes() const;
 

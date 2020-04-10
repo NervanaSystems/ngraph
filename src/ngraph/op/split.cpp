@@ -18,7 +18,7 @@
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/split.hpp"
+#include "ngraph/op/split.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -107,7 +107,7 @@ NodeVector op::v0::Split::decompose_op() const
     return builder::split(input_value(0), m_splits, m_axis);
 }
 
-shared_ptr<Node> op::v0::Split::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Split::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Split>(new_args.at(0), new_args.at(1), m_splits);
@@ -116,7 +116,7 @@ shared_ptr<Node> op::v0::Split::copy_with_new_args(const NodeVector& new_args) c
 constexpr NodeTypeInfo op::v1::Split::type_info;
 
 op::v1::Split::Split(const Output<Node>& data, const Output<Node>& axis, const size_t num_splits)
-    : FusedOp({data, axis})
+    : Op({data, axis})
     , m_num_splits{num_splits}
 {
     constructor_validate_and_infer_types();
@@ -179,7 +179,7 @@ void op::v1::Split::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::v1::Split::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Split::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::Split>(new_args.at(0), new_args.at(1), m_num_splits);

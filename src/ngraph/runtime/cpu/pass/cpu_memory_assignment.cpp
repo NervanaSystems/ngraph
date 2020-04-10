@@ -88,7 +88,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(
                     // start from the last concat
                     if (found_last_concat)
                     {
-                        auto output_tensor = &concat->output(0).get_tensor();
+                        auto output_tensor = &concat->get_output_tensor(0);
                         auto output_bufferID = get_bufferID(output_tensor);
 
                         auto offset = output_tensor->get_pool_offset();
@@ -136,7 +136,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(const Ou
     auto op = output.get_node_shared_ptr();
     if (is_type<op::Concat>(op))
     {
-        auto output_tensor = &op->output(0).get_tensor();
+        auto output_tensor = &op->get_output_tensor(0);
         auto output_bufferID = get_bufferID(output_tensor);
 
         auto offset = output_tensor->get_pool_offset();
@@ -230,7 +230,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(
                     auto arg = input.get_node_shared_ptr();
                     auto input_tensor = &input.get_tensor();
                     auto input_bufferID = get_bufferID(input_tensor);
-                    auto output_tensor = &slice->output(0).get_tensor();
+                    auto output_tensor = &slice->get_output_tensor(0);
                     auto output_bufferID = get_bufferID(output_tensor);
 
                     // same set, in place slice allowed
@@ -337,7 +337,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(vector<shar
         const shared_ptr<Node>& node = *it;
         if (node->is_parameter())
         {
-            auto output_tensor = &node->output(0).get_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
                 TensorRole::INPUT, unordered_set<descriptor::Tensor*>({output_tensor}));
             m_bufferID_to_tensorSets[count] = ele;
@@ -346,7 +346,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(vector<shar
         }
         else if (is_type<op::Constant>(node))
         {
-            auto output_tensor = &node->output(0).get_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
                 TensorRole::CONSTANT, unordered_set<descriptor::Tensor*>({output_tensor}));
             m_bufferID_to_tensorSets[count] = ele;
@@ -355,7 +355,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(vector<shar
         }
         else if (node->is_output())
         {
-            auto output_tensor = &node->output(0).get_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             auto input_tensor = &node->get_input_tensor(0);
             auto bufferID = get_bufferID(input_tensor);
             NGRAPH_CHECK(bufferID <= count);
@@ -397,7 +397,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(vector<shar
                     // in place concat
                     if (is_type<op::Concat>(node))
                     {
-                        auto output_tensor = &node->output(0).get_tensor();
+                        auto output_tensor = &node->get_output_tensor(0);
                         auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
                             TensorRole::INTERMEDIATE,
                             unordered_set<descriptor::Tensor*>({output_tensor}));
