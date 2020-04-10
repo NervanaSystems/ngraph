@@ -57,6 +57,7 @@ bool Interval::empty() const
 {
     return m_min_val == s_max;
 }
+
 bool Interval::operator==(const Interval& interval) const
 {
     return m_min_val == interval.m_min_val && m_max_val == interval.m_max_val;
