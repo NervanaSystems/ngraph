@@ -16,6 +16,7 @@
 
 #include "constant_folding.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/runtime/reference/gather.hpp"
 
@@ -236,9 +237,16 @@ void pass::ConstantFolding::construct_constant_gather_with_subgraph()
         const int64_t raw_index = indices->cast_vector<int64_t>()[0];
         const int64_t positive_index = raw_index < 0 ? rank + raw_index : raw_index;
         // gather takes exactly one element out of the Concat output
-        const auto gathered =
+        const auto gathered_concat_input =
             concat_inputs[positive_index].get_source_output().get_node_shared_ptr();
-
+        // Concat inputs are 1D, resulting tensor shape depends on Gather indices
+        auto gathered = gathered_concat_input;
+        if (indices_shape.empty())
+        {
+            // gathering a scalar
+            auto axes = op::Constant::create(element::i64, Shape{1}, {0});
+            gathered = make_shared<op::v0::Squeeze>(gathered_concat_input, axes);
+        }
         replace_node(m.get_match_root(), gathered);
         return true;
     };
