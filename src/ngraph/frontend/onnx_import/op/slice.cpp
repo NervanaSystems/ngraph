@@ -42,6 +42,18 @@ namespace ngraph
             {
                 namespace
                 {
+                    /// \brief Transform Slice axes input to mask which is attribute of
+                    /// StridedSlice:v1 interface.
+                    ///
+                    /// \note Mask attributes of StridedSlice:10 operator indicates
+                    ///       if corresponding begin/end/strides input indices should be applied (0
+                    ///       value) or ignored (1 value)
+                    ///
+                    /// \param[in] axes                 Axes input of ONNX Slice operator
+                    /// \param[in] slice_indices_length Lenght of Slice indices
+                    ///                                 (starts, ends, steps)
+                    ///
+                    /// \return Mask attribute in format required by StridedSlice:v1
                     std::vector<int64_t> axes_to_mask(const std::vector<uint64_t>& axes,
                                                       uint64_t slice_indices_length)
                     {
@@ -53,24 +65,44 @@ namespace ngraph
                         return mask;
                     }
 
+                    /// \brief Adjsut ONNX Slice indices: starts, ends, steps to StridedSlice:v1
+                    /// interface.
+                    ///
+                    /// \note StridedSlice:v1 doesn't support axes paramets.
+                    ///       The axes parameters detrmines to which dimension of input data slice
+                    ///       operation should be applied.
+                    ///       The retuned sub-graph provide proper adjustement of Slice indices if
+                    ///       it is needed.
+                    ///
+                    /// \param[in] indices               Parameters of Slice operator: starts, ends,
+                    ///                                  steps.
+                    /// \param[in] axes                  Detemines dimenions on which slice
+                    ///                                  operation should be applied.
+                    /// \param[in] slice_indices_length  Indices length after adjustment
+                    /// \param[in] fill_in_value         Neutrial value (`0` for starts and ends,
+                    ///                                  `1` for steps) which is set to indices
+                    ///                                  in order to provide adjustment.
+                    ///
+                    /// \return Sub-graph represents adjusted indices or input indices
+                    ///         if any transformation was not needed.
                     std::shared_ptr<ngraph::Node>
-                        adjust_indices_if_needed(const std::shared_ptr<ngraph::Node>& input,
+                        adjust_indices_if_needed(const std::shared_ptr<ngraph::Node>& indices,
                                                  const std::vector<uint64_t>& axes,
                                                  uint64_t slice_indices_length,
-                                                 int64_t value)
+                                                 int64_t fill_in_value)
                     {
                         const bool are_axes_sorted = std::is_sorted(axes.begin(), axes.end());
 
-                        const auto input_shape = input->get_output_partial_shape(0);
+                        const auto indices_shape = indices->get_output_partial_shape(0);
                         // if length of slice indices vector is known
-                        if (input_shape.rank().is_static() &&
-                            input_shape.rank().get_length() == 1 && input_shape[0].is_static())
+                        if (indices_shape.rank().is_static() &&
+                            indices_shape.rank().get_length() == 1 && indices_shape[0].is_static())
                         {
-                            if (input_shape[0].get_length() >= slice_indices_length &&
+                            if (indices_shape[0].get_length() >= slice_indices_length &&
                                 are_axes_sorted)
                             {
                                 // adjusting indices is not needed
-                                return input;
+                                return indices;
                             }
                         }
                         // Handle a case when starts/ends/steps lengths are less than provided axes
@@ -93,15 +125,15 @@ namespace ngraph
                         {
                             if (std::find(std::begin(axes), std::end(axes), i) == axes.end())
                             {
-                                adjusted_indices[i] =
-                                    default_opset::Constant::create(element::i64, {1}, {value});
+                                adjusted_indices[i] = default_opset::Constant::create(
+                                    element::i64, {1}, {fill_in_value});
                                 target_axes.insert(std::next(target_axes.begin(), i), i);
                                 ++added_indices_number;
                             }
                             else
                             {
                                 adjusted_indices[i] = std::make_shared<default_opset::Gather>(
-                                    input,
+                                    indices,
                                     default_opset::Constant::create(
                                         element::i64, {1}, {i - added_indices_number}),
                                     gather_axis);
