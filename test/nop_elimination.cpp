@@ -55,8 +55,55 @@ TEST(nop_elimination, eliminate_sum)
 
     ASSERT_EQ(count_ops_of_type<op::Sum>(f), 0);
 }
+/****************************************
+ *
+ *   Convert elimination use cases:
+ *   Let the candidate Convert node for elimination
+ *   be Convert1 in the following sub-graph:
+ *
+//
+//            [ Input_node ]
+//            /      |      \
+//           /       |       \
+//          |        u3       |
+//    [ Convert1 ]            u4
+//    /   |     \
+//   /    |      \
+//  |     |       |
+//  u1    |       |
+          u2      |
+//                { r1 }
+//
+ *
+ * Then the elimination logic covers following use cases:
+ *     1. If all users of Convert1 are of type op::Convert &&
+ *                    m_destination_type of all users are equal:
+ *             replace Convert1 with one of the users and
+ *             attach other users' users to it
+ *     2. Else if Input_node:: element_type == Convert1::m_destination_type:
+ *             replace Convert1 with Input_node
+ *     3. Else if Convert1 has a result output:
+ *             return false
+ *     4. Else if all users of Convert1 are type_agnostic ( eg. op: Non_Zero)
+ *             replace Convert with Input_node
+ *
+ *
+ *****************************************/
+TEST(nop_elimination, eliminate_convert_multiple_users)
+{
+    Shape shape{2, 3};
+    auto type = element::i64;
+    auto A = make_shared<op::Parameter>(type, shape);
+    auto f = make_shared<Function>(make_shared<op::Convert>(A, element::i64), ParameterVector{A});
 
-TEST(nop_elimination, eliminate_convert)
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::NopElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Convert>(f), 0);
+}
+
+TEST(nop_elimination, eliminate_convert_single_user)
 {
     Shape shape{};
     auto type = element::f32;
