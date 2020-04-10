@@ -47,7 +47,7 @@ namespace ngraph
         /// \brief Closed interval {x|min_val <= x <= max_val}
         Interval(value_type min_val, value_type max_val);
 
-        /// \brief One-value interval
+        /// \brief Single-valued interval; just contains val
         Interval(value_type val);
 
         Interval& operator=(const Interval& interval) = default;
@@ -110,7 +110,6 @@ namespace ngraph
         static value_type clip_add(value_type a, value_type b);
         static value_type clip_minus(value_type a, value_type b);
 
-    private:
         value_type m_min_val{0};
         value_type m_max_val{s_max};
     };

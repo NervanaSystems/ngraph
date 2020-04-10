@@ -44,25 +44,13 @@ namespace ngraph
                 ///             element type, and same element type as `start` and `stop`.
                 Range(const Output<Node>& start,
                       const Output<Node>& stop,
-                      const Output<Node>& step,
-                      int64_t max_output_length = -1);
+                      const Output<Node>& step);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
-
-                /// \brief Get the maximum output length. -1 means unbounded.
-                int64_t get_max_output_length() const { return m_max_output_length; }
-                /// \brief Set the maximum output length. -1 means unbounded.
-                void set_max_output_length(int64_t max_output_length)
-                {
-                    m_max_output_length = max_output_length;
-                }
-
-            private:
-                int64_t m_max_output_length{-1};
             };
         }
         using v0::Range;
