@@ -41,8 +41,8 @@ from test.ngraph.util import run_op_node
 @pytest.mark.skip_on_gpu  # under investigation, runtime error is: function failed to compile
 def test_dot(left_shape, right_shape, reduction_axes_count, numpy_axes):
     np.random.seed(133391)
-    left_input = -100.0 + np.random.rand(*left_shape) * 200.0
-    right_input = -100.0 + np.random.rand(*right_shape) * 200.0
+    left_input = -100.0 + np.random.rand(*left_shape).astype(np.float32) * 200.0
+    right_input = -100.0 + np.random.rand(*right_shape).astype(np.float32) * 200.0
 
     expected = np.tensordot(left_input, right_input, numpy_axes)
     result = run_op_node([left_input, right_input], ng.dot, reduction_axes_count)
@@ -52,12 +52,46 @@ def test_dot(left_shape, right_shape, reduction_axes_count, numpy_axes):
 @pytest.mark.skip_on_gpu  # under investigation, runtime error is: function failed to compile
 def test_dot_tensor_scalar():
     np.random.seed(133391)
-    left_input = 10.0
-    right_input = -100.0 + np.random.rand(2, 3, 4) * 200.0
+    left_input = np.float32(10.0)
+    right_input = -100.0 + np.random.rand(2, 3, 4).astype(np.float32) * 200.0
     expected = left_input * right_input
 
     result = run_op_node([left_input, right_input], ng.dot)
     assert np.allclose(result, expected)
 
     result = run_op_node([right_input, left_input], ng.dot)
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.parametrize('shape_a, shape_b, transpose_a, transpose_b', [
+    # matrix, vector
+    ([2, 4], [4], False, False),
+    ([4], [4, 2], False, False),
+
+    # matrix, matrix
+    ([2, 4], [4, 2], False, False),
+
+    # tensor, vector
+    ([2, 4, 5], [5], False, False),
+
+    # # tensor, matrix
+    ([2, 4, 5], [5, 4], False, False),
+
+    # # tensor, tensor
+    ([2, 2, 4], [2, 4, 2], False, False),
+])
+@pytest.mark.skip_on_gpu
+def test_matmul(shape_a, shape_b, transpose_a, transpose_b):
+    np.random.seed(133391)
+    left_input = -100.0 + np.random.rand(*shape_a).astype(np.float32) * 200.0
+    right_input = -100.0 + np.random.rand(*shape_b).astype(np.float32) * 200.0
+
+    result = run_op_node([left_input, right_input], ng.matmul, transpose_a, transpose_b)
+
+    if transpose_a:
+        left_input = np.transpose(left_input)
+    if transpose_b:
+        right_input = np.transpose(right_input)
+
+    expected = np.matmul(left_input, right_input)
     assert np.allclose(result, expected)
