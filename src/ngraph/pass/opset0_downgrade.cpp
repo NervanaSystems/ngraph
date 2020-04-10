@@ -236,8 +236,8 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ConvolutionBackpropData> node)
     {
-        const auto data_arg = node->input(0).get_source_output();
-        const auto filters_arg = node->input(1).get_source_output();
+        const auto data_arg = node->input_value(0);
+        const auto filters_arg = node->input_value(1);
 
         auto data_pshape = data_arg.get_partial_shape();
         auto filters_pshape = filters_arg.get_partial_shape();
@@ -250,7 +250,7 @@ namespace
 
         const size_t num_spatial_dims = data_pshape.rank().get_length() - 2;
 
-        const PartialShape output_pshape{node->output(0).get_partial_shape()};
+        const PartialShape output_pshape{node->get_output_partial_shape(0)};
         NGRAPH_CHECK(output_pshape.is_static(),
                      "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
                      "if output shape is dynamic. Node: ",
@@ -416,7 +416,7 @@ namespace
         auto filters_shape = filters_arg.get_shape();
         const size_t groups = filters_shape.at(0);
 
-        const PartialShape output_pshape{node->output(0).get_partial_shape()};
+        const PartialShape output_pshape{node->get_output_partial_shape(0)};
         NGRAPH_CHECK(output_pshape.is_static(),
                      "Unable to convert GroupConvolutionBackpropData:v1 to "
                      "GroupConvolutionBackpropData:v0 "

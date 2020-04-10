@@ -45,11 +45,6 @@ public:
     static constexpr NodeTypeInfo type_info{"Passthrough", 0};
     const NodeTypeInfo& get_type_info() const override { return type_info; }
     Passthrough() = default;
-    Passthrough(const std::string& logical_type, // aka "What this operation is doing"
-                const std::string& language,     // The language the implementation is written in
-                const std::string& function,     // The operation implementation
-                const NodeVector& args,
-                std::vector<std::tuple<element::Type, PartialShape>> outputs);
 
     Passthrough(const std::string& logical_type, // aka "What this operation is doing"
                 const std::string& language,     // The language the implementation is written in
@@ -59,7 +54,7 @@ public:
 
     void validate_and_infer_types() final;
 
-    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const final;
+    std::shared_ptr<Node> clone_with_new_inputs(const OutputVector& new_args) const final;
 
     const std::string& logical_type() const { return m_logical_type; }
     const std::string& language() const { return m_language; }
