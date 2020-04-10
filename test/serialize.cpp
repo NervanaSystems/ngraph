@@ -230,7 +230,7 @@ TEST(serialize, passthrough)
         "SerializationTest",
         "Plain",
         "Hello, world!",
-        NodeVector{},
+        OutputVector{},
         std::vector<estuple>{estuple{element::f32, PartialShape{2, 3}},
                              estuple{element::i8, PartialShape{4, 5}}});
     auto f = make_shared<Function>(NodeVector{std::make_shared<op::GetOutputElement>(p, 0),

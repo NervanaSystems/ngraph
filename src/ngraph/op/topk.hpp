@@ -89,7 +89,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 size_t get_k() const;
                 void set_k(size_t k);
@@ -101,6 +101,7 @@ namespace ngraph
                 element::Type get_index_element_type() const { return m_index_element_type; }
                 bool get_compute_max() const { return m_compute_max; }
                 SortType get_sort() const { return m_sort; }
+                size_t get_default_output_index() const override { return no_default_index(); }
             protected:
                 element::Type m_index_element_type;
                 bool m_compute_max{false};
@@ -159,7 +160,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual size_t get_version() const override { return 1; }
                 /// \brief Returns axis value after normalization
@@ -178,14 +179,13 @@ namespace ngraph
                 {
                     m_index_element_type = index_element_type;
                 }
-
                 /// \brief Returns the value of K, if available
                 ///
                 /// \note If the second input to this op is a constant, the value is retrieved
                 ///       and returned. If the input is not constant(dynamic) this method returns 0
                 size_t get_k() const;
                 void set_k(size_t k);
-
+                size_t get_default_output_index() const override { return no_default_index(); }
             protected:
                 int64_t m_axis;
                 uint64_t m_normalized_axis;

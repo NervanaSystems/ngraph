@@ -54,7 +54,8 @@ op::v1::NonMaxSuppression::NonMaxSuppression(
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v1::NonMaxSuppression::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::v1::NonMaxSuppression::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v1::NonMaxSuppression>(new_args.at(0),
@@ -144,9 +145,9 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
     if (num_boxes_boxes.is_static() && scores_ps[1].is_static() &&
         max_output_boxes_per_class->is_constant())
     {
-        const auto num_boxes = static_cast<int64_t>(num_boxes_boxes);
+        const auto num_boxes = num_boxes_boxes.get_length();
         const auto max_output_boxes_per_class = max_boxes_output_from_input();
-        const auto num_classes = static_cast<int64_t>(scores_ps[1]);
+        const auto num_classes = scores_ps[1].get_length();
 
         out_shape[0] = std::min(num_boxes, max_output_boxes_per_class * num_classes);
     }

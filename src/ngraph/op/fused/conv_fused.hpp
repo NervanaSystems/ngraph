@@ -67,7 +67,7 @@ namespace ngraph
                 Output<Node> get_data_batch() { return input_value(0); }
                 bool with_relu() const { return m_with_relu; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual NodeVector decompose_op() const override;
 
@@ -104,7 +104,7 @@ namespace ngraph
                                                    const Strides& data_dilation_strides_forward);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The filters tensor shape.
                 const Shape& get_filters_shape() const { return m_filters_shape; }
@@ -135,7 +135,6 @@ namespace ngraph
                 {
                     return m_data_dilation_strides_forward;
                 }
-
                 /// \return The window movement strides for the backward prop.
                 const Strides& get_window_movement_strides_backward() const
                 {
@@ -161,7 +160,6 @@ namespace ngraph
                 {
                     return m_data_dilation_strides_backward;
                 }
-
                 virtual NodeVector decompose_op() const override;
 
             protected:
@@ -216,7 +214,7 @@ namespace ngraph
                 Output<Node> get_data_batch() { return input_value(0); }
                 bool with_relu() const { return m_with_relu; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual NodeVector decompose_op() const override;
 
