@@ -34,7 +34,7 @@ op::v0::Min::Min(const Output<Node>& arg, const Output<Node>& reduction_axes)
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v0::Min::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Min::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v0::Min>(new_args.at(0), get_reduction_axes());
@@ -92,7 +92,7 @@ op::v1::ReduceMin::ReduceMin(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v1::ReduceMin::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::ReduceMin::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v1::ReduceMin>(new_args.at(0), new_args.at(1), get_keep_dims());

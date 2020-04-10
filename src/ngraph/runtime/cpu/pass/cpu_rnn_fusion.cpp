@@ -72,6 +72,77 @@
 
 using namespace ngraph;
 
+void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
+{
+    // pattern to capture the vanilla RNN
+    // at = W*h{t, l-1} + U *h{t-1, l} + B
+    // ht = activation(at)
+
+    auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 34});
+    auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 34});
+    auto concat =
+        std::make_shared<ngraph::op::Concat>(NodeVector{src_layer_label, src_iter_label}, 0);
+    auto weights = std::make_shared<pattern::op::Label>(element::f32, Shape{34, 2});
+    auto bias_label = std::make_shared<pattern::op::Label>(element::f32, Shape{64, 2});
+    auto broadcast_pred = [](std::shared_ptr<Node> n) {
+        return ((is_type<ngraph::op::Broadcast>(n)) || (is_type<ngraph::op::Reshape>(n)));
+    };
+    auto dot = std::make_shared<ngraph::op::Dot>(concat, weights);
+    auto add = std::make_shared<ngraph::op::Add>(
+        dot, std::make_shared<pattern::op::Skip>(bias_label, broadcast_pred));
+
+    auto activation = std::make_shared<ngraph::op::Tanh>(add);
+
+    auto callback = [src_layer_label, src_iter_label, weights, bias_label](pattern::Matcher& m) {
+        auto pattern_map = m.get_pattern_map();
+        ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
+            ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_rnn;
+
+        auto fused_weights = pattern_map[weights];
+        auto bias = pattern_map[bias_label];
+        auto src_layer = pattern_map[src_layer_label];
+        auto src_iter = pattern_map[src_iter_label];
+
+        size_t slc = src_layer->get_shape()[1];
+        size_t sic = src_iter->get_shape()[1];
+        size_t dlc = fused_weights->get_shape()[1];
+        size_t n_gates = 1;
+        size_t direction = 1;
+        size_t n_layers = 1;
+        size_t n_state = 1;
+        size_t time_steps = 1;
+        size_t seq_length = 1;
+
+        // split the fused weights for RNN kernel
+        auto wei_layer = std::make_shared<ngraph::op::Slice>(
+            fused_weights, Coordinate{0, 0}, Coordinate{slc, dlc});
+        auto wei_iter = std::make_shared<ngraph::op::Slice>(
+            fused_weights, Coordinate{slc, 0}, Coordinate{slc + sic, dlc});
+
+        auto rnn_node = std::make_shared<ngraph::op::Rnn>(src_layer,
+                                                          src_iter,
+                                                          wei_layer,
+                                                          wei_iter,
+                                                          bias,
+                                                          time_steps,
+                                                          n_gates,
+                                                          seq_length,
+                                                          n_state,
+                                                          direction,
+                                                          n_layers,
+                                                          rnn_type);
+
+        auto dst_layer = std::make_shared<ngraph::op::GetOutputElement>(rnn_node, 0);
+        auto dst_iter = std::make_shared<ngraph::op::GetOutputElement>(rnn_node, 1);
+
+        ngraph::replace_node(m.get_match_root(), dst_layer);
+        return true;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(activation, "VanillaRNNFusion.vanilla_rnn");
+    this->add_matcher(m, callback);
+}
+
 void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 {
     size_t ref_batch_size = 2;
