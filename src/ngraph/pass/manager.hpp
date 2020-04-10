@@ -59,6 +59,9 @@ public:
     void set_pass_config(const PassConfig& pass_config) { m_pass_config = pass_config; }
     void set_pass_visualization(bool new_state) { m_visualize = new_state; }
     void set_pass_serialization(bool new_state) { m_serialize = new_state; }
+    /// \brief Set flag to enable/disable running Validate pass after executing
+    /// each registered pass
+    /// \param new_state Value "true" enables Validate pass run; "false", otherwise
     void set_per_pass_validation(bool new_state) { m_per_pass_validation = new_state; }
 private:
     template <typename T, class... Args>
