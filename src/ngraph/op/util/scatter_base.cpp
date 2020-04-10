@@ -122,11 +122,11 @@ void op::util::ScatterBase::validate_and_infer_types()
                           compatible,
                           "Updates shape must have appropriate dimensions equal to indices and "
                           "data dimensions. Updates shape:",
-                          updates_shape.to_shape(),
+                          updates_shape,
                           ", data shape: ",
-                          data_shape.to_shape(),
+                          data_shape,
                           ", indices_shape: ",
-                          indices_shape.to_shape(),
+                          indices_shape,
                           ", axis: ",
                           axis,
                           ".");
