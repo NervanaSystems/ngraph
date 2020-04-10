@@ -80,9 +80,9 @@ func @prelu(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tenso
 // -----
 
 // CHECK-LABEL: func @normalizeL2
-func @normalizeL2(%arg0: !ng.tensor<1x2x3x4xf32>, %arg1: !ng.tensor<3x!ng.i64>) -> !ng.tensor<1x2x3x4xf32> {
-  // CHECK: %{{.*}} = "ng.normalizeL2"(%{{.*}}, %{{.*}}) {eps = {{0.[0-9]+}} : f32, epsMode = 0 : i32} : (!ng.tensor<1x2x3x4xf32>, !ng.tensor<3x!ng.i64>) -> !ng.tensor<1x2x3x4xf32>
-  %0 = "ng.normalizeL2"(%arg0, %arg1) {eps = 0.01 : f32, epsMode = 0 : i32} : (!ng.tensor<1x2x3x4xf32> , !ng.tensor<3x!ng.i64>) -> !ng.tensor<1x2x3x4xf32>
+func @normalizeL2(%arg0: !ng.tensor<1x2x3x4xf32>, %arg1: !ng.tensor<3xsi64>) -> !ng.tensor<1x2x3x4xf32> {
+  // CHECK: %{{.*}} = "ng.normalizeL2"(%{{.*}}, %{{.*}}) {eps = {{0.[0-9]+}} : f32, epsMode = 0 : i32} : (!ng.tensor<1x2x3x4xf32>, !ng.tensor<3xsi64>) -> !ng.tensor<1x2x3x4xf32>
+  %0 = "ng.normalizeL2"(%arg0, %arg1) {eps = 0.01 : f32, epsMode = 0 : i32} : (!ng.tensor<1x2x3x4xf32> , !ng.tensor<3xsi64>) -> !ng.tensor<1x2x3x4xf32>
   "ng.return"(%0) : (!ng.tensor<1x2x3x4xf32>) -> ()
 }
 
