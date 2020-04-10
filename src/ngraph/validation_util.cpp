@@ -895,7 +895,7 @@ void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_sh
         int total_padding = strides[i] * (input_data_shape[i] - 1) +
                             dilations[i] * (filters_shape[i] - 1) + 1 - output_shape[i] +
                             output_padding[i];
-        if (auto_pad_type == op::PadType::SAME_UPPER)
+        if (auto_pad_type != op::PadType::SAME_UPPER)
         {
             pads_begin[i] = total_padding / 2;
             pads_end[i] = total_padding - pads_begin[i];
