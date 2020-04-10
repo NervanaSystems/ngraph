@@ -58,6 +58,7 @@ TEST(intervals, equals)
     Interval c(2, 4);
     b = c;
     EXPECT_TRUE(b == c);
+    EXPECT_FALSE(b != c);
 }
 
 TEST(intervals, arithmetic)
