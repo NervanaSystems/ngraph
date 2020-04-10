@@ -81,7 +81,7 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
     else if (m_broadcast_spec.m_type == AutoBroadcastType::NUMPY ||
              m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
     {
-        if (get_input_partial_shape(0).is_static() && output(0).get_partial_shape().is_static())
+        if (get_input_partial_shape(0).is_static() && get_output_partial_shape(0).is_static())
         {
             auto arg_shape = get_input_shape(0);
             auto result_shape = get_output_shape(0);

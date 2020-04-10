@@ -190,7 +190,7 @@ void ngraph::op::v1::BatchToSpace::pre_validate_and_infer_types()
 }
 
 std::shared_ptr<ngraph::Node>
-    ngraph::op::v1::BatchToSpace::copy_with_new_args(const ngraph::NodeVector& new_args) const
+    ngraph::op::v1::BatchToSpace::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<BatchToSpace>(

@@ -26,7 +26,7 @@ static int UPDATES = 2;
 
 constexpr NodeTypeInfo op::ScatterNDAdd::type_info;
 
-shared_ptr<Node> op::ScatterNDAdd::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ScatterNDAdd::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ScatterNDAdd>(

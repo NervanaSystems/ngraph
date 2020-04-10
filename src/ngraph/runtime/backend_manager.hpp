@@ -58,7 +58,7 @@ public:
 
     /// \brief Query the list of registered devices
     /// \returns A vector of all registered devices.
-    static std::vector<std::string> get_registered_backends();
+    static NGRAPH_API std::vector<std::string> get_registered_backends();
 
 private:
     static void initialize_backends();
