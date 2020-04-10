@@ -14,19 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/visibility.hpp"
 
-#include <string>
-
-#include "ngraph/ngraph_visibility.hpp"
-#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
-#include "ngraph/runtime/ie/ie_backend_visibility.hpp"
-#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
-#include "ngraph/runtime/nop/nop_backend_visibility.hpp"
-#include "ngraph/runtime/plaidml/plaidml_backend_visibility.hpp"
-
-extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend();
-extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend();
-extern "C" PLAIDML_BACKEND_API void ngraph_register_plaidml_backend();
-extern "C" NOP_BACKEND_API void ngraph_register_nop_backend();
-extern "C" IE_BACKEND_API void ngraph_register_ie_backend();
+#ifdef IE_BACKEND_DLL_EXPORTS // defined if we are building the IE_BACKEND
+#define IE_BACKEND_API NGRAPH_HELPER_DLL_EXPORT
+#else
+#define IE_BACKEND_API NGRAPH_HELPER_DLL_IMPORT
+#endif
