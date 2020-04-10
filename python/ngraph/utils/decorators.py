@@ -17,8 +17,7 @@ from functools import wraps
 from typing import Any, Callable
 
 from ngraph.impl import Node
-from ngraph.utils.types import as_node, NodeInput
-from ngraph.utils.broadcasting import as_elementwise_compatible_nodes
+from ngraph.utils.types import as_node, as_nodes, NodeInput
 
 
 def _set_node_name(node, **kwargs):  # type: (Node, **Any) -> Node
@@ -52,7 +51,7 @@ def binary_op(node_factory_function):  # type: (Callable) -> Callable
     """Convert the first two input values to Constant Nodes if scalar values are detected."""
     @wraps(node_factory_function)
     def wrapper(left, right, *args, **kwargs):  # type: (NodeInput, NodeInput, *Any, **Any) -> Node
-        left, right = as_elementwise_compatible_nodes(left, right)
+        left, right = as_nodes(left, right)
         node = node_factory_function(left, right, *args, **kwargs)
         node = _set_node_name(node, **kwargs)
         return node
