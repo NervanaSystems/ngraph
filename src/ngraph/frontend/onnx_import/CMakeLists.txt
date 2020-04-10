@@ -183,6 +183,8 @@ add_library(onnx_import STATIC
         op/round.hpp
         op/scatter_nd.cpp
         op/scatter_nd.hpp
+        op/scatter_elements.cpp
+        op/scatter_elements.hpp
         op/selu.cpp
         op/selu.hpp
         op/shape.hpp

@@ -162,6 +162,7 @@
 #include "ngraph/op/roi_align.hpp"
 #include "ngraph/op/round.hpp"
 #include "ngraph/op/scatter_add.hpp"
+#include "ngraph/op/scatter_elements_update.hpp"
 #include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/send.hpp"

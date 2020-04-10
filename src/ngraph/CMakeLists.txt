@@ -330,6 +330,8 @@ set (SRC
     op/reverse_sequence.hpp
     op/scatter_add.cpp
     op/scatter_add.hpp
+    op/scatter_elements_update.cpp
+    op/scatter_elements_update.hpp
     op/scatter_nd_add.cpp
     op/scatter_nd_add.hpp
     op/select.cpp
@@ -491,6 +493,7 @@ set (SRC
     pass/constant_folding_dyn_reshape.cpp
     pass/constant_folding_dyn_slice.cpp
     pass/constant_folding_gather.cpp
+    pass/constant_folding_scatter.cpp
     pass/constant_folding_logical_reduction.cpp
     pass/constant_folding_non_zero.cpp
     pass/constant_folding_one_hot.cpp

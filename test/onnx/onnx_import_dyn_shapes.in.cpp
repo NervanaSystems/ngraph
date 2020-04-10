@@ -576,3 +576,28 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_tile_static)
         Shape{4, 6}, {0, 1, 2, 0, 1, 2, 3, 4, 5, 3, 4, 5, 0, 1, 2, 0, 1, 2, 3, 4, 5, 3, 4, 5});
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, transpose)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dynamic_shapes/transpose.prototxt"));
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    Shape shape{2, 2, 4, 3};
+    const auto elems_in_tensor = shape_size(shape);
+
+    std::vector<float> input_values(elems_in_tensor);
+    std::iota(std::begin(input_values), std::end(input_values), 1);
+
+    test_case.add_input<float>(shape, input_values);
+
+    std::vector<float> expected_values{1.f,  25.f, 13.f, 37.f, 4.f,  28.f, 16.f, 40.f, 7.f,  31.f,
+                                       19.f, 43.f, 10.f, 34.f, 22.f, 46.f, 2.f,  26.f, 14.f, 38.f,
+                                       5.f,  29.f, 17.f, 41.f, 8.f,  32.f, 20.f, 44.f, 11.f, 35.f,
+                                       23.f, 47.f, 3.f,  27.f, 15.f, 39.f, 6.f,  30.f, 18.f, 42.f,
+                                       9.f,  33.f, 21.f, 45.f, 12.f, 36.f, 24.f, 48.f};
+    Shape expected_shape{3, 4, 2, 2};
+    test_case.add_expected_output<float>(expected_shape, expected_values);
+
+    test_case.run();
+}

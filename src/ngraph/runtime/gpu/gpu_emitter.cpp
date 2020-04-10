@@ -2000,3 +2000,8 @@ std::string runtime::gpu::GPU_Emitter::emit_v3_ROIAlign(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
+
+std::string runtime::gpu::GPU_Emitter::emit_v3_ScatterElementsUpdate(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
