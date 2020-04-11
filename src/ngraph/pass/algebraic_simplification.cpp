@@ -27,6 +27,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
@@ -345,6 +346,32 @@ static bool is_input_uniform_constant(shared_ptr<Node> op,
     return rc;
 }
 
+//`simplify_gather`, optimizes gather if Gather is gathering the
+// whole input tensor
+static bool simplify_gather(std::shared_ptr<Node> node)
+{
+    auto gather = as_type_ptr<op::Gather>(node);
+
+    if (gather)
+    {
+        // check if we are gathering the whole input
+        auto data = node->get_argument(0);
+        auto indices = node->get_argument(1);
+        auto axis = node->get_argument(2);
+
+        if (data->get_shape() == node->get_shape())
+        {
+            // replace all the users of the gather with the input
+            for (auto& output : gather->outputs())
+            {
+                output.replace(data->output(0));
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
 //`simplify_multiply` optimizes the following 4 *base* cases
 //(8 cases in total including variants due to commutativity)
 //
@@ -549,6 +576,7 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_
         {{op::Add::type_info, simplify_add},
          {op::Multiply::type_info, simplify_multiply},
          {op::Concat::type_info, simplify_concat},
+         {op::Gather::type_info, simplify_gather},
          {op::Sum::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::Sum, get_sum_constant>}},
          {op::Product::type_info,
