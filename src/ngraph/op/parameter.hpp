@@ -57,7 +57,7 @@ namespace ngraph
 
                 bool get_cacheable() const { return m_cacheable; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool is_relevant_to_shapes() const;
                 void set_is_relevant_to_shapes(bool is_relevant);
@@ -68,7 +68,6 @@ namespace ngraph
                 {
                     m_partial_shape = partial_shape;
                 }
-
                 const element::Type& get_element_type() const { return m_element_type; }
                 void set_element_type(const element::Type& element_type)
                 {

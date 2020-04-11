@@ -106,7 +106,7 @@ void op::Concat::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::Concat::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Concat::clone_with_new_inputs(const OutputVector& new_args) const
 {
     // TODO(amprocte): Should we check the new_args count here?
     return make_shared<Concat>(new_args, m_axis);

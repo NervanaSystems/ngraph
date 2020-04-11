@@ -174,9 +174,11 @@ set(SRC
     type_prop/reshape.cpp
     type_prop/reverse.cpp
     type_prop/reverse_sequence.cpp
+    type_prop/roi_align.cpp
     type_prop/rnn_cell.cpp
     type_prop/scale_shift.cpp
     type_prop/scatter_add.cpp
+    type_prop/scatter_elements_update.cpp
     type_prop/scatter_nd.cpp
     type_prop/select.cpp
     type_prop/shape_of.cpp
@@ -202,6 +204,33 @@ set(SRC
     zero_dim_tensor_elimination.cpp
 )
 
+# This code generates one source file per header file under ngraph/src where the source file
+# has just a single #include statement. This checks that each header in the source tree is
+# complete and self-contained so it can be included without requiring any other includes.
+set(DIRECTORIES_IGNORED runtime frontend)
+set(NGRAPH_MAIN_SRC_DIR "${CMAKE_SOURCE_DIR}/src/ngraph")
+file(GLOB_RECURSE LIST_RECURSE
+    "${NGRAPH_MAIN_SRC_DIR}/autodiff/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/builder/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/codegen/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/descriptor/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/distributed/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/op/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/pass/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/state*.hpp")
+file(GLOB LIST
+    "${NGRAPH_MAIN_SRC_DIR}/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/runtime/*.hpp")
+set(NGRAPH_HEADER_LIST ${LIST_RECURSE} ${LIST})
+list(APPEND NGRAPH_HEADER_LIST ${LIST})
+foreach(HEADER ${NGRAPH_HEADER_LIST})
+    file(RELATIVE_PATH OUT_PATH ${NGRAPH_MAIN_SRC_DIR} ${HEADER})
+    string(REGEX REPLACE "hpp$" "cpp" OUT_PATH ${OUT_PATH})
+    set(OUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/include_test/${OUT_PATH}")
+    configure_file("header_standalone.in.cpp" ${OUT_FILE})
+    list(APPEND SRC ${OUT_FILE})
+endforeach()
+
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC core.cpp serialize.cpp)
 endif()
@@ -213,49 +242,46 @@ endif()
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
 
-if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
-    message(STATUS "NGRAPH_UNIT_TEST_OPENVINO_ENABLE = TRUE")
-    add_definitions(-DNGRAPH_UNIT_TEST_OPENVINO_ENABLE)
-
+if (NGRAPH_IE_ENABLE)
     if (ENABLE_MKL_DNN)
-        message(STATUS "NGRAPH_TESTS: CPU enabled")
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
+        message(STATUS "NGRAPH_TESTS: IE:CPU enabled")
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:CPU")
     endif()
 
     if (ENABLE_CLDNN)
-        message(STATUS "NGRAPH_TESTS: GPU enabled")
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
+        message(STATUS "NGRAPH_TESTS: IE:GPU enabled")
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:GPU")
     endif()
-else()
-    if (NGRAPH_INTERPRETER_ENABLE)
-        list(APPEND SRC
-            backend_debug_api.cpp
-            builder.cpp
-            backend_api.cpp)
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
-    endif()
+endif()
 
-    if (NGRAPH_CPU_ENABLE)
-        list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
-        list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp cpu_debug_tracer.cpp)
-        if (NOT NGRAPH_DEX_ONLY)
-            list(APPEND SRC cpu_codegen.cpp)
-        endif()
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
-    endif()
+if (NGRAPH_INTERPRETER_ENABLE)
+    list(APPEND SRC
+        backend_debug_api.cpp
+        builder.cpp
+        backend_api.cpp)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
+endif()
 
-    if(NGRAPH_GPU_ENABLE)
-        list(APPEND SRC gpu_test.cpp gpu_fusion.cpp)
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
+if (NGRAPH_CPU_ENABLE)
+    list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
+    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp cpu_debug_tracer.cpp)
+    if (NOT NGRAPH_DEX_ONLY)
+        list(APPEND SRC cpu_codegen.cpp)
     endif()
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
+endif()
 
-    if (NGRAPH_PLAIDML_ENABLE)
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
-    endif()
+if(NGRAPH_GPU_ENABLE)
+    list(APPEND SRC gpu_test.cpp gpu_fusion.cpp)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
+endif()
 
-    if (NGRAPH_GENERIC_CPU_ENABLE)
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
-    endif()
+if (NGRAPH_PLAIDML_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
+endif()
+
+if (NGRAPH_GENERIC_CPU_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
 endif()
 
 add_definitions("-DTEST_FILES=\"${CMAKE_CURRENT_SOURCE_DIR}/files\"")
@@ -376,7 +402,7 @@ set(MULTI_TEST_SRC
     backend/zero_sized.in.cpp
 )
 
-if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
+if (NGRAPH_IE_ENABLE)
     set(MULTI_TEST_SRC
             backend/abc.in.cpp
             backend/abs.in.cpp
@@ -520,11 +546,24 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     endif()
 
     string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
+    string(REGEX REPLACE "([a-z0-9]+):(.*)" "\\1" BACKEND_DIR ${BACKEND_DIR})
     set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
 
     foreach(TEST_SRC ${MULTI_TEST_SRC})
+        set(BACKEND_DEVICE_NAME ${BACKEND_NAME})
+        string(REPLACE ":" "_" BACKEND_NAME ${BACKEND_DEVICE_NAME})
         string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
-        configure_file(${TEST_SRC} ${TARGET_NAME})
+
+        # Do a custom configure
+        # This is like cmake configure but for a backend named INTERPRETER_TEST we replace
+        #    "${BACKEND_NAME}" with "INTERPRETER:TEST"
+        #    ${BACKEND_NAME} with INTERPRETER_TEST
+        # pay close attention to the quotes around the strings above as that is the literal replacement
+        file(READ ${TEST_SRC} FILE_CONTENTS_TMP)
+        string(REPLACE "\"\${BACKEND_NAME}\"" "\"${BACKEND_DEVICE_NAME}\"" FILE_CONTENTS_TMP "${FILE_CONTENTS_TMP}")
+        string(CONFIGURE "${FILE_CONTENTS_TMP}" FILE_CONTENTS_TMP)
+        file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} "${FILE_CONTENTS_TMP}")
+
         set(SRC ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} ${SRC})
     endforeach()
 
@@ -584,6 +623,10 @@ if (NGRAPH_PLAIDML_ENABLE)
     target_compile_definitions(unit-test PRIVATE "PlaidML_FLOAT_TOLERANCE_BITS=12")
 endif()
 
+if (NGRAPH_IE_ENABLE)
+    target_link_libraries(unit-test PRIVATE ie_backend)
+endif()
+
 if (NGRAPH_TBB_ENABLE)
     target_compile_definitions(unit-test PRIVATE "NGRAPH_TBB_ENABLE")
 endif()
@@ -609,7 +652,7 @@ if (NGRAPH_MLIR_ENABLE)
     target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
 endif()
 
-if (NOT NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
+if (NOT NGRAPH_IE_ENABLE)
     # If all the runtime libraries are installed into one location, that will make life easier.
     if (MSVC)
         add_custom_target(unit-test-check

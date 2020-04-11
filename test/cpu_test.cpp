@@ -1059,6 +1059,8 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
 // Thus this test is disabled with MLIR enabled.
 TEST(cpu_test, MLIR_DISABLE_TEST(constant_convertlayout))
 {
+    // Initialize CPU constant folders
+    auto backend = runtime::Backend::create("CPU");
     Shape data_shape{1, 64, 56, 56};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     Shape weights_shape{64, 64, 3, 3};
@@ -1073,15 +1075,15 @@ TEST(cpu_test, MLIR_DISABLE_TEST(constant_convertlayout))
     auto convbias = make_shared<op::ConvolutionBias>(conv, bias);
 
     auto f = make_shared<Function>(convbias, ParameterVector{data, bias});
-    auto backend = runtime::Backend::create("CPU");
     auto handle = backend->compile(f);
-
     size_t convert_layout = count_ops_of_type<runtime::cpu::op::ConvertLayout>(f);
     ASSERT_EQ(convert_layout, 1);
 }
 
 TEST(cpu_test, constant_reshape)
 {
+    // Initialize CPU constant folders
+    auto backend = runtime::Backend::create("CPU");
     Shape shape_in{2, 4};
     Shape shape_out{2, 4, 1};
 
@@ -1107,6 +1109,8 @@ TEST(cpu_test, constant_reshape)
 
 TEST(cpu_test, constant_reshape_permute)
 {
+    // Initialize CPU constant folders
+    auto backend = runtime::Backend::create("CPU");
     Shape shape_in{2, 4};
     Shape shape_out{4, 2};
 
@@ -1133,6 +1137,8 @@ TEST(cpu_test, constant_reshape_permute)
 
 TEST(cpu_test, constant_broadcast)
 {
+    // Initialize CPU constant folders
+    auto backend = runtime::Backend::create("CPU");
     Shape shape_in{2};
     Shape shape_out{2, 4};
 
@@ -1159,6 +1165,8 @@ TEST(cpu_test, constant_broadcast)
 
 TEST(cpu_test, constant_pad_exterior)
 {
+    // Initialize CPU constant folders
+    auto backend = runtime::Backend::create("CPU");
     Shape shape_in{2};
 
     vector<int> values_in{777, 888};
@@ -1196,6 +1204,8 @@ static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t po
 
 TEST(cpu_test, constant_unary_binary)
 {
+    // Initialize CPU constant folders
+    auto backend = runtime::Backend::create("CPU");
     Shape shape_in{2, 2};
     vector<int> values_a{1, 2, 3, 4};
     vector<int> values_b{1, 2, 3, 4};

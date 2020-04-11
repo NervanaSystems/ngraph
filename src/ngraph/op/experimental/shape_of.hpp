@@ -36,9 +36,20 @@ namespace ngraph
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 void validate_and_infer_types() override;
+
+                // FOR CONSTANT FOLDING INTERNAL USAGE ONLY
+                // Constant folding for cases with static rank but dynamic shape create a subgraph
+                // which contains a Shape of.
+                // In this case we need to prevent constant folding from endless creation of these
+                // subgraphs.
+                // These metods should be removed if better solution will be designed.
+                void set_is_foldable(bool is_foldable) { m_is_foldable = is_foldable; }
+                bool get_is_foldable() { return m_is_foldable; }
+            private:
+                bool m_is_foldable = true;
             };
         }
         using v0::ShapeOf;

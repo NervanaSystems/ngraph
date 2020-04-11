@@ -27,7 +27,7 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::ConvolutionRelu::type_info;
 
 op::ConvolutionRelu::ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv)
-    : Op({conv->input(0).get_source_output(), conv->input(1).get_source_output()})
+    : Op({conv->input_value(0), conv->input_value(1)})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())

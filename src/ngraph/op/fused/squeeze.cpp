@@ -38,25 +38,34 @@ void op::Squeeze::pre_validate_and_infer_types()
     auto data = input_value(0);
     auto axes_node = input_value(1).get_node_shared_ptr();
 
-    if (data.get_partial_shape().is_dynamic() || !axes_node->is_constant())
+    bool data_has_dynamic_rank = data.get_partial_shape().rank().is_dynamic();
+    bool data_has_dynamic_shape = data.get_partial_shape().is_dynamic();
+
+    auto axes_constant = as_type_ptr<op::v0::Constant>(axes_node);
+    bool axes_is_empty_constant =
+        (axes_constant) ? axes_constant->cast_vector<int64_t>().empty() : false;
+
+    if (data_has_dynamic_rank || !axes_constant ||
+        (data_has_dynamic_shape && axes_is_empty_constant))
     {
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
         return;
     }
 
-    auto data_shape = data.get_shape();
+    auto data_partial_shape = data.get_partial_shape();
+    uint64_t data_rank = data_partial_shape.rank().get_length();
 
     // Get value of axes from Constant
-    auto axes_constant = as_type_ptr<op::Constant>(axes_node);
-    auto axes = normalize_axes(
-        this->description(), axes_constant->cast_vector<int64_t>(), data_shape.size());
+    auto axes =
+        normalize_axes(this->description(), axes_constant->cast_vector<int64_t>(), data_rank);
 
     // Prepare set of unique axes marked to be removed from input data.
-    std::vector<uint64_t> axes_to_squeeze(data_shape.size());
-    if (axes.empty())
+    vector<uint64_t> axes_to_squeeze(data_rank);
+    if (axes_is_empty_constant)
     {
+        auto data_shape = data.get_shape();
         // Default behaviour is to remove all single dimension axes.
-        for (size_t idx = 0; idx < data_shape.size(); ++idx)
+        for (uint64_t idx = 0; idx < data_rank; ++idx)
         {
             if (data_shape.at(idx) == 1)
             {
@@ -73,24 +82,27 @@ void op::Squeeze::pre_validate_and_infer_types()
         set<size_t, greater<size_t>> unique_axes(begin(axes), end(axes));
         for (uint64_t axis : unique_axes)
         {
-            NODE_VALIDATION_CHECK(
-                this,
-                (data_shape.at(axis) == 1),
-                "provided axis value is invalid. Only axes of size 1 may be removed.");
+            if (!data_has_dynamic_shape)
+            {
+                auto data_shape = data.get_shape();
+                NODE_VALIDATION_CHECK(
+                    this,
+                    (data_shape.at(axis) == 1),
+                    "provided axis value is invalid. Only axes of size 1 may be removed.");
+            }
             axes_to_squeeze.at(axis) = 1;
         }
     }
 
-    Shape output_data_shape;
-    for (size_t idx = 0; idx < data_shape.size(); ++idx)
+    vector<Dimension> output_data_shape;
+    for (uint64_t idx = 0; idx < data_rank; ++idx)
     {
         if (axes_to_squeeze.at(idx) == 0)
         {
-            output_data_shape.push_back(data_shape.at(idx));
+            output_data_shape.push_back(data_partial_shape[idx]);
         }
     }
-
-    set_output_type(0, get_input_element_type(0), output_data_shape);
+    set_output_type(0, get_input_element_type(0), PartialShape(output_data_shape));
 }
 
 bool ngraph::op::v0::Squeeze::visit_attributes(AttributeVisitor& visitor)
@@ -111,7 +123,7 @@ NodeVector op::Squeeze::decompose_op() const
     return {make_shared<op::Reshape>(data, input_order, output_data_shape)};
 }
 
-shared_ptr<Node> op::Squeeze::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Squeeze::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {
