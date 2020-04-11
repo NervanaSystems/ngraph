@@ -88,6 +88,7 @@ set (SRC
     enum_names.hpp
     env_util.cpp
     env_util.hpp
+    evaluator.hpp
     except.hpp
     factory.cpp
     factory.hpp
@@ -640,6 +641,7 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
+    type/element_type_traits.hpp
     type.cpp
     type.hpp
     util.cpp

@@ -587,6 +587,11 @@ namespace ngraph
             , index(value.get_index())
         {
         }
+        RawNodeOutput(Node* node, size_t index)
+            : node(node)
+            , index(index)
+        {
+        }
         RawNodeOutput(const RawNodeOutput&) = default;
         RawNodeOutput() = default;
         RawNodeOutput& operator=(const RawNodeOutput&) = default;
