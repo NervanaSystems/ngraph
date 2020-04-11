@@ -85,7 +85,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(std::string
     auto colon = type.find(":");
     if (colon != type.npos)
     {
-        options = type.substr(colon+1);
+        options = type.substr(colon + 1);
         type = type.substr(0, colon);
     }
 
