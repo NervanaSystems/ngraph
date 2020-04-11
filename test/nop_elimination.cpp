@@ -20,6 +20,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "util/all_close.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -66,6 +67,24 @@ TEST(nop_elimination, eliminate_convert)
     auto f = make_shared<Function>(make_shared<op::v0::Abs>(c), ParameterVector{A});
 
     pass::Manager pass_manager;
+    pass_manager.register_pass<pass::NopElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 0);
+}
+
+TEST(nop_elimination, convert_type_agnostic)
+{
+    Shape shape{};
+    auto type = element::from<char>();
+    auto A = make_shared<op::Parameter>(type, shape);
+    auto c1 = make_shared<op::v0::Convert>(A, element::from<uint8_t>());
+    auto c = make_shared<op::v0::Convert>(c1, element::f32);
+    auto z = make_shared<op::v3::NonZero>(c);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(z), ParameterVector{A});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Validate>();
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
@@ -205,20 +224,100 @@ TEST(nop_elimination, concat_elimination_single_input_dynamic)
     ASSERT_EQ(count_ops_of_type<op::v0::Concat>(f), 0);
 }
 
-TEST(nop_elimination, convert_nonzero)
+TEST(nop_elimination, squeeze_unsqueeze_elimination)
 {
-    Shape shape{};
-    auto type = element::from<char>();
-    auto A = make_shared<op::Parameter>(type, shape);
-    auto c1 = make_shared<op::v0::Convert>(A, element::from<uint8_t>());
-    auto c = make_shared<op::v0::Convert>(c1, element::f32);
-    auto z = make_shared<op::v3::NonZero>(c);
-    auto f = make_shared<Function>(make_shared<op::v0::Abs>(z), ParameterVector{A});
+    auto generate_func = [](const Shape& shape, const std::vector<int64_t>& axes_val) {
+        auto axes = op::Constant::create<int64_t>(element::i64, Shape{axes_val.size()}, axes_val);
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto A1 = make_shared<op::v0::Abs>(A);
+        auto B = make_shared<op::v0::Squeeze>(A1, axes);
+        auto B1 = make_shared<op::v0::Unsqueeze>(B, axes);
+        return make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
+    };
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Validate>();
-    pass_manager.register_pass<pass::NopElimination>();
-    pass_manager.run_passes(f);
+    auto exec_check = [](const std::shared_ptr<ngraph::Function>& baseline_f,
+                         const std::shared_ptr<ngraph::Function>& optimized_f) {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::Validate>();
+        pass_manager.register_pass<pass::NopElimination>();
+        pass_manager.run_passes(optimized_f);
 
-    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 0);
+        ASSERT_EQ(baseline_f->get_results()[0]->get_shape(),
+                  optimized_f->get_results()[0]->get_shape());
+
+        vector<vector<float>> args{vector<float>{5.5, 6.4, 7.9, 3.4, 2.3, 1.1}};
+        auto baseline_results = execute(baseline_f, args, "INTERPRETER");
+        auto optimized_results = execute(optimized_f, args, "INTERPRETER");
+        EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+        ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(optimized_f), 0);
+        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(optimized_f), 0);
+    };
+
+    auto baseline_f = generate_func(Shape{1, 6}, std::vector<int64_t>{0});
+    auto optimized_f = generate_func(Shape{1, 6}, std::vector<int64_t>{0});
+    exec_check(baseline_f, optimized_f);
+
+    baseline_f = generate_func(Shape{1, 3, 2, 1}, std::vector<int64_t>{0, 3});
+    optimized_f = generate_func(Shape{1, 3, 2, 1}, std::vector<int64_t>{0, 3});
+    exec_check(baseline_f, optimized_f);
+
+    baseline_f = generate_func(Shape{1, 3, 1, 2, 1}, std::vector<int64_t>{0, 2, 4});
+    optimized_f = generate_func(Shape{1, 3, 1, 2, 1}, std::vector<int64_t>{0, 2, 4});
+    exec_check(baseline_f, optimized_f);
+
+    baseline_f = generate_func(Shape{1, 3, 2, 1}, std::vector<int64_t>{-1, -4});
+    optimized_f = generate_func(Shape{1, 3, 2, 1}, std::vector<int64_t>{-1, -4});
+    exec_check(baseline_f, optimized_f);
+}
+
+TEST(nop_elimination, unsqueeze_squeeze_elimination)
+{
+    auto generate_func = [](const Shape& shape, const std::vector<int64_t>& axes_val) {
+        auto axes = op::Constant::create<int64_t>(element::i64, Shape{axes_val.size()}, axes_val);
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto A1 = make_shared<op::v0::Abs>(A);
+        auto B = make_shared<op::v0::Unsqueeze>(A1, axes);
+        auto B1 = make_shared<op::v0::Squeeze>(B, axes);
+        return make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
+    };
+
+    auto exec_check = [](const std::shared_ptr<ngraph::Function>& baseline_f,
+                         const std::shared_ptr<ngraph::Function>& optimized_f) {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::Validate>();
+        pass_manager.register_pass<pass::NopElimination>();
+        pass_manager.run_passes(optimized_f);
+
+        ASSERT_EQ(baseline_f->get_results()[0]->get_shape(),
+                  optimized_f->get_results()[0]->get_shape());
+
+        vector<vector<float>> args{vector<float>{5.5, 6.4, 7.9, 3.4, 2.3, 1.1}};
+        auto baseline_results = execute(baseline_f, args, "INTERPRETER");
+        auto optimized_results = execute(optimized_f, args, "INTERPRETER");
+        EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+        ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(optimized_f), 0);
+        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(optimized_f), 0);
+    };
+
+    auto baseline_f = generate_func(Shape{6}, std::vector<int64_t>{0});
+    auto optimized_f = generate_func(Shape{6}, std::vector<int64_t>{0});
+    exec_check(baseline_f, optimized_f);
+
+    baseline_f = generate_func(Shape{3, 2}, std::vector<int64_t>{0, 3});
+    optimized_f = generate_func(Shape{3, 2}, std::vector<int64_t>{0, 3});
+    exec_check(baseline_f, optimized_f);
+
+    baseline_f = generate_func(Shape{3, 2}, std::vector<int64_t>{0, 2, 4});
+    optimized_f = generate_func(Shape{3, 2}, std::vector<int64_t>{0, 2, 4});
+    exec_check(baseline_f, optimized_f);
+
+    baseline_f = generate_func(Shape{3, 2}, std::vector<int64_t>{-1, -4});
+    optimized_f = generate_func(Shape{3, 2}, std::vector<int64_t>{-1, -4});
+    exec_check(baseline_f, optimized_f);
 }
