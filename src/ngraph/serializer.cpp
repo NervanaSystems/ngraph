@@ -4324,9 +4324,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["fixed_seed"] = tmp->get_fixed_seed();
         break;
     }
-    case OP_TYPEID::Range:
-    {
-        break;
+    case OP_TYPEID::Range: { break;
     }
     case OP_TYPEID::Recv:
     {
