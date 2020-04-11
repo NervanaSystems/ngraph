@@ -22,9 +22,9 @@ constexpr ngraph::NodeTypeInfo ngraph::op::gpu::BatchNormTrainingWithStats::type
 
 ngraph::op::gpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(
     double eps,
-    std::shared_ptr<ngraph::Node> gamma,
-    std::shared_ptr<ngraph::Node> beta,
-    std::shared_ptr<ngraph::Node> input)
+    Output<ngraph::Node> gamma,
+    Output<ngraph::Node> beta,
+    Output<ngraph::Node> input)
     : ngraph::op::BatchNormTraining(eps, gamma, beta, input)
 {
     constructor_validate_and_infer_types();
