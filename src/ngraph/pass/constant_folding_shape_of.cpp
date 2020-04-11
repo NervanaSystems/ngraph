@@ -87,9 +87,10 @@ void pass::ConstantFolding::construct_constant_shape_of()
             return false;
         }
     };
-
+#if 0
     auto shape_of_matcher =
         make_shared<pattern::Matcher>(shape_of_op, "ConstantFolding.ConstantShapeOf");
     this->add_matcher(
         shape_of_matcher, constant_shape_of_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+#endif
 }

@@ -194,8 +194,8 @@ namespace ngraph
         /// \returns true if the node can decompose
         virtual bool supports_decompose() const { return false; }
         /// \brief Can replace a node with a constant during constant folding.
-        /// \returns true if the node was replace.
-        virtual bool constant_fold_default() { return false; }
+        /// \returns vector of outputs to replace node outputs. Empty outputs will not be replace.
+        virtual OutputVector constant_fold_default() { return {}; }
         /// \brief Decomposes the FusedOp into a sub-graph consisting of core ngraph ops
         ///
         /// \return A vector of nodes comprising the sub-graph. The order of output

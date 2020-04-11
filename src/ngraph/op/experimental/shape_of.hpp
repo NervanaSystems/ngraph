@@ -47,7 +47,9 @@ namespace ngraph
                 // subgraphs.
                 // These metods should be removed if better solution will be designed.
                 void set_is_foldable(bool is_foldable) { m_is_foldable = is_foldable; }
-                bool get_is_foldable() { return m_is_foldable; }
+                bool get_is_foldable() const { return m_is_foldable; }
+                OutputVector constant_fold_default() override;
+
             private:
                 bool m_is_foldable = true;
             };
