@@ -89,7 +89,7 @@ namespace ngraph
         }
 
         /// \brief Return true if node's type is in the opset
-        bool contains_op_type(Node* node) const
+        bool contains_op_type(const Node* node) const
         {
             std::lock_guard<std::mutex> guard(get_mutex());
             return m_op_types.find(node->get_type_info()) != m_op_types.end();

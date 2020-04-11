@@ -81,7 +81,7 @@ shared_ptr<Node>
 ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
                                            const OutputVector& outputs,
                                            const OutputVector& args)
-    : Op({args})
+    : Op(args)
     , m_node_list(node_list)
     , m_outputs(outputs)
 {
