@@ -289,14 +289,13 @@ namespace
 
             auto reshaped_filters = builder::reshape(node->input_value(1), filters_shape);
 
-            replacement_node =
-                make_shared<op::v1::GroupConvolution>(node->input(0).get_source_output(),
-                                                      reshaped_filters,
-                                                      strides,
-                                                      pads_begin,
-                                                      pads_end,
-                                                      dilations,
-                                                      auto_pad);
+            replacement_node = make_shared<op::v1::GroupConvolution>(node->input_value(0),
+                                                                     reshaped_filters,
+                                                                     strides,
+                                                                     pads_begin,
+                                                                     pads_end,
+                                                                     dilations,
+                                                                     auto_pad);
         }
         replace_node(node, replacement_node);
         return replacement_node;

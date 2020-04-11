@@ -139,7 +139,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
             if (shape_size(replacement_shape) == 0)
             {
                 // Op is a noop
-                Output<Node> source_output = replace_slice->input(0).get_source_output();
+                Output<Node> source_output = replace_slice->input_value(0);
                 Output<Node> output = replace_slice->output(0);
                 for (Input<Node> input : output.get_target_inputs())
                 {
@@ -148,7 +148,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
             }
         }
 
-        auto source_output = n->input(0).get_source_output();
+        auto source_output = n->input_value(0);
 
         if (source_output.get_node()->get_output_size() != 1 || !has_zero_dim(source_output))
         {
