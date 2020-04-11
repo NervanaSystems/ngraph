@@ -34,13 +34,13 @@ shared_ptr<Node>
     }
 
     // map inputs
-    unordered_map<Node*, Output<Node>> nm;
+    map<Output<Node>, Output<Node>> nm;
     for (size_t i = 0; i < args.size(); i++)
     {
-        nm[args.at(i).get_node()] = new_args.at(i);
+        nm[args[i]] = new_args.at(i);
     }
 
-    OutputVector new_node_list;
+    NodeVector new_node_list;
     for (auto n : m_node_list)
     {
         OutputVector cur_args;
@@ -53,18 +53,21 @@ shared_ptr<Node>
             }
             else
             {
-                cur_args.push_back(nm.at(a.get_node()));
+                cur_args.push_back(nm.at(a));
             }
         }
         auto new_n = n->copy_with_new_inputs(cur_args);
-        nm[n.get()] = new_n;
+        for (size_t i = 0; i < n->get_output_size(); ++i)
+        {
+            nm[n->output(i)] = new_n->output(i);
+        }
         new_node_list.push_back(new_n);
     }
 
     OutputVector new_outputs;
-    for (auto o : m_output_nodes)
+    for (auto o : m_outputs)
     {
-        new_outputs.push_back(nm.at(o.get()));
+        new_outputs.push_back(nm.at(o));
     }
 
     auto ck = std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
@@ -75,33 +78,27 @@ shared_ptr<Node>
     return std::move(ck);
 }
 
-ngraph::op::CompiledKernel::CompiledKernel(const OutputVector& node_list,
+ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
                                            const OutputVector& outputs,
                                            const OutputVector& args)
-    : CompiledKernel(as_node_vector(node_list), as_node_vector(outputs), as_node_vector(args))
-{
-}
-
-ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
-                                           const NodeVector& outputs,
-                                           const NodeVector& args)
-    : Op(check_single_output_args({args}))
+    : Op(args)
     , m_node_list(node_list)
-    , m_output_nodes(outputs)
+    , m_outputs(outputs)
 {
     constructor_validate_and_infer_types();
     encapsulate_nodes();
-    set_output_size(m_output_nodes.size());
+    set_output_size(m_outputs.size());
 
     for (size_t i = 0; i < outputs.size(); ++i)
     {
         auto& o = outputs.at(i);
 
-        if (std::find(node_list.begin(), node_list.end(), o) == node_list.end())
+        if (std::find(node_list.begin(), node_list.end(), o.get_node_shared_ptr()) ==
+            node_list.end())
         {
-            throw ngraph_error(o->get_name() + " isn't in node_list");
+            NODE_VALIDATION_CHECK(this, false, "Node for ", o, " isn't in node_list");
         }
-        set_output_type(i, o->get_element_type(), o->get_shape());
+        set_output_type(i, o.get_element_type(), o.get_partial_shape());
     }
 }
 
