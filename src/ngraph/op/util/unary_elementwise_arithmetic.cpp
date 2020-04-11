@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,18 +28,12 @@ op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const Output<No
 {
 }
 
-op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::shared_ptr<Node>& arg)
-    : Op(check_single_output_args({arg}))
-{
-}
-
-op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
-                                                                 const std::shared_ptr<Node>& arg)
-    : Op(node_type, check_single_output_args({arg}))
-{
-}
-
 void op::util::UnaryElementwiseArithmetic::validate_and_infer_types()
 {
     validate_and_infer_elementwise_arithmetic();
+}
+
+bool op::util::UnaryElementwiseArithmetic::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
 }

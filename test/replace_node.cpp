@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "gtest/gtest.h"
+#include "util/type_prop.hpp"
 
 #include "ngraph/ngraph.hpp"
 
@@ -101,21 +102,77 @@ TEST(replace_node, replace_nodes)
     ASSERT_EQ(f->get_results().size(), 1);
 
     // Result node should be sub (unchanged).
-    ASSERT_EQ(f->get_results()[0]->input(0).get_source_output().get_node_shared_ptr(), sub);
+    ASSERT_EQ(f->get_results()[0]->get_input_node_shared_ptr(0), sub);
 
     // sub's arguments should be mul (unchanged) and z_replacement.
-    ASSERT_EQ(sub->input(0).get_source_output().get_node_shared_ptr(), mul);
-    ASSERT_EQ(sub->input(1).get_source_output().get_node_shared_ptr(), z_replacement);
+    ASSERT_EQ(sub->get_input_node_shared_ptr(0), mul);
+    ASSERT_EQ(sub->get_input_node_shared_ptr(1), z_replacement);
 
     // mul's arguments should be add (unchanged) and k_replacement.
-    ASSERT_EQ(mul->input(0).get_source_output().get_node_shared_ptr(), add);
-    ASSERT_EQ(mul->input(1).get_source_output().get_node_shared_ptr(), k_replacement);
+    ASSERT_EQ(mul->get_input_node_shared_ptr(0), add);
+    ASSERT_EQ(mul->get_input_node_shared_ptr(1), k_replacement);
 
     // add's arguments should be x_replacement and y_replacement.
-    ASSERT_EQ(add->input(0).get_source_output().get_node_shared_ptr(), x_replacement);
-    ASSERT_EQ(add->input(1).get_source_output().get_node_shared_ptr(), y_replacement);
+    ASSERT_EQ(add->get_input_node_shared_ptr(0), x_replacement);
+    ASSERT_EQ(add->get_input_node_shared_ptr(1), y_replacement);
 
     // z_replacement's arguments should be x_replacement and mul.
-    ASSERT_EQ(z_replacement->input(0).get_source_output().get_node_shared_ptr(), x_replacement);
-    ASSERT_EQ(z_replacement->input(1).get_source_output().get_node_shared_ptr(), mul);
+    ASSERT_EQ(z_replacement->get_input_node_shared_ptr(0), x_replacement);
+    ASSERT_EQ(z_replacement->get_input_node_shared_ptr(1), mul);
+}
+
+TEST(replace_node, replace_nodes_output_order)
+{
+    auto data = make_shared<op::Parameter>(element::f16, Shape{4, 3});
+    auto topk_v0 = make_shared<op::v0::TopK>(data, 0, element::i32, 2, true);
+
+    auto topk_v1 = make_shared<op::v1::TopK>(data,
+                                             op::Constant::create(element::i32, Shape{}, {2}),
+                                             0,
+                                             op::v1::TopK::Mode::MAX,
+                                             op::v1::TopK::SortType::SORT_VALUES,
+                                             element::i32);
+
+    auto values = make_shared<op::GetOutputElement>(topk_v1, 0);
+    auto indices = make_shared<op::GetOutputElement>(topk_v1, 1);
+
+    ASSERT_EQ(values->get_input_element_type(0), element::f16);
+    ASSERT_EQ(indices->get_input_element_type(0), element::i32);
+
+    std::vector<int64_t> output_order{1, 0};
+    replace_node(topk_v1, topk_v0, output_order);
+
+    ASSERT_EQ(values->get_input_element_type(0), element::f16);
+    ASSERT_EQ(indices->get_input_element_type(0), element::i32);
+}
+
+TEST(replace_node, replace_nodes_output_order_incorrect_size)
+{
+    auto data = make_shared<op::Parameter>(element::f16, Shape{4, 3});
+    auto topk_v0 = make_shared<op::v0::TopK>(data, 0, element::i32, 2, true);
+
+    auto topk_v1 = make_shared<op::v1::TopK>(data,
+                                             op::Constant::create(element::i32, Shape{}, {2}),
+                                             0,
+                                             op::v1::TopK::Mode::MAX,
+                                             op::v1::TopK::SortType::SORT_VALUES,
+                                             element::i32);
+
+    auto values = make_shared<op::GetOutputElement>(topk_v1, 0);
+    auto indices = make_shared<op::GetOutputElement>(topk_v1, 1);
+
+    std::vector<int64_t> output_order{2, 1, 0};
+    try
+    {
+        replace_node(topk_v1, topk_v0, output_order);
+        FAIL() << "Incorrect output order size exception not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Target output size: "));
+    }
+    catch (...)
+    {
+        FAIL() << "Incorrect output order size exception not thrown for unexpected reason";
+    }
 }

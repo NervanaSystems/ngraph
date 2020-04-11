@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 #include "cpu_layout.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
@@ -38,8 +39,8 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/op.hpp"
@@ -98,9 +99,9 @@ static shared_ptr<Node>
                            to_string(node->get_input_size()) + ")");
     }
 
-    for (const descriptor::Input& input : node->get_inputs())
+    for (auto input : node->inputs())
     {
-        const auto& output = input.get_output();
+        auto output = input.get_source_output();
         auto tv = output.get_tensor_ptr();
         auto tvl =
             std::dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
@@ -127,8 +128,7 @@ static shared_ptr<Node>
         {
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
             layout->set_mkldnn_md(required_mds[index]);
-            auto new_node = std::shared_ptr<Node>(
-                new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
+            auto new_node = make_shared<runtime::cpu::op::ConvertLayout>(output, layout);
             new_args.push_back(new_node);
             replace_node = true;
 #if MKLDNN_VERSION_MAJOR < 1
@@ -144,7 +144,7 @@ static shared_ptr<Node>
         }
         else
         {
-            new_args.push_back(output.get_node());
+            new_args.push_back(output);
         }
         index++;
     }
@@ -198,9 +198,9 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
     OutputVector new_args;
     bool replace_node = false;
     uint32_t index = 0;
-    for (descriptor::Input& input : node->get_inputs())
+    for (auto input : node->inputs())
     {
-        const auto& output = input.get_output();
+        auto output = input.get_source_output();
         auto tv = output.get_tensor_ptr();
         auto et = tv->get_element_type();
         auto shape = tv->get_shape();
@@ -215,33 +215,25 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
             {
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
                 layout->set_mkldnn_md(native_md);
-                auto new_node = std::shared_ptr<Node>(new runtime::cpu::op::ConvertLayout(
-                    output.get_node(), output.get_index(), layout));
-                new_args.push_back(new_node);
+                auto new_node = make_shared<runtime::cpu::op::ConvertLayout>(output, layout);
+                new_args.push_back(new_node->output(0));
                 if (use_replace)
                 {
                     replace_node = true;
                 }
                 else
                 {
-                    input.replace_output(new_node->get_outputs().at(0));
+                    input.replace_source_output(new_node->output(0));
                 }
-
-#if MKLDNN_VERSION_MAJOR < 1
-                NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
-                             << output.get_node()->get_name()
-                             << "(layout: " << cpu_tvl->get_mkldnn_md().data.format << ") and "
-                             << node->get_name() << "(layout: default)";
-#endif
             }
             else
             {
-                new_args.push_back(output.get_node());
+                new_args.push_back(output);
             }
         }
         else
         {
-            new_args.push_back(output.get_node());
+            new_args.push_back(output);
         }
         index++;
     }
@@ -342,13 +334,8 @@ void set_layouts_binaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* exter
     {
         vector<memory::desc> i_mds;
         vector<memory::desc> o_mds;
-        int select = 0;
-        char* ngraph_pass_cpu_layout_eltwise = std::getenv("NGRAPH_PASS_CPU_LAYOUT_ELTWISE");
-        if (ngraph_pass_cpu_layout_eltwise != nullptr)
-        {
-            const int user_select = std::atoi(ngraph_pass_cpu_layout_eltwise);
-            select = (user_select == 0 || user_select == 1) ? user_select : select;
-        }
+        const int32_t user_select = getenv_int("NGRAPH_PASS_CPU_LAYOUT_ELTWISE");
+        int select = (user_select == 0 || user_select == 1) ? user_select : 0;
         i_mds.push_back(arg_mds[select]);
         i_mds.push_back(arg_mds[select]);
         o_mds.push_back(arg_mds[select]);
@@ -1743,22 +1730,14 @@ namespace ngraph
                     memory::dims mkldnn_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims mkldnn_padding_above(padding_above.begin(), padding_above.end());
 
-                    auto fprop_input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-
-#if MKLDNN_VERSION_MAJOR < 1
-                    auto fprop_input_layout =
-                        static_cast<memory::format>(fprop_input_md.data.format);
-                    auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, fprop_input_layout);
-#else
-                    auto strides = fprop_input_md.data.format_desc.blocking.strides;
-                    memory::dims strides_arg;
-                    for (auto i = 0; i < fprop_input_md.data.ndims; i++)
+                    if (arg0_shape.size() != 4 && arg0_shape.size() != 5)
                     {
-                        strides_arg.push_back(strides[i]);
+                        throw ngraph_error("MKLDNN Unsupported pooling layout");
                     }
-                    auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, strides_arg);
-#endif
-                    auto diff_src_desc = memory::desc(mkldnn_arg0_shape, et, memory::FORMAT::any);
+                    auto default_format = arg0_shape.size() == 4 ? mkldnn::memory::FORMAT::nchw
+                                                                 : mkldnn::memory::FORMAT::ncdhw;
+                    auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, default_format);
+                    auto diff_src_desc = memory::desc(mkldnn_arg0_shape, et, default_format);
 
                     try
                     {
@@ -1784,7 +1763,8 @@ namespace ngraph
 
                         auto prim_desc = pooling_backward::primitive_desc(
                             bwd_desc, executor::global_cpu_engine, fwd_prim_desc);
-                        i_mds.push_back(fprop_input_md);
+
+                        i_mds.push_back(diff_src_desc);
                         i_mds.push_back(diff_dst_desc);
 
                         if (with_indices)
@@ -1799,22 +1779,12 @@ namespace ngraph
                         {
                             i_mds.push_back(diff_dst_desc);
                         }
-#if MKLDNN_VERSION_MAJOR < 1
-                        o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
-#else
-                        o_mds.push_back(prim_desc.diff_src_desc());
-#endif
+                        o_mds.push_back(diff_src_desc);
                     }
                     catch (const mkldnn::error& e)
                     {
-#if MKLDNN_VERSION_MAJOR < 1
-                        throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                           to_string(fprop_input_md.data.format) +
-                                           MKLDNN_ERROR_MESSAGE);
-#else
                         throw ngraph_error("MKLDNN Unsupported pooling layout" +
                                            MKLDNN_ERROR_MESSAGE);
-#endif
                     }
                 }
 
@@ -1884,7 +1854,7 @@ namespace ngraph
                     (void)md;
                     auto axis_order = reshape->get_input_order();
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->get_output_shape(0);
                     if (input_shape.size() != output_shape.size())
                         return false;
 
@@ -1905,7 +1875,7 @@ namespace ngraph
                                             AxisVector& squeezed_axis)
                 {
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->get_output_shape(0);
 
                     if (input_shape.size() <= output_shape.size())
                         return false;
@@ -1941,7 +1911,7 @@ namespace ngraph
                                             AxisVector& expanded_axis)
                 {
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->get_output_shape(0);
 
                     if (input_shape.size() >= output_shape.size())
                         return false;
@@ -1980,7 +1950,7 @@ namespace ngraph
                     {
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         auto input_shape = reshape->get_input_shape(0);
-                        auto output_shape = reshape->get_output_shape();
+                        auto output_shape = reshape->get_output_shape(0);
                         AxisVector squeezed_axis;
                         AxisVector expanded_axis;
 

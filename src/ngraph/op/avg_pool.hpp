@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,10 +27,9 @@ namespace ngraph
         {
             /// \brief Batched average pooling operation, with optional padding and window stride.
             ///
-            class AvgPool : public Op
+            class NGRAPH_API AvgPool : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPool", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched average pooling operation.
@@ -130,13 +129,15 @@ namespace ngraph
                 /// `[n]`
                 AvgPool(const Output<Node>& arg, const Shape& window_shape);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 /// \return The window shape.
                 const Shape& get_window_shape() const;
@@ -171,10 +172,9 @@ namespace ngraph
                 bool m_ceil_mode{false};
             };
 
-            class AvgPoolBackprop : public Op
+            class NGRAPH_API AvgPoolBackprop : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPoolBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 AvgPoolBackprop() = default;
@@ -187,9 +187,10 @@ namespace ngraph
                                 bool include_padding_in_avg_computation);
 
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const Shape& get_forward_arg_shape() const;
                 void set_forward_arg_shape(const Shape& forward_arg_shape);
@@ -219,32 +220,31 @@ namespace ngraph
         {
             /// \brief Batched average pooling operation.
             ///
-            class AvgPool : public Op
+            class NGRAPH_API AvgPool : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPool", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched average pooling operation.
                 AvgPool() = default;
 
-                /// \brief Constructs a batched average pooling operation.
                 ///
-                /// \param arg The output producing the input data batch tensor.<br>
-                /// `[d1, dn]`
-                /// \param strides The strides.<br>
-                /// `[n]`
-                /// \param pads_begin The beginning of padding shape.<br>
-                /// `[n]`
-                /// \param pads_end The end of padding shape.<br>
-                /// `[n]`
-                /// \param kernel The kernel shape.<br>
-                /// `[n]`
-                /// \param exclude_pad If false then averages include padding elements, each treated
-                /// as the number zero.  If true, padding elements are entirely ignored when
-                /// computing averages. \param rounding_type Whether to use ceiling or floor
-                /// rounding type while computing output shape. \param auto_pad Padding type to use
-                /// for additional padded dimensions
+                /// \brief      Constructs a batched average pooling operation.
+                ///
+                /// \param      arg            The output producing the input data batch tensor.<br>
+                ///                            `[d1, dn]`
+                /// \param      strides        The strides.<br> `[n]`
+                /// \param      pads_begin     The beginning of padding shape.<br> `[n]`
+                /// \param      pads_end       The end of padding shape.<br> `[n]`
+                /// \param      kernel         The kernel shape.<br> `[n]`
+                /// \param      exclude_pad    If false then averages include padding elements, each
+                ///                            treated as the number zero.  If true, padding
+                ///                            elements
+                ///                            are entirely ignored when computing averages.
+                /// \param      rounding_type  Whether to use ceiling or floor rounding type while
+                ///                            computing output shape.
+                /// \param      auto_pad       Padding type to use for additional padded dimensions
+                ///
                 AvgPool(const Output<Node>& arg,
                         const Strides& strides,
                         const Shape& pads_begin,
@@ -254,23 +254,22 @@ namespace ngraph
                         op::RoundingType rounding_type,
                         const PadType& auto_pad);
 
-                //// \brief Constructs a batched average pooling operation.
                 ///
-                /// \param arg The output producing the input data batch tensor.<br>
-                /// `[d1, dn]`
-                /// \param strides The strides.<br>
-                /// `[n]`
-                /// \param pads_begin The beginning of padding shape.<br>
-                /// `[n]`
-                /// \param pads_end The end of padding shape.<br>
-                /// `[n]`
-                /// \param kernel The kernel shape.<br>
-                /// `[n]`
-                /// \param exclude_pad If false then averages include padding elements, each treated
-                /// as the number zero.  If true, padding elements are entirely ignored when
-                /// computing averages.
-                /// \param rounding_type Whether to use ceiling or floor rounding type while
-                /// computing output shape.
+                /// \brief      Constructs a batched average pooling operation.
+                ///
+                /// \param      arg            The output producing the input data batch tensor.<br>
+                ///                            `[d1, dn]`
+                /// \param      strides        The strides.<br> `[n]`
+                /// \param      pads_begin     The beginning of padding shape.<br> `[n]`
+                /// \param      pads_end       The end of padding shape.<br> `[n]`
+                /// \param      kernel         The kernel shape.<br> `[n]`
+                /// \param      exclude_pad    If false then averages include padding elements, each
+                ///                            treated as the number zero.  If true, padding
+                ///                            elements
+                ///                            are entirely ignored when computing averages.
+                /// \param      rounding_type  Whether to use ceiling or floor rounding type while
+                ///                            computing output shape.
+                ///
                 AvgPool(const Output<Node>& arg,
                         const Strides& strides,
                         const Shape& pads_begin,
@@ -281,12 +280,13 @@ namespace ngraph
 
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 /// \return The kernel shape.
                 const Shape& get_kernel() const;
@@ -320,10 +320,9 @@ namespace ngraph
                 op::RoundingType m_rounding_type{op::RoundingType::FLOOR};
             };
 
-            class AvgPoolBackprop : public Op
+            class NGRAPH_API AvgPoolBackprop : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"AvgPoolBackprop", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 AvgPoolBackprop() = default;
@@ -337,9 +336,10 @@ namespace ngraph
 
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const Shape get_forward_arg_shape() const;
                 const Shape& get_kernel() const;

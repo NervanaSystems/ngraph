@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace pass
     {
-        class DynElimination : public GraphRewrite
+        class NGRAPH_API DynElimination : public GraphRewrite
         {
         public:
             DynElimination();
@@ -33,7 +33,6 @@ namespace ngraph
             void construct_dyn_broadcast();
             void construct_dyn_replace_slice();
             void construct_dyn_slice();
-            void construct_dyn_reshape();
             void construct_range();
         };
     }

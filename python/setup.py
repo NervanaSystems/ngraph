@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ __version__ = os.environ.get('NGRAPH_VERSION', '0.0.0-dev')
 PYNGRAPH_ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 NGRAPH_DEFAULT_INSTALL_DIR = os.environ.get('HOME')
 NGRAPH_ONNX_IMPORT_ENABLE = os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE')
+NGRAPH_PYTHON_DEBUG = os.environ.get('NGRAPH_PYTHON_DEBUG')
 
 
 def find_ngraph_dist_dir():
@@ -101,6 +102,16 @@ def parallelCCompile(
     macros, objects, extra_postargs, pp_opts, build = self._setup_compile(
         output_dir, macros, include_dirs, sources, depends, extra_postargs)
     cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
+
+    if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
+        try:
+            # pybind11 is much more verbose without -DNDEBUG
+            self.compiler.remove('-DNDEBUG')
+            self.compiler.remove('-O2')
+            self.compiler_so.remove('-DNDEBUG')
+            self.compiler_so.remove('-O2')
+        except (AttributeError, ValueError):
+            pass
     # parallel code
     import multiprocessing.pool
 
@@ -149,6 +160,7 @@ sources = [
     'pyngraph/function.cpp',
     'pyngraph/serializer.cpp',
     'pyngraph/node.cpp',
+    'pyngraph/node_factory.cpp',
     'pyngraph/shape.cpp',
     'pyngraph/strides.cpp',
     'pyngraph/coordinate_diff.cpp',
@@ -367,15 +379,30 @@ class BuildExt(build_ext):
             return True
         return False
 
+    def _add_debug_or_release_flags(self):
+        """Return compiler flags for Release and Debug build types."""
+        if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
+            return ['-O0', '-g']
+        else:
+            return ['-O2', '-D_FORTIFY_SOURCE=2']
+
+    def _customize_compiler_flags(self):
+        """Modify standard compiler flags."""
+        try:
+            # -Wstrict-prototypes is not a valid option for c++
+            self.compiler.compiler_so.remove('-Wstrict-prototypes')
+            if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
+                # pybind11 is much more verbose without -DNDEBUG
+                self.compiler.compiler_so.remove('-DNDEBUG')
+                self.compiler.compiler_so.remove('-O2')
+        except (AttributeError, ValueError):
+            pass
+
     def build_extensions(self):
         """Build extension providing extra compiler flags."""
         if sys.platform == 'win32':
             raise RuntimeError('Unsupported platform: win32!')
-        # -Wstrict-prototypes is not a valid option for c++
-        try:
-            self.compiler.compiler_so.remove('-Wstrict-prototypes')
-        except (AttributeError, ValueError):
-            pass
+        self._customize_compiler_flags()
         for ext in self.extensions:
             ext.extra_compile_args += [cpp_flag(self.compiler)]
 
@@ -388,7 +415,8 @@ class BuildExt(build_ext):
             add_platform_specific_link_args(ext.extra_link_args)
 
             ext.extra_compile_args += ['-Wformat', '-Wformat-security']
-            ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
+            ext.extra_compile_args += self._add_debug_or_release_flags()
+
             if sys.platform == 'darwin':
                 ext.extra_compile_args += ['-stdlib=libc++']
         build_ext.build_extensions(self)

@@ -50,6 +50,6 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Xor
+.. doxygenclass:: ngraph::op::v0::Xor
    :project: ngraph
    :members:

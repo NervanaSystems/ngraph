@@ -1,0 +1,130 @@
+# ******************************************************************************
+# Copyright 2017-2020 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ******************************************************************************
+
+cmake_minimum_required(VERSION 3.4.3)
+
+include(ExternalProject)
+
+project(llvm NONE)
+
+set(NGRAPH_USE_PREBUILT_LLVM @NGRAPH_USE_PREBUILT_LLVM@)
+set(LLVM_TARBALL_URL @LLVM_TARBALL_URL@)
+set(LLVM_SHA1_HASH @LLVM_SHA1_HASH@)
+
+if(NGRAPH_USE_PREBUILT_LLVM)
+    message(STATUS "LLVM: Using prebuilt LLVM")
+    # Override default LLVM binaries
+    if(NOT DEFINED LLVM_TARBALL_URL)
+        set(NGRAPH_LLVM_VERSION 9.0.1)
+        if(APPLE)
+            set(LLVM_TARBALL_URL https://github.com/llvm/llvm-project/releases/download/llvmorg-${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-apple-darwin.tar.xz)
+            set(LLVM_SHA1_HASH 693e7c2d2fcd005f0d8198ea0174ae30ec78bb7c)
+        elseif(UNIX AND NOT APPLE)
+            if(EXISTS /etc/lsb-release)
+                execute_process(COMMAND grep DISTRIB_RELEASE /etc/lsb-release OUTPUT_VARIABLE UBUNTU_VER_LINE)
+                string(REGEX MATCH "[0-9.]+" UBUNTU_VERSION ${UBUNTU_VER_LINE})
+                message(STATUS "Ubuntu version: ${UBUNTU_VERSION} detected.")
+                if(UBUNTU_VERSION VERSION_LESS 16.04)
+                    message(FATAL_ERROR "No prebuilt LLVM available for Ubuntu ${UBUNTU_VER} on llvm.org, please set LLVM_TARBALL_URL manually.")
+                else()
+                    set(LLVM_SHA1_HASH 608285fb0503ee6d15ce9acb8f4575bba4d78e06)
+                endif()
+                set(LLVM_TARBALL_URL https://github.com/llvm/llvm-project/releases/download/llvmorg-${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-linux-gnu-ubuntu-16.04.tar.xz)
+            else()
+                message(FATAL_ERROR "Prebuilt LLVM: Only Ubuntu Linux is supported.")
+            endif()
+        else()
+            message(FATAL_ERROR "Prebuilt LLVM: unsupported OS.")
+        endif()
+    else()
+        if(NOT DEFINED LLVM_SHA1_HASH)
+            message(FATAL_ERROR "Prebuilt LLVM: please provide LLVM_SHA_HASH.")
+        endif()
+    endif()
+
+    ExternalProject_Add(
+        ext_llvm
+        PREFIX llvm
+        URL ${LLVM_TARBALL_URL}
+        URL_HASH SHA1=${LLVM_SHA1_HASH}
+        CMAKE_GENERATOR "${CMAKE_GENERATOR}"
+        CMAKE_GENERATOR_PLATFORM "${CMAKE_GENERATOR_PLATFORM}"
+        CMAKE_GENERATOR_TOOLSET "${CMAKE_GENERATOR_TOOLSET}"
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        UPDATE_COMMAND ""
+        SOURCE_DIR @LLVM_INSTALL_ROOT@
+        DOWNLOAD_NO_PROGRESS OFF
+        )
+
+else()
+    message(STATUS "LLVM: Building LLVM from source")
+
+    set(LLVM_GIT_REPOSITORY https://github.com/llvm/llvm-project.git)
+    set(LLVM_GIT_TAG llvmorg-9.0.1)
+
+    set(LLVM_CMAKE_ARGS @NGRAPH_FORWARD_CMAKE_ARGS@
+                   -DCMAKE_INSTALL_PREFIX=@LLVM_INSTALL_ROOT@
+                   -DLLVM_ENABLE_PROJECTS:STRING=clang$<SEMICOLON>openmp
+                   -DLLVM_INCLUDE_DOCS=OFF
+                   -DLLVM_INCLUDE_TESTS=OFF
+                   -DLLVM_INCLUDE_GO_TESTS=OFF
+                   -DLLVM_INCLUDE_EXAMPLES=OFF
+                   -DLLVM_INCLUDE_BENCHMARKS=OFF
+                   -DLLVM_BUILD_TOOLS=OFF
+                   -DLLVM_BUILD_UTILS=OFF
+                   -DLLVM_BUILD_RUNTIMES=OFF
+                   -DLLVM_BUILD_RUNTIME=OFF
+                   -DLLVM_TARGETS_TO_BUILD=X86
+                   -DLLVM_ENABLE_BINDINGS=OFF
+                   -DLLVM_ENABLE_TERMINFO=OFF
+                   -DLLVM_ENABLE_ZLIB=OFF
+                   -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON
+                   -DLLVM_ENABLE_WARNINGS=OFF
+                   -DLLVM_ENABLE_PEDANTIC=OFF
+                   -DLIBOMP_OMPT_SUPPORT=OFF
+                   -DCLANG_ENABLE_ARCMT=OFF
+                   -DCLANG_ENABLE_STATIC_ANALYZER=OFF)
+
+    if(CMAKE_VERSION VERSION_LESS 3.7)
+        ExternalProject_Add(
+            ext_llvm
+            PREFIX llvm
+            GIT_REPOSITORY ${LLVM_GIT_REPOSITORY}
+            GIT_TAG ${LLVM_GIT_TAG}
+            CMAKE_GENERATOR "${CMAKE_GENERATOR}"
+            CMAKE_GENERATOR_PLATFORM "${CMAKE_GENERATOR_PLATFORM}"
+            CMAKE_GENERATOR_TOOLSET "${CMAKE_GENERATOR_TOOLSET}"
+            UPDATE_COMMAND ""
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} ../ext_llvm/llvm -G "@CMAKE_GENERATOR@" -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM} -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET} ${LLVM_CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+            )
+    else()
+        ExternalProject_Add(
+            ext_llvm
+            PREFIX llvm
+            GIT_REPOSITORY ${LLVM_GIT_REPOSITORY}
+            GIT_TAG ${LLVM_GIT_TAG}
+            GIT_SHALLOW 1
+            CMAKE_GENERATOR "${CMAKE_GENERATOR}"
+            CMAKE_GENERATOR_PLATFORM "${CMAKE_GENERATOR_PLATFORM}"
+            CMAKE_GENERATOR_TOOLSET "${CMAKE_GENERATOR_TOOLSET}"
+            CMAKE_ARGS ${LLVM_CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+            UPDATE_COMMAND ""
+            SOURCE_SUBDIR llvm
+            )
+    endif()
+endif()

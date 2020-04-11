@@ -3,8 +3,10 @@
 Provenance
 ##########
 
+   
+.. include:: overview.rst
+
 .. toctree::
    :maxdepth: 1
-   
-   overview.rst
-..   other.rst
+
+.. other.rst

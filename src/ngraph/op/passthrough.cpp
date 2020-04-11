@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,21 +22,6 @@ using namespace std;
 using namespace ngraph;
 
 constexpr NodeTypeInfo op::Passthrough::type_info;
-
-ngraph::op::Passthrough::Passthrough(const std::string& logical_type,
-                                     const std::string& language,
-                                     const std::string& function,
-                                     const NodeVector& args,
-                                     std::vector<std::tuple<element::Type, PartialShape>> outputs)
-    : Op{args}
-    , m_logical_type{logical_type}
-    , m_language{language}
-    , m_function{function}
-    , m_output_shapes{std::move(outputs)}
-{
-    set_output_size(m_output_shapes.size());
-    constructor_validate_and_infer_types();
-}
 
 ngraph::op::Passthrough::Passthrough(const std::string& logical_type,
                                      const std::string& language,
@@ -77,7 +62,7 @@ void ngraph::op::Passthrough::validate_and_infer_types()
 }
 
 std::shared_ptr<ngraph::Node>
-    ngraph::op::Passthrough::copy_with_new_args(const NodeVector& new_args) const
+    ngraph::op::Passthrough::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != get_input_size())
     {

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@
 #include <algorithm>
 #include <iterator>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/op/util/rnn_cell_base.hpp"
 #include "ngraph/util.hpp"
 
@@ -39,14 +39,24 @@ static vector<string> to_lower_case(const vector<string>& vs)
 op::util::RNNCellBase::RNNCellBase(size_t hidden_size,
                                    float clip,
                                    const vector<string>& activations,
-                                   const vector<float>& activation_alpha,
-                                   const vector<float>& activation_beta)
+                                   const vector<float>& activations_alpha,
+                                   const vector<float>& activations_beta)
     : m_hidden_size(hidden_size)
     , m_clip(clip)
     , m_activations(to_lower_case(activations))
-    , m_activation_alpha(activation_alpha)
-    , m_activation_beta(activation_beta)
+    , m_activations_alpha(activations_alpha)
+    , m_activations_beta(activations_beta)
 {
+}
+
+bool ngraph::op::util::RNNCellBase::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("hidden_size", m_hidden_size);
+    visitor.on_attribute("activations", m_activations);
+    visitor.on_attribute("activations_alpha", m_activations_alpha);
+    visitor.on_attribute("activations_beta", m_activations_beta);
+    visitor.on_attribute("clip", m_clip);
+    return true;
 }
 
 op::util::ActivationFunction op::util::RNNCellBase::get_activation_function(size_t idx) const
@@ -54,13 +64,13 @@ op::util::ActivationFunction op::util::RNNCellBase::get_activation_function(size
     op::util::ActivationFunction afunc = get_activation_func_by_name(m_activations.at(idx));
 
     // Set activation functions parameters (if any)
-    if (m_activation_alpha.size() > idx)
+    if (m_activations_alpha.size() > idx)
     {
-        afunc.set_alpha(m_activation_alpha.at(idx));
+        afunc.set_alpha(m_activations_alpha.at(idx));
     }
-    if (m_activation_beta.size() > idx)
+    if (m_activations_beta.size() > idx)
     {
-        afunc.set_beta(m_activation_beta.at(idx));
+        afunc.set_beta(m_activations_beta.at(idx));
     }
 
     return afunc;
@@ -68,20 +78,19 @@ op::util::ActivationFunction op::util::RNNCellBase::get_activation_function(size
 
 shared_ptr<Node> op::util::RNNCellBase::add(const Output<Node>& lhs, const Output<Node>& rhs)
 {
-    auto args = op::numpy_style_broadcast_values({lhs, rhs});
-    return {make_shared<op::Add>(args.at(0), args.at(1))};
+    return {make_shared<op::Add>(lhs, rhs, op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY))};
 }
 
 shared_ptr<Node> op::util::RNNCellBase::sub(const Output<Node>& lhs, const Output<Node>& rhs)
 {
-    auto args = op::numpy_style_broadcast_values({lhs, rhs});
-    return {make_shared<op::Subtract>(args.at(0), args.at(1))};
+    return {
+        make_shared<op::Subtract>(lhs, rhs, op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY))};
 }
 
 shared_ptr<Node> op::util::RNNCellBase::mul(const Output<Node>& lhs, const Output<Node>& rhs)
 {
-    auto args = op::numpy_style_broadcast_values({lhs, rhs});
-    return {make_shared<op::Multiply>(args.at(0), args.at(1))};
+    return {
+        make_shared<op::Multiply>(lhs, rhs, op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY))};
 }
 
 shared_ptr<Node> op::util::RNNCellBase::clip(const Output<Node>& data) const

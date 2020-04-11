@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ TEST(shape_relevance, param_direct)
 {
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{4, 6});
     auto param1 = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto x = make_shared<op::DynReshape>(param0, param1);
+    auto x = make_shared<op::v1::Reshape>(param0, param1, true);
 
     auto f = make_shared<Function>(x, ParameterVector{param0, param1});
 
@@ -67,7 +67,7 @@ TEST(shape_relevance, param_indirect)
     auto param2 = make_shared<op::Parameter>(element::i64, Shape{2});
 
     auto c = make_shared<op::Concat>(NodeVector{param1, param2}, 0);
-    auto x = make_shared<op::DynReshape>(param0, c);
+    auto x = make_shared<op::v1::Reshape>(param0, c, true);
 
     auto f = make_shared<Function>(x, ParameterVector{param0, param1, param2});
 
@@ -84,7 +84,7 @@ TEST(shape_relevance, param_shape_of_direct)
 {
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{4, 6});
 
-    auto x = make_shared<op::DynReshape>(param0, make_shared<op::ShapeOf>(param0));
+    auto x = make_shared<op::v1::Reshape>(param0, make_shared<op::ShapeOf>(param0), true);
 
     auto f = make_shared<Function>(x, ParameterVector{param0});
 
@@ -101,7 +101,7 @@ TEST(shape_relevance, param_shape_of_indirect)
 
     auto s = make_shared<op::ShapeOf>(param0);
     auto r = make_shared<op::Reverse>(s, AxisSet{0});
-    auto x = make_shared<op::DynReshape>(param0, r);
+    auto x = make_shared<op::v1::Reshape>(param0, r, true);
 
     auto f = make_shared<Function>(x, ParameterVector{param0});
 

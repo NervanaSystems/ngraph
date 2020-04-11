@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,8 +16,11 @@
 
 #pragma once
 
+#include <memory>
+
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/get_output_element.hpp"
 
 namespace ngraph
 {
@@ -29,7 +32,9 @@ namespace ngraph
             {
                 inline NodeVector identity(const Node& node)
                 {
-                    return {node.get_ng_inputs().at(0)};
+                    auto input = node.get_ng_inputs().at(0);
+                    auto zero = default_opset::Constant::create(input->get_element_type(), {}, {0});
+                    return {std::make_shared<default_opset::Add>(input, zero)};
                 }
             } // namespace set_1
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,9 +54,9 @@ TEST(type_prop, reverse_sequence_batch_index_oob)
         auto bc = make_shared<op::ReverseSequence>(data, seq_lenghts, batch_axis, seq_axis);
         FAIL() << "ReverseSequence c-tor should throw for out-of-bounds batch axis index";
     }
-    catch (const NodeValidationFailure& error)
+    catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Batch axis index (3) is out of bounds"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Parameter axis 3 out of the tensor rank"));
     }
     catch (...)
     {
@@ -75,9 +75,9 @@ TEST(type_prop, reverse_sequence_sequence_index_oob)
         auto bc = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
         FAIL() << "ReverseSequence c-tor should throw for out-of-bounds sequence axis index";
     }
-    catch (const NodeValidationFailure& error)
+    catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Sequence axis index (3) is out of bounds"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Parameter axis 3 out of the tensor rank"));
     }
     catch (...)
     {
@@ -179,9 +179,9 @@ TEST(type_prop, reverse_sequence_partial_both_rank_static_dynamic_batch_axis_oob
         auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
         FAIL() << "Batch axis out of bounds not detected (rank-static dynamic shape)";
     }
-    catch (const NodeValidationFailure& error)
+    catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Batch axis index (4) is out of bounds"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Parameter axis 4 out of the tensor rank"));
     }
     catch (...)
     {
@@ -204,9 +204,9 @@ TEST(type_prop, reverse_sequence_partial_both_rank_static_dynamic_sequence_axis_
         auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
         FAIL() << "Sequence axis out of bounds not detected (rank-static dynamic shape)";
     }
-    catch (const NodeValidationFailure& error)
+    catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Sequence axis index (4) is out of bounds"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Parameter axis 4 out of the tensor rank"));
     }
     catch (...)
     {
@@ -288,4 +288,40 @@ TEST(
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, reverse_sequence_negative_axis_dynamic_input_rank)
+{
+    auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{1});
+    int64_t batch_axis = 1;
+    int64_t seq_axis = -2;
+    try
+    {
+        auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+        FAIL() << "Dynamic input rank for negative axis not detected";
+    }
+    catch (const CheckFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank must be static in order to normalize negative axis=-2"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reverse_sequence_negative_axes_support)
+{
+    auto data = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3, 4, 5});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{3});
+    int64_t batch_axis = -3;
+    int64_t seq_axis = -2;
+
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_EQ(rs->get_batch_axis(), 2);
+    EXPECT_EQ(rs->get_sequence_axis(), 3);
 }

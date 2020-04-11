@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,9 +34,12 @@ namespace mlir
     {
     public:
         explicit NGraphOpsDialect(mlir::MLIRContext* ctx);
-        mlir::Type parseType(llvm::StringRef tyData, mlir::Location loc) const override;
-        void printType(mlir::Type type, llvm::raw_ostream& os) const override;
+
+        mlir::Type parseType(mlir::DialectAsmParser& parser) const override;
+        void printType(mlir::Type type, mlir::DialectAsmPrinter& printer) const override;
 
         static StringRef getDialectNamespace() { return "ng"; }
+    private:
+        mlir::Type parseEltType(mlir::DialectAsmParser& parser) const;
     };
 }

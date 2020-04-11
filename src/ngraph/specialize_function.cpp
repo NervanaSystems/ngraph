@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #include "ngraph/specialize_function.hpp"
 #include <pass/constant_folding.hpp>
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/tensor_iterator.hpp"
 
 using namespace ngraph;
 
@@ -27,7 +28,7 @@ std::shared_ptr<Function>
                                 const std::vector<void*>& parameter_values)
 {
     return specialize_function(
-        f, parameter_element_types, parameter_shapes, parameter_values, false);
+        f, parameter_element_types, parameter_shapes, parameter_values, false, false);
 }
 
 std::shared_ptr<Function>
@@ -35,7 +36,8 @@ std::shared_ptr<Function>
                                 const std::vector<element::Type>& parameter_element_types,
                                 const std::vector<PartialShape>& parameter_shapes,
                                 const std::vector<void*>& parameter_values,
-                                bool constant_folding)
+                                bool constant_folding,
+                                bool share_constants)
 {
     NGRAPH_CHECK(f->get_parameters().size() == parameter_shapes.size());
     NGRAPH_CHECK(f->get_parameters().size() == parameter_element_types.size());
@@ -59,6 +61,7 @@ std::shared_ptr<Function>
             m[f->get_parameters()[i].get()] =
                 std::make_shared<op::Parameter>(parameter_element_types[i], parameter_shapes[i]);
         }
+        m[f->get_parameters()[i].get()]->get_rt_info() = f->get_parameters()[i]->get_rt_info();
     }
 
     for (auto old_node : f->get_ordered_ops())
@@ -74,7 +77,22 @@ std::shared_ptr<Function>
             auto output = input.get_source_output();
             new_args.push_back(output.for_node(m[output.get_node()]));
         }
-        m[old_node.get()] = old_node->copy_with_new_inputs(new_args);
+
+        if (share_constants && as_type_ptr<op::Constant>(old_node))
+        {
+            m[old_node.get()] = old_node;
+        }
+        else
+        {
+            m[old_node.get()] = old_node->copy_with_new_inputs(new_args);
+            //  TODO: workaround for shape inference, delete it after fix
+            if (::ngraph::as_type_ptr<ngraph::op::TensorIterator>(m[old_node.get()]))
+            {
+                m[old_node.get()]->validate_and_infer_types();
+            }
+            m[old_node.get()]->get_rt_info() = old_node->get_rt_info();
+        }
+
         m[old_node.get()]->set_friendly_name(old_node->get_friendly_name());
     }
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ bool pass::GetOutputElementElimination::run_on_node(shared_ptr<Node> n)
     {
         if (auto goe = dynamic_cast<op::GetOutputElement*>(input.get_source_output().get_node()))
         {
-            input.replace_source_output(goe->input(0).get_source_output());
+            input.replace_source_output(goe->input_value(0));
             // we don't need to fix anything w.r.t GetOutputElement as it will become unreachable
             optimized = true;
         }

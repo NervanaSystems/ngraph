@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,11 @@ op::Tile::Tile(const Output<Node>& data, const Output<Node>& repeats)
     : Op({data, repeats})
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::Tile::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
 }
 
 void op::Tile::validate_and_infer_types()
@@ -83,14 +88,15 @@ void op::Tile::validate_and_infer_types()
     set_input_is_relevant_to_shape(1);
 }
 
-shared_ptr<Node> op::Tile::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Tile::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Tile>(new_args.at(0), new_args.at(1));
 }
 
 // TODO: This function is not implemented!
-void op::Tile::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
+void op::Tile::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                 const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for Tile");
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -155,7 +155,8 @@ TEST(build_graph, multi_output_split)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{64, 8, 100, 150});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 2, 10, 20});
-    const auto split = make_shared<op::Split>(data, 1, 2);
+    const auto axis = op::Constant::create(element::i64, Shape{}, {1});
+    const auto split = make_shared<op::Split>(data, axis, 2);
     auto conv = make_shared<op::GroupConvolution>(split->output(1),
                                                   filters,
                                                   Strides{1, 1},
@@ -170,13 +171,16 @@ TEST(build_graph, multi_output_split)
 TEST(build_graph, multi_output_split_dynamic)
 {
     const auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    const auto split = make_shared<op::Split>(data, 1, 2);
+    const auto axis = op::Constant::create(element::i64, Shape{}, {1});
+    const auto split = make_shared<op::Split>(data, axis, 2);
     auto abs = make_shared<op::Abs>(split->output(1));
     EXPECT_TRUE(abs->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
 
-    auto f = make_shared<Function>(abs, ParameterVector{data});
     auto new_parameter = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     split->input(0).replace_source_output(new_parameter->output(0));
+
+    auto f = make_shared<Function>(abs, ParameterVector{new_parameter});
+
     f->validate_nodes_and_infer_types();
     EXPECT_EQ(abs->get_shape(), (Shape{2, 2}));
 }
@@ -186,7 +190,7 @@ TEST(build_graph, function_revalidate_and_infer)
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
     auto pattern = op::Constant::create(element::i64, Shape{6}, {1, 3, 16, 2, 2, 2});
 
-    auto r = make_shared<op::DynReshape>(arg, pattern);
+    auto r = make_shared<op::v1::Reshape>(arg, pattern, true);
     auto relu = make_shared<op::Relu>(r);
     auto f = make_shared<Function>(relu, ParameterVector{arg});
 
@@ -216,6 +220,19 @@ TEST(build_graph, validate_function_for_dynamic_shape)
         return f;
     };
 
-    EXPECT_EQ(true, make_function(true)->is_dynamic());
-    EXPECT_EQ(false, make_function(false)->is_dynamic());
+    EXPECT_TRUE(make_function(true)->is_dynamic());
+    EXPECT_FALSE(make_function(false)->is_dynamic());
+}
+
+TEST(build_graph, default_output_checks)
+{
+    try
+    {
+        std::shared_ptr<Node> empty;
+        auto nullout = Output<Node>(empty);
+    }
+    catch (...)
+    {
+        FAIL() << "nullptr initialization of Output failed";
+    }
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,9 +35,6 @@
 using namespace std;
 using namespace ngraph;
 
-extern template AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input,
-                                                                 AxisVector order);
-
 void pass::ReshapeElimination::construct_identity_reshape_pattern()
 {
     Shape shape_op{3};
@@ -49,12 +46,12 @@ void pass::ReshapeElimination::construct_identity_reshape_pattern()
     auto callback = [op](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_identity_reshape_pattern against node = "
                      << m.get_match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
+        auto pattern_map = m.get_pattern_value_map();
         auto gop = pattern_map[op];
 
         auto r1 = as_type_ptr<op::Reshape>(m.get_match_root());
 
-        if (r1->get_shape() != gop->get_shape())
+        if (r1->get_shape() != gop.get_shape())
         {
             NGRAPH_DEBUG << "Not a no-op; Shapes are different!";
             return false;
@@ -68,7 +65,7 @@ void pass::ReshapeElimination::construct_identity_reshape_pattern()
             return false;
         }
 
-        replace_node(m.get_match_root(), gop);
+        m.get_match_value().replace(gop);
         return true;
     };
 

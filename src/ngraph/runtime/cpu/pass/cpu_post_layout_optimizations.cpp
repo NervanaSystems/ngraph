@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
@@ -248,8 +248,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
             *reshape_m->get_argument(0)->get_output_tensor_ptr());
         rotated_lt_desc->set_mkldnn_md(rotated_md);
 
-        auto cvt_lt_n = std::make_shared<runtime::cpu::op::ConvertLayout>(
-            reshape_m->get_argument(0), 0, rotated_lt_desc);
+        auto cvt_lt_n = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_m->input_value(0),
+                                                                          rotated_lt_desc);
         cvt_lt_n->set_op_annotations(cvt_lt_m->get_op_annotations());
 
         auto reshape_n =
@@ -280,7 +280,7 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     mkldnn::memory::desc& input_desc,
     mkldnn::memory::desc& result_desc)
 {
-    std::vector<T> result_vec(convertlayout->output(0).get_tensor().size() /
+    std::vector<T> result_vec(convertlayout->get_output_tensor(0).size() /
                               input->get_element_type().size());
 
 #if MKLDNN_VERSION_MAJOR < 1
@@ -419,7 +419,7 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
                 continue;
             }
 
-            auto arg = m_convertlayout->input(0).get_source_output().get_node_shared_ptr();
+            auto arg = m_convertlayout->get_input_node_shared_ptr(0);
             if (is_type<ngraph::op::Constant>(arg))
             {
                 auto m_input = static_pointer_cast<ngraph::op::Constant>(arg);
@@ -438,6 +438,10 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
                     NGRAPH_CHECK(
                         false,
                         "Encountered 'dynamic' element type in construct_constant_convertlayout");
+                    break;
+                case element::Type_t::u1:
+                    NGRAPH_CHECK(
+                        false, "Encountered 'u1' element type in construct_constant_convertlayout");
                     break;
                 case element::Type_t::boolean:
                     replacement = fold_constant_convertlayout_helper<char>(

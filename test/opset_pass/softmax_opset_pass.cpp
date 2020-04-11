@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,12 +39,10 @@ TEST(opset_transform, opset1_softmax_upgrade_pass_axis)
     pass_manager.run_passes(f);
 
     auto softmax_s1_result = f->get_results().at(0);
-    auto node = softmax_s1_result->input(0).get_source_output().get_node_shared_ptr();
-    auto softmax_s1_node = static_pointer_cast<op::v1::Softmax>(node);
-
+    auto node = softmax_s1_result->get_input_node_shared_ptr(0);
+    auto softmax_s1_node = as_type_ptr<op::v1::Softmax>(node);
+    ASSERT_TRUE(softmax_s1_node);
     EXPECT_EQ(softmax_s1_node->get_axis(), axis);
-    EXPECT_EQ(softmax_s1_node->description(), "Softmax");
-    EXPECT_EQ(softmax_s1_node->get_version(), 1);
 }
 
 TEST(opset_transform, opset1_softmax_upgrade_pass_axis_exception)
@@ -69,46 +67,6 @@ TEST(opset_transform, opset1_softmax_upgrade_pass_axis_exception)
             error.what(),
             std::string(
                 "Unable to convert Softmax:0 to Softmax:1 with zero or more than one axis."));
-    }
-    catch (...)
-    {
-        FAIL() << "Softmax pass failed for unexpected reason";
-    }
-}
-
-namespace fake_v2
-{
-    class FakeSoftmax : public op::v0::Softmax
-    {
-    public:
-        FakeSoftmax(const Output<Node>& arg, const AxisSet& axes)
-            : Softmax{arg, axes}
-        {
-        }
-        size_t get_version() const override { return 2; }
-    };
-}
-
-TEST(opset_transform, opset1_softmax_upgrade_pass_incorrect_op_version)
-{
-    const AxisSet axes{2};
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    auto softmax_s2 = make_shared<fake_v2::FakeSoftmax>(arg, axes);
-    auto result = make_shared<op::Result>(softmax_s2);
-    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
-
-    ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Upgrade>();
-
-    try
-    {
-        pass_manager.run_passes(f);
-        FAIL() << "Opset 1 transformation pass failed for";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Op version 1 transformation pass failed for"));
     }
     catch (...)
     {

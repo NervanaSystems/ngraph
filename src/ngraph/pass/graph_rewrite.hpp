@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ namespace ngraph
 /// Patterns can be added by using \sa add_matcher
 /// Callbacks should use \sa replace_node to transform matched sub graphs
 
-class ngraph::pass::GraphRewrite : public FunctionPass
+class NGRAPH_API ngraph::pass::GraphRewrite : public FunctionPass
 {
 public:
     GraphRewrite()
@@ -82,7 +82,7 @@ private:
     std::vector<MatchClosure> m_matchers;
 };
 
-class ngraph::pass::RecurrentGraphRewrite : public FunctionPass
+class NGRAPH_API ngraph::pass::RecurrentGraphRewrite : public FunctionPass
 {
 public:
     RecurrentGraphRewrite(size_t num_iters = 10)

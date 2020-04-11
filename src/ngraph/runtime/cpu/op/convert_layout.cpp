@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,9 +25,12 @@ constexpr NodeTypeInfo runtime::cpu::op::ConvertLayout::type_info;
 
 runtime::cpu::op::ConvertLayout::ConvertLayout(
     const Output<Node>& arg, const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
-    : ConvertLayout(arg, 0, layout)
+    : Op({arg})
+    , arg_output_index(arg.get_index())
+    , output_layout(layout)
 {
     runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(this);
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node>
@@ -38,18 +41,6 @@ shared_ptr<Node>
         throw ngraph_error("Incorrect number of new arguments");
     }
     return make_shared<ConvertLayout>(new_args.at(0), output_layout);
-}
-
-runtime::cpu::op::ConvertLayout::ConvertLayout(
-    const Output<Node>& arg,
-    size_t output_index,
-    const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
-    : Op({arg})
-    , arg_output_index(output_index)
-    , output_layout(layout)
-{
-    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(this);
-    constructor_validate_and_infer_types();
 }
 
 void runtime::cpu::op::ConvertLayout::validate_and_infer_types()

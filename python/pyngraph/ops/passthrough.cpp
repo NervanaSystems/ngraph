@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,6 @@ void regclass_pyngraph_op_Passthrough(py::module m)
     pass.def(py::init<const std::string&,
                       const std::string&,
                       const std::string&,
-                      const std::vector<std::shared_ptr<ngraph::Node>>&,
+                      const std::vector<ngraph::Output<ngraph::Node>>&,
                       std::vector<std::tuple<ngraph::element::Type, ngraph::PartialShape>>>());
 }

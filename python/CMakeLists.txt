@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ include(ExternalProject)
 ExternalProject_Add(
         pybind11
         GIT_REPOSITORY "https://github.com/pybind/pybind11.git"
-        GIT_TAG "v2.2.4"
+        GIT_TAG "v2.4.3"
         SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/pybind11"
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""

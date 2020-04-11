@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,14 +20,14 @@
 
 using namespace std;
 
-extern "C" const char* get_ngraph_version_string()
+extern "C" NGRAPH_API const char* get_ngraph_version_string()
 {
     return NGRAPH_VERSION;
 }
 
 namespace ngraph
 {
-    void get_version(size_t& major, size_t& minor, size_t& patch, std::string& extra)
+    NGRAPH_API void get_version(size_t& major, size_t& minor, size_t& patch, std::string& extra)
     {
         string version = NGRAPH_VERSION;
         ngraph::parse_version_string(version, major, minor, patch, extra);

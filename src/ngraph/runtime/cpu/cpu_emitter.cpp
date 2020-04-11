@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
+#include "ngraph/env_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
@@ -33,6 +34,7 @@
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
+#include "ngraph/op/atan2.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -44,6 +46,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/cum_sum.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
@@ -60,6 +63,7 @@
 #include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -111,7 +115,6 @@
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -136,9 +139,9 @@
 using namespace std;
 using namespace ngraph;
 
-static bool s_use_ref_kernels = (std::getenv("NGRAPH_CPU_USE_REF_KERNELS") != nullptr);
+static bool s_use_ref_kernels = getenv_bool("NGRAPH_CPU_USE_REF_KERNELS");
 
-static string eigen_vector_format(const runtime::cpu::TensorViewWrapper& tvi)
+static string eigen_vector_format(const runtime::cpu::TensorWrapper& tvi)
 {
     return "fmt::V{" + to_string(tvi.get_size()) + "}";
 }
@@ -182,7 +185,7 @@ namespace ngraph
                                               size_t& index,
                                               std::vector<std::size_t>& deps,
                                               size_t& scratchpad_size,
-                                              const std::vector<TensorViewWrapper>& args)
+                                              const std::vector<TensorWrapper>& args)
             {
                 writer << "if (ctx->first_iteration)\n";
                 writer.block_begin();
@@ -384,8 +387,8 @@ namespace ngraph
                                         const Shape& shape_a,
                                         const Shape& shape_b,
                                         const Shape& shape_c,
-                                        const std::vector<TensorViewWrapper>& args,
-                                        const std::vector<TensorViewWrapper>& out,
+                                        const std::vector<TensorWrapper>& args,
+                                        const std::vector<TensorWrapper>& out,
                                         const bool transpose_a,
                                         const bool transpose_b,
                                         CodeWriter& writer)
@@ -685,8 +688,8 @@ namespace ngraph
             void CPU_Emitter::emitBatchNorm(CPU_ExternalFunction* external_function,
                                             CodeWriter& writer,
                                             const ngraph::Node* node,
-                                            const std::vector<TensorViewWrapper>& args,
-                                            const std::vector<TensorViewWrapper>& out,
+                                            const std::vector<TensorWrapper>& args,
+                                            const std::vector<TensorWrapper>& out,
                                             bool /* append_relu */,
                                             bool training)
             {
@@ -943,10 +946,26 @@ namespace ngraph
                          dot->get_reduction_axes_count() == 1)
                 {
                     // Emit an MKL SGEMM call if possible
-                    if (args[0].get_element_type() == element::f32)
+                    auto element_type = args[0].get_element_type();
+                    if (element_type == element::f32)
                     {
                         writer.block_begin();
                         writer << "cblas::cblas_sgemm("
+                               << "cblas::Layout::RowMajor, "
+                               << "cblas::Transpose::None, "
+                               << "cblas::Transpose::None, " << arg0_shape[0] << ", "
+                               << arg1_shape[1] << ", " << arg0_shape[1] << ",\n"
+                               << "        1.0f, " << args[0].get_name() << ", "
+                               << max(1UL, arg0_shape[1]) << ", " << args[1].get_name() << ", "
+                               << max(1UL, arg1_shape[1]) << ", 0.0f,\n"
+                               << "        " << out[0].get_name() << ", " << max(1UL, arg1_shape[1])
+                               << ");\n";
+                        writer.block_end();
+                    }
+                    else if (element_type == element::f64)
+                    {
+                        writer.block_begin();
+                        writer << "cblas::cblas_dgemm("
                                << "cblas::Layout::RowMajor, "
                                << "cblas::Transpose::None, "
                                << "cblas::Transpose::None, " << arg0_shape[0] << ", "
@@ -1892,8 +1911,23 @@ namespace ngraph
                 writer.block_end();
             }
 
-            static void emitArgMinArgMax(const std::vector<TensorViewWrapper>& args,
-                                         const std::vector<TensorViewWrapper>& out,
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Atan2)
+            {
+                (void)external_function;
+                (void)node;
+                writer.block_begin();
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = atan2(" << args[0].get_name() << ", "
+                       << args[1].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            static void emitArgMinArgMax(const std::vector<TensorWrapper>& args,
+                                         const std::vector<TensorWrapper>& out,
                                          size_t reduction_axis,
                                          const char* kernel_name,
                                          CodeWriter& writer)
@@ -2293,6 +2327,21 @@ namespace ngraph
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = floor(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Round)
+            {
+                (void)external_function;
+                (void)node;
+                writer.block_begin();
+                size_t element_count = out[0].get_size();
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = round(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
                 writer.block_end();
             }
@@ -3341,17 +3390,17 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3])
-                           << ", cg_ctx->mkldnn_workspaces[" << deps[5] << "]);\n";
+                           << ", cg_ctx->mkldnn_workspaces[" << deps[4] << "]);\n";
 
                     writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(deps[4])
-                           << ",deps, OpType::MAXPOOLBACKPROPFORWARD, "
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index - 1)
+                           << ", deps, OpType::MAXPOOLBACKPROPFORWARD, "
                            << to_string(scratchpad_size) << ");\n";
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << args[1].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3])
-                           << ", cg_ctx->mkldnn_workspaces[" << deps[5] << "]);\n";
+                           << ", cg_ctx->mkldnn_workspaces[" << deps[4] << "]);\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
 
@@ -3867,11 +3916,11 @@ namespace ngraph
                 // dz/dy = dz/dg * dg/dy = f(x) * g'(y)
                 auto sigmoid_mul_backprop =
                     static_cast<const ngraph::op::SigmoidMultiplyBackprop*>(node);
-                const TensorViewWrapper& data_0 = args[0];
-                const TensorViewWrapper& data_1 = args[1];
-                const TensorViewWrapper& delta = args[2];
-                const TensorViewWrapper& input_0_delta = out[0];
-                const TensorViewWrapper& input_1_delta = out[1];
+                const TensorWrapper& data_0 = args[0];
+                const TensorWrapper& data_1 = args[1];
+                const TensorWrapper& delta = args[2];
+                const TensorWrapper& input_0_delta = out[0];
+                const TensorWrapper& input_1_delta = out[1];
                 std::string numer_0 = "numer_0";
                 std::string denom_0 = "denom_0";
                 std::string numer_1 = "numer_1";
@@ -4270,7 +4319,7 @@ namespace ngraph
                 const ngraph::op::CompiledKernel* ck =
                     static_cast<const ngraph::op::CompiledKernel*>(node);
 
-                NodeVector output_nodes = ck->get_kernel_outputs();
+                OutputVector outputs = ck->get_kernel_outputs();
                 NodeVector node_list = ck->get_node_list();
 
                 for (size_t i = 0; i < args.size(); i++)
@@ -4285,8 +4334,10 @@ namespace ngraph
                 for (size_t i = 0; i < out.size(); i++)
                 {
                     std::string sname = std::string(out[i].get_name()) + "[i]";
-                    // TODO: no support for multiple-output ops in loop kernel
-                    auto entry = std::make_pair(&output_nodes.at(i)->get_outputs().at(0), sname);
+                    auto output = outputs[i];
+                    auto output_node = output.get_node();
+                    auto entry =
+                        std::make_pair(&output_node->get_outputs().at(output.get_index()), sname);
                     loop_symbol_table.insert(entry);
                 }
 
@@ -4588,6 +4639,22 @@ namespace ngraph
                 }
             }
 
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::CumSum)
+            {
+                const ngraph::op::CumSum* cumsum = static_cast<const ngraph::op::CumSum*>(node);
+                writer.block_begin();
+                writer << "reference::cumsum<" << args[0].get_element_type().c_type_string();
+                writer << ",           " << args[1].get_element_type().c_type_string() << ">(";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << args[1].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            {" << join(args[0].get_shape()) << "},\n";
+                writer << "            " << cumsum->is_exclusive() << ",\n";
+                writer << "            " << cumsum->is_reverse() << ");\n";
+                writer.block_end();
+            }
+
 #undef TI
         } // namespace cpu
     }     // namespace runtime
@@ -4626,7 +4693,7 @@ std::string
     return ss.str();
 }
 
-std::string runtime::cpu::CPU_Emitter::emit_vector(const runtime::cpu::TensorViewWrapper& tvi,
+std::string runtime::cpu::CPU_Emitter::emit_vector(const runtime::cpu::TensorWrapper& tvi,
                                                    const string& name)
 {
     stringstream ss;
@@ -4637,7 +4704,7 @@ std::string runtime::cpu::CPU_Emitter::emit_vector(const runtime::cpu::TensorVie
     return ss.str();
 }
 
-string runtime::cpu::CPU_Emitter::emit_array1d(const runtime::cpu::TensorViewWrapper& tvi,
+string runtime::cpu::CPU_Emitter::emit_array1d(const runtime::cpu::TensorWrapper& tvi,
                                                const string& name)
 {
     stringstream ss;
@@ -4648,7 +4715,7 @@ string runtime::cpu::CPU_Emitter::emit_array1d(const runtime::cpu::TensorViewWra
     return ss.str();
 }
 
-string runtime::cpu::CPU_Emitter::emit_matrix(const runtime::cpu::TensorViewWrapper& tvi,
+string runtime::cpu::CPU_Emitter::emit_matrix(const runtime::cpu::TensorWrapper& tvi,
                                               const string& name)
 {
     stringstream ss;

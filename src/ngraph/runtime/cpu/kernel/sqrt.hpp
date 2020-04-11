@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,29 @@ namespace ngraph
                 template <typename ElementType>
                 void sqrt(void* input, void* output, size_t count, int arena)
                 {
+                    Eigen::array<Eigen::Index, 1> out_dims, in_dims;
+
+                    out_dims[0] = in_dims[0] = count;
+
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> out(
+                        static_cast<ElementType*>(output), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> in(
+                        static_cast<ElementType*>(input), in_dims);
+
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
+                        in.sqrt();
+                }
+
+                template <typename ElementType>
+                void checked_sqrt(void* input, void* output, size_t count, int arena)
+                {
+                    ElementType* elts = static_cast<ElementType*>(input);
+                    if (std::any_of(
+                            elts, elts + count, [](ElementType i) { return i < ElementType(0); }))
+                    {
+                        throw ngraph_error("Square root of negative value");
+                    }
+
                     Eigen::array<Eigen::Index, 1> out_dims, in_dims;
 
                     out_dims[0] = in_dims[0] = count;

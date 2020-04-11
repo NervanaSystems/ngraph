@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,13 +35,13 @@ op::v0::Sum::Sum(const Output<Node>& arg, const Output<Node>& reduction_axes)
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Sum::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Sum::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v0::Sum>(new_args.at(0), new_args.at(1));
 }
 
-void op::v0::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

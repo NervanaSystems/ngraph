@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,25 +22,29 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise hyperbolic sine (sinh) operation.
-        class Sinh : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Sinh", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a hyperbolic sine operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Sinh(const Output<Node>& arg);
-            Sinh() = default;
+            /// \brief Elementwise hyperbolic sine (sinh) operation.
+            class NGRAPH_API Sinh : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Sinh", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a hyperbolic sine operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                Sinh(const Output<Node>& arg);
+                Sinh() = default;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                virtual std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-        };
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
+            };
+        }
+        using v0::Sinh;
     }
 }

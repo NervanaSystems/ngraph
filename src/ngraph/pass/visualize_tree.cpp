@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include <fstream>
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -30,8 +31,6 @@
 
 using namespace ngraph;
 using namespace std;
-
-#define TI(x) type_index(typeid(x))
 
 //
 // As we are visualizing the graph, we will make some tweaks to the generated dot file to make
@@ -160,7 +159,7 @@ static std::string label_edge(const std::shared_ptr<Node>& /* src */,
                               int64_t jump_distance)
 {
     std::stringstream ss;
-    if (getenv("NGRAPH_VISUALIZE_EDGE_LABELS") != nullptr)
+    if (getenv_bool("NGRAPH_VISUALIZE_EDGE_LABELS"))
     {
         size_t output = 0;
         if (auto goe = as_type_ptr<op::GetOutputElement>(dst))
@@ -172,7 +171,7 @@ static std::string label_edge(const std::shared_ptr<Node>& /* src */,
         ss << label_edge.str();
     }
 
-    else if (getenv("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE") != nullptr)
+    else if (getenv_bool("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE"))
     {
         if (jump_distance > 1)
         {
@@ -203,10 +202,10 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
         }
 
         auto nodes = topological_sort(f->get_ops());
-        nodes.reverse();
 
-        for (auto& node : nodes)
+        for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
         {
+            auto& node = *it;
             for (auto& output : node->outputs())
             {
                 for (auto& input : output.get_target_inputs())
@@ -260,8 +259,9 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
                                              size_t& fake_node_ctr)
 {
     size_t arg_index = 0;
-    for (auto arg : node->get_arguments())
+    for (auto input_value : node->input_values())
     {
+        auto arg = input_value.get_node_shared_ptr();
         size_t jump_distance = height_maps[arg.get()].max_jump_to(height_maps[node.get()]);
         if (is_type<ngraph::op::Constant>(arg) || is_type<ngraph::op::Parameter>(arg))
         {
@@ -326,7 +326,7 @@ static std::string pretty_partial_shape(const PartialShape& shape)
         bool first = true;
 
         ss << "[";
-        for (size_t i = 0; i < size_t(shape.rank()); i++)
+        for (size_t i = 0; i < shape.rank().get_length(); i++)
         {
             if (!first)
             {
@@ -338,7 +338,7 @@ static std::string pretty_partial_shape(const PartialShape& shape)
             }
             else
             {
-                ss << size_t(shape[i]);
+                ss << shape[i].get_length();
             }
             first = false;
         }
@@ -368,8 +368,8 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
         stringstream label;
         label << "label=\"" << get_node_name(node);
 
-        static const char* nvtos = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
-        if (nvtos != nullptr)
+        static const bool nvtos = getenv_bool("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
+        if (nvtos)
         {
             // The shapes of the Outputs of a multi-output op
             // will be printed for its corresponding `GetOutputElement`s
@@ -378,8 +378,8 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
                                  : pretty_partial_shape(node->get_output_partial_shape(0)));
         }
 
-        static const char* nvtot = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
-        if (nvtot != nullptr)
+        static const bool nvtot = getenv_bool("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
+        if (nvtot)
         {
             // The types of the Outputs of a multi-output op
             // will be printed for its corresponding `GetOutputElement`s
@@ -388,11 +388,10 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
                                                      : node->get_element_type().c_type_string());
         }
 
-        const Node& n = *node;
-        auto eh = m_ops_to_details.find(TI(n));
+        auto eh = m_ops_to_details.find(node->get_type_info());
         if (eh != m_ops_to_details.end())
         {
-            eh->second(n, label);
+            eh->second(*node, label);
         }
         label << "\"";
         attributes.push_back(label.str());

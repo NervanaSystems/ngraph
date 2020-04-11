@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #pragma once
-#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
@@ -57,16 +57,17 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            Output<Node> get_bias() { return input(2).get_source_output(); }
-            Output<Node> get_filters() { return input(1).get_source_output(); }
-            Output<Node> get_data_batch() { return input(0).get_source_output(); }
+            Output<Node> get_bias() { return input_value(2); }
+            Output<Node> get_filters() { return input_value(1); }
+            Output<Node> get_data_batch() { return input_value(0); }
             size_t get_groups() const { return m_groups; }
             bool with_relu() const { return m_with_relu; }
             float get_alpha() const { return m_alpha; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
+            void generate_adjoints(autodiff::Adjoints& adjoints,
+                                   const OutputVector& deltas) override;
 
         protected:
             Strides m_window_movement_strides;

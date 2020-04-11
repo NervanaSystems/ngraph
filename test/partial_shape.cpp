@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ TEST(partial_shape, ps_construction_empty)
     auto ps = PartialShape{};
     ASSERT_TRUE(ps.rank().is_static());
     ASSERT_TRUE(ps.is_static());
-    ASSERT_EQ(size_t(ps.rank()), 0);
+    ASSERT_EQ(ps.rank().get_length(), 0);
 }
 
 TEST(partial_shape, ps_construction_rank_dynamic)
@@ -42,7 +42,7 @@ TEST(partial_shape, ps_construction_rank_static_shape_dynamic)
     auto ps = PartialShape{2, Dimension::dynamic(), 3};
     ASSERT_TRUE(ps.rank().is_static());
     ASSERT_TRUE(ps.is_dynamic());
-    ASSERT_EQ(size_t(ps.rank()), 3);
+    ASSERT_EQ(ps.rank().get_length(), 3);
 }
 
 TEST(partial_shape, ps_construction_static)
@@ -50,13 +50,13 @@ TEST(partial_shape, ps_construction_static)
     auto ps = PartialShape{2, 5, 3, 6};
     ASSERT_TRUE(ps.rank().is_static());
     ASSERT_TRUE(ps.is_static());
-    ASSERT_EQ(size_t(ps.rank()), 4);
+    ASSERT_EQ(ps.rank().get_length(), 4);
 }
 
 TEST(partial_shape, dim_construction_static)
 {
     Dimension dim{3};
-    ASSERT_EQ(size_t(dim), 3);
+    ASSERT_EQ(dim.get_length(), 3);
     ASSERT_TRUE(dim.is_static());
 }
 
@@ -71,25 +71,15 @@ TEST(partial_shape, dim_construction_size_t_max)
     EXPECT_ANY_THROW({ Dimension d{Dimension::s_dynamic_val}; });
 }
 
-TEST(partial_shape, dim_conversion_static)
-{
-    Dimension d{42};
-    size_t s{d};
-    ASSERT_EQ(s, 42);
-}
-
 TEST(partial_shape, dim_conversion_dynamic)
 {
-    EXPECT_ANY_THROW({
-        size_t s{Dimension::dynamic()};
-        (void)s; // Silence compiler warning about unused s
-    });
+    EXPECT_ANY_THROW({ Dimension::dynamic().get_length(); });
 }
 
 TEST(partial_shape, rank_construction_static)
 {
     Rank r{4};
-    ASSERT_EQ(size_t(r), 4);
+    ASSERT_EQ(r.get_length(), 4);
     ASSERT_TRUE(r.is_static());
 }
 
@@ -203,12 +193,12 @@ TEST(partial_shape, from_shape)
     PartialShape ps1{s};
 
     ASSERT_TRUE(ps1.rank().is_static());
-    ASSERT_EQ(size_t(ps1.rank()), s.size());
+    ASSERT_EQ(ps1.rank().get_length(), s.size());
     ASSERT_TRUE(ps1.is_static());
-    ASSERT_EQ(size_t(ps1[0]), 2);
-    ASSERT_EQ(size_t(ps1[1]), 4);
-    ASSERT_EQ(size_t(ps1[2]), 6);
-    ASSERT_EQ(size_t(ps1[3]), 8);
+    ASSERT_EQ(ps1[0].get_length(), 2);
+    ASSERT_EQ(ps1[1].get_length(), 4);
+    ASSERT_EQ(ps1[2].get_length(), 6);
+    ASSERT_EQ(ps1[3].get_length(), 8);
 }
 
 TEST(partial_shape, to_shape_static)
@@ -236,7 +226,7 @@ TEST(partial_shape, tensor_descriptor_from_shape)
     descriptor::Tensor t{element::i32, Shape{1, 2, 3}, "Ankeny"};
 
     ASSERT_EQ(t.get_shape(), (Shape{1, 2, 3}));
-    ASSERT_EQ(size_t(t.get_partial_shape().rank()), 3);
+    ASSERT_EQ(t.get_partial_shape().rank().get_length(), 3);
     ASSERT_TRUE(t.get_partial_shape().same_scheme(PartialShape{1, 2, 3}));
 }
 
@@ -245,7 +235,7 @@ TEST(partial_shape, tensor_descriptor_from_static_partial_shape)
     descriptor::Tensor t{element::i32, PartialShape{1, 2, 3}, "Burnside"};
 
     ASSERT_EQ(t.get_shape(), (Shape{1, 2, 3}));
-    ASSERT_EQ(size_t(t.get_partial_shape().rank()), 3);
+    ASSERT_EQ(t.get_partial_shape().rank().get_length(), 3);
     ASSERT_TRUE(t.get_partial_shape().same_scheme(PartialShape{1, 2, 3}));
 }
 
@@ -253,7 +243,7 @@ TEST(partial_shape, tensor_descriptor_from_rank_static_dynamic_partial_shape)
 {
     descriptor::Tensor t{element::i32, PartialShape{1, Dimension::dynamic(), 3}, "Couch"};
 
-    ASSERT_EQ(size_t(t.get_partial_shape().rank()), 3);
+    ASSERT_EQ(t.get_partial_shape().rank().get_length(), 3);
     ASSERT_THROW({ t.get_shape(); }, std::invalid_argument);
     ASSERT_TRUE(t.get_partial_shape().same_scheme(PartialShape{1, Dimension::dynamic(), 3}));
 }
@@ -374,7 +364,7 @@ TEST(partial_shape, dim_merge_left_dynamic)
     Dimension d;
     ASSERT_TRUE(Dimension::merge(d, Dimension::dynamic(), 3));
     ASSERT_TRUE(d.is_static());
-    ASSERT_EQ(size_t(d), 3);
+    ASSERT_EQ(d.get_length(), 3);
 }
 
 TEST(partial_shape, dim_merge_right_dynamic)
@@ -382,7 +372,7 @@ TEST(partial_shape, dim_merge_right_dynamic)
     Dimension d;
     ASSERT_TRUE(Dimension::merge(d, 3, Dimension::dynamic()));
     ASSERT_TRUE(d.is_static());
-    ASSERT_EQ(size_t(d), 3);
+    ASSERT_EQ(d.get_length(), 3);
 }
 
 TEST(partial_shape, dim_merge_both_static_equal)
@@ -390,7 +380,7 @@ TEST(partial_shape, dim_merge_both_static_equal)
     Dimension d;
     ASSERT_TRUE(Dimension::merge(d, 3, 3));
     ASSERT_TRUE(d.is_static());
-    ASSERT_EQ(size_t(d), 3);
+    ASSERT_EQ(d.get_length(), 3);
 }
 
 TEST(partial_shape, dim_merge_both_static_unequal)
@@ -398,7 +388,7 @@ TEST(partial_shape, dim_merge_both_static_unequal)
     Dimension d = 163;
     ASSERT_FALSE(Dimension::merge(d, 3, 4));
     ASSERT_TRUE(d.is_static());
-    ASSERT_EQ(size_t(d), 163);
+    ASSERT_EQ(d.get_length(), 163);
 }
 
 TEST(partial_shape, partial_shape_merge_both_rank_dynamic)
@@ -554,7 +544,7 @@ TEST(partial_shape, dim_pluseq_both_static)
     d1 += d2;
 
     ASSERT_TRUE(d1.is_static());
-    ASSERT_EQ(size_t(d1), 5);
+    ASSERT_EQ(d1.get_length(), 5);
 }
 
 TEST(partial_shape, dim_timeseq_left_dynamic_right_nonzero)
@@ -575,7 +565,7 @@ TEST(partial_shape, dim_timeseq_left_dynamic_right_zero)
     d1 *= d2;
 
     ASSERT_TRUE(d1.is_static());
-    ASSERT_EQ(size_t(d1), 0);
+    ASSERT_EQ(d1.get_length(), 0);
 }
 
 TEST(partial_shape, dim_timeseq_right_dynamic_left_nonzero)
@@ -596,7 +586,7 @@ TEST(partial_shape, dim_timeseq_right_dynamic_left_zero)
     d1 *= d2;
 
     ASSERT_TRUE(d1.is_static());
-    ASSERT_EQ(size_t(d1), 0);
+    ASSERT_EQ(d1.get_length(), 0);
 }
 
 TEST(partial_shape, dim_timeseq_both_static)
@@ -607,7 +597,7 @@ TEST(partial_shape, dim_timeseq_both_static)
     d1 *= d2;
 
     ASSERT_TRUE(d1.is_static());
-    ASSERT_EQ(size_t(d1), 6);
+    ASSERT_EQ(d1.get_length(), 6);
 }
 
 TEST(partial_shape, dim_relaxes_refines_dyn_dyn)

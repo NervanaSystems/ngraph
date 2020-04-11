@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,12 +17,15 @@
 #include <cstdint>
 #include <memory>
 
+#include "default_opset.hpp"
+#include "dequantize_linear.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "ngraph/shape.hpp"
-#include "quantize_linear.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -55,29 +58,22 @@ namespace ngraph
                     int64_t axis_0{node.get_attribute_value<int64_t>("axis", 0)};
                     int64_t axis_1{node.get_attribute_value<int64_t>("axis", 1)};
 
+                    const auto data_rank = x->get_output_partial_shape(0).rank();
                     AxisSet axes;
                     // if axis attribute is set
                     if (axis_0 == axis_1)
                     {
-                        // positive axis
-                        if (axis_0 >= 0)
-                        {
-                            axes.insert(axis_0);
-                        }
-                        // negative axis
-                        else if (axis_0 < 0)
-                        {
-                            axes.insert(x->get_shape().size() + axis_0);
-                        }
+                        axes.insert(
+                            ngraph::normalize_axis(node.get_description(), axis_0, data_rank));
                     }
 
                     if (x->get_element_type() != zero_point->get_element_type())
                     {
-                        zero_point = std::make_shared<ngraph::op::Convert>(zero_point,
-                                                                           x->get_element_type());
+                        zero_point = std::make_shared<default_opset::Convert>(
+                            zero_point, x->get_element_type());
                     }
 
-                    return {std::make_shared<ngraph::op::Dequantize>(
+                    return {std::make_shared<ngraph::opset0::Dequantize>(
                         x, x_scale, zero_point, x_scale->get_element_type(), axes)};
                 }
 

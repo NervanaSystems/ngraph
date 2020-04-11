@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ namespace ngraph
         {
             template <typename T>
             CPUKernelFunctor prepare_functor(const Node* node,
-                                             const vector<TensorViewWrapper>& args,
-                                             const vector<TensorViewWrapper>& out,
+                                             const vector<TensorWrapper>& args,
+                                             const vector<TensorWrapper>& out,
                                              CPU_ExternalFunction* external_function)
             {
                 auto ru = static_cast<const ngraph::op::RandomUniform*>(node);
@@ -111,6 +111,9 @@ namespace ngraph
                 case element::Type_t::dynamic:
                     NGRAPH_CHECK(false,
                                  "Encountered 'dynamic' element type in fold_constant_convert");
+                    break;
+                case element::Type_t::u1:
+                    NGRAPH_CHECK(false, "Encountered 'u1' element type in fold_constant_convert");
                     break;
                 case element::Type_t::boolean:
                     functor = prepare_functor<char>(node, args, out, external_function);

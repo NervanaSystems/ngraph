@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief Operation which "adds" axes to an input tensor, replicating elements from the
             ///        input as needed along the new axes.
-            class Broadcast : public Op
+            class NGRAPH_API Broadcast : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Broadcast", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a broadcast operation.
@@ -46,11 +45,11 @@ namespace ngraph
                 Broadcast(const Output<Node>& arg,
                           const Shape& shape,
                           const AxisSet& broadcast_axes);
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return A set containing the indices of the broadcast axes (0-based).
                 const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
@@ -66,7 +65,7 @@ namespace ngraph
                           const AxisSet& broadcast_axes);
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 virtual void infer_shape() {}
                 Shape m_shape;
@@ -74,10 +73,9 @@ namespace ngraph
             };
 
             /// \brief Broadcast arg to the same shape as like_arg.
-            class BroadcastLike : public v0::Broadcast
+            class NGRAPH_API BroadcastLike : public v0::Broadcast
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"BroadcastLike", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Broadcast arg to the same shape as like_arg.
@@ -94,9 +92,9 @@ namespace ngraph
                 BroadcastLike(const Output<Node>& arg,
                               const Output<Node>& like_arg,
                               const AxisSet& initial_broadcast_axes);
-
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 void infer_shape() override;
                 const AxisSet& get_initial_broadcast_axes() const
@@ -117,10 +115,9 @@ namespace ngraph
         {
             /// \brief Operation which "adds" axes to an input tensor, replicating elements from the
             ///        input as needed along the new axes.
-            class Broadcast : public Op
+            class NGRAPH_API Broadcast : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Broadcast", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a broadcast operation.
@@ -154,12 +151,12 @@ namespace ngraph
                           const Output<Node>& target_shape,
                           const AutoBroadcastSpec& broadcast_spec =
                               AutoBroadcastSpec(AutoBroadcastType::NUMPY));
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return Broadcast Specification.
                 const AutoBroadcastSpec& get_broadcast_spec() const { return m_broadcast_spec; }
@@ -167,13 +164,12 @@ namespace ngraph
                 {
                     m_broadcast_spec = broadcast_spec;
                 }
-
                 /// \return true and the AxisSet if broadcast axes can be fully determined.
                 std::pair<bool, AxisSet> get_broadcast_axes() const;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             private:
                 AutoBroadcastSpec m_broadcast_spec;

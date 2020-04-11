@@ -22,20 +22,18 @@ TEST(opset_transform, opset1_broadcast_upgrade_pass)
     pass_manager.register_pass<pass::Opset1Upgrade>();
     pass_manager.run_passes(f);
 
-    auto bcast_v1 = static_pointer_cast<op::v1::Broadcast>(
+    auto bcast_v1 = as_type_ptr<op::v1::Broadcast>(
         f->get_results().at(0)->input_value(0).get_node_shared_ptr());
 
-    EXPECT_EQ(bcast_v1->description(), "Broadcast");
-    EXPECT_EQ(bcast_v1->get_version(), 1);
+    ASSERT_TRUE(bcast_v1);
     EXPECT_EQ(bcast_v1->get_broadcast_spec(), op::AutoBroadcastSpec());
     EXPECT_EQ(bcast_v1->get_broadcast_axes(), (std::make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
-
-    EXPECT_EQ(bcast_v1->input_value(1).get_node()->description(), "Constant");
-    EXPECT_EQ(bcast_v1->input_value(2).get_node()->description(), "Constant");
-    EXPECT_EQ(static_pointer_cast<op::Constant>(bcast_v1->input_value(1).get_node_shared_ptr())
-                  ->get_shape_val(),
-              (Shape{3, 5, 4, 6}));
-    EXPECT_EQ(static_pointer_cast<op::Constant>(bcast_v1->input_value(2).get_node_shared_ptr())
+    ASSERT_TRUE(bcast_v1->input_value(1).get_node()->is_constant());
+    ASSERT_TRUE(bcast_v1->input_value(2).get_node()->is_constant());
+    EXPECT_EQ(
+        as_type_ptr<op::Constant>(bcast_v1->input_value(1).get_node_shared_ptr())->get_shape_val(),
+        (Shape{3, 5, 4, 6}));
+    EXPECT_EQ(as_type_ptr<op::Constant>(bcast_v1->input_value(2).get_node_shared_ptr())
                   ->get_axis_set_val(),
               (AxisSet{1, 3}));
 }
@@ -53,11 +51,10 @@ TEST(opset_transform, opset1_broadcast_downgrade_pass)
     pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
-    auto bcast_v0 = static_pointer_cast<op::v0::Broadcast>(
+    auto bcast_v0 = as_type_ptr<op::v0::Broadcast>(
         f->get_results().at(0)->input_value(0).get_node_shared_ptr());
 
-    EXPECT_EQ(bcast_v0->description(), "Broadcast");
-    EXPECT_EQ(bcast_v0->get_version(), 0);
+    ASSERT_TRUE(bcast_v0);
     EXPECT_EQ(bcast_v0->get_broadcast_shape(), (Shape{3, 1, 4, 2, 3}));
     EXPECT_EQ(bcast_v0->get_broadcast_axes(), (AxisSet{0, 2}));
 }

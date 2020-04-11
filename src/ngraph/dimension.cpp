@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 
 using namespace ngraph;
 
-Dimension::Dimension(int64_t dimension)
+Dimension::Dimension(value_type dimension)
     : m_dimension(dimension)
 {
     if (dimension == s_dynamic_val)
@@ -40,7 +40,7 @@ std::ostream& ngraph::operator<<(std::ostream& str, const Dimension& dimension)
 {
     if (dimension.is_static())
     {
-        return (str << int64_t(dimension));
+        return (str << dimension.get_length());
     }
     else
     {
@@ -50,36 +50,36 @@ std::ostream& ngraph::operator<<(std::ostream& str, const Dimension& dimension)
 
 Dimension Dimension::operator+(const Dimension& dim) const
 {
-    return (is_static() && dim.is_static() ? m_dimension + int64_t(dim) : Dimension::dynamic());
+    return (is_static() && dim.is_static() ? m_dimension + dim.get_length() : Dimension::dynamic());
 }
 
 Dimension Dimension::operator-(const Dimension& dim) const
 {
-    return (is_static() && dim.is_static() ? m_dimension - int64_t(dim) : Dimension::dynamic());
+    return (is_static() && dim.is_static() ? m_dimension - dim.get_length() : Dimension::dynamic());
 }
 
 Dimension Dimension::operator*(const Dimension& dim) const
 {
     return ((is_static() && dim.is_static())
-                ? m_dimension * int64_t(dim)
+                ? m_dimension * dim.get_length()
                 : (is_static() && m_dimension == 0)
                       ? 0
-                      : (dim.is_static() && int64_t(dim) == 0) ? 0 : Dimension::dynamic());
+                      : (dim.is_static() && dim.get_length() == 0) ? 0 : Dimension::dynamic());
 }
 
 bool Dimension::compatible(const Dimension& d) const
 {
-    return (is_dynamic() || d.is_dynamic() || m_dimension == int64_t(d));
+    return (is_dynamic() || d.is_dynamic() || m_dimension == d.get_length());
 }
 
 bool Dimension::relaxes(const Dimension& d) const
 {
-    return (is_dynamic() || (d.is_static() && int64_t(*this) == int64_t(d)));
+    return (is_dynamic() || (d.is_static() && get_length() == d.get_length()));
 }
 
 bool Dimension::refines(const Dimension& d) const
 {
-    return (d.is_dynamic() || (is_static() && int64_t(d) == int64_t(*this)));
+    return (d.is_dynamic() || (is_static() && d.get_length() == get_length()));
 }
 
 bool Dimension::merge(Dimension& dst, const Dimension d1, const Dimension d2)
@@ -94,7 +94,7 @@ bool Dimension::merge(Dimension& dst, const Dimension d1, const Dimension d2)
         dst = d1;
         return true;
     }
-    else if (int64_t(d1) != int64_t(d2))
+    else if (d1.get_length() != d2.get_length())
     {
         return false;
     }
@@ -115,16 +115,16 @@ bool Dimension::broadcast_merge(Dimension& dst, const Dimension d1, const Dimens
     else if (d1.is_dynamic() || d2.is_dynamic())
     {
         // One static. Set dst to static size if >1
-        auto ds = d1.is_dynamic() ? int64_t(d2) : int64_t(d1);
+        auto ds = d1.is_dynamic() ? d2.get_length() : d1.get_length();
         dst = (ds > 1) ? ds : Dimension::dynamic();
         return true;
     }
     else
     {
         // Static sizes. Both match or one of them is 1.
-        if (int64_t(d1) == int64_t(d2) || int64_t(d1) == 1 || int64_t(d2) == 1)
+        if (d1.get_length() == d2.get_length() || d1.get_length() == 1 || d2.get_length() == 1)
         {
-            dst = std::max(int64_t(d1), int64_t(d2));
+            dst = std::max(d1.get_length(), d2.get_length());
             return true;
         }
         else
@@ -132,4 +132,30 @@ bool Dimension::broadcast_merge(Dimension& dst, const Dimension d1, const Dimens
             return false;
         }
     }
+}
+
+Dimension::value_type Dimension::get_length() const
+{
+    if (is_dynamic())
+    {
+        throw std::invalid_argument("Cannot get length of dynamic dimension");
+    }
+    if (m_dimension < 0)
+    {
+        throw std::invalid_argument("Cannot get_length of negative dimension");
+    }
+    return m_dimension;
+}
+
+Dimension::operator size_t() const
+{
+    if (is_dynamic())
+    {
+        throw std::invalid_argument("Cannot convert dynamic dimension to size_t");
+    }
+    if (m_dimension < 0)
+    {
+        throw std::invalid_argument("Cannot convert negative dimension to size_t");
+    }
+    return m_dimension;
 }

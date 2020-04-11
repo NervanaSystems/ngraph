@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,14 +18,15 @@ import numpy as np
 
 import pytest
 import ngraph as ng
-from test.ngraph.util import get_runtime
+from test.ngraph.util import get_runtime, run_op_node
+from test.test_ops import convolution2d
 
 
 @pytest.mark.skip_on_gpu
 def test_convolution_2d():
-    runtime = get_runtime()
+
     # input_x should have shape N(batch) x C x H x W
-    input_x = ng.constant(np.array([
+    input_x = np.array([
         [0., 0., 5., 5., 0., 0., 0., 0., 0.],
         [0., 0., 5., 5., 0., 0., 0., 0., 0.],
         [0., 0., 5., 5., 0., 0., 0., 0., 0.],
@@ -34,18 +35,26 @@ def test_convolution_2d():
         [0., 0., 5., 5., 0., 0., 0., 0., 0.],
         [0., 0., 5., 5., 0., 0., 0., 0., 0.],
         [0., 0., 5., 5., 0., 0., 0., 0., 0.],
-        [0., 0., 5., 5., 0., 0., 0., 0., 0.]], dtype=np.float32).reshape(1, 1, 9, 9))
+        [0., 0., 5., 5., 0., 0., 0., 0., 0.]], dtype=np.float32).reshape(1, 1, 9, 9)
 
     # filter weights should have shape M x C x kH x kW
-    input_filter = ng.constant(np.array([
+    input_filter = np.array([
         [1., 0., -1.],
         [2., 0., -2.],
-        [1., 0., -1.]], dtype=np.float32).reshape(1, 1, 3, 3))
+        [1., 0., -1.]], dtype=np.float32).reshape(1, 1, 3, 3)
+
+    strides = np.array([1, 1])
+    pads_begin = np.array([1, 1])
+    pads_end = np.array([1, 1])
+    dilations = np.array([1, 1])
 
     # convolution with padding=1 should produce 9 x 9 output:
-    model = runtime.computation(ng.convolution(input_x, input_filter, padding_above=[1, 1],
-                                               padding_below=[1, 1]))
-    result = model()
+    result = run_op_node([input_x, input_filter],
+                         ng.convolution,
+                         strides,
+                         pads_begin,
+                         pads_end,
+                         dilations)
 
     assert np.allclose(result,
                        np.array([[[[0., -15., -15., 15., 15., 0., 0., 0., 0.],
@@ -60,8 +69,16 @@ def test_convolution_2d():
                                 dtype=np.float32))
 
     # convolution with padding=0 should produce 7 x 7 output:
-    model = runtime.computation(ng.convolution(input_x, input_filter))
-    result = model()
+    strides = np.array([1, 1])
+    pads_begin = np.array([0, 0])
+    pads_end = np.array([0, 0])
+    dilations = np.array([1, 1])
+    result = run_op_node([input_x, input_filter],
+                         ng.convolution,
+                         strides,
+                         pads_begin,
+                         pads_end,
+                         dilations)
     assert np.allclose(result,
                        np.array([[[[-20, -20, 20, 20, 0, 0, 0],
                                    [-20, -20, 20, 20, 0, 0, 0],
@@ -72,9 +89,19 @@ def test_convolution_2d():
                                    [-20, -20, 20, 20, 0, 0, 0]]]],
                                 dtype=np.float32))
 
+    strides = np.array([2, 2])
+    pads_begin = np.array([0, 0])
+    pads_end = np.array([0, 0])
+    dilations = np.array([1, 1])
+
     # convolution with strides=2 should produce 4 x 4 output:
-    model = runtime.computation(ng.convolution(input_x, input_filter, filter_strides=[2, 2]))
-    result = model()
+    result = run_op_node([input_x, input_filter],
+                         ng.convolution,
+                         strides,
+                         pads_begin,
+                         pads_end,
+                         dilations)
+
     assert np.allclose(result,
                        np.array([[[[-20., 20., 0., 0.],
                                    [-20., 20., 0., 0.],
@@ -82,10 +109,18 @@ def test_convolution_2d():
                                    [-20., 20., 0., 0.]]]],
                                 dtype=np.float32))
 
+    strides = np.array([1, 1])
+    pads_begin = np.array([0, 0])
+    pads_end = np.array([0, 0])
+    dilations = np.array([2, 2])
+
     # convolution with dilation=2 should produce 5 x 5 output:
-    model = runtime.computation(ng.convolution(input_x, input_filter,
-                                               filter_dilation_strides=(2, 2)))
-    result = model()
+    result = run_op_node([input_x, input_filter],
+                         ng.convolution,
+                         strides,
+                         pads_begin,
+                         pads_end,
+                         dilations)
     assert np.allclose(result,
                        np.array([[[[0, 0, 20, 20, 0],
                                    [0, 0, 20, 20, 0],
@@ -99,31 +134,32 @@ def test_convolution_2d():
 def test_convolution_backprop_data():
     runtime = get_runtime()
 
-    data_batch_shape = [1, 1, 9, 9]
+    output_spatial_shape = [9, 9]
     filter_shape = [1, 1, 3, 3]
-    output_delta_shape = [1, 1, 7, 7]
+    data_shape = [1, 1, 7, 7]
+    strides = [1, 1]
 
-    filter_param = ng.parameter(shape=filter_shape)
-    output_delta_param = ng.parameter(shape=output_delta_shape)
+    data_node = ng.parameter(shape=data_shape)
+    filter_node = ng.parameter(shape=filter_shape)
+    output_shape_node = ng.constant(np.array(output_spatial_shape, dtype=np.int64))
 
-    deconvolution = ng.convolution_backprop_data(data_batch_shape, filter_param, output_delta_param)
+    deconvolution = ng.convolution_backprop_data(data_node, filter_node, strides, output_shape_node)
 
-    data_batch_data = np.array([[[[-20, -20, 20, 20, 0, 0, 0],
-                                  [-20, -20, 20, 20, 0, 0, 0],
-                                  [-20, -20, 20, 20, 0, 0, 0],
-                                  [-20, -20, 20, 20, 0, 0, 0],
-                                  [-20, -20, 20, 20, 0, 0, 0],
-                                  [-20, -20, 20, 20, 0, 0, 0],
-                                  [-20, -20, 20, 20, 0, 0, 0]]]],
-                               dtype=np.float32)
+    input_data = np.array([[[[-20, -20, 20, 20, 0, 0, 0],
+                             [-20, -20, 20, 20, 0, 0, 0],
+                             [-20, -20, 20, 20, 0, 0, 0],
+                             [-20, -20, 20, 20, 0, 0, 0],
+                             [-20, -20, 20, 20, 0, 0, 0],
+                             [-20, -20, 20, 20, 0, 0, 0],
+                             [-20, -20, 20, 20, 0, 0, 0]]]], dtype=np.float32)
 
     filter_data = np.array([
         [1., 0., -1.],
         [2., 0., -2.],
         [1., 0., -1.]], dtype=np.float32).reshape(1, 1, 3, 3)
 
-    model = runtime.computation(deconvolution, filter_param, output_delta_param)
-    result = model(filter_data, data_batch_data)
+    model = runtime.computation(deconvolution, data_node, filter_node)
+    result = model(input_data, filter_data)
     assert np.allclose(result,
                        np.array([[[[-20., -20., 40., 40., -20., -20., 0., 0., 0.],
                                    [-60., -60., 120., 120., -60., -60., 0., 0., 0.],
@@ -135,3 +171,29 @@ def test_convolution_backprop_data():
                                    [-60., -60., 120., 120., -60., -60., 0., 0., 0.],
                                    [-20., -20., 40., 40., -20., -20., 0., 0., 0.]]]],
                                 dtype=np.float32))
+
+
+@pytest.mark.skip_on_gpu
+def test_convolution_v1():
+    input_tensor = np.arange(-128, 128, 1, dtype=np.float32).reshape(1, 1, 16, 16)
+    filters = np.ones(9, dtype=np.float32).reshape(1, 1, 3, 3)
+    filters[0, 0, 0, 0] = -1
+    filters[0, 0, 1, 1] = -1
+    filters[0, 0, 2, 2] = -1
+    filters[0, 0, 0, 2] = -1
+    filters[0, 0, 2, 0] = -1
+    strides = np.array([1, 1])
+    pads_begin = np.array([0, 0])
+    pads_end = np.array([0, 0])
+    dilations = np.array([1, 1])
+
+    result = run_op_node([input_tensor, filters],
+                         ng.convolution,
+                         strides,
+                         pads_begin,
+                         pads_end,
+                         dilations)
+
+    expected = convolution2d(input_tensor[0, 0], filters[0, 0]).reshape(1, 1, 14, 14)
+
+    assert np.allclose(result, expected)

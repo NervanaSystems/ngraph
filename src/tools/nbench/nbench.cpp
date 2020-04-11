@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,26 +34,18 @@
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/ops.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-static void configure_static_backends()
-{
-#ifdef NGRAPH_INTERPRETER_STATIC_LIB_ENABLE
-    ngraph::runtime::BackendManager::register_backend(
-        "INTERPRETER", ngraph::runtime::interpreter::get_backend_constructor_pointer());
-#endif
-}
 
 class PerfShape : public ngraph::runtime::PerformanceCounter
 {
@@ -81,7 +73,7 @@ vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
             throw runtime_error(os.str());
         }
 
-        Shape shape = node->output(0).get_shape();
+        Shape shape = node->get_output_shape(0);
         result.push_back(PerfShape(p, shape));
     }
     return result;
@@ -161,29 +153,6 @@ void print_results(vector<PerfShape> perf_data, bool timing_detail)
     }
 }
 
-element::Type get_op_element_type(const Node& op)
-{
-    element::Type type;
-    if (op.description() == "Convert")
-    {
-        type = op.input(0).get_element_type();
-    }
-    else if (op.description() == "Equal" || op.description() == "Greater" ||
-             op.description() == "GreaterEq" || op.description() == "Less" ||
-             op.description() == "LessEq" || op.description() == "NotEqual")
-    {
-        // Get the type of the second input, not the first
-        // All BinaryElementwiseComparision ops have the same type for inputs
-        // Select has bool for first input and the type we are interested in for the second
-        type = op.input(1).get_element_type();
-    }
-    else
-    {
-        type = op.output(0).get_element_type();
-    }
-    return type;
-}
-
 int main(int argc, char** argv)
 {
     string model_arg;
@@ -196,10 +165,10 @@ int main(int argc, char** argv)
     bool visualize = false;
     int warmup_iterations = 1;
     bool copy_data = true;
+    bool dump_results = false;
     bool dot_file = false;
     bool double_buffer = false;
 
-    configure_static_backends();
     for (int i = 1; i < argc; i++)
     {
         string arg = argv[i];
@@ -234,6 +203,10 @@ int main(int argc, char** argv)
         else if (arg == "--no_copy_data")
         {
             copy_data = false;
+        }
+        else if (arg == "--dump_results")
+        {
+            dump_results = true;
         }
         else if (arg == "-v" || arg == "--visualize")
         {
@@ -304,6 +277,7 @@ OPTIONS
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
+        --dump_results            Dump result tensors to standard output.
         --dot                     Generate Graphviz dot file
         --double_buffer           Double buffer inputs and outputs
 )###";
@@ -373,23 +347,24 @@ OPTIONS
                 set<string> type_list;
                 for (shared_ptr<Node> node : f->get_ordered_ops())
                 {
+                    for (auto value : node->outputs())
+                    {
+                        type_list.insert(value.get_element_type().c_type_string());
+                    }
                     for (descriptor::Tensor* tensor : node->liveness_new_list)
                     {
                         total_temporary_bytes += tensor->size();
                         total_temporary_count++;
                     }
                     string op_name = node->description();
-                    string shape_name = "{" + join(node->output(0).get_shape()) + "}";
+                    string shape_name = "{" + join(node->get_output_shape(0)) + "}";
                     op_list[op_name + shape_name]++;
-                    auto et = get_op_element_type(*node);
-                    string type_string = et.c_type_string();
-                    type_list.insert(type_string);
 
-                    if (op_name == "Constant")
+                    if (node->is_constant())
                     {
                         total_constant_count++;
-                        const Shape& shape = node->output(0).get_shape();
-                        size_t const_size = node->output(0).get_element_type().size();
+                        const Shape& shape = node->get_output_shape(0);
+                        size_t const_size = node->get_output_element_type(0).size();
                         if (shape.size() == 0)
                         {
                             total_constant_bytes += const_size;
@@ -397,21 +372,21 @@ OPTIONS
                         else
                         {
                             total_constant_bytes +=
-                                (const_size * shape_size(node->output(0).get_shape()));
+                                (const_size * shape_size(node->get_output_shape(0)));
                         }
                     }
-                    else if (op_name == "Parameter")
+                    else if (node->is_parameter())
                     {
                         total_parameter_count++;
-                        const Shape& shape = node->output(0).get_shape();
-                        size_t size = node->output(0).get_element_type().size() * shape_size(shape);
+                        const Shape& shape = node->get_output_shape(0);
+                        size_t size = node->get_output_element_type(0).size() * shape_size(shape);
                         total_parameter_bytes += size;
                     }
-                    else if (op_name == "Result")
+                    else if (is_type<op::Result>(node))
                     {
                         total_result_count++;
-                        const Shape& shape = node->input(0).get_shape();
-                        size_t size = node->input(0).get_element_type().size() * shape_size(shape);
+                        const Shape& shape = node->get_input_shape(0);
+                        size_t size = node->get_input_element_type(0).size() * shape_size(shape);
                         total_result_bytes += size;
                     }
                 }
@@ -442,17 +417,30 @@ OPTIONS
             if (!backend.empty())
             {
                 cout << "\n---- Benchmark ----\n";
+                stopwatch t1;
+                t1.start();
                 shared_ptr<Function> f = deserialize(model);
+                stringstream ss;
+                ss.imbue(locale(""));
+                ss << t1.get_milliseconds();
+                cout << "deserialize took " << ss.str() << "ms\n";
                 vector<runtime::PerformanceCounter> perf_data;
                 if (double_buffer)
                 {
+                    NGRAPH_CHECK(!dump_results,
+                                 "'dump_results' not implemented in double buffer mode");
                     perf_data = run_benchmark_pipelined(
                         f, backend, iterations, timing_detail, warmup_iterations, copy_data);
                 }
                 else
                 {
-                    perf_data = run_benchmark(
-                        f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                    perf_data = run_benchmark(f,
+                                              backend,
+                                              iterations,
+                                              timing_detail,
+                                              warmup_iterations,
+                                              copy_data,
+                                              dump_results);
                 }
                 auto perf_shape = to_perf_shape(f, perf_data);
                 aggregate_perf_data.insert(

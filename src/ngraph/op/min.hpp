@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,10 +26,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Min-reduction operation.
-            class Min : public util::ArithmeticReduction
+            class NGRAPH_API Min : public util::ArithmeticReduction
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Min", 0};
 
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
@@ -49,7 +48,7 @@ namespace ngraph
                 Min(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The default value for Min.
                 virtual std::shared_ptr<Node> get_default_value() const override;
@@ -58,10 +57,9 @@ namespace ngraph
 
         namespace v1
         {
-            class ReduceMin : public util::ArithmeticReductionKeepDims
+            class NGRAPH_API ReduceMin : public util::ArithmeticReductionKeepDims
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ReduceMin", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a summation operation.
@@ -77,7 +75,7 @@ namespace ngraph
 
                 size_t get_version() const override { return 1; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
 

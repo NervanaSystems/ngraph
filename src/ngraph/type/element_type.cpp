@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,24 +20,28 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-NGRAPH_API const element::Type element::dynamic(element::Type_t::dynamic);
-NGRAPH_API const element::Type element::boolean(element::Type_t::boolean);
-NGRAPH_API const element::Type element::bf16(element::Type_t::bf16);
-NGRAPH_API const element::Type element::f16(element::Type_t::f16);
-NGRAPH_API const element::Type element::f32(element::Type_t::f32);
-NGRAPH_API const element::Type element::f64(element::Type_t::f64);
-NGRAPH_API const element::Type element::i8(element::Type_t::i8);
-NGRAPH_API const element::Type element::i16(element::Type_t::i16);
-NGRAPH_API const element::Type element::i32(element::Type_t::i32);
-NGRAPH_API const element::Type element::i64(element::Type_t::i64);
-NGRAPH_API const element::Type element::u8(element::Type_t::u8);
-NGRAPH_API const element::Type element::u16(element::Type_t::u16);
-NGRAPH_API const element::Type element::u32(element::Type_t::u32);
-NGRAPH_API const element::Type element::u64(element::Type_t::u64);
+const element::Type element::dynamic(element::Type_t::dynamic);
+const element::Type element::boolean(element::Type_t::boolean);
+const element::Type element::bf16(element::Type_t::bf16);
+const element::Type element::f16(element::Type_t::f16);
+const element::Type element::f32(element::Type_t::f32);
+const element::Type element::f64(element::Type_t::f64);
+const element::Type element::i8(element::Type_t::i8);
+const element::Type element::i16(element::Type_t::i16);
+const element::Type element::i32(element::Type_t::i32);
+const element::Type element::i64(element::Type_t::i64);
+const element::Type element::u1(element::Type_t::u1);
+const element::Type element::u8(element::Type_t::u8);
+const element::Type element::u16(element::Type_t::u16);
+const element::Type element::u32(element::Type_t::u32);
+const element::Type element::u64(element::Type_t::u64);
+
+constexpr DiscreteTypeInfo AttributeAdapter<element::Type>::type_info;
 
 class TypeInfo
 {
@@ -80,6 +84,7 @@ static const map<element::Type_t, const TypeInfo>& get_type_info_map()
         {element::Type_t::i16, TypeInfo(16, false, true, false, "int16_t", "i16")},
         {element::Type_t::i32, TypeInfo(32, false, true, true, "int32_t", "i32")},
         {element::Type_t::i64, TypeInfo(64, false, true, false, "int64_t", "i64")},
+        {element::Type_t::u1, TypeInfo(1, false, false, false, "uint1_t", "u1")},
         {element::Type_t::u8, TypeInfo(8, false, false, true, "uint8_t", "u8")},
         {element::Type_t::u16, TypeInfo(16, false, false, false, "uint16_t", "u16")},
         {element::Type_t::u32, TypeInfo(32, false, false, false, "uint32_t", "u32")},
@@ -100,6 +105,7 @@ std::vector<const element::Type*> element::Type::get_known_types()
                                             &element::i16,
                                             &element::i32,
                                             &element::i64,
+                                            &element::u1,
                                             &element::u8,
                                             &element::u16,
                                             &element::u32,
@@ -234,9 +240,7 @@ namespace ngraph
 
 std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
 {
-    out << "element::Type{" << obj.bitwidth() << ", " << obj.is_real() << ", " << obj.is_signed()
-        << ", " << obj.is_quantized() << ", \"" << obj.c_type_string() << "\"}";
-    return out;
+    return out << obj.get_type_name();
 }
 
 bool element::Type::compatible(const element::Type& t) const
@@ -277,6 +281,11 @@ bool element::Type::is_real() const
     return get_type_info_map().at(m_type).m_is_real;
 }
 
+bool element::Type::is_integral_number() const
+{
+    return is_integral() && (m_type != element::boolean);
+}
+
 bool element::Type::is_signed() const
 {
     return get_type_info_map().at(m_type).m_is_signed;
@@ -290,4 +299,30 @@ bool element::Type::is_quantized() const
 size_t element::Type::bitwidth() const
 {
     return get_type_info_map().at(m_type).m_bitwidth;
+}
+
+size_t ngraph::compiler_byte_size(element::Type_t et)
+{
+    switch (et)
+    {
+#define ET_CASE(et)                                                                                \
+    case element::Type_t::et: return sizeof(element_type_traits<element::Type_t::et>::value_type);
+        ET_CASE(boolean);
+        ET_CASE(bf16);
+        ET_CASE(f16);
+        ET_CASE(f32);
+        ET_CASE(f64);
+        ET_CASE(i8);
+        ET_CASE(i16);
+        ET_CASE(i32);
+        ET_CASE(i64);
+        ET_CASE(u1);
+        ET_CASE(u8);
+        ET_CASE(u16);
+        ET_CASE(u32);
+        ET_CASE(u64);
+#undef ET_CASE
+    case element::Type_t::undefined: return 0;
+    case element::Type_t::dynamic: return 0;
+    }
 }

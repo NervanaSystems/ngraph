@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,9 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/max_pool.hpp"
+#include <memory>
+
 #include "core/null_node.hpp"
-#include "ngraph/node.hpp"
+#include "max_pool.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "utils/pooling_factory.hpp"
 
 namespace ngraph
@@ -29,7 +31,7 @@ namespace ngraph
             {
                 NodeVector max_pool(const Node& node)
                 {
-                    auto max_pool = pooling::PoolingFactory(node).make_max_pool();
+                    auto max_pool = pooling::LocalPoolingFactory(node).make_max_pool();
                     max_pool.emplace_back(std::make_shared<NullNode>()); // Indices (optional)
                     return max_pool;
                 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include <mkldnn.hpp>
 
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
@@ -37,8 +38,8 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -411,7 +412,8 @@ namespace ngraph
                         (node->get_input_element_type(0) == element::f32 ||
                          node->get_input_element_type(0) == element::u8 ||
                          node->get_input_element_type(0) == element::i8 ||
-                         node->get_input_element_type(0) == element::bf16))
+                         (node->get_input_element_type(0) == element::bf16 &&
+                          runtime::cpu::mkldnn_utils::is_bf16_supported())))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -547,11 +549,14 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::LRN)
                 {
                     (void)external_function;
+                    auto lrn = static_cast<ngraph::op::LRN*>(node);
+                    AxisSet axes = lrn->get_reduction_axes();
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->get_output_shape(0);
 
-                    if ((arg0_rank == 4) && node->get_input_element_type(0) == element::f32)
+                    if ((arg0_rank == 4) && node->get_input_element_type(0) == element::f32 &&
+                        axes == AxisSet{1})
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -658,6 +663,7 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Rnn)
                 {
                     (void)external_function;
+                    auto rnn_op = static_cast<ngraph::op::Rnn*>(node);
                     auto src_layer_rank = node->get_input_shape(0).size();
                     auto src_iter_rank = node->get_input_shape(1).size();
 #if MKLDNN_VERSION_MAJOR < 1
@@ -672,16 +678,33 @@ namespace ngraph
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
 #else
-                    auto src_iter_c_rank = node->get_input_shape(2).size();
-                    auto weights_layer_rank = node->get_input_shape(3).size();
-                    auto weights_iter_rank = node->get_input_shape(4).size();
-                    auto bias_rank = node->get_input_shape(5).size();
-                    if ((src_layer_rank == 2 && src_iter_rank == 2 && src_iter_c_rank == 2 &&
-                         weights_layer_rank == 2 && weights_iter_rank == 2 && bias_rank == 1 &&
-                         node->get_input_element_type(0) == element::f32 &&
-                         node->get_input_element_type(1) == element::f32))
+
+                    if (rnn_op->is_type(ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm))
                     {
-                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                        auto src_iter_c_rank = node->get_input_shape(2).size();
+                        auto weights_layer_rank = node->get_input_shape(3).size();
+                        auto weights_iter_rank = node->get_input_shape(4).size();
+                        auto bias_rank = node->get_input_shape(5).size();
+                        if ((src_layer_rank == 2 && src_iter_rank == 2 && src_iter_c_rank == 2 &&
+                             weights_layer_rank == 2 && weights_iter_rank == 2 && bias_rank == 1 &&
+                             node->get_input_element_type(0) == element::f32 &&
+                             node->get_input_element_type(1) == element::f32))
+                        {
+                            runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                        }
+                    }
+                    else if (rnn_op->is_type(ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_rnn))
+                    {
+                        auto weights_layer_rank = node->get_input_shape(2).size();
+                        auto weights_iter_rank = node->get_input_shape(3).size();
+                        auto bias_rank = node->get_input_shape(4).size();
+                        if ((src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
+                             weights_iter_rank == 2 && bias_rank == 1 &&
+                             node->get_input_element_type(0) == element::f32 &&
+                             node->get_input_element_type(1) == element::f32))
+                        {
+                            runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                        }
                     }
 #endif
                 }

@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 import numpy as np
+import pytest
 
 import ngraph as ng
 from test.ngraph.util import get_runtime
@@ -90,7 +91,7 @@ def test_fake_quantize():
     expected = np.array([[[[[2., 2., 2., 2.],
                             [6.6666669, 6.6666669, 6.6666669, 6.6666669],
                             [6.6666669, 6.6666669, 6.6666669, 6.6666669]],
-                        [[11.33333301, 11.33333301, 11.33333301, 11.33333301],
+                           [[11.33333301, 11.33333301, 11.33333301, 11.33333301],
                             [11.33333301, 11.33333301, 11.33333301, 11.33333301],
                             [16., 16., 16., 16.]]]]], dtype=np.float32)
     assert np.allclose(result, expected)
@@ -100,13 +101,13 @@ def test_depth_to_space():
     runtime = get_runtime()
 
     data_value = np.array([[[[0, 1, 2],
-                            [3, 4, 5]],
+                             [3, 4, 5]],
                             [[6, 7, 8],
-                            [9, 10, 11]],
+                             [9, 10, 11]],
                             [[12, 13, 14],
-                            [15, 16, 17]],
+                             [15, 16, 17]],
                             [[18, 19, 20],
-                            [21, 22, 23]]]], dtype=np.float32)
+                             [21, 22, 23]]]], dtype=np.float32)
     mode = 'blocks_first'
     block_size = np.float32(2)
 
@@ -118,9 +119,9 @@ def test_depth_to_space():
 
     result = computation(data_value)
     expected = np.array([[[[0, 6, 1, 7, 2, 8],
-                        [12, 18, 13, 19, 14, 20],
-                        [3, 9, 4, 10, 5, 11],
-                        [15, 21, 16, 22, 17, 23]]]], dtype=np.float32)
+                           [12, 18, 13, 19, 14, 20],
+                           [3, 9, 4, 10, 5, 11],
+                           [15, 21, 16, 22, 17, 23]]]], dtype=np.float32)
     assert np.allclose(result, expected)
 
 
@@ -351,17 +352,19 @@ def test_hard_sigmoid_operator():
     runtime = get_runtime()
 
     data_shape = [3]
-    alpha = np.float32(0.5)
-    beta = np.float32(0.6)
+    alpha_value = np.float32(0.5)
+    beta_value = np.float32(0.6)
 
     data_value = np.array([-1, 0, 1], dtype=np.float32)
 
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    parameter_alpha = ng.parameter([], name='Alpha', dtype=np.float32)
+    parameter_beta = ng.parameter([], name='Beta', dtype=np.float32)
 
-    model = ng.hard_sigmoid(parameter_data, alpha, beta)
-    computation = runtime.computation(model, parameter_data)
+    model = ng.hard_sigmoid(parameter_data, parameter_alpha, parameter_beta)
+    computation = runtime.computation(model, parameter_data, parameter_alpha, parameter_beta)
 
-    result = computation(data_value)
+    result = computation(data_value, alpha_value, beta_value)
     expected = [0.1, 0.6, 1.]
     assert np.allclose(result, expected)
 
@@ -429,18 +432,19 @@ def test_space_to_depth_operator():
 
     data_shape = [1, 2, 4, 4]
     data_value = np.arange(start=0, stop=32, step=1.0, dtype=np.float32).reshape(data_shape)
+    mode = 'blocks_first'
     block_size = 2
 
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
 
-    model = ng.space_to_depth(parameter_data, block_size)
+    model = ng.space_to_depth(parameter_data, mode, block_size)
     computation = runtime.computation(model, parameter_data)
 
     result = computation(data_value)
     expected = np.array([0, 2, 8, 10, 16, 18, 24, 26,
-                        1, 3, 9, 11, 17, 19, 25, 27,
-                        4, 6, 12, 14, 20, 22, 28, 30,
-                        5, 7, 13, 15, 21, 23, 29, 31], dtype=np.float32).reshape(1, 8, 2, 2)
+                         1, 3, 9, 11, 17, 19, 25, 27,
+                         4, 6, 12, 14, 20, 22, 28, 30,
+                         5, 7, 13, 15, 21, 23, 29, 31], dtype=np.float32).reshape(1, 8, 2, 2)
     assert np.allclose(result, expected)
 
 
@@ -455,17 +459,20 @@ def test_rnn_cell_operator():
     W_shape = [hidden_size, input_size]
     R_shape = [hidden_size, hidden_size]
     H_t_shape = [batch_size, hidden_size]
-    B_shape = [2 * hidden_size]
+    B_shape = [hidden_size]
 
     parameter_X = ng.parameter(X_shape, name='X', dtype=np.float32)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=np.float32)
     parameter_W = ng.parameter(W_shape, name='W', dtype=np.float32)
     parameter_R = ng.parameter(R_shape, name='R', dtype=np.float32)
-    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=np.float32)
     parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
 
     X_value = np.array([0.3432185, 0.612268, 0.20272376,
                         0.9513413, 0.30585995, 0.7265472],
                        dtype=np.float32).reshape(X_shape)
+    H_t_value = np.array([0.12444675, 0.52055854, 0.46489045,
+                          0.4983964, 0.7730452, 0.28439692],
+                         dtype=np.float32).reshape(H_t_shape)
     W_value = np.array([0.41930267, 0.7872176, 0.89940447,
                         0.23659843, 0.24676207, 0.17101714,
                         0.3147149, 0.6555601, 0.4559603],
@@ -474,11 +481,7 @@ def test_rnn_cell_operator():
                         0.71549815, 0.18775631, 0.3182116,
                         0.25392973, 0.38301638, 0.85531586],
                        dtype=np.float32).reshape(R_shape)
-    H_t_value = np.array([0.12444675, 0.52055854, 0.46489045,
-                          0.4983964, 0.7730452, 0.28439692],
-                         dtype=np.float32).reshape(H_t_shape)
-    B_value = np.array([0.45513555, 0.96227735, 0.24737759,
-                        0.57380486, 0.67398053, 0.18968852],
+    B_value = np.array([1.0289404, 1.6362579, 0.4370661],
                        dtype=np.float32).reshape(B_shape)
     activations = ['sigmoid']
     activation_alpha = []
@@ -486,23 +489,23 @@ def test_rnn_cell_operator():
     clip = 2.88
 
     model = ng.rnn_cell(parameter_X,
+                        parameter_H_t,
                         parameter_W,
                         parameter_R,
-                        parameter_H_t,
-                        hidden_size,
                         parameter_B,
+                        hidden_size,
                         activations,
                         activation_alpha,
                         activation_beta,
                         clip)
     computation = runtime.computation(model,
                                       parameter_X,
+                                      parameter_H_t,
                                       parameter_W,
                                       parameter_R,
-                                      parameter_H_t,
                                       parameter_B)
 
-    result = computation(X_value, W_value, R_value, H_t_value, B_value)
+    result = computation(X_value, H_t_value, W_value, R_value, B_value)
     expected = np.array([0.94126844, 0.9036043, 0.841243,
                          0.9468489, 0.934215, 0.873708],
                         dtype=np.float32).reshape(batch_size, hidden_size)
@@ -514,32 +517,97 @@ def test_group_convolution_operator():
     runtime = get_runtime()
 
     data_shape = [1, 4, 2, 2]
-    filters_shape = [2, 2, 1, 1]
+    filters_shape = [2, 1, 2, 1, 1]
 
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
     parameter_filters = ng.parameter(filters_shape, name='Filters', dtype=np.float32)
 
     data_value = np.arange(start=1.0, stop=17.0, dtype=np.float32).reshape(data_shape)
     filters_value = np.arange(start=1.0, stop=5.0, dtype=np.float32).reshape(filters_shape)
-    window_movement_strides = [1, 1]
-    window_dilation_strides = [1, 1]
-    padding_below = [0, 0]
-    padding_above = [0, 0]
-    data_dilation_strides = [1, 1]
-    groups = 2
+    strides = [1, 1]
+    dilations = [1, 1]
+    pads_begin = [0, 0]
+    pads_end = [0, 0]
 
     model = ng.group_convolution(parameter_data,
                                  parameter_filters,
-                                 window_movement_strides,
-                                 window_dilation_strides,
-                                 padding_below, padding_above,
-                                 data_dilation_strides,
-                                 groups,
-                                 0)
+                                 strides,
+                                 pads_begin, pads_end,
+                                 dilations)
     computation = runtime.computation(model, parameter_data, parameter_filters)
-
     result = computation(data_value, filters_value)
+
     expected = np.array([11, 14, 17, 20, 79, 86, 93, 100],
                         dtype=np.float32).reshape(1, 2, 2, 2)
+
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.xfail(reason='Computation mismatch')
+def test_group_convolution_backprop_data():
+    runtime = get_runtime()
+
+    data_shape = [1, 1, 3, 3]
+    filters_shape = [1, 1, 1, 3, 3]
+    strides = [2, 2]
+    output_padding = [1, 1]
+    pads_begin = [1, 1]
+    pads_end = [1, 1]
+
+    data_node = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    filters_node = ng.parameter(filters_shape, name='Filters', dtype=np.float32)
+    model = ng.group_convolution_backprop_data(data_node, filters_node, strides, None, pads_begin,
+                                               pads_end, output_padding=output_padding)
+
+    data_value = np.array([0.16857791, -0.15161794, 0.08540368,
+                           0.1820628, -0.21746576, 0.08245695,
+                           0.1431433, -0.43156421, 0.30591947],
+                          dtype=np.float32).reshape(data_shape)
+
+    filters_value = np.array([-0.06230065, 0.37932432, -0.25388849,
+                              0.33878803, 0.43709868, -0.22477469,
+                              0.04118127, -0.44696793, 0.06373066],
+                             dtype=np.float32).reshape(filters_shape)
+
+    computation = runtime.computation(model, data_node, filters_node)
+    result = computation(data_value, filters_value)
+
+    expected = np.array(
+        [0.07368518, -0.08925839, -0.06627201, 0.06301362, 0.03732984, -0.01919658,
+         -0.00628807, -0.02817563, -0.01472169, 0.04392925, -0.00689478, -0.01549204,
+         0.07957941, -0.11459791, -0.09505399, 0.07681622, 0.03604182, -0.01853423,
+         -0.0270785, -0.00680824, -0.06650258, 0.08004665, 0.07918708, 0.0724144,
+         0.06256775, -0.17838378, -0.18863615, 0.20064656, 0.133717, -0.06876295,
+         -0.06398046, -0.00864975, 0.19289537, -0.01490572, -0.13673618, 0.01949645],
+        dtype=np.float32).reshape(1, 1, 6, 6)
+
+    assert np.allclose(result, expected)
+
+
+def test_group_convolution_backprop_data_output_shape():
+    runtime = get_runtime()
+
+    data_shape = [1, 1, 1, 10]
+    filters_shape = [1, 1, 1, 1, 5]
+    strides = [1, 1]
+
+    data_node = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    filters_node = ng.parameter(filters_shape, name='Filters', dtype=np.float32)
+    output_shape_node = ng.constant(np.array([1, 14], dtype=np.int64))
+
+    model = ng.group_convolution_backprop_data(data_node, filters_node, strides, output_shape_node,
+                                               auto_pad='same_upper')
+
+    data_value = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
+                          dtype=np.float32).reshape(data_shape)
+
+    filters_value = np.array([1.0, 2.0, 3.0, 2.0, 1.0], dtype=np.float32).reshape(filters_shape)
+
+    computation = runtime.computation(model, data_node, filters_node)
+    result = computation(data_value, filters_value)
+
+    expected = np.array(
+        [0.0, 1.0, 4.0, 10.0, 18.0, 27.0, 36.0, 45.0, 54.0, 63.0, 62.0, 50.0, 26.0, 9.0],
+        dtype=np.float32).reshape(1, 1, 1, 14)
 
     assert np.allclose(result, expected)

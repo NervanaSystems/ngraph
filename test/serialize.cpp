@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -230,7 +230,7 @@ TEST(serialize, passthrough)
         "SerializationTest",
         "Plain",
         "Hello, world!",
-        NodeVector{},
+        OutputVector{},
         std::vector<estuple>{estuple{element::f32, PartialShape{2, 3}},
                              estuple{element::i8, PartialShape{4, 5}}});
     auto f = make_shared<Function>(NodeVector{std::make_shared<op::GetOutputElement>(p, 0),
@@ -288,25 +288,25 @@ TEST(serialize, constant_infinity_nan)
     {
         if (node->get_friendly_name() == "A")
         {
-            a = static_pointer_cast<op::Constant>(node);
+            a = as_type_ptr<op::Constant>(node);
         }
         else if (node->get_friendly_name() == "B")
         {
-            b = static_pointer_cast<op::Constant>(node);
+            b = as_type_ptr<op::Constant>(node);
         }
         else if (node->get_friendly_name() == "C")
         {
-            c = static_pointer_cast<op::Constant>(node);
+            c = as_type_ptr<op::Constant>(node);
         }
         else if (node->get_friendly_name() == "D")
         {
-            d = static_pointer_cast<op::Constant>(node);
+            d = as_type_ptr<op::Constant>(node);
         }
     }
-    ASSERT_NE(a, nullptr);
-    ASSERT_NE(b, nullptr);
-    ASSERT_NE(c, nullptr);
-    ASSERT_NE(d, nullptr);
+    ASSERT_TRUE(a);
+    ASSERT_TRUE(b);
+    ASSERT_TRUE(c);
+    ASSERT_TRUE(d);
     EXPECT_TRUE(test::all_close_f(a->get_vector<float>(), a_data));
     EXPECT_TRUE(test::all_close_f(b->get_vector<float>(), b_data));
     EXPECT_TRUE(test::all_close_f(c->get_vector<float>(), c_data));
@@ -335,10 +335,10 @@ TEST(serialize, non_zero_node_output)
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_abs = g_result->input(0).get_source_output().get_node_shared_ptr();
-    auto topk_out = g_abs->input(0).get_source_output();
+    auto g_abs = g_result->input_value(0).get_node_shared_ptr();
+    auto topk_out = g_abs->input_value(0);
     EXPECT_EQ(topk_out.get_index(), 1);
-    EXPECT_EQ(topk_out.get_node()->description(), "TopK");
+    ASSERT_TRUE(is_type<op::TopK>(topk_out.get_node()));
 }
 
 TEST(serialize, opset1_softmax)
@@ -351,10 +351,8 @@ TEST(serialize, opset1_softmax)
 
     shared_ptr<Function> g = deserialize(s);
     const auto g_result = g->get_results().at(0);
-    const auto g_softmax = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_softmax->description(), "Softmax");
-    EXPECT_EQ(g_softmax->get_version(), 1);
+    const auto g_softmax = g_result->get_input_node_shared_ptr(0);
+    EXPECT_TRUE(is_type<op::v1::Softmax>(g_softmax));
 }
 
 TEST(serialize, opset1_gather)
@@ -370,10 +368,8 @@ TEST(serialize, opset1_gather)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_gather = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_gather->description(), "Gather");
-    EXPECT_EQ(g_gather->get_version(), 1);
+    auto g_gather = g_result->get_input_node_shared_ptr(0);
+    EXPECT_TRUE(is_type<op::v1::Gather>(g_gather));
 }
 
 TEST(serialize, opset1_product)
@@ -388,13 +384,11 @@ TEST(serialize, opset1_product)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_red_prod = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_red_prod->description(), "Product");
-    EXPECT_EQ(g_red_prod->get_version(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::ReduceProd*>(g_red_prod.get())->get_keep_dims(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::ReduceProd*>(g_red_prod.get())->get_reduction_axes(),
-              AxisSet({1, 2}));
+    auto g_red_prod = g_result->get_input_node_shared_ptr(0);
+    auto node = as_type_ptr<op::v1::ReduceProd>(g_red_prod);
+    EXPECT_TRUE(node);
+    EXPECT_EQ(node->get_keep_dims(), 1);
+    EXPECT_EQ(node->get_reduction_axes(), AxisSet({1, 2}));
 }
 
 TEST(serialize, opset1_sum)
@@ -409,13 +403,11 @@ TEST(serialize, opset1_sum)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_red_sum = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_red_sum->description(), "Sum");
-    EXPECT_EQ(g_red_sum->get_version(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::ReduceSum*>(g_red_sum.get())->get_keep_dims(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::ReduceSum*>(g_red_sum.get())->get_reduction_axes(),
-              AxisSet({1, 2}));
+    auto g_red_sum = g_result->get_input_node_shared_ptr(0);
+    auto node = as_type_ptr<op::v1::ReduceSum>(g_red_sum);
+    EXPECT_TRUE(node);
+    EXPECT_EQ(node->get_keep_dims(), 1);
+    EXPECT_EQ(node->get_reduction_axes(), AxisSet({1, 2}));
 }
 
 TEST(serialize, opset1_pad)
@@ -434,11 +426,267 @@ TEST(serialize, opset1_pad)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_pad = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_pad = as_type_ptr<op::v1::Pad>(g_result->input_value(0).get_node_shared_ptr());
+    ASSERT_TRUE(g_pad);
+    EXPECT_EQ(g_pad->get_pad_mode(), pad_mode);
+}
 
-    EXPECT_EQ(g_pad->description(), "Pad");
-    EXPECT_EQ(g_pad->get_version(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::Pad*>(g_pad.get())->get_pad_mode(), pad_mode);
+TEST(serialize, tensor_iterator_raw)
+{
+    // That which we iterate over
+    auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+
+    // Common to all cells
+    auto WH = make_shared<op::Parameter>(element::f32, Shape{20, 20});
+    auto WX = make_shared<op::Parameter>(element::f32, Shape{10, 20});
+    auto bH = make_shared<op::Parameter>(element::f32, Shape{20});
+    auto WY = make_shared<op::Parameter>(element::f32, Shape{20, 5});
+    auto bY = make_shared<op::Parameter>(element::f32, Shape{5});
+
+    // Initial values
+    auto Hinit = make_shared<op::Parameter>(element::f32, Shape{32, 1, 20});
+
+    // Set up the cell body, a function from (Hi, Xi) -> (Ho, Yo)
+    // Cell parameters
+    auto Hi = make_shared<op::Parameter>(element::f32, Shape{32, 1, 20});
+    auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 1, 10});
+    auto WH_body = make_shared<op::Parameter>(element::f32, Shape{20, 20});
+    auto WX_body = make_shared<op::Parameter>(element::f32, Shape{10, 20});
+    auto bH_body = make_shared<op::Parameter>(element::f32, Shape{20});
+    auto WY_body = make_shared<op::Parameter>(element::f32, Shape{20, 5});
+    auto bY_body = make_shared<op::Parameter>(element::f32, Shape{5});
+
+    // Body
+    auto Ho = make_shared<op::Reshape>(
+        make_shared<op::Relu>(
+            make_shared<op::Dot>(make_shared<op::Reshape>(Xi, AxisVector{0, 1, 2}, Shape{32, 10}),
+                                 WX_body) +
+            make_shared<op::Dot>(make_shared<op::Reshape>(Hi, AxisVector{0, 1, 2}, Shape{32, 20}),
+                                 WH_body) +
+            make_shared<op::Broadcast>(bH_body, Shape{32, 20}, AxisSet{0})),
+        AxisVector{0, 1},
+        Shape{32, 1, 20});
+    auto Yo = make_shared<op::Relu>(
+        make_shared<op::Dot>(make_shared<op::Reshape>(Ho, AxisVector{0, 1, 2}, Shape{32, 20}),
+                             WY_body) +
+        make_shared<op::Broadcast>(bY_body, Shape{32, 5}, AxisSet{0}));
+    auto body = make_shared<op::TensorIterator::BodyLambda>(
+        OutputVector{Yo, Ho}, ParameterVector{Xi, Hi, WH_body, WX_body, WY_body, bH_body, bY_body});
+
+    auto tensor_iterator = make_shared<op::TensorIterator>();
+    tensor_iterator->set_body(body);
+    // The Xi are the elements of Xseq
+    // start=0, stride=1, part_size=1, end=39, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 1, 1, 39, 1);
+    // Hi is Hinit on the first iteration, Ho after that
+    tensor_iterator->set_merged_input(Hi, Hinit, Ho);
+    tensor_iterator->set_invariant_input(WH_body, WH);
+    tensor_iterator->set_invariant_input(WX_body, WX);
+    tensor_iterator->set_invariant_input(WY_body, WY);
+    tensor_iterator->set_invariant_input(bH_body, bH);
+    tensor_iterator->set_invariant_input(bY_body, bY);
+
+    // Output 0 is last Yo
+    auto out0 = tensor_iterator->get_iter_value(Yo, -1);
+    // Output 1 is concat of hidden states
+    // start=0, stride=1, part_size=1, end=39, axis=1
+    auto out1 = tensor_iterator->get_concatenated_slices(Ho, 0, 1, 1, 39, 1);
+
+    auto results = ResultVector{make_shared<op::Result>(out0), make_shared<op::Result>(out1)};
+    auto f = make_shared<Function>(results, ParameterVector{X, Hinit, WH, WX, bH, WY, bY});
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
+}
+
+TEST(serialize, tensor_iterator_lstm)
+{
+    // That which we iterate over
+    const size_t N = 32; // Batch size
+    const size_t L = 10; // Sequence length
+    const size_t I = 8;  // Input size
+    const size_t H = 32; // Hidden size
+    auto SENT = make_shared<op::Parameter>(element::f32, Shape{N, L, I});
+
+    auto H_init = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
+    auto C_init = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
+
+    auto W = make_shared<op::Parameter>(element::f32, Shape{4 * H, I});
+    auto R = make_shared<op::Parameter>(element::f32, Shape{4 * H, H});
+    auto H_t = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
+    auto C_t = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
+
+    // Body
+    auto X = make_shared<op::Parameter>(element::f32, Shape{N, 1, I});
+    auto W_body = make_shared<op::Parameter>(element::f32, Shape{4 * H, I});
+    auto R_body = make_shared<op::Parameter>(element::f32, Shape{4 * H, H});
+    auto LSTM_cell =
+        make_shared<op::LSTMCell>(make_shared<op::Reshape>(X, AxisVector{0, 1, 2}, Shape{N, I}),
+                                  make_shared<op::Reshape>(H_t, AxisVector{0, 1, 2}, Shape{N, H}),
+                                  make_shared<op::Reshape>(C_t, AxisVector{0, 1, 2}, Shape{N, H}),
+                                  W_body,
+                                  R_body,
+                                  H);
+    auto H_o = make_shared<op::Reshape>(LSTM_cell->output(0), AxisVector{0, 1}, Shape{N, 1, H});
+    auto C_o = make_shared<op::Reshape>(LSTM_cell->output(1), AxisVector{0, 1}, Shape{N, 1, H});
+    auto body = make_shared<op::TensorIterator::BodyLambda>(
+        OutputVector{H_o, C_o}, ParameterVector{X, H_t, C_t, W_body, R_body});
+
+    auto tensor_iterator = make_shared<op::TensorIterator>();
+    tensor_iterator->set_body(body);
+    // start=0, stride=1, part_size=1, end=39, axis=1
+    tensor_iterator->set_sliced_input(X, SENT, 0, 1, 1, -1, 1);
+    // H_t is Hinit on the first iteration, Ho after that
+    tensor_iterator->set_merged_input(H_t, H_init, H_o);
+    tensor_iterator->set_merged_input(C_t, C_init, C_o);
+    tensor_iterator->set_invariant_input(W_body, W);
+    tensor_iterator->set_invariant_input(R_body, R);
+
+    // Output 0 is last Ho, result 0 of body
+    auto out0 = tensor_iterator->get_iter_value(H_o, -1);
+    // Output 1 is last Co, result 1 of body
+    auto out1 = tensor_iterator->get_iter_value(C_o, -1);
+
+    auto results = ResultVector{make_shared<op::Result>(out0), make_shared<op::Result>(out1)};
+    auto f = make_shared<Function>(results, ParameterVector{SENT, H_init, C_init, W, R});
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
+}
+
+TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
+{
+    // That which we iterate over
+    auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto Y = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto M = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+
+    // Set up the cell body, a function from (Xi, Yi) -> (Zo)
+    // Body parameters
+    auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+    auto Yi = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+    auto M_body = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+
+    // Body
+    auto Zo = (Xi + Yi) * M_body;
+    auto body = make_shared<op::TensorIterator::BodyLambda>(OutputVector{Zo},
+                                                            ParameterVector{Xi, Yi, M_body});
+
+    auto tensor_iterator = make_shared<op::TensorIterator>();
+    tensor_iterator->set_body(body);
+    // The Xi are the elements of Xseq
+    // start=0, stride=2, part_size=2, end=39, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 39, 1);
+    // The Yi are the elements of Yseq
+    // start=0, stride=2, part_size=2, end=-1, axis=1
+    tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -1, 1);
+    tensor_iterator->set_invariant_input(M_body, M);
+
+    // Output 0 is last Zo
+    auto out0 = tensor_iterator->get_iter_value(Zo, -1);
+    // Output 1 is concat of Zos
+    // start=0, stride=2, part_size=2, end=39, axis=1
+    auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 39, 1);
+
+    auto result0 = make_shared<op::Result>(out0);
+    auto result1 = make_shared<op::Result>(out1);
+    Shape out0_shape{32, 2, 10};
+    Shape out1_shape{32, 40, 10};
+
+    auto results = ResultVector{result0, result1};
+    auto f = make_shared<Function>(results, ParameterVector{X, Y, M});
+    EXPECT_EQ(result0->get_output_shape(0), out0_shape);
+    EXPECT_EQ(result1->get_output_shape(0), out1_shape);
+
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
+}
+
+TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
+{
+    // That which we iterate over
+    auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto Y = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto M = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+
+    // Set up the cell body, a function from (Xi, Yi) -> (Zo)
+    // Body parameters
+    auto Xi = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto Yi = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto M_body = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    // Body
+    auto Zo = (Xi + Yi) * M_body;
+    auto body = make_shared<op::TensorIterator::BodyLambda>(OutputVector{Zo},
+                                                            ParameterVector{Xi, Yi, M_body});
+
+    auto tensor_iterator = make_shared<op::TensorIterator>();
+    tensor_iterator->set_body(body);
+    // The Xi are the elements of Xseq
+    // start=0, stride=2, part_size=2, end=38, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 2, 2, 38, 1);
+    // The Yi are the elements of Yseq
+    // start=0, stride=2, part_size=2, end=-2, axis=1
+    tensor_iterator->set_sliced_input(Yi, Y, 0, 2, 2, -2, 1);
+    tensor_iterator->set_invariant_input(M_body, M);
+
+    // check input descriptors
+    for (auto& desc : tensor_iterator->get_input_descriptions())
+    {
+        auto type_info = desc->get_type_info();
+        if (std::strcmp(type_info.name, "InvariantInputDescription") == 0)
+        {
+            auto input_desc =
+                as_type_ptr<ngraph::op::TensorIterator::InvariantInputDescription>(desc);
+            EXPECT_NE(input_desc, nullptr);
+        }
+        else if (std::strcmp(type_info.name, "SliceInputDescription") == 0)
+        {
+            auto input_desc = as_type_ptr<ngraph::op::TensorIterator::SliceInputDescription>(desc);
+            EXPECT_NE(input_desc, nullptr);
+        }
+        else if (std::strcmp(type_info.name, "MergedInputDescription") == 0)
+        {
+            auto input_desc = as_type_ptr<ngraph::op::TensorIterator::MergedInputDescription>(desc);
+            EXPECT_NE(input_desc, nullptr);
+        }
+    }
+
+    // Output 0 is last Zo
+    auto out0 = tensor_iterator->get_iter_value(Zo, -1);
+    // Output 1 is concat of Zos
+    // start=0, stride=2, part_size=2, end=38, axis=1
+    auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 38, 1);
+
+    // check output descriptors
+    for (auto& desc : tensor_iterator->get_output_descriptions())
+    {
+        auto type_info = desc->get_type_info();
+        if (std::strcmp(type_info.name, "ConcatOutputDescription") == 0)
+        {
+            auto output_desc =
+                as_type_ptr<ngraph::op::TensorIterator::ConcatOutputDescription>(desc);
+            EXPECT_NE(output_desc, nullptr);
+        }
+        else if (std::strcmp(type_info.name, "BodyOutputDescription") == 0)
+        {
+            auto output_desc = as_type_ptr<ngraph::op::TensorIterator::BodyOutputDescription>(desc);
+            EXPECT_NE(output_desc, nullptr);
+        }
+    }
+
+    auto result0 = make_shared<op::Result>(out0);
+    auto result1 = make_shared<op::Result>(out1);
+    Shape out0_shape{32, 2, 10};
+    Shape out1_shape{32, 38, 10};
+
+    auto results = ResultVector{result0, result1};
+    auto f = make_shared<Function>(results, ParameterVector{X, Y, M});
+    EXPECT_EQ(result0->get_output_shape(0), out0_shape);
+    EXPECT_EQ(result1->get_output_shape(0), out1_shape);
+
+    EXPECT_EQ(body->get_results()[0]->get_output_shape(0), out0_shape);
+
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
 }
 
 TEST(serialize, opset1_strided_slice)
@@ -471,11 +719,10 @@ TEST(serialize, opset1_strided_slice)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_strided_slice_v1 = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_strided_slice_v1 = g_result->get_input_node_shared_ptr(0);
     auto strided_slice_out = as_type_ptr<op::v1::StridedSlice>(g_strided_slice_v1);
 
-    EXPECT_EQ(strided_slice_out->description(), "Slice");
-    EXPECT_EQ(strided_slice_out->get_version(), 1);
+    ASSERT_TRUE(strided_slice_out);
     EXPECT_EQ(strided_slice_out->get_begin_mask(), begin_mask);
     EXPECT_EQ(strided_slice_out->get_end_mask(), end_mask);
     EXPECT_EQ(strided_slice_out->get_new_axis_mask(), new_axis_mask);
@@ -504,11 +751,9 @@ TEST(serialize, opset1_binary_convolution)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_binary_conv = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_binary_conv = g_result->get_input_node_shared_ptr(0);
     auto binary_conv_out = as_type_ptr<op::v1::BinaryConvolution>(g_binary_conv);
-
-    EXPECT_EQ(binary_conv_out->description(), "BinaryConvolution");
-    EXPECT_EQ(binary_conv_out->get_version(), 1);
+    ASSERT_TRUE(binary_conv_out);
 
     EXPECT_EQ(binary_conv_out->get_strides(), strides);
     EXPECT_EQ(binary_conv_out->get_pads_begin(), pads_begin);
@@ -533,11 +778,77 @@ TEST(serialize, depth_to_space)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_depth_to_space = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_depth_to_space = g_result->get_input_node_shared_ptr(0);
     auto depth_to_space_out = as_type_ptr<op::DepthToSpace>(g_depth_to_space);
-
-    EXPECT_EQ(depth_to_space_out->description(), "DepthToSpace");
-    EXPECT_EQ(depth_to_space_out->get_version(), 0);
+    ASSERT_TRUE(depth_to_space_out);
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
     EXPECT_EQ(depth_to_space_out->get_mode(), mode);
+}
+
+TEST(serialize, space_to_depth)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 6, 8});
+    auto mode = op::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
+    size_t block_size = 2;
+    auto space_to_depth_in = make_shared<op::SpaceToDepth>(arg, mode, block_size);
+
+    auto result = make_shared<op::Result>(space_to_depth_in);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_space_to_depth = g_result->get_input_node_shared_ptr(0);
+    auto depth_to_space_out = as_type_ptr<op::SpaceToDepth>(g_space_to_depth);
+    ASSERT_TRUE(depth_to_space_out);
+    EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
+    EXPECT_EQ(depth_to_space_out->get_mode(), mode);
+}
+
+TEST(serialize, deformable_psroi_pooling)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto coords = make_shared<op::Parameter>(element::f32, Shape{1, 1});
+    auto offsets = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    const int64_t output_dim = 1;
+    const int64_t group_size = 2;
+    const float spatial_scale = 3;
+    std::string mode = "bilinear_deformable";
+    int64_t spatial_bins_x = 4;
+    int64_t spatial_bins_y = 5;
+    float trans_std = 6.1f;
+    int64_t part_size = 7;
+
+    auto def_psroi_pool_in = make_shared<op::v1::DeformablePSROIPooling>(input,
+                                                                         coords,
+                                                                         offsets,
+                                                                         output_dim,
+                                                                         spatial_scale,
+                                                                         group_size,
+                                                                         mode,
+                                                                         spatial_bins_x,
+                                                                         spatial_bins_y,
+                                                                         trans_std,
+                                                                         part_size);
+
+    auto result = make_shared<op::Result>(def_psroi_pool_in);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{input, coords, offsets});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_def_psroi_pool = g_result->get_input_node_shared_ptr(0);
+    auto def_psroi_pool_out = as_type_ptr<op::v1::DeformablePSROIPooling>(g_def_psroi_pool);
+
+    EXPECT_EQ(def_psroi_pool_out->description(), "DeformablePSROIPooling");
+    EXPECT_EQ(def_psroi_pool_out->get_version(), 1);
+
+    EXPECT_EQ(def_psroi_pool_out->get_output_dim(), output_dim);
+    EXPECT_EQ(def_psroi_pool_out->get_group_size(), group_size);
+    EXPECT_EQ(def_psroi_pool_out->get_spatial_scale(), spatial_scale);
+    EXPECT_EQ(def_psroi_pool_out->get_mode(), mode);
+    EXPECT_EQ(def_psroi_pool_out->get_spatial_bins_x(), spatial_bins_x);
+    EXPECT_EQ(def_psroi_pool_out->get_spatial_bins_y(), spatial_bins_y);
+    EXPECT_EQ(def_psroi_pool_out->get_trans_std(), trans_std);
+    EXPECT_EQ(def_psroi_pool_out->get_part_size(), part_size);
 }

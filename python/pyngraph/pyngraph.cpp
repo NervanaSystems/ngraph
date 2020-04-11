@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include "pyngraph/coordinate_diff.hpp"
 #include "pyngraph/function.hpp"
 #include "pyngraph/node.hpp"
+#include "pyngraph/node_factory.hpp"
 #if defined(NGRAPH_ONNX_IMPORT_ENABLE)
 #include "pyngraph/onnx_import/onnx_import.hpp"
 #endif
@@ -41,6 +42,7 @@ PYBIND11_MODULE(_pyngraph, m)
 {
     m.doc() = "Package ngraph.impl that wraps nGraph's namespace ngraph";
     regclass_pyngraph_Node(m);
+    regclass_pyngraph_NodeFactory(m);
     regclass_pyngraph_Shape(m);
     regclass_pyngraph_Strides(m);
     regclass_pyngraph_CoordinateDiff(m);

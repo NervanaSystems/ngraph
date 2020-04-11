@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,75 +23,14 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/all.hpp"
-#include "ngraph/op/allreduce.hpp"
-#include "ngraph/op/and.hpp"
-#include "ngraph/op/any.hpp"
-#include "ngraph/op/argmax.hpp"
-#include "ngraph/op/argmin.hpp"
-#include "ngraph/op/avg_pool.hpp"
-#include "ngraph/op/batch_norm.hpp"
-#include "ngraph/op/binary_convolution.hpp"
-#include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/broadcast_distributed.hpp"
-#include "ngraph/op/concat.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/dot.hpp"
-#include "ngraph/op/embedding_lookup.hpp"
-#include "ngraph/op/equal.hpp"
-#include "ngraph/op/experimental/batch_mat_mul.hpp"
-#include "ngraph/op/experimental/dyn_broadcast.hpp"
-#include "ngraph/op/experimental/dyn_pad.hpp"
-#include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/random_uniform.hpp"
-#include "ngraph/op/experimental/shape_of.hpp"
-#include "ngraph/op/gather.hpp"
-#include "ngraph/op/get_output_element.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/op/greater_eq.hpp"
-#include "ngraph/op/less.hpp"
-#include "ngraph/op/less_eq.hpp"
-#include "ngraph/op/lrn.hpp"
-#include "ngraph/op/max.hpp"
-#include "ngraph/op/max_pool.hpp"
-#include "ngraph/op/maximum.hpp"
-#include "ngraph/op/min.hpp"
-#include "ngraph/op/minimum.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/not_equal.hpp"
-#include "ngraph/op/one_hot.hpp"
-#include "ngraph/op/or.hpp"
-#include "ngraph/op/pad.hpp"
-#include "ngraph/op/passthrough.hpp"
-#include "ngraph/op/power.hpp"
-#include "ngraph/op/product.hpp"
-#include "ngraph/op/quantize.hpp"
-#include "ngraph/op/quantized_convolution.hpp"
-#include "ngraph/op/quantized_dot.hpp"
-#include "ngraph/op/recv.hpp"
-#include "ngraph/op/replace_slice.hpp"
-#include "ngraph/op/reshape.hpp"
-#include "ngraph/op/result.hpp"
-#include "ngraph/op/reverse.hpp"
-#include "ngraph/op/reverse_sequence.hpp"
-#include "ngraph/op/send.hpp"
-#include "ngraph/op/slice.hpp"
-#include "ngraph/op/softmax.hpp"
-#include "ngraph/op/subtract.hpp"
-#include "ngraph/op/sum.hpp"
-#include "ngraph/op/topk.hpp"
-#include "ngraph/op/xor.hpp"
+#include "ngraph/ops.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
 #endif
-#include "ngraph/runtime/interpreter/node_wrapper.hpp"
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
@@ -103,6 +42,7 @@
 #include "ngraph/runtime/reference/argmin.hpp"
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
+#include "ngraph/runtime/reference/atan2.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "ngraph/runtime/reference/batch_mat_mul.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
@@ -116,6 +56,7 @@
 #include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/cos.hpp"
 #include "ngraph/runtime/reference/cosh.hpp"
+#include "ngraph/runtime/reference/cum_sum.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
@@ -156,6 +97,7 @@
 #include "ngraph/runtime/reference/result.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
+#include "ngraph/runtime/reference/round.hpp"
 #include "ngraph/runtime/reference/scatter_add.hpp"
 #include "ngraph/runtime/reference/scatter_nd_add.hpp"
 #include "ngraph/runtime/reference/select.hpp"
@@ -186,11 +128,24 @@ namespace ngraph
         {
             class INTBackend;
             class INTExecutable;
+
+            // This expands the op list in op_tbl.hpp into a list of enumerations that look like
+            // this:
+            // Abs,
+            // Acos,
+            // ...
+            enum class OP_TYPEID
+            {
+#define NGRAPH_OP(NAME, NAMESPACE) ID_SUFFIX(NAME),
+#include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
+#undef NGRAPH_OP
+                UnknownOp
+            };
         } // namespace interpreter
     }     // namespace runtime
 } // namespace ngraph
 
-class ngraph::runtime::interpreter::INTExecutable : public Executable
+class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTExecutable : public Executable
 {
     friend class INTBackend;
 
@@ -217,7 +172,7 @@ public:
     std::vector<std::shared_ptr<runtime::Tensor>>
         create_output_tensor(size_t output_index, size_t pipeline_depth) override;
 
-private:
+protected:
     INTExecutable(const std::string& model_string);
 
     std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
@@ -228,35 +183,25 @@ private:
     bool m_performance_counters_enabled = false;
     std::shared_ptr<Function> m_function;
     std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
-    std::vector<NodeWrapper> m_wrapped_nodes;
+    std::vector<std::shared_ptr<Node>> m_nodes;
     std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
+
+    static OP_TYPEID get_typeid(const Node& node);
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
 
-    void generate_calls(const element::Type& type,
-                        const NodeWrapper& op,
-                        const std::vector<std::shared_ptr<HostTensor>>& outputs,
-                        const std::vector<std::shared_ptr<HostTensor>>& inputs);
+    virtual void generate_calls(const element::Type& type,
+                                const Node& op,
+                                const std::vector<std::shared_ptr<HostTensor>>& outputs,
+                                const std::vector<std::shared_ptr<HostTensor>>& inputs);
 
     template <typename T>
-    void op_engine(const NodeWrapper& node_wrapper,
+    void op_engine(const Node& node,
                    const std::vector<std::shared_ptr<HostTensor>>& out,
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
-        const Node& node = *node_wrapper.get_node();
-
-        size_t op_version = node.get_version();
-        bool is_op_version_supported = op_version == 0;
-        NGRAPH_CHECK(is_op_version_supported,
-                     "Unsupported operator version ",
-                     op_version,
-                     " in ",
-                     node,
-                     ".\n",
-                     "INTERPRETER backend currently only supports op in version 0.");
-
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
@@ -264,9 +209,8 @@ private:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-// #pragma GCC diagnostic error "-Wcovered-switch-default"
 #endif
-        switch (node_wrapper.get_typeid())
+        switch (get_typeid(node))
         {
         case OP_TYPEID::Abs:
         {
@@ -401,6 +345,15 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::Atan2:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::atan2<T>(args[0]->get_data_ptr<const T>(),
+                                args[1]->get_data_ptr<const T>(),
+                                out[0]->get_data_ptr<T>(),
+                                element_count);
+            break;
+        }
         case OP_TYPEID::AvgPool:
         {
             const op::AvgPool* avg_pool = static_cast<const op::AvgPool*>(&node);
@@ -414,11 +367,6 @@ private:
                                    avg_pool->get_padding_below(),
                                    avg_pool->get_padding_above(),
                                    avg_pool->get_include_padding_in_avg_computation());
-            break;
-        }
-        case OP_TYPEID::BinaryConvolution:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
         case OP_TYPEID::GenerateMask:
@@ -598,7 +546,6 @@ private:
             reference::constant<T>(c->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::ScalarConstantLike: break;
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
@@ -662,6 +609,7 @@ private:
                 break;
             case element::Type_t::undefined:
             case element::Type_t::dynamic:
+            case element::Type_t::u1:
             case element::Type_t::bf16:
             case element::Type_t::f16:
                 ss << "unsupported element type " << type << " op Convert";
@@ -736,6 +684,35 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::CumSum:
+        {
+            const op::CumSum* cumsum = static_cast<const op::CumSum*>(&node);
+            auto axis_et = node.get_input_element_type(1);
+            if (axis_et == element::i32)
+            {
+                reference::cumsum<T, int32_t>(args[0]->get_data_ptr<const T>(),
+                                              args[1]->get_data_ptr<const int32_t>(),
+                                              out[0]->get_data_ptr<T>(),
+                                              node.get_input_shape(0),
+                                              cumsum->is_exclusive(),
+                                              cumsum->is_reverse());
+            }
+            else if (axis_et == element::i64)
+            {
+                reference::cumsum<T, int64_t>(args[0]->get_data_ptr<const T>(),
+                                              args[1]->get_data_ptr<const int64_t>(),
+                                              out[0]->get_data_ptr<T>(),
+                                              node.get_input_shape(0),
+                                              cumsum->is_exclusive(),
+                                              cumsum->is_reverse());
+            }
+            break;
+        }
+        case OP_TYPEID::CropAndResize:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
         case OP_TYPEID::Dequantize:
         {
             const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
@@ -793,11 +770,6 @@ private:
                            node.get_input_shape(1),
                            node.get_output_shape(0),
                            dot->get_reduction_axes_count());
-            break;
-        }
-        case OP_TYPEID::DynReshape:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
             break;
         }
         case OP_TYPEID::DynSlice:
@@ -1006,7 +978,7 @@ private:
                                   less_eq->get_autob());
             break;
         }
-        case OP_TYPEID::LessEqual:
+        case OP_TYPEID::LessEqual_v1:
         {
             auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
             reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
@@ -1024,7 +996,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::LogicalAnd:
+        case OP_TYPEID::LogicalAnd_v1:
         {
             auto logical_and = static_cast<const op::v1::LogicalAnd*>(&node);
             reference::logical_and(args[0]->get_data_ptr<const T>(),
@@ -1035,7 +1007,7 @@ private:
                                    logical_and->get_autob());
             break;
         }
-        case OP_TYPEID::LogicalOr:
+        case OP_TYPEID::LogicalOr_v1:
         {
             auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
             reference::logical_or(args[0]->get_data_ptr<const T>(),
@@ -1046,7 +1018,7 @@ private:
                                   logical_or->get_autob());
             break;
         }
-        case OP_TYPEID::LogicalXor:
+        case OP_TYPEID::LogicalXor_v1:
         {
             auto logical_xor = static_cast<const op::v1::LogicalXor*>(&node);
             reference::logical_xor(args[0]->get_data_ptr<const T>(),
@@ -1160,7 +1132,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::LogicalNot:
+        case OP_TYPEID::LogicalNot_v1:
         case OP_TYPEID::Not:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1213,8 +1185,8 @@ private:
             reference::pad(args[0]->get_data_ptr<const T>(),
                            args[1]->get_data_ptr<const T>(),
                            out[0]->get_data_ptr<T>(),
-                           node.input(0).get_shape(),
-                           node.output(0).get_shape(),
+                           node.get_input_shape(0),
+                           node.get_output_shape(0),
                            pad->get_padding_below(),
                            pad->get_padding_above(),
                            pad->get_pad_mode());
@@ -1616,6 +1588,13 @@ private:
             }
             break;
         }
+        case OP_TYPEID::Round:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::round<T>(
+                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
         case OP_TYPEID::ScatterAdd:
         {
             if (node.get_input_element_type(1) == element::i64)
@@ -1852,11 +1831,59 @@ private:
                                    logical_xor->get_autob());
             break;
         }
+
+        // Fused Ops are not supported in interpreter. They need to be decomposed before execution
+        case OP_TYPEID::Clamp:
+        case OP_TYPEID::MatMul:
+        case OP_TYPEID::Split:
         case OP_TYPEID::DynBroadcast:
-        case OP_TYPEID::Transpose:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::Tile:
         case OP_TYPEID::DynReplaceSlice:
+        case OP_TYPEID::BatchMatMulTranspose:
+        case OP_TYPEID::ConvolutionBias:
+        case OP_TYPEID::ConvolutionBiasAdd:
+        case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
+        case OP_TYPEID::CrossEntropy:
+        case OP_TYPEID::CrossEntropyBackprop:
+        case OP_TYPEID::DepthToSpace:
+        case OP_TYPEID::Elu:
+        case OP_TYPEID::FakeQuantize:
+        case OP_TYPEID::GroupConvolution:
+        case OP_TYPEID::GroupConvolutionBackpropData:
+        case OP_TYPEID::GroupConvolutionBackpropFilters:
+        case OP_TYPEID::GRN:
+        case OP_TYPEID::GRUCell:
+        case OP_TYPEID::Gelu:
+        case OP_TYPEID::GeluBackpropFactor:
+        case OP_TYPEID::Gemm:
+        case OP_TYPEID::HardSigmoid:
+        case OP_TYPEID::Interpolate:
+        case OP_TYPEID::LayerNorm:
+        case OP_TYPEID::LayerNormBackprop:
+        case OP_TYPEID::LSTMCell:
+        case OP_TYPEID::LSTMSequence:
+        case OP_TYPEID::MVN:
+        case OP_TYPEID::NormalizeL2:
+        case OP_TYPEID::PRelu:
+        case OP_TYPEID::PartialSlice:
+        case OP_TYPEID::PartialSliceBackprop:
+        case OP_TYPEID::RNNCell:
+        case OP_TYPEID::ScalarConstantLike:
+        case OP_TYPEID::ScaleShift:
+        case OP_TYPEID::ScatterND:
+        case OP_TYPEID::Selu:
+        case OP_TYPEID::ShuffleChannels:
+        case OP_TYPEID::SoftmaxCrossEntropy:
+        case OP_TYPEID::SoftmaxCrossEntropyBackprop:
+        case OP_TYPEID::SpaceToDepth:
+        case OP_TYPEID::SquaredDifference:
+        case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Stack:
+        case OP_TYPEID::Unsqueeze:
+        // Tensor Iterator not yet supported
+        case OP_TYPEID::TensorIterator:
+        case OP_TYPEID::UnknownOp:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop

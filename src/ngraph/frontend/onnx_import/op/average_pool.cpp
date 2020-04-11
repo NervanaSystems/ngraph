@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "average_pool.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/avg_pool.hpp"
 #include "utils/pooling_factory.hpp"
 
 namespace ngraph
@@ -28,7 +28,7 @@ namespace ngraph
             {
                 NodeVector average_pool(const Node& node)
                 {
-                    return pooling::PoolingFactory(node).make_avg_pool();
+                    return pooling::LocalPoolingFactory(node).make_avg_pool();
                 }
 
             } // namespace set_1

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -142,7 +142,7 @@ namespace ngraph
             auto c_arg = backend->create_tensor<T>(y_shape);
 
             // df/dX*
-            std::vector<std::shared_ptr<Node>> df_output_params;
+            std::vector<Output<Node>> df_output_params;
 
             Adjoints adjoints(OutputVector{f->output(0)}, OutputVector{c_param});
 
@@ -150,7 +150,7 @@ namespace ngraph
             for (auto x : indep_params)
             {
                 // add df/dx to df/dX*
-                df_output_params.push_back(adjoints.backprop_node(x));
+                df_output_params.push_back(adjoints.backprop_output(x));
             }
 
             // (c, X)
@@ -184,9 +184,10 @@ namespace ngraph
             std::vector<std::shared_ptr<runtime::Tensor>> mod_df_input_args = df_input_args;
 
             // add cached nodes to both modified f output and modified f' input arguments
-            for (auto node : fprop_cache.fprop_output_nodes)
+            for (auto weak_value : fprop_cache.fprop_output_nodes)
             {
-                auto tv = backend->create_tensor(node->get_element_type(), node->get_shape());
+                Output<Node> value(weak_value);
+                auto tv = backend->create_tensor(value.get_element_type(), value.get_shape());
                 mod_f_output_args.push_back(tv);
                 mod_df_input_args.push_back(tv);
             }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 #include "ngraph/runtime/cpu/kernel/convolution.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -296,7 +296,7 @@ namespace ngraph
                 auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
                 auto arg3_buffer_index = external_function->get_buffer_index(args[3].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                size_t arg3_size = node->input(3).get_tensor().size();
+                size_t arg3_size = node->get_input_tensor(3).size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -377,7 +377,7 @@ namespace ngraph
                 auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
                 auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                size_t arg2_size = node->input(2).get_tensor().size();
+                size_t arg2_size = node->get_input_tensor(2).size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {

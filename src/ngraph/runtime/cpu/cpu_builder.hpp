@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,14 +21,14 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_wrapper.hpp"
 #include "ngraph/runtime/cpu/kernel_selectors.hpp"
 
 #define BUILDER_DECL(op_name)                                                                      \
     build<op_name>(CPU_ExternalFunction * external_function,                                       \
                    const ngraph::Node* node,                                                       \
-                   const std::vector<TensorViewWrapper>& args,                                     \
-                   const std::vector<TensorViewWrapper>& out)
+                   const std::vector<TensorWrapper>& args,                                         \
+                   const std::vector<TensorWrapper>& out)
 
 #define BUILD_UNARY_ELEMWISE_FUNCTOR(OP)                                                           \
     (void)node;                                                                                    \
@@ -125,11 +125,10 @@ namespace ngraph
     {
         namespace cpu
         {
-            using BuildOpFunction =
-                std::function<void(CPU_ExternalFunction* external_function,
-                                   const ngraph::Node*,
-                                   const std::vector<TensorViewWrapper>& inputs,
-                                   const std::vector<TensorViewWrapper>& outputs)>;
+            using BuildOpFunction = std::function<void(CPU_ExternalFunction* external_function,
+                                                       const ngraph::Node*,
+                                                       const std::vector<TensorWrapper>& inputs,
+                                                       const std::vector<TensorWrapper>& outputs)>;
 
             using BuildOpMap = std::unordered_map<std::type_index, BuildOpFunction>;
 
@@ -144,8 +143,8 @@ namespace ngraph
                 template <typename OP>
                 static void build(CPU_ExternalFunction* /* external_function */,
                                   const ngraph::Node* node,
-                                  const std::vector<TensorViewWrapper>& /* args */,
-                                  const std::vector<TensorViewWrapper>& /* out */)
+                                  const std::vector<TensorWrapper>& /* args */,
+                                  const std::vector<TensorWrapper>& /* out */)
                 {
                     throw unsupported_op("Unimplemented op '" + node->description() +
                                          "' in CPU builder");
@@ -160,8 +159,8 @@ namespace ngraph
 
                 static void nop(CPU_ExternalFunction* /* external_function */,
                                 const ngraph::Node* /* node */,
-                                const std::vector<TensorViewWrapper>& /* args */,
-                                const std::vector<TensorViewWrapper>& /* out */)
+                                const std::vector<TensorWrapper>& /* args */,
+                                const std::vector<TensorWrapper>& /* out */)
                 {
                 }
             };

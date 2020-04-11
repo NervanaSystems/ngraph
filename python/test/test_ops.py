@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ from ngraph.impl.op import Reverse, MaxPool, ReplaceSlice, Slice
 from ngraph.impl.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
 
 import test
+
 
 def binary_op(op_str, a, b):
 

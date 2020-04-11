@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 #include <memory>
 
 #include "cast.hpp"
-#include "ngraph/op/convert.hpp"
+#include "default_opset.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "utils/common.hpp"
 
@@ -34,7 +34,7 @@ namespace ngraph
                     int64_t target_type = node.get_attribute_value<int64_t>("to");
                     element::Type elem_type = common::get_ngraph_element_type(target_type);
 
-                    return {std::make_shared<ngraph::op::Convert>(data, elem_type)};
+                    return {std::make_shared<default_opset::Convert>(data, elem_type)};
                 }
 
             } // namespace set_1

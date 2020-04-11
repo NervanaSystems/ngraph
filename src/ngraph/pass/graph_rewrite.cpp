@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "graph_rewrite.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/log.hpp"
 
 using namespace std;
@@ -68,8 +69,7 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
     vector<MatchClosure> original_matchers{m_matchers};
     // This check is very expensive and is only needed for experimental features, so we will hide
     // it behind an environment variable for now. TODO: Find a less expensive way to handle this.
-    static bool s_rerun_dynamic_check =
-        (std::getenv("NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK") != nullptr);
+    static bool s_rerun_dynamic_check = getenv_bool("NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK");
     bool is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
     do
     {
@@ -124,11 +124,10 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
 
 static vector<regex> initialize_fusion_regexes()
 {
-    const char* cnsf = getenv("NGRAPH_DISABLED_FUSIONS");
+    static const string nsf = getenv_string("NGRAPH_DISABLED_FUSIONS");
     vector<regex> regexes;
-    if (cnsf)
+    if (!nsf.empty())
     {
-        const string nsf = cnsf;
         const auto sregexes = split(nsf, ';');
 
         transform(sregexes.begin(),
@@ -210,8 +209,7 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
 
     // This check is very expensive and is only needed for experimental features, so we will hide
     // it behind an environment variable for now. TODO: Find a less expensive way to handle this.
-    static bool s_rerun_dynamic_check =
-        (std::getenv("NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK") != nullptr);
+    static bool s_rerun_dynamic_check = getenv_bool("NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK");
 
     auto run_matchers = [&]() -> bool {
         bool is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
@@ -228,7 +226,7 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
                     continue;
                 }
                 NGRAPH_DEBUG << "Running matcher " << closure.matcher << " on " << node->get_name();
-                if (closure.matcher->match(node))
+                if (closure.matcher->match(node->output(0)))
                 {
                     NGRAPH_DEBUG << "Matcher " << closure.matcher << " matched "
                                  << node->get_name();

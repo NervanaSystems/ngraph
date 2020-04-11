@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,18 +25,8 @@ op::util::FusedOp::FusedOp()
 {
 }
 
-op::util::FusedOp::FusedOp(const NodeVector& args)
-    : Op(args)
-{
-}
-
 op::util::FusedOp::FusedOp(const OutputVector& args)
     : Op(args)
-{
-}
-
-op::util::FusedOp::FusedOp(const std::string& node_type, const NodeVector& args)
-    : Op(node_type, args)
 {
 }
 
@@ -71,7 +61,7 @@ void op::util::FusedOp::validate_and_infer_types()
 }
 
 void op::util::FusedOp::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                          const NodeVector& /*deltas*/)
+                                          const OutputVector& /* deltas */)
 {
     // TODO
     throw ngraph_error("Autodiff on fused ops not supported yet");

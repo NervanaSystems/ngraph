@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
-#include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/IR/Builders.h>
 #include <mlir/IR/Module.h>
 #include <mlir/IR/Types.h>
@@ -34,6 +33,20 @@ namespace ngraph
     {
         namespace ngmlir
         {
+            struct StaticMemRef
+            {
+                void* allocatedPtr;
+                void* alignedPtr;
+                int64_t offset;
+                int64_t shapeAndStrides[];
+            };
+
+            struct UnrankedMemRef
+            {
+                int64_t rank;
+                StaticMemRef* memRefDescPtr;
+            };
+
             /// A CPU Runtime is an MLIR runtime that owns an MLIR context and a module
             /// The module should be in LLVM dialect and ready to be lowered via an MLIR
             /// ExecutionEngine. The runtime owns the context and must out-live any MLIR
@@ -42,29 +55,31 @@ namespace ngraph
             {
             public:
                 /// Executes a pre-compiled subgraph
-                void run(void* args) override;
+                void run(const std::vector<MemRefArg>& args, bool firstIteration) override;
 
             private:
-                void run_internal(std::vector<void*>& externalTensors);
+                void run_internal(const std::vector<MemRefArg>& args, bool firstIteration);
                 // Bind external tensors to MLIR module entry point
-                void bindArguments(std::vector<void*>& externalTensors);
+                void bindArguments(const std::vector<MemRefArg>& args);
                 // Invokes an MLIR module entry point with bound arguments
-                void execute();
+                void execute(bool firstIteration);
                 // Cleans up allocated args
                 void cleanup();
 
                 /// Helper to create memref arguments for MLIR function signature
                 llvm::SmallVector<void*, 8> allocateMemrefArgs();
 
-                /// Helper to allocate a mem ref object. Handles static shapes only for now.
-                mlir::StaticFloatMemRef* allocateMemrefDescriptor();
+                /// Helper to allocate a default MemRef descriptor for LLVM. Handles static shapes
+                /// only for now.
+                StaticMemRef* allocateDefaultMemrefDescriptor(size_t);
 
             private:
                 // Pointers to externally allocated memory for sub-graph's input and output tensors.
-                std::vector<void*>* m_externalTensors;
+                const std::vector<MemRefArg>* m_externalTensors;
                 // Arguments for the MLIR function generated for the nGraph sub-graph.
                 llvm::SmallVector<void*, 8> m_invokeArgs;
                 std::unique_ptr<mlir::ExecutionEngine> m_engine;
+                std::vector<size_t> m_ranks;
             };
         }
     }

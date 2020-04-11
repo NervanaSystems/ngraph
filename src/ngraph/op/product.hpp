@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,10 +27,9 @@ namespace ngraph
             /// \brief Product reduction operation.
             ///
             /// Reduces the tensor, eliminating the specified reduction axes by taking the product.
-            class Product : public util::ArithmeticReduction
+            class NGRAPH_API Product : public util::ArithmeticReduction
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Product", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a product reduction operation.
@@ -50,7 +49,7 @@ namespace ngraph
                 virtual std::shared_ptr<Node> get_default_value() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
         // default opset version

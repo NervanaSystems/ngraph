@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -86,4 +86,36 @@ TEST(float16, assigns)
         f16arr[i] = f32arr[i];
         EXPECT_EQ(f32arr[i], f16arr[i]);
     }
+}
+
+TEST(float16, values)
+{
+    EXPECT_EQ(static_cast<float16>(test::FloatUnion(0, 112 - 8, (1 << 21) + 0).f).to_bits(),
+              float16(0, 0, 2).to_bits());
+    EXPECT_EQ(static_cast<float16>(test::FloatUnion(0, 112 - 8, (1 << 21) + 1).f).to_bits(),
+              float16(0, 0, 3).to_bits());
+    EXPECT_EQ(static_cast<float16>(1.0 / (256.0 * 65536.0)).to_bits(), float16(0, 0, 1).to_bits());
+    EXPECT_EQ(static_cast<float16>(1.5 / (256.0 * 65536.0)).to_bits(), float16(0, 0, 2).to_bits());
+    EXPECT_EQ(static_cast<float16>(1.25 / (256.0 * 65536.0)).to_bits(), float16(0, 0, 1).to_bits());
+    EXPECT_EQ(static_cast<float16>(1.0 / (128.0 * 65536.0)).to_bits(), float16(0, 0, 2).to_bits());
+    EXPECT_EQ(static_cast<float16>(1.5 / (128.0 * 65536.0)).to_bits(), float16(0, 0, 3).to_bits());
+    EXPECT_EQ(static_cast<float16>(1.25 / (128.0 * 65536.0)).to_bits(), float16(0, 0, 2).to_bits());
+    EXPECT_EQ(static_cast<float16>(std::numeric_limits<float>::infinity()).to_bits(),
+              float16(0, 0x1F, 0).to_bits());
+    EXPECT_EQ(static_cast<float16>(-std::numeric_limits<float>::infinity()).to_bits(),
+              float16(1, 0x1F, 0).to_bits());
+    EXPECT_TRUE(isnan(static_cast<float16>(std::numeric_limits<float>::quiet_NaN())));
+    EXPECT_TRUE(isnan(static_cast<float16>(std::numeric_limits<float>::signaling_NaN())));
+    EXPECT_EQ(static_cast<float16>(2.73786e-05).to_bits(), 459);
+    EXPECT_EQ(static_cast<float16>(3.87722e-05).to_bits(), 650);
+    EXPECT_EQ(static_cast<float16>(-0.0223043).to_bits(), 42422);
+    EXPECT_EQ(static_cast<float16>(5.10779e-05).to_bits(), 857);
+    EXPECT_EQ(static_cast<float16>(-5.10779e-05).to_bits(), 0x8359);
+    EXPECT_EQ(static_cast<float16>(-2.553895e-05).to_bits(), 0x81ac);
+    EXPECT_EQ(static_cast<float16>(-0.0001021558).to_bits(), 0x86b2);
+    EXPECT_EQ(static_cast<float16>(5.960464477539063e-08).to_bits(), 0x01);
+    EXPECT_EQ(static_cast<float16>(8.940696716308594e-08).to_bits(), 0x02);
+    EXPECT_EQ(static_cast<float16>(65536.0).to_bits(), 0x7c00);
+    EXPECT_EQ(static_cast<float16>(65519.0).to_bits(), 0x7bff);
+    EXPECT_EQ(static_cast<float16>(65520.0).to_bits(), 0x7c00);
 }

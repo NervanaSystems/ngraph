@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,14 +38,11 @@ TEST(opset_transform, opset1_logical_xor_upgrade_pass)
     pass_manager.register_pass<pass::Opset1Upgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    const auto xor_v1 = static_pointer_cast<op::v1::LogicalXor>(pass_replacement_node);
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
+    const auto xor_v1 = as_type_ptr<op::v1::LogicalXor>(pass_replacement_node);
+    ASSERT_TRUE(xor_v1);
 
-    EXPECT_EQ(xor_v1->description(), "LogicalXor");
-    EXPECT_EQ(xor_v1->get_version(), 1);
-
-    const auto values_out_element_type = xor_v1->output(0).get_element_type();
+    const auto values_out_element_type = xor_v1->get_output_element_type(0);
     EXPECT_EQ(values_out_element_type, element::boolean);
 }
 
@@ -61,13 +58,10 @@ TEST(opset_transform, opset1_logical_xor_downgrade_pass)
     pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
-    const auto xor_v0 = static_pointer_cast<op::v0::Xor>(pass_replacement_node);
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
+    const auto xor_v0 = as_type_ptr<op::v0::Xor>(pass_replacement_node);
+    ASSERT_TRUE(xor_v0);
 
-    EXPECT_EQ(xor_v0->description(), "Xor");
-    EXPECT_EQ(xor_v0->get_version(), 0);
-
-    const auto values_out_element_type = xor_v0->output(0).get_element_type();
+    const auto values_out_element_type = xor_v0->get_output_element_type(0);
     EXPECT_EQ(values_out_element_type, element::boolean);
 }

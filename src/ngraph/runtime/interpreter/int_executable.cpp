@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,22 +15,19 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/interpreter/int_executable.hpp"
+#include "ngraph/chrome_trace.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
-#include "ngraph/op/convert.hpp"
-#include "ngraph/op/select.hpp"
-#include "ngraph/op/util/binary_elementwise_comparison.hpp"
+#include "ngraph/ops.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/chrome_trace.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
@@ -39,23 +36,52 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
+runtime::interpreter::OP_TYPEID runtime::interpreter::INTExecutable::get_typeid(const Node& node)
+{
+    const NodeTypeInfo& type_info = node.get_type_info();
+    // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+    // {Abs::type_info, OP_TYPEID::Abs},
+    // {Acos::type_info, OP_TYPEID::Acos},
+    // ...
+    static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
+#define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, OP_TYPEID::ID_SUFFIX(NAME)},
+#include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
+#undef NGRAPH_OP
+    };
+    OP_TYPEID rc = OP_TYPEID::UnknownOp;
+
+    auto it = type_info_map.find(type_info);
+    if (it != type_info_map.end())
+    {
+        rc = it->second;
+    }
+    return rc;
+}
+
 runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
                                                    bool enable_performance_collection)
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
+#ifdef INTERPRETER_FORCE_SERIALIZE
+    // To verify that the serializer works correctly let's just run this graph round-trip
+    string ser = serialize(function);
+    m_function = deserialize(ser);
+#else
     m_function = clone_function(*function);
+#endif
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();
     pass_manager.register_pass<pass::Opset0Downgrade>();
+    // Need to decompose any v0 fused ops, which were produced by the downgrade pass
+    pass_manager.register_pass<pass::FusedOpDecomposition>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(m_function);
-
-    for (const shared_ptr<Node>& node : m_function->get_ordered_ops())
+    for (auto node : m_function->get_ordered_ops())
     {
-        m_wrapped_nodes.emplace_back(node);
+        m_nodes.push_back(node);
     }
     set_parameters_and_results(*m_function);
 }
@@ -65,9 +91,9 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
     , m_performance_counters_enabled{false}
 {
     m_function = deserialize(model_string);
-    for (const shared_ptr<Node>& node : m_function->get_ordered_ops())
+    for (auto node : m_function->get_ordered_ops())
     {
-        m_wrapped_nodes.emplace_back(node);
+        m_nodes.push_back(node);
     }
     set_parameters_and_results(*m_function);
 }
@@ -75,7 +101,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    runtime::event::Duration d1("call", "Interpreter");
+    event::Duration d1("call", "Interpreter");
 
     // convert inputs to HostTensor
     vector<shared_ptr<HostTensor>> func_inputs;
@@ -117,17 +143,15 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        descriptor::Tensor* tensor = &output->output(0).get_tensor();
+        descriptor::Tensor* tensor = &output->get_output_tensor(0);
         tensor_map.insert({tensor, func_outputs[output_count]});
     }
 
     // for each ordered op in the graph
-    for (const NodeWrapper& wrapped : m_wrapped_nodes)
+    for (auto op : m_nodes)
     {
-        auto op = wrapped.get_node();
-        runtime::event::Duration d2(op->description(), "Interpreter");
-        auto type_id = wrapped.get_typeid();
-        if (type_id == OP_TYPEID::Parameter)
+        event::Duration d2(op->description(), "Interpreter");
+        if (op->is_parameter())
         {
             continue;
         }
@@ -164,40 +188,33 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
 
         // get op type
         element::Type type;
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-enum"
-#endif
-        switch (type_id)
+        if (is_type<op::Convert>(op) || is_type<op::Quantize>(op) || is_type<op::Dequantize>(op) ||
+            is_type<op::ArgMin>(op) || is_type<op::ArgMax>(op))
         {
-        case OP_TYPEID::Convert:
-        case OP_TYPEID::Quantize:
-        case OP_TYPEID::Dequantize:
-        case OP_TYPEID::ArgMin:
-        case OP_TYPEID::ArgMax: type = op->get_input_element_type(0); break;
-        case OP_TYPEID::Equal:
-        case OP_TYPEID::Greater:
-        case OP_TYPEID::GreaterEq:
-        case OP_TYPEID::Less:
-        case OP_TYPEID::LessEq:
-        case OP_TYPEID::NotEqual:
+            type = op->get_input_element_type(0);
+        }
+        else if (is_type<op::Equal>(op) || is_type<op::Greater>(op) || is_type<op::GreaterEq>(op) ||
+                 is_type<op::Less>(op) || is_type<op::LessEq>(op) || is_type<op::NotEqual>(op))
+        {
             // Get the type of the second input, not the first
             // All BinaryElementwiseComparision ops have the same type for inputs
             // Select has bool for first input and the type we are interested in for the second
             type = op->get_input_element_type(1);
-            break;
-        case OP_TYPEID::TopK: type = op->get_output_element_type(1); break;
-        default: type = op->get_output_element_type(0); break;
         }
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
-#pragma GCC diagnostic pop
-#endif
+        else if (is_type<op::TopK>(op))
+        {
+            type = op->get_output_element_type(1);
+        }
+        else
+        {
+            type = op->get_output_element_type(0);
+        }
 
         if (m_performance_counters_enabled)
         {
             m_timer_map[op].start();
         }
-        generate_calls(type, wrapped, op_outputs, op_inputs);
+        generate_calls(type, *op.get(), op_outputs, op_inputs);
         if (m_performance_counters_enabled)
         {
             m_timer_map[op].stop();
@@ -212,7 +229,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
 }
 
 void runtime::interpreter::INTExecutable::generate_calls(const element::Type& type,
-                                                         const NodeWrapper& op,
+                                                         const Node& op,
                                                          const vector<shared_ptr<HostTensor>>& out,
                                                          const vector<shared_ptr<HostTensor>>& in)
 {
@@ -232,9 +249,10 @@ void runtime::interpreter::INTExecutable::generate_calls(const element::Type& ty
     case element::Type_t::u64: op_engine<uint64_t>(op, out, in); break;
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
+    case element::Type_t::u1:
     case element::Type_t::bf16:
     case element::Type_t::f16:
-        ss << "unsupported element type " << type << " op " << op.get_node()->get_name();
+        ss << "unsupported element type " << type << " op " << op.get_name();
         throw ngraph_error(ss.str());
     }
 }

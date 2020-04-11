@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@
 #include <memory>
 #include <string>
 
-#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -36,7 +35,7 @@ namespace ngraph
         }
 
         /// \brief Compile-time descriptor of a first-class value that is a tensor.
-        class Tensor
+        class NGRAPH_API Tensor
         {
             Tensor(const Tensor&) = delete;
             Tensor& operator=(const Tensor&) = delete;
@@ -85,6 +84,7 @@ namespace ngraph
             size_t m_pool_offset{0};
         };
 
+        NGRAPH_API
         std::ostream& operator<<(std::ostream&, const ngraph::descriptor::Tensor&);
     }
 }

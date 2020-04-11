@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,27 +26,25 @@ namespace ngraph
 {
     namespace op
     {
-        /// An op directly representing backend-specific code.
-        ///
-        /// N.B. Not all backends support all operation languages; a
-        /// given backend might only support a given passthrough
-        /// operation language in certain modes.
-        class Passthrough;
+        namespace v0
+        {
+            /// An op directly representing backend-specific code.
+            ///
+            /// N.B. Not all backends support all operation languages; a
+            /// given backend might only support a given passthrough
+            /// operation language in certain modes.
+            class Passthrough;
+        }
+        using v0::Passthrough;
     }
 }
 
-class ngraph::op::Passthrough final : public Op
+class NGRAPH_API ngraph::op::v0::Passthrough final : public Op
 {
 public:
-    NGRAPH_API
     static constexpr NodeTypeInfo type_info{"Passthrough", 0};
     const NodeTypeInfo& get_type_info() const override { return type_info; }
     Passthrough() = default;
-    Passthrough(const std::string& logical_type, // aka "What this operation is doing"
-                const std::string& language,     // The language the implementation is written in
-                const std::string& function,     // The operation implementation
-                const NodeVector& args,
-                std::vector<std::tuple<element::Type, PartialShape>> outputs);
 
     Passthrough(const std::string& logical_type, // aka "What this operation is doing"
                 const std::string& language,     // The language the implementation is written in
@@ -56,7 +54,7 @@ public:
 
     void validate_and_infer_types() final;
 
-    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const final;
+    std::shared_ptr<Node> clone_with_new_inputs(const OutputVector& new_args) const final;
 
     const std::string& logical_type() const { return m_logical_type; }
     const std::string& language() const { return m_language; }

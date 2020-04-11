@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,9 +19,11 @@
 #include <iterator>
 #include <numeric>
 
+#include "default_opset.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/shape.hpp"
+#include "reshape.hpp"
 
 namespace ngraph
 {
@@ -103,12 +105,15 @@ namespace ngraph
                 if (node->is_constant())
                 {
                     const auto value =
-                        ngraph::as_type_ptr<ngraph::op::Constant>(node)->get_data_ptr();
-                    return std::make_shared<ngraph::op::Constant>(
+                        ngraph::as_type_ptr<default_opset::Constant>(node)->get_data_ptr();
+                    return std::make_shared<default_opset::Constant>(
                         node->get_element_type(), ngraph::Shape{}, value);
                 }
 
-                return ngraph::builder::reshape(node, Shape{});
+                const auto axis =
+                    default_opset::Constant::create(element::i64, ngraph::Shape{}, {0});
+
+                return std::make_shared<ngraph::opset1::Squeeze>(node, axis);
             }
 
         } // namespace  reshape

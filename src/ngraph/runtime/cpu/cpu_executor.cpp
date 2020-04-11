@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,23 +18,24 @@
 
 #include "cpu_executor.hpp"
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/except.hpp"
 
 #define MAX_PARALLELISM_THRESHOLD 2
 
 static int GetNumCores()
 {
-    const auto omp_num_threads = std::getenv("OMP_NUM_THREADS");
-    const auto ngraph_intra_op_parallelism = std::getenv("NGRAPH_INTRA_OP_PARALLELISM");
+    const auto omp_num_threads = ngraph::getenv_int("OMP_NUM_THREADS");
+    const auto ngraph_intra_op_parallelism = ngraph::getenv_int("NGRAPH_INTRA_OP_PARALLELISM");
     int count = 0;
 
-    if (omp_num_threads)
+    if (omp_num_threads > 0)
     {
-        count = std::atoi(omp_num_threads);
+        count = omp_num_threads;
     }
-    else if (ngraph_intra_op_parallelism)
+    else if (ngraph_intra_op_parallelism > 0)
     {
-        count = std::atoi(ngraph_intra_op_parallelism);
+        count = ngraph_intra_op_parallelism;
     }
     else
     {
@@ -56,12 +57,12 @@ static int GetNumCores()
 
 static int GetNumThreadPools()
 {
-    const auto ngraph_inter_op_parallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
+    const auto ngraph_inter_op_parallelism = ngraph::getenv_int("NGRAPH_INTER_OP_PARALLELISM");
     int count = 0;
 
-    if (ngraph_inter_op_parallelism)
+    if (ngraph_inter_op_parallelism > 0)
     {
-        count = std::atoi(ngraph_inter_op_parallelism);
+        count = ngraph_inter_op_parallelism;
     }
 
     return count < 1 ? 1 : count;
@@ -88,16 +89,17 @@ namespace ngraph
                         num_threads_per_pool = GetNumCores();
 
                         // User override
-                        char* eigen_tp_count = std::getenv("NGRAPH_CPU_EIGEN_THREAD_COUNT");
-                        if (eigen_tp_count != nullptr)
+                        int32_t eigen_tp_count =
+                            ngraph::getenv_int("NGRAPH_CPU_EIGEN_THREAD_COUNT");
+                        if (eigen_tp_count > 0)
                         {
-                            const int tp_count = std::atoi(eigen_tp_count);
+                            const int tp_count = eigen_tp_count;
                             if (tp_count < 1 || tp_count > GetNumCores())
                             {
                                 throw ngraph_error(
                                     "Unexpected value specified for NGRAPH_CPU_EIGEN_THREAD_COUNT "
                                     "(" +
-                                    std::string(eigen_tp_count) +
+                                    std::to_string(eigen_tp_count) +
                                     "). Please specify a value in range [1-" +
                                     std::to_string(GetNumCores()) + "]");
                             }

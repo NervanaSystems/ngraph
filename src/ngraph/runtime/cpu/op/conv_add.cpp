@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ constexpr NodeTypeInfo op::ConvolutionAdd::type_info;
 op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
                                    const Output<Node>& sum_input,
                                    bool with_relu)
-    : Op({conv->input(0).get_source_output(), conv->input(1).get_source_output(), sum_input})
+    : Op({conv->input_value(0), conv->input_value(1), sum_input})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -53,7 +53,7 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
     , m_with_relu(with_relu)
 {
     constructor_validate_and_infer_types();
-    util::validate_conv_shapes(this, conv->input(0).get_shape(), conv->input(1).get_shape());
+    util::validate_conv_shapes(this, conv->get_input_shape(0), conv->get_input_shape(1));
     set_output_type(0, conv->get_element_type(), conv->get_shape());
 }
 

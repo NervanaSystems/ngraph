@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,10 +27,6 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
-#if defined(AUTODIFF_BACKEND_CPU)
-#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
-#endif
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
@@ -519,6 +515,23 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_atan)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, backwards_atan2)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    Shape shape{30};
+
+    test::Uniform<float> rng(-5.0f, 5.0f);
+    auto y = rng.initialize(backend->create_tensor<float>(shape));
+    auto x = rng.initialize(backend->create_tensor<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        auto Y = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Atan2>(Y, X), ParameterVector{Y, X});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {y, x}, .01f, .01f));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_broadcast0)

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,10 +48,9 @@ namespace ngraph
             /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
             /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg}[j_1,\dots,j_n]\f$ and \f$j_k = d_k - i_k - 1\f$ if axis \f$k\f$ is in the reverse set; else \f$j_k = i_k\f$. |
             // clang-format on
-            class Reverse : public Op
+            class NGRAPH_API Reverse : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Reverse", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Reverse() = default;
@@ -64,7 +63,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The set of axes to reverse.
                 const AxisSet& get_reversed_axes() const { return m_reversed_axes; }
@@ -75,7 +74,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 AxisSet m_reversed_axes;
             };
@@ -83,7 +82,7 @@ namespace ngraph
 
         namespace v1
         {
-            class Reverse : public Op
+            class NGRAPH_API Reverse : public Op
             {
             public:
                 enum class Mode
@@ -92,7 +91,6 @@ namespace ngraph
                     MASK
                 };
 
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Reverse", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Reverse() = default;
@@ -110,10 +108,11 @@ namespace ngraph
                         const Output<Node>& reversed_axes,
                         const Mode mode);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The second input data interpretation mode.
                 Mode get_mode() const { return m_mode; }
@@ -121,7 +120,7 @@ namespace ngraph
                 virtual size_t get_version() const override { return 1; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 Mode mode_from_string(const std::string& mode) const;
 
@@ -137,4 +136,21 @@ namespace ngraph
         // default opset version
         using v0::Reverse;
     }
+
+    NGRAPH_API
+    std::ostream& operator<<(std::ostream& s, const op::v1::Reverse::Mode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v1::Reverse::Mode>
+        : public EnumAttributeAdapterBase<op::v1::Reverse::Mode>
+    {
+    public:
+        AttributeAdapter(op::v1::Reverse::Mode& value)
+            : EnumAttributeAdapterBase<op::v1::Reverse::Mode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::v1::Reverse::Mode>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

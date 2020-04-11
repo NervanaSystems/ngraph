@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,21 +22,24 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief create StopGrdient op
-        class StopGradient : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"StopGradient", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs StopGradient
-            ///
-            /// \param arg Node that produces the input tensor.
-            StopGradient(const Output<Node>& arg);
-            StopGradient() = default;
+            /// \brief create StopGrdient op
+            class NGRAPH_API StopGradient : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"StopGradient", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs StopGradient
+                ///
+                /// \param arg Node that produces the input tensor.
+                StopGradient(const Output<Node>& arg);
+                StopGradient() = default;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+                virtual std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+            };
+        }
+        using v0::StopGradient;
     }
 }

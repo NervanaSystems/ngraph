@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -103,7 +103,7 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
                                                const Shape& output_shape,
                                                bool with_relu,
                                                float alpha)
-    : Op({conv->input(0).get_source_output(), conv->input(1).get_source_output(), bias})
+    : Op({conv->input_value(0), conv->input_value(1), bias})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -115,16 +115,13 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
 {
     constructor_validate_and_infer_types();
 
-    if (conv->output(0).get_element_type() != bias.get_element_type())
+    if (conv->get_output_element_type(0) != bias.get_element_type())
     {
         throw ngraph_error("GroupConvolution's element type isn't equal to bias!");
     }
 
-    validate_groupconvbias_shapes(conv->input(0).get_shape(),
-                                  conv->input(1).get_shape(),
-                                  bias.get_shape(),
-                                  output_shape,
-                                  groups);
+    validate_groupconvbias_shapes(
+        conv->get_input_shape(0), conv->get_input_shape(1), bias.get_shape(), output_shape, groups);
 
     set_output_type(0, conv->get_element_type(), output_shape);
 }
@@ -194,7 +191,7 @@ shared_ptr<Node> op::GroupConvolutionBias::copy_with_new_args(const NodeVector& 
 }
 
 void op::GroupConvolutionBias::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                                 const NodeVector& /* deltas */)
+                                                 const OutputVector& /* deltas */)
 {
     throw ngraph_error("GroupConvolutionBias generate_adjoints not supported implemented");
 }

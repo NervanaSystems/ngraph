@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,9 +38,9 @@ TEST(type_prop, param_partial_rank_static)
     auto& pshape = a->get_output_partial_shape(0);
 
     ASSERT_TRUE(pshape.is_dynamic());
-    ASSERT_EQ(size_t(pshape.rank()), 4);
-    ASSERT_TRUE(pshape[0].is_static() && size_t(pshape[0]) == 2);
+    ASSERT_EQ(pshape.rank().get_length(), 4);
+    ASSERT_TRUE(pshape[0].is_static() && pshape[0].get_length() == 2);
     ASSERT_TRUE(pshape[1].is_dynamic());
-    ASSERT_TRUE(pshape[2].is_static() && size_t(pshape[2]) == 3);
-    ASSERT_TRUE(pshape[3].is_static() && size_t(pshape[3]) == 4);
+    ASSERT_TRUE(pshape[2].is_static() && pshape[2].get_length() == 3);
+    ASSERT_TRUE(pshape[3].is_static() && pshape[3].get_length() == 4);
 }

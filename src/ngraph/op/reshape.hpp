@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,9 @@ namespace ngraph
 {
     namespace op
     {
-        // clang-format off
+        namespace v0
+        {
+            // clang-format off
         /// \brief Tensor reshape operation.
         ///
         /// "Converts" an input tensor into a new shape with the same number of elements.
@@ -61,50 +63,51 @@ namespace ngraph
         /// | Type                     | Description                                                                                            |
         /// | ------------------------ | ------------------------------------------------------------------------------------------------------ |
         /// | \f$E[d'_1,\dots,d'_m]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with its elements rearranged as described above. |
-        // clang-format on
-        class Reshape : public Op
-        {
-        public:
-            NGRAPH_API
-            static constexpr NodeTypeInfo type_info{"Reshape", 0};
-            const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs a reshape operation.
-            Reshape() = default;
-            /// \brief Constructs a reshape operation.
-            ///
-            /// \param arg The tensor to be reshaped.
-            /// \param input_order The order in which to iterate over input axes. This must be a
-            ///                    permutation of the sequence \f$(0,\dots,n-1)\f$ where \f$n\f$ is
-            ///                    the rank of the input tensor.
-            /// \param output_shape The output shape. If the input shape is
-            ///                     \f$(a_0,\dots,a_{k-1})\f$ then the output shape must
-            ///                     be of the form \f$(b_0,\dots,b_{j-1})\f$ where
-            ///                     \f$\Pi(a_i) = \Pi(b_i)\f$.
-            Reshape(const Output<Node>& arg,
-                    const AxisVector& input_order,
-                    const Shape& output_shape);
+            // clang-format on
+            class NGRAPH_API Reshape : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Reshape", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a reshape operation.
+                Reshape() = default;
+                /// \brief Constructs a reshape operation.
+                ///
+                /// \param arg The tensor to be reshaped.
+                /// \param input_order The order in which to iterate over input axes. This must be a
+                ///                    permutation of the sequence \f$(0,\dots,n-1)\f$ where \f$n\f$
+                ///                    is
+                ///                    the rank of the input tensor.
+                /// \param output_shape The output shape. If the input shape is
+                ///                     \f$(a_0,\dots,a_{k-1})\f$ then the output shape must
+                ///                     be of the form \f$(b_0,\dots,b_{j-1})\f$ where
+                ///                     \f$\Pi(a_i) = \Pi(b_i)\f$.
+                Reshape(const Output<Node>& arg,
+                        const AxisVector& input_order,
+                        const Shape& output_shape);
 
-            void validate_and_infer_types() override;
+                void validate_and_infer_types() override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
-            /// \return The order in which to iterate over input axes.
-            const AxisVector& get_input_order() const { return m_input_order; }
-            void set_input_order(const AxisVector& input_order) { m_input_order = input_order; }
-            /// \return The shape of the output tensor.
-            const Shape& get_output_shape() const { return m_output_shape; }
-            void set_output_shape(const Shape& output_shape) { m_output_shape = output_shape; }
-            bool get_is_transpose() const { return m_is_transpose; }
-            void set_is_transpose(bool is_transpose) { m_is_transpose = is_transpose; }
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                /// \return The order in which to iterate over input axes.
+                const AxisVector& get_input_order() const { return m_input_order; }
+                void set_input_order(const AxisVector& input_order) { m_input_order = input_order; }
+                /// \return The shape of the output tensor.
+                const Shape& get_reshape_output_shape() const { return m_output_shape; }
+                void set_output_shape(const Shape& output_shape) { m_output_shape = output_shape; }
+                bool get_is_transpose() const { return m_is_transpose; }
+                void set_is_transpose(bool is_transpose) { m_is_transpose = is_transpose; }
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
 
-            AxisVector m_input_order;
-            Shape m_output_shape;
-            bool m_is_transpose{false};
-        };
+                AxisVector m_input_order;
+                Shape m_output_shape;
+                bool m_is_transpose{false};
+            };
+        }
 
         namespace v1
         {
@@ -113,11 +116,10 @@ namespace ngraph
             /// "Converts" an input tensor into a new shape with the same number of elements.
             /// This op does not touch the actual data. If needed, use Transpose for that purpose.
             ///
-            class Reshape : public Op
+            class NGRAPH_API Reshape : public Op
             {
             public:
-                NGRAPH_API
-                static constexpr NodeTypeInfo type_info{"DynReshape", 1};
+                static constexpr NodeTypeInfo type_info{"Reshape", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Reshape() = default;
                 /// \brief Constructs a dynamic reshape operation. This operation does not perform
@@ -130,27 +132,28 @@ namespace ngraph
                 ///        be of the form \f$(b_0,\dots,b_{j-1})\f$ where \f$\Pi(a_i) = \Pi(b_i)\f$.
                 ///        A value of -1 is allowed for at most one dimension, in which case the
                 ///        dimension size is inferred based on element count of input tensor.
-                /// \param zero_flag Treats zeros in `pattern` as wildcard flags indicating a copy
-                /// from input shape at the same index.
-                Reshape(const Output<Node>& arg,
-                        const Output<Node>& pattern,
-                        bool zero_flag = false);
+                /// \param special_zero Treats zeros in `pattern` as wildcard flags indicating a
+                ///        copy from input shape at the same index.
+                ///
+                Reshape(const Output<Node>& arg, const Output<Node>& pattern, bool special_zero);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 size_t get_version() const override { return 1; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
-                bool get_zero_flag() const { return m_zero_flag; }
-                void set_zero_flag(bool zero_flag) { m_zero_flag = zero_flag; }
+                bool get_special_zero() const { return m_special_zero; }
+                void set_special_zero(bool special_zero) { m_special_zero = special_zero; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
             private:
-                bool m_zero_flag;
+                bool m_special_zero;
             };
         }
+        using v0::Reshape;
     }
 }

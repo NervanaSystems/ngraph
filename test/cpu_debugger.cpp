@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -30,7 +31,7 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_debugger.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/util.hpp"
 #include "util/test_tools.hpp"
@@ -40,14 +41,8 @@ using namespace std;
 
 bool static is_codegen_mode()
 {
-    static bool codegen_set = false;
-    static bool codegen_mode = false;
-    if (!codegen_set)
-    {
-        const char* ngraph_codegen = std::getenv("NGRAPH_CODEGEN");
-        codegen_mode = (ngraph_codegen != nullptr) && std::string(ngraph_codegen) != "0";
-        codegen_set = true;
-    }
+    static bool codegen_mode = getenv_bool("NGRAPH_CODEGEN");
+    ;
     return codegen_mode;
 }
 

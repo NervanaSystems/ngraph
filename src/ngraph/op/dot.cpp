@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ void op::Dot::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           reduction_axes_ambiguous || arg0_shape.rank().is_dynamic() ||
-                              m_reduction_axes_count <= size_t(arg0_shape.rank()),
+                              m_reduction_axes_count <= arg0_shape.rank().get_length(),
                           "Reduction axes count (",
                           m_reduction_axes_count,
                           ") is too large (arg0 shape: ",
@@ -98,7 +98,7 @@ void op::Dot::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           reduction_axes_ambiguous || arg1_shape.rank().is_dynamic() ||
-                              m_reduction_axes_count <= size_t(arg1_shape.rank()),
+                              m_reduction_axes_count <= arg1_shape.rank().get_length(),
                           "Reduction axes count (",
                           m_reduction_axes_count,
                           ") is too large (arg0 shape: ",
@@ -111,7 +111,7 @@ void op::Dot::validate_and_infer_types()
     {
         for (size_t i = 0; i < m_reduction_axes_count; i++)
         {
-            size_t axis_index_arg0 = size_t(arg0_shape.rank()) - m_reduction_axes_count + i;
+            size_t axis_index_arg0 = arg0_shape.rank().get_length() - m_reduction_axes_count + i;
             size_t axis_index_arg1 = i;
 
             NODE_VALIDATION_CHECK(
@@ -130,16 +130,17 @@ void op::Dot::validate_and_infer_types()
                 ").");
         }
 
-        std::vector<Dimension> result_dims(size_t(arg0_shape.rank()) + size_t(arg1_shape.rank()) -
+        std::vector<Dimension> result_dims(arg0_shape.rank().get_length() +
+                                           arg1_shape.rank().get_length() -
                                            2 * m_reduction_axes_count);
 
         size_t i = 0;
 
-        for (size_t j = 0; j < size_t(arg0_shape.rank()) - m_reduction_axes_count; j++)
+        for (size_t j = 0; j < arg0_shape.rank().get_length() - m_reduction_axes_count; j++)
         {
             result_dims[i++] = arg0_shape[j];
         }
-        for (size_t j = m_reduction_axes_count; j < size_t(arg1_shape.rank()); j++)
+        for (size_t j = m_reduction_axes_count; j < arg1_shape.rank().get_length(); j++)
         {
             result_dims[i++] = arg1_shape[j];
         }
@@ -176,16 +177,16 @@ shared_ptr<op::Reshape> make_reshape_axes_to_front(const Output<Node>& n,
     return make_shared<op::Reshape>(n, input_order, output_shape);
 }
 
-void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
     auto x = input_value(0);
     auto y = input_value(1);
 
-    auto x_shape = x.get_shape();          // shape IJ
-    auto y_shape = y.get_shape();          // shape JK
-    auto delta_shape = delta->get_shape(); // shape IK
+    auto x_shape = x.get_shape();         // shape IJ
+    auto y_shape = y.get_shape();         // shape JK
+    auto delta_shape = delta.get_shape(); // shape IK
 
     Shape I_shape;
     Shape J_shape;

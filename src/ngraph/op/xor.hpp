@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,12 +28,12 @@ namespace ngraph
         {
             /// \brief Elementwise logical-xor operation.
             ///
-            class LogicalXor : public util::BinaryElementwiseLogical
+            class NGRAPH_API LogicalXor : public util::BinaryElementwiseLogical
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"LogicalXor", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                LogicalXor() = default;
                 /// \brief Constructs a logical-xor operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.<br>
@@ -50,21 +50,22 @@ namespace ngraph
                                AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual bool is_commutative() const override { return true; }
+                bool visit_attributes(AttributeVisitor& visitor) override;
             };
         } // namespace v1
         namespace v0
         {
             /// \brief Elementwise logical-xor operation.
             ///
-            class Xor : public util::BinaryElementwiseLogical
+            class NGRAPH_API Xor : public util::BinaryElementwiseLogical
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Xor", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Xor() = default;
                 /// \brief Constructs a logical-xor operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.<br>
@@ -80,7 +81,7 @@ namespace ngraph
                     const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual bool is_commutative() const override { return true; }
             };

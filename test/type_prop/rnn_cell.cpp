@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,13 +28,13 @@ TEST(type_prop, rnn_cell)
     const size_t hidden_size = 3;
 
     const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto W = make_shared<op::Parameter>(element::f32, Shape{hidden_size, input_size});
     const auto R = make_shared<op::Parameter>(element::f32, Shape{hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
-    const auto rnn_cell = make_shared<op::RNNCell>(X, W, R, H_t, hidden_size);
-    EXPECT_EQ(rnn_cell->output(0).get_element_type(), element::f32);
-    EXPECT_EQ(rnn_cell->output(0).get_shape(), (Shape{batch_size, hidden_size}));
+    const auto rnn_cell = make_shared<op::RNNCell>(X, H_t, W, R, hidden_size);
+    EXPECT_EQ(rnn_cell->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rnn_cell->get_output_shape(0), (Shape{batch_size, hidden_size}));
 }
 
 TEST(type_prop, rnn_cell_invalid_input)
@@ -51,7 +51,7 @@ TEST(type_prop, rnn_cell_invalid_input)
     auto W = make_shared<op::Parameter>(element::f32, Shape{2 * hidden_size, input_size});
     try
     {
-        const auto rnn_cell = make_shared<op::RNNCell>(X, W, R, H_t, hidden_size);
+        const auto rnn_cell = make_shared<op::RNNCell>(X, H_t, W, R, hidden_size);
         FAIL() << "RNNCell node was created with invalid data.";
     }
     catch (const NodeValidationFailure& error)
@@ -64,7 +64,7 @@ TEST(type_prop, rnn_cell_invalid_input)
     R = make_shared<op::Parameter>(element::f32, Shape{hidden_size, 1});
     try
     {
-        const auto rnn_cell = make_shared<op::RNNCell>(X, W, R, H_t, hidden_size);
+        const auto rnn_cell = make_shared<op::RNNCell>(X, H_t, W, R, hidden_size);
         FAIL() << "RNNCell node was created with invalid data.";
     }
     catch (const NodeValidationFailure& error)
@@ -77,20 +77,21 @@ TEST(type_prop, rnn_cell_invalid_input)
     H_t = make_shared<op::Parameter>(element::f32, Shape{4, hidden_size});
     try
     {
-        const auto rnn_cell = make_shared<op::RNNCell>(X, W, R, H_t, hidden_size);
+        const auto rnn_cell = make_shared<op::RNNCell>(X, H_t, W, R, hidden_size);
         FAIL() << "RNNCell node was created with invalid data.";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor H_t must have shape"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor initial_hidden_state must have shape"));
     }
 
     // Invalid B tensor shape.
     H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{hidden_size});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{2 * hidden_size});
     try
     {
-        const auto rnn_cell = make_shared<op::RNNCell>(X, W, R, H_t, hidden_size, B);
+        const auto rnn_cell = make_shared<op::RNNCell>(X, H_t, W, R, B, hidden_size);
         FAIL() << "RNNCell node was created with invalid data.";
     }
     catch (const NodeValidationFailure& error)

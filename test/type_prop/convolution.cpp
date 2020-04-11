@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -2836,7 +2836,130 @@ TEST(type_prop, conv_bprop_data_v1_output_partial_shape_dynamic)
     auto padding_end = CoordinateDiff{0, 0};
 
     auto conv1 = make_shared<op::v1::ConvolutionBackpropData>(
-        filters, deltas, data_batch_shape, strides, dilations, padding_begin, padding_end);
+        deltas, filters, data_batch_shape, strides, padding_begin, padding_end, dilations);
 
     ASSERT_TRUE(conv1->get_output_partial_shape(0).is_dynamic());
+}
+
+TEST(type_prop, conv_bprop_data_v1_output_partial_shape_dynamic_static_rank)
+{
+    PartialShape shape_filter{20, 10, 3, 3};
+    auto filters = make_shared<op::Parameter>(element::f32, shape_filter);
+    PartialShape shape_delta{Dimension(), 20, 224, 224};
+    auto deltas = make_shared<op::Parameter>(element::f32, shape_delta);
+    auto strides = Strides{2, 2};
+    auto dilations = Strides{1, 1};
+    auto padding_begin = CoordinateDiff{1, 1};
+    auto padding_end = CoordinateDiff{1, 1};
+
+    auto conv1 = make_shared<op::v1::ConvolutionBackpropData>(
+        deltas, filters, strides, padding_begin, padding_end, dilations);
+
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).rank().is_static());
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).rank().same_scheme(Rank{4}));
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).is_dynamic());
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), 10, 447, 447}));
+}
+
+TEST(type_prop, conv_v1_partial_rank)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::v1::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 window_dilation_strides);
+
+    ASSERT_TRUE(conv->get_output_partial_shape(0).is_dynamic());
+}
+
+TEST(type_prop, deformable_conv_incorrect_group)
+{
+    const PartialShape data_batch_shape{1, 3, 96, 96};
+    const PartialShape deformable_values_shape{1, 50, 5, 5};
+    const PartialShape filters_shape{4, 3, 5, 5};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, deformable_values_shape);
+    auto param2 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        make_shared<op::v1::DeformableConvolution>(param0,
+                                                   param1,
+                                                   param2,
+                                                   Strides{},
+                                                   CoordinateDiff{},
+                                                   CoordinateDiff{},
+                                                   Strides{},
+                                                   op::PadType::EXPLICIT,
+                                                   2);
+
+        FAIL() << "DeformableConvolution created with incorrect 'group' value";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "input data shape must be evenly divisible");
+    }
+
+    try
+    {
+        make_shared<op::v1::DeformableConvolution>(param0,
+                                                   param1,
+                                                   param2,
+                                                   Strides{},
+                                                   CoordinateDiff{},
+                                                   CoordinateDiff{},
+                                                   Strides{},
+                                                   op::PadType::EXPLICIT,
+                                                   3);
+
+        FAIL() << "DeformableConvolution created with incorrect 'group' value";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "weights shape must be evenly divisible");
+    }
+}
+
+TEST(type_prop, deformable_conv_incorrect_deformable_group)
+{
+    const PartialShape data_batch_shape{1, 3, 96, 96};
+    const PartialShape deformable_values_shape{1, 50, 5, 5};
+    const PartialShape filters_shape{3, 3, 5, 5};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, deformable_values_shape);
+    auto param2 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        make_shared<op::v1::DeformableConvolution>(param0,
+                                                   param1,
+                                                   param2,
+                                                   Strides{},
+                                                   CoordinateDiff{},
+                                                   CoordinateDiff{},
+                                                   Strides{},
+                                                   op::PadType::EXPLICIT,
+                                                   1,
+                                                   7);
+
+        FAIL() << "DeformableConvolution created with incorrect 'deformable group' value";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "deformable values input must be evenly divisible");
+    }
 }

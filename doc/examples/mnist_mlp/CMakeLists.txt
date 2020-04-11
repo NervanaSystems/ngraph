@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +17,7 @@
 add_executable(mnist_mlp mnist_loader.cpp mnist_mlp.cpp)
 add_dependencies(mnist_mlp ngraph cpu_backend)
 target_link_libraries(mnist_mlp ngraph cpu_backend)
-if (NGRAPH_DISTRIBUTED_ENABLE)
-    add_executable(dist_mnist_mlp mnist_loader.cpp dist_mnist_mlp.cpp)
-    target_compile_definitions(dist_mnist_mlp PRIVATE NGRAPH_DISTRIBUTED_ENABLE)
-    target_include_directories(dist_mnist_mlp SYSTEM PRIVATE libmlsl)
-    target_link_libraries(dist_mnist_mlp ngraph cpu_backend libmlsl)
-endif()
+
+add_executable(dist_mnist_mlp mnist_loader.cpp dist_mnist_mlp.cpp)
+add_dependencies(dist_mnist_mlp ngraph cpu_backend)
+target_link_libraries(dist_mnist_mlp ngraph cpu_backend)

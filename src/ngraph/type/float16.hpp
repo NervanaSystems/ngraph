@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,11 +23,13 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/ngraph_visibility.hpp"
+
 #define ROUND_MODE_TO_NEAREST_EVEN
 
 namespace ngraph
 {
-    class float16
+    class NGRAPH_API float16
     {
     public:
         constexpr float16()
@@ -88,6 +90,8 @@ namespace ngraph
 
 namespace std
 {
+    bool NGRAPH_API isnan(ngraph::float16 x);
+
     template <>
     class numeric_limits<ngraph::float16>
     {

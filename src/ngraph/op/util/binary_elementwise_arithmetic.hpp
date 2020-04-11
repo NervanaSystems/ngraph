@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,15 +51,10 @@ namespace ngraph
             /// | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
             /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape and element type as the input tensors (after auto broadcasting). |
             // clang-format on
-            class BinaryElementwiseArithmetic : public Op
+            class NGRAPH_API BinaryElementwiseArithmetic : public Op
             {
             protected:
-                /// \brief Constructs a binary elementwise arithmetic operation.
-                BinaryElementwiseArithmetic();
-
-                BinaryElementwiseArithmetic(const std::shared_ptr<Node>& arg0,
-                                            const std::shared_ptr<Node>& arg1,
-                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+                BinaryElementwiseArithmetic(const AutoBroadcastSpec& autob);
 
                 /// \brief Constructs a binary elementwise arithmetic operation.
                 ///
@@ -67,17 +62,7 @@ namespace ngraph
                 /// \param arg1 Output that produces the second input tensor.
                 BinaryElementwiseArithmetic(const Output<Node>& arg0,
                                             const Output<Node>& arg1,
-                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
-
-                /// \brief Constructs a binary elementwise arithmetic operation.
-                ///
-                /// \param arg0 Node that produces the first input tensor.
-                /// \param arg1 Node that produces the second input tensor.
-                /// \param autob AutoBroadcast mode.
-                BinaryElementwiseArithmetic(const std::string& node_type,
-                                            const std::shared_ptr<Node>& arg0,
-                                            const std::shared_ptr<Node>& arg1,
-                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+                                            const AutoBroadcastSpec& autob);
 
             public:
                 void validate_and_infer_types() override;
@@ -86,6 +71,8 @@ namespace ngraph
                 void set_autob(const AutoBroadcastSpec& autob) { m_autob = autob; }
                 bool is_binary_elementwise_arithmetic() const override { return true; }
                 bool supports_auto_broadcast() const override { return true; }
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
             private:
                 AutoBroadcastSpec m_autob;
             };

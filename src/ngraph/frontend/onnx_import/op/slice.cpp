@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,14 +18,16 @@
 #include <memory>
 #include <vector>
 
+#include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/slice.hpp"
-#include "slice.hpp"
 #include "utils/common.hpp"
 
-static inline int64_t get_valid_array_idx(int64_t idx, int64_t last_idx)
+namespace
 {
-    return (idx >= 0) ? std::min(idx, last_idx) : std::max<int64_t>(0, last_idx + idx);
+    int64_t get_valid_array_idx(int64_t idx, int64_t last_idx)
+    {
+        return (idx >= 0) ? std::min(idx, last_idx) : std::max<int64_t>(0, last_idx + idx);
+    }
 }
 
 namespace ngraph
@@ -40,6 +42,7 @@ namespace ngraph
                 {
                     std::shared_ptr<ngraph::Node> data = node.get_ng_inputs().at(0);
                     Shape data_shape = data->get_shape();
+                    const auto data_rank = data_shape.size();
 
                     auto starts = node.get_attribute_value<std::vector<int64_t>>("starts");
                     auto ends = node.get_attribute_value<std::vector<int64_t>>("ends");
@@ -47,7 +50,7 @@ namespace ngraph
                     auto axes = node.get_attribute_value<std::vector<int64_t>>(
                         "axes", common::get_monotonic_range<int64_t>(data_shape.size()));
 
-                    Shape lower_bounds(data_shape.size());
+                    Shape lower_bounds(data_rank);
                     Shape upper_bounds = data_shape;
 
                     for (size_t idx = 0; idx < axes.size(); ++idx)
@@ -69,7 +72,20 @@ namespace ngraph
                         }
                     }
 
-                    return {std::make_shared<ngraph::op::Slice>(data, lower_bounds, upper_bounds)};
+                    const auto begin = default_opset::Constant::create(
+                        element::i64, Shape{lower_bounds.size()}, lower_bounds);
+                    const auto end = default_opset::Constant::create(
+                        element::i64, Shape{upper_bounds.size()}, upper_bounds);
+                    const auto strides = default_opset::Constant::create(
+                        element::i64, Shape{data_rank}, std::vector<int64_t>(data_rank, 1));
+
+                    return {std::make_shared<default_opset::StridedSlice>(
+                        data,
+                        begin,
+                        end,
+                        strides,
+                        std::vector<int64_t>(data_rank, 0),
+                        std::vector<int64_t>(data_rank, 0))};
                 }
 
             } // namespace set_1

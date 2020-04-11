@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ namespace ngraph
 {
     namespace builder
     {
+        NGRAPH_API
         std::shared_ptr<Node>
             QuantizedConvolutionBuilder(const Output<Node>& input,
                                         const Output<Node>& filters,
@@ -49,6 +50,7 @@ namespace ngraph
                                         const ngraph::AxisSet& filter_axes = ngraph::AxisSet{},
                                         const ngraph::AxisSet& output_axes = ngraph::AxisSet{});
 
+        NGRAPH_API
         std::shared_ptr<Node>
             QuantizedConvolutionBiasBuilder(const Output<Node>& input,
                                             const Output<Node>& filters,
@@ -66,6 +68,7 @@ namespace ngraph
                                             const Output<Node>& max_output,
                                             const bool with_relu = false);
 
+        NGRAPH_API
         std::shared_ptr<Node>
             QuantizedConvolutionReluBuilder(const Output<Node>& input,
                                             const Output<Node>& filters,
@@ -81,6 +84,7 @@ namespace ngraph
                                             const Output<Node>& min_output,
                                             const Output<Node>& max_output);
 
+        NGRAPH_API
         std::shared_ptr<Node>
             QuantizedConvolutionBiasAddBuilder(const Output<Node>& input,
                                                const Output<Node>& filters,
@@ -101,6 +105,7 @@ namespace ngraph
                                                const Output<Node>& max_sum_input,
                                                const bool with_relu = false);
 
+        NGRAPH_API
         std::shared_ptr<Node>
             QuantizedConvolutionBiasSignedAddBuilder(const Output<Node>& input,
                                                      const Output<Node>& filters,

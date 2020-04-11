@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,8 +37,11 @@
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/pattern/op/branch.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/pattern/op/or.hpp"
 #include "ngraph/pattern/op/skip.hpp"
+#include "ngraph/pattern/op/true.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
@@ -144,8 +147,8 @@ public:
 
             size_t const_node_index =
                 m.get_match_root()->get_arguments().at(0) == pattern_map[pattern];
-            auto const_node = static_pointer_cast<op::Constant>(
-                m.get_match_root()->get_arguments().at(const_node_index));
+            auto const_node =
+                as_type_ptr<op::Constant>(m.get_match_root()->get_arguments().at(const_node_index));
             auto second_node = m.get_match_root()->get_arguments().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
@@ -210,8 +213,8 @@ TEST(pattern, graph_rewrite)
                                             ParameterVector{a, b, c});
         pass_manager.run_passes(f);
 
-        ASSERT_TRUE(graph_a->output(0).get_target_inputs().empty());
-        ASSERT_TRUE(graph_b->output(0).get_target_inputs().empty());
+        ASSERT_TRUE(graph_a->get_output_target_inputs(0).empty());
+        ASSERT_TRUE(graph_b->get_output_target_inputs(0).empty());
 
         auto expected = ngraph::NodeVector{a, b, a, c, b};
         ASSERT_TRUE(count_ops_of_type<op::Add>(f) == 0);
@@ -225,12 +228,11 @@ TEST(pattern, graph_rewrite)
         auto graph = b + sum;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->input(1).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
+        ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(sum->output(0)
                         .get_target_inputs()
                         .empty()); // graph's input is removed from sum's target inptus
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+        ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(1))); // a's output feeds into graph's input
     }
 
@@ -242,12 +244,11 @@ TEST(pattern, graph_rewrite)
         auto graph = b + mul;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->input(1).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
+        ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(mul->output(0)
                         .get_target_inputs()
                         .empty()); // graph's input is removed from sum's target inputs
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+        ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(1))); // a's output feeds into graph's input
     }
 
@@ -258,9 +259,8 @@ TEST(pattern, graph_rewrite)
         auto graph = ((((a * iconst1) * iconst1) * iconst1) * iconst1) + b;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(0), a);
-        ASSERT_EQ(graph->input(0).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+        ASSERT_EQ(graph->input_value(0), a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(0))); // a's output feeds into graph's input
     }
 
@@ -272,9 +272,8 @@ TEST(pattern, graph_rewrite)
         auto graph = b + (iconst0 + ((a + iconst0) * iconst1));
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->input(1).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+        ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(1))); // a's output feeds into graph's input
     }
 
@@ -285,9 +284,8 @@ TEST(pattern, graph_rewrite)
         auto graph = b + (iconst1 * (iconst1 * (iconst1 * (iconst1 * a))));
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->input(1).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+        ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(1))); // a's output feeds into graph's input
     }
 }
@@ -296,7 +294,7 @@ TEST(pattern, matcher)
 {
     Shape shape{};
     auto a = make_shared<op::Parameter>(element::i32, shape);
-    TestMatcher n(nullptr);
+    TestMatcher n;
     ASSERT_TRUE(n.match(a, a));
     ASSERT_EQ(n.get_matched_nodes(), (NodeVector{a}));
 
@@ -435,9 +433,24 @@ TEST(pattern, matcher)
     ASSERT_EQ(n.get_pattern_map()[label1], a);
     ASSERT_EQ(n.get_pattern_map()[label2], add);
 
+    // Or
+    ASSERT_TRUE(n.match(std::make_shared<pattern::op::Or>(OutputVector{a + b, a - b}), a + b));
+    ASSERT_TRUE(n.match(std::make_shared<pattern::op::Or>(OutputVector{a + b, a - b}), a - b));
+
+    // Branch
+    {
+        auto branch = std::make_shared<pattern::op::Branch>();
+        auto star = std::make_shared<pattern::op::Or>(
+            OutputVector{branch, std::make_shared<pattern::op::True>()});
+        auto pattern = star + star;
+        branch->set_destination(pattern);
+        ASSERT_TRUE(n.match(pattern, ((a + b) + (b + a) + a)));
+        ASSERT_EQ(n.get_matched_nodes().size(), 4);
+    }
+
     // strict mode
     {
-        TestMatcher sm(nullptr, "TestMatcher", true);
+        TestMatcher sm(Output<Node>{}, "TestMatcher", true);
         // exact shape and type
         auto scalar_param = make_shared<op::Parameter>(element::i32, Shape{});
         auto label_dynamic_shape =
@@ -462,7 +475,7 @@ TEST(pattern, matcher)
 TEST(pattern, mean)
 {
     // construct mean
-    TestMatcher n(nullptr);
+    TestMatcher n;
 
     auto input = std::make_shared<op::Parameter>(element::f32, Shape{2, 3});
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
@@ -477,7 +490,7 @@ TEST(pattern, mean)
 TEST(pattern, variance)
 {
     // construct variance
-    TestMatcher n(nullptr);
+    TestMatcher n;
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
     auto input_sq = std::make_shared<op::Multiply>(input, input);
@@ -733,7 +746,7 @@ TEST(pattern, is_contained_match)
     Shape shape{};
     auto a = make_shared<op::Parameter>(element::i32, shape);
     auto absn = make_shared<op::Abs>(a);
-    TestMatcher n(nullptr);
+    TestMatcher n;
 
     auto label_a = std::make_shared<pattern::op::Label>(a);
     auto label_abs = make_shared<op::Abs>(a);

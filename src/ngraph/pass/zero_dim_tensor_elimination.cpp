@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,9 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/type.hpp"
 #include "zero_dim_tensor_elimination.hpp"
 
 using namespace std;
@@ -113,7 +115,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
 
         if (auto concat = as_type_ptr<op::Concat>(n))
         {
-            NodeVector non_zero_dim_args;
+            OutputVector non_zero_dim_args;
             for (auto arg : concat->get_arguments())
             {
                 if (!has_zero_dim(arg))
@@ -124,15 +126,29 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
 
             if (non_zero_dim_args.size() < concat->get_input_size())
             {
-                auto new_concat = concat->copy_with_new_args(non_zero_dim_args);
+                auto new_concat = concat->clone_with_new_inputs(non_zero_dim_args);
                 NGRAPH_DEBUG << " Replacing " << n->get_name() << " with "
                              << new_concat->get_name();
                 replace_node(concat, new_concat);
                 continue;
             }
         }
+        else if (auto replace_slice = as_type_ptr<op::ReplaceSlice>(n))
+        {
+            const Shape& replacement_shape = replace_slice->get_input_shape(1);
+            if (shape_size(replacement_shape) == 0)
+            {
+                // Op is a noop
+                Output<Node> source_output = replace_slice->input_value(0);
+                Output<Node> output = replace_slice->output(0);
+                for (Input<Node> input : output.get_target_inputs())
+                {
+                    input.replace_source_output(source_output);
+                }
+            }
+        }
 
-        auto source_output = n->input(0).get_source_output();
+        auto source_output = n->input_value(0);
 
         if (source_output.get_node()->get_output_size() != 1 || !has_zero_dim(source_output))
         {

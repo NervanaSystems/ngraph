@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 #include <cstdint>
 #include <vector>
 
-#include "ngraph/op/fused/split.hpp"
-#include "op/split.hpp"
-#include "utils/common.hpp"
+#include "default_opset.hpp"
+#include "ngraph/builder/split.hpp"
+#include "split.hpp"
 
 namespace ngraph
 {
@@ -32,29 +32,18 @@ namespace ngraph
                 NodeVector split(const Node& node)
                 {
                     const auto input = node.get_ng_inputs().at(0);
-                    const auto outputs_number = node.get_output_names().size();
                     const auto axis = node.get_attribute_value<int64_t>("axis", 0);
-                    std::size_t valid_axis =
-                        common::validate_axis(node, axis, input->get_shape().size());
 
-                    try
+                    if (node.has_attribute("split"))
                     {
-                        const auto length_parts =
+                        const auto splits =
                             node.get_attribute_value<std::vector<std::size_t>>("split");
-                        const auto fused_split =
-                            std::make_shared<ngraph::op::Split>(input, valid_axis, length_parts);
-
-                        return fused_split->decompose_op();
+                        return ngraph::builder::opset1::split(input, splits, axis);
                     }
-                    catch (const error::node::UnknownAttribute&)
+                    else
                     {
-                        // an exception will be caught if the input node does not contain
-                        // the 'split' attribute - this means we should split the input tensor
-                        // into same-length parts equal to the number of node outputs
-                        const auto fused_split =
-                            std::make_shared<ngraph::op::Split>(input, valid_axis, outputs_number);
-
-                        return fused_split->decompose_op();
+                        const auto outputs_number = node.get_output_names().size();
+                        return ngraph::builder::opset1::split(input, outputs_number, axis);
                     }
                 }
 

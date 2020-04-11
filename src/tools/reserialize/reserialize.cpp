@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
         }
 
         timer.start();
-        ngraph::serialize(output, function, 2);
+        ngraph::serialize(output, function);
         timer.stop();
         cout << "serialize took   " << timer.get_milliseconds() << "ms\n";
     }

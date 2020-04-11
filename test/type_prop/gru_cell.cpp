@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@ TEST(type_prop, gru_cell)
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
     const auto gru_cell = make_shared<op::GRUCell>(X, W, R, H_t, hidden_size);
-    EXPECT_EQ(gru_cell->output(0).get_element_type(), element::f32);
-    EXPECT_EQ(gru_cell->output(0).get_shape(), (Shape{batch_size, hidden_size}));
+    EXPECT_EQ(gru_cell->get_output_element_type(0), element::f32);
+    EXPECT_EQ(gru_cell->get_output_shape(0), (Shape{batch_size, hidden_size}));
 }
 
 TEST(type_prop, gru_cell_invalid_input)
@@ -87,7 +87,8 @@ TEST(type_prop, gru_cell_invalid_input)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor H_t must have shape"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor initial_hidden_state must have shape"));
     }
 
     // Invalid B tensor shape.

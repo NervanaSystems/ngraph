@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <vector>
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
 
@@ -185,16 +186,16 @@ string file_util::get_temp_directory_path()
 {
     const vector<string> potential_tmps = {"NGRAPH_TMP", "TMPDIR", "TMP", "TEMP", "TEMPDIR"};
 
-    const char* path = nullptr;
+    string path;
     for (const string& var : potential_tmps)
     {
-        path = getenv(var.c_str());
-        if (path != nullptr)
+        path = getenv_string(var.c_str());
+        if (!path.empty())
         {
             break;
         }
     }
-    if (path == nullptr)
+    if (path.empty())
     {
         path = "/tmp";
     }

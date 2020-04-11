@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -47,7 +47,7 @@
 #include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
@@ -73,7 +73,7 @@ namespace ngraph
         namespace cpu
         {
             class CPU_ExternalFunction;
-            class TensorViewWrapper;
+            class TensorWrapper;
 
             // TODO (nbpatel) Templatize the return type when we have double scales
             template <typename OP>
@@ -139,7 +139,9 @@ namespace ngraph
                 // reserve the space for primitives for each op, different op requires different
                 // number of primitives.
                 // some ops require a new workspace.
-                size_t reserve_primitive_space(size_t count, bool new_workspace = false);
+                size_t reserve_primitive_space(size_t count,
+                                               bool fwd_bwd = false,
+                                               bool new_workspace = false);
                 size_t insert_primitive(mkldnn::primitive* primitive);
                 size_t insert_memory(mkldnn::memory* memory);
                 size_t insert_workspace(std::unique_ptr<MKLDNNWorkspace>& workspace);
@@ -175,8 +177,8 @@ namespace ngraph
 
                 template <typename OP>
                 size_t build_deconvolution(const ngraph::Node* node,
-                                           const std::vector<TensorViewWrapper>& /* args */,
-                                           const std::vector<TensorViewWrapper>& /* out */)
+                                           const std::vector<TensorWrapper>& /* args */,
+                                           const std::vector<TensorWrapper>& /* out */)
                 {
                     auto convolution = static_cast<const OP*>(node);
 
@@ -238,8 +240,8 @@ namespace ngraph
 
                 template <typename OP>
                 size_t build_inner_product(const ngraph::Node* node,
-                                           const std::vector<TensorViewWrapper>& /* args */,
-                                           const std::vector<TensorViewWrapper>& /* out */)
+                                           const std::vector<TensorWrapper>& /* args */,
+                                           const std::vector<TensorWrapper>& /* out */)
                 {
                     auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
@@ -1193,9 +1195,9 @@ namespace ngraph
                                          size_t gelu_index);
 
 #if MKLDNN_VERSION_MAJOR >= 1
-                // TODO(jmenon): Get rid of TensorViewWrappers at some point
+                // TODO(jmenon): Get rid of TensorWrappers at some point
                 mkldnn::memory::desc
-                    build_memory_descriptor(const TensorViewWrapper& tvw,
+                    build_memory_descriptor(const TensorWrapper& tvw,
                                             mkldnn::memory::format_tag fmt_tag) const;
                 mkldnn::memory::desc
                     build_memory_descriptor(const Shape& shape,
@@ -1237,8 +1239,8 @@ namespace ngraph
                 template <typename OP>
                 mkldnn::lstm_forward::desc
                     get_rnn_forward_desc(const ngraph::Node* node,
-                                         const std::vector<TensorViewWrapper>& args,
-                                         const std::vector<TensorViewWrapper>& out)
+                                         const std::vector<TensorWrapper>& args,
+                                         const std::vector<TensorWrapper>& out)
                 {
                     auto rnn_node = static_cast<const OP*>(node);
                     auto src_sequence_length_max =
@@ -1330,6 +1332,93 @@ namespace ngraph
                                                       dst_iter_c_desc);
                 }
 
+                template <typename OP>
+                mkldnn::vanilla_rnn_forward::desc
+                    get_vanilla_rnn_forward_desc(const ngraph::Node* node,
+                                                 const std::vector<TensorWrapper>& args,
+                                                 const std::vector<TensorWrapper>& out)
+                {
+                    auto rnn_node = static_cast<const OP*>(node);
+                    auto src_sequence_length_max =
+                        static_cast<unsigned long>(rnn_node->get_src_sequence_length());
+                    auto direction = static_cast<unsigned long>(rnn_node->get_direction());
+                    auto num_fused_layers =
+                        static_cast<unsigned long>(rnn_node->get_num_fused_layers());
+                    auto feature_size =
+                        static_cast<unsigned long>(rnn_node->get_src_iter_feature_size());
+                    auto batch = static_cast<unsigned long>(rnn_node->get_batch_size());
+                    auto rnn_cell_n_gates =
+                        static_cast<unsigned long>(rnn_node->get_gates_per_cell());
+
+                    auto get_mkldnn_rnn_direction = [&]() {
+                        switch (direction)
+                        {
+                        case 1: return mkldnn::rnn_direction::unidirectional_left2right;
+                        case 2: return mkldnn::rnn_direction::bidirectional_concat;
+                        default: throw ngraph_error("unsupported mkldnn rnn direction");
+                        }
+                    };
+
+                    if (out[0].get_shape().size() == 2 &&
+                        (out[0].get_shape()[1] != direction * feature_size))
+                    {
+                        throw ngraph_error(
+                            "input slc{ht} feature size is not equal to output dlc{ht} feature "
+                            "size ");
+                    }
+
+                    if (out[1].get_shape().size() == 2 && (out[1].get_shape()[1] != feature_size) &&
+                        rnn_node->get_num_timesteps() != 1)
+                    {
+                        throw ngraph_error(
+                            "input sic{ht_1|ct_1} feature size is not equal to output "
+                            "dlc{ht_1|ct_1} "
+                            "feature size ");
+                    }
+                    Shape src_layer_tz{
+                        src_sequence_length_max,
+                        batch,
+                        static_cast<unsigned long>(rnn_node->get_src_layer_feature_size())};
+                    Shape src_iter_tz{num_fused_layers, direction, batch, feature_size};
+                    Shape wei_layer_tz{
+                        num_fused_layers,
+                        direction,
+                        static_cast<unsigned long>(rnn_node->get_src_layer_feature_size()),
+                        rnn_cell_n_gates,
+                        feature_size};
+                    Shape wei_iter_tz{
+                        num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
+                    Shape bias_tz{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
+                    Shape dst_layer_tz{src_sequence_length_max, batch, direction * feature_size};
+                    Shape dst_iter_tz{num_fused_layers, direction, batch, feature_size};
+
+                    // We create the memory descriptors used by the user
+                    auto src_layer_desc = build_memory_descriptor(
+                        src_layer_tz, args[0].get_element_type(), mkldnn::memory::FORMAT::tnc);
+                    auto src_iter_desc = build_memory_descriptor(
+                        src_iter_tz, args[1].get_element_type(), mkldnn::memory::FORMAT::ldnc);
+                    auto weights_layer_desc = build_memory_descriptor(
+                        wei_layer_tz, args[2].get_element_type(), mkldnn::memory::FORMAT::ldigo);
+                    auto weights_iter_desc = build_memory_descriptor(
+                        wei_iter_tz, args[3].get_element_type(), mkldnn::memory::FORMAT::ldigo);
+                    auto bias_desc = build_memory_descriptor(
+                        bias_tz, args[4].get_element_type(), mkldnn::memory::FORMAT::ldgo);
+                    auto dst_layer_desc = build_memory_descriptor(
+                        dst_layer_tz, out[0].get_element_type(), mkldnn::memory::FORMAT::tnc);
+                    auto dst_iter_desc = build_memory_descriptor(
+                        dst_iter_tz, out[1].get_element_type(), mkldnn::memory::FORMAT::ldnc);
+
+                    return mkldnn::vanilla_rnn_forward::desc(mkldnn::prop_kind::forward_training,
+                                                             mkldnn::algorithm::eltwise_tanh,
+                                                             get_mkldnn_rnn_direction(),
+                                                             src_layer_desc,
+                                                             src_iter_desc,
+                                                             weights_layer_desc,
+                                                             weights_iter_desc,
+                                                             bias_desc,
+                                                             dst_layer_desc,
+                                                             dst_iter_desc);
+                }
                 void build_rnn_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                        std::vector<mkldnn::primitive*>& mkldnn_primitives,
                                        std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
@@ -1337,6 +1426,15 @@ namespace ngraph
                                        const mkldnn::lstm_forward::desc& desc,
                                        std::vector<size_t>& deps,
                                        size_t rnn_idx);
+
+                void build_vanilla_rnn_forward(
+                    std::vector<mkldnn::memory*>& mkldnn_memories,
+                    std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+                    std::vector<char*>& mkldnn_workspaces,
+                    const mkldnn::vanilla_rnn_forward::desc& desc,
+                    std::vector<size_t>& deps,
+                    size_t rnn_idx);
 
                 template <bool with_bias>
                 void build_convolution_forward(
@@ -1457,6 +1555,8 @@ namespace ngraph
                                                 const mkldnn::memory::desc& result_desc);
                 size_t query_scratchpad_lrn_forward(const mkldnn::lrn_forward::desc& desc);
                 size_t query_scratchpad_rnn_forward(const mkldnn::lstm_forward::desc& desc);
+                size_t query_scratchpad_vanilla_rnn_forward(
+                    const mkldnn::vanilla_rnn_forward::desc& desc);
                 size_t query_scratchpad_slice(mkldnn::memory::desc& input_desc,
                                               const mkldnn::memory::desc& output_desc,
                                               const ngraph::Coordinate& lower_bounds,
@@ -1464,8 +1564,8 @@ namespace ngraph
                 size_t query_scratchpad_softmax_forward(const mkldnn::softmax_forward::desc& desc);
 
 #else
-                // TODO(jmenon): Get rid of TensorViewWrappers at some point
-                mkldnn::memory::desc build_memory_descriptor(const TensorViewWrapper& tvw,
+                // TODO(jmenon): Get rid of TensorWrappers at some point
+                mkldnn::memory::desc build_memory_descriptor(const TensorWrapper& tvw,
                                                              mkldnn::memory::format fmt) const;
                 mkldnn::memory::desc build_memory_descriptor(const Shape& shape,
                                                              const ngraph::element::Type& et,
@@ -1502,8 +1602,8 @@ namespace ngraph
                 template <typename OP>
                 mkldnn::rnn_forward::desc
                     get_rnn_forward_desc(const ngraph::Node* node,
-                                         const std::vector<TensorViewWrapper>& args,
-                                         const std::vector<TensorViewWrapper>& out)
+                                         const std::vector<TensorWrapper>& args,
+                                         const std::vector<TensorWrapper>& out)
                 {
                     auto rnn_node = static_cast<const OP*>(node);
                     auto src_sequence_length_max =
@@ -1591,7 +1691,8 @@ namespace ngraph
                     auto dst_iter_desc = build_memory_descriptor(
                         dst_iter_tz, out[1].get_element_type(), mkldnn::memory::FORMAT::ldsnc);
 
-                    mkldnn::rnn_cell::desc rnn_cell_desc(get_mkldnn_rnn_cell_type());
+                    mkldnn::rnn_cell::desc rnn_cell_desc(get_mkldnn_rnn_cell_type(),
+                                                         mkldnn::algorithm::eltwise_tanh);
                     return mkldnn::rnn_forward::desc(mkldnn::prop_kind::forward_training,
                                                      rnn_cell_desc,
                                                      get_mkldnn_rnn_direction(),

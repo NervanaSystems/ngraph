@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include "deconv.hpp"
 
+#include "ngraph/log.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/util.hpp"
@@ -138,14 +139,13 @@ void op::DeconvolutionBias::validate_and_infer_types()
                           ").");
 
     NODE_VALIDATION_CHECK(this,
-                          static_cast<size_t>(bias_shape.rank()) == 1,
+                          bias_shape.rank().get_length() == 1,
                           "bias_shape size(",
                           bias_shape.rank(),
                           ") is not equal to 1");
 
     NODE_VALIDATION_CHECK(this,
-                          static_cast<size_t>(bias_shape[0]) ==
-                              static_cast<size_t>(filters_shape[0]),
+                          bias_shape[0].get_length() == filters_shape[0].get_length(),
                           "Filter input channel count (",
                           filters_shape,
                           ") does not compatible with ",
@@ -157,7 +157,7 @@ void op::DeconvolutionBias::validate_and_infer_types()
 }
 
 void op::DeconvolutionBias::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                              const NodeVector& /* deltas */)
+                                              const OutputVector& /* deltas */)
 {
     throw ngraph_error("DeconvolutionBias generate_adjoints not supported implemented");
 }

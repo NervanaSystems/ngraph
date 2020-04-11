@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,149 +21,35 @@
 
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/and.hpp"
-#include "ngraph/op/avg_pool.hpp"
-#include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/gather.hpp"
-#include "ngraph/op/less_eq.hpp"
-#include "ngraph/op/max.hpp"
-#include "ngraph/op/max_pool.hpp"
-#include "ngraph/op/min.hpp"
-#include "ngraph/op/not.hpp"
-#include "ngraph/op/or.hpp"
-#include "ngraph/op/pad.hpp"
-#include "ngraph/op/product.hpp"
-#include "ngraph/op/reverse.hpp"
-#include "ngraph/op/slice.hpp"
-#include "ngraph/op/sum.hpp"
-#include "ngraph/op/topk.hpp"
-#include "ngraph/op/xor.hpp"
+#include "ngraph/ops.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
+#include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/dropout.hpp"
 #include "ngraph/runtime/cpu/op/gelu_backprop.hpp"
+#include "ngraph/runtime/cpu/op/lstm.hpp"
+#include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantized_matmul.hpp"
+#include "ngraph/runtime/cpu/op/quantized_matmul.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
+#include "ngraph/runtime/cpu/op/update_slice.hpp"
 
 #define EMITTER_DECL(op_name)                                                                      \
     emit<op_name>(CPU_ExternalFunction * external_function,                                        \
                   CodeWriter & writer,                                                             \
                   const ngraph::Node* node,                                                        \
-                  const std::vector<TensorViewWrapper>& args,                                      \
-                  const std::vector<TensorViewWrapper>& out)
+                  const std::vector<TensorWrapper>& args,                                          \
+                  const std::vector<TensorWrapper>& out)
 
 namespace ngraph
 {
-    namespace op
-    {
-        class Add;
-        class AllReduce;
-        class BroadcastDistributed;
-        class MatmulBias;
-        class BatchMatMul;
-        class BatchMatMulTranspose;
-        class Lstm;
-        class Rnn;
-        class BatchNormTraining;
-        class BatchNormInference;
-        class BatchNormTrainingRelu;
-        class BatchNormInferenceRelu;
-        class BatchNormTrainingBackprop;
-        class Dot;
-        class Multiply;
-        class GetOutputElement;
-        class Abs;
-        class Concat;
-        class Divide;
-        class Equal;
-        class Greater;
-        class GreaterEq;
-        class Less;
-        class Any;
-        class All;
-        class LRN;
-        class Log;
-        class Maximum;
-        class Minimum;
-        class Negative;
-        class NotEqual;
-        class Select;
-        class Subtract;
-        class Convert;
-        class Constant;
-        class Reshape;
-        class Sign;
-        class Exp;
-        class EmbeddingLookup;
-        class Sin;
-        class Sinh;
-        class Cos;
-        class Cosh;
-        class Tan;
-        class Tanh;
-        class Asin;
-        class Atan;
-        class ArgMin;
-        class ArgMax;
-        class GatherND;
-        class ScatterAdd;
-        class ScatterNDAdd;
-        class Power;
-        class UpdateSlice;
-        class ReplaceSlice;
-        class OneHot;
-        class Ceiling;
-        class Floor;
-        class Sqrt;
-        class ConvolutionRelu;
-        class QuantizedConvolutionRelu;
-        class QuantizedConvolution;
-        class GroupConvolution;
-        class GroupConvolutionBias;
-        class DeconvolutionBias;
-        class QuantizedConvolutionBias;
-        class QuantizedConvolutionBiasAdd;
-        class QuantizedConvolutionBiasSignedAdd;
-        class QuantizedDotBias;
-        class QuantizedDot;
-        class QuantizedMatmul;
-        class ConvolutionBias;
-        class ConvolutionBiasAdd;
-        class ConvolutionAdd;
-        class ConvolutionBiasBackpropFiltersBias;
-        class QuantizedMaxPool;
-        class QuantizedAvgPool;
-        class MaxPoolWithIndices;
-        class ReverseSequence;
-        class MaxPoolWithIndicesBackprop;
-        class Erf;
-        class ReluBackprop;
-        class Relu;
-        class CPULeakyRelu;
-        class BoundedRelu;
-        class Sigmoid;
-        class SigmoidBackprop;
-        class SigmoidMultiply;
-        class SigmoidMultiplyBackprop;
-        class Result;
-        class CompiledKernel;
-        class Dropout;
-        class Dequantize;
-        class Quantize;
-        class QuantizedConcat;
-        class Tile;
-        class Gelu;
-        class RandomUniform;
-        class GeluBackprop;
-    }
     namespace runtime
     {
         namespace cpu
         {
-            namespace op
-            {
-                class ConvertLayout;
-            }
-
             class CPU_Emitter
             {
             public:
@@ -171,8 +57,8 @@ namespace ngraph
                 static void emit(CPU_ExternalFunction* /* external_function */,
                                  CodeWriter& /* writer */,
                                  const ngraph::Node* node,
-                                 const std::vector<TensorViewWrapper>& /* args */,
-                                 const std::vector<TensorViewWrapper>& /* out */)
+                                 const std::vector<TensorWrapper>& /* args */,
+                                 const std::vector<TensorWrapper>& /* out */)
                 {
                     throw std::runtime_error("Unimplemented op '" + node->description() +
                                              "' in CPU emitter");
@@ -181,8 +67,8 @@ namespace ngraph
                 static void nop(CPU_ExternalFunction* /* external_function */,
                                 CodeWriter& /* writer */,
                                 const ngraph::Node* /* node */,
-                                const std::vector<TensorViewWrapper>& /* args */,
-                                const std::vector<TensorViewWrapper>& /* out */)
+                                const std::vector<TensorWrapper>& /* args */,
+                                const std::vector<TensorWrapper>& /* out */)
                 {
                 }
 
@@ -190,18 +76,15 @@ namespace ngraph
                 static void emitBatchNorm(CPU_ExternalFunction* external_function,
                                           CodeWriter& writer,
                                           const ngraph::Node* node,
-                                          const std::vector<TensorViewWrapper>& args,
-                                          const std::vector<TensorViewWrapper>& out,
+                                          const std::vector<TensorWrapper>& args,
+                                          const std::vector<TensorWrapper>& out,
                                           bool append_relu,
                                           bool training);
 
             private:
-                static std::string emit_vector(const TensorViewWrapper&,
-                                               const std::string& name = "");
-                static std::string emit_array1d(const TensorViewWrapper&,
-                                                const std::string& name = "");
-                static std::string emit_matrix(const TensorViewWrapper&,
-                                               const std::string& name = "");
+                static std::string emit_vector(const TensorWrapper&, const std::string& name = "");
+                static std::string emit_array1d(const TensorWrapper&, const std::string& name = "");
+                static std::string emit_matrix(const TensorWrapper&, const std::string& name = "");
 
                 static std::string emit_for_lt(const std::string& prefix, size_t index, size_t to);
                 static std::string emit_indices(const std::vector<std::string> indices);
@@ -218,8 +101,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchMatMul);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchMatMulTranspose);
-            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Lstm);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Rnn);
@@ -233,6 +114,8 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormInferenceRelu);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormTrainingBackprop);
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::CumSum);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dot);
             template <>
@@ -378,10 +261,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Not);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedMaxPool);
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedAvgPool);
-            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::MaxPoolWithIndices);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Reverse);
@@ -443,8 +322,6 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dequantize);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Quantize);
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConcat);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Tile);
             template <>

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,10 +28,9 @@ namespace ngraph
         {
             /// \brief GenerateMask
             ///
-            class GenerateMask : public op::Op
+            class NGRAPH_API GenerateMask : public op::Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"GenerateMask", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a GenerateMask node with a given shape, seed,
@@ -48,14 +47,13 @@ namespace ngraph
                              bool use_seed = false);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const element::Type& get_element_type() const { return m_element_type; }
                 void set_element_type(const element::Type& element_type)
                 {
                     m_element_type = element_type;
                 }
-
                 /// Deprecated accessor for transitional attributes
                 const Shape& get_mask_shape() const { return m_shape; }
                 /// \brief Returns the probability of a trial generating 1 (i.e. an element being
@@ -70,10 +68,9 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                               const NodeVector& /* deltas */) override
+                                               const OutputVector& /* deltas */) override
                 {
                 }
-
                 element::Type m_element_type;
                 // These will be deprecated
                 Shape m_shape;
@@ -87,10 +84,9 @@ namespace ngraph
         {
             /// \brief GenerateMask
             ///
-            class GenerateMask : public op::Op
+            class NGRAPH_API GenerateMask : public op::Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"GenerateMask", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a GenerateMask node with a given shape, seed,
@@ -108,14 +104,13 @@ namespace ngraph
 
                 size_t get_version() const override { return 1; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const element::Type& get_element_type() const { return m_element_type; }
                 void set_element_type(const element::Type& element_type)
                 {
                     m_element_type = element_type;
                 }
-
                 /// Deprecated accessor for transitional attributes
                 const Shape get_mask_shape() const;
                 /// \brief Returns the probability of a trial generating 1 (i.e. an element being
@@ -130,10 +125,9 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                               const NodeVector& /* deltas */) override
+                                               const OutputVector& /* deltas */) override
                 {
                 }
-
                 element::Type m_element_type;
                 // These will be deprecated
                 bool m_use_seed{false};

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,19 +15,12 @@
 //*****************************************************************************
 
 #include "ngraph/op/util/binary_elementwise_comparison.hpp"
+#include "ngraph/attribute_visitor.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 op::util::BinaryElementwiseComparison::BinaryElementwiseComparison()
-{
-}
-
-op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const shared_ptr<Node>& arg0,
-                                                                   const shared_ptr<Node>& arg1,
-                                                                   const AutoBroadcastSpec& autob)
-    : Op(check_single_output_args({arg0, arg1}))
-    , m_autob(autob)
 {
 }
 
@@ -39,19 +32,16 @@ op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const Output<
 {
 }
 
-op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const string& node_type,
-                                                                   const shared_ptr<Node>& arg0,
-                                                                   const shared_ptr<Node>& arg1,
-                                                                   const AutoBroadcastSpec& autob)
-    : Op(node_type, check_single_output_args({arg0, arg1}))
-    , m_autob(autob)
-{
-}
-
 void op::util::BinaryElementwiseComparison::validate_and_infer_types()
 {
     auto args_et_pshape = validate_and_infer_elementwise_args(m_autob);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 
     set_output_type(0, element::boolean, args_pshape);
+}
+
+bool op::util::BinaryElementwiseComparison::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("auto_broadcast", m_autob);
+    return true;
 }

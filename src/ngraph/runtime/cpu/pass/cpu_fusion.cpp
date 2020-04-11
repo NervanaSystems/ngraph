@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,8 +45,8 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
@@ -86,9 +86,6 @@
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/util.hpp"
-
-extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
-                                                                       ngraph::AxisVector order);
 
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
                            std::shared_ptr<ngraph::Node> arg,
@@ -166,6 +163,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
         auto m_bias = m_broadcast->get_argument(0);
         auto pattern_map = m.get_pattern_map();
 
+        NGRAPH_CHECK(mpattern->get_element_type() != element::f64 || m_bias == nullptr,
+                     "Bias in DP MatMulBias is not supported yet");
+
         auto mmb = std::make_shared<ngraph::op::MatmulBias>(pattern_map[W],
                                                             pattern_map[x],
                                                             m_bias,
@@ -207,10 +207,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
 
         auto mpattern = m.get_match_root();
         auto dot = m.get_match_root();
+        auto element_type = mpattern->get_element_type();
 
-        if (mpattern->get_element_type() != element::f32)
+        if (element_type != element::f32 && element_type != element::f64)
         {
-            NGRAPH_DEBUG << "mpattern = " << mpattern->get_name() << " type is not float!";
+            NGRAPH_DEBUG << "mpattern = " << mpattern->get_name()
+                         << " type is not float or double!";
             return false;
         }
 
@@ -542,7 +544,7 @@ static bool switch_nodes(std::shared_ptr<ngraph::Node> node1,
         return false;
     }
 
-    auto target_inputs = node2->output(0).get_target_inputs();
+    auto target_inputs = node2->get_output_target_inputs(0);
     // Remove the control_dependency, which shouldn't be there, but in case
     // Other control_dependencies will work out fine even after switch.
     node2->remove_control_dependency(node1);
@@ -600,12 +602,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        auto m_bn =
-            std::static_pointer_cast<ngraph::op::BatchNormTraining>(m.get_match_root()
-                                                                        ->get_argument(0)
-                                                                        ->input(0)
-                                                                        .get_source_output()
-                                                                        .get_node_shared_ptr());
+        auto m_bn = std::static_pointer_cast<ngraph::op::BatchNormTraining>(
+            m.get_match_root()->get_input_node_shared_ptr(0)->get_input_node_shared_ptr(0));
 
         if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(m_bn.get()))
         {
@@ -666,7 +664,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
 
         auto pattern_map = m.get_pattern_map();
 
-        auto bn_match = m.get_match_root()->input(0).get_source_output().get_node_shared_ptr();
+        auto bn_match = m.get_match_root()->get_input_node_shared_ptr(0);
         if (bn_match->get_users().size() > 1)
         {
             NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";
@@ -791,7 +789,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
         }
 
         std::vector<size_t> vec{0};
-        for (size_t i = 2; i < pattern_map[input]->output(0).get_shape().size(); i++)
+        for (size_t i = 2; i < pattern_map[input]->get_output_shape(0).size(); i++)
         {
             vec.push_back(i);
         }
@@ -1762,6 +1760,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
         }
 
         if (conv_m->get_groups() == 0)
+        {
+            return false;
+        }
+
+        if (conv_m->has_groups_in_filters())
         {
             return false;
         }

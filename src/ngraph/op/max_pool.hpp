@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,10 +26,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Batched max pooling operation, with optional padding and window stride.
-            class MaxPool : public Op
+            class NGRAPH_API MaxPool : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"MaxPool", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched max pooling operation.
@@ -100,7 +99,7 @@ namespace ngraph
                 MaxPool(const Output<Node>& arg, const Shape& window_shape);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The window shape.
                 const Shape& get_window_shape() const { return m_window_shape; }
@@ -137,7 +136,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 Shape m_window_shape;
                 Strides m_window_movement_strides;
@@ -147,10 +146,9 @@ namespace ngraph
                 bool m_ceil_mode{false};
             };
 
-            class MaxPoolBackprop : public Op
+            class NGRAPH_API MaxPoolBackprop : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"MaxPoolBackprop", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 MaxPoolBackprop() = default;
@@ -171,7 +169,7 @@ namespace ngraph
                                 const Shape& padding_above);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 void validate_and_infer_types() override;
 
@@ -207,10 +205,9 @@ namespace ngraph
         namespace v1
         {
             /// \brief Batched max pooling operation.
-            class MaxPool : public Op
+            class NGRAPH_API MaxPool : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"MaxPool", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a batched max pooling operation.
@@ -250,11 +247,12 @@ namespace ngraph
                         const Shape& kernel,
                         op::RoundingType rounding_mode);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The kernel shape.
                 const Shape& get_kernel() const { return m_kernel; }
@@ -282,7 +280,7 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas) override;
+                                               const OutputVector& deltas) override;
 
                 Shape m_kernel;
                 Strides m_strides;
@@ -292,10 +290,9 @@ namespace ngraph
                 op::RoundingType m_rounding_type{op::RoundingType::FLOOR};
             };
 
-            class MaxPoolBackprop : public Op
+            class NGRAPH_API MaxPoolBackprop : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"MaxPoolBackprop", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 MaxPoolBackprop() = default;
@@ -316,7 +313,7 @@ namespace ngraph
                                 const Shape& kernel);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;

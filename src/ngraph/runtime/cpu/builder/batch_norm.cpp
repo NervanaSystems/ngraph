@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@ namespace ngraph
             template <typename OP>
             static void build_batch_norm(CPU_ExternalFunction* external_function,
                                          const ngraph::Node* node,
-                                         const std::vector<TensorViewWrapper>& args,
-                                         const std::vector<TensorViewWrapper>& out,
+                                         const std::vector<TensorWrapper>& args,
+                                         const std::vector<TensorWrapper>& out,
                                          bool append_relu,
                                          bool training)
             {

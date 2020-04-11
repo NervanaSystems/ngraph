@@ -1,4 +1,4 @@
-.. Copyright 2017-2019 Intel Corporation
+.. Copyright 2017-2020 Intel Corporation
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -39,40 +39,62 @@ nGraph Compiler Stack Documentation
    introduction.rst
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Framework Support
 
-   frameworks/index.rst
-   frameworks/validated/list.rst
-
+   frameworks/overview.rst
+   frameworks/tensorflow_connect.rst
+   frameworks/onnx_integ.rst
+   frameworks/paddle_integ.rst
 
 .. toctree::
    :maxdepth: 1
    :caption: nGraph Core
 
-   buildlb.rst
    core/overview.rst
-   core/fusion/index.rst
-   nGraph Core Ops <ops/index.rst>
+   buildlb.rst
    core/constructing-graphs/index.rst
    core/passes/passes.rst
+   core/fusion/index.rst
+   nGraph Core Ops <ops/index.rst>
    provenance/index.rst
+   core/quantization.rst
+   dynamic/index.rst
 
    
 .. toctree::
    :maxdepth: 1
-   :caption: APIs 
+   :caption: Backend Support
 
-   python_api/index.rst
-   backends/index.rst
-   backends/cpp-api.rst
+   Basic Concepts <backends/index.rst>
+   Adding New Backends <backends/cpp-api.rst>
 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Inspecting Graphs
+   :caption: Training
 
-   inspection/index.rst
+   training/index.rst
+   training/qat.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Validated Workloads
+
+   frameworks/validated/list.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Diagnostics
+
+   inspection/debug_core.rst
+   inspection/debug_tf.rst
+   inspection/debug_onnx.rst
+   inspection/debug_paddle.rst
+   inspection/viz_tools.rst 
+   inspection/profiling.rst
 
 
 .. toctree::

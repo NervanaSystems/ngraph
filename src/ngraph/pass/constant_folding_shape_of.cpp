@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include "constant_folding.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/ops.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -31,18 +32,52 @@ void pass::ConstantFolding::construct_constant_shape_of()
         NGRAPH_DEBUG << "In callback for constant_shape_of_callback against node = "
                      << m.get_match_root()->get_name();
 
-        auto pattern_map = m.get_pattern_map();
+        auto pattern_value_map = m.get_pattern_value_map();
 
-        auto arg_match = pattern_map[arg_label];
+        auto arg_match = pattern_value_map[arg_label];
 
-        if (arg_match->get_output_partial_shape(0).is_static())
+        auto partial_shape = arg_match.get_partial_shape();
+        auto original_shape_of_node = as_type_ptr<op::ShapeOf>(m.get_match_root());
+        if (partial_shape.is_static())
         {
             NGRAPH_CHECK(revalidate_and_ensure_static(m.get_match_root()));
 
-            auto arg_shape = arg_match->get_output_shape(0);
+            auto arg_shape = arg_match.get_shape();
             auto replacement =
                 make_shared<op::Constant>(element::i64, Shape{arg_shape.size()}, arg_shape.data());
 
+            replace_node(m.get_match_root(), replacement);
+
+            return true;
+        }
+        else if (partial_shape.rank().is_static() && original_shape_of_node->get_is_foldable())
+        {
+            auto shape_of = make_shared<op::ShapeOf>(arg_match);
+            shape_of->set_is_foldable(false);
+            auto dimensions = OutputVector{};
+            auto output_dimensions = vector<Dimension>(partial_shape);
+            for (size_t i = 0; i < output_dimensions.size(); ++i)
+            {
+                if (output_dimensions[i].is_static())
+                {
+                    auto temp = op::Constant::create(
+                        element::i64,
+                        Shape{1},
+                        {static_cast<int64_t>(output_dimensions[i].get_length())});
+                    temp->set_friendly_name("ConstDim/" + temp->get_name());
+                    dimensions.push_back(temp);
+                }
+                else
+                {
+                    auto index = op::Constant::create(element::i64, Shape{1}, {i});
+                    auto axis = op::Constant::create(element::i64, Shape{}, {0});
+                    auto temp = make_shared<op::v1::Gather>(shape_of, index, axis);
+                    temp->set_friendly_name("DynDim/" + temp->get_name());
+                    dimensions.push_back(temp);
+                }
+            }
+
+            auto replacement = std::make_shared<op::Concat>(dimensions, 0);
             replace_node(m.get_match_root(), replacement);
 
             return true;

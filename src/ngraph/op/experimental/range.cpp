@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -182,6 +182,11 @@ static PartialShape infer_output_shape(const op::Range* node, const element::Typ
     return result;
 }
 
+bool ngraph::op::v0::Range::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 void op::Range::validate_and_infer_types()
 {
     set_input_is_relevant_to_shape(0);
@@ -230,6 +235,7 @@ void op::Range::validate_and_infer_types()
     case element::Type_t::u32: result_shape = infer_output_shape<uint32_t>(this, result_et); break;
     case element::Type_t::u64: result_shape = infer_output_shape<uint64_t>(this, result_et); break;
     case element::Type_t::dynamic: result_shape = PartialShape::dynamic(1); break;
+    case element::Type_t::u1:
     case element::Type_t::undefined:
     case element::Type_t::boolean:
         NODE_VALIDATION_CHECK(
@@ -243,7 +249,7 @@ void op::Range::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<Node> op::Range::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Range::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Range>(new_args.at(0), new_args.at(1), new_args.at(2));
