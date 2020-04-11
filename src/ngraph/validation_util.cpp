@@ -15,6 +15,11 @@
 //*****************************************************************************
 
 #include "ngraph/validation_util.hpp"
+#include "ngraph/evaluator.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -906,4 +911,85 @@ void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_sh
             pads_begin[i] = total_padding - pads_end[i];
         }
     }
+}
+
+namespace
+{
+    /// \brief Scalar variant describes value of an Output
+    struct MaxValue
+    {
+        /// \brief No information known about the output
+        MaxValue()
+            : m_element_type(element::Type_t::undefined)
+        {
+        }
+        /// \brief int64_t assoiated with the output
+        MaxValue(int64_t value)
+            : m_element_type(element::Type_t::i64)
+            , m_int64_t(value)
+        {
+        }
+        element::Type_t m_element_type;
+        element_type_traits<element::Type_t::i64>::value_type m_int64_t;
+    };
+
+    vector<MaxValue> exec_constant(Node* node, vector<MaxValue>& inputs)
+    {
+        auto op = as_type<op::Constant>(node);
+        auto shape = op->get_output_partial_shape(0);
+        if (shape.rank().is_static() && shape.rank().get_length() == 0)
+        {
+            auto et = op->get_output_element_type(0);
+            if (et == element::i64)
+            {
+                vector<int64_t> elts = op->get_vector<int64_t>();
+                return {MaxValue(elts[0])};
+            }
+        }
+        return {MaxValue()};
+    }
+
+    vector<MaxValue> exec_minimum(Node* node, vector<MaxValue>& inputs)
+    {
+        auto op = as_type<op::Minimum>(node);
+        auto shape = op->get_output_partial_shape(0);
+        if (shape.rank().is_static() && shape.rank().get_length() == 0)
+        {
+            auto et = op->get_output_element_type(0);
+            if (et == element::i64)
+            {
+                int64_t min_value = numeric_limits<int64_t>::max();
+                {
+                    auto v1 = inputs.at(0);
+                    if (v1.m_element_type == et)
+                    {
+                        min_value = min(min_value, v1.m_int64_t);
+                    }
+                }
+                {
+                    auto v2 = inputs.at(1);
+                    if (v2.m_element_type == et)
+                    {
+                        min_value = min(min_value, v2.m_int64_t);
+                    }
+                }
+                return {min_value == numeric_limits<int64_t>::max() ? MaxValue()
+                                                                    : MaxValue(min_value)};
+            }
+        }
+        return {MaxValue()};
+    }
+}
+
+pair<bool, int64_t> ngraph::maximum_value(const Output<Node>& value)
+{
+    static Evaluator<MaxValue>::op_handler_map handlers = {
+        {op::Minimum::type_info, exec_minimum}, {op::Constant::type_info, exec_constant}};
+    Evaluator<MaxValue> evaluator(handlers);
+    auto val = evaluator.evaluate(value);
+    if (val.m_element_type == element::Type_t::i64)
+    {
+        return pair<bool, int64_t>(true, val.m_int64_t);
+    }
+    return pair<bool, int64_t>(false, 0);
 }
