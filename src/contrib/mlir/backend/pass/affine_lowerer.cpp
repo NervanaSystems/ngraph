@@ -1105,8 +1105,6 @@ namespace
             constants.push_back(constant);
         }
         auto globalType = getLLVMType(AttrsType::CONV3D, llvmDialect);
-        auto gepTy = getLLVMType(AttrsType::CONV3D, llvmDialect).getPointerTo();
-
         int32_t i = 0;
         for (auto attrs : m_attrsVec)
         {
@@ -1840,7 +1838,6 @@ namespace
         attrs.gemmAttrs2d.ldc = attrs.gemmAttrs2d.n;
         attrs.gemmAttrs2d.alpha = 1.0;
         attrs.gemmAttrs2d.beta = 0.0;
-        BroadcastType broadcastHint = BroadcastType::NONE;
         auto index = pass.insertAttrs(attrs, AttrsType::GEMM);
         // Get callback func
         auto module = pass.getModule();
