@@ -235,8 +235,9 @@ TEST(nop_elimination, squeeze_unsqueeze_elimination)
         return make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
     };
 
-    auto exec_check = [](const std::shared_ptr<ngraph::Function>& baseline_f,
-                         const std::shared_ptr<ngraph::Function>& optimized_f) {
+    auto check_usecase = [&](const Shape& shape, const std::vector<int64_t>& axes_val) {
+        auto baseline_f = generate_func(shape, axes_val);
+        auto optimized_f = generate_func(shape, axes_val);
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::Validate>();
         pass_manager.register_pass<pass::NopElimination>();
@@ -256,21 +257,10 @@ TEST(nop_elimination, squeeze_unsqueeze_elimination)
         ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(optimized_f), 0);
     };
 
-    auto baseline_f = generate_func(Shape{1, 6}, std::vector<int64_t>{0});
-    auto optimized_f = generate_func(Shape{1, 6}, std::vector<int64_t>{0});
-    exec_check(baseline_f, optimized_f);
-
-    baseline_f = generate_func(Shape{1, 3, 2, 1}, std::vector<int64_t>{0, 3});
-    optimized_f = generate_func(Shape{1, 3, 2, 1}, std::vector<int64_t>{0, 3});
-    exec_check(baseline_f, optimized_f);
-
-    baseline_f = generate_func(Shape{1, 3, 1, 2, 1}, std::vector<int64_t>{0, 2, 4});
-    optimized_f = generate_func(Shape{1, 3, 1, 2, 1}, std::vector<int64_t>{0, 2, 4});
-    exec_check(baseline_f, optimized_f);
-
-    baseline_f = generate_func(Shape{1, 3, 2, 1}, std::vector<int64_t>{-1, -4});
-    optimized_f = generate_func(Shape{1, 3, 2, 1}, std::vector<int64_t>{-1, -4});
-    exec_check(baseline_f, optimized_f);
+    check_usecase(Shape{1, 6}, std::vector<int64_t>{0});
+    check_usecase(Shape{1, 3, 2, 1}, std::vector<int64_t>{0, 3});
+    check_usecase(Shape{1, 3, 1, 2, 1}, std::vector<int64_t>{0, 2, 4});
+    check_usecase(Shape{1, 3, 2, 1}, std::vector<int64_t>{-1, -4});
 }
 
 TEST(nop_elimination, unsqueeze_squeeze_elimination)
@@ -284,8 +274,9 @@ TEST(nop_elimination, unsqueeze_squeeze_elimination)
         return make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
     };
 
-    auto exec_check = [](const std::shared_ptr<ngraph::Function>& baseline_f,
-                         const std::shared_ptr<ngraph::Function>& optimized_f) {
+    auto check_usecase = [&](const Shape& shape, const std::vector<int64_t>& axes_val) {
+        auto baseline_f = generate_func(shape, axes_val);
+        auto optimized_f = generate_func(shape, axes_val);
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::Validate>();
         pass_manager.register_pass<pass::NopElimination>();
@@ -305,19 +296,8 @@ TEST(nop_elimination, unsqueeze_squeeze_elimination)
         ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(optimized_f), 0);
     };
 
-    auto baseline_f = generate_func(Shape{6}, std::vector<int64_t>{0});
-    auto optimized_f = generate_func(Shape{6}, std::vector<int64_t>{0});
-    exec_check(baseline_f, optimized_f);
-
-    baseline_f = generate_func(Shape{3, 2}, std::vector<int64_t>{0, 3});
-    optimized_f = generate_func(Shape{3, 2}, std::vector<int64_t>{0, 3});
-    exec_check(baseline_f, optimized_f);
-
-    baseline_f = generate_func(Shape{3, 2}, std::vector<int64_t>{0, 2, 4});
-    optimized_f = generate_func(Shape{3, 2}, std::vector<int64_t>{0, 2, 4});
-    exec_check(baseline_f, optimized_f);
-
-    baseline_f = generate_func(Shape{3, 2}, std::vector<int64_t>{-1, -4});
-    optimized_f = generate_func(Shape{3, 2}, std::vector<int64_t>{-1, -4});
-    exec_check(baseline_f, optimized_f);
+    check_usecase(Shape{6}, std::vector<int64_t>{0});
+    check_usecase(Shape{3, 2}, std::vector<int64_t>{0, 3});
+    check_usecase(Shape{3, 2}, std::vector<int64_t>{0, 2, 4});
+    check_usecase(Shape{3, 2}, std::vector<int64_t>{-1, -4});
 }
