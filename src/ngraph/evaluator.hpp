@@ -14,9 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <map>
 #include <stack>
 #include <utility>
 
+#include "ngraph/node.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type_traits.hpp"
 
