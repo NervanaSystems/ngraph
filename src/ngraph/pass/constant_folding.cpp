@@ -34,30 +34,29 @@ bool ngraph::pass::revalidate_and_ensure_static(shared_ptr<Node> n)
 
 void ngraph::pass::ConstantFolding::construct_constant_default()
 {
-    add_handler(
-        "Constant folding defaults",
-        [](const std::shared_ptr<Node>& node) -> bool {
-            OutputVector replacements = node->constant_fold_default();
-            if (replacements.empty())
-            {
-                return false;
-            }
-            NGRAPH_CHECK(replacements.size() == node->get_output_size(),
-                         "constant_fold_default returned incorrect number of replacements for ",
-                         node);
-            bool result{false};
-            for (size_t i = 0; i < replacements.size(); ++i)
-            {
-                auto node_output = node->output(i);
-                auto replacement = replacements.at(i);
-                if (node_output != replacement)
-                {
-                    cerr << "Replace " << node->output(i) << " with " << replacement << endl;
-                    node->output(i).replace(replacement);
-                    result = true;
-                }
-            }
-            return result;
-        },
-        PassProperty::CHANGE_DYNAMIC_STATE);
+    add_handler("Constant folding defaults",
+                [](const std::shared_ptr<Node>& node) -> bool {
+                    OutputVector replacements = node->constant_fold_default();
+                    if (replacements.empty())
+                    {
+                        return false;
+                    }
+                    NGRAPH_CHECK(
+                        replacements.size() == node->get_output_size(),
+                        "constant_fold_default returned incorrect number of replacements for ",
+                        node);
+                    bool result{false};
+                    for (size_t i = 0; i < replacements.size(); ++i)
+                    {
+                        auto node_output = node->output(i);
+                        auto replacement = replacements.at(i);
+                        if (node_output != replacement)
+                        {
+                            node->output(i).replace(replacement);
+                            result = true;
+                        }
+                    }
+                    return result;
+                },
+                PassProperty::CHANGE_DYNAMIC_STATE);
 }

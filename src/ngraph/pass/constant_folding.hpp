@@ -73,7 +73,6 @@ public:
         m_cfmap = cfmap;
         m_enable_shape_inference = true;
 
-        construct_constant_shape_of();
         construct_constant_split();
         construct_constant_variadic_split();
         construct_constant_reshape();
@@ -117,7 +116,6 @@ private:
     void construct_constant_quantize();
     void construct_constant_dequantize();
     void construct_constant_convert();
-    void construct_constant_shape_of();
     void construct_constant_reverse();
     void construct_constant_arithmetic_reduction();
     void construct_constant_logical_reduction();
