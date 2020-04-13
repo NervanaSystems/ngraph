@@ -62,7 +62,7 @@ public:
 
 private:
     static void initialize_backends();
-    static std::shared_ptr<runtime::Backend> create_backend(const std::string& type);
+    static std::shared_ptr<runtime::Backend> create_backend(std::string type);
     static std::unordered_map<std::string, BackendConstructor>& get_registry();
 
     static std::unordered_map<std::string, BackendConstructor> s_registered_backend;

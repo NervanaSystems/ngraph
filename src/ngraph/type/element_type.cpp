@@ -20,6 +20,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -298,4 +299,30 @@ bool element::Type::is_quantized() const
 size_t element::Type::bitwidth() const
 {
     return get_type_info_map().at(m_type).m_bitwidth;
+}
+
+size_t ngraph::compiler_byte_size(element::Type_t et)
+{
+    switch (et)
+    {
+#define ET_CASE(et)                                                                                \
+    case element::Type_t::et: return sizeof(element_type_traits<element::Type_t::et>::value_type);
+        ET_CASE(boolean);
+        ET_CASE(bf16);
+        ET_CASE(f16);
+        ET_CASE(f32);
+        ET_CASE(f64);
+        ET_CASE(i8);
+        ET_CASE(i16);
+        ET_CASE(i32);
+        ET_CASE(i64);
+        ET_CASE(u1);
+        ET_CASE(u8);
+        ET_CASE(u16);
+        ET_CASE(u32);
+        ET_CASE(u64);
+#undef ET_CASE
+    case element::Type_t::undefined: return 0;
+    case element::Type_t::dynamic: return 0;
+    }
 }
