@@ -37,7 +37,7 @@ namespace ngraph
                 ScatterAdd(const Output<Node>& inputs,
                            const Output<Node>& indices,
                            const Output<Node>& updates)
-                        : Op({inputs, indices, updates})
+                    : Op({inputs, indices, updates})
                 {
                     constructor_validate_and_infer_types();
                 }
@@ -50,7 +50,7 @@ namespace ngraph
                     throw ngraph_error("Not yet implemented");
                 }
                 virtual std::shared_ptr<Node>
-                clone_with_new_inputs(const OutputVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
         using v0::ScatterAdd;

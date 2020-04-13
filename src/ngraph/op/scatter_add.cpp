@@ -47,15 +47,15 @@ void op::ScatterAdd::validate_and_infer_types()
                           "Indices element type must be i64 or i32");
 
     NODE_VALIDATION_CHECK(
-            this, updates_et == inputs_et, "Updates element type must be the same as Inputs");
+        this, updates_et == inputs_et, "Updates element type must be the same as Inputs");
 
     // updates rank must be at indices rank + inputs rank - 1
     NODE_VALIDATION_CHECK(this,
                           inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
-                          updates_shape.rank().is_dynamic() ||
-                          updates_shape.rank().get_length() ==
-                          indices_shape.rank().get_length() +
-                          inputs_shape.rank().get_length() - 1,
+                              updates_shape.rank().is_dynamic() ||
+                              updates_shape.rank().get_length() ==
+                                  indices_shape.rank().get_length() +
+                                      inputs_shape.rank().get_length() - 1,
                           "Updates rank is expected to be indices rank + inputs rank - 1");
 
     bool compatible = true;
@@ -69,12 +69,12 @@ void op::ScatterAdd::validate_and_infer_types()
         {
             compatible = compatible &&
                          updates_shape[indices_shape.rank().get_length() + i - 1].same_scheme(
-                                 inputs_shape[i]);
+                             inputs_shape[i]);
         }
     }
 
     NODE_VALIDATION_CHECK(
-            this, compatible, "Updates shape must be indices_shape + inputs_shape[1:]");
+        this, compatible, "Updates shape must be indices_shape + inputs_shape[1:]");
 
     set_output_type(0, inputs_et, inputs_shape);
 }
