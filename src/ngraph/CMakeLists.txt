@@ -60,7 +60,6 @@ set (SRC
     chrome_trace.cpp
     chrome_trace.hpp
     code_writer.hpp
-    component_manager.hpp
     coordinate.cpp
     coordinate.hpp
     coordinate_diff.cpp
@@ -88,6 +87,7 @@ set (SRC
     enum_names.hpp
     env_util.cpp
     env_util.hpp
+    evaluator.hpp
     except.hpp
     factory.cpp
     factory.hpp
@@ -96,6 +96,8 @@ set (SRC
     function.cpp
     function.hpp
     graph_util.cpp
+    interval.cpp
+    interval.hpp
     lambda.cpp
     lambda.hpp
     log.cpp
@@ -640,6 +642,7 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
+    type/element_type_traits.hpp
     type.cpp
     type.hpp
     util.cpp

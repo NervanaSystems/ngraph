@@ -134,9 +134,8 @@ namespace ngraph
         ///
         /// Formally, PartialShape `s1` is said to _relax_ PartialShape `s2`
         /// if:
-        /// \li `s1` has dynamic rank, or
-        /// \li `s1` and `s2` both have static rank `r`, and for every `i` from `0` to `r-1`,
-        ///      either `s1[i]` is dynamic, or `s1[i]` == `s2[i]`.
+        /// \li For every `i` from `0` to `r-1`,
+        ///      either `s1[i]` contains s2[i].
         bool relaxes(const PartialShape& s) const;
 
         /// \brief Check whether this shape is a refinement of the argument.
@@ -186,6 +185,12 @@ namespace ngraph
         explicit operator std::vector<Dimension>() const { return m_dimensions; }
         friend NGRAPH_API std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
         friend PartialShape operator+(const PartialShape& s1, const PartialShape& s2);
+        bool operator==(const PartialShape& partial_shape) const;
+        bool operator!=(const PartialShape& partial_shape) const;
+        /// Get the max bounding shape
+        Shape get_max_shape() const;
+        /// Get the min bounding shape
+        Shape get_min_shape() const;
 
         /// \brief Try to merge one shape into another.
         /// \param[in,out] dst The shape that `src` will be merged into.
