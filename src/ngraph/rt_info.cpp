@@ -16,7 +16,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/variant.hpp"
-#include "rt_info.hpp"
+#include "ngraph/rt_info.hpp"
 
 namespace ngraph
 {
