@@ -44,31 +44,31 @@ namespace ngraph
         return newInfo;
     }
 
-    void copyRuntimeInfo(std::shared_ptr<ngraph::Node> from, std::shared_ptr<ngraph::Node> to)
+    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, std::shared_ptr<ngraph::Node> to)
     {
         auto& rtInfoFrom = from->get_rt_info();
         auto& rtInfoTo = to->get_rt_info();
         rtInfoTo = rtInfoFrom;
     }
 
-    void copyRuntimeInfo(std::shared_ptr<ngraph::Node> from,
-                         std::initializer_list<std::shared_ptr<ngraph::Node>> to)
+    void copy_runtime_info(std::shared_ptr<ngraph::Node> from,
+                           std::initializer_list<std::shared_ptr<ngraph::Node>> to)
     {
         for (auto& op : to)
         {
-            copyRuntimeInfo(from, op);
+            copy_runtime_info(from, op);
         }
     }
 
-    void copyRuntimeInfo(std::initializer_list<std::shared_ptr<ngraph::Node>> from,
-                         std::shared_ptr<ngraph::Node> to)
+    void copy_runtime_info(std::initializer_list<std::shared_ptr<ngraph::Node>> from,
+                           std::shared_ptr<ngraph::Node> to)
     {
         auto& rtInfoTo = to->get_rt_info();
         rtInfoTo = mergeRuntimeInfo(from);
     }
 
-    void copyRuntimeInfo(std::initializer_list<std::shared_ptr<ngraph::Node>> from,
-                         std::initializer_list<std::shared_ptr<ngraph::Node>> to)
+    void copy_runtime_info(std::initializer_list<std::shared_ptr<ngraph::Node>> from,
+                           std::initializer_list<std::shared_ptr<ngraph::Node>> to)
     {
         auto mergedInfo = mergeRuntimeInfo(from);
         for (auto& node : to)
