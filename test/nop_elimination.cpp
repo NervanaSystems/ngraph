@@ -71,36 +71,48 @@ TEST(nop_elimination, eliminate_sum)
 //   /    |      \
 //  |     |       |
 //  u1    |       |
-          u2      |
+//        u2      |
 //                { r1 }
 //
  *
  * Then the elimination logic covers following use cases:
+ *     // Vertical elimination 1
  *     1. If all users of Convert1 are of type op::Convert &&
  *                    m_destination_type of all users are equal:
  *             replace Convert1 with one of the users and
  *             attach other users' users to it
- *     2. Else if Input_node:: element_type == Convert1::m_destination_type:
+ *     // Vertical elimination 2
+ *     2. Else if Input_node::element_type == Convert1::m_destination_type:
  *             replace Convert1 with Input_node
- *     3. Else if Convert1 has a result output:
- *             return false
- *     4. Else if all users of Convert1 are type_agnostic ( eg. op: Non_Zero)
+ *     // Vertical elimination 3
+ *     3. Else if all users of Convert1 are type_agnostic ( eg. op: Non_Zero)
  *             replace Convert with Input_node
- *
+ *     // Horizontal elimination 1
+ *     4. Else if some users (same_users) of Input_node are of type op::Convert &&
+ *                      m_destination_type of all users are equal:
+ *             choose 1 of same_users as u1 and move users of all others in same_users under u1
+ *     else return false
  *
  *****************************************/
-TEST(nop_elimination, eliminate_convert_multiple_users)
+TEST(nop_elimination, eliminate_horizontal_converts)
 {
+    // Horizontal elimination 1
     Shape shape{2, 3};
-    auto type = element::i64;
-    auto A = make_shared<op::Parameter>(type, shape);
-    auto f = make_shared<Function>(make_shared<op::Convert>(A, element::i64), ParameterVector{A});
+    auto A = make_shared<op::Parameter>(element::i64, shape);
+    auto convert_1 = make_shared<op::Convert>(A, element::i32);
+    auto convert_2 = make_shared<op::Convert>(A, element::i32);
+    auto user_1 = make_shared<op::Equal>(A, convert_1);
+    auto convert_3 = make_shared<op::Convert>(A, element::f32);
+    auto user_2 = make_shared<op::Equal>(A, convert_2);
+    auto user_3 = make_shared<op::Equal>(convert_3, A);
+    auto f = make_shared<Function>(NodeVector{user_1, user_2, user_3}, ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Convert>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Convert>(f), 2);
+    ASSERT_EQ(count_ops_of_type<op::Equal>(f), 3);
 }
 
 TEST(nop_elimination, eliminate_convert_single_user)
