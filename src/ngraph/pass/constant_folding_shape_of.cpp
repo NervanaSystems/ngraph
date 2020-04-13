@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
-#include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/shape_of.hpp"
 #include "ngraph/ops.hpp"
 
 using namespace std;

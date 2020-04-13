@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/shape_of.hpp"
 
 using namespace std;
 using namespace ngraph;

@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "reorg_yolo.hpp"
+#include "ngraph/op/reorg_yolo.hpp"
 
 using namespace std;
 using namespace ngraph;

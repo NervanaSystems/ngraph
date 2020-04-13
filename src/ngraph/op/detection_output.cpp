@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "detection_output.hpp"
+#include "ngraph/op/detection_output.hpp"
 
 using namespace std;
 using namespace ngraph;
