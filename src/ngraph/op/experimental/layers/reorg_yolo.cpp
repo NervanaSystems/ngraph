@@ -49,7 +49,7 @@ void op::ReorgYolo::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::ReorgYolo::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ReorgYolo::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ReorgYolo>(new_args.at(0), m_strides);

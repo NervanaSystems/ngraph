@@ -16,15 +16,8 @@
 
 #pragma once
 
-#include <string>
+#include <pybind11/pybind11.h>
 
-#include "ngraph/ngraph_visibility.hpp"
-#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
-#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
-#include "ngraph/runtime/nop/nop_backend_visibility.hpp"
-#include "ngraph/runtime/plaidml/plaidml_backend_visibility.hpp"
+namespace py = pybind11;
 
-extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend();
-extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend();
-extern "C" PLAIDML_BACKEND_API void ngraph_register_plaidml_backend();
-extern "C" NOP_BACKEND_API void ngraph_register_nop_backend();
+void regclass_pyngraph_NodeFactory(py::module m);

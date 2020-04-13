@@ -91,7 +91,7 @@ bool ngraph::op::v0::Unsqueeze::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::Unsqueeze::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Unsqueeze::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {

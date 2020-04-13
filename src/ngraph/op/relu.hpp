@@ -43,7 +43,7 @@ namespace ngraph
                 Relu(const Output<ngraph::Node>& arg);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
@@ -66,7 +66,7 @@ namespace ngraph
                 ReluBackprop(const Output<ngraph::Node>& arg, const Output<ngraph::Node>& delta);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
         using v0::Relu;
