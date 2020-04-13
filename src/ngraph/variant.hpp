@@ -38,7 +38,7 @@ namespace ngraph
         }
 
         virtual std::shared_ptr<ngraph::Variant>
-            merge(const std::vector<std::shared_ptr<const ngraph::Node>> & nodes)
+            merge(const std::vector<std::shared_ptr<const ngraph::Node>>& nodes)
         {
             return nullptr;
         }
