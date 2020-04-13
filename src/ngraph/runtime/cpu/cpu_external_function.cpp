@@ -1295,11 +1295,15 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported)
     REGISTER_KNOBBED_PASS(CPUPreFusion, true, runtime::cpu::pass)
 
-    // Disable CPUFusion if MLIR is enabled to preserve core ops.
+// Disable CPUFusion if MLIR is enabled to preserve core ops.
+#ifdef NGRAPH_MLIR_ENABLE
     if (!getenv_bool("NGRAPH_MLIR"))
     {
+#endif
         REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass)
+#ifdef NGRAPH_MLIR_ENABLE
     }
+#endif
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)
