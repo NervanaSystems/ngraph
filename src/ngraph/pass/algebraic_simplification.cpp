@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <memory>
+#include <numeric>
 #include <set>
 
 #include "algebraic_simplification.hpp"
@@ -357,9 +358,35 @@ static bool simplify_gather(std::shared_ptr<Node> node)
         // check if we are gathering the whole input
         auto data = node->get_argument(0);
         auto indices = node->get_argument(1);
-        auto axis = node->get_argument(2);
 
-        if (data->get_shape() == node->get_shape())
+        // check if the indices is constant
+        if (!std::dynamic_pointer_cast<ngraph::op::Constant>(node->get_argument(1)))
+        {
+            return false;
+        }
+        int axis = 0;
+
+        // if axis is a input for gather op
+        if (node->get_arguments().size() == 3)
+        {
+            auto axis_const_op =
+                std::static_pointer_cast<ngraph::op::Constant>(node->get_argument(2));
+            axis = *(static_cast<float const*>(axis_const_op->get_data_ptr()));
+        }
+
+        std::cout << "I am here" << std::endl;
+        // if rank of data and gather output dont match, we will skip
+        if (data->get_shape().size() != node->get_shape().size())
+        {
+            return false;
+        }
+
+        Shape ref_indices(data->get_shape()[axis], 0);
+        std::iota(ref_indices.begin(), ref_indices.end(), 0);
+
+        // if ref_inidices == indices, we are capturing the
+        // entire input tensor
+        if (ref_indices == indices->get_shape())
         {
             // replace all the users of the gather with the input
             for (auto& output : gather->outputs())

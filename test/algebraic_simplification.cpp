@@ -32,6 +32,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -49,6 +50,8 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/serializer.hpp"
+#include "util/all_close.hpp"
+#include "util/all_close_f.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
 
@@ -595,4 +598,35 @@ TEST(algebraic_simplification, pass_property)
 
     ASSERT_TRUE(pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
     ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+}
+
+TEST(algebraic_simplification, gather_2d_axis_0)
+{
+    Shape params_shape{3, 2};
+    Shape indices_shape{3};
+    Shape out_shape{3, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::Gather>(P, I);
+    auto f = make_shared<Function>(G, ParameterVector{P, I});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto p = backend->create_tensor(element::f32, params_shape);
+    copy_data(p, vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f});
+    auto i = backend->create_tensor(element::i32, indices_shape);
+    copy_data(i, vector<int32_t>{0, 1, 2});
+    auto result = backend->create_tensor(element::f32, out_shape);
+
+    auto c = backend->compile(f);
+    c->call_with_validate({result}, {p, i});
+    EXPECT_TRUE(test::all_close_f((vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
+
+    // the pass should short cut the Gather i/p with the gather users
+    // since we are fetching the whole tensor using gather op
+    auto gather_ops = get_ops_of_type<op::Gather>(f);
+    EXPECT_EQ(gather_ops.size(), 0);
 }
