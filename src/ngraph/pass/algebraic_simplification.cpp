@@ -558,9 +558,11 @@ static bool simplify_transpose(shared_ptr<Node> n)
 
     // create transpose squeeze pattern
     auto non_zero_input = make_shared<pattern::op::Label>(element::i64, Shape{1, 2});
-    auto cnst_perm_lable = make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
+    auto cnst_perm_lable =
+        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
     auto t = make_shared<op::Transpose>(non_zero_input, cnst_perm_lable);
-    auto cnst_axis_lable = make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
+    auto cnst_axis_lable =
+        make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
     auto s = make_shared<op::Squeeze>(t, cnst_axis_lable);
     auto t_s_matcher = make_shared<pattern::Matcher>(s, "transpose_squeeze_pattern");
 
@@ -577,7 +579,8 @@ static bool simplify_transpose(shared_ptr<Node> n)
         auto cnst_axis_op = as_type_ptr<op::Constant>(t_s_pattern_value_map[cnst_axis_lable]);
 
         auto replace_gather_op = make_shared<op::v0::Gather>(cnst_perm_op, cnst_axis_op);
-        auto replace_squeeze_op = make_shared<op::Squeeze>(t_s_pattern_value_map[non_zero_input], replace_gather_op);
+        auto replace_squeeze_op =
+            make_shared<op::Squeeze>(t_s_pattern_value_map[non_zero_input], replace_gather_op);
 
         replace_node(t_s_matcher->get_match_root(), replace_squeeze_op);
         return true;
