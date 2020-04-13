@@ -51,19 +51,19 @@ namespace ngraph
                 ///
                 /// \param[in]  X                     The input tensor with shape: [batch_size,
                 /// input_size].
+                /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
+                /// with
+                ///                                   shape: [batch_size, hidden_size].
                 /// \param[in]  W                     The weight tensor with shape:
                 ///                                   [gates_count * hidden_size, input_size].
                 /// \param[in]  R                     The recurrence weight tensor with shape:
                 ///                                   [gates_count * hidden_size, hidden_size].
-                /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
-                /// with
-                ///                                   shape: [batch_size, hidden_size].
                 /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
                 ///
                 GRUCell(const Output<Node>& X,
+                        const Output<Node>& initial_hidden_state,
                         const Output<Node>& W,
                         const Output<Node>& R,
-                        const Output<Node>& initial_hidden_state,
                         std::size_t hidden_size);
 
                 ///
@@ -71,13 +71,13 @@ namespace ngraph
                 ///
                 /// \param[in]  X                     The input tensor with shape: [batch_size,
                 ///                                   input_size].
+                /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
+                /// with
+                ///                                   shape: [batch_size, hidden_size].
                 /// \param[in]  W                     The weight tensor with shape:
                 ///                                   [gates_count * hidden_size, input_size].
                 /// \param[in]  R                     The recurrence weight tensor with shape:
                 ///                                   [gates_count * hidden_size, hidden_size].
-                /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
-                /// with
-                ///                                   shape: [batch_size, hidden_size].
                 /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
                 /// \param[in]  activations           The vector of activation functions used inside
                 ///                                   recurrent cell.
@@ -92,9 +92,9 @@ namespace ngraph
                 ///                                   input of activation functions.
                 ///
                 GRUCell(const Output<Node>& X,
+                        const Output<Node>& initial_hidden_state,
                         const Output<Node>& W,
                         const Output<Node>& R,
-                        const Output<Node>& initial_hidden_state,
                         std::size_t hidden_size,
                         const std::vector<std::string>& activations,
                         const std::vector<float>& activations_alpha,
@@ -107,13 +107,13 @@ namespace ngraph
                 ///
                 /// \param[in]  X                     The input tensor with shape: [batch_size,
                 /// input_size].
+                /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
+                /// with
+                ///                                   shape: [batch_size, hidden_size].
                 /// \param[in]  W                     The weight tensor with shape: [gates_count *
                 ///                                   hidden_size, input_size].
                 /// \param[in]  R                     The recurrence weight tensor with shape:
                 ///                                   [gates_count * hidden_size, hidden_size].
-                /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
-                /// with
-                ///                                   shape: [batch_size, hidden_size].
                 /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
                 /// \param[in]  B                     The bias tensor for input gate with shape:
                 ///                                   [2 * gates_count * hidden_size].
@@ -134,11 +134,11 @@ namespace ngraph
                 ///                                   gate.
                 ///
                 GRUCell(const Output<Node>& X,
+                        const Output<Node>& initial_hidden_state,
                         const Output<Node>& W,
                         const Output<Node>& R,
-                        const Output<Node>& initial_hidden_state,
-                        std::size_t hidden_size,
                         const Output<Node>& B,
+                        std::size_t hidden_size,
                         const std::vector<std::string>& activations =
                             std::vector<std::string>{"sigmoid", "tanh"},
                         const std::vector<float>& activations_alpha = {},
@@ -146,6 +146,7 @@ namespace ngraph
                         float clip = 0.f,
                         bool linear_before_reset = false);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual void pre_validate_and_infer_types() override;
                 virtual NodeVector decompose_op() const override;
                 virtual std::shared_ptr<Node>

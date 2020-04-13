@@ -23,3 +23,5 @@
 NGRAPH_OP(NonZero, ngraph::op::v3)
 NGRAPH_OP(ROIAlign, ngraph::op::v3)
 NGRAPH_OP(ScatterElementsUpdate, ngraph::op::v3)
+NGRAPH_OP(GRUCell, ngraph::op::v0)
+NGRAPH_OP(RNNCell, ngraph::op::v0)

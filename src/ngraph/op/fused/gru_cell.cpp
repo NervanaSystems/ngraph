@@ -31,14 +31,14 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::GRUCell::type_info;
 
 op::GRUCell::GRUCell(const Output<Node>& X,
+                     const Output<Node>& initial_hidden_state,
                      const Output<Node>& W,
                      const Output<Node>& R,
-                     const Output<Node>& initial_hidden_state,
                      size_t hidden_size)
     : GRUCell(X,
+              initial_hidden_state,
               W,
               R,
-              initial_hidden_state,
               hidden_size,
               vector<string>{"sigmoid", "tanh"},
               vector<float>{},
@@ -49,16 +49,16 @@ op::GRUCell::GRUCell(const Output<Node>& X,
 }
 
 op::GRUCell::GRUCell(const Output<Node>& X,
+                     const Output<Node>& initial_hidden_state,
                      const Output<Node>& W,
                      const Output<Node>& R,
-                     const Output<Node>& initial_hidden_state,
                      size_t hidden_size,
                      const vector<string>& activations,
                      const vector<float>& activations_alpha,
                      const vector<float>& activations_beta,
                      float clip,
                      bool linear_before_reset)
-    : FusedOp({X, W, R, initial_hidden_state})
+    : FusedOp({X, initial_hidden_state, W, R})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
@@ -69,17 +69,17 @@ op::GRUCell::GRUCell(const Output<Node>& X,
 }
 
 op::GRUCell::GRUCell(const Output<Node>& X,
+                     const Output<Node>& initial_hidden_state,
                      const Output<Node>& W,
                      const Output<Node>& R,
-                     const Output<Node>& initial_hidden_state,
-                     size_t hidden_size,
                      const Output<Node>& B,
+                     size_t hidden_size,
                      const vector<string>& activations,
                      const vector<float>& activations_alpha,
                      const vector<float>& activations_beta,
                      float clip,
                      bool linear_before_reset)
-    : FusedOp({X, W, R, initial_hidden_state, B})
+    : FusedOp({X, initial_hidden_state, W, R, B})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
@@ -88,12 +88,18 @@ op::GRUCell::GRUCell(const Output<Node>& X,
     constructor_validate_and_infer_types();
 }
 
+bool op::GRUCell::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("linear_before_reset", m_linear_before_reset);
+    return op::util::RNNCellBase::visit_attributes(visitor);;
+}
+
 void op::GRUCell::pre_validate_and_infer_types()
 {
     const auto& x_pshape = get_input_partial_shape(0);
-    const auto& w_pshape = get_input_partial_shape(1);
-    const auto& r_pshape = get_input_partial_shape(2);
-    const auto& ht_pshape = get_input_partial_shape(3);
+    const auto& ht_pshape = get_input_partial_shape(1);
+    const auto& w_pshape = get_input_partial_shape(2);
+    const auto& r_pshape = get_input_partial_shape(3);
 
     NODE_VALIDATION_CHECK(this,
                           (x_pshape.is_static() || w_pshape.is_static() || r_pshape.is_static() ||
@@ -188,9 +194,9 @@ NodeVector op::GRUCell::decompose_op() const
     // -------------------
 
     Output<Node> X = input_value(0);
-    Output<Node> W = input_value(1);
-    Output<Node> R = input_value(2);
-    Output<Node> H_t = input_value(3);
+    Output<Node> H_t = input_value(1);
+    Output<Node> W = input_value(2);
+    Output<Node> R = input_value(3);
     Output<Node> B = input_value(4);
 
     // Get W and R biases separately.
@@ -301,8 +307,8 @@ shared_ptr<Node> op::GRUCell::clone_with_new_inputs(const OutputVector& new_args
                                     new_args.at(1),
                                     new_args.at(2),
                                     new_args.at(3),
-                                    get_hidden_size(),
                                     new_args.at(4),
+                                    get_hidden_size(),
                                     get_activations(),
                                     get_activations_alpha(),
                                     get_activations_beta(),

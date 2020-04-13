@@ -160,3 +160,5 @@ NGRAPH_OP(Transpose, ngraph::op::v1)
 NGRAPH_OP(Unsqueeze, ngraph::op::v0)
 NGRAPH_OP(VariadicSplit, ngraph::op::v1)
 NGRAPH_OP(Xor, ngraph::op::v0)
+
+NGRAPH_OP(GRUCell, ngraph::op::v0)
