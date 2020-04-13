@@ -34,9 +34,9 @@ namespace ngraph
             {
             public:
                 BatchNormTrainingWithStats(double eps,
-                                           std::shared_ptr<Node> gamma,
-                                           std::shared_ptr<Node> beta,
-                                           std::shared_ptr<Node> input);
+                                           Output<Node> gamma,
+                                           Output<Node> beta,
+                                           Output<Node> input);
 
                 void validate_and_infer_types() override;
 
