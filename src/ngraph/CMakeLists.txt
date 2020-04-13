@@ -96,6 +96,8 @@ set (SRC
     function.cpp
     function.hpp
     graph_util.cpp
+    interval.cpp
+    interval.hpp
     lambda.cpp
     lambda.hpp
     log.cpp

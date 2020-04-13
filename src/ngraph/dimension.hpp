@@ -21,6 +21,7 @@
 #include <stdexcept>
 
 #include "ngraph/deprecated.hpp"
+#include "ngraph/interval.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
@@ -30,28 +31,38 @@ namespace ngraph
     ///
     /// Static dimensions may be implicitly converted from value_type. A dynamic dimension is
     /// constructed with Dimension() or Dimension::dynamic().
-    ///
-    /// XXX: THIS CLASS IS NOT IN USE YET AND THE ENTIRE DESIGN IS SUBJECT TO CHANGE.
     class NGRAPH_API Dimension
     {
     public:
         using value_type = int64_t;
 
         /// \brief Construct a static dimension.
-        /// \param dimension Value of the dimension. Must not be equal to
-        ///                  Dimension::s_dynamic_val.
-        /// \throws std::invalid_argument If `dimension` == Dimension::s_dynamic_val.
+        /// \param dimension Value of the dimension.
         Dimension(value_type dimension);
 
-        /// \brief Construct a dynamic dimension.
-        Dimension() { m_dimension = s_dynamic_val; }
+        /// \brief Construct a dynamic dimension with bounded range
+        /// \param min_dimension The lower inclusive limit for the dimension
+        /// \param mas_dimension The upper inclusive limit for the dimension
+        Dimension(value_type min_dimension, value_type max_dimension);
+
+        /// \brief Construct a dynamic dimension with range [0, ...]
+        Dimension() = default;
+
+        bool operator==(const Dimension& dimension) const
+        {
+            return m_dimension == dimension.m_dimension;
+        }
+        bool operator!=(const Dimension& dimension) const
+        {
+            return m_dimension != dimension.m_dimension;
+        }
         /// \brief Check whether this dimension is static.
         /// \return `true` if the dimension is static, else `false`.
-        bool is_static() const { return m_dimension != s_dynamic_val; }
+        bool is_static() const { return m_dimension.size() == 1; }
         /// \brief Check whether this dimension is dynamic.
         /// \return `false` if the dimension is static, else `true`.
-        bool is_dynamic() const { return !is_static(); }
-        /// \brief Convert this dimension to `value_type`. This dimension must be static.
+        bool is_dynamic() const { return m_dimension.size() != 1; }
+        /// \brief Convert this dimension to `value-type`. This dimension must be static.
         /// \throws std::invalid_argument If this dimension is dynamic.
         explicit operator value_type() const NGRAPH_DEPRECATED("use get_length() instead")
         {
@@ -59,7 +70,7 @@ namespace ngraph
             {
                 throw std::invalid_argument("Cannot convert dynamic dimension to value_type");
             }
-            return m_dimension;
+            return m_dimension.get_min_val();
         }
 
         /// \brief Convert this dimension to `size_t`. This dimension must be static and
@@ -72,17 +83,18 @@ namespace ngraph
         /// \throws std::invalid_argument If this dimension is dynamic or negative.
         value_type get_length() const;
 
+        value_type get_min_length() const;
+        value_type get_max_length() const;
+
+        /// \brief Return the interval of valid lengths
+        const Interval& get_interval() const { return m_dimension; }
+        Interval& get_interval() { return m_dimension; }
         /// \brief Check whether this dimension represents the same scheme as the argument (both
         ///        dynamic, or equal).
         /// \param dim The other dimension to compare this dimension to.
         /// \return `true` if this dimension and `dim` are both dynamic, or if they are both
         ///         static and equal; otherwise, `false`.
-        bool same_scheme(const Dimension& dim) const
-        {
-            return (is_dynamic() && dim.is_dynamic()) ||
-                   (is_static() && dim.is_static() && get_length() == dim.get_length());
-        }
-
+        bool same_scheme(const Dimension& dim) const;
         /// \brief Try to merge two Dimension objects together.
         /// \param[out] dst Reference to write the merged Dimension into.
         /// \param d1 First dimension to merge.
@@ -132,26 +144,20 @@ namespace ngraph
         /// \brief Create a dynamic dimension.
         /// \return A dynamic dimension.
         static Dimension dynamic() { return Dimension(); }
-        /// \brief Constant for the value used internally to represent a dynamic dimension.
-        static const value_type s_dynamic_val{(std::numeric_limits<value_type>::max())};
-
         /// \brief Addition operator for Dimension.
         /// \param dim Right operand for addition.
-        /// \return Dimension::dynamic() if either of `*this` or `dim` is dynamic; else, a static
-        ///         dimension with value `int64_t(*this)+in64_t(dim)`.
+        /// \return Smallest interval dimension enclosing inputs
         Dimension operator+(const Dimension& dim) const;
 
         /// \brief Subtraction operator for Dimension.
         /// \param dim Right operand for subtraction.
-        /// \return Dimension::dynamic() if either of `*this` or `dim` is dynamic; else, a static
-        ///         dimension with value `int64_t(*this)-int64_t(dim)`.
+        /// \return Smallest interval dimension enclosing inputs
         Dimension operator-(const Dimension& dim) const;
 
         /// \brief Multiplication operator for Dimension.
         /// \param dim Right operand for multiplicaiton.
-        /// \return 0 if either of `*this` or `dim` is static and 0; else, Dimension::dynamic() if
-        ///         either of `*this` or `dim` is dynamic; else, a static dimension with value
-        ///         `int64_t(*this)*int64_t(dim)`.
+        /// \return Smallest interval containing all "produces" which are 0 if either of `this` or
+        /// `dim` has length `0`, else unbounded if either is unbounded, else product of lengths.
         Dimension operator*(const Dimension& dim) const;
 
         /// \brief Add-into operator for Dimension.
@@ -162,10 +168,19 @@ namespace ngraph
         /// \param dim Right operand for multiplication.
         /// \return A reference to `*this`, after updating `*this` to the value `*this * dim`.
         Dimension& operator*=(const Dimension& dim) { return (*this = *this * dim); }
+        /// \brief Intersection of dimensions
+        Dimension operator&(const Dimension& dim) const;
+        /// \brief Intersection of dimensions
+        Dimension& operator&=(const Dimension& dim);
+
     private:
-        // The actual numerical value of the dimension. s_dynamic_val is a special case,
-        // representing a dynamic dimension.
-        value_type m_dimension;
+        Dimension(const Interval& interval)
+            : m_dimension(interval)
+        {
+        }
+
+        // The actual numerical value of the dimension.
+        Interval m_dimension{};
     };
 
     /// \brief Insert a human-readable representation of a dimension into an output stream.
@@ -173,7 +188,7 @@ namespace ngraph
     /// \param dimension The dimension to be inserted into `str`.
     /// \return A reference to `str` after insertion.
     ///
-    /// Inserts the string `?` if `dimension` is dynamic; else inserts `int64_t(dimension)`.
+    /// Inserts the string `?` if `dimension` is dynamic; else inserts `dimension.get_length()`.
     NGRAPH_API
     std::ostream& operator<<(std::ostream& str, const Dimension& dimension);
 }
