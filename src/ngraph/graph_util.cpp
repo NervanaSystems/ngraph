@@ -881,3 +881,28 @@ void ngraph::traverse_functions(std::shared_ptr<Function> p,
 {
     f(p);
 }
+
+bool ngraph::remove_node_update_name(const std::shared_ptr<Node>& node,
+                                     const std::shared_ptr<Node>& node_input)
+{
+    bool has_result_output = false;
+    for (auto& output : node->output(0).get_target_inputs())
+    {
+        if (as_type<op::Result>(output.get_node()))
+        {
+            has_result_output = true;
+        }
+    }
+    // ignore trivial elimination
+    if (has_result_output && as_type_ptr<ngraph::op::Parameter>(node_input))
+    {
+        return false;
+    }
+    if (!has_result_output || node_input->get_users().size() == 1)
+    {
+        node_input->set_friendly_name(node->get_friendly_name());
+        replace_node(node, node_input);
+        return true;
+    }
+    return false;
+}
