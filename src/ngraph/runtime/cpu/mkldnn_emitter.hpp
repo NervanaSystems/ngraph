@@ -1558,7 +1558,6 @@ namespace ngraph
                                               const ngraph::Shape& result_shape);
                 size_t query_scratchpad_softmax_forward(const mkldnn::softmax_forward::desc& desc);
 
-
             private:
                 std::vector<mkldnn::memory*> m_mkldnn_memories;
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;

@@ -373,7 +373,7 @@ size_t MKLDNNEmitter::convolution_forward_init(bool with_bias)
     size_t size = m_mkldnn_primitives.size();
     if (with_bias)
     {
-// Inputs, Weights, Bias, Results, Conv
+        // Inputs, Weights, Bias, Results, Conv
         size_t mem_size = m_mkldnn_memories.size();
         m_mkldnn_primitives.resize(size + 1, nullptr);
         m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
@@ -383,7 +383,7 @@ size_t MKLDNNEmitter::convolution_forward_init(bool with_bias)
     }
     else
     {
-// Inputs, Weights, Results, Conv
+        // Inputs, Weights, Results, Conv
         size_t mem_size = m_mkldnn_memories.size();
         m_mkldnn_primitives.resize(size + 1, nullptr);
         m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
@@ -398,7 +398,7 @@ size_t MKLDNNEmitter::inner_product_forward_init(bool with_bias)
     size_t size = m_mkldnn_primitives.size();
     if (with_bias)
     {
-// Inputs, Weights, Bias, Results, inner_product
+        // Inputs, Weights, Bias, Results, inner_product
         size_t mem_size = m_mkldnn_memories.size();
         m_mkldnn_primitives.resize(size + 1, nullptr);
         m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
@@ -408,7 +408,7 @@ size_t MKLDNNEmitter::inner_product_forward_init(bool with_bias)
     }
     else
     {
-// Inputs, Weights, Results, inner_product
+        // Inputs, Weights, Results, inner_product
         size_t mem_size = m_mkldnn_memories.size();
         m_mkldnn_primitives.resize(size + 1, nullptr);
         m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
