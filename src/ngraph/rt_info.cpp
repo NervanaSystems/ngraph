@@ -14,66 +14,63 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/rt_info.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/variant.hpp"
-#include "ngraph/rt_info.hpp"
 
-namespace ngraph
+ngraph::Node::RTMap mergeRuntimeInfo(std::initializer_list<std::shared_ptr<ngraph::Node>> nodes)
 {
-    ngraph::Node::RTMap mergeRuntimeInfo(std::initializer_list<std::shared_ptr<ngraph::Node>> nodes)
+    ngraph::Node::RTMap mergedInfo;
+    for (auto& node : nodes)
     {
-        ngraph::Node::RTMap mergedInfo;
-        for (auto& node : nodes)
+        for (auto& item : node->get_rt_info())
         {
-            for (auto& item : node->get_rt_info())
-            {
-                mergedInfo[item.first] = item.second;
-            }
-        }
-
-        ngraph::Node::RTMap newInfo;
-        for (auto& item : mergedInfo)
-        {
-            if (auto merge_attr = item.second->merge(nodes))
-            {
-                newInfo[item.second->get_type_info().name] = merge_attr;
-            }
-        }
-
-        return newInfo;
-    }
-
-    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, std::shared_ptr<ngraph::Node> to)
-    {
-        auto& rtInfoFrom = from->get_rt_info();
-        auto& rtInfoTo = to->get_rt_info();
-        rtInfoTo = rtInfoFrom;
-    }
-
-    void copy_runtime_info(std::shared_ptr<ngraph::Node> from,
-                           std::initializer_list<std::shared_ptr<ngraph::Node>> to)
-    {
-        for (auto& op : to)
-        {
-            copy_runtime_info(from, op);
+            mergedInfo[item.first] = item.second;
         }
     }
 
-    void copy_runtime_info(std::initializer_list<std::shared_ptr<ngraph::Node>> from,
-                           std::shared_ptr<ngraph::Node> to)
+    ngraph::Node::RTMap newInfo;
+    for (auto& item : mergedInfo)
     {
-        auto& rtInfoTo = to->get_rt_info();
-        rtInfoTo = mergeRuntimeInfo(from);
+        if (auto merge_attr = item.second->merge(nodes))
+        {
+            newInfo[item.second->get_type_info().name] = merge_attr;
+        }
     }
 
-    void copy_runtime_info(std::initializer_list<std::shared_ptr<ngraph::Node>> from,
-                           std::initializer_list<std::shared_ptr<ngraph::Node>> to)
+    return newInfo;
+}
+
+void ngraph::copy_runtime_info(std::shared_ptr<ngraph::Node> from, std::shared_ptr<ngraph::Node> to)
+{
+    auto& rtInfoFrom = from->get_rt_info();
+    auto& rtInfoTo = to->get_rt_info();
+    rtInfoTo = rtInfoFrom;
+}
+
+void ngraph::copy_runtime_info(std::shared_ptr<ngraph::Node> from,
+                               std::initializer_list<std::shared_ptr<ngraph::Node>> to)
+{
+    for (auto& op : to)
     {
-        auto mergedInfo = mergeRuntimeInfo(from);
-        for (auto& node : to)
-        {
-            auto& rtInfoTo = node->get_rt_info();
-            rtInfoTo = mergedInfo;
-        }
+        copy_runtime_info(from, op);
+    }
+}
+
+void ngraph::copy_runtime_info(std::initializer_list<std::shared_ptr<ngraph::Node>> from,
+                               std::shared_ptr<ngraph::Node> to)
+{
+    auto& rtInfoTo = to->get_rt_info();
+    rtInfoTo = mergeRuntimeInfo(from);
+}
+
+void ngraph::copy_runtime_info(std::initializer_list<std::shared_ptr<ngraph::Node>> from,
+                               std::initializer_list<std::shared_ptr<ngraph::Node>> to)
+{
+    auto mergedInfo = mergeRuntimeInfo(from);
+    for (auto& node : to)
+    {
+        auto& rtInfoTo = node->get_rt_info();
+        rtInfoTo = mergedInfo;
     }
 }
