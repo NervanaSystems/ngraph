@@ -882,8 +882,8 @@ void ngraph::traverse_functions(std::shared_ptr<Function> p,
     f(p);
 }
 
-bool ngraph::remove_update_name(const std::shared_ptr<Node>& node,
-                                const std::shared_ptr<Node>& node_input)
+bool ngraph::remove_node_update_name(const std::shared_ptr<Node>& node,
+                                     const std::shared_ptr<Node>& node_input)
 {
     bool has_result_output = false;
     for (auto& output : node->output(0).get_target_inputs())

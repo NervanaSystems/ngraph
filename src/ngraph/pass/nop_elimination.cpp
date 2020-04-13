@@ -55,7 +55,7 @@ static bool eliminate_pad(const std::shared_ptr<Node>& node)
 
     if (pad->get_input_shape(0) == pad->get_output_shape(0))
     {
-        return remove_update_name(node, node->get_argument(0));
+        return remove_node_update_name(node, node->get_argument(0));
     }
     return false;
 }
@@ -65,7 +65,7 @@ static bool eliminate_sum(const std::shared_ptr<Node>& node)
     auto sum = as_type_ptr<op::v0::Sum>(node);
     if (sum->get_reduction_axes().empty())
     {
-        return remove_update_name(node, node->get_argument(0));
+        return remove_node_update_name(node, node->get_argument(0));
     }
     return false;
 }
@@ -87,7 +87,7 @@ static bool eliminate_convert(const std::shared_ptr<Node>& node)
         {
             input = input->get_argument(0);
         }
-        return remove_update_name(node, input);
+        return remove_node_update_name(node, input);
     }
     return false;
 }
@@ -103,7 +103,7 @@ static bool eliminate_slice(const std::shared_ptr<Node>& node)
     }
     if (slice->get_input_shape(0) == slice->get_output_shape(0))
     {
-        return remove_update_name(node, node->get_argument(0));
+        return remove_node_update_name(node, node->get_argument(0));
     }
     return false;
 }
@@ -119,7 +119,7 @@ static bool eliminate_broadcast(const std::shared_ptr<Node>& node)
     }
     if (broadcast->get_input_shape(0) == broadcast->get_output_shape(0))
     {
-        return remove_update_name(node, node->get_argument(0));
+        return remove_node_update_name(node, node->get_argument(0));
     }
     return false;
 }
@@ -131,7 +131,7 @@ static bool eliminate_concat(const std::shared_ptr<Node>& node)
     // remove concat with single input
     if (node->get_input_size() == 1)
     {
-        return remove_update_name(node, node_input);
+        return remove_node_update_name(node, node_input);
     }
     return false;
 }
@@ -147,7 +147,7 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
         NGRAPH_DEBUG << "Not a no-op; Shapes are different!";
         return false;
     }
-    return remove_update_name(node, node_input);
+    return remove_node_update_name(node, node_input);
 }
 
 static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
@@ -162,7 +162,7 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
             NGRAPH_DEBUG << "squeeze->unsqueeze axes do not match";
             return false;
         }
-        return remove_update_name(unsqueeze, squeeze->get_argument(0));
+        return remove_node_update_name(unsqueeze, squeeze->get_argument(0));
     }
     return false;
 }
@@ -179,14 +179,14 @@ static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
             NGRAPH_DEBUG << "unsqueeze->squeeze axes do not match";
             return false;
         }
-        return remove_update_name(squeeze, unsqueeze->get_argument(0));
+        return remove_node_update_name(squeeze, unsqueeze->get_argument(0));
     }
     return false;
 }
 
 static bool eliminate_stop_gradient(const std::shared_ptr<Node>& node)
 {
-    remove_update_name(node, node->get_argument(0));
+    remove_node_update_name(node, node->get_argument(0));
     return true;
 }
 
