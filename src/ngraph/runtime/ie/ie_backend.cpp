@@ -16,7 +16,6 @@
 
 #include "ie_backend.hpp"
 
-#include "ngraph/component_manager.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
