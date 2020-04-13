@@ -446,7 +446,5 @@ setup(
     setup_requires=setup_requires,
     install_requires=requirements,
     zip_safe=False,
-    extras_require={
-        'plaidml': ['plaidml>=0.6.3'],
-    },
+    extras_require={},
 )

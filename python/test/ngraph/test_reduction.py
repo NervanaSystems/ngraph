@@ -106,7 +106,6 @@ def test_topk():
 @pytest.mark.skip_on_gpu
 @pytest.mark.skip_on_cpu
 @pytest.mark.skip_on_interpreter
-@pytest.mark.skip_on_plaidml
 @pytest.mark.skip_on_intelgpu
 def test_reduce_mean_op(ng_api_helper, numpy_function, reduction_axes):
     shape = [2, 4, 3, 2]
