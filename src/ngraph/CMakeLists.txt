@@ -599,6 +599,8 @@ set (SRC
     provenance.cpp
     provenance.hpp
     rank.hpp
+    rt_info.cpp
+    rt_info.hpp
     runtime/aligned_buffer.cpp
     runtime/aligned_buffer.hpp
     runtime/allocator.cpp
