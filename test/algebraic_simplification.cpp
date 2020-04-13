@@ -646,3 +646,20 @@ TEST(algebraic_simplification, transpose_with_shape_do_not_match)
 
     ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 1);
 }
+
+TEST(algebraic_simplification, transpose_squeeze)
+{
+    auto ps = PartialShape{1, Dimension::dynamic()};
+    auto param = make_shared<op::Parameter>(element::boolean, ps);
+    auto constant_perm = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 0});
+    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto squeeze_axis = make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{1});
+    auto squeeze = make_shared<op::Squeeze>(transpose, squeeze_axis);
+    auto f = make_shared<Function>(squeeze, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
+}
