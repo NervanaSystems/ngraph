@@ -1002,9 +1002,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
     auto ref_rnn_node = std::make_shared<ngraph::op::Rnn>(rnn_src_layer,
                                                           rnn_src_iter,
-#if MKLDNN_VERSION_MAJOR >= 1
                                                           rnn_src_iter_c,
-#endif
                                                           rnn_weights_layer,
                                                           rnn_weights_iter,
                                                           rnn_bias,
@@ -1023,9 +1021,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
     auto callback = [rnn_src_layer,
                      rnn_src_iter,
-#if MKLDNN_VERSION_MAJOR >= 1
                      rnn_src_iter_c,
-#endif
                      rnn_weights_layer,
                      rnn_weights_iter,
                      rnn_bias,
@@ -1094,9 +1090,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         auto mrnn_src_layer =
             m.get_bound_nodes_for_pattern(rnn_src_layer)[number_of_rnn_cell_matched - 1];
         auto mrnn_src_iter = stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_src_iter));
-#if MKLDNN_VERSION_MAJOR >= 1
         auto mrnn_src_iter_c = stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_src_iter_c));
-#endif
         auto mrnn_weights_layer =
             stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_weights_layer));
         auto mrnn_weights_iter = stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_weights_iter));
@@ -1104,9 +1098,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
         NGRAPH_DEBUG << "src_layer: " << join(mrnn_src_layer->get_shape());
         NGRAPH_DEBUG << "src_iter: " << join(mrnn_src_iter->get_shape());
-#if MKLDNN_VERSION_MAJOR >= 1
         NGRAPH_DEBUG << "src_iter_c: " << join(mrnn_src_iter_c->get_shape());
-#endif
         NGRAPH_DEBUG << "weights_layer: " << join(mrnn_weights_layer->get_shape());
         NGRAPH_DEBUG << "weights_iter: " << join(mrnn_weights_iter->get_shape());
         NGRAPH_DEBUG << "bias: " << join(mrnn_bias->get_shape());
@@ -1123,9 +1115,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
         auto rnn = std::make_shared<ngraph::op::Rnn>(mrnn_src_layer,
                                                      mrnn_src_iter,
-#if MKLDNN_VERSION_MAJOR >= 1
                                                      mrnn_src_iter_c,
-#endif
                                                      mrnn_weights_layer,
                                                      mrnn_weights_iter,
                                                      mrnn_bias,

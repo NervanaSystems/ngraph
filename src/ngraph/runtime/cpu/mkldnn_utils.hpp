@@ -241,7 +241,6 @@ namespace ngraph
                     return true;
                 }
 
-#if MKLDNN_VERSION_MAJOR >= 1
                 std::map<mkldnn::memory::format_kind, const std::string>&
                     get_mkldnn_format_kind_string_map();
                 const std::string&
@@ -259,7 +258,6 @@ namespace ngraph
                 mkldnn::memory::desc create_default_mkldnn_md_with_strides(
                     const Node* node, size_t index, mkldnn::memory::dims& strides, bool is_output);
                 bool is_mkldnn_desc_blocked_data_format(const mkldnn::memory::desc& desc);
-#endif
             }
         }
     }
