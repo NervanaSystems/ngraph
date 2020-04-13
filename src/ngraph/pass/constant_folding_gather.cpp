@@ -236,6 +236,8 @@ void pass::ConstantFolding::construct_constant_gather_with_subgraph()
         const int64_t rank = concat->get_shape()[0];
         const int64_t raw_index = indices->cast_vector<int64_t>()[0];
         const int64_t positive_index = raw_index < 0 ? rank + raw_index : raw_index;
+        NGRAPH_CHECK(positive_index >= 0 && positive_index < rank);
+
         // gather takes exactly one element out of the Concat output
         const auto gathered_concat_input =
             concat_inputs[positive_index].get_source_output().get_node_shared_ptr();
