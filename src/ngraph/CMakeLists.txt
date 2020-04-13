@@ -96,6 +96,8 @@ set (SRC
     function.cpp
     function.hpp
     graph_util.cpp
+    interval.cpp
+    interval.hpp
     lambda.cpp
     lambda.hpp
     log.cpp
@@ -505,7 +507,6 @@ set (SRC
     pass/constant_folding_select.cpp
     pass/constant_folding_squeeze.cpp
     pass/constant_folding_unsqueeze.cpp
-    pass/constant_folding_shape_of.cpp
     pass/constant_folding_slice.cpp
     pass/constant_folding_split.cpp
     pass/constant_folding_variadic_split.cpp

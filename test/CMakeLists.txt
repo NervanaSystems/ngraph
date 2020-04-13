@@ -67,6 +67,7 @@ set(SRC
     float16.cpp
     includes.cpp
     input_output_assign.cpp
+    intervals.cpp
     main.cpp
     misc.cpp
     ngraph_api.cpp
