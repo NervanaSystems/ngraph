@@ -14,9 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <ngraph/node.hpp>
-#include <ngraph/variant.hpp>
-
+#include "ngraph/node.hpp"
+#include "ngraph/variant.hpp"
 #include "rt_info.hpp"
 
 namespace ngraph
