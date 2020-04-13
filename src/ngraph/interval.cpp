@@ -57,6 +57,7 @@ bool Interval::empty() const
 {
     return m_min_val == s_max;
 }
+
 bool Interval::operator==(const Interval& interval) const
 {
     return m_min_val == interval.m_min_val && m_max_val == interval.m_max_val;
@@ -64,7 +65,7 @@ bool Interval::operator==(const Interval& interval) const
 
 bool Interval::operator!=(const Interval& interval) const
 {
-    return m_min_val != interval.m_min_val || m_max_val != interval.m_max_val;
+    return !(*this == interval);
 }
 
 Interval Interval::operator+(const Interval& interval) const
@@ -79,20 +80,7 @@ Interval Interval::operator+(const Interval& interval) const
 
 Interval& Interval::operator+=(const Interval& interval)
 {
-    if (empty())
-    {
-    }
-    else if (interval.empty())
-    {
-        *this = interval;
-    }
-    else
-    {
-        m_min_val = clip_add(m_min_val, interval.m_min_val);
-        m_max_val = clip_add(m_max_val, interval.m_max_val);
-        canonicalize();
-    }
-    return *this;
+    return *this = *this + interval;
 }
 
 Interval Interval::operator-(const Interval& interval) const
@@ -107,20 +95,7 @@ Interval Interval::operator-(const Interval& interval) const
 
 Interval& Interval::operator-=(const Interval& interval)
 {
-    if (empty())
-    {
-    }
-    else if (interval.empty())
-    {
-        *this = interval;
-    }
-    else
-    {
-        m_min_val = clip_minus(m_min_val, interval.m_max_val);
-        m_max_val = clip_minus(m_max_val, interval.m_min_val);
-        canonicalize();
-    }
-    return *this;
+    return *this = *this - interval;
 }
 
 Interval Interval::operator*(const Interval& interval) const
@@ -139,20 +114,7 @@ Interval Interval::operator*(const Interval& interval) const
 
 Interval& Interval::operator*=(const Interval& interval)
 {
-    if (empty())
-    {
-    }
-    else if (interval.empty())
-    {
-        *this = interval;
-    }
-    else
-    {
-        m_min_val = clip_times(m_min_val, interval.m_min_val);
-        m_max_val = clip_times(m_max_val, interval.m_max_val);
-        canonicalize();
-    }
-    return *this;
+    return *this = *this * interval;
 }
 
 Interval Interval::operator&(const Interval& interval) const
@@ -163,13 +125,7 @@ Interval Interval::operator&(const Interval& interval) const
 
 Interval& Interval::operator&=(const Interval& interval)
 {
-    std::cerr << "Before: " << *this << " " << interval << std::endl;
-    m_min_val = std::max(m_min_val, interval.m_min_val);
-    m_max_val = std::min(m_max_val, interval.m_max_val);
-    std::cerr << "After: " << *this << std::endl;
-    canonicalize();
-    std::cerr << "Can: " << *this << std::endl;
-    return *this;
+    return *this = *this & interval;
 }
 
 bool Interval::contains(value_type value) const
@@ -216,7 +172,9 @@ Interval::value_type Interval::clip_times(value_type a, value_type b)
         return s_max;
     }
     else
+    {
         return a * b;
+    }
 }
 
 constexpr Interval::value_type Interval::s_max;
@@ -225,7 +183,16 @@ namespace ngraph
 {
     std::ostream& operator<<(std::ostream& str, const Interval& interval)
     {
-        return str << "Interval(" << interval.get_min_val() << ", " << interval.get_max_val()
-                   << ")";
+        str << "Interval(" << interval.get_min_val() << ", ";
+        auto max_val = interval.get_max_val();
+        if (max_val == Interval::s_max)
+        {
+            str << "...";
+        }
+        else
+        {
+            str << max_val;
+        }
+        return str << ")";
     }
 }

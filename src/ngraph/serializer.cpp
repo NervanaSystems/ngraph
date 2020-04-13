@@ -2230,8 +2230,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Range:
         {
-            auto max_output_length = get_or_default<int64_t>(node_js, "max_output_length", -1);
-            node = make_shared<op::Range>(args[0], args[1], args[2], max_output_length);
+            node = make_shared<op::Range>(args[0], args[1], args[2]);
             break;
         }
         case OP_TYPEID::Relu:
@@ -3556,10 +3555,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["fixed_seed"] = tmp->get_fixed_seed();
         break;
     }
-    case OP_TYPEID::Range:
-    {
-        node["max_output_length"] = static_cast<const op::v0::Range*>(&n)->get_max_output_length();
-        break;
+    case OP_TYPEID::Range: { break;
     }
     case OP_TYPEID::Recv:
     {
