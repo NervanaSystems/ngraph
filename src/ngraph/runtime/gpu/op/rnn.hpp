@@ -54,10 +54,10 @@ namespace ngraph
             class Rnn : public Op
             {
             public:
-                Rnn(Output<Node> src_layer, // x
-                    Output<Node> src_iter,  // hx
-                    Output<Node> params,
-                    Output<Node> state_iter, // cx
+                Rnn(const Output<Node>& src_layer, // x
+                    const Output<Node>& src_iter,  // hx
+                    const Output<Node>& params,
+                    const Output<Node>& state_iter, // cx
                     const int num_timesteps,
                     const int num_gates_per_cell,
                     const int src_sequence_length,
@@ -68,7 +68,7 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"Rnn", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 int get_num_timesteps() const { return m_num_timesteps; }
                 int get_src_sequence_length() const { return m_src_sequence_length; }
                 int get_gates_per_cell() const { return m_num_gates_per_cell; }
