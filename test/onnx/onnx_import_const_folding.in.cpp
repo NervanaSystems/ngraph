@@ -32,33 +32,34 @@ static std::string s_manifest = "${MANIFEST}";
 
 namespace
 {
-    void test_non_zero_constant_folding(std::shared_ptr<ngraph::Function> function,
-                                        const std::vector<int64_t> expected_output,
+    template <typename T>
+    void test_constant_folding(std::shared_ptr<ngraph::Function> ng_function,
+                                        const std::vector<T> expected_output,
                                         const PartialShape expected_shape = PartialShape::dynamic())
     {
         ngraph::pass::Manager pass_manager;
         pass_manager.register_pass<pass::ConstantFolding>();
-        pass_manager.run_passes(function);
+        pass_manager.run_passes(ng_function);
 
-        for (auto ng_node : function->get_ordered_ops())
+        for (auto ng_node : ng_function->get_ordered_ops())
         {
             if (ng_node->is_constant())
             {
-                const auto folded_non_zero = as_type_ptr<op::Constant>(ng_node);
-                const auto values = folded_non_zero->cast_vector<int64_t>();
+                const auto folded_node = as_type_ptr<op::Constant>(ng_node);
+                const auto output_values = folded_node->cast_vector<T>();
 
-                EXPECT_TRUE(ngraph::test::all_close(expected_output, values));
+                EXPECT_TRUE(ngraph::test::all_close(expected_output, output_values));
 
                 if (expected_shape.is_static())
                 {
-                    EXPECT_EQ(folded_non_zero->get_output_shape(0), expected_shape.to_shape());
+                    EXPECT_EQ(folded_node->get_output_shape(0), expected_shape.to_shape());
                 }
 
                 return;
             }
         }
 
-        FAIL() << "NonZero constant folding failed.";
+        FAIL() << "ONNX model import with constant folding failed.";
     }
 }
 
