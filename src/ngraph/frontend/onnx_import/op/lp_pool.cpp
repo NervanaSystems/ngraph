@@ -43,6 +43,8 @@ namespace ngraph
                     const auto data_shape = data->get_output_partial_shape(0);
                     NGRAPH_CHECK(data_shape.rank().is_static(),
                                  "Rank of input data must be static");
+                    NGRAPH_CHECK(data_shape.rank().get_length() >= 2,
+                                 "Rank of input data must be greater or equal to 2");
                     NGRAPH_CHECK(data_shape[0].is_static(),
                                  "First dimension of input data must be static");
                     NGRAPH_CHECK(data_shape[channel_axis].is_static(),
