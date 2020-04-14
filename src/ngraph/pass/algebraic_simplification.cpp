@@ -551,23 +551,21 @@ static bool simplify_reduction(shared_ptr<Node> n)
 static bool simplify_transpose(shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_transpose for " << n->get_name();
-    auto transpose = as_type_ptr<op::Transpose>(n);
     auto squeeze = as_type_ptr<op::Squeeze>(n);
-
-    bool rc = false;
+    auto reshape = as_type_ptr<op::Reshape>(n);
 
     // create transpose squeeze pattern
-    auto non_zero_input = make_shared<pattern::op::Label>(element::i64, Shape{1, 2});
+    auto input = make_shared<pattern::op::Label>(element::i64, Shape{1, 2});
     auto cnst_perm_lable =
         make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
-    auto t = make_shared<op::Transpose>(non_zero_input, cnst_perm_lable);
-    auto cnst_axis_lable =
-        make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
-    auto s = make_shared<op::Squeeze>(t, cnst_axis_lable);
-    auto t_s_matcher = make_shared<pattern::Matcher>(s, "transpose_squeeze_pattern");
+    auto t = make_shared<op::Transpose>(input, cnst_perm_lable);
 
     if (squeeze)
     {
+        auto cnst_axis_lable = make_shared<pattern::op::Label>(
+            element::i64, Shape{1}, pattern::has_class<op::Constant>());
+        auto s = make_shared<op::Squeeze>(t, cnst_axis_lable);
+        auto t_s_matcher = make_shared<pattern::Matcher>(s, "transpose_squeeze_pattern");
         if (!t_s_matcher->match(n))
         {
             NGRAPH_DEBUG << n << "Doesn't match pattern" << t_s_matcher->get_name();
@@ -580,28 +578,43 @@ static bool simplify_transpose(shared_ptr<Node> n)
 
         auto replace_gather_op = make_shared<op::v0::Gather>(cnst_perm_op, cnst_axis_op);
         auto replace_squeeze_op =
-            make_shared<op::Squeeze>(t_s_pattern_value_map[non_zero_input], replace_gather_op);
+            make_shared<op::Squeeze>(t_s_pattern_value_map[input], replace_gather_op);
 
         replace_node(t_s_matcher->get_match_root(), replace_squeeze_op);
         return true;
     }
-    if (transpose)
+
+    if (reshape)
     {
-        auto perm = as_type_ptr<op::Constant>(n->get_input_node_shared_ptr(1));
-        if (perm != NULL && perm->get_vector<int64_t>() == std::vector<int64_t>{1, 0})
+        auto r = make_shared<op::Reshape>(t, AxisVector{0, 1}, Shape{1, 1});
+        auto t_r_matcher = make_shared<pattern::Matcher>(r, "transpose_reshape_pattern");
+
+        if (!t_r_matcher->match(n))
         {
-            auto data = n->get_input_node_shared_ptr(0);
-            auto data_shape = n->input_value(0).get_partial_shape();
+            NGRAPH_DEBUG << n << "Doesn't match pattern" << t_r_matcher->get_name();
+            return false;
+        }
+        NGRAPH_DEBUG << "Match pattern " << t_r_matcher->get_name();
+        auto t_r_pattern_value_map = t_r_matcher->get_pattern_map();
+        auto cnst_perm_op = as_type_ptr<op::Constant>(t_r_pattern_value_map[cnst_perm_lable]);
+
+        auto matched_root = t_r_matcher->get_match_root();
+        auto matched_transpose_op = matched_root->get_input_node_shared_ptr(0);
+        if (cnst_perm_op != NULL &&
+            cnst_perm_op->get_vector<int64_t>() == std::vector<int64_t>{1, 0})
+        {
+            auto data = matched_transpose_op->get_input_node_shared_ptr(0);
+            auto data_shape = matched_transpose_op->input_value(0).get_partial_shape();
 
             if (data_shape.rank().get_length() == 2 && data_shape[0].get_length() == 1)
             {
-                replace_node(n, data);
-                rc = true;
+                replace_node(matched_transpose_op, data);
+                return true;
             }
         }
     }
 
-    return rc;
+    return false;
 }
 
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
@@ -615,6 +628,7 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_
          {op::Product::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::Product, get_prod_constant>}},
          {op::Log::type_info, simplify_log},
+         {op::Reshape::type_info, simplify_transpose},
          {op::Squeeze::type_info, simplify_transpose}});
 }
 
