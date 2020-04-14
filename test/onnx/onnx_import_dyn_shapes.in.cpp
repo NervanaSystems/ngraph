@@ -23,6 +23,10 @@
 #endif
 // clang-format on
 
+#include <functional>
+#include <iterator>
+#include <numeric>
+
 #include "gtest/gtest.h"
 #include "ngraph/file_util.hpp"
 #include "ngraph/frontend/onnx_import/default_opset.hpp"
@@ -601,6 +605,98 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, transpose)
 
     test_case.run();
 }
+namespace
+{
+    Shape get_flattened_shape(const Shape& in_shape, size_t axis)
+    {
+        size_t first_dim_size = std::accumulate(
+            begin(in_shape), next(begin(in_shape), axis), 1UL, std::multiplies<size_t>());
+        size_t last_dim_size = std::accumulate(
+            next(begin(in_shape), axis), end(in_shape), 1UL, std::multiplies<size_t>());
+        return Shape{first_dim_size, last_dim_size};
+    }
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, flatten_axis_0)
+{
+    const auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/flatten_dyn_shape_axis0.prototxt"));
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const size_t RANKS_TO_TEST = 4;
+    const size_t AXIS = 0;
+
+    for (size_t r = 0; r <= RANKS_TO_TEST; ++r)
+    {
+        const Shape shape(r, 2);
+        const auto elems_in_tensor = shape_size(shape);
+
+        std::vector<float> input_values(elems_in_tensor);
+        std::iota(input_values.begin(), input_values.end(), 1);
+
+        test_case.add_input<float>(shape, input_values);
+
+        std::vector<float> expected_values(input_values.begin(), input_values.end());
+        const Shape expected_shape(get_flattened_shape(shape, AXIS));
+        test_case.add_expected_output<float>(expected_shape, expected_values);
+
+        test_case.run();
+    }
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, flatten_axis)
+{
+    const auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/flatten_dyn_shape_axis.prototxt"));
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const size_t RANKS_TO_TEST = 4;
+    const size_t AXIS = 3;
+
+    for (size_t r = AXIS; r <= RANKS_TO_TEST + AXIS; ++r)
+    {
+        const Shape shape(r, 2);
+        const auto elems_in_tensor = shape_size(shape);
+
+        std::vector<float> input_values(elems_in_tensor);
+        std::iota(input_values.begin(), input_values.end(), 1);
+
+        test_case.add_input<float>(shape, input_values);
+
+        std::vector<float> expected_values(input_values.begin(), input_values.end());
+        const Shape expected_shape(get_flattened_shape(shape, AXIS));
+        test_case.add_expected_output<float>(expected_shape, expected_values);
+
+        test_case.run();
+    }
+}
+
+NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, flatten_neg_axis)
+{
+    const auto function = onnx_import::import_onnx_model(file_util::path_join(
+        SERIALIZED_ZOO, "onnx/dynamic_shapes/flatten_dyn_shape_neg_axis.prototxt"));
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
+
+    const size_t RANKS_TO_TEST = 4;
+    const int64_t AXIS = -3;
+
+    for (size_t r = -AXIS; r <= RANKS_TO_TEST + -AXIS; ++r)
+    {
+        const Shape shape(r, 2);
+        const auto elems_in_tensor = shape_size(shape);
+
+        std::vector<float> input_values(elems_in_tensor);
+        std::iota(input_values.begin(), input_values.end(), 1);
+
+        test_case.add_input<float>(shape, input_values);
+
+        std::vector<float> expected_values(input_values.begin(), input_values.end());
+        const Shape expected_shape(get_flattened_shape(shape, r + AXIS));
+        test_case.add_expected_output<float>(expected_shape, expected_values);
+
+        test_case.run();
+    }
+}
 
 NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_2d_input)
 {
@@ -829,4 +925,6 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_default_axes)
     test_case.add_input<int64_t>({1, 1, 1});
     test_case.add_input<int64_t>({2, 2, 2});
     test_case.add_expected_output<float>(Shape{1, 1, 1}, {9});
+
+    test_case.run();
 }
