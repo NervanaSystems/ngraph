@@ -597,23 +597,6 @@ TEST(algebraic_simplification, pass_property)
     ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }
 
-TEST(algebraic_simplification, replace_transpose_with_reshape_4d)
-{
-    Shape shape_in{1, 2, 3, 3};
-    auto param = make_shared<op::Parameter>(element::boolean, shape_in);
-    auto constant_perm =
-        make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{1, 0, 2, 3});
-    auto transpose = make_shared<op::Transpose>(param, constant_perm);
-    auto f = make_shared<Function>(transpose, ParameterVector{param});
-
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.run_passes(f);
-
-    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
-}
-
 TEST(algebraic_simplification, replace_transpose_with_reshape_3d)
 {
     Shape shape_in{2, 3, 1};
@@ -631,12 +614,12 @@ TEST(algebraic_simplification, replace_transpose_with_reshape_3d)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
 }
 
-TEST(algebraic_simplification, replace_transpose_with_reshape_5d)
+TEST(algebraic_simplification, replace_transpose_with_reshape_4d_1)
 {
-    Shape shape_in{10, 1, 1, 1, 20};
+    Shape shape_in{10, 20, 1, 1};
     auto param = make_shared<op::Parameter>(element::boolean, shape_in);
     auto constant_perm =
-        make_shared<op::Constant>(element::i64, Shape{5}, vector<int64_t>{0, 4, 1, 2, 3});
+        make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 2, 3, 1});
     auto transpose = make_shared<op::Transpose>(param, constant_perm);
     auto f = make_shared<Function>(transpose, ParameterVector{param});
 
@@ -648,7 +631,24 @@ TEST(algebraic_simplification, replace_transpose_with_reshape_5d)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
 }
 
-TEST(algebraic_simplification, replace_transpose_with_reshape_4d_multiple_1)
+TEST(algebraic_simplification, replace_transpose_with_reshape_4d_2)
+{
+    Shape shape_in{10, 1, 1, 20};
+    auto param = make_shared<op::Parameter>(element::boolean, shape_in);
+    auto constant_perm =
+        make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 3, 1, 2});
+    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto f = make_shared<Function>(transpose, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
+}
+
+TEST(algebraic_simplification, replace_transpose_with_reshape_4d_3)
 {
     Shape shape_in{10, 20, 1, 2};
     auto param = make_shared<op::Parameter>(element::boolean, shape_in);
@@ -665,12 +665,130 @@ TEST(algebraic_simplification, replace_transpose_with_reshape_4d_multiple_1)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
 }
 
-TEST(algebraic_simplification, replace_transpose_with_reshape_4d_fail)
+TEST(algebraic_simplification, replace_transpose_with_reshape_5d_1)
+{
+    Shape shape_in{10, 1, 1, 1, 20};
+    auto param = make_shared<op::Parameter>(element::boolean, shape_in);
+    auto constant_perm =
+        make_shared<op::Constant>(element::i64, Shape{5}, vector<int64_t>{0, 4, 1, 2, 3});
+    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto f = make_shared<Function>(transpose, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
+}
+
+TEST(algebraic_simplification, replace_transpose_with_reshape_5d_2)
+{
+    Shape shape_in{10, 20, 1, 1, 1};
+    auto param = make_shared<op::Parameter>(element::boolean, shape_in);
+    auto constant_perm =
+        make_shared<op::Constant>(element::i64, Shape{5}, vector<int64_t>{0, 2, 3, 4, 1});
+    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto f = make_shared<Function>(transpose, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
+}
+
+TEST(algebraic_simplification, replace_transpose_with_reshape_5d_3)
+{
+    Shape shape_in{10, 1, 1, 1, 1};
+    auto param = make_shared<op::Parameter>(element::boolean, shape_in);
+    auto constant_perm =
+        make_shared<op::Constant>(element::i64, Shape{5}, vector<int64_t>{1, 4, 2, 3, 0});
+    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto f = make_shared<Function>(transpose, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
+}
+
+TEST(algebraic_simplification, replace_transpose_with_reshape_5d_4)
+{
+    Shape shape_in{10, 1, 1, 1, 1};
+    auto param = make_shared<op::Parameter>(element::boolean, shape_in);
+    auto constant_perm =
+        make_shared<op::Constant>(element::i64, Shape{5}, vector<int64_t>{4, 2, 0, 1, 3});
+    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto f = make_shared<Function>(transpose, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
+}
+
+TEST(algebraic_simplification, replace_transpose_with_reshape_5d_5)
+{
+    Shape shape_in{1, 1, 1, 1, 1};
+    auto param = make_shared<op::Parameter>(element::boolean, shape_in);
+    auto constant_perm =
+        make_shared<op::Constant>(element::i64, Shape{5}, vector<int64_t>{4, 2, 0, 1, 3});
+    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto f = make_shared<Function>(transpose, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
+}
+
+TEST(algebraic_simplification, replace_transpose_with_reshape_4d_fail_1)
 {
     Shape shape_in{10, 20, 1, 2};
     auto param = make_shared<op::Parameter>(element::boolean, shape_in);
     auto constant_perm =
         make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 2, 3, 1});
+    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto f = make_shared<Function>(transpose, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
+}
+
+TEST(algebraic_simplification, replace_transpose_with_reshape_4d_fail_2)
+{
+    Shape shape_in{10, 20, 1, 2};
+    auto param = make_shared<op::Parameter>(element::boolean, shape_in);
+    auto constant_perm =
+        make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 3, 1, 2});
+    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto f = make_shared<Function>(transpose, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
+}
+
+TEST(algebraic_simplification, replace_transpose_with_reshape_2d_fail_1)
+{
+    Shape shape_in{10, 20};
+    auto param = make_shared<op::Parameter>(element::boolean, shape_in);
+    auto constant_perm = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 0});
     auto transpose = make_shared<op::Transpose>(param, constant_perm);
     auto f = make_shared<Function>(transpose, ParameterVector{param});
 
