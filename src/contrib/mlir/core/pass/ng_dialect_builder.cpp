@@ -163,7 +163,7 @@ void NgDialectConversionPass::runOnModule()
 
     for (auto output : kernelOutput)
     {
-        resultTypeList.push_back(getMlirType(output.get()));
+        resultTypeList.push_back(getMlirType(output.get_node()));
     }
 
     auto funcType = mlir::FunctionType::get(argsTypeList, resultTypeList, m_context);
@@ -639,7 +639,6 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
         {
             break;
         }
-        auto argOutputNode = argOutput.get_node();
         argTensor = argOutput.get_tensor_ptr();
         auto argV = getTensorValue(argTensor.get()).m_value;
         argValues.push_back(argV);
@@ -673,7 +672,7 @@ void NgDialectConversionPass::createReturn()
     std::vector<mlir::Value> valueList;
     for (auto output : m_compiledKernel->get_kernel_outputs())
     {
-        valueList.push_back(getTensorValue(output->get_output_tensor_ptr().get()).m_value);
+        valueList.push_back(getTensorValue(output.get_tensor_ptr().get()).m_value);
     }
     m_builder.create<mlir::NGReturnOp>(mlir::UnknownLoc::get(m_context), valueList);
 }
