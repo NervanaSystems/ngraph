@@ -25,38 +25,6 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/type/element_type.hpp"
 
-#if MKLDNN_VERSION_MAJOR < 1
-#define FORMAT format
-#define FORMAT_KIND format
-#define FORMAT_KIND_UNDEF mkdnn_format_undef
-#define FORMAT_ANY mkldnn_any
-#define FORMAT_UNDEF mkldnn_undef
-#define DATA_UNDEF data_undef
-
-#define CHANGE_FORMAT                                                                              \
-    if (weights_desc.data.format == mkldnn_nchw)                                                   \
-    {                                                                                              \
-        weights_desc.data.format = mkldnn_oihw;                                                    \
-    }                                                                                              \
-    if (weights_desc.data.format == mkldnn_ncdhw)                                                  \
-    {                                                                                              \
-        weights_desc.data.format = mkldnn_oidhw;                                                   \
-    }
-
-#define BN_FLAG_CLASS batch_normalization_flag
-
-#define PADDING , mkldnn::padding_kind::zero
-
-#define SET_ROUND_MODE attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
-
-#define QUERY_SCRATCHPAD(op_name, x) 0
-#define QUERY_SCRATCHPAD_2ARGS(op_name, x, y) 0
-#define QUERY_SCRATCHPAD_3ARGS(op_name, x, y, z) 0
-#define QUERY_SCRATCHPAD_4ARGS(op_name, x, y, z, u) 0
-
-#define MKLDNN_ERROR_MESSAGE e.message
-
-#else
 #define TENSOR_MAX_DIMS MKLDNN_MAX_NDIMS
 #define FORMAT format_tag
 #define FORMAT_KIND format_kind
@@ -90,8 +58,6 @@
     return size;
 
 #define MKLDNN_ERROR_MESSAGE std::string(e.message)
-
-#endif
 
 namespace ngraph
 {
@@ -241,7 +207,6 @@ namespace ngraph
                     return true;
                 }
 
-#if MKLDNN_VERSION_MAJOR >= 1
                 std::map<mkldnn::memory::format_kind, const std::string>&
                     get_mkldnn_format_kind_string_map();
                 const std::string&
@@ -259,7 +224,6 @@ namespace ngraph
                 mkldnn::memory::desc create_default_mkldnn_md_with_strides(
                     const Node* node, size_t index, mkldnn::memory::dims& strides, bool is_output);
                 bool is_mkldnn_desc_blocked_data_format(const mkldnn::memory::desc& desc);
-#endif
             }
         }
     }
