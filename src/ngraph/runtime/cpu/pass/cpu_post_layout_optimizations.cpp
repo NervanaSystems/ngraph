@@ -280,7 +280,7 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     mkldnn::memory::desc& input_desc,
     mkldnn::memory::desc& result_desc)
 {
-    std::vector<T> result_vec(convertlayout->output(0).get_tensor().size() /
+    std::vector<T> result_vec(convertlayout->get_output_tensor(0).size() /
                               input->get_element_type().size());
 
 #if MKLDNN_VERSION_MAJOR < 1

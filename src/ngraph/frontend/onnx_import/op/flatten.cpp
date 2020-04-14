@@ -36,19 +36,17 @@ namespace ngraph
                     auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
                     const auto data_rank = data->get_output_partial_shape(0).rank();
 
-                    CHECK_VALID_NODE(node,
-                                     data_rank.is_static(),
-                                     "Data rank must be static in order to calculate flatten op");
-                    const auto data_rank_value = static_cast<int64_t>(data_rank);
-
-                    // Accepted range is [-r, r] where r = rank(input).
-                    const auto normalized_axis = ngraph::normalize_axis(node.get_description(),
-                                                                        axis,
-                                                                        data_rank_value,
-                                                                        -data_rank_value,
-                                                                        data_rank_value);
-
-                    return {ngraph::builder::opset1::flatten(data, normalized_axis)};
+                    if (data_rank.is_static())
+                    {
+                        const std::int64_t data_rank_value = data_rank.get_length();
+                        // Accepted range is [-r, r] where r = rank(input).
+                        axis = ngraph::normalize_axis(node.get_description(),
+                                                      axis,
+                                                      data_rank_value,
+                                                      -data_rank_value,
+                                                      data_rank_value);
+                    }
+                    return {ngraph::builder::opset1::flatten(data, axis)};
                 }
 
             } // namespace set_1
