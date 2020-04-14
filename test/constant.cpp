@@ -1021,11 +1021,9 @@ TEST(constant, shared_data)
     EXPECT_EQ(p1, p2);
 }
 
-#include "ngraph/log.hpp"
 template <typename T1, typename T2>
 ::testing::AssertionResult test_convert()
 {
-    NGRAPH_INFO << element::from<T1>() << " -> " << element::from<T2>();
     Shape shape{5};
     vector<T1> expected{1, 2, 3, 4, 5};
     auto c1 = make_shared<op::Constant>(element::from<T2>(), shape, expected);
