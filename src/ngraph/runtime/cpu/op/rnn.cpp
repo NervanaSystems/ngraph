@@ -24,7 +24,7 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::Rnn::type_info;
 
 #if MKLDNN_VERSION_MAJOR >= 1
-shared_ptr<Node> op::Rnn::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Rnn::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 6 && new_args.size() != 5)
     {
@@ -225,7 +225,7 @@ op::Rnn::Rnn(const Output<Node>& src_layer,
         Shape{(m_direction * m_num_fused_layers * m_batch_size), m_src_iter_feature_size});
 }
 #else
-shared_ptr<Node> op::Rnn::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Rnn::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 5)
     {

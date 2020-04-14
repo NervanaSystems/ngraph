@@ -113,7 +113,7 @@ op::ConvolutionAdd::ConvolutionAdd(const Output<Node>& data_batch,
                                                          ));
 }
 
-std::shared_ptr<Node> op::ConvolutionAdd::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node> op::ConvolutionAdd::clone_with_new_inputs(const OutputVector& new_args) const
 {
     NODE_VALIDATION_CHECK(this,
                           new_args.size() == 3,

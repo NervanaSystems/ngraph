@@ -67,6 +67,7 @@ set(SRC
     float16.cpp
     includes.cpp
     input_output_assign.cpp
+    intervals.cpp
     main.cpp
     misc.cpp
     ngraph_api.cpp
@@ -273,10 +274,6 @@ endif()
 if(NGRAPH_GPU_ENABLE)
     list(APPEND SRC gpu_test.cpp gpu_fusion.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
-endif()
-
-if (NGRAPH_PLAIDML_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
 endif()
 
 if (NGRAPH_GENERIC_CPU_ENABLE)
@@ -603,12 +600,6 @@ if (NGRAPH_TOOLS_ENABLE)
     set(NBENCH "${NBENCH_PATH}/nbench")
     target_compile_definitions(unit-test PRIVATE NBENCH_PATH="${NBENCH}")
     add_dependencies(unit-test nbench)
-endif()
-
-if (NGRAPH_PLAIDML_ENABLE)
-    target_link_libraries(unit-test PRIVATE plaidml_backend)
-    # Some PlaidML devices aren't so precise, so we increase the allowable tolerance.
-    target_compile_definitions(unit-test PRIVATE "PlaidML_FLOAT_TOLERANCE_BITS=12")
 endif()
 
 if (NGRAPH_IE_ENABLE)
