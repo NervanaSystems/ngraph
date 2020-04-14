@@ -119,7 +119,7 @@ NodeVector op::PartialSlice::decompose_op() const
     return {out};
 }
 
-shared_ptr<Node> op::PartialSlice::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::PartialSlice::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {
@@ -214,7 +214,7 @@ NodeVector op::PartialSliceBackprop::decompose_op() const
     return {din};
 }
 
-shared_ptr<Node> op::PartialSliceBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::PartialSliceBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {

@@ -89,7 +89,6 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/softmax_crossentropy.hpp"
@@ -98,6 +97,7 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
@@ -1279,6 +1279,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(VanillaRNNFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(RNNFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(AlgebraicSimplification, true, ngraph::pass)
@@ -1294,11 +1295,15 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported)
     REGISTER_KNOBBED_PASS(CPUPreFusion, true, runtime::cpu::pass)
 
-    // Disable CPUFusion if MLIR is enabled to preserve core ops.
+// Disable CPUFusion if MLIR is enabled to preserve core ops.
+#ifdef NGRAPH_MLIR_ENABLE
     if (!getenv_bool("NGRAPH_MLIR"))
     {
+#endif
         REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass)
+#ifdef NGRAPH_MLIR_ENABLE
     }
+#endif
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)
