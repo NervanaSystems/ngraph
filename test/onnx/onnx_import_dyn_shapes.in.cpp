@@ -605,6 +605,7 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, transpose)
 
     test_case.run();
 }
+
 namespace
 {
     Shape get_flattened_shape(const Shape& in_shape, size_t axis)
@@ -925,6 +926,5 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, slice_10_default_axes)
     test_case.add_input<int64_t>({1, 1, 1});
     test_case.add_input<int64_t>({2, 2, 2});
     test_case.add_expected_output<float>(Shape{1, 1, 1}, {9});
-
     test_case.run();
 }
