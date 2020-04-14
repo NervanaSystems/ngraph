@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "region_yolo.hpp"
+#include "ngraph/attribute_visitor.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -41,6 +42,19 @@ op::RegionYolo::RegionYolo(const Output<Node>& input,
     , m_end_axis(end_axis)
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::RegionYolo::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("anchors", m_anchors);
+    visitor.on_attribute("axis", m_axis);
+    visitor.on_attribute("coords", m_num_coords);
+    visitor.on_attribute("classes", m_num_classes);
+    visitor.on_attribute("end_axis", m_end_axis);
+    visitor.on_attribute("num", m_num_regions);
+    visitor.on_attribute("do_softmax", m_do_softmax);
+    visitor.on_attribute("mask", m_mask);
+    return true;
 }
 
 void op::RegionYolo::validate_and_infer_types()
@@ -88,7 +102,7 @@ void op::RegionYolo::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::RegionYolo::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::RegionYolo::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<RegionYolo>(new_args.at(0),

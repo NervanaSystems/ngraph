@@ -38,10 +38,11 @@ namespace ngraph
                 /// \param repeats The node producing the per-dimension replication factor
                 Tile(const Output<Node>& data, const Output<Node>& repeats);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,

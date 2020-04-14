@@ -34,9 +34,9 @@ namespace ngraph
             {
             public:
                 BatchNormTrainingWithStats(double eps,
-                                           std::shared_ptr<Node> gamma,
-                                           std::shared_ptr<Node> beta,
-                                           std::shared_ptr<Node> input);
+                                           const Output<Node>& gamma,
+                                           const Output<Node>& beta,
+                                           const Output<Node>& input);
 
                 void validate_and_infer_types() override;
 
@@ -44,7 +44,7 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
             protected:
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
     }

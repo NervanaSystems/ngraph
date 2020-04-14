@@ -34,9 +34,7 @@ namespace ngraph
                 : Node()
             {
             }
-            Op(const NodeVector& arguments);
             Op(const OutputVector& arguments);
-            Op(const std::string& node_type, const NodeVector& arguments);
         };
     }
 }

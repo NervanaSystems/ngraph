@@ -22,7 +22,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
@@ -248,8 +248,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
             *reshape_m->get_argument(0)->get_output_tensor_ptr());
         rotated_lt_desc->set_mkldnn_md(rotated_md);
 
-        auto cvt_lt_n = std::make_shared<runtime::cpu::op::ConvertLayout>(
-            reshape_m->get_argument(0), 0, rotated_lt_desc);
+        auto cvt_lt_n = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_m->input_value(0),
+                                                                          rotated_lt_desc);
         cvt_lt_n->set_op_annotations(cvt_lt_m->get_op_annotations());
 
         auto reshape_n =
@@ -280,7 +280,7 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     mkldnn::memory::desc& input_desc,
     mkldnn::memory::desc& result_desc)
 {
-    std::vector<T> result_vec(convertlayout->output(0).get_tensor().size() /
+    std::vector<T> result_vec(convertlayout->get_output_tensor(0).size() /
                               input->get_element_type().size());
 
 #if MKLDNN_VERSION_MAJOR < 1

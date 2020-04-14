@@ -51,10 +51,11 @@ namespace ngraph
                              int spatial_bins_y,
                              const std::string& mode);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 size_t get_output_dim() const { return m_output_dim; }
                 size_t get_group_size() const { return m_group_size; }

@@ -30,6 +30,7 @@
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/provenance.hpp"
+#include "util/provenance_enabler.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -39,18 +40,7 @@ using ProvSet = std::unordered_set<std::string>;
 
 TEST(provenance, provenance)
 {
-    class ProvenanceEnabler
-    {
-    public:
-        ProvenanceEnabler()
-        {
-            saved_enable_state = get_provenance_enabled();
-            set_provenance_enabled(true);
-        }
-        ~ProvenanceEnabler() { set_provenance_enabled(saved_enable_state); }
-    private:
-        bool saved_enable_state;
-    } provenance_enabler;
+    test::ProvenanceEnabler provenance_enabler;
 
     //
     // Before:
@@ -406,7 +396,7 @@ TEST(provenance, builder)
 
 TEST(provenance, fused_copy_origin_tags)
 {
-    set_provenance_enabled(true);
+    test::ProvenanceEnabler provenance_enabler;
 
     auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{2, 3, 4});
     p1->add_provenance_tag("P1");
@@ -439,7 +429,7 @@ TEST(provenance, fused_copy_origin_tags)
 
 TEST(provenance, fused_decomposition_tag)
 {
-    set_provenance_enabled(true);
+    test::ProvenanceEnabler provenance_enabler;
 
     auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{2, 3, 4});
     auto fused_op = make_shared<op::MVN>(p1);
@@ -455,7 +445,7 @@ TEST(provenance, fused_decomposition_tag)
         auto tags = node->get_provenance_tags();
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
-    const auto decomposed_op = f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto decomposed_op = f->get_result()->get_input_node_shared_ptr(0);
     traverse_nodes(as_node_vector(decomposed_op->outputs()), tag_check, {p1});
 }
 
@@ -556,22 +546,21 @@ TEST(provenance, scaled_quantize_concat_unsigned)
 
 TEST(provenance, opset1_upgrade_pass_topk)
 {
-    set_provenance_enabled(true);
+    test::ProvenanceEnabler provenance_enabler;
 
     const size_t axis = 2;
     const size_t k = 10;
     const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
 
     const auto topk_v0 = make_shared<op::v0::TopK>(data, axis, element::i32, k);
-    const auto result = make_shared<op::Result>(topk_v0);
+    const auto result = make_shared<op::Result>(topk_v0->output(0));
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset1Upgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
     const auto topk_v1 = as_type_ptr<op::v1::TopK>(pass_replacement_node);
 
     const std::string tag = "<Opset1_Upgrade (v0 TopK)>";
@@ -579,13 +568,12 @@ TEST(provenance, opset1_upgrade_pass_topk)
         auto tags = node->get_provenance_tags();
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
-    traverse_nodes(
-        as_node_vector(topk_v1->outputs()), tag_check, as_node_vector(topk_v0->input_values()));
+    traverse_nodes({topk_v1}, tag_check, as_node_vector(topk_v0->input_values()));
 }
 
 TEST(provenance, opset0_downgrade_pass_topk)
 {
-    set_provenance_enabled(true);
+    test::ProvenanceEnabler provenance_enabler;
 
     const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
     const int32_t k = 10;
@@ -596,15 +584,14 @@ TEST(provenance, opset0_downgrade_pass_topk)
     const auto elem_type = element::i64;
 
     const auto topk_v1 = make_shared<op::v1::TopK>(data, k_node, axis, mode, sort, elem_type);
-    const auto result = make_shared<op::Result>(topk_v1);
+    const auto result = make_shared<op::Result>(topk_v1->output(0));
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
     const auto topk_v0 = as_type_ptr<op::v0::TopK>(pass_replacement_node);
 
     const std::string tag = "<Opset0_Downgrade (v1 TopK)>";
@@ -612,13 +599,12 @@ TEST(provenance, opset0_downgrade_pass_topk)
         auto tags = node->get_provenance_tags();
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
-    traverse_nodes(
-        as_node_vector(topk_v0->outputs()), tag_check, as_node_vector(topk_v1->input_values()));
+    traverse_nodes({topk_v0}, tag_check, as_node_vector(topk_v1->input_values()));
 }
 
 TEST(provenance, opset1_upgrade_pass_graph)
 {
-    set_provenance_enabled(true);
+    test::ProvenanceEnabler provenance_enabler;
 
     auto x = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
     auto y = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
@@ -661,7 +647,7 @@ TEST(provenance, opset1_upgrade_pass_graph)
 
 TEST(provenance, opset0_downgrade_pass_graph)
 {
-    set_provenance_enabled(true);
+    test::ProvenanceEnabler provenance_enabler;
 
     auto x = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
     auto y = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});

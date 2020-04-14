@@ -52,8 +52,8 @@ op::Constant::Constant(const element::Type& type,
                        const std::vector<std::string>& values)
     : m_element_type(type)
     , m_shape(shape)
-    , m_data(
-          new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(), host_alignment()))
+    , m_data(new runtime::AlignedBuffer(ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
+                                        host_alignment()))
 {
     NODE_VALIDATION_CHECK(this,
                           values.size() == shape_size(m_shape) || values.size() == 1,
@@ -290,10 +290,10 @@ op::Constant::Constant(const element::Type& type,
 op::Constant::Constant(const element::Type& type, const Shape& shape, const void* data)
     : m_element_type(type)
     , m_shape(shape)
-    , m_data(
-          new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(), host_alignment()))
+    , m_data(new runtime::AlignedBuffer(ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
+                                        host_alignment()))
 {
-    size_t size = shape_size(m_shape) * m_element_type.size();
+    size_t size = ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f);
     std::memcpy(m_data->get_ptr(), data, size);
     constructor_validate_and_infer_types();
     m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
@@ -522,7 +522,7 @@ AxisSet op::Constant::get_axis_set_val() const
     return output_axis_set;
 }
 
-shared_ptr<Node> op::Constant::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Constant::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Constant>(*this);
@@ -605,7 +605,8 @@ shared_ptr<op::Constant> op::ScalarConstantLike::as_constant() const
     return std::make_shared<op::Constant>(m_element_type, m_shape, m_data->get_ptr());
 }
 
-std::shared_ptr<Node> op::ScalarConstantLike::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node>
+    op::ScalarConstantLike::clone_with_new_inputs(const OutputVector& new_args) const
 {
     return std::make_shared<ScalarConstantLike>(new_args.at(0), m_value);
 }

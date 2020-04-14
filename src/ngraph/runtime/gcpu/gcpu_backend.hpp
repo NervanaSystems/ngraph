@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/reference/allreduce.hpp"
 #include "ngraph/runtime/tensor.hpp"
 

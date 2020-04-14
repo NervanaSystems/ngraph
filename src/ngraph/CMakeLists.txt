@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 set (SRC
+    assertion.cpp
     assertion.hpp
     attribute_adapter.cpp
     attribute_adapter.hpp
@@ -59,7 +60,6 @@ set (SRC
     chrome_trace.cpp
     chrome_trace.hpp
     code_writer.hpp
-    component_manager.hpp
     coordinate.cpp
     coordinate.hpp
     coordinate_diff.cpp
@@ -80,11 +80,14 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
+    distributed/null.cpp
+    distributed/null.hpp
     distributed.cpp
     distributed.hpp
     enum_names.hpp
     env_util.cpp
     env_util.hpp
+    evaluator.hpp
     except.hpp
     factory.cpp
     factory.hpp
@@ -93,6 +96,8 @@ set (SRC
     function.cpp
     function.hpp
     graph_util.cpp
+    interval.cpp
+    interval.hpp
     lambda.cpp
     lambda.hpp
     log.cpp
@@ -184,8 +189,6 @@ set (SRC
     op/experimental/dyn_pad.hpp
     op/experimental/dyn_replace_slice.cpp
     op/experimental/dyn_replace_slice.hpp
-    op/experimental/dyn_reshape.cpp
-    op/experimental/dyn_reshape.hpp
     op/experimental/dyn_slice.cpp
     op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
@@ -245,6 +248,8 @@ set (SRC
     op/greater.hpp
     op/greater_eq.cpp
     op/greater_eq.hpp
+    op/group_conv.hpp
+    op/group_conv.cpp
     op/less.cpp
     op/less.hpp
     op/less_eq.cpp
@@ -269,6 +274,8 @@ set (SRC
     op/negative.hpp
     op/non_max_suppression.cpp
     op/non_max_suppression.hpp
+    op/non_zero.cpp
+    op/non_zero.hpp
     op/not.cpp
     op/not.hpp
     op/not_equal.cpp
@@ -299,6 +306,8 @@ set (SRC
     op/reduce_mean.hpp
     op/reduce_sum.cpp
     op/reduce_sum.hpp
+    op/roi_align.hpp
+    op/roi_align.cpp
     op/round.cpp
     op/round.hpp
     op/quantize.cpp
@@ -323,6 +332,8 @@ set (SRC
     op/reverse_sequence.hpp
     op/scatter_add.cpp
     op/scatter_add.hpp
+    op/scatter_elements_update.cpp
+    op/scatter_elements_update.hpp
     op/scatter_nd_add.cpp
     op/scatter_nd_add.hpp
     op/select.cpp
@@ -341,6 +352,8 @@ set (SRC
     op/slice.hpp
     op/softmax.cpp
     op/softmax.hpp
+    op/split.cpp
+    op/split.hpp
     op/strided_slice.cpp
     op/strided_slice.hpp
     op/sqrt.cpp
@@ -365,6 +378,8 @@ set (SRC
     op/xor.hpp
     op/fused/batch_mat_mul_transpose.cpp
     op/fused/batch_mat_mul_transpose.hpp
+    op/fused/batch_to_space.cpp
+    op/fused/batch_to_space.hpp
     op/fused/clamp.cpp
     op/fused/clamp.hpp
     op/fused/conv_fused.cpp
@@ -386,7 +401,6 @@ set (SRC
     op/fused/grn.cpp
     op/fused/grn.hpp
     op/fused/group_conv.hpp
-    op/fused/group_conv.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
     op/fused/layer_norm.cpp
@@ -421,9 +435,10 @@ set (SRC
     op/fused/shuffle_channels.hpp
     op/fused/softmax_crossentropy.cpp
     op/fused/softmax_crossentropy.hpp
+    op/fused/space_to_batch.cpp
+    op/fused/space_to_batch.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
-    op/fused/split.cpp
     op/fused/split.hpp
     op/fused/squared_difference.cpp
     op/fused/squared_difference.hpp
@@ -480,7 +495,9 @@ set (SRC
     pass/constant_folding_dyn_reshape.cpp
     pass/constant_folding_dyn_slice.cpp
     pass/constant_folding_gather.cpp
+    pass/constant_folding_scatter.cpp
     pass/constant_folding_logical_reduction.cpp
+    pass/constant_folding_non_zero.cpp
     pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
@@ -490,7 +507,6 @@ set (SRC
     pass/constant_folding_select.cpp
     pass/constant_folding_squeeze.cpp
     pass/constant_folding_unsqueeze.cpp
-    pass/constant_folding_shape_of.cpp
     pass/constant_folding_slice.cpp
     pass/constant_folding_split.cpp
     pass/constant_folding_variadic_split.cpp
@@ -566,6 +582,8 @@ set (SRC
     pattern/matcher.hpp
     pattern/op/any.cpp
     pattern/op/any.hpp
+    pattern/op/any_output.cpp
+    pattern/op/any_output.hpp
     pattern/op/any_of.cpp
     pattern/op/any_of.hpp
     pattern/op/branch.cpp
@@ -587,6 +605,8 @@ set (SRC
     provenance.cpp
     provenance.hpp
     rank.hpp
+    rt_info.cpp
+    rt_info.hpp
     runtime/aligned_buffer.cpp
     runtime/aligned_buffer.hpp
     runtime/allocator.cpp
@@ -623,6 +643,7 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
+    type/element_type_traits.hpp
     type.cpp
     type.hpp
     util.cpp
@@ -652,6 +673,11 @@ else()
     add_library(ngraph SHARED ${SRC})
 endif()
 
+set_target_properties(ngraph PROPERTIES
+                      CXX_VISIBILITY_PRESET hidden
+                      C_VISIBILITY_PRESET hidden
+                      VISIBILITY_INLINES_HIDDEN ON)
+
 if(NOT NGRAPH_JSON_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
 endif()
@@ -662,19 +688,6 @@ endif()
 
 if(NGRAPH_CPU_STATIC_LIB_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_CPU_STATIC_LIB_ENABLE)
-endif()
-
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-        target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
-        target_link_libraries(ngraph PRIVATE libmlsl)
-    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-        find_package(MPI REQUIRED)
-        target_include_directories(ngraph SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-        target_link_libraries(ngraph PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    else()
-        message(FATAL_ERROR "Distributed Library not supported/mentioned")
-    endif()
 endif()
 
 add_subdirectory(frontend)
@@ -734,8 +747,7 @@ target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH
 add_library(ngraph::ngraph ALIAS ngraph)
 
 if (NOT WIN32)
-    find_package(Threads REQUIRED)
-    target_link_libraries(ngraph PUBLIC dl Threads::Threads)
+    target_link_libraries(ngraph PRIVATE dl)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
@@ -758,10 +770,9 @@ endif()
 
 # nGraph
 install(TARGETS ngraph EXPORT ngraphTargets
-        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB}
-        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB}
-        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB}
-        COMPONENT ngraph)
+        RUNTIME DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph
+        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph
+        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB} COMPONENT ngraph)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION ${NGRAPH_INSTALL_INCLUDE}/ngraph
     COMPONENT ngraph

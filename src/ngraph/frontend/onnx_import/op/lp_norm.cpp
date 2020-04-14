@@ -44,7 +44,7 @@ namespace ngraph
 
                     CHECK_VALID_NODE(
                         node, data_shape.is_static(), "Data shape must be static for lp_norm op");
-                    const auto data_rank_value = static_cast<size_t>(data_rank);
+                    const auto data_rank_value = data_rank.get_length();
                     const std::int64_t p_norm{node.get_attribute_value<std::int64_t>("p", 2)};
 
                     const std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
@@ -59,7 +59,7 @@ namespace ngraph
                         data, AxisSet{normalize_axis}, static_cast<std::size_t>(p_norm));
 
                     const auto target_shape = default_opset::Constant::create(
-                        element::i64, Shape{data_rank_value}, data_shape.to_shape());
+                        element::i64, Shape{size_t(data_rank_value)}, data_shape.to_shape());
 
                     // Create a default axes order matching the data tensor rank and erase the
                     // element at the 'normalize_axis' position. The erased element indicates the

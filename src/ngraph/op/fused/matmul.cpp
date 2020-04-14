@@ -17,6 +17,7 @@
 #include <numeric>
 
 #include "matmul.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/matmul_factory.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -37,6 +38,13 @@ op::MatMul::MatMul(const Output<Node>& A,
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::MatMul::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("transpose_a", m_transpose_a);
+    visitor.on_attribute("transpose_b", m_transpose_b);
+    return true;
+}
+
 void op::MatMul::pre_validate_and_infer_types()
 {
     element::Type result_et;
@@ -54,7 +62,7 @@ void op::MatMul::pre_validate_and_infer_types()
 
     if (A_rank.is_static() && B_rank.is_static())
     {
-        Rank max_rank = int64_t(A_rank) > int64_t(B_rank) ? A_rank : B_rank;
+        Rank max_rank = A_rank.get_length() > B_rank.get_length() ? A_rank : B_rank;
         set_output_type(0, result_et, PartialShape::dynamic(max_rank));
     }
 }
@@ -89,7 +97,7 @@ NodeVector op::MatMul::decompose_op() const
     return factory.make_matmul_op();
 }
 
-shared_ptr<Node> op::MatMul::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::MatMul::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<MatMul>(new_args.at(0), new_args.at(1), m_transpose_a, m_transpose_b);

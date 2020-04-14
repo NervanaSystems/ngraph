@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS FALSE)
+
 include(FindOpenMP)
 
 if (NGRAPH_CPU_STATIC_LIB_ENABLE)
@@ -27,13 +29,14 @@ set(SRC
     cpu_builder.cpp
     cpu_builder_registry.cpp
     cpu_call_frame.cpp
+    cpu_executable.cpp
     cpu_executor.cpp
     cpu_external_function.cpp
     cpu_kernels.cpp
     cpu_layout_descriptor.cpp
     cpu_op_annotations.cpp
-    cpu_tensor_view_wrapper.cpp
-    cpu_tensor_view.cpp
+    cpu_tensor_wrapper.cpp
+    cpu_tensor.cpp
     cpu_tracing.cpp
     cpu_visualize_tree.cpp
     cpu_cse.cpp

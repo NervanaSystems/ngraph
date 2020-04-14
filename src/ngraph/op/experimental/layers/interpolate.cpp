@@ -44,7 +44,7 @@ void op::Interpolate::validate_and_infer_types()
     {
         for (auto axis : m_attrs.axes)
         {
-            NGRAPH_CHECK(axis < static_cast<size_t>(output_shape.rank()));
+            NGRAPH_CHECK(axis < output_shape.rank().get_length());
             output_shape[axis] = Dimension::dynamic();
         }
     }
@@ -65,7 +65,7 @@ void op::Interpolate::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::Interpolate::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Interpolate::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Interpolate>(new_args.at(0), new_args.at(1), m_attrs);
