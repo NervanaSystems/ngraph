@@ -65,28 +65,36 @@ namespace
                                         element::Type output_type,
                                         bool is_foldable)
     {
-        auto arg_match = shape_of_node->input_value(0);
-        auto partial_shape = arg_match.get_partial_shape();
+        auto shape_of_input = shape_of_node->input_value(0);
+        auto partial_shape = shape_of_input.get_partial_shape();
         OutputVector replacements;
         if (partial_shape.is_static())
         {
             NGRAPH_CHECK(pass::revalidate_and_ensure_static(shape_of_node));
-            auto arg_shape = arg_match.get_shape();
-            replacements = OutputVector{
-                op::v0::Constant::create(output_type, Shape{arg_shape.size()}, arg_shape)};
+            auto arg_shape = shape_of_input.get_shape();
+            replacements = OutputVector{std::make_shared<op::v0::Constant>(
+                output_type, Shape{arg_shape.size()}, arg_shape)};
         }
         else if (partial_shape.rank().is_static() && is_foldable)
         {
-            auto shape_of = make_shared<op::v0::ShapeOf>(arg_match);
-            shape_of->set_is_foldable(false);
+            auto shape_of = shape_of_node->copy_with_new_inputs({shape_of_input});
+            // Ugly
+            if (auto ps = as_type_ptr<op::v0::ShapeOf>(shape_of))
+            {
+                ps->set_is_foldable(false);
+            }
+            else if (auto ps = as_type_ptr<op::v3::ShapeOf>(shape_of))
+            {
+                ps->set_is_foldable(false);
+            }
             auto dimensions = OutputVector{};
             auto output_dimensions = vector<Dimension>(partial_shape);
             for (int64_t i = 0; i < output_dimensions.size(); ++i)
             {
                 if (output_dimensions[i].is_static())
                 {
-                    auto temp = op::v0::Constant::create(
-                        element::i64,
+                    auto temp = std::make_shared<op::v0::Constant>(
+                        output_type,
                         Shape{1},
                         std::vector<int64_t>{output_dimensions[i].get_length()});
                     temp->set_friendly_name("ConstDim/" + temp->get_name());
@@ -94,10 +102,10 @@ namespace
                 }
                 else
                 {
-                    auto index = op::v0::Constant::create(
-                        element::Type_t::i64, Shape{1}, std::vector<int64_t>{i});
-                    auto axis = op::v0::Constant::create(
-                        element::Type_t::i64, Shape{}, std::vector<int64_t>{0});
+                    auto index = std::make_shared<op::v0::Constant>(
+                        output_type, Shape{1}, std::vector<int64_t>{i});
+                    auto axis = std::make_shared<op::v0::Constant>(
+                        element::i64, Shape{}, std::vector<int64_t>{0});
                     auto temp = make_shared<op::v1::Gather>(shape_of, index, axis);
                     temp->set_friendly_name("DynDim/" + temp->get_name());
                     dimensions.push_back(temp);

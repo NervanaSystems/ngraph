@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <sstream>
@@ -25,7 +24,6 @@
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/type/element_type_traits.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -163,71 +161,6 @@ namespace ngraph
                         std::make_shared<op::v0::Constant>(type, shape, std::vector<T>{values});
                     result->validate_and_infer_types();
                     return result;
-                }
-
-                /// \brief Make a constant of element tyoe ET with compatible initialization from
-                /// elements
-                ///
-                /// \param shape The shape of the constant
-                /// \param elements Initial value sequence
-                template <element::Type_t ET, typename U>
-                static std::shared_ptr<op::v0::Constant> create(const Shape& shape,
-                                                                const U& elements)
-                {
-                    if (shape_size(shape) != elements.size())
-                    {
-                        throw std::invalid_argument("Size mismatch");
-                    }
-                    std::vector<typename element_type_traits<ET>::value_type> data;
-                    std::copy(elements.begin(), elements.end(), std::back_inserter(data));
-                    return std::make_shared<op::v0::Constant>(ET, shape, data);
-                }
-
-                /// \brief Make a constant from compatible data (does not need to match element
-                /// type)
-                ///
-                /// \param et Element type
-                /// \param shape Shape of the constant
-                /// \param data Initial value sequence
-                template <typename T>
-                static std::shared_ptr<op::v0::Constant>
-                    create(element::Type et, const Shape& shape, const T& data)
-                {
-                    switch (et)
-                    {
-                    case element::Type_t::undefined:
-                    case element::Type_t::dynamic: throw std::invalid_argument("Invalid type");
-                    case element::Type_t::boolean:
-                    {
-                        return create<element::Type_t::boolean>(shape, data);
-                    }
-                    case element::Type_t::bf16: { return create<element::Type_t::bf16>(shape, data);
-                    }
-                    case element::Type_t::f16: { return create<element::Type_t::f16>(shape, data);
-                    }
-                    case element::Type_t::f32: { return create<element::Type_t::f32>(shape, data);
-                    }
-                    case element::Type_t::f64: { return create<element::Type_t::f64>(shape, data);
-                    }
-                    case element::Type_t::i8: { return create<element::Type_t::i8>(shape, data);
-                    }
-                    case element::Type_t::i16: { return create<element::Type_t::i16>(shape, data);
-                    }
-                    case element::Type_t::i32: { return create<element::Type_t::i32>(shape, data);
-                    }
-                    case element::Type_t::i64: { return create<element::Type_t::i64>(shape, data);
-                    }
-                    case element::Type_t::u1: { return create<element::Type_t::u1>(shape, data);
-                    }
-                    case element::Type_t::u8: { return create<element::Type_t::u8>(shape, data);
-                    }
-                    case element::Type_t::u16: { return create<element::Type_t::u16>(shape, data);
-                    }
-                    case element::Type_t::u32: { return create<element::Type_t::u32>(shape, data);
-                    }
-                    case element::Type_t::u64: { return create<element::Type_t::u64>(shape, data);
-                    }
-                    }
                 }
 
                 virtual std::shared_ptr<Node>
