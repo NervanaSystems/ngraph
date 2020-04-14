@@ -80,7 +80,7 @@ op::SigmoidMultiply::SigmoidMultiply(const Output<Node>& input_0,
     set_output_type(0, input_0.get_element_type(), input_0.get_shape());
 }
 
-shared_ptr<Node> op::SigmoidMultiply::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::SigmoidMultiply::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {
@@ -142,7 +142,8 @@ op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(const Output<Node>& input_0
     set_output_type(1, get_input_element_type(1), get_input_shape(1));
 }
 
-shared_ptr<Node> op::SigmoidMultiplyBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::SigmoidMultiplyBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {
