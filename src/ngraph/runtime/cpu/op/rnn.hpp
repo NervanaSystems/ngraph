@@ -85,7 +85,7 @@ namespace ngraph
                                 size_t num_fused_layers,
                                 ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                clone_with_new_inputs(const OutputVector& new_args) const override;
 
             ngraph::runtime::cpu::rnn_utils::rnntype get_rnn_type() const { return m_rnntype; }
             size_t get_num_timesteps() const { return m_num_timesteps; }

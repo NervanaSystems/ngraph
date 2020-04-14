@@ -68,7 +68,7 @@ namespace ngraph
             size_t get_direction() const { return m_direction; }
             size_t get_num_fused_layers() const { return m_num_fused_layers; }
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                clone_with_new_inputs(const OutputVector& new_args) const override;
 
         private:
             Shape m_output_tensor_shape;
