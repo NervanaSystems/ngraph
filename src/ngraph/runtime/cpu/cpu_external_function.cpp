@@ -1226,23 +1226,11 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         }
         else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
         {
-#if MKLDNN_VERSION_MAJOR < 1
-            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
             return false;
-#else
-            // TODO: will be supported in mkldnn v1.1
-            return false;
-#endif
         }
         else if (typeid(ngraph::op::Gelu) == typeid(node))
         {
-#if MKLDNN_VERSION_MAJOR < 1
-            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
             return false;
-#else
-            // TODO: will be supported in mkldnn v1.1
-            return false;
-#endif
         }
         // GroupConvolution is only supported with MKLDNN
         else if (auto conv = as_type<ngraph::op::GroupConvolution>(const_cast<Node*>(&node)))

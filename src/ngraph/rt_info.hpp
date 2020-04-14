@@ -16,26 +16,26 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include <string>
+
+#include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
-    namespace runtime
-    {
-        namespace plaidml
-        {
-            namespace pass
-            {
-                class Winograd;
-            }
-        }
-    }
-}
+    NGRAPH_API
+    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, std::shared_ptr<ngraph::Node> to);
 
-// Applies Winograd to selected convolutions; see
-// <http://arxiv.org/abs/1509.09308> for details.
-class ngraph::runtime::plaidml::pass::Winograd final : public ngraph::pass::GraphRewrite
-{
-public:
-    Winograd();
-};
+    NGRAPH_API
+    void copy_runtime_info(std::shared_ptr<ngraph::Node> from,
+                           const std::vector<std::shared_ptr<ngraph::Node>>& to);
+
+    NGRAPH_API
+    void copy_runtime_info(const std::vector<std::shared_ptr<const ngraph::Node>>& from,
+                           std::shared_ptr<ngraph::Node> to);
+
+    NGRAPH_API
+    void copy_runtime_info(const std::vector<std::shared_ptr<const ngraph::Node>>& from,
+                           const std::vector<std::shared_ptr<ngraph::Node>>& to);
+}
