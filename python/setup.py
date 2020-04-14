@@ -415,7 +415,6 @@ class BuildExt(build_ext):
         self._add_extra_compile_arg('-fPIC', ext.extra_compile_args)
 
         ext.extra_compile_args += ['-Wformat', '-Wformat-security']
-        ext.extra_compile_args += self.add_debug_or_release_flags()
 
     def _customize_compiler_flags(self):
         """Modify standard compiler flags."""
