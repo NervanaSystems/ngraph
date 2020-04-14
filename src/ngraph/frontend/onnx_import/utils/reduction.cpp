@@ -38,7 +38,7 @@ namespace ngraph
                     const auto input_rank =
                         node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
 
-                    std::vector<uint64_t> normalized_axes =
+                    std::vector<std::size_t> normalized_axes =
                         ngraph::normalize_axes(node.get_description(), reduction_axes, input_rank);
 
                     if (reduction_axes.empty())
@@ -48,7 +48,7 @@ namespace ngraph
                                      "'axes' attribute is not specified. Node: ",
                                      node.get_description());
 
-                        normalized_axes = onnx_import::common::get_monotonic_range<uint64_t>(
+                        normalized_axes = onnx_import::common::get_monotonic_range<size_t>(
                             input_rank.get_length());
                     }
                     return AxisSet{normalized_axes};
