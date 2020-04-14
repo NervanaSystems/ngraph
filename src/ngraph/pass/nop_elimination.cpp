@@ -69,25 +69,67 @@ static bool eliminate_sum(const std::shared_ptr<Node>& node)
     }
     return false;
 }
-
+/****************************************
+ *
+ *   Convert elimination use cases:
+ *   Let the candidate Convert node for elimination
+ *   be Convert1 in the following sub-graph:
+ *
+//            [ Input_node ]
+//            /      |      \
+//           /       |       \
+//          |        u3       |
+//    [ Convert1 ]            u4
+//    /   |     \
+//   /    |      \
+//  |     |       |
+//  u1    |       |
+//        u2      |
+//                { r1 }
+//
+ *
+ * Then the elimination logic covers following use cases:
+ *     // Vertical elimination 1
+ *     1. If all users of Convert1 are of type op::Convert &&
+ *                    m_destination_type of all users are equal:
+ *             replace Convert1 with one of the users and
+ *             attach other users' users to it
+ *     // Vertical elimination 2
+ *     2. Else if Input_node::element_type == Convert1::m_destination_type:
+ *             replace Convert1 with Input_node
+ *     // Vertical elimination 3
+ *     3. Else if all users of Convert1 are type_agnostic ( eg. op: Non_Zero)
+ *             replace Convert with Input_node
+ *     // Horizontal elimination 1
+ *     4. Else if some users (same_users) of Input_node are of type op::Convert &&
+ *                      m_destination_type of all users are equal:
+ *             choose 1 of same_users as u1 and move users of all others in same_users under u1
+ *     else return false
+ *
+ *****************************************/
 static bool eliminate_convert(const std::shared_ptr<Node>& node)
 {
-    bool is_out_type_agnostic = false;
-    static const std::set<NodeTypeInfo> type_agnostic{TI(op::v3::NonZero)};
-    if (node->output(0).get_target_inputs().size() == 1)
-    {
-        auto& out = *node->output(0).get_target_inputs().begin();
-        is_out_type_agnostic = type_agnostic.count(out.get_node()->get_type_info()) == 1;
-    }
     auto convert = as_type_ptr<op::v0::Convert>(node);
-    auto input = convert->get_argument(0);
-    if (convert->get_convert_element_type() == input->get_element_type() || is_out_type_agnostic)
+    auto destination_type = convert->get_destination_type();
+    static const std::set<NodeTypeInfo> type_agnostic{TI(op::v3::NonZero)};
+    //    size_t user_count = node->output(0).get_target_inputs().size();
+
+    // vertical elimination 1
+    // TBD
+
+    // vertical elimination 2 & 3
+    bool users_are_type_agnostic = true;
+    for (auto& user : node->output(0).get_target_inputs())
     {
-        if (is_out_type_agnostic && as_type_ptr<op::v0::Convert>(input))
+        if (!type_agnostic.count(user.get_node()->get_type_info()))
         {
-            input = input->get_argument(0);
+            users_are_type_agnostic = false;
+            break;
         }
-        return remove_node_update_name(node, input);
+    }
+    if (destination_type == convert->get_argument(0)->get_element_type() || users_are_type_agnostic)
+    {
+        return remove_node_update_name(node, convert->get_argument(0));
     }
     return false;
 }
