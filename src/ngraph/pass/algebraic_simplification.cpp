@@ -556,55 +556,44 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
         auto data = n->get_argument(0);
         auto data_shape = n->input_value(0).get_partial_shape().to_shape();
 
-        // Data shape should be >= 3
-        if (data_shape.size() < 3 || data_shape.size() > 4)
-            return false;
-
         // Check if input shape contains a Dim of value 1
-        int index_of_one = 0; // index of dim 1 in data_shape
+        vector<int> indices_of_one; // index of dim 1 in data_shape
         for (int i = 0; i < data_shape.size(); i++)
         {
             if (data_shape[i] == 1)
             {
-                index_of_one = i;
-                break;
+                indices_of_one.push_back(i);
             }
         }
 
-        if (!index_of_one)
+        if (indices_of_one.size() == 0)
             return false;
 
-        // Remove index of 1 from perm_value and check if the other
+        // Remove indices of 1 from perm_value and check if the other
         // dimensions haven't interchanged
         vector<int64_t> perm_value_copy = perm_value;
 
-        for (int i = 0; i < perm_value_copy.size(); i++)
+        for (int i = 0; i < perm_value.size(); i++)
         {
-            if (perm_value_copy[i] == index_of_one)
+            if (count(indices_of_one.begin(), indices_of_one.end(), perm_value[i]))
             {
-                perm_value_copy.erase(perm_value_copy.begin() + i);
-                break;
+                perm_value_copy.erase(perm_value_copy.begin() +
+                                      (i - (perm_value.size() - perm_value_copy.size())));
             }
         }
 
         // If all the indices are in increasing order,
         // then the other dims are unchanged and only dim of 1
         // has changed its position
-        for (int i = 0; i < perm_value_copy.size() - 1; i++)
+        for (int i = 0; i + 1 < perm_value_copy.size(); i++)
         {
             if (perm_value_copy[i] > perm_value_copy[i + 1])
                 return false; // not a valid permutation
         }
 
-        Shape out_shape{};
-        AxisVector input_order{};
-        for (int i = 0; i < perm_value.size(); i++)
-        {
-            out_shape.push_back(data_shape[perm_value[i]]);
-            input_order.push_back(perm_value[i]);
-        }
-
-        auto reshape_op = make_shared<op::Reshape>(data, input_order, out_shape);
+        auto reshape_op = make_shared<op::Reshape>(data,
+                                                   AxisVector(perm_value.begin(), perm_value.end()),
+                                                   n->get_output_partial_shape(0).to_shape());
         replace_node(n, reshape_op);
         rc = true;
     }
