@@ -520,3 +520,7 @@ model_acosh
 model_asinh
 model_atanh
 model_conv_with_dynamic_batch
+
+#ONNX Flatten with dynamic reshape
+flatten_axis
+flatten_neg_axis

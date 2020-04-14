@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS FALSE)
+
 include(FindOpenMP)
 
 if (NGRAPH_CPU_STATIC_LIB_ENABLE)
