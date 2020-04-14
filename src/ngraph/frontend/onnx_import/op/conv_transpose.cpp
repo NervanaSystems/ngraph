@@ -205,7 +205,7 @@ namespace ngraph
                             const auto remaining_bias_shape_ones =
                                 std::make_shared<default_opset::Broadcast>(
                                     one_node,
-                                    remaining_shape_length); // To skalar czy [1]?
+                                    remaining_shape_length);
 
                             // Split conv shape into (N), (C), (H, W, ...) in order to get C dim
                             const auto split_part_lengths = std::make_shared<default_opset::Concat>(
