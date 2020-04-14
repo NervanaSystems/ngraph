@@ -129,7 +129,8 @@ namespace ngraph
             {"NONE", AutoBroadcastType::NONE},
             {"NUMPY", AutoBroadcastType::NUMPY},
             {"PDPD", AutoBroadcastType::PDPD},
-            {"EXPLICIT", AutoBroadcastType::EXPLICIT}};
+            {"EXPLICIT", AutoBroadcastType::EXPLICIT},
+            {"BIDIRECTIONAL", AutoBroadcastType::BIDIRECTIONAL}};
 
         NGRAPH_CHECK(allowed_values.count(type) > 0, "Invalid 'type' value passed in.");
 

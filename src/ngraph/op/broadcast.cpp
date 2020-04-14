@@ -79,7 +79,8 @@ std::pair<bool, AxisSet> op::v2::Broadcast::get_broadcast_axes() const
         }
     }
     else if (m_broadcast_spec.m_type == AutoBroadcastType::NUMPY ||
-             m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
+             m_broadcast_spec.m_type == AutoBroadcastType::PDPD ||
+             m_broadcast_spec.m_type == AutoBroadcastType::BIDIRECTIONAL)
     {
         if (get_input_partial_shape(0).is_static() && get_output_partial_shape(0).is_static())
         {
@@ -226,7 +227,8 @@ void op::v2::Broadcast::validate_and_infer_types()
         }
     }
     else if (m_broadcast_spec.m_type == AutoBroadcastType::NUMPY ||
-             m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
+             m_broadcast_spec.m_type == AutoBroadcastType::PDPD ||
+             m_broadcast_spec.m_type == AutoBroadcastType::BIDIRECTIONAL)
     {
         if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static())
         {
@@ -258,6 +260,13 @@ void op::v2::Broadcast::validate_and_infer_types()
                 }
             }
         }
+    }
+    if(m_broadcast_spec.m_type == AutoBroadcastType::BIDIRECTIONAL)
+    {
+        // TODO
+         const auto target_shape = shape_constant->get_shape_val();
+         Shape arg0_padded_shape = result_shape.to_shape();
+         Shape arg1_padded_shape = target_shape;
     }
 
     set_input_is_relevant_to_shape(0); // arg - Result element type

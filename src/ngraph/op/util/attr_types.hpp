@@ -166,7 +166,8 @@ namespace ngraph
             NONE = 0,
             EXPLICIT = NONE,
             NUMPY,
-            PDPD
+            PDPD,
+            BIDIRECTIONAL
         };
 
         NGRAPH_API
