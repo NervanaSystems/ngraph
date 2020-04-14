@@ -21,11 +21,6 @@
 using namespace std;
 using namespace ngraph;
 
-static constexpr int DATA = 0;
-static constexpr int INDICES = 1;
-static constexpr int UPDATES = 2;
-static constexpr int AXIS = 3;
-
 constexpr NodeTypeInfo op::util::ScatterBase::type_info;
 
 op::util::ScatterBase::ScatterBase(const Output<Node>& data,

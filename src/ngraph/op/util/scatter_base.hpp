@@ -52,6 +52,13 @@ namespace ngraph
                             const Output<Node>& indices,
                             const Output<Node>& updates,
                             const Output<Node>& axis);
+
+            private:
+                // Respective input ordinal number.
+                static constexpr int DATA = 0;
+                static constexpr int INDICES = 1;
+                static constexpr int UPDATES = 2;
+                static constexpr int AXIS = 3;
             };
         }
     }

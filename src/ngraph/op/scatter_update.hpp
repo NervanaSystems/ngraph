@@ -51,7 +51,5 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& inputs) const override;
             };
         }
-        // TODO: Is it correct?
-        using v3::ScatterUpdate;
     }
 }
