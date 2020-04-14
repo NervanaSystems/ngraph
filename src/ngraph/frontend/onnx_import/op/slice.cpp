@@ -185,7 +185,8 @@ namespace ngraph
                     std::vector<uint64_t> axes_vec;
                     if (data_rank.is_static())
                     {
-                        axes_vec = normalize_axes(node.get_description(), raw_axes_vec, data_rank);
+                        const auto normalized_axes_vec = normalize_axes(node.get_description(), raw_axes_vec, data_rank);
+                        axes_vec = std::vector<uint64_t>(std::begin(normalized_axes_vec), std::begin(normalized_axes_vec));
                     }
                     else
                     {
