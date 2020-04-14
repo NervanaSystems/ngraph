@@ -176,6 +176,71 @@ namespace ngraph
             };
         } // namespace v1
 
+        namespace v2
+        {
+            /// \brief Operation which "adds" axes to an input tensor, replicating elements from the
+            ///        input as needed along the new axes.
+            class NGRAPH_API Broadcast : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Broadcast", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a broadcast operation.
+                Broadcast() = default;
+                /// \brief Constructs a broadcast operation.
+                ///
+                /// \param arg            The input tensor to be broadcast.
+                /// \param target_shape   The shape of the output tensor.
+                /// \param axes_mapping   The axis positions (0-based) in the result that correspond
+                ///                       to input axes. 'Arg' tensor is broadcast along the
+                ///                       remaining
+                ///                       axes.
+                ///                       E.g., Input Shape - [3, 4], Target Shape - [3, 5, 4, 4]
+                ///                       axes_mapping - [0, 2] => Broadcast along axes 1 and 3.
+                ///                       axes_mapping - [0, 3] => Broadcast along axes 1 and 2.
+                /// \param broadcast_spec Broadcast specification to use for determining broadcast
+                ///                       axes. 'axes_mapping' is ignored if broadcast_spec is not
+                ///                       NONE
+                Broadcast(const Output<Node>& arg,
+                          const Output<Node>& target_shape,
+                          const Output<Node>& axes_mapping,
+                          const AutoBroadcastSpec& broadcast_spec = AutoBroadcastSpec());
+
+                /// \brief Constructs a broadcast operation.
+                ///
+                /// \param arg            The input tensor to be broadcast.
+                /// \param target_shape   The shape of the output tensor.
+                /// \param broadcast_spec Broadcast specification to use for determining broadcast
+                ///                       axes
+                Broadcast(const Output<Node>& arg,
+                          const Output<Node>& target_shape,
+                          const AutoBroadcastSpec& broadcast_spec =
+                              AutoBroadcastSpec(AutoBroadcastType::NUMPY));
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                size_t get_version() const override { return 1; }
+                void validate_and_infer_types() override;
+
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+
+                /// \return Broadcast Specification.
+                const AutoBroadcastSpec& get_broadcast_spec() const { return m_broadcast_spec; }
+                void set_broadcast_spec(const AutoBroadcastSpec& broadcast_spec)
+                {
+                    m_broadcast_spec = broadcast_spec;
+                }
+                /// \return true and the AxisSet if broadcast axes can be fully determined.
+                std::pair<bool, AxisSet> get_broadcast_axes() const;
+
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
+
+            private:
+                AutoBroadcastSpec m_broadcast_spec;
+            };
+        } // namespace v2
+
         using v0::Broadcast;
         using v0::BroadcastLike;
     }
