@@ -37,6 +37,7 @@ from ngraph.impl.op import Convolution, ConvolutionBackpropData, ConvolutionBack
 
 import test
 
+
 def binary_op(op_str, a, b):
 
     if op_str == '+':

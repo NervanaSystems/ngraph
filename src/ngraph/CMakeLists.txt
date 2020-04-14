@@ -60,7 +60,6 @@ set (SRC
     chrome_trace.cpp
     chrome_trace.hpp
     code_writer.hpp
-    component_manager.hpp
     coordinate.cpp
     coordinate.hpp
     coordinate_diff.cpp
@@ -88,6 +87,7 @@ set (SRC
     enum_names.hpp
     env_util.cpp
     env_util.hpp
+    evaluator.hpp
     except.hpp
     factory.cpp
     factory.hpp
@@ -96,6 +96,8 @@ set (SRC
     function.cpp
     function.hpp
     graph_util.cpp
+    interval.cpp
+    interval.hpp
     lambda.cpp
     lambda.hpp
     log.cpp
@@ -330,6 +332,8 @@ set (SRC
     op/reverse_sequence.hpp
     op/scatter_add.cpp
     op/scatter_add.hpp
+    op/scatter_elements_update.cpp
+    op/scatter_elements_update.hpp
     op/scatter_nd_add.cpp
     op/scatter_nd_add.hpp
     op/select.cpp
@@ -491,6 +495,7 @@ set (SRC
     pass/constant_folding_dyn_reshape.cpp
     pass/constant_folding_dyn_slice.cpp
     pass/constant_folding_gather.cpp
+    pass/constant_folding_scatter.cpp
     pass/constant_folding_logical_reduction.cpp
     pass/constant_folding_non_zero.cpp
     pass/constant_folding_one_hot.cpp
@@ -502,7 +507,6 @@ set (SRC
     pass/constant_folding_select.cpp
     pass/constant_folding_squeeze.cpp
     pass/constant_folding_unsqueeze.cpp
-    pass/constant_folding_shape_of.cpp
     pass/constant_folding_slice.cpp
     pass/constant_folding_split.cpp
     pass/constant_folding_variadic_split.cpp
@@ -601,6 +605,8 @@ set (SRC
     provenance.cpp
     provenance.hpp
     rank.hpp
+    rt_info.cpp
+    rt_info.hpp
     runtime/aligned_buffer.cpp
     runtime/aligned_buffer.hpp
     runtime/allocator.cpp
@@ -637,6 +643,7 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
+    type/element_type_traits.hpp
     type.cpp
     type.hpp
     util.cpp

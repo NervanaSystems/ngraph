@@ -332,7 +332,7 @@ static bool is_input_uniform_constant(shared_ptr<Node> op,
     if (is_uniform_constant(c.get(), constant_value))
     {
         constant = op->get_input_node_shared_ptr(0);
-        value = op->input(1).get_source_output();
+        value = op->input_value(1);
         rc = true;
     }
     else
@@ -341,7 +341,7 @@ static bool is_input_uniform_constant(shared_ptr<Node> op,
         if (is_uniform_constant(c.get(), constant_value))
         {
             constant = op->get_input_node_shared_ptr(1);
-            value = op->input(0).get_source_output();
+            value = op->input_value(0);
             rc = true;
         }
     }
