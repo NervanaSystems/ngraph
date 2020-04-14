@@ -1020,3 +1020,13 @@ TEST(constant, shared_data)
     const float* p2 = c2->get_data_ptr<float>();
     EXPECT_EQ(p1, p2);
 }
+
+TEST(constant, convert_input)
+{
+    Shape shape{5};
+
+    vector<int32_t> expected{1, 2, 3, 4, 5};
+    auto c1 = make_shared<op::Constant>(element::from<float>(), shape, expected);
+    vector<int32_t> actual = c1->cast_vector<int32_t>();
+    EXPECT_EQ(actual, expected);
+}
