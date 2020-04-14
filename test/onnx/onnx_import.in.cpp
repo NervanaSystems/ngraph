@@ -2067,3 +2067,16 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_scatter10_import_only)
     EXPECT_EQ(count_ops_of_type<op::v3::ScatterElementsUpdate>(scatter_fn), 1);
     EXPECT_EQ(count_ops_of_type<op::v0::Constant>(scatter_fn), 4);
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_scatter_elements_import_only)
+{
+    const auto scatter_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/scatter_elements_opset11.prototxt"));
+
+    const Shape data_shape{1, 5};
+
+    EXPECT_EQ(scatter_fn->get_output_size(), 1);
+    EXPECT_EQ(scatter_fn->get_output_shape(0), data_shape);
+    EXPECT_EQ(count_ops_of_type<op::v3::ScatterElementsUpdate>(scatter_fn), 1);
+    EXPECT_EQ(count_ops_of_type<op::v0::Constant>(scatter_fn), 4);
+}
