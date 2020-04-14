@@ -27,6 +27,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
@@ -543,6 +544,73 @@ static bool simplify_reduction(shared_ptr<Node> n)
     return true;
 }
 
+static bool replace_transpose_with_reshape(shared_ptr<Node> n)
+{
+    bool rc = false;
+    auto transpose = as_type_ptr<op::Transpose>(n);
+
+    if (transpose)
+    {
+        auto perm = as_type_ptr<op::Constant>(n->get_argument(1));
+        auto perm_value = perm->get_vector<int64_t>();
+        auto data = n->get_argument(0);
+        auto data_shape = n->input_value(0).get_partial_shape().to_shape();
+
+        // Data shape should be >= 3
+        if (data_shape.size() < 3 || data_shape.size() > 4)
+            return false;
+
+        // Check if input shape contains a Dim of value 1
+        int index_of_one = 0; // index of dim 1 in data_shape
+        for (int i = 0; i < data_shape.size(); i++)
+        {
+            if (data_shape[i] == 1)
+            {
+                index_of_one = i;
+                break;
+            }
+        }
+
+        if (!index_of_one)
+            return false;
+
+        // Remove index of 1 from perm_value and check if the other
+        // dimensions haven't interchanged
+        vector<int64_t> perm_value_copy = perm_value;
+
+        for (int i = 0; i < perm_value_copy.size(); i++)
+        {
+            if (perm_value_copy[i] == index_of_one)
+            {
+                perm_value_copy.erase(perm_value_copy.begin() + i);
+                break;
+            }
+        }
+
+        // If all the indices are in increasing order,
+        // then the other dims are unchanged and only dim of 1
+        // has changed its position
+        for (int i = 0; i < perm_value_copy.size() - 1; i++)
+        {
+            if (perm_value_copy[i] > perm_value_copy[i + 1])
+                return false; // not a valid permutation
+        }
+
+        Shape out_shape{};
+        AxisVector input_order{};
+        for (int i = 0; i < perm_value.size(); i++)
+        {
+            out_shape.push_back(data_shape[perm_value[i]]);
+            input_order.push_back(perm_value[i]);
+        }
+
+        auto reshape_op = make_shared<op::Reshape>(data, input_order, out_shape);
+        replace_node(n, reshape_op);
+        rc = true;
+    }
+    return rc;
+}
+
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
 {
     return unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>>(
@@ -553,7 +621,8 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::Sum, get_sum_constant>}},
          {op::Product::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::Product, get_prod_constant>}},
-         {op::Log::type_info, simplify_log}});
+         {op::Log::type_info, simplify_log},
+         {op::Transpose::type_info, replace_transpose_with_reshape}});
 }
 
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> ops_to_simplifiers =
