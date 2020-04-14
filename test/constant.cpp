@@ -1021,12 +1021,176 @@ TEST(constant, shared_data)
     EXPECT_EQ(p1, p2);
 }
 
+#include "ngraph/log.hpp"
+template <typename T1, typename T2>
+::testing::AssertionResult test_convert()
+{
+    NGRAPH_INFO << element::from<T1>() << " -> " << element::from<T2>();
+    Shape shape{5};
+    vector<T1> expected{1, 2, 3, 4, 5};
+    auto c1 = make_shared<op::Constant>(element::from<T2>(), shape, expected);
+    vector<T1> actual = c1->template cast_vector<T1>();
+    ::testing::AssertionResult rc =
+        (actual == expected ? ::testing::AssertionSuccess() : ::testing::AssertionFailure());
+    rc << "Conversion failed";
+    return rc;
+}
+
 TEST(constant, convert_input)
 {
-    Shape shape{5};
+    EXPECT_TRUE((test_convert<float, float>()));
+    EXPECT_TRUE((test_convert<float, double>()));
+    EXPECT_TRUE((test_convert<float, float16>()));
+    EXPECT_TRUE((test_convert<float, bfloat16>()));
+    EXPECT_TRUE((test_convert<float, int8_t>()));
+    EXPECT_TRUE((test_convert<float, int16_t>()));
+    EXPECT_TRUE((test_convert<float, int32_t>()));
+    EXPECT_TRUE((test_convert<float, int64_t>()));
+    EXPECT_TRUE((test_convert<float, uint8_t>()));
+    EXPECT_TRUE((test_convert<float, uint16_t>()));
+    EXPECT_TRUE((test_convert<float, uint32_t>()));
+    EXPECT_TRUE((test_convert<float, uint64_t>()));
 
-    vector<int32_t> expected{1, 2, 3, 4, 5};
-    auto c1 = make_shared<op::Constant>(element::from<float>(), shape, expected);
-    vector<int32_t> actual = c1->cast_vector<int32_t>();
-    EXPECT_EQ(actual, expected);
+    EXPECT_TRUE((test_convert<double, float>()));
+    EXPECT_TRUE((test_convert<double, double>()));
+    EXPECT_TRUE((test_convert<double, float16>()));
+    EXPECT_TRUE((test_convert<double, bfloat16>()));
+    EXPECT_TRUE((test_convert<double, int8_t>()));
+    EXPECT_TRUE((test_convert<double, int16_t>()));
+    EXPECT_TRUE((test_convert<double, int32_t>()));
+    EXPECT_TRUE((test_convert<double, int64_t>()));
+    EXPECT_TRUE((test_convert<double, uint8_t>()));
+    EXPECT_TRUE((test_convert<double, uint16_t>()));
+    EXPECT_TRUE((test_convert<double, uint32_t>()));
+    EXPECT_TRUE((test_convert<double, uint64_t>()));
+
+    EXPECT_TRUE((test_convert<float16, float>()));
+    EXPECT_TRUE((test_convert<float16, double>()));
+    EXPECT_TRUE((test_convert<float16, float16>()));
+    EXPECT_TRUE((test_convert<float16, bfloat16>()));
+    EXPECT_TRUE((test_convert<float16, int8_t>()));
+    EXPECT_TRUE((test_convert<float16, int16_t>()));
+    EXPECT_TRUE((test_convert<float16, int32_t>()));
+    EXPECT_TRUE((test_convert<float16, int64_t>()));
+    EXPECT_TRUE((test_convert<float16, uint8_t>()));
+    EXPECT_TRUE((test_convert<float16, uint16_t>()));
+    EXPECT_TRUE((test_convert<float16, uint32_t>()));
+    EXPECT_TRUE((test_convert<float16, uint64_t>()));
+
+    EXPECT_TRUE((test_convert<bfloat16, float>()));
+    EXPECT_TRUE((test_convert<bfloat16, double>()));
+    EXPECT_TRUE((test_convert<bfloat16, float16>()));
+    EXPECT_TRUE((test_convert<bfloat16, bfloat16>()));
+    EXPECT_TRUE((test_convert<bfloat16, int8_t>()));
+    EXPECT_TRUE((test_convert<bfloat16, int16_t>()));
+    EXPECT_TRUE((test_convert<bfloat16, int32_t>()));
+    EXPECT_TRUE((test_convert<bfloat16, int64_t>()));
+    EXPECT_TRUE((test_convert<bfloat16, uint8_t>()));
+    EXPECT_TRUE((test_convert<bfloat16, uint16_t>()));
+    EXPECT_TRUE((test_convert<bfloat16, uint32_t>()));
+    EXPECT_TRUE((test_convert<bfloat16, uint64_t>()));
+
+    EXPECT_TRUE((test_convert<int8_t, float>()));
+    EXPECT_TRUE((test_convert<int8_t, double>()));
+    EXPECT_TRUE((test_convert<int8_t, float16>()));
+    EXPECT_TRUE((test_convert<int8_t, bfloat16>()));
+    EXPECT_TRUE((test_convert<int8_t, int8_t>()));
+    EXPECT_TRUE((test_convert<int8_t, int16_t>()));
+    EXPECT_TRUE((test_convert<int8_t, int32_t>()));
+    EXPECT_TRUE((test_convert<int8_t, int64_t>()));
+    EXPECT_TRUE((test_convert<int8_t, uint8_t>()));
+    EXPECT_TRUE((test_convert<int8_t, uint16_t>()));
+    EXPECT_TRUE((test_convert<int8_t, uint32_t>()));
+    EXPECT_TRUE((test_convert<int8_t, uint64_t>()));
+
+    EXPECT_TRUE((test_convert<int16_t, float>()));
+    EXPECT_TRUE((test_convert<int16_t, double>()));
+    EXPECT_TRUE((test_convert<int16_t, float16>()));
+    EXPECT_TRUE((test_convert<int16_t, bfloat16>()));
+    EXPECT_TRUE((test_convert<int16_t, int8_t>()));
+    EXPECT_TRUE((test_convert<int16_t, int16_t>()));
+    EXPECT_TRUE((test_convert<int16_t, int32_t>()));
+    EXPECT_TRUE((test_convert<int16_t, int64_t>()));
+    EXPECT_TRUE((test_convert<int16_t, uint8_t>()));
+    EXPECT_TRUE((test_convert<int16_t, uint16_t>()));
+    EXPECT_TRUE((test_convert<int16_t, uint32_t>()));
+    EXPECT_TRUE((test_convert<int16_t, uint64_t>()));
+
+    EXPECT_TRUE((test_convert<int32_t, float>()));
+    EXPECT_TRUE((test_convert<int32_t, double>()));
+    EXPECT_TRUE((test_convert<int32_t, float16>()));
+    EXPECT_TRUE((test_convert<int32_t, bfloat16>()));
+    EXPECT_TRUE((test_convert<int32_t, int8_t>()));
+    EXPECT_TRUE((test_convert<int32_t, int16_t>()));
+    EXPECT_TRUE((test_convert<int32_t, int32_t>()));
+    EXPECT_TRUE((test_convert<int32_t, int64_t>()));
+    EXPECT_TRUE((test_convert<int32_t, uint8_t>()));
+    EXPECT_TRUE((test_convert<int32_t, uint16_t>()));
+    EXPECT_TRUE((test_convert<int32_t, uint32_t>()));
+    EXPECT_TRUE((test_convert<int32_t, uint64_t>()));
+
+    EXPECT_TRUE((test_convert<int64_t, float>()));
+    EXPECT_TRUE((test_convert<int64_t, double>()));
+    EXPECT_TRUE((test_convert<int64_t, float16>()));
+    EXPECT_TRUE((test_convert<int64_t, bfloat16>()));
+    EXPECT_TRUE((test_convert<int64_t, int8_t>()));
+    EXPECT_TRUE((test_convert<int64_t, int16_t>()));
+    EXPECT_TRUE((test_convert<int64_t, int32_t>()));
+    EXPECT_TRUE((test_convert<int64_t, int64_t>()));
+    EXPECT_TRUE((test_convert<int64_t, uint8_t>()));
+    EXPECT_TRUE((test_convert<int64_t, uint16_t>()));
+    EXPECT_TRUE((test_convert<int64_t, uint32_t>()));
+    EXPECT_TRUE((test_convert<int64_t, uint64_t>()));
+
+    EXPECT_TRUE((test_convert<uint8_t, float>()));
+    EXPECT_TRUE((test_convert<uint8_t, double>()));
+    EXPECT_TRUE((test_convert<uint8_t, float16>()));
+    EXPECT_TRUE((test_convert<uint8_t, bfloat16>()));
+    EXPECT_TRUE((test_convert<uint8_t, int8_t>()));
+    EXPECT_TRUE((test_convert<uint8_t, int16_t>()));
+    EXPECT_TRUE((test_convert<uint8_t, int32_t>()));
+    EXPECT_TRUE((test_convert<uint8_t, int64_t>()));
+    EXPECT_TRUE((test_convert<uint8_t, uint8_t>()));
+    EXPECT_TRUE((test_convert<uint8_t, uint16_t>()));
+    EXPECT_TRUE((test_convert<uint8_t, uint32_t>()));
+    EXPECT_TRUE((test_convert<uint8_t, uint64_t>()));
+
+    EXPECT_TRUE((test_convert<uint16_t, float>()));
+    EXPECT_TRUE((test_convert<uint16_t, double>()));
+    EXPECT_TRUE((test_convert<uint16_t, float16>()));
+    EXPECT_TRUE((test_convert<uint16_t, bfloat16>()));
+    EXPECT_TRUE((test_convert<uint16_t, int8_t>()));
+    EXPECT_TRUE((test_convert<uint16_t, int16_t>()));
+    EXPECT_TRUE((test_convert<uint16_t, int32_t>()));
+    EXPECT_TRUE((test_convert<uint16_t, int64_t>()));
+    EXPECT_TRUE((test_convert<uint16_t, uint8_t>()));
+    EXPECT_TRUE((test_convert<uint16_t, uint16_t>()));
+    EXPECT_TRUE((test_convert<uint16_t, uint32_t>()));
+    EXPECT_TRUE((test_convert<uint16_t, uint64_t>()));
+
+    EXPECT_TRUE((test_convert<uint32_t, float>()));
+    EXPECT_TRUE((test_convert<uint32_t, double>()));
+    EXPECT_TRUE((test_convert<uint32_t, float16>()));
+    EXPECT_TRUE((test_convert<uint32_t, bfloat16>()));
+    EXPECT_TRUE((test_convert<uint32_t, int8_t>()));
+    EXPECT_TRUE((test_convert<uint32_t, int16_t>()));
+    EXPECT_TRUE((test_convert<uint32_t, int32_t>()));
+    EXPECT_TRUE((test_convert<uint32_t, int64_t>()));
+    EXPECT_TRUE((test_convert<uint32_t, uint8_t>()));
+    EXPECT_TRUE((test_convert<uint32_t, uint16_t>()));
+    EXPECT_TRUE((test_convert<uint32_t, uint32_t>()));
+    EXPECT_TRUE((test_convert<uint32_t, uint64_t>()));
+
+    EXPECT_TRUE((test_convert<uint64_t, float>()));
+    EXPECT_TRUE((test_convert<uint64_t, double>()));
+    EXPECT_TRUE((test_convert<uint64_t, float16>()));
+    EXPECT_TRUE((test_convert<uint64_t, bfloat16>()));
+    EXPECT_TRUE((test_convert<uint64_t, int8_t>()));
+    EXPECT_TRUE((test_convert<uint64_t, int16_t>()));
+    EXPECT_TRUE((test_convert<uint64_t, int32_t>()));
+    EXPECT_TRUE((test_convert<uint64_t, int64_t>()));
+    EXPECT_TRUE((test_convert<uint64_t, uint8_t>()));
+    EXPECT_TRUE((test_convert<uint64_t, uint16_t>()));
+    EXPECT_TRUE((test_convert<uint64_t, uint32_t>()));
+    EXPECT_TRUE((test_convert<uint64_t, uint64_t>()));
 }
