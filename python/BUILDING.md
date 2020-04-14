@@ -49,14 +49,14 @@ The final Python wheel will contain the contents of this temporary directory so 
 
 2. Build the `install` target:
 
-    `cmake --build . --target install -j 8`
+    `cmake --build . --target install --config Release -j 8`
 
 In this step nGraph will be built and installed to the temporary directory specified above. You can
 adjust the number of threads used in the building process to your machine's capabilities.
 
 3. Build the Python wheel itself:
 
-    `cmake --build . --target python_wheel -j 8`
+    `cmake --build . --target python_wheel --config Release -j 8`
 
 The final wheel should be located in `build\python\dist` directory.
 
