@@ -24,7 +24,7 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::Lstm::type_info;
 
 #if MKLDNN_VERSION_MAJOR >= 1
-shared_ptr<Node> op::Lstm::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Lstm::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 6)
     {
@@ -110,7 +110,7 @@ op::Lstm::Lstm(const Output<Node>& src_layer,
 }
 #else
 
-shared_ptr<Node> op::Lstm::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Lstm::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 5)
     {
