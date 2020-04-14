@@ -130,9 +130,9 @@ namespace ngraph
     /// \return     If any negative axis in vector, it counts from the last to the first
     ///             axis, by adding tensor_rank to axis.
     ///
-    std::vector<size_t> normalize_axes(const std::string& node_description,
-                                       const std::vector<int64_t>& axes,
-                                       const Rank& tensor_rank);
+    std::vector<uint64_t> normalize_axes(const std::string& node_description,
+                                         const std::vector<int64_t>& axes,
+                                         const Rank& tensor_rank);
 
     /// \brief      Handle out of range axis.
     ///

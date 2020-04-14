@@ -79,7 +79,7 @@ void op::Squeeze::pre_validate_and_infer_types()
     }
     else
     {
-        set<size_t, greater<size_t>> unique_axes(begin(axes), end(axes));
+        set<uint64_t, greater<uint64_t>> unique_axes(begin(axes), end(axes));
         for (uint64_t axis : unique_axes)
         {
             if (!data_has_dynamic_shape)
