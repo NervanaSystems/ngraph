@@ -195,49 +195,49 @@ void pass::ConstantFolding::construct_constant_non_zero()
 
         const auto data = static_pointer_cast<op::Constant>(pattern_map[data_label]);
         const auto non_zero_matched = as_type_ptr<op::v3::NonZero>(m.get_match_root());
-        auto outpu_type = non_zero_matched->get_output_type();
+        auto output_type = non_zero_matched->get_output_type();
 
         std::shared_ptr<Node> replacement;
         switch (data->get_element_type())
         {
         case element::Type_t::boolean:
-            replacement = fold_constant_non_zero<char>(data, outpu_type);
+            replacement = fold_constant_non_zero<char>(data, output_type);
             break;
         case element::Type_t::bf16:
-            replacement = fold_constant_non_zero<bfloat16>(data, outpu_type);
+            replacement = fold_constant_non_zero<bfloat16>(data, output_type);
             break;
         case element::Type_t::f16:
-            replacement = fold_constant_non_zero<float16>(data, outpu_type);
+            replacement = fold_constant_non_zero<float16>(data, output_type);
             break;
         case element::Type_t::f32:
-            replacement = fold_constant_non_zero<float>(data, outpu_type);
+            replacement = fold_constant_non_zero<float>(data, output_type);
             break;
         case element::Type_t::f64:
-            replacement = fold_constant_non_zero<double>(data, outpu_type);
+            replacement = fold_constant_non_zero<double>(data, output_type);
             break;
         case element::Type_t::i8:
-            replacement = fold_constant_non_zero<int8_t>(data, outpu_type);
+            replacement = fold_constant_non_zero<int8_t>(data, output_type);
             break;
         case element::Type_t::i16:
-            replacement = fold_constant_non_zero<int16_t>(data, outpu_type);
+            replacement = fold_constant_non_zero<int16_t>(data, output_type);
             break;
         case element::Type_t::i32:
-            replacement = fold_constant_non_zero<int32_t>(data, outpu_type);
+            replacement = fold_constant_non_zero<int32_t>(data, output_type);
             break;
         case element::Type_t::i64:
-            replacement = fold_constant_non_zero<int64_t>(data, outpu_type);
+            replacement = fold_constant_non_zero<int64_t>(data, output_type);
             break;
         case element::Type_t::u8:
-            replacement = fold_constant_non_zero<uint8_t>(data, outpu_type);
+            replacement = fold_constant_non_zero<uint8_t>(data, output_type);
             break;
         case element::Type_t::u16:
-            replacement = fold_constant_non_zero<uint16_t>(data, outpu_type);
+            replacement = fold_constant_non_zero<uint16_t>(data, output_type);
             break;
         case element::Type_t::u32:
-            replacement = fold_constant_non_zero<uint32_t>(data, outpu_type);
+            replacement = fold_constant_non_zero<uint32_t>(data, output_type);
             break;
         case element::Type_t::u64:
-            replacement = fold_constant_non_zero<uint64_t>(data, outpu_type);
+            replacement = fold_constant_non_zero<uint64_t>(data, output_type);
             break;
         case element::Type_t::u1:
         case element::Type_t::dynamic:
