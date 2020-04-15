@@ -359,41 +359,71 @@ static bool simplify_gather(std::shared_ptr<Node> node)
         auto data = node->get_argument(0);
         auto indices = node->get_argument(1);
 
-        // check if the indices is constant
-        if (!std::dynamic_pointer_cast<ngraph::op::Constant>(node->get_argument(1)))
-        {
-            return false;
-        }
-        int axis = 0;
-
-        // if axis is a input for gather op
-        if (node->get_arguments().size() == 3)
-        {
-            auto axis_const_op =
-                std::static_pointer_cast<ngraph::op::Constant>(node->get_argument(2));
-            axis = *(static_cast<float const*>(axis_const_op->get_data_ptr()));
-        }
-
-        std::cout << "I am here" << std::endl;
         // if rank of data and gather output dont match, we will skip
         if (data->get_shape().size() != node->get_shape().size())
         {
             return false;
         }
 
-        Shape ref_indices(data->get_shape()[axis], 0);
-        std::iota(ref_indices.begin(), ref_indices.end(), 0);
+        auto axis = gather->get_axis();
 
-        // if ref_inidices == indices, we are capturing the
-        // entire input tensor
-        if (ref_indices == indices->get_shape())
+        if (axis == std::numeric_limits<int64_t>::max())
         {
-            // replace all the users of the gather with the input
+            NGRAPH_DEBUG << "axis value not set";
+            return false;
+        }
+
+        // lamba function to remove the gather op and rewire the
+        // input data of gather to its users
+        auto replace_gather = [&]() {
             for (auto& output : gather->outputs())
             {
                 output.replace(data->output(0));
             }
             return true;
+        };
+
+        // case_1 : if the input tensor is of shape (4, 1, 4)
+        // and axis = 1, then the gather would be simply
+        // gathering the whole input tensor, so we can optimize this
+        // op has Nop
+
+        if (data->get_shape()[axis] == 1)
+        {
+            replace_gather();
+        }
+
+// case_2 : if the input tensor is of shape (4, 3, 4)
+// we need to check the contents of indices, if indices
+// is 1D tensor of value {0, 1, 2}, we can optimize this
+// op has Nop
+
+#define COMPARE_AND_REPLACE_GATHER(T)                                                              \
+    std::vector<T> ref_indices(data->get_shape()[axis], 0);                                        \
+    std::iota(ref_indices.begin(), ref_indices.end(), 0);                                          \
+    if (ref_indices == indices_node->get_vector<T>())                                              \
+    {                                                                                              \
+        replace_gather();                                                                          \
+    }
+
+        // check if the indices is constant
+        auto indices_node = std::dynamic_pointer_cast<ngraph::op::Constant>(node->get_argument(1));
+        if (!indices_node)
+        {
+            return false;
+        }
+        else
+        {
+            // if ref_inidices == indices, we are capturing the
+            // entire input tensor
+            if (indices->get_element_type() == element::i32)
+            {
+                COMPARE_AND_REPLACE_GATHER(int32_t);
+            }
+            else
+            {
+                COMPARE_AND_REPLACE_GATHER(int64_t);
+            }
         }
     }
     return false;
