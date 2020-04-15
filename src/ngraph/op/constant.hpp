@@ -25,7 +25,6 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/log.hpp"
 
 namespace ngraph
 {
@@ -91,7 +90,6 @@ namespace ngraph
                     , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
                                                         host_alignment()))
                 {
-                    NGRAPH_INFO << "*********************************************************************";
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
@@ -101,67 +99,67 @@ namespace ngraph
                     {
                     case element::Type_t::boolean:
                         std::fill_n(static_cast<char*>(m_data->get_ptr()),
-                                    m_data->size(),
+                                    shape_size(m_shape),
                                     static_cast<char>(value));
                         break;
                     case element::Type_t::bf16:
                         std::fill_n(static_cast<bfloat16*>(m_data->get_ptr()),
-                                    m_data->size(),
+                                    shape_size(m_shape),
                                     static_cast<bfloat16>(value));
                         break;
                     case element::Type_t::f16:
                         std::fill_n(static_cast<float16*>(m_data->get_ptr()),
-                                    m_data->size(),
+                                    shape_size(m_shape),
                                     static_cast<float16>(value));
                         break;
                     case element::Type_t::f32:
                         std::fill_n(static_cast<float*>(m_data->get_ptr()),
-                                    m_data->size(),
+                                    shape_size(m_shape),
                                     static_cast<float>(value));
                         break;
                     case element::Type_t::f64:
                         std::fill_n(static_cast<double*>(m_data->get_ptr()),
-                                    m_data->size(),
+                                    shape_size(m_shape),
                                     static_cast<double>(value));
                         break;
                     case element::Type_t::i8:
                         std::fill_n(static_cast<int8_t*>(m_data->get_ptr()),
-                                    m_data->size(),
+                                    shape_size(m_shape),
                                     static_cast<int8_t>(value));
                         break;
                     case element::Type_t::i16:
                         std::fill_n(static_cast<int16_t*>(m_data->get_ptr()),
-                                    m_data->size(),
+                                    shape_size(m_shape),
                                     static_cast<int16_t>(value));
                         break;
                     case element::Type_t::i32:
                         std::fill_n(static_cast<int32_t*>(m_data->get_ptr()),
-                                    m_data->size(),
+                                    shape_size(m_shape),
                                     static_cast<int32_t>(value));
                         break;
                     case element::Type_t::i64:
                         std::fill_n(static_cast<int64_t*>(m_data->get_ptr()),
-                                    m_data->size(),
+                                    shape_size(m_shape),
                                     static_cast<int64_t>(value));
                         break;
                     case element::Type_t::u8:
                         std::fill_n(static_cast<uint8_t*>(m_data->get_ptr()),
-                                    m_data->size(),
+                                    shape_size(m_shape),
                                     static_cast<uint8_t>(value));
                         break;
                     case element::Type_t::u16:
                         std::fill_n(static_cast<uint16_t*>(m_data->get_ptr()),
-                                    m_data->size(),
+                                    shape_size(m_shape),
                                     static_cast<uint16_t>(value));
                         break;
                     case element::Type_t::u32:
                         std::fill_n(static_cast<uint32_t*>(m_data->get_ptr()),
-                                    m_data->size(),
+                                    shape_size(m_shape),
                                     static_cast<uint32_t>(value));
                         break;
                     case element::Type_t::u64:
                         std::fill_n(static_cast<uint64_t*>(m_data->get_ptr()),
-                                    m_data->size(),
+                                    shape_size(m_shape),
                                     static_cast<uint64_t>(value));
                         break;
                     case element::Type_t::u1: throw std::runtime_error("unsupported type");
