@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ctc_greedy_decoder.hpp"
+#include "ngraph/op/ctc_greedy_decoder.hpp"
 
 using namespace std;
 using namespace ngraph;
