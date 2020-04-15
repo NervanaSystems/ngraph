@@ -16,13 +16,13 @@
 
 #pragma once
 
-#include "ngraph/runtime/gpu/cublas_emitter.hpp"
-#include "ngraph/runtime/gpu/cuda_emitter.hpp"
-#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_kernel_args.hpp"
-#include "ngraph/runtime/gpu/gpu_memory_manager.hpp"
-#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/host_emitter.hpp"
+#include "cublas_emitter.hpp"
+#include "cuda_emitter.hpp"
+#include "cudnn_emitter.hpp"
+#include "gpu_kernel_args.hpp"
+#include "gpu_memory_manager.hpp"
+#include "gpu_runtime_context.hpp"
+#include "host_emitter.hpp"
 
 namespace ngraph
 {

@@ -39,16 +39,16 @@
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
-#include "ngraph/runtime/gpu/gpu_external_function.hpp"
-#include "ngraph/runtime/gpu/gpu_internal_function.hpp"
-#include "ngraph/runtime/gpu/op/batch_norm.hpp"
-#include "ngraph/runtime/gpu/op/rnn.hpp"
-#include "ngraph/runtime/gpu/pass/gpu_batch_norm_cache.hpp"
-#include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
-#include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
-#include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
+#include "gpu_backend.hpp"
+#include "gpu_compiled_function.hpp"
+#include "gpu_external_function.hpp"
+#include "gpu_internal_function.hpp"
+#include "op/batch_norm.hpp"
+#include "op/rnn.hpp"
+#include "pass/gpu_batch_norm_cache.hpp"
+#include "pass/gpu_layout.hpp"
+#include "pass/gpu_rnn_fusion.hpp"
+#include "pass/tensor_memory_reservation.hpp"
 
 using namespace std;
 using namespace ngraph;

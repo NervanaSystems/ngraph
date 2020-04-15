@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gpu/op/batch_norm.hpp"
+#include "op/batch_norm.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/validation_util.hpp"
 

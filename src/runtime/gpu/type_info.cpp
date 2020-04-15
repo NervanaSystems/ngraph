@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gpu/type_info.hpp"
+#include "type_info.hpp"
 
 using namespace ngraph;
 

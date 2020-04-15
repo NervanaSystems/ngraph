@@ -23,7 +23,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ngraph/runtime/gpu/gpu_host_parameters.hpp"
+#include "gpu_host_parameters.hpp"
 
 namespace ngraph
 {

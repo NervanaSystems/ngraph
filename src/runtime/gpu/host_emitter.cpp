@@ -19,10 +19,10 @@
 #include <sstream>
 #include <vector>
 
-#include "ngraph/runtime/gpu/gpu_invoke.hpp"
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/host_emitter.hpp"
+#include "gpu_invoke.hpp"
+#include "gpu_primitive_emitter.hpp"
+#include "gpu_runtime_context.hpp"
+#include "host_emitter.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;

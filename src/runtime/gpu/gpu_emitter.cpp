@@ -31,15 +31,15 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/ops.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
-#include "ngraph/runtime/gpu/gpu_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
-#include "ngraph/runtime/gpu/gpu_op_annotations.hpp"
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
-#include "ngraph/runtime/gpu/op/batch_norm.hpp"
-#include "ngraph/runtime/gpu/op/rnn.hpp"
-#include "ngraph/runtime/gpu/type_info.hpp"
+#include "gpu_cuda_kernel_ops.hpp"
+#include "gpu_emitter.hpp"
+#include "gpu_kernel_emitters.hpp"
+#include "gpu_op_annotations.hpp"
+#include "gpu_primitive_emitter.hpp"
+#include "gpu_util.hpp"
+#include "op/batch_norm.hpp"
+#include "op/rnn.hpp"
+#include "type_info.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -54,7 +54,7 @@ function<std::string(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(co
 #define NGRAPH_OP(a, b, VERS)                                                                      \
     {type_index(typeid(b::a)), runtime::gpu::GPU_Emitter::emit_v##VERS##_##a},
     static const map<type_index, function<std::string(EMIT_ARGS)>> typeid_map{
-#include "ngraph/runtime/gpu/op/op_tbl.hpp"
+#include "op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
     auto it = typeid_map.find(type_index(typeid(node)));

@@ -19,7 +19,7 @@
 #include "ngraph/code_writer.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "gpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {

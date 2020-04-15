@@ -22,16 +22,16 @@
 #include <vector>
 
 #include "ngraph/code_writer.hpp"
-#include "ngraph/runtime/gpu/cuda_emitter.hpp"
-#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
-#include "ngraph/runtime/gpu/gpu_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_invoke.hpp"
-#include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
-#include "ngraph/runtime/gpu/type_info.hpp"
+#include "cuda_emitter.hpp"
+#include "cudnn_emitter.hpp"
+#include "gpu_cuda_kernel_builder.hpp"
+#include "gpu_emitter.hpp"
+#include "gpu_invoke.hpp"
+#include "gpu_kernel_emitters.hpp"
+#include "gpu_primitive_emitter.hpp"
+#include "gpu_runtime_context.hpp"
+#include "gpu_util.hpp"
+#include "type_info.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;

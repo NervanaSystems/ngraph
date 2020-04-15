@@ -23,9 +23,9 @@
 #include <vector>
 
 #include "ngraph/function.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_call_frame.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "gpu_backend.hpp"
+#include "gpu_call_frame.hpp"
+#include "gpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {

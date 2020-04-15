@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "gpu_compiled_function.hpp"
+#include "gpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
@@ -38,7 +38,7 @@ namespace ngraph
 // static std::string emit_Abs(EMIT_ARGS);
 // static std::string emit_Acos(EMIT_ARGS);
 #define NGRAPH_OP(a, b, VERS) static std::string emit_v##VERS##_##a(EMIT_ARGS);
-#include "ngraph/runtime/gpu/op/op_tbl.hpp"
+#include "op/op_tbl.hpp"
 #undef NGRAPH_OP
 
                 template <typename T>

@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gpu/gpu_runtime_constructor.hpp"
+#include "gpu_runtime_constructor.hpp"
 
 using namespace ngraph;
 

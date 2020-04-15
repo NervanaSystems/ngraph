@@ -16,7 +16,7 @@
 
 #include <limits>
 
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
+#include "gpu_primitive_emitter.hpp"
 
 using namespace ngraph;
 using namespace ngraph::runtime::gpu;

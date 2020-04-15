@@ -22,7 +22,7 @@
 #include "gpu_backend_visibility.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "gpu_backend.hpp"
 
 namespace ngraph
 {

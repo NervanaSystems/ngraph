@@ -14,9 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gpu/cublas_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
+#include "cublas_emitter.hpp"
+#include "gpu_emitter.hpp"
+#include "gpu_primitive_emitter.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;

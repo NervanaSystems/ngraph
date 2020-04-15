@@ -18,10 +18,10 @@
 
 #include <array>
 #include "ngraph/code_writer.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
-#include "ngraph/runtime/gpu/gpu_host_parameters.hpp"
-#include "ngraph/runtime/gpu/nvdiff.hpp"
-#include "ngraph/runtime/gpu/nvshape.hpp"
+#include "gpu_cuda_kernel_ops.hpp"
+#include "gpu_host_parameters.hpp"
+#include "nvdiff.hpp"
+#include "nvshape.hpp"
 #include "ngraph/strides.hpp"
 
 #include "ngraph/op/convolution.hpp"

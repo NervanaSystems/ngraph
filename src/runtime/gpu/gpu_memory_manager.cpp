@@ -16,9 +16,9 @@
 
 #include <cstring>
 
-#include "ngraph/runtime/gpu/gpu_memory_manager.hpp"
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "gpu_memory_manager.hpp"
+#include "gpu_primitive_emitter.hpp"
+#include "gpu_util.hpp"
 
 using namespace ngraph;
 

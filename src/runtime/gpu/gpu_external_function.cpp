@@ -99,12 +99,12 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_external_function.hpp"
-#include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
-#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "gpu_backend.hpp"
+#include "gpu_emitter.hpp"
+#include "gpu_external_function.hpp"
+#include "gpu_kernel_emitters.hpp"
+#include "gpu_runtime_context.hpp"
+#include "gpu_tensor_wrapper.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -211,10 +211,10 @@ const string& runtime::gpu::GPUExternalFunction::get_pch_header_source()
 #include <cuda_runtime.h>
 #include <cudnn.h>
 
-#include "ngraph/runtime/gpu/cuda_error_check.hpp"
-#include "ngraph/runtime/gpu/gpu_invoke.hpp"
-#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "cuda_error_check.hpp"
+#include "gpu_invoke.hpp"
+#include "gpu_runtime_context.hpp"
+#include "gpu_util.hpp"
 )";
     return s_pch_header_source;
 }

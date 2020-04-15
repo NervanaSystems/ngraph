@@ -45,7 +45,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/runtime/gpu/op/rnn.hpp"
+#include "op/rnn.hpp"
 
 #define RETURN_IF_FALSE(cond, message)                                                             \
     if (!(cond))                                                                                   \

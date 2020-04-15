@@ -25,7 +25,7 @@
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/topk.hpp"
-#include "ngraph/runtime/gpu/gpu_op_annotations.hpp"
+#include "gpu_op_annotations.hpp"
 
 using namespace std;
 using namespace ngraph;
