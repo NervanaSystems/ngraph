@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "psroi_pooling.hpp"
+#include "ngraph/op/psroi_pooling.hpp"
 #include "ngraph/attribute_visitor.hpp"
 
 using namespace std;

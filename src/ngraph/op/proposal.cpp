@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "proposal.hpp"
+#include "ngraph/op/proposal.hpp"
 
 #include "ngraph/op/constant.hpp"
 
