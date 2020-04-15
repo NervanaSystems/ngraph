@@ -606,19 +606,6 @@ NGRAPH_TEST(onnx_dyn_shapes_${BACKEND_NAME}, transpose)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_dynamic_hw)
-{
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_dynamic_hw.prototxt"));
-
-    auto test_case =
-        ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::DYNAMIC);
-    test_case.add_input<int64_t>(Shape{1, 2, 3, 4}, {1,  0, -4, 0, 2,  1, -6, 1,  0, 0, 0, 0,
-                                                     -7, 1, -1, 0, -1, 8, 0,  10, 9, 0, 0, 5});
-    test_case.add_expected_output(Shape{1, 2, 1, 1}, std::vector<int64_t>{6, 8});
-
-    test_case.run();
-}
 namespace
 {
     Shape get_flattened_shape(const Shape& in_shape, size_t axis)
