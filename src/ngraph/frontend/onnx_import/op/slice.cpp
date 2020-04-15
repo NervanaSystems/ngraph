@@ -76,15 +76,15 @@ namespace ngraph
                     ///
                     /// \param[in] indices               Parameters of Slice operator: starts, ends,
                     ///                                  steps.
-                    /// \param[in] axes                  Detemines dimenions on which slice
+                    /// \param[in] axes                  Determines dimensions on which slice
                     ///                                  operation should be applied.
                     /// \param[in] slice_indices_length  Indices length after adjustment
-                    /// \param[in] fill_in_value         Neutrial value (`0` for starts and ends,
+                    /// \param[in] fill_in_value         Neutral value (`0` for starts and ends,
                     ///                                  `1` for steps) which is set to indices
                     ///                                  in order to provide adjustment.
                     ///
                     /// \return Sub-graph represents adjusted indices or input indices
-                    ///         if any transformation was not needed.
+                    ///         if any transformation was needed.
                     std::shared_ptr<ngraph::Node>
                         adjust_indices_if_needed(const std::shared_ptr<ngraph::Node>& indices,
                                                  const std::vector<uint64_t>& axes,
@@ -188,7 +188,7 @@ namespace ngraph
                         const auto normalized_axes_vec =
                             normalize_axes(node.get_description(), raw_axes_vec, data_rank);
                         axes_vec = std::vector<uint64_t>(std::begin(normalized_axes_vec),
-                                                         std::begin(normalized_axes_vec));
+                                                         std::end(normalized_axes_vec));
                     }
                     else
                     {
@@ -196,8 +196,7 @@ namespace ngraph
                                                  std::end(raw_axes_vec),
                                                  [](int64_t axis) { return axis >= 0; }),
                                      "All axes must be positive when data rank is unknown");
-                        axes_vec =
-                            std::vector<uint64_t>(std::begin(axes_vec), std::begin(axes_vec));
+                        axes_vec = std::vector<uint64_t>(std::begin(axes_vec), std::end(axes_vec));
                     }
 
                     const uint64_t slice_indices_length =
