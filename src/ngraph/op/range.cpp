@@ -17,7 +17,7 @@
 #include <algorithm>
 
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/experimental/range.hpp"
+#include "ngraph/op/range.hpp"
 
 using namespace std;
 using namespace ngraph;
