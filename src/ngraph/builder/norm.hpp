@@ -47,7 +47,8 @@ namespace ngraph
             /// \return     L-0 norm of value. The output sub-graph is composed of v1 ops.
             ///
             NGRAPH_API
-            std::shared_ptr<Node> l0_norm(const Output<Node>& value, const AxisSet& reduction_axes);
+            std::shared_ptr<Node> l0_norm(const Output<Node>& value,
+                                          const Output<Node>& reduction_axes);
 
             /// \brief      Calculates L-1 norm of a value.
             ///
@@ -60,8 +61,9 @@ namespace ngraph
             /// \return     L-1 norm of value. The output sub-graph is composed of v1 ops.
             ///
             NGRAPH_API
-            std::shared_ptr<Node>
-                l1_norm(const Output<Node>& value, const AxisSet& reduction_axes, float bias = 0.f);
+            std::shared_ptr<Node> l1_norm(const Output<Node>& value,
+                                          const Output<Node>& reduction_axes,
+                                          float bias = 0.f);
 
             /// \brief      Calculates L-2 norm of input tensor.
             ///
@@ -78,7 +80,7 @@ namespace ngraph
             ///
             NGRAPH_API
             std::shared_ptr<Node> l2_norm(const Output<Node>& value,
-                                          const AxisSet& reduction_axes,
+                                          const Output<Node>& reduction_axes,
                                           float bias = 0.f,
                                           BiasMode bias_mode = BiasMode::ADD,
                                           bool keep_dims = false);
@@ -94,7 +96,7 @@ namespace ngraph
             ///
             NGRAPH_API
             std::shared_ptr<Node> lp_norm(const Output<Node>& value,
-                                          const AxisSet& reduction_axes,
+                                          const Output<Node>& reduction_axes,
                                           std::size_t p_norm = 2,
                                           float bias = 0.f);
         }
