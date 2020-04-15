@@ -21,11 +21,12 @@
 
 #include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
 
-#include <mlir/Dialect/AffineOps/AffineOps.h>
+#include <mlir/Dialect/Affine/IR/AffineOps.h>
+#include <mlir/Dialect/Affine/Passes.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 #include <mlir/Dialect/LoopOps/LoopOps.h>
-#include <mlir/Dialect/StandardOps/Ops.h>
-#include <mlir/Dialect/VectorOps/VectorOps.h>
+#include <mlir/Dialect/StandardOps/IR/Ops.h>
+#include <mlir/Dialect/Vector/VectorOps.h>
 #include <mlir/IR/Dialect.h>
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/Pass/Pass.h>
@@ -34,6 +35,7 @@
 
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/Debug.h>
+#include <llvm/Transforms/Vectorize.h>
 
 using namespace mlir;
 
@@ -49,11 +51,11 @@ void ngraph::runtime::ngmlir::initializeNGraphMLIR()
     // Initialize MLIR dialects and passes only once.
     static bool init_once = []() {
         // In-tree Dialects.
-        registerDialect<AffineOpsDialect>();
+        registerDialect<AffineDialect>();
         registerDialect<LLVM::LLVMDialect>();
         registerDialect<loop::LoopOpsDialect>();
         registerDialect<StandardOpsDialect>();
-        registerDialect<vector::VectorOpsDialect>();
+        registerDialect<vector::VectorDialect>();
 
         // nGraph dialects.
         registerDialect<mlir::NGraphOpsDialect>();
@@ -65,7 +67,7 @@ void ngraph::runtime::ngmlir::initializeNGraphMLIR()
 
         createCanonicalizerPass();
         createCSEPass();
-        createVectorizePass({});
+        llvm::createLoopVectorizePass();
         createLoopUnrollPass();
         createLoopUnrollAndJamPass();
         createSimplifyAffineStructuresPass();

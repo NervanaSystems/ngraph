@@ -75,7 +75,7 @@ def NGDotOp : NG_Binary_Op<"dot", [OpVersion0]>
 // class, but I'm not sure how to add concatenation_axis into the args if we
 // do that.
 def NGConcatOp :
-    NG_OneResult_Op<"concat", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"concat", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins Variadic<NG_TensorType>:$args, I64Attr:$concatenation_axis)>
 {
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
@@ -134,7 +134,7 @@ def NGAnyRedOp : NG_Axis_Reduction_Op<"any.red", [OpVersion0]>
 
 // Gather
 def NGGatherOp : 
-    NG_OneResult_Op<"gather", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"gather", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType:$params, NG_TensorType:$indices, I64Attr:$axis)>
 {
   let summary = "Gather slices from params along the specified axis according to indices";
@@ -152,7 +152,7 @@ def NGGatherOp :
 
 // Convolution
 def NGConvolutionOp :
-    NG_OneResult_Op<"convolution", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"convolution", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters, 
                I64ArrayAttr:$strides,
                I64ArrayAttr:$padBelow,
@@ -181,7 +181,7 @@ def NGConvolutionOp :
 
 // AvgPool
 def NGAvgPoolOp :
-    NG_OneResult_Op<"avgPool", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"avgPool", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType:$arg, 
                I64ArrayAttr     :$windowShape,
                I64ArrayAttr     :$windowMovementStrides,
@@ -253,7 +253,7 @@ def NGAvgPoolOp :
 
 // AvgPool for back prop
 def NGAvgPoolBackpropOp :
-    NG_OneResult_Op<"avgPoolBackprop", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"avgPoolBackprop", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins I64ArrayAttr :$forwardArgShape,
                NG_TensorType    :$delta, 
                I64ArrayAttr     :$windowShape,
@@ -283,7 +283,7 @@ def NGAvgPoolBackpropOp :
 
 // BatchNorm for Training
 def NGBatchNormTrainingOp :
-    NG_OneResult_Op<"batchNormTraining", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"batchNormTraining", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType :$input, 
                NG_TensorType     :$gamma, 
                NG_TensorType     :$beta, 
@@ -305,7 +305,7 @@ def NGBatchNormTrainingOp :
 
 // BatchNorm for Inference
 def NGBatchNormInferenceOp :
-    NG_OneResult_Op<"batchNormInference", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"batchNormInference", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType :$input, 
                NG_TensorType     :$gamma, 
                NG_TensorType     :$beta, 
@@ -329,7 +329,7 @@ def NGBatchNormInferenceOp :
 
 // BatchNorm for Training BackProp
 def NGBatchNormTrainingBackPropOp :
-    NG_OneResult_Op<"batchNormTrainingBackProp", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"batchNormTrainingBackProp", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType :$input, 
                NG_TensorType     :$gamma, 
                NG_TensorType     :$beta, 
@@ -353,7 +353,7 @@ def NGBatchNormTrainingBackPropOp :
 
 // Broadcast
 def NGBroadcastOp :
-    NG_OneResult_Op<"broadcast", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"broadcast", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType :$arg, 
                I64ArrayAttr      :$shape,
                I64ArrayAttr      :$axisSet
@@ -374,7 +374,7 @@ def NGBroadcastOp :
 }
 
 def NGConstantOp : 
-  NG_OneResult_Op<"consant", [NoSideEffect, OpVersion0]>,
+  NG_OneResult_Op<"consant", [/* NoSideEffect,*/ OpVersion0]>,
   Arguments<(ins I64ArrayAttr  : $shape,
             TypeArrayAttr      : $data)>
 {
@@ -392,7 +392,7 @@ def NGConstantOp :
 
 // MaxPool
 def NGMaxPoolOp :
-    NG_OneResult_Op<"maxPool", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"maxPool", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType:$arg, 
                I64ArrayAttr     :$windowShape,
                I64ArrayAttr     :$windowMovementStrides,
@@ -443,7 +443,7 @@ def NGMaxPoolOp :
 
 // MaxPool for back prop
 def NGMaxPoolBackpropOp :
-    NG_OneResult_Op<"maxPoolBackprop", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"maxPoolBackprop", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType :$argForward,
                NG_TensorType     :$delta, 
                I64ArrayAttr      :$windowShape,
@@ -470,7 +470,7 @@ def NGMaxPoolBackpropOp :
 
 // OneHot
 def NGOneHotOp :
-    NG_OneResult_Op<"oneHot", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"oneHot", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType :$arg,
                I64ArrayAttr      :$shape,
                I64Attr           :$axis )>
@@ -489,7 +489,7 @@ def NGOneHotOp :
 
 // Pad
 def NGPadOp : 
-    NG_OneResult_Op<"pad", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"pad", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType:$arg,
                NG_TensorType    :$padValue,
                I64ArrayAttr     :$padBelow,
@@ -522,7 +522,7 @@ def NGPadOp :
     
 // ReplaceSlice
 def NGReplaceSliceOp : 
-    NG_OneResult_Op<"replaceSlice", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"replaceSlice", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType:$arg0,
                NG_TensorType    :$arg1,
                I64ArrayAttr     :$lowerBounds,
@@ -553,7 +553,7 @@ def NGReplaceSliceOp :
 
 // slice
 def NGSliceOp : 
-    NG_OneResult_Op<"slice", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"slice", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType:$arg,
                I64ArrayAttr     :$lowerBounds,
                I64ArrayAttr     :$upperBounds,
@@ -581,7 +581,7 @@ def NGSliceOp :
 
 // reshape
 def NGReshapeOp : 
-    NG_OneResult_Op<"reshape", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"reshape", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType:$arg,
                I64ArrayAttr     :$axisOrder,
                I64ArrayAttr     :$shape)>
@@ -606,7 +606,7 @@ def NGReshapeOp :
 
 // softmax
 def NGSoftMaxOp : 
-    NG_OneResult_Op<"softmax", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"softmax", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType :$arg,
                I64ArrayAttr  :$axes)>
 {  
@@ -625,7 +625,7 @@ def NGSoftMaxOp :
 
 // topk
 def NGTopKOp : 
-    NG_OneResult_Op<"topk", [NoSideEffect, OpVersion0]>,
+    NG_OneResult_Op<"topk", [/* NoSideEffect,*/ OpVersion0]>,
     Arguments<(ins NG_TensorType :$arg,
                NG_TensorType :$k,
                I64Attr       :$axis,

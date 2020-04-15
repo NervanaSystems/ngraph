@@ -23,6 +23,7 @@
 
 include "core/ngraph_dialect/ops_interfaces.td"
 include "mlir/IR/OpBase.td"
+include "mlir/Interfaces/SideEffects.td"
 
 // nGraph Dialect operations definitions
 //
@@ -72,7 +73,7 @@ class NG_ZeroResult_Op<string mnemonic, list<OpTrait> traits = []> :
 
 // Base class for arithmetic unary operations without side effects.
 class NG_Unary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
-      NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect], traits)>,
+      NG_OneResult_Op<mnemonic, /*!listconcat([NoSideEffect],*/ traits/*)*/>,
       Arguments<(ins NG_TensorType:$arg)>
 {
   // TODO: Implement
@@ -83,7 +84,7 @@ class NG_Unary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
 
 // Base class for arithmetic binary operations without side effects.
 class NG_Binary_Op<string mnemonic, list<OpTrait> traits = []> :
-      NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect], traits)>,
+      NG_OneResult_Op<mnemonic, /*!listconcat([NoSideEffect],*/ traits/*)*/>,
       Arguments<(ins NG_TensorType:$lhs, NG_TensorType:$rhs)>
 {
   // TODO: Implement
@@ -114,7 +115,7 @@ class NG_Cmp_Op<string mnemonic, list<OpTrait> traits = []> :
 
 // Base class for ternary operations without side effects.
 class NG_Ternary_Op<string mnemonic, list<OpTrait> traits = []> :
-      NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect], traits)>,
+      NG_OneResult_Op<mnemonic, /*!listconcat([NoSideEffect],*/ traits/*)*/>,
       Arguments<(ins NG_TensorType:$op0, NG_TensorType:$op1, NG_TensorType:$op2)>
 {
   // TODO: Implement
@@ -123,7 +124,7 @@ class NG_Ternary_Op<string mnemonic, list<OpTrait> traits = []> :
 
 
 class NG_Axis_Reduction_Op<string mnemonic, list<OpTrait> traits = []> :
-      NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect], traits)>,
+      NG_OneResult_Op<mnemonic, /*!listconcat([NoSideEffect],*/ traits/*)*/>,
       Arguments<(ins NG_TensorType:$operand, I64ArrayAttr:$axes)>
 {
   let summary = "Base class for reduction operations that perform a reduction "

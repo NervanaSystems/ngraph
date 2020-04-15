@@ -62,6 +62,7 @@ target_link_libraries(
     MLIRTargetLLVMIR
     MLIRTransforms
     MLIRSupport
+    MLIRAffineTransforms
 )
 # some libs need whole archive linkage because of Globals static initialization
 function(whole_archive_link target)
@@ -83,7 +84,7 @@ function(whole_archive_link target)
 endfunction(whole_archive_link)
 
 set(LIBS
-    ${LLVM_BUILD_LIBRARY_DIR}/libMLIRAffineOps.a
+    ${LLVM_BUILD_LIBRARY_DIR}/libMLIRAffine.a
     ${LLVM_BUILD_LIBRARY_DIR}/libMLIRStandardOps.a
 )
 whole_archive_link(mlir_backend ${LIBS})

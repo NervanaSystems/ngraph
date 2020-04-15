@@ -25,7 +25,7 @@
 #include "mlir/IR/OpImplementation.h"
 #include "mlir/IR/OperationSupport.h"
 #include "mlir/IR/StandardTypes.h"
-#include "mlir/Support/STLExtras.h"
+#include "llvm/ADT/STLExtras.h"
 
 // attributes
 // Currently table-gen dictates that enum attributes are in global namespace

@@ -24,7 +24,7 @@
  
 // Squeeze Op
 def NGSqueezeOp : 
-    NG_OneResult_Op<"squeeze", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"squeeze", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, NG_TensorType:$axes)>
 {
   let summary = "Squeeze Op";
@@ -38,7 +38,7 @@ def NGSqueezeOp :
 
 // Unsqueeze Op
 def NGUnSqueezeOp : 
-    NG_OneResult_Op<"unsqueeze", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"unsqueeze", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, NG_TensorType:$axes)>
 {
   let summary = "Unsqueeze Op";
@@ -85,7 +85,7 @@ def NGSplitOp :
 
 // SpaceToDepth Op
 def NGSpaceToDepthOp :
-    NG_OneResult_Op<"spaceToDepth", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"spaceToDepth", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, 
               DefaultValuedAttr<I64Attr, "1">:$blockSize,
               DepthSpaceModeEnumAttr:$mode)>
@@ -112,7 +112,7 @@ def NGSpaceToDepthOp :
     
 // ShuffleChannels Op
 def NGShuffleChannelsOp :
-    NG_OneResult_Op<"shuffleChannels", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"shuffleChannels", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, I64Attr:$axis, I64Attr:$groups)>
 {
   let summary = "Shuffle Channels op";
@@ -151,7 +151,7 @@ def NGScaleShiftOp :
 
 // RNN Cell Op
 def NGRNNCellOp : 
-    NG_OneResult_Op<"rnnCell", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"rnnCell", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$X, NG_TensorType:$W, NG_TensorType:$R, NG_TensorType:$H_t,
                Variadic<NG_TensorType>:$optionalArgs, 
                DefaultValuedAttr<StrArrayAttr, "{\"tanh\"}">:$activations,
@@ -202,7 +202,7 @@ def NGRNNCellOp :
 
 // Prelu Op
 def NGPrelu : 
-    NG_OneResult_Op<"prelu", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"prelu", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, NG_TensorType:$slope)>
 {
   let summary = "Prelu op";
@@ -218,7 +218,7 @@ def NGPrelu :
 
 // Normalize L2 Op
 def NGNormalizeL2Op : 
-    NG_OneResult_Op<"normalizeL2", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"normalizeL2", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, NG_TensorType:$axis, F32Attr:$eps, EpsModeEnumAttr:$epsMode)>
 {
   let summary = "NormalizeL2 op";
@@ -243,7 +243,7 @@ def NGNormalizeL2Op :
 
 // MVN Op
 def NGMVN : 
-    NG_OneResult_Op<"mvn", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"mvn", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, 
                DefaultValuedAttr<BoolAttr, "true">: $acrossChannels,
                DefaultValuedAttr<BoolAttr, "true">: $normalizeVariance,
@@ -283,7 +283,7 @@ def NGMVN :
 
 // MatMul Op
 def NGMatMulOp :
-  NG_OneResult_Op<"matmul", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+  NG_OneResult_Op<"matmul", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
   Arguments<(ins NG_TensorType:$A, NG_TensorType:$B, 
             DefaultValuedAttr<BoolAttr, "false">:$transposeA,
             DefaultValuedAttr<BoolAttr, "false">:$transposeB)>
@@ -305,7 +305,7 @@ def NGMatMulOp :
 // LSTM Cell Op
 // 
 def NGLSTMCellOp : 
-    NG_OneResult_Op<"lstmCell", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"lstmCell", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$X, NG_TensorType:$W, NG_TensorType:$R,
                NG_TensorType:$H_t, NG_TensorType:$C_t,
                Variadic<NG_TensorType>:$optionalArgs, 
@@ -417,7 +417,7 @@ def NGLSTMCellOp :
 
 // LSTM Sequence Op
 def NGLSTMSequenceOp : 
-    NG_OneResult_Op<"lstmSeq", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"lstmSeq", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$X, NG_TensorType:$H_t, NG_TensorType:$C_t, 
                NG_TensorType:$S_l, NG_TensorType:$W, NG_TensorType:$R,
                NG_TensorType:$B, Variadic<NG_TensorType>:$optionalArgs, 
@@ -462,7 +462,7 @@ def NGLSTMSequenceOp :
 
 // GRU Cell Op
 def NGGRUCellOp : 
-    NG_OneResult_Op<"gruCell", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"gruCell", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$X, NG_TensorType:$W, NG_TensorType:$R,
                NG_TensorType:$H_t, Variadic<NG_TensorType>:$optionalArgs,
                I64Attr:$hiddenSize,
@@ -544,7 +544,7 @@ def NGGRUCellOp :
 // Op produces 3 results when keepStats is true
 // Op is defined with 3 results, 2 of which are invalid/dead if keepStats is false
 def NGLayerNormOp : 
-    NG_Op<"layernorm", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_Op<"layernorm", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Results<(outs NG_TensorType:$res, NG_TensorType:$mean, NG_TensorType:$var)>,
     Arguments<(ins NG_TensorType:$data, Variadic<NG_TensorType>:$optionalArgs,
                DefaultValuedAttr<BoolAttr, "true">:$keepStats,
@@ -595,7 +595,7 @@ def NGLayerNormOp :
 // LayerNormBackprop Op
 // Scale can be optional, in which case use a constant op of 0
 def NGLayerNormBackpropOp : 
-    NG_Op<"layernormBackprop", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_Op<"layernormBackprop", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Results<(outs NG_TensorType:$d_data, NG_TensorType:$d_scale, NG_TensorType:$d_bias)>,
     Arguments<(ins NG_TensorType:$data, NG_TensorType:$delta, NG_TensorType:$scale, 
                Variadic<NG_TensorType>:$optionalArgs, 
@@ -663,7 +663,7 @@ def NGLayerNormBackpropOp :
 
 // HardSigmoid Op
 def NGHardSigmoid : 
-    NG_OneResult_Op<"hardSigmoid", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"hardSigmoid", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data,
                F32Attr:$alpha, F32Attr:$beta)>
 {
@@ -681,7 +681,7 @@ def NGHardSigmoid :
 
 // Gemm Op
 def NGGemmOp : 
-    NG_OneResult_Op<"gemm", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"gemm", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$A, NG_TensorType:$B, NG_TensorType:$C,
               DefaultValuedAttr<F32Attr, "1.0">:$alpha,
               DefaultValuedAttr<F32Attr, "1.0">:$beta,
@@ -706,7 +706,7 @@ def NGGemmOp :
                   
 // GroupConv Op
 def NGGroupConvOp : 
-    NG_OneResult_Op<"groupConv", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"groupConv", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters, 
                I64ArrayAttr:$strides,
                I64ArrayAttr:$padBelow,
@@ -746,7 +746,7 @@ def NGGroupConvOp :
 
 // GroupConvTranspose Op
 def NGGroupConvTransposeOp :
-  NG_OneResult_Op<"groupConvTranspose", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+  NG_OneResult_Op<"groupConvTranspose", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
   Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters,
              I64ArrayAttr:$strides, I64ArrayAttr:$padBelow, I64ArrayAttr:$padAbove, 
              I64ArrayAttr:$outputPad, 
@@ -814,7 +814,7 @@ def NGGroupConvTransposeOp :
 
 // GRN Op
 def NGGRNOp :
-    NG_OneResult_Op<"grn", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"grn", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, 
                DefaultValuedAttr<F32Attr, "1.0">:$bias)>
 {
@@ -832,7 +832,7 @@ def NGGRNOp :
 
 // Clamp Op
 def NGClampOp :
-    NG_OneResult_Op<"clamp", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"clamp", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, F64Attr:$min, F64Attr:$max)>
 {
   let summary = "Clamp Op";
@@ -852,7 +852,7 @@ def NGClampOp :
 
 // Gelu Op
 def NGGeluOp :
-    NG_OneResult_Op<"gelu", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"gelu", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data)>
 {
   let summary = "Gelu Op";
@@ -864,7 +864,7 @@ def NGGeluOp :
 
 // GeluBackpropFactor Op
 def NGGeluBackpropFactorOp :
-    NG_OneResult_Op<"geluBackpropFactor", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"geluBackpropFactor", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data)>
 {
   let summary = "Gelu Backprop Op";
@@ -875,7 +875,7 @@ def NGGeluBackpropFactorOp :
 
 // Elu Op
 def NGEluOp :
-    NG_OneResult_Op<"elu", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"elu", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, F64Attr:$alpha)>
 {
   let summary = "Elu Op";
@@ -892,7 +892,7 @@ def NGEluOp :
 
 // FakeQuant Op
 def NGFakeQuantOp :
-    NG_OneResult_Op<"fakeQuant", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"fakeQuant", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, NG_TensorType:$inputLow, NG_TensorType:$inputHigh,
                NG_TensorType:$outputLow, NG_TensorType:$outputHigh,
                I64Attr:$levels,
@@ -917,7 +917,7 @@ def NGFakeQuantOp :
 
 // DepthToSpace Op
 def NGDepthToSpaceOp : 
-    NG_OneResult_Op<"depthToSpace", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"depthToSpace", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$data, 
                DefaultValuedAttr<I64Attr, "1">:$blockSize, 
                DepthSpaceModeEnumAttr:$mode)>
@@ -940,7 +940,7 @@ def NGDepthToSpaceOp :
 
 // ConvolutionBias Op
 def NGConvBiasOp :
-    NG_OneResult_Op<"convBias", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"convBias", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters, NG_TensorType:$bias,
                I64ArrayAttr:$strides, I64ArrayAttr:$dilation, I64ArrayAttr:$padBelow,
                I64ArrayAttr:$padAbove, DefaultValuedAttr<BoolAttr, "false">:$withRelu)>
@@ -976,7 +976,7 @@ def NGConvBiasOp :
 
 // ConvBiasBackpropFiltersBias Op
 def NGConvBiasBackpropFiltersBias :
-    NG_Op<"convBiasBackpropFiltersBias", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_Op<"convBiasBackpropFiltersBias", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Results<(outs NG_TensorType:$filter, NG_TensorType:$bias)>, 
     Arguments<(ins NG_TensorType:$images, NG_TensorType:$outputDelta,
                I64ArrayAttr:$filtersShape, I64ArrayAttr:$biasShape,
@@ -994,7 +994,7 @@ def NGConvBiasBackpropFiltersBias :
 
 // ConvBiasAdd Op
 def NGConvBiasAddOp :
-    NG_OneResult_Op<"convBiasAdd", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
+    NG_OneResult_Op<"convBiasAdd", [/* NoSideEffect,*/ DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters, 
                NG_TensorType:$bias, NG_TensorType:$sumInput,
                I64ArrayAttr:$strides, I64ArrayAttr:$padBelow, I64ArrayAttr:$padAbove,

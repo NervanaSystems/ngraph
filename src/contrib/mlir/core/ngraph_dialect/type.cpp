@@ -25,7 +25,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/StandardTypes.h"
-#include "mlir/Support/STLExtras.h"
+#include "llvm/ADT/STLExtras.h"
 #include "ngraph/assertion.hpp"
 
 using llvm::ArrayRef;

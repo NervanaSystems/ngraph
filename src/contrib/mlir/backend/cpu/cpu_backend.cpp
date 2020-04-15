@@ -34,6 +34,7 @@
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
+#include <mlir/Dialect/Affine/Passes.h>
 #include <mlir/IR/StandardTypes.h>
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Target/LLVMIR.h>
@@ -204,14 +205,23 @@ void MLIRCPUBackend::lowerStandardDialect()
     // specified, we lower memref arguments to bare pointers to the memref element type.
     if (clEnableBarePtrMemRefLowering)
     {
-        pm.addPass(mlir::createLowerToLLVMPass(/*useAlloca=*/false,
-                                               /*useBarePtrCallConv=*/true,
-                                               /*emitCWrappers=*/false));
+        LowerToLLVMOptions llvmOptions = {
+            /*useAlloca=*/false,
+            /*useBarePtrCallConv=*/true,
+            /*emitCWrappers=*/false
+        };
+
+        pm.addPass(mlir::createLowerToLLVMPass(llvmOptions));
     }
     else
     {
-        pm.addPass(mlir::createLowerToLLVMPass(
-            /*useAlloca=*/false, /*useBarePtrCallConv=*/false, /*emitCWrappers=*/true));
+        LowerToLLVMOptions llvmOptions = {
+            /*useAlloca=*/false,
+            /*useBarePtrCallConv=*/false,
+            /*emitCWrappers=*/false
+        };
+
+        pm.addPass(mlir::createLowerToLLVMPass(llvmOptions));
     }
 
     // Apply any generic pass manager command line options.

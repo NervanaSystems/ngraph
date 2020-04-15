@@ -36,6 +36,7 @@ using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::ArrayRef;
 
+using namespace mlir;
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
@@ -44,11 +45,11 @@ using namespace ngraph::runtime::ngmlir;
 
 namespace
 {
-    /// NgDialectConversionPass is an MLIR ModulePass Given an nGraph sub-graph, represented as
+    /// NgDialectConversionPass is an MLIR Pass Given an nGraph sub-graph, represented as
     /// CompiledKernel node, it
     /// translates the graph down to nGraph dialect
 
-    class NgDialectConversionPass : public mlir::ModulePass<NgDialectConversionPass>
+    class NgDialectConversionPass : public PassWrapper<NgDialectConversionPass, OperationPass<ModuleOp>>
     {
     public:
         using TensorList = std::vector<descriptor::Tensor*>;
@@ -75,7 +76,7 @@ namespace
         // Converts an nGraph sub-graph to MLIR nGraph dialect.
         void buildNgDialectModule();
         void buildNgDialect(mlir::FuncOp function);
-        void runOnModule() override;
+        void runOnOperation() override;
 
         mlir::Type getMlirType(const descriptor::Tensor* tensor);
         mlir::Type getMlirType(const element::Type& type);
@@ -145,11 +146,11 @@ NgDialectConversionPass::NgDialectConversionPass(const NgDialectConversionPass& 
 {
 }
 
-void NgDialectConversionPass::runOnModule()
+void NgDialectConversionPass::runOnOperation()
 {
     TypeList argsTypeList, resultTypeList;
 
-    mlir::ModuleOp module = getModule();
+    mlir::ModuleOp module = getOperation();
     // Retrieve input and output tensors.
     const auto& kernelInputs = m_compiledKernel->get_arguments();
     const auto& kernelOutput = m_compiledKernel->get_kernel_outputs();
@@ -689,7 +690,7 @@ mlir::Operation* NgDialectConversionPass::createIndexReduction(const ngraph::Nod
     return op;
 }
 
-std::unique_ptr<mlir::Pass>
+std::unique_ptr<Pass>
     ngraph::pass::createNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
                                                 mlir::MLIRContext* context)
 {
