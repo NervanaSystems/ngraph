@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "prior_box_clustered.hpp"
+#include "ngraph/op/prior_box_clustered.hpp"
 
 #include "ngraph/op/constant.hpp"
 
