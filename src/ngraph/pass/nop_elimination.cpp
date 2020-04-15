@@ -112,16 +112,14 @@ static bool eliminate_convert(const std::shared_ptr<Node>& node)
     auto convert = as_type_ptr<op::v0::Convert>(node);
     auto destination_type = convert->get_destination_type();
     static const std::set<NodeTypeInfo> type_agnostic{TI(op::v3::NonZero)};
-    //    size_t user_count = node->output(0).get_target_inputs().size();
 
     // vertical elimination 1
-    // TBD
 
     // vertical elimination 2 & 3
     bool users_are_type_agnostic = true;
-    for (auto& user : node->output(0).get_target_inputs())
+    for (auto& user : node->get_users())
     {
-        if (!type_agnostic.count(user.get_node()->get_type_info()))
+        if (!type_agnostic.count(user->get_type_info()))
         {
             users_are_type_agnostic = false;
             break;

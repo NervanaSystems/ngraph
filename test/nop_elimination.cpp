@@ -96,7 +96,7 @@ TEST(nop_elimination, eliminate_sum)
  *     else return false
  *
  *****************************************/
-TEST(nop_elimination, eliminate_horizontal_converts)
+TEST(nop_elimination, convert_horizontal)
 {
     // Horizontal elimination 1
     Shape shape{2, 3};
@@ -117,18 +117,25 @@ TEST(nop_elimination, eliminate_horizontal_converts)
     ASSERT_EQ(count_ops_of_type<op::Equal>(f), 3);
 }
 
-TEST(nop_elimination, eliminate_convert_single_user)
+TEST(nop_elimination, convert_same_type_input)
 {
     Shape shape{};
     auto type = element::f32;
     auto A = make_shared<op::Parameter>(type, shape);
-    auto c = make_shared<op::v0::Convert>(A, element::f32);
-    auto f = make_shared<Function>(make_shared<op::v0::Abs>(c), ParameterVector{A});
+    auto convert_1 = make_shared<op::v0::Convert>(A, element::f32);
+    auto convert_2 = make_shared<op::v0::Convert>(convert_1, element::f32);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(convert_2), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
+    // vertical 2
+    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 0);
 
+    auto convert_3 = make_shared<op::v0::Convert>(A, element::f32);
+    f = make_shared<Function>(NodeVector{make_shared<op::v0::Abs>(convert_2), convert_3},
+                              ParameterVector{A});
+    // vertical 2
     ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 0);
 }
 
@@ -145,7 +152,7 @@ TEST(nop_elimination, convert_type_agnostic)
     pass_manager.register_pass<pass::Validate>();
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
-
+    // vertical 3
     ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 0);
 
     auto c1 = make_shared<op::v0::Convert>(A, element::from<uint8_t>());
@@ -154,7 +161,14 @@ TEST(nop_elimination, convert_type_agnostic)
     f = make_shared<Function>(make_shared<op::v0::Abs>(z), ParameterVector{A});
 
     pass_manager.run_passes(f);
+    // vertical 1
+    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 0);
 
+    // negative test for vertical 3
+    auto b = make_shared<op::v0::Broadcast>(c, shape, AxisSet{});
+    f = make_shared<Function>(make_shared<op::v0::Abs>(b), ParameterVector{A});
+
+    pass_manager.run_passes(f);
     ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 0);
 }
 
