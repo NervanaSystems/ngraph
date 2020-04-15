@@ -131,7 +131,7 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
     else if (is_vector(input_shape))
     {
         const auto input_values_count = shape_size(input_shape);
-        std::vector<std::int64_t> indices;
+        std::vector<int64_t> indices;
         indices.reserve(input_values_count);
 
         if (identical_elems_in_data)
