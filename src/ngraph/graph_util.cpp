@@ -900,7 +900,10 @@ bool ngraph::remove_node_update_name(const std::shared_ptr<Node>& node,
     }
     if (!has_result_output || node_input->get_users().size() == 1)
     {
-        node_input->set_friendly_name(node->get_friendly_name());
+        if (has_result_output && !std::dynamic_pointer_cast<ngraph::op::Parameter>(node_input))
+        {
+            node_input->set_friendly_name(node->get_friendly_name());
+        }
         replace_node(node, node_input);
         return true;
     }
