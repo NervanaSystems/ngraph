@@ -14,13 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifndef NGRAPH_OP
-#warning "NGRAPH_OP not defined"
-#define NGRAPH_OP(x, y)
-#endif
+#include "ngraph/op/scatter_update.hpp"
+#include "ngraph/shape.hpp"
 
-#include "opset2_tbl.hpp"
-NGRAPH_OP(NonZero, ngraph::op::v3)
-NGRAPH_OP(ROIAlign, ngraph::op::v3)
-NGRAPH_OP(ScatterElementsUpdate, ngraph::op::v3)
-NGRAPH_OP(ScatterUpdate, ngraph::op::v3)
+using namespace std;
+using namespace ngraph;
+
+constexpr NodeTypeInfo op::v3::ScatterUpdate::type_info;
+
+op::v3::ScatterUpdate::ScatterUpdate(const Output<Node>& data,
+                                     const Output<Node>& indices,
+                                     const Output<Node>& updates,
+                                     const Output<Node>& axis)
+    : util::ScatterBase(data, indices, updates, axis)
+{
+}
+
+shared_ptr<Node> op::v3::ScatterUpdate::clone_with_new_inputs(const OutputVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v3::ScatterUpdate>(
+        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
+}
