@@ -13,19 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ******************************************************************************
-# flake8: noqa
 
-import sys
-import six
-
-# workaround to load the libngraph.so with RTLD_GLOBAL
-if sys.platform != 'win32':
-    if six.PY3:
-        import os
-        flags = os.RTLD_NOW | os.RTLD_GLOBAL
-    else:
-        import ctypes
-        flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-    sys.setdlopenflags(flags)
-
-from _pyngraph.passes import Manager
+if (NGRAPH_NOP_ENABLE)
+    add_subdirectory(nop)
+endif()
