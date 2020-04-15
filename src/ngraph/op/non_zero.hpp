@@ -52,6 +52,14 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
+                element::Type get_output_type() const { return m_index_element_type; }
+                void set_output_type(element::Type output_type)
+                {
+                    m_index_element_type = output_type;
+                }
+                // Overload collision with method on Node
+                using Node::set_output_type;
+
             protected:
                 element::Type m_index_element_type;
             };

@@ -31,6 +31,7 @@ op::v3::NonZero::NonZero(const Output<Node>& arg, const element::Type& index_ele
 
 bool ngraph::op::v3::NonZero::visit_attributes(AttributeVisitor& visitor)
 {
+    visitor.on_attribute("index_element_type", m_index_element_type);
     return true;
 }
 
@@ -43,6 +44,10 @@ void op::v3::NonZero::validate_and_infer_types()
                           input_et.is_integral() || input_et.is_real(),
                           "NonZero input data type needs to be a numeric type. Got: ",
                           input_et);
+    NODE_VALIDATION_CHECK(this,
+                          m_index_element_type == element::i64 ||
+                              m_index_element_type == element::i32,
+                          "Output type must be i32 or i64");
 
     set_output_type(
         0, m_index_element_type, PartialShape{input_shape.rank(), Dimension::dynamic()});

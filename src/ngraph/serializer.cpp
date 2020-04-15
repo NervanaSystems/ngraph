@@ -2003,7 +2003,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::NonZero_v3:
         {
             auto target_type = read_element_type(node_js.at("index_element_type"));
-            node = make_shared<op::NonZero>(args[0], target_type);
+            node = make_shared<op::v3::NonZero>(args[0], target_type);
             break;
         }
         case OP_TYPEID::NormalizeL2:
