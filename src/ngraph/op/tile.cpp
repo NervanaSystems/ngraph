@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "tile.hpp"
+#include "ngraph/op/tile.hpp"
 
 #include "ngraph/op/constant.hpp"
 
