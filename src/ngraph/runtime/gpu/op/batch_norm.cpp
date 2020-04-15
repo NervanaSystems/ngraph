@@ -20,11 +20,10 @@
 
 constexpr ngraph::NodeTypeInfo ngraph::op::gpu::BatchNormTrainingWithStats::type_info;
 
-ngraph::op::gpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(
-    double eps,
-    std::shared_ptr<ngraph::Node> gamma,
-    std::shared_ptr<ngraph::Node> beta,
-    std::shared_ptr<ngraph::Node> input)
+ngraph::op::gpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(double eps,
+                                                                        const Output<Node>& gamma,
+                                                                        const Output<Node>& beta,
+                                                                        const Output<Node>& input)
     : ngraph::op::BatchNormTraining(eps, gamma, beta, input)
 {
     constructor_validate_and_infer_types();
@@ -55,8 +54,8 @@ void ngraph::op::gpu::BatchNormTrainingWithStats::validate_and_infer_types()
     set_output_type(4, result_et, result_channel_shape);
 }
 
-std::shared_ptr<ngraph::Node> ngraph::op::gpu::BatchNormTrainingWithStats::copy_with_new_args(
-    const NodeVector& new_args) const
+std::shared_ptr<ngraph::Node> ngraph::op::gpu::BatchNormTrainingWithStats::clone_with_new_inputs(
+    const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return std::make_shared<ngraph::op::gpu::BatchNormTrainingWithStats>(

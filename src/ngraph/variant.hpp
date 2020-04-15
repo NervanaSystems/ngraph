@@ -19,6 +19,7 @@
 #include <string>
 
 #include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/type.hpp"
 
 namespace ngraph
@@ -30,6 +31,17 @@ namespace ngraph
     public:
         virtual ~Variant() {}
         virtual const VariantTypeInfo& get_type_info() const = 0;
+
+        virtual std::shared_ptr<ngraph::Variant> init(const std::shared_ptr<ngraph::Node>& node)
+        {
+            return nullptr;
+        }
+
+        virtual std::shared_ptr<ngraph::Variant>
+            merge(const std::vector<std::shared_ptr<const ngraph::Node>>& nodes)
+        {
+            return nullptr;
+        }
     };
 
     template <typename VT>

@@ -185,6 +185,8 @@ add_library(onnx_import STATIC
         op/round.hpp
         op/scatter_nd.cpp
         op/scatter_nd.hpp
+        op/scatter_elements.cpp
+        op/scatter_elements.hpp
         op/selu.cpp
         op/selu.hpp
         op/shape.hpp
@@ -249,7 +251,11 @@ set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 add_dependencies(onnx_import_interface onnx onnx_proto)
 add_dependencies(onnx_import onnx_import_interface)
 
-set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(onnx_import PROPERTIES
+                      CXX_VISIBILITY_PRESET hidden
+                      C_VISIBILITY_PRESET hidden
+                      VISIBILITY_INLINES_HIDDEN ON
+                      POSITION_INDEPENDENT_CODE ON)
 target_include_directories(onnx_import
     SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
@@ -257,7 +263,11 @@ target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} onnx_proto)
 
 target_compile_definitions(onnx_import PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
 
-set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(onnx_import_interface PROPERTIES
+                      CXX_VISIBILITY_PRESET hidden
+                      C_VISIBILITY_PRESET hidden
+                      VISIBILITY_INLINES_HIDDEN ON
+                      POSITION_INDEPENDENT_CODE ON)
 target_include_directories(onnx_import_interface SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 
