@@ -21,111 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(type_prop, scatter_add_fail_indices_element_type)
-{
-    Shape ref_shape{2, 3, 3};
-    Shape indices_shape{2, 2};
-    Shape updates_shape{2, 2, 3, 3};
-    Shape out_shape{2, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
-    try
-    {
-        auto G = make_shared<op::ScatterAdd>(R, I, U);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Incorrect indices element type";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices element type must be i64 or i32"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, scatter_add_fail_updates_element_type)
-{
-    Shape ref_shape{2, 3, 3};
-    Shape indices_shape{2, 2};
-    Shape updates_shape{2, 2, 3, 3};
-    Shape out_shape{2, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::i32, updates_shape);
-    try
-    {
-        auto G = make_shared<op::ScatterAdd>(R, I, U);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Incorrect updates element type";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Updates element type must be the same as Inputs"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, scatter_add_fail_updates_rank)
-{
-    Shape ref_shape{2, 3, 3};
-    Shape indices_shape{2, 2};
-    Shape updates_shape{2, 3, 3};
-    Shape out_shape{2, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
-    try
-    {
-        auto G = make_shared<op::ScatterAdd>(R, I, U);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Incorrect updates rank";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Updates rank is expected to be indices rank + inputs rank - 1"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, scatter_add_fail_updates_shape)
-{
-    Shape ref_shape{2, 3, 3};
-    Shape indices_shape{2, 2};
-    Shape updates_shape{1, 2, 3, 3};
-    Shape out_shape{2, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
-    try
-    {
-        auto G = make_shared<op::ScatterAdd>(R, I, U);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Incorrect updates shape";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Updates shape must be indices_shape + inputs_shape[1:]"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, scatter_add_v3_fail_indices_element_type)
+TEST(type_prop, scatter_update_v3_fail_indices_element_type)
 {
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
@@ -136,7 +32,7 @@ TEST(type_prop, scatter_add_v3_fail_indices_element_type)
     auto A = op::Constant::create(element::i64, Shape{}, {1});
     try
     {
-        auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
+        auto G = make_shared<op::v3::ScatterUpdate>(R, I, U, A);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect indices element type";
     }
@@ -151,7 +47,7 @@ TEST(type_prop, scatter_add_v3_fail_indices_element_type)
     }
 }
 
-TEST(type_prop, scatter_add_v3_fail_updates_data_et_not_equal)
+TEST(type_prop, scatter_update_v3_fail_updates_data_et_not_equal)
 {
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
@@ -162,7 +58,7 @@ TEST(type_prop, scatter_add_v3_fail_updates_data_et_not_equal)
     auto A = op::Constant::create(element::u32, Shape{1}, {1});
     try
     {
-        auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
+        auto G = make_shared<op::v3::ScatterUpdate>(R, I, U, A);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates element type";
     }
@@ -177,7 +73,7 @@ TEST(type_prop, scatter_add_v3_fail_updates_data_et_not_equal)
     }
 }
 
-TEST(type_prop, scatter_add_v3_fail_axis_element_type)
+TEST(type_prop, scatter_update_v3_fail_axis_element_type)
 {
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
@@ -188,7 +84,7 @@ TEST(type_prop, scatter_add_v3_fail_axis_element_type)
     auto A = op::Constant::create(element::f32, Shape{1}, {1.5f});
     try
     {
-        auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
+        auto G = make_shared<op::v3::ScatterUpdate>(R, I, U, A);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates element type";
     }
@@ -203,7 +99,7 @@ TEST(type_prop, scatter_add_v3_fail_axis_element_type)
     }
 }
 
-TEST(type_prop, scatter_add_v3_fail_axis_shape)
+TEST(type_prop, scatter_update_v3_fail_axis_shape)
 {
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
@@ -214,7 +110,7 @@ TEST(type_prop, scatter_add_v3_fail_axis_shape)
     auto A = op::Constant::create(element::u8, Shape{2}, {1, 5});
     try
     {
-        auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
+        auto G = make_shared<op::v3::ScatterUpdate>(R, I, U, A);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates element type";
     }
@@ -229,7 +125,7 @@ TEST(type_prop, scatter_add_v3_fail_axis_shape)
     }
 }
 
-TEST(type_prop, scatter_add_v3_fail_updates_rank)
+TEST(type_prop, scatter_update_v3_fail_updates_rank)
 {
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
@@ -240,7 +136,7 @@ TEST(type_prop, scatter_add_v3_fail_updates_rank)
     auto A = op::Constant::create(element::u8, Shape{}, {0});
     try
     {
-        auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
+        auto G = make_shared<op::v3::ScatterUpdate>(R, I, U, A);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates element type";
     }
@@ -256,7 +152,7 @@ TEST(type_prop, scatter_add_v3_fail_updates_rank)
     }
 }
 
-TEST(type_prop, scatter_add_v3_fail_updates_shape_axis)
+TEST(type_prop, scatter_update_v3_fail_updates_shape_axis)
 {
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
@@ -267,7 +163,7 @@ TEST(type_prop, scatter_add_v3_fail_updates_shape_axis)
     auto A = op::Constant::create(element::u16, Shape{}, {0});
     try
     {
-        auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
+        auto G = make_shared<op::v3::ScatterUpdate>(R, I, U, A);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates element type";
     }
@@ -284,7 +180,7 @@ TEST(type_prop, scatter_add_v3_fail_updates_shape_axis)
     }
 }
 
-TEST(type_prop, scatter_add_v3_fail_updates_shape_indices)
+TEST(type_prop, scatter_update_v3_fail_updates_shape_indices)
 {
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
@@ -295,7 +191,7 @@ TEST(type_prop, scatter_add_v3_fail_updates_shape_indices)
     auto A = op::Constant::create(element::i32, Shape{}, {1});
     try
     {
-        auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
+        auto G = make_shared<op::v3::ScatterUpdate>(R, I, U, A);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates element type";
     }
@@ -312,7 +208,7 @@ TEST(type_prop, scatter_add_v3_fail_updates_shape_indices)
     }
 }
 
-TEST(type_prop, scatter_add_v3_fail_updates_shape_data_before_axis)
+TEST(type_prop, scatter_update_v3_fail_updates_shape_data_before_axis)
 {
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
@@ -323,7 +219,7 @@ TEST(type_prop, scatter_add_v3_fail_updates_shape_data_before_axis)
     auto A = op::Constant::create(element::i8, Shape{}, {1});
     try
     {
-        auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
+        auto G = make_shared<op::v3::ScatterUpdate>(R, I, U, A);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates element type";
     }
@@ -340,7 +236,7 @@ TEST(type_prop, scatter_add_v3_fail_updates_shape_data_before_axis)
     }
 }
 
-TEST(type_prop, scatter_add_v3_fail_updates_shape_data_after_axis)
+TEST(type_prop, scatter_update_v3_fail_updates_shape_data_after_axis)
 {
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
@@ -351,7 +247,7 @@ TEST(type_prop, scatter_add_v3_fail_updates_shape_data_after_axis)
     auto A = op::Constant::create(element::i16, Shape{}, {1});
     try
     {
-        auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
+        auto G = make_shared<op::v3::ScatterUpdate>(R, I, U, A);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates element type";
     }
@@ -368,7 +264,7 @@ TEST(type_prop, scatter_add_v3_fail_updates_shape_data_after_axis)
     }
 }
 
-TEST(type_prop, scatter_add_v3)
+TEST(type_prop, scatter_update_v3)
 {
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
@@ -378,12 +274,12 @@ TEST(type_prop, scatter_add_v3)
     auto U = make_shared<op::Parameter>(element::i8, updates_shape);
     auto A = op::Constant::create(element::i16, Shape{}, {1});
 
-    auto scatter_update = make_shared<op::v3::ScatterAdd>(R, I, U, A);
+    auto scatter_update = make_shared<op::v3::ScatterUpdate>(R, I, U, A);
     EXPECT_EQ(scatter_update->get_output_element_type(0), element::i8);
     EXPECT_EQ(scatter_update->get_output_shape(0), ref_shape);
 }
 
-TEST(type_prop, scatter_add_v3_dynamic_data_shape)
+TEST(type_prop, scatter_update_v3_dynamic_data_shape)
 {
     PartialShape ref_shape = PartialShape::dynamic();
     Shape indices_shape{2, 1};
@@ -393,7 +289,7 @@ TEST(type_prop, scatter_add_v3_dynamic_data_shape)
     auto U = make_shared<op::Parameter>(element::i8, updates_shape);
     auto A = op::Constant::create(element::i16, Shape{}, {1});
 
-    auto scatter_update = make_shared<op::v3::ScatterAdd>(R, I, U, A);
+    auto scatter_update = make_shared<op::v3::ScatterUpdate>(R, I, U, A);
     EXPECT_EQ(scatter_update->get_output_element_type(0), element::i8);
     EXPECT_TRUE(scatter_update->get_output_partial_shape(0).is_dynamic());
 }
