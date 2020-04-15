@@ -22,8 +22,9 @@ using namespace std;
 
 constexpr NodeTypeInfo op::v3::NonZero::type_info;
 
-op::v3::NonZero::NonZero(const Output<Node>& arg)
+op::v3::NonZero::NonZero(const Output<Node>& arg, const element::Type& index_element_type)
     : Op({arg})
+    , m_index_element_type(index_element_type)
 {
     constructor_validate_and_infer_types();
 }
@@ -43,12 +44,13 @@ void op::v3::NonZero::validate_and_infer_types()
                           "NonZero input data type needs to be a numeric type. Got: ",
                           input_et);
 
-    set_output_type(0, element::i64, PartialShape{input_shape.rank(), Dimension::dynamic()});
+    set_output_type(
+        0, m_index_element_type, PartialShape{input_shape.rank(), Dimension::dynamic()});
     set_input_is_relevant_to_shape(0);
 }
 
 shared_ptr<Node> op::v3::NonZero::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v3::NonZero>(new_args.at(0));
+    return make_shared<v3::NonZero>(new_args.at(0), m_index_element_type);
 }

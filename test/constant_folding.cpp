@@ -2605,7 +2605,7 @@ TEST(constant_folding, pass_property)
 TEST(constant_folding, constant_non_zero_0D)
 {
     auto data = op::Constant::create(element::i32, Shape{}, {1});
-    auto non_zero = make_shared<op::v3::NonZero>(data);
+    auto non_zero = make_shared<op::v3::NonZero>(data, element::i64);
     auto f = make_shared<Function>(non_zero, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -2628,7 +2628,7 @@ TEST(constant_folding, constant_non_zero_1D)
 {
     vector<int> values_in{0, 1, 0, 1};
     auto data = make_shared<op::Constant>(element::i32, Shape{4}, values_in);
-    auto non_zero = make_shared<op::v3::NonZero>(data);
+    auto non_zero = make_shared<op::v3::NonZero>(data, element::i64);
     auto f = make_shared<Function>(non_zero, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -2651,7 +2651,7 @@ TEST(constant_folding, constant_non_zero_1D_all_indices)
 {
     const vector<float> values_in{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
     const auto data = make_shared<op::Constant>(element::f32, Shape{values_in.size()}, values_in);
-    const auto non_zero = make_shared<op::v3::NonZero>(data);
+    const auto non_zero = make_shared<op::v3::NonZero>(data, element::i64);
     auto f = make_shared<Function>(non_zero, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -2674,7 +2674,7 @@ TEST(constant_folding, constant_non_zero_2D)
 {
     vector<int> values_in{1, 0, 0, 0, 1, 0, 1, 1, 0};
     auto data = make_shared<op::Constant>(element::i32, Shape{3, 3}, values_in);
-    auto non_zero = make_shared<op::v3::NonZero>(data);
+    auto non_zero = make_shared<op::v3::NonZero>(data, element::i64);
     auto f = make_shared<Function>(non_zero, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -2697,7 +2697,7 @@ TEST(constant_folding, constant_non_zero_2D_all_indices)
 {
     const vector<int8_t> values_in{1, 1, 1, 1, 1, 1, 1, 1, 1};
     const auto data = make_shared<op::Constant>(element::i8, Shape{3, 3}, values_in);
-    const auto non_zero = make_shared<op::v3::NonZero>(data);
+    const auto non_zero = make_shared<op::v3::NonZero>(data, element::i64);
     auto f = make_shared<Function>(non_zero, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -2720,7 +2720,7 @@ TEST(constant_folding, constant_non_zero_2D_all_zeros)
 {
     const vector<uint8_t> values_in{0, 0, 0, 0, 0, 0};
     const auto data = make_shared<op::Constant>(element::u8, Shape{2, 3}, values_in);
-    const auto non_zero = make_shared<op::v3::NonZero>(data);
+    const auto non_zero = make_shared<op::v3::NonZero>(data, element::i64);
     auto f = make_shared<Function>(non_zero, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -2736,7 +2736,7 @@ TEST(constant_folding, constant_non_zero_3D)
 {
     vector<int> values_in{1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0};
     auto data = make_shared<op::Constant>(element::i32, Shape{2, 3, 3}, values_in);
-    auto non_zero = make_shared<op::v3::NonZero>(data);
+    auto non_zero = make_shared<op::v3::NonZero>(data, element::i64);
     auto f = make_shared<Function>(non_zero, ParameterVector{});
 
     pass::Manager pass_manager;

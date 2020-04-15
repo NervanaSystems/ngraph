@@ -42,13 +42,18 @@ namespace ngraph
                 /// \brief Constructs a NonZero operation.
                 ///
                 /// \param arg Node that produces the input tensor.
-                NonZero(const Output<Node>& arg);
+                /// \param index_element_type produce indices. Currently, only int64 or int32 are
+                ///                           supported
+                NonZero(const Output<Node>& arg, const element::Type& index_element_type);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
+
+            protected:
+                element::Type m_index_element_type;
             };
         }
         using v3::NonZero;
