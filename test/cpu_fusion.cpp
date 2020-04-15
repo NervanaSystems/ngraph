@@ -1108,73 +1108,6 @@ TEST(cpu_fusion, conv_add)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
-#if MKLDNN_VERSION_MAJOR < 1
-static double gelu_backprop_factor(double x)
-{
-    auto pi = 4.0 * std::atan(1.0);
-    return 0.5 * (1.0 + erf(x * sqrt(1.0 / 2.0))) + (x * exp(-x * x / 2.0)) / sqrt(2.0 * pi);
-}
-
-TEST(cpu_fusion, fuse_gelu_backprop_f32)
-{
-    Shape shape_a{2, 1, 600, 600};
-
-    auto make_function = [shape_a]() {
-        auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
-        auto gbpfactor = std::make_shared<op::GeluBackpropFactor>(A);
-        auto delta = std::make_shared<op::Parameter>(element::f32, shape_a);
-        auto gbp = gbpfactor * delta;
-
-        auto f = make_shared<Function>(NodeVector{gbp}, ParameterVector{A, delta});
-        return f;
-    };
-    auto fuse_func = make_function();
-    // Test fusion
-    {
-        pass::Manager pass_manager;
-        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-        pass_manager.run_passes(fuse_func);
-        ASSERT_EQ(count_ops_of_type<op::GeluBackprop>(fuse_func), 1);
-    }
-
-    // Test values
-    {
-        test::Uniform<float> rng(1.0f, 100.0f);
-        vector<vector<float>> args;
-        for (shared_ptr<op::Parameter> param : fuse_func->get_parameters())
-        {
-            auto name = param->get_name();
-            vector<float> tensor_val(shape_size(param->get_shape()));
-            rng.initialize(tensor_val);
-            args.push_back(tensor_val);
-        }
-
-        auto backend = runtime::Backend::create("CPU");
-
-        // Create some tensors for input/output
-        auto a = backend->create_tensor(element::f32, shape_a);
-        auto delta = backend->create_tensor(element::f32, shape_a);
-        copy_data(a, args[0]);
-        copy_data(delta, args[1]);
-        auto result = backend->create_tensor(element::f32, shape_a);
-
-        std::transform(args[0].begin(), args[0].end(), args[0].begin(), [](float x) -> float {
-            return static_cast<float>(gelu_backprop_factor(static_cast<double>(x)));
-        });
-
-        std::transform(args[0].begin(),
-                       args[0].end(),
-                       args[1].begin(),
-                       args[0].begin(),
-                       [](float x, float delta) -> float { return static_cast<float>(x * delta); });
-
-        auto handle = backend->compile(fuse_func);
-        handle->call_with_validate({result}, {a, delta});
-        EXPECT_TRUE(test::all_close(args[0], read_vector<float>(result), 0.007f, 0.007f));
-    }
-}
-#endif
-
 shared_ptr<Function> gen_deconv(const bool add_goe)
 {
     Shape conv_out_shape{100, 64, 1, 1};
@@ -2061,85 +1994,6 @@ TEST(batch_fusion, group_convolution)
     EXPECT_TRUE(test::all_close_f(rv, erv));
 }
 
-#if MKLDNN_VERSION_MAJOR < 1
-TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
-{
-    auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
-    auto src_iter = make_shared<op::Parameter>(element::f32, Shape{20, 100});
-    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{100, 400});
-    auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{100, 400});
-    auto biases = make_shared<op::Parameter>(element::f32, Shape{400});
-    const int number_of_timesteps = 1;
-    const int number_of_gates_per_cell = 4;
-    const int src_seq_length = 1;
-    const int num_rnn_cell_states = 2;
-    const int rnn_direction = 1;
-    const int num_of_rnn_fused_layer = 1;
-    ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
-        ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
-
-    auto rnn_node = make_shared<op::Rnn>(src_layer,
-                                         src_iter,
-                                         weights_layer,
-                                         weights_iter,
-                                         biases,
-                                         number_of_timesteps,
-                                         number_of_gates_per_cell,
-                                         src_seq_length,
-                                         num_rnn_cell_states,
-                                         rnn_direction,
-                                         num_of_rnn_fused_layer,
-                                         rnn_type);
-
-    auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
-    auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
-
-    auto func = make_shared<Function>(
-        NodeVector{rnn_ht_output, rnn_ct_output},
-        ParameterVector{src_layer, src_iter, weights_layer, weights_iter, biases});
-    auto backend = runtime::Backend::create("CPU");
-
-    shared_ptr<runtime::Tensor> src_layer_t =
-        backend->create_tensor(element::f32, src_layer->get_shape());
-    shared_ptr<runtime::Tensor> src_iter_t =
-        backend->create_tensor(element::f32, src_iter->get_shape());
-    shared_ptr<runtime::Tensor> weights_layer_t =
-        backend->create_tensor(element::f32, weights_layer->get_shape());
-    shared_ptr<runtime::Tensor> weights_iter_t =
-        backend->create_tensor(element::f32, weights_iter->get_shape());
-    shared_ptr<runtime::Tensor> biases_t =
-        backend->create_tensor(element::f32, biases->get_shape());
-    shared_ptr<runtime::Tensor> result_ht = backend->create_tensor(element::f32, {10, 100});
-    shared_ptr<runtime::Tensor> result_ct = backend->create_tensor(element::f32, Shape{20, 100});
-
-    copy_data(src_layer_t, vector<float>(1000, 1));
-    copy_data(src_iter_t, vector<float>(2000, 1));
-    copy_data(weights_layer_t, vector<float>(400 * 100, 1));
-    copy_data(weights_iter_t, vector<float>(400 * 100, 1));
-    copy_data(biases_t, vector<float>(400, 1));
-
-    auto handle = backend->compile(func);
-    handle->call_with_validate(
-        {result_ht, result_ct},
-        {src_layer_t, src_iter_t, weights_layer_t, weights_iter_t, biases_t});
-    vector<float> expected_ht(10 * 100, 0.964028f);
-    vector<float> expected_ct;
-    for (size_t i = 0; i < 20 * 100; i++)
-    {
-        if (i < 1000)
-        {
-            expected_ct.push_back(0.964028f);
-        }
-        else
-        {
-            expected_ct.push_back(2.0f);
-        }
-    }
-
-    EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
-    EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
-}
-#else
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
 {
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
@@ -2211,7 +2065,6 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
     EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
 }
-#endif
 
 void sigmoid_multiply_fusion_forward_compute(runtime::Backend* backend,
                                              const ParameterVector& input_params,
@@ -3866,9 +3719,6 @@ TEST(cpu_fusion, fuse_2_layer_rnn)
     for (auto& node : rnn_ops)
     {
         EXPECT_EQ(node->get_num_timesteps(), node->get_src_sequence_length());
-#if MKLDNN_VERSION_MAJOR < 1
-        EXPECT_EQ(node->get_num_cell_states(), node->get_argument(1)->get_arguments().size());
-#endif
     }
 }
 
@@ -3891,9 +3741,6 @@ TEST(cpu_fusion, fuse_1_layer_rnn)
     for (auto& node : rnn_ops)
     {
         EXPECT_EQ(node->get_num_timesteps(), node->get_src_sequence_length());
-#if MKLDNN_VERSION_MAJOR < 1
-        EXPECT_EQ(node->get_num_cell_states(), node->get_argument(1)->get_arguments().size());
-#endif
     }
 }
 

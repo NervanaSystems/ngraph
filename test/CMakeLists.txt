@@ -53,7 +53,6 @@ set(SRC
     check.cpp
     constant.cpp
     constant_folding.cpp
-    concat_fusion.cpp
     control_dependencies.cpp
     convert_u1_to_string.cpp
     coordinate.cpp
@@ -180,6 +179,7 @@ set(SRC
     type_prop/scatter_add.cpp
     type_prop/scatter_elements_update.cpp
     type_prop/scatter_nd.cpp
+    type_prop/scatter_update.cpp
     type_prop/select.cpp
     type_prop/shape_of.cpp
     type_prop/shuffle_channels.cpp
@@ -203,6 +203,12 @@ set(SRC
     util.cpp
     zero_dim_tensor_elimination.cpp
 )
+
+if(NGRAPH_INTERPRETER_ENABLE)
+    list(APPEND SRC
+        concat_fusion.cpp
+    )
+endif()
 
 # This code generates one source file per header file under ngraph/src where the source file
 # has just a single #include statement. This checks that each header in the source tree is
@@ -276,10 +282,6 @@ if(NGRAPH_GPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
 endif()
 
-if (NGRAPH_PLAIDML_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
-endif()
-
 if (NGRAPH_GENERIC_CPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
 endif()
@@ -315,6 +317,7 @@ set(MULTI_TEST_SRC
     backend/batch_norm.in.cpp
     backend/broadcast.in.cpp
     backend/builder_flatten.in.cpp
+    backend/builder_reduce_ops_opset1.in.cpp
     backend/ceiling.in.cpp
     backend/comparison.in.cpp
     backend/computation_reuse.in.cpp
@@ -604,12 +607,6 @@ if (NGRAPH_TOOLS_ENABLE)
     set(NBENCH "${NBENCH_PATH}/nbench")
     target_compile_definitions(unit-test PRIVATE NBENCH_PATH="${NBENCH}")
     add_dependencies(unit-test nbench)
-endif()
-
-if (NGRAPH_PLAIDML_ENABLE)
-    target_link_libraries(unit-test PRIVATE plaidml_backend)
-    # Some PlaidML devices aren't so precise, so we increase the allowable tolerance.
-    target_compile_definitions(unit-test PRIVATE "PlaidML_FLOAT_TOLERANCE_BITS=12")
 endif()
 
 if (NGRAPH_IE_ENABLE)
