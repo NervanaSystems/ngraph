@@ -160,7 +160,7 @@ public:
     void validate_and_infer_types() override{};
 
     virtual std::shared_ptr<Node>
-        copy_with_new_args(const NodeVector& /* new_args */) const override
+        clone_with_new_inputs(const OutputVector& /* new_args */) const override
     {
         return make_shared<NewOp>();
     };
@@ -188,6 +188,8 @@ TEST(opset, new_op)
     // Fred should be in the copy
     fred = shared_ptr<Node>(opset1_copy.create("Fred"));
     EXPECT_TRUE(fred);
+    // Fred should not be in the registry
+    ASSERT_FALSE(FactoryRegistry<Node>::get().has_factory<NewOp>());
 }
 
 TEST(opset, dump)

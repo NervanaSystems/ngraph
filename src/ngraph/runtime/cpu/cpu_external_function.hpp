@@ -42,7 +42,7 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_debug_tracer.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/state/state.hpp"
@@ -65,8 +65,8 @@ namespace ngraph
             using OpFunction = std::function<void(CPU_ExternalFunction* external_function,
                                                   CodeWriter&,
                                                   const ngraph::Node*,
-                                                  const std::vector<TensorViewWrapper>& inputs,
-                                                  const std::vector<TensorViewWrapper>& outputs)>;
+                                                  const std::vector<TensorWrapper>& inputs,
+                                                  const std::vector<TensorWrapper>& outputs)>;
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 #endif
@@ -205,12 +205,12 @@ namespace ngraph
 #if !defined(NGRAPH_DEX_ONLY)
                 void emit_debug_function_entry(CodeWriter& writer,
                                                Node* node,
-                                               const std::vector<TensorViewWrapper>& in,
-                                               const std::vector<TensorViewWrapper>& out);
+                                               const std::vector<TensorWrapper>& in,
+                                               const std::vector<TensorWrapper>& out);
                 void emit_debug_function_exit(CodeWriter& writer,
                                               Node* node,
-                                              const std::vector<TensorViewWrapper>& in,
-                                              const std::vector<TensorViewWrapper>& out);
+                                              const std::vector<TensorWrapper>& in,
+                                              const std::vector<TensorWrapper>& out);
                 void handle_output_alias(
                     CodeWriter& writer,
                     const Node&,

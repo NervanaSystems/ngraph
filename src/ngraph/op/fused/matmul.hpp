@@ -33,7 +33,7 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"MatMul", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 MatMul() = default;
-                /// \brief Constructs an ScaleShift operation.
+                /// \brief Constructs an Matrix Multiplication operation.
                 ///
                 /// \param A Matrix A
                 /// \param B Matrix B
@@ -44,12 +44,13 @@ namespace ngraph
                        const bool& transpose_a = 0,
                        const bool& transpose_b = 0);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual void pre_validate_and_infer_types() override;
 
                 virtual NodeVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool get_transpose_a() const { return m_transpose_a; }
                 bool get_transpose_b() const { return m_transpose_b; }

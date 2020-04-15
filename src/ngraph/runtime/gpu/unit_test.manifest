@@ -25,6 +25,9 @@ batch_norm_inference_f32
 batch_norm_training_0eps_f64
 batch_norm_training_0eps_f32
 backwards_batch_norm_training
+backwards_batch_norm_training_3d
+backwards_batch_norm_training_4d
+batch_norm_bprop_n4c3h2w2
 dequantize
 dequantize_zero_offset
 dequantize_axes
@@ -517,3 +520,7 @@ model_acosh
 model_asinh
 model_atanh
 model_conv_with_dynamic_batch
+
+#ONNX Flatten with dynamic reshape
+flatten_axis
+flatten_neg_axis

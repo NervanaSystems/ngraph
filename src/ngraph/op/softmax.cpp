@@ -18,6 +18,7 @@
 
 #include <algorithm>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -96,7 +97,7 @@ void op::v0::Softmax::validate_and_infer_types()
             for (auto axis : m_axes)
             {
                 NODE_VALIDATION_CHECK(this,
-                                      axis < static_cast<size_t>(input_shape.rank()),
+                                      axis < input_shape.rank().get_length(),
                                       "Reduction axis (",
                                       axis,
                                       ") is out of bounds (argument shape: ",
@@ -118,7 +119,7 @@ void op::v0::Softmax::validate_and_infer_types()
     set_input_is_relevant_to_shape(1);
 }
 
-shared_ptr<Node> op::v0::Softmax::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Softmax::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Softmax>(new_args.at(0), new_args.at(1));
@@ -164,12 +165,18 @@ op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v1::Softmax::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    return true;
+}
+
 void op::v1::Softmax::validate_and_infer_types()
 {
     const PartialShape& input_shape = get_input_partial_shape(0);
     if (input_shape.rank().is_static())
         NODE_VALIDATION_CHECK(this,
-                              m_axis < static_cast<size_t>(input_shape.rank()),
+                              m_axis < input_shape.rank().get_length(),
                               "Reduction axis (",
                               m_axis,
                               ") is out of bounds (argument shape: ",
@@ -181,7 +188,7 @@ void op::v1::Softmax::validate_and_infer_types()
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 }
 
-shared_ptr<Node> op::v1::Softmax::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Softmax::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v1::Softmax>(new_args.at(0), m_axis);
@@ -220,7 +227,7 @@ void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 
     auto adjoint = z - builder::make_with_numpy_broadcast<op::Multiply>(output(0), zreshape);
 
-    auto x = input(0).get_source_output();
+    auto x = input_value(0);
     adjoints.add_delta(x, adjoint);
     */
 }

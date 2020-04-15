@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/fused/squared_difference.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
@@ -34,6 +35,12 @@ op::SquaredDifference::SquaredDifference(const Output<Node>& x1,
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::SquaredDifference::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("auto_broadcast", m_autobroadcast);
+    return true;
+}
+
 NodeVector op::SquaredDifference::decompose_op() const
 {
     const auto x1 = input_value(0);
@@ -44,7 +51,7 @@ NodeVector op::SquaredDifference::decompose_op() const
     return {difference * difference};
 }
 
-shared_ptr<Node> op::SquaredDifference::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::SquaredDifference::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
 

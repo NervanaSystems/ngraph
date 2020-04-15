@@ -15,6 +15,11 @@
 //*****************************************************************************
 
 #include "ngraph/validation_util.hpp"
+#include "ngraph/evaluator.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -26,13 +31,13 @@ Strides ngraph::conv_default_strides(const Node* /* node */,
 {
     size_t rank;
 
-    if (data_batch_shape.rank().is_static() && static_cast<size_t>(data_batch_shape.rank()) >= 2)
+    if (data_batch_shape.rank().is_static() && data_batch_shape.rank().get_length() >= 2)
     {
-        rank = static_cast<size_t>(data_batch_shape.rank()) - 2;
+        rank = data_batch_shape.rank().get_length() - 2;
     }
-    else if (filters_shape.rank().is_static() && static_cast<size_t>(filters_shape.rank()) >= 2)
+    else if (filters_shape.rank().is_static() && filters_shape.rank().get_length() >= 2)
     {
-        rank = static_cast<size_t>(filters_shape.rank()) - 2;
+        rank = filters_shape.rank().get_length() - 2;
     }
     else
     {
@@ -48,13 +53,13 @@ CoordinateDiff ngraph::conv_default_padding(const Node* /* node */,
 {
     size_t rank;
 
-    if (data_batch_shape.rank().is_static() && static_cast<size_t>(data_batch_shape.rank()) >= 2)
+    if (data_batch_shape.rank().is_static() && data_batch_shape.rank().get_length() >= 2)
     {
-        rank = static_cast<size_t>(data_batch_shape.rank()) - 2;
+        rank = data_batch_shape.rank().get_length() - 2;
     }
-    else if (filters_shape.rank().is_static() && static_cast<size_t>(filters_shape.rank()) >= 2)
+    else if (filters_shape.rank().is_static() && filters_shape.rank().get_length() >= 2)
     {
-        rank = static_cast<size_t>(filters_shape.rank()) - 2;
+        rank = filters_shape.rank().get_length() - 2;
     }
     else
     {
@@ -112,7 +117,7 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
 
     if (output_shape.rank().is_static())
     {
-        for (size_t i = 0; i < static_cast<size_t>(output_shape.rank()); i++)
+        for (size_t i = 0; i < output_shape.rank().get_length(); i++)
         {
             NODE_VALIDATION_CHECK(node,
                                   data_dilation[i] > 0,
@@ -142,9 +147,9 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t data_padded_dilated_dim = -1;
             if (data_dim_static)
             {
-                data_padded_dilated_dim = (static_cast<int64_t>(data_dilation[i]) *
-                                           (static_cast<int64_t>(data_shape[i]) - 1)) +
-                                          1 + data_padding_below[i] + data_padding_above[i];
+                data_padded_dilated_dim =
+                    (static_cast<int64_t>(data_dilation[i]) * (data_shape[i].get_length() - 1)) +
+                    1 + data_padding_below[i] + data_padding_above[i];
                 NODE_VALIDATION_CHECK(
                     node,
                     data_padded_dilated_dim > 0,
@@ -158,9 +163,9 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t window_dilated_dim = -1;
             if (window_dim_static)
             {
-                window_dilated_dim = static_cast<int64_t>(window_dilation[i]) *
-                                         (static_cast<int64_t>(window_shape[i]) - 1) +
-                                     1;
+                window_dilated_dim =
+                    static_cast<int64_t>(window_dilation[i]) * (window_shape[i].get_length() - 1) +
+                    1;
 
                 NODE_VALIDATION_CHECK(node,
                                       window_dilated_dim > 0,
@@ -245,7 +250,7 @@ PartialShape ngraph::infer_convolution_forward(const Node* node,
 
     NODE_VALIDATION_CHECK(node,
                           data_batch_filters_rank.is_dynamic() ||
-                              static_cast<size_t>(data_batch_filters_rank) >= 3,
+                              data_batch_filters_rank.get_length() >= 3,
                           "Data batch and filters must have rank of at least 3 (one batch axis, ",
                           "one input-channel axis, and at least one spatial dimension) ",
                           "(data batch shape: ",
@@ -298,7 +303,7 @@ PartialShape ngraph::infer_convolution_forward(const Node* node,
     // Note: spatial_rank is definitely static at this point.
     //
 
-    for (size_t i = 0; i < static_cast<size_t>(spatial_rank); i++)
+    for (size_t i = 0; i < spatial_rank.get_length(); i++)
     {
         if (data_batch_shape.rank().is_static())
         {
@@ -311,9 +316,8 @@ PartialShape ngraph::infer_convolution_forward(const Node* node,
         }
     }
 
-    NODE_VALIDATION_CHECK(node,
-                          batch_size.is_dynamic() || static_cast<size_t>(batch_size) > 0,
-                          "Batch size is zero.");
+    NODE_VALIDATION_CHECK(
+        node, batch_size.is_dynamic() || batch_size.get_length() > 0, "Batch size is zero.");
 
     Dimension merged_channel_count;
 
@@ -329,12 +333,12 @@ PartialShape ngraph::infer_convolution_forward(const Node* node,
 
     NODE_VALIDATION_CHECK(node,
                           merged_channel_count.is_dynamic() ||
-                              static_cast<size_t>(merged_channel_count) > 0,
+                              merged_channel_count.get_length() > 0,
                           "Data batch channel count and/or filter input channel count is zero.");
 
     NODE_VALIDATION_CHECK(node,
                           filter_output_channel_count.is_dynamic() ||
-                              static_cast<size_t>(filter_output_channel_count) > 0,
+                              filter_output_channel_count.get_length() > 0,
                           "Filter output channel count is zero.");
 
     PartialShape data_output_shape = infer_windowed_reduction_output_shape(node,
@@ -351,7 +355,7 @@ PartialShape ngraph::infer_convolution_forward(const Node* node,
     batch_output_shape[0] = batch_size;
     batch_output_shape[1] = filter_output_channel_count;
 
-    for (size_t i = 0; i < static_cast<size_t>(spatial_rank); i++)
+    for (size_t i = 0; i < spatial_rank.get_length(); i++)
     {
         batch_output_shape[i + 2] = data_output_shape[i];
     }
@@ -373,7 +377,7 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
 {
     NODE_VALIDATION_CHECK(node,
                           data_batch_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(data_batch_shape.rank()) >= 3,
+                              data_batch_shape.rank().get_length() >= 3,
                           "Data batch must have rank of at least 3 (one batch axis, ",
                           "one input-channel axis, and at least one spatial dimension) ",
                           "(data batch shape: ",
@@ -411,22 +415,21 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
         batch_size = data_batch_shape[0];
         channel_count = data_batch_shape[1];
 
-        for (size_t i = 0; i < static_cast<size_t>(data_spatial_shape.rank()); i++)
+        for (size_t i = 0; i < data_spatial_shape.rank().get_length(); i++)
         {
             data_spatial_shape[i] = data_batch_shape[i + 2];
         }
 
-        NODE_VALIDATION_CHECK(node,
-                              batch_size.is_dynamic() || static_cast<size_t>(batch_size) > 0,
-                              "Batch size is zero.");
+        NODE_VALIDATION_CHECK(
+            node, batch_size.is_dynamic() || batch_size.get_length() > 0, "Batch size is zero.");
 
         NODE_VALIDATION_CHECK(node,
-                              channel_count.is_dynamic() || static_cast<size_t>(channel_count) > 0,
+                              channel_count.is_dynamic() || channel_count.get_length() > 0,
                               "Channel count is zero.");
 
         // For pooling ops we don't need dilation, so we fill in the identity value (all 1).
-        Strides data_dilation(static_cast<size_t>(data_spatial_shape.rank()), 1);
-        Strides window_dilation(static_cast<size_t>(data_spatial_shape.rank()), 1);
+        Strides data_dilation(data_spatial_shape.rank().get_length(), 1);
+        Strides window_dilation(data_spatial_shape.rank().get_length(), 1);
 
         data_output_spatial_shape =
             infer_windowed_reduction_output_shape(node,
@@ -446,7 +449,7 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
     data_batch_output_shape[0] = batch_size;
     data_batch_output_shape[1] = channel_count;
 
-    for (size_t i = 0; i < static_cast<size_t>(data_spatial_shape.rank()); i++)
+    for (size_t i = 0; i < data_spatial_shape.rank().get_length(); i++)
     {
         data_batch_output_shape[i + 2] = data_output_spatial_shape[i];
     }
@@ -496,7 +499,7 @@ static std::tuple<element::Type, PartialShape, PartialShape> infer_batch_norm_fo
     Dimension channel_dim{Dimension::dynamic()};
 
     NODE_VALIDATION_CHECK(node,
-                          input_shape.is_dynamic() || static_cast<size_t>(input_shape.rank()) >= 2,
+                          input_shape.is_dynamic() || input_shape.rank().get_length() >= 2,
                           "Input argument must have rank of at least 2 (input argument shape: ",
                           input_shape,
                           ").");
@@ -538,7 +541,7 @@ static std::tuple<element::Type, PartialShape, PartialShape> infer_batch_norm_fo
                           ").");
 
     NODE_VALIDATION_CHECK(node,
-                          channel_dim.is_dynamic() || static_cast<size_t>(channel_dim) >= 1,
+                          channel_dim.is_dynamic() || channel_dim.get_length() >= 1,
                           "Channel count must be at least 1.");
 
     // Batch result shape is same as the input shape, except we may possibly have inferred more
@@ -680,7 +683,7 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
             int64_t num_input_axis_after_ellipses =
                 (begin.size() - axis - num_new_axis_after_ellipses -
                  1); // -1 because it's a position of ellipses
-            int64_t num_of_hidden_dims = static_cast<size_t>(input_shape.rank()) -
+            int64_t num_of_hidden_dims = input_shape.rank().get_length() -
                                          num_input_axis_after_ellipses -
                                          num_input_axis_before_ellipses;
             for (int64_t i = 0; i < num_of_hidden_dims; ++i)
@@ -721,17 +724,17 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                 // so according to tensorflow and numpy we just get 0
                 if (lb < 0)
                 {
-                    lb = std::max(int64_t(input_shape[input_shape_idx]) + lb, int64_t(0));
+                    lb = std::max(input_shape[input_shape_idx].get_length() + lb, int64_t(0));
                 }
 
                 if (ub < 0)
                 {
-                    ub = std::max(int64_t(input_shape[input_shape_idx]) + ub, int64_t(0));
+                    ub = std::max(input_shape[input_shape_idx].get_length() + ub, int64_t(0));
                 }
 
                 // apply restrictions when begin or end values more than max possible values.
-                lb = std::min(int64_t(input_shape[input_shape_idx]), lb);
-                ub = std::min(int64_t(input_shape[input_shape_idx]), ub);
+                lb = std::min(input_shape[input_shape_idx].get_length(), lb);
+                ub = std::min(input_shape[input_shape_idx].get_length(), ub);
 
                 // set default value for stride or use given value
                 int64_t stride = 1;
@@ -748,14 +751,14 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                     // apply masks
                     if (begin_mask.count(axis))
                     {
-                        lb = int64_t(input_shape[input_shape_idx]) - 1;
+                        lb = input_shape[input_shape_idx].get_length() - 1;
                     }
                     if (end_mask.count(axis))
                     {
                         ub = -1;
                     }
 
-                    lb = std::min(lb, int64_t(input_shape[input_shape_idx]) - 1);
+                    lb = std::min(lb, input_shape[input_shape_idx].get_length() - 1);
                     lb -= 1; // we always get 1st element, so we need decrease range
                     if (ub <= lb)
                     {
@@ -771,7 +774,7 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                     }
                     if (end_mask.count(axis))
                     {
-                        ub = int64_t(input_shape[input_shape_idx]);
+                        ub = input_shape[input_shape_idx].get_length();
                     }
 
                     lb += 1; // we always get 1st element, so we need decrease range
@@ -787,7 +790,7 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
         }
     }
     // get remaining values
-    for (; input_shape_idx < static_cast<size_t>(input_shape.rank()); ++input_shape_idx)
+    for (; input_shape_idx < input_shape.rank().get_length(); ++input_shape_idx)
     {
         dim.emplace_back(input_shape[input_shape_idx]);
     }
@@ -831,7 +834,7 @@ int64_t ngraph::normalize_axis(const std::string& node_description,
         return axis;
     }
 
-    const auto tensor_rank_value = static_cast<int64_t>(tensor_rank);
+    const auto tensor_rank_value = tensor_rank.get_length();
     return normalize_axis(
         node_description, axis, tensor_rank_value, -tensor_rank_value, tensor_rank_value - 1);
 }
@@ -868,30 +871,7 @@ int64_t ngraph::normalize_axis(const std::string& node_description,
         axis = axis + tensor_rank;
     }
 
-    return static_cast<int64_t>(axis);
-}
-
-void ngraph::opset1::infer_conv_backprop_output_spatial_shape(const Shape& input_data_shape,
-                                                              const Shape& filters_shape,
-                                                              const Strides& strides,
-                                                              const Strides& dilations,
-                                                              const CoordinateDiff& pads_begin,
-                                                              const CoordinateDiff& pads_end,
-                                                              const CoordinateDiff& output_padding,
-                                                              Shape& output_spatial_shape)
-{
-    size_t num_spatial_dims = input_data_shape.size();
-    NGRAPH_CHECK(filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
-                 dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
-                 pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
-
-    for (size_t i = 0; i < num_spatial_dims; ++i)
-    {
-        size_t val = strides[i] * (input_data_shape[i] - 1) +
-                     dilations[i] * (filters_shape[i] - 1) + 1 - pads_begin[i] - pads_end[i] +
-                     output_padding[i];
-        output_spatial_shape.push_back(val);
-    }
+    return int64_t(axis);
 }
 
 void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_shape,
@@ -920,7 +900,7 @@ void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_sh
         int total_padding = strides[i] * (input_data_shape[i] - 1) +
                             dilations[i] * (filters_shape[i] - 1) + 1 - output_shape[i] +
                             output_padding[i];
-        if (auto_pad_type == op::PadType::SAME_UPPER)
+        if (auto_pad_type != op::PadType::SAME_UPPER)
         {
             pads_begin[i] = total_padding / 2;
             pads_end[i] = total_padding - pads_begin[i];
@@ -931,4 +911,85 @@ void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_sh
             pads_begin[i] = total_padding - pads_end[i];
         }
     }
+}
+
+namespace
+{
+    /// \brief Scalar variant describes value of an Output
+    struct MaxValue
+    {
+        /// \brief No information known about the output
+        MaxValue()
+            : m_element_type(element::Type_t::undefined)
+        {
+        }
+        /// \brief int64_t assoiated with the output
+        MaxValue(int64_t value)
+            : m_element_type(element::Type_t::i64)
+            , m_int64_t(value)
+        {
+        }
+        element::Type_t m_element_type;
+        element_type_traits<element::Type_t::i64>::value_type m_int64_t;
+    };
+
+    vector<MaxValue> exec_constant(Node* node, vector<MaxValue>& inputs)
+    {
+        auto op = as_type<op::Constant>(node);
+        auto shape = op->get_output_partial_shape(0);
+        if (shape.rank().is_static() && shape.rank().get_length() == 0)
+        {
+            auto et = op->get_output_element_type(0);
+            if (et == element::i64)
+            {
+                vector<int64_t> elts = op->get_vector<int64_t>();
+                return {MaxValue(elts[0])};
+            }
+        }
+        return {MaxValue()};
+    }
+
+    vector<MaxValue> exec_minimum(Node* node, vector<MaxValue>& inputs)
+    {
+        auto op = as_type<op::Minimum>(node);
+        auto shape = op->get_output_partial_shape(0);
+        if (shape.rank().is_static() && shape.rank().get_length() == 0)
+        {
+            auto et = op->get_output_element_type(0);
+            if (et == element::i64)
+            {
+                int64_t min_value = numeric_limits<int64_t>::max();
+                {
+                    auto v1 = inputs.at(0);
+                    if (v1.m_element_type == et)
+                    {
+                        min_value = min(min_value, v1.m_int64_t);
+                    }
+                }
+                {
+                    auto v2 = inputs.at(1);
+                    if (v2.m_element_type == et)
+                    {
+                        min_value = min(min_value, v2.m_int64_t);
+                    }
+                }
+                return {min_value == numeric_limits<int64_t>::max() ? MaxValue()
+                                                                    : MaxValue(min_value)};
+            }
+        }
+        return {MaxValue()};
+    }
+}
+
+pair<bool, int64_t> ngraph::maximum_value(const Output<Node>& value)
+{
+    static Evaluator<MaxValue>::op_handler_map handlers = {
+        {op::Minimum::type_info, exec_minimum}, {op::Constant::type_info, exec_constant}};
+    Evaluator<MaxValue> evaluator(handlers);
+    auto val = evaluator.evaluate(value);
+    if (val.m_element_type == element::Type_t::i64)
+    {
+        return pair<bool, int64_t>(true, val.m_int64_t);
+    }
+    return pair<bool, int64_t>(false, 0);
 }

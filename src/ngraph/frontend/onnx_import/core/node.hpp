@@ -51,7 +51,7 @@ namespace ngraph
         // forward declaration
         class Graph;
 
-        class Node
+        class NGRAPH_API Node
         {
         public:
             Node() = delete;

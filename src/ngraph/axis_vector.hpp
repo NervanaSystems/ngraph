@@ -51,5 +51,6 @@ namespace ngraph
         NGRAPH_API AxisVector& operator=(AxisVector&& v) noexcept;
     };
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const AxisVector& axis_vector);
 }
