@@ -196,10 +196,6 @@ void codegen::CompilerCore::initialize()
     args.push_back("-DNGRAPH_TBB_ENABLE");
 #endif
 
-#if defined(NGRAPH_USE_LEGACY_MKLDNN)
-    args.push_back("-DNGRAPH_USE_LEGACY_MKLDNN");
-#endif
-
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
     diag_options->ErrorLimit = 20;
