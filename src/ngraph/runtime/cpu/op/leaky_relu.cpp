@@ -33,7 +33,7 @@ op::CPULeakyRelu::CPULeakyRelu(const Output<Node>& arg, float alpha)
     set_output_type(0, arg.get_element_type(), arg.get_shape());
 }
 
-shared_ptr<Node> op::CPULeakyRelu::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::CPULeakyRelu::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {

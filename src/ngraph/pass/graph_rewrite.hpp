@@ -27,6 +27,7 @@ namespace ngraph
 {
     namespace pass
     {
+        class GraphRewriteBase;
         class GraphRewrite;
         class RecurrentGraphRewrite;
     }
@@ -35,6 +36,38 @@ namespace ngraph
     using recurrent_graph_rewrite_callback =
         std::function<bool(ngraph::pattern::RecurrentMatcher& m)>;
 }
+
+class NGRAPH_API ngraph::pass::GraphRewriteBase : public ngraph::pass::FunctionPass
+{
+public:
+    /// \brief Add an arbitrary handler for nodes
+    /// \param name The name of the handler
+    /// \param handler Function responsible for deciding if the graph should be changed and making
+    /// the changes. Returns true if changes are made.
+    void add_handler(const std::string& name,
+                     std::function<bool(const std::shared_ptr<Node>& node)> handler,
+                     const PassPropertyMask& property);
+
+protected:
+    GraphRewriteBase()
+        : FunctionPass()
+    {
+        // Being explicit:
+        // Setting REQUIRE_STATIC_SHAPE to false because we will check if each
+        // callback needs static shape during run_on_function().
+        set_property(PassProperty::REQUIRE_STATIC_SHAPE, false);
+    }
+
+    bool is_enabled(const std::string& name) const;
+
+    struct MatchClosure
+    {
+        std::string name;
+        std::function<bool(const std::shared_ptr<Node>& node)> handler;
+        PassPropertyMask property;
+    };
+    std::vector<MatchClosure> m_matchers;
+};
 
 /// \brief GraphRewrite (in tandem with \sa Matcher) performs transformations on specified patterns
 ///
@@ -46,18 +79,9 @@ namespace ngraph
 /// Patterns can be added by using \sa add_matcher
 /// Callbacks should use \sa replace_node to transform matched sub graphs
 
-class NGRAPH_API ngraph::pass::GraphRewrite : public FunctionPass
+class NGRAPH_API ngraph::pass::GraphRewrite : public ngraph::pass::GraphRewriteBase
 {
 public:
-    GraphRewrite()
-        : FunctionPass()
-    {
-        // Being explicit:
-        // Setting REQUIRE_STATIC_SHAPE to false because we will check if each
-        // callback needs static shape during run_on_function().
-        set_property(PassProperty::REQUIRE_STATIC_SHAPE, false);
-    }
-
     void add_matcher(const std::shared_ptr<pattern::Matcher>& m,
                      const ngraph::graph_rewrite_callback& callback,
                      const PassPropertyMask& property);
@@ -69,30 +93,16 @@ public:
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
 protected:
-    bool is_enabled(const std::shared_ptr<pattern::Matcher>& m) const;
     bool m_enable_shape_inference = false;
-
-private:
-    struct MatchClosure
-    {
-        std::shared_ptr<pattern::Matcher> matcher;
-        ngraph::graph_rewrite_callback callback;
-        PassPropertyMask property;
-    };
-    std::vector<MatchClosure> m_matchers;
 };
 
-class NGRAPH_API ngraph::pass::RecurrentGraphRewrite : public FunctionPass
+class NGRAPH_API ngraph::pass::RecurrentGraphRewrite : public ngraph::pass::GraphRewriteBase
 {
 public:
     RecurrentGraphRewrite(size_t num_iters = 10)
-        : FunctionPass()
+        : GraphRewriteBase()
         , m_num_iters(num_iters)
     {
-        // Being explicit:
-        // Setting REQUIRE_STATIC_SHAPE to false because we will check if each
-        // callback needs static shape during run_on_function().
-        set_property(PassProperty::REQUIRE_STATIC_SHAPE, false);
     }
 
     void add_matcher(const std::shared_ptr<pattern::RecurrentMatcher>& m,
@@ -107,12 +117,4 @@ public:
 
 private:
     size_t m_num_iters;
-
-    struct MatchClosure
-    {
-        std::shared_ptr<pattern::RecurrentMatcher> matcher;
-        ngraph::recurrent_graph_rewrite_callback callback;
-        PassPropertyMask property;
-    };
-    std::vector<MatchClosure> m_matchers;
 };
