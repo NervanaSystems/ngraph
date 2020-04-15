@@ -64,7 +64,7 @@ namespace ngraph
             bool with_relu() const { return m_with_relu; }
             float get_alpha() const { return m_alpha; }
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                clone_with_new_inputs(const OutputVector& new_args) const override;
 
             void generate_adjoints(autodiff::Adjoints& adjoints,
                                    const OutputVector& deltas) override;

@@ -24,7 +24,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::gpu::Rnn::type_info;
 
-shared_ptr<Node> op::gpu::Rnn::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::gpu::Rnn::clone_with_new_inputs(const OutputVector& new_args) const
 {
     NGRAPH_CHECK(new_args.size() == 4, "Incorrect number of new arguments");
 
@@ -41,10 +41,10 @@ shared_ptr<Node> op::gpu::Rnn::copy_with_new_args(const NodeVector& new_args) co
                             m_num_fused_layers);
 }
 
-op::gpu::Rnn::Rnn(Output<Node> src_layer,
-                  Output<Node> src_iter,
-                  Output<Node> params,
-                  Output<Node> state_iter,
+op::gpu::Rnn::Rnn(const Output<Node>& src_layer,
+                  const Output<Node>& src_iter,
+                  const Output<Node>& params,
+                  const Output<Node>& state_iter,
                   const int num_timesteps,
                   const int num_gates_per_cell,
                   const int src_sequence_length,
