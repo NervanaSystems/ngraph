@@ -14,8 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/nop/nop_backend_visibility.hpp"
-
+#include "nop_backend.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/op/convert.hpp"
@@ -26,8 +25,8 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/nop/nop_backend.hpp"
 #include "ngraph/util.hpp"
+#include "nop_backend_visibility.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -36,9 +35,8 @@ using descriptor::layout::DenseTensorLayout;
 
 extern "C" NOP_BACKEND_API void ngraph_register_nop_backend()
 {
-    runtime::BackendManager::register_backend("NOP", [](const std::string& /* config */) {
-        return std::make_shared<runtime::nop::NOPBackend>();
-    });
+    runtime::BackendManager::register_backend(
+        "NOP", [](const std::string&) { return std::make_shared<runtime::nop::NOPBackend>(); });
 }
 
 shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const element::Type& type,
