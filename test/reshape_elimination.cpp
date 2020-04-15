@@ -88,6 +88,7 @@ TEST(reshape_elimination, bn_bprop_rewrite)
 }
 #endif
 
+#ifdef NGRAPH_INTERPRETER_ENABLE
 TEST(reshape_elimination, transpose_reshape_pattern_fuse)
 {
     auto generate_func = []() {
@@ -118,6 +119,7 @@ TEST(reshape_elimination, transpose_reshape_pattern_fuse)
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 }
+#endif
 
 TEST(reshape_elimination, transpose_reshape_pattern_nofuse)
 {
@@ -156,6 +158,7 @@ TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
     ASSERT_EQ(gdot->get_shape(), (Shape{1, 2}));
 }
 
+#ifdef NGRAPH_INTERPRETER_ENABLE
 TEST(reshape_elimination, recurrent_reshapes)
 {
     Shape shape_a{2, 2, 3, 3, 2, 4};
@@ -477,6 +480,7 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
     size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
     ASSERT_EQ(num_reshapes_optimized, 2);
 }
+#endif
 
 TEST(reshape_elimination, pass_property)
 {
