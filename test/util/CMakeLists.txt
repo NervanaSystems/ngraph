@@ -35,6 +35,5 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
 endif()
 target_include_directories(ngraph_test_util PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(ngraph_test_util PRIVATE ngraph libgtest)
-add_dependencies(ngraph_test_util ext_gtest)
 
 install(TARGETS ngraph_test_util DESTINATION ${NGRAPH_INSTALL_LIB})
