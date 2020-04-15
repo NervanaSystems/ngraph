@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <memory>
+
 #include "gtest/gtest.h"
 #include "ngraph/file_util.hpp"
 #include "ngraph/frontend/onnx_import/default_opset.hpp"
@@ -21,7 +23,6 @@
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "util/all_close.hpp"
-#include "util/all_close_f.hpp"
 #include "util/test_control.hpp"
 #include "util/type_prop.hpp"
 
@@ -45,7 +46,7 @@ namespace
         {
             if (ng_node->is_constant())
             {
-                const auto folded_node = as_type_ptr<op::Constant>(ng_node);
+                const auto folded_node = as_type_ptr<default_opset::Constant>(ng_node);
                 const auto output_values = folded_node->cast_vector<T>();
 
                 EXPECT_TRUE(ngraph::test::all_close(expected_output, output_values));
