@@ -633,18 +633,6 @@ namespace ngraph
                     (void)external_function;
                     auto src_layer_rank = node->get_input_shape(0).size();
                     auto src_iter_rank = node->get_input_shape(1).size();
-#if MKLDNN_VERSION_MAJOR < 1
-                    auto weights_layer_rank = node->get_input_shape(2).size();
-                    auto weights_iter_rank = node->get_input_shape(3).size();
-                    auto bias_rank = node->get_input_shape(4).size();
-                    if ((src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
-                         weights_iter_rank == 2 && bias_rank == 1 &&
-                         node->get_input_element_type(0) == element::f32 &&
-                         node->get_input_element_type(1) == element::f32))
-                    {
-                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
-                    }
-#else
                     auto src_iter_c_rank = node->get_input_shape(2).size();
                     auto weights_layer_rank = node->get_input_shape(3).size();
                     auto weights_iter_rank = node->get_input_shape(4).size();
@@ -656,7 +644,6 @@ namespace ngraph
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
-#endif
                 }
 
                 template <>
@@ -666,18 +653,6 @@ namespace ngraph
                     auto rnn_op = static_cast<ngraph::op::Rnn*>(node);
                     auto src_layer_rank = node->get_input_shape(0).size();
                     auto src_iter_rank = node->get_input_shape(1).size();
-#if MKLDNN_VERSION_MAJOR < 1
-                    auto weights_layer_rank = node->get_input_shape(2).size();
-                    auto weights_iter_rank = node->get_input_shape(3).size();
-                    auto bias_rank = node->get_input_shape(4).size();
-                    if ((src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
-                         weights_iter_rank == 2 && bias_rank == 1 &&
-                         node->get_input_element_type(0) == element::f32 &&
-                         node->get_input_element_type(1) == element::f32))
-                    {
-                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
-                    }
-#else
 
                     if (rnn_op->is_type(ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm))
                     {
@@ -706,7 +681,6 @@ namespace ngraph
                             runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                         }
                     }
-#endif
                 }
 
                 template <>

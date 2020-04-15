@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "interpolate.hpp"
+#include "ngraph/op/interpolate.hpp"
 
 #include "ngraph/op/constant.hpp"
 

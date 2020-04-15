@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "prior_box.hpp"
+#include "ngraph/op/prior_box.hpp"
 
 #include "ngraph/op/constant.hpp"
 
