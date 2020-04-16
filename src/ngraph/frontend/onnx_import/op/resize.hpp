@@ -16,16 +16,23 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace onnx_import
     {
-        class NGRAPH_API NopElimination : public FunctionPass
+        namespace op
         {
-        public:
-            bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-        };
-    }
-}
+            namespace set_1
+            {
+                NodeVector resize(const Node& node);
+
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
