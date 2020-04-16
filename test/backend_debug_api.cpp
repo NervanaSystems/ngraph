@@ -20,9 +20,9 @@
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "int_executable.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "int_executable.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;

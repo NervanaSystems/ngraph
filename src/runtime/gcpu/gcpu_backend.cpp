@@ -16,10 +16,10 @@
 
 #include "gcpu_backend_visibility.hpp"
 
-#include "ngraph/except.hpp"
-#include "ngraph/runtime/backend_manager.hpp"
 #include "gcpu_backend.hpp"
 #include "gcpu_executable.hpp"
+#include "ngraph/except.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
 
