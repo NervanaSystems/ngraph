@@ -258,8 +258,7 @@ namespace ngraph
     }
 
     template <>
-    class NGRAPH_API AttributeAdapter<op::TopKMode>
-        : public EnumAttributeAdapterBase<op::TopKMode>
+    class NGRAPH_API AttributeAdapter<op::TopKMode> : public EnumAttributeAdapterBase<op::TopKMode>
     {
     public:
         AttributeAdapter(op::TopKMode& value)
