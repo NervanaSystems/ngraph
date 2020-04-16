@@ -581,7 +581,6 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_dyn_shapes_model_tile_static)
     test_case.run();
 }
 
-
 NGRAPH_TEST(${BACKEND_NAME}, onnx_dyn_shapes_model_convtranspose_dyn_data)
 {
     auto ct_fn = onnx_import::import_onnx_model(
