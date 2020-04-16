@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
+set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
 # Add sources for the GPU backend
 # and all its dependencies
