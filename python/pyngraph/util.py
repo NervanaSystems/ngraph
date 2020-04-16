@@ -21,12 +21,13 @@ import six
 from _pyngraph import util
 
 # workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
-else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)
+if sys.platform != 'win32':
+    if six.PY3:
+        import os
+        flags = os.RTLD_NOW | os.RTLD_GLOBAL
+    else:
+        import ctypes
+        flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
+    sys.setdlopenflags(flags)
 
 numpy_to_c = util.numpy_to_c
