@@ -20,9 +20,9 @@
 #include <string>
 #include <unordered_map>
 
-#include "ngraph/file_util.hpp"
 #include "gpu_cuda_function_builder.hpp"
 #include "gpu_cuda_function_pool.hpp"
+#include "ngraph/file_util.hpp"
 
 static const std::string s_output_dir = "gpu_codegen";
 

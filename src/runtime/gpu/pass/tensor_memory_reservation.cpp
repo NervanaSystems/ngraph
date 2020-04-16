@@ -16,12 +16,12 @@
 
 #include <memory>
 
+#include "gpu_memory_manager.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pass/manager_state.hpp"
-#include "gpu_memory_manager.hpp"
 #include "pass/tensor_memory_reservation.hpp"
 
 using namespace ngraph;

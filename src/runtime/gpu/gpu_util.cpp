@@ -22,9 +22,9 @@
 #include <stdio.h>
 #include <string>
 
-#include "ngraph/check.hpp"
 #include "cuda_error_check.hpp"
 #include "gpu_util.hpp"
+#include "ngraph/check.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;

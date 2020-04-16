@@ -17,10 +17,10 @@
 #include <memory>
 #include <unordered_map>
 
+#include "gpu_op_annotations.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "gpu_op_annotations.hpp"
 #include "op/batch_norm.hpp"
 #include "pass/gpu_batch_norm_cache.hpp"
 

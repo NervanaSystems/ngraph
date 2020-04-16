@@ -22,15 +22,15 @@
 #include <typeinfo>
 #include <unordered_map>
 
+#include "gpu_backend.hpp"
+#include "gpu_primitive_emitter.hpp"
+#include "gpu_tensor_wrapper.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
-#include "gpu_backend.hpp"
-#include "gpu_primitive_emitter.hpp"
-#include "gpu_tensor_wrapper.hpp"
 
 #define EMIT_ARGS                                                                                  \
     runtime::gpu::GPUCompiledFunction *compiled_function, const std::string &function_name,        \

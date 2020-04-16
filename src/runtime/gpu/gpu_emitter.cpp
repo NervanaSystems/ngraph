@@ -29,18 +29,18 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ngraph/node.hpp"
-#include "ngraph/ops.hpp"
 #include "gpu_cuda_kernel_ops.hpp"
 #include "gpu_emitter.hpp"
 #include "gpu_kernel_emitters.hpp"
 #include "gpu_op_annotations.hpp"
 #include "gpu_primitive_emitter.hpp"
 #include "gpu_util.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/ops.hpp"
+#include "ngraph/util.hpp"
 #include "op/batch_norm.hpp"
 #include "op/rnn.hpp"
 #include "type_info.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;

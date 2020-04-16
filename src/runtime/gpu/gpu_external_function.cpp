@@ -24,6 +24,12 @@
 #include <string>
 #include <tuple>
 
+#include "gpu_backend.hpp"
+#include "gpu_emitter.hpp"
+#include "gpu_external_function.hpp"
+#include "gpu_kernel_emitters.hpp"
+#include "gpu_runtime_context.hpp"
+#include "gpu_tensor_wrapper.hpp"
 #include "ngraph/code_writer.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
@@ -99,12 +105,6 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
-#include "gpu_backend.hpp"
-#include "gpu_emitter.hpp"
-#include "gpu_external_function.hpp"
-#include "gpu_kernel_emitters.hpp"
-#include "gpu_runtime_context.hpp"
-#include "gpu_tensor_wrapper.hpp"
 
 using namespace std;
 using namespace ngraph;

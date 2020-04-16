@@ -24,6 +24,16 @@
 #include <string>
 #include <tuple>
 
+#include "gpu_backend.hpp"
+#include "gpu_call_frame.hpp"
+#include "gpu_emitter.hpp"
+#include "gpu_internal_function.hpp"
+#include "gpu_invoke.hpp"
+#include "gpu_kernel_emitters.hpp"
+#include "gpu_runtime_constructor.hpp"
+#include "gpu_runtime_context.hpp"
+#include "gpu_tensor_wrapper.hpp"
+#include "gpu_util.hpp"
 #include "ngraph/code_writer.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
@@ -103,16 +113,6 @@
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/pass/like_replacement.hpp"
-#include "gpu_backend.hpp"
-#include "gpu_call_frame.hpp"
-#include "gpu_emitter.hpp"
-#include "gpu_internal_function.hpp"
-#include "gpu_invoke.hpp"
-#include "gpu_kernel_emitters.hpp"
-#include "gpu_runtime_constructor.hpp"
-#include "gpu_runtime_context.hpp"
-#include "gpu_tensor_wrapper.hpp"
-#include "gpu_util.hpp"
 
 using namespace std;
 using namespace ngraph;

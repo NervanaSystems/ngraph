@@ -21,7 +21,6 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/code_writer.hpp"
 #include "cuda_emitter.hpp"
 #include "cudnn_emitter.hpp"
 #include "gpu_cuda_kernel_builder.hpp"
@@ -31,8 +30,9 @@
 #include "gpu_primitive_emitter.hpp"
 #include "gpu_runtime_context.hpp"
 #include "gpu_util.hpp"
-#include "type_info.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/util.hpp"
+#include "type_info.hpp"
 
 using namespace ngraph;
 

@@ -15,9 +15,9 @@
 //*****************************************************************************
 #include <limits>
 
+#include "gpu_tensor_wrapper.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/descriptor/tensor.hpp"
-#include "gpu_tensor_wrapper.hpp"
 
 using namespace std;
 using namespace ngraph;

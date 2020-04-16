@@ -18,11 +18,11 @@
 
 #include <cuda_runtime.h>
 
-#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "cuda_error_check.hpp"
 #include "gpu_backend.hpp"
 #include "gpu_tensor.hpp"
 #include "gpu_util.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 
 using namespace ngraph;
 using namespace std;

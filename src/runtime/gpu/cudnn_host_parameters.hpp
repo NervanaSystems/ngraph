@@ -20,9 +20,9 @@
 
 #include <cudnn.h>
 
-#include "ngraph/log.hpp"
 #include "gpu_host_parameters.hpp"
 #include "gpu_util.hpp"
+#include "ngraph/log.hpp"
 
 namespace ngraph
 {

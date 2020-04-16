@@ -19,9 +19,9 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/node.hpp"
 #include "gpu_compiled_function.hpp"
 #include "gpu_tensor_wrapper.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {

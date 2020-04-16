@@ -24,6 +24,10 @@
 #include <typeinfo>
 #include <unordered_map>
 
+#include "gpu_backend.hpp"
+#include "gpu_compiled_function.hpp"
+#include "gpu_primitive_emitter.hpp"
+#include "gpu_tensor_wrapper.hpp"
 #include "ngraph/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
@@ -33,10 +37,6 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
-#include "gpu_backend.hpp"
-#include "gpu_compiled_function.hpp"
-#include "gpu_primitive_emitter.hpp"
-#include "gpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {

@@ -15,9 +15,9 @@
 //*****************************************************************************
 #include <algorithm>
 
-#include "ngraph/code_writer.hpp"
 #include "gpu_cuda_kernel_builder.hpp"
 #include "gpu_kernel_args.hpp"
+#include "ngraph/code_writer.hpp"
 #include "nvrtc/helpers.hpp"
 #include "type_info.hpp"
 

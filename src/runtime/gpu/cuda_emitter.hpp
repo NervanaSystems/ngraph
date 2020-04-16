@@ -17,12 +17,12 @@
 #pragma once
 
 #include <array>
-#include "ngraph/code_writer.hpp"
 #include "gpu_cuda_kernel_ops.hpp"
 #include "gpu_host_parameters.hpp"
+#include "ngraph/code_writer.hpp"
+#include "ngraph/strides.hpp"
 #include "nvdiff.hpp"
 #include "nvshape.hpp"
-#include "ngraph/strides.hpp"
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/max_pool.hpp"

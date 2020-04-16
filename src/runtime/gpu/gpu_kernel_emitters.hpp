@@ -16,10 +16,10 @@
 
 #pragma once
 
+#include "gpu_tensor_wrapper.hpp"
 #include "ngraph/code_writer.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/node.hpp"
-#include "gpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {

@@ -19,20 +19,20 @@
 #include <sstream>
 #include <vector>
 
-#include "ngraph/log.hpp"
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/op/max.hpp"
-#include "ngraph/op/max_pool.hpp"
-#include "ngraph/op/min.hpp"
 #include "cudnn_emitter.hpp"
 #include "gpu_emitter.hpp"
 #include "gpu_invoke.hpp"
 #include "gpu_primitive_emitter.hpp"
 #include "gpu_runtime_context.hpp"
 #include "gpu_util.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/min.hpp"
+#include "ngraph/util.hpp"
 #include "op/rnn.hpp"
 #include "type_info.hpp"
-#include "ngraph/util.hpp"
 
 using namespace ngraph;
 

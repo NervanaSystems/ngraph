@@ -22,10 +22,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ngraph/function.hpp"
 #include "gpu_backend.hpp"
 #include "gpu_call_frame.hpp"
 #include "gpu_tensor_wrapper.hpp"
+#include "ngraph/function.hpp"
 
 namespace ngraph
 {

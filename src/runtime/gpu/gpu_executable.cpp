@@ -19,15 +19,15 @@
 #include <cuda_runtime.h>
 #include <cudnn.h>
 
-#include "ngraph/graph_util.hpp"
-#include "ngraph/op/batch_norm.hpp"
-#include "ngraph/runtime/backend_manager.hpp"
 #include "gpu_executable.hpp"
 #include "gpu_external_function.hpp"
 #include "gpu_internal_function.hpp"
 #include "gpu_primitive_emitter.hpp"
 #include "gpu_tensor.hpp"
 #include "gpu_util.hpp"
+#include "ngraph/graph_util.hpp"
+#include "ngraph/op/batch_norm.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
