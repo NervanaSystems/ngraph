@@ -483,6 +483,7 @@ bool ngraph::op::v3::TopK::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("axis", m_axis);
     visitor.on_attribute("mode", m_mode);
     visitor.on_attribute("sort", m_sort);
+    visitor.on_attribute("output_indices_type", m_output_indices_type);
     return true;
 }
 
