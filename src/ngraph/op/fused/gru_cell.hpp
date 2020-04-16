@@ -45,7 +45,12 @@ namespace ngraph
             public:
                 static constexpr NodeTypeInfo type_info{"GRUCell", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                GRUCell() = default;
+                GRUCell()
+                {
+                    m_activations = {"sigmoid", "tanh"};
+                    m_activation_f = get_activation_function(0);
+                    m_activation_g = get_activation_function(1);
+                };
                 ///
                 /// \brief      Constructs GRUCell node.
                 ///
@@ -160,11 +165,11 @@ namespace ngraph
                 ///
                 /// \brief The Activation function f.
                 ///
-                util::ActivationFunction m_activation_f;
+                util::ActivationFunction m_activation_f{};
                 ///
                 /// \brief The Activation function g.
                 ///
-                util::ActivationFunction m_activation_g;
+                util::ActivationFunction m_activation_g{};
 
                 static constexpr std::size_t s_gates_count{3};
                 ///
@@ -174,7 +179,7 @@ namespace ngraph
                 /// hidden
                 ///       gate. It's done before multiplying by the output of the reset gate.
                 ///
-                bool m_linear_before_reset;
+                bool m_linear_before_reset{};
             };
         }
         using v0::GRUCell;

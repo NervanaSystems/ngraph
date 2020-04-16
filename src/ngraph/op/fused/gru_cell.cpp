@@ -91,7 +91,7 @@ op::GRUCell::GRUCell(const Output<Node>& X,
 bool op::GRUCell::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("linear_before_reset", m_linear_before_reset);
-    return op::util::RNNCellBase::visit_attributes(visitor);;
+    return op::util::RNNCellBase::visit_attributes(visitor);
 }
 
 void op::GRUCell::pre_validate_and_infer_types()
@@ -209,9 +209,9 @@ NodeVector op::GRUCell::decompose_op() const
     auto Ht_R = make_shared<op::Dot>(H_t, R_transpose);
 
     // split to gates:
-    NodeVector Xt_W_zrh = builder::split(Xt_W, 3);
-    NodeVector R_zrh = builder::split(R_transpose, 3);
-    NodeVector Ht_R_zrh = builder::split(Ht_R, 3);
+    NodeVector Xt_W_zrh = builder::split(Xt_W, 3, 1);
+    NodeVector R_zrh = builder::split(R_transpose, 3, 1);
+    NodeVector Ht_R_zrh = builder::split(Ht_R, 3, 1);
     NodeVector biases_zrh = m_linear_before_reset ? builder::split(B, 4) : builder::split(B, 3);
 
     // zt = f(Xt*(Wz^T) + Ht-1*(Rz^T) + Wbz + Rbz)

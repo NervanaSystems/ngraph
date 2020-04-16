@@ -56,7 +56,10 @@ namespace ngraph
             public:
                 static constexpr NodeTypeInfo type_info{"RNNCell", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                RNNCell() = default;
+                RNNCell() {
+                    m_activations = {"tanh"};
+                    m_activation_f = get_activation_function(0);
+                };
                 ///
                 /// \brief      Constructs RNNCell node.
                 ///
@@ -149,7 +152,7 @@ namespace ngraph
                 ///
                 /// \brief The Activation function f.
                 ///
-                util::ActivationFunction m_activation_f;
+                util::ActivationFunction m_activation_f{};
 
                 static constexpr std::size_t s_gates_count{1};
             };
