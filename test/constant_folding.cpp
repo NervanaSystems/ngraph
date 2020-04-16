@@ -2663,6 +2663,7 @@ TEST(constant_folding, constant_non_zero_int32_output_type)
 
     const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
+    ASSERT_EQ(element::i32, new_const->get_element_type());
     const auto values_out = new_const->get_vector<int32_t>();
 
     const vector<int32_t> values_expected{1, 3};
