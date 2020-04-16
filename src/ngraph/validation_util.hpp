@@ -181,30 +181,12 @@ namespace ngraph
                            std::int64_t axis_range_min,
                            std::int64_t axis_range_max);
 
+    /// \brief Try to compute the maximum value of value
+    /// \return (true, max_value) if can be determined, or (false, 0) if not.
+    NGRAPH_API std::pair<bool, int64_t> maximum_value(const Output<Node>& value);
+
     namespace opset1
     {
-        ///
-        /// \brief      Calculates output spatial features size.
-        ///
-        /// \param[in]  input_data_shape      The input data shape
-        /// \param[in]  filters_shape         The filters shape
-        /// \param[in]  strides               The strides values.
-        /// \param[in]  dilations             The dilations values.
-        /// \param[in]  pads_begin            The paddings at the beginning of axis.
-        /// \param[in]  pads_end              The paddings at the end of axis.
-        /// \param[in]  output_padding    The output padding values.
-        /// \param      output_spatial_shape  The placeholder for computed output spatial shape.
-        ///
-        NGRAPH_API
-        void infer_conv_backprop_output_spatial_shape(const Shape& input_data_shape,
-                                                      const Shape& filters_shape,
-                                                      const Strides& strides,
-                                                      const Strides& dilations,
-                                                      const CoordinateDiff& pads_begin,
-                                                      const CoordinateDiff& pads_end,
-                                                      const CoordinateDiff& output_padding,
-                                                      Shape& output_spatial_shape);
-
         ///
         /// \brief      Calculates padding values for ConvolutionBackpropData operator.
         ///

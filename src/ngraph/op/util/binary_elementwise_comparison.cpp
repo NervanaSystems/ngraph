@@ -24,27 +24,10 @@ op::util::BinaryElementwiseComparison::BinaryElementwiseComparison()
 {
 }
 
-op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const shared_ptr<Node>& arg0,
-                                                                   const shared_ptr<Node>& arg1,
-                                                                   const AutoBroadcastSpec& autob)
-    : Op(check_single_output_args({arg0, arg1}))
-    , m_autob(autob)
-{
-}
-
 op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const Output<Node>& arg0,
                                                                    const Output<Node>& arg1,
                                                                    const AutoBroadcastSpec& autob)
     : Op({arg0, arg1})
-    , m_autob(autob)
-{
-}
-
-op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const string& node_type,
-                                                                   const shared_ptr<Node>& arg0,
-                                                                   const shared_ptr<Node>& arg1,
-                                                                   const AutoBroadcastSpec& autob)
-    : Op(node_type, check_single_output_args({arg0, arg1}))
     , m_autob(autob)
 {
 }

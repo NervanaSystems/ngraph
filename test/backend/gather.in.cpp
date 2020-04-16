@@ -837,10 +837,11 @@ TEST(${BACKEND_NAME}, gather_3d_axis_default)
     Shape out_shape{1, 3, 2};
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto G = make_shared<op::Gather>(P, I);
-    auto f = make_shared<Function>(G, ParameterVector{P, I});
+    auto axes = op::Constant::create(element::i64, Shape{}, {0});
+    auto G = make_shared<op::v1::Gather>(P, I, axes);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P, I});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
@@ -857,7 +858,7 @@ TEST(${BACKEND_NAME}, gather_3d_axis_default)
 
     // the pass should short cut the Gather i/p with the gather users
     // since we are fetching the whole tensor using gather op
-    auto gather_ops = get_ops_of_type<op::Gather>(f);
+    auto gather_ops = get_ops_of_type<op::v1::Gather>(f);
     EXPECT_EQ(gather_ops.size(), 0);
 }
 
@@ -868,10 +869,11 @@ TEST(${BACKEND_NAME}, gather_3d_axis_1_nop)
     Shape out_shape{3, 1, 2};
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto G = make_shared<op::Gather>(P, I, 1);
-    auto f = make_shared<Function>(G, ParameterVector{P, I});
+    auto axes = op::Constant::create(element::i64, Shape{}, {1});
+    auto G = make_shared<op::v1::Gather>(P, I, axes);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P, I});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
@@ -888,7 +890,7 @@ TEST(${BACKEND_NAME}, gather_3d_axis_1_nop)
 
     // the pass should short cut the Gather i/p with the gather users
     // since we are fetching the whole tensor using gather op
-    auto gather_ops = get_ops_of_type<op::Gather>(f);
+    auto gather_ops = get_ops_of_type<op::v1::Gather>(f);
     EXPECT_EQ(gather_ops.size(), 0);
 }
 
@@ -899,10 +901,11 @@ TEST(${BACKEND_NAME}, gather_3d_axis_2_nop)
     Shape out_shape{3, 2, 1};
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto G = make_shared<op::Gather>(P, I, 2);
-    auto f = make_shared<Function>(G, ParameterVector{P, I});
+    auto axes = op::Constant::create(element::i64, Shape{}, {2});
+    auto G = make_shared<op::v1::Gather>(P, I, axes);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P, I});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
@@ -919,7 +922,7 @@ TEST(${BACKEND_NAME}, gather_3d_axis_2_nop)
 
     // the pass should short cut the Gather i/p with the gather users
     // since we are fetching the whole tensor using gather op
-    auto gather_ops = get_ops_of_type<op::Gather>(f);
+    auto gather_ops = get_ops_of_type<op::v1::Gather>(f);
     EXPECT_EQ(gather_ops.size(), 0);
 }
 
@@ -930,10 +933,11 @@ TEST(${BACKEND_NAME}, gather_3d_indices_constant_axis_1)
     Shape out_shape{3, 2, 1};
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = op::Constant::create<int32_t>(element::i32, Shape{2}, {0, 1});
-    auto G = make_shared<op::Gather>(P, I, 1);
-    auto f = make_shared<Function>(G, ParameterVector{P});
+    auto axes = op::Constant::create(element::i64, Shape{}, {1});
+    auto G = make_shared<op::v1::Gather>(P, I, axes);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
@@ -950,6 +954,6 @@ TEST(${BACKEND_NAME}, gather_3d_indices_constant_axis_1)
 
     // the pass should short cut the Gather i/p with the gather users
     // since we are fetching the whole tensor using gather op
-    auto gather_ops = get_ops_of_type<op::Gather>(f);
+    auto gather_ops = get_ops_of_type<op::v1::Gather>(f);
     EXPECT_EQ(gather_ops.size(), 0);
 }

@@ -60,7 +60,6 @@ set (SRC
     chrome_trace.cpp
     chrome_trace.hpp
     code_writer.hpp
-    component_manager.hpp
     coordinate.cpp
     coordinate.hpp
     coordinate_diff.cpp
@@ -88,6 +87,7 @@ set (SRC
     enum_names.hpp
     env_util.cpp
     env_util.hpp
+    evaluator.hpp
     except.hpp
     factory.cpp
     factory.hpp
@@ -96,6 +96,8 @@ set (SRC
     function.cpp
     function.hpp
     graph_util.cpp
+    interval.cpp
+    interval.hpp
     lambda.cpp
     lambda.hpp
     log.cpp
@@ -157,6 +159,8 @@ set (SRC
     op/cos.hpp
     op/cosh.cpp
     op/cosh.hpp
+    op/ctc_greedy_decoder.cpp
+    op/ctc_greedy_decoder.hpp
     op/cum_sum.cpp
     op/cum_sum.hpp
     op/crop_and_resize.cpp
@@ -167,6 +171,8 @@ set (SRC
     op/deformable_psroi_pooling.hpp
     op/dequantize.cpp
     op/dequantize.hpp
+    op/detection_output.cpp
+    op/detection_output.hpp
     op/divide.cpp
     op/divide.hpp
     op/dot.cpp
@@ -195,40 +201,26 @@ set (SRC
     op/experimental/quantized_conv_bias.hpp
     op/experimental/quantized_conv_relu.cpp
     op/experimental/quantized_conv_relu.hpp
-    op/experimental/range.cpp
     op/experimental/range.hpp
-    op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
-    op/experimental/tile.cpp
     op/experimental/tile.hpp
     op/experimental/quantized_dot_bias.cpp
     op/experimental/quantized_dot_bias.hpp
     op/experimental/compiled_kernel.cpp
     op/experimental/compiled_kernel.hpp
-    op/experimental/transpose.cpp
-    op/experimental/transpose.hpp
-    op/experimental/layers/ctc_greedy_decoder.cpp
     op/experimental/layers/ctc_greedy_decoder.hpp
-    op/experimental/layers/detection_output.cpp
     op/experimental/layers/detection_output.hpp
-    op/experimental/layers/interpolate.cpp
     op/experimental/layers/interpolate.hpp
-    op/experimental/layers/prior_box.cpp
     op/experimental/layers/prior_box.hpp
-    op/experimental/layers/prior_box_clustered.cpp
     op/experimental/layers/prior_box_clustered.hpp
     op/experimental/layers/proposal.hpp
-    op/experimental/layers/proposal.cpp
     op/experimental/layers/psroi_pooling.hpp
-    op/experimental/layers/psroi_pooling.cpp
     op/experimental/layers/region_yolo.hpp
-    op/experimental/layers/region_yolo.cpp
     op/experimental/layers/reorg_yolo.hpp
-    op/experimental/layers/reorg_yolo.cpp
     op/experimental/layers/roi_pooling.hpp
-    op/experimental/layers/roi_pooling.cpp
     op/experimental/random_uniform.hpp
     op/experimental/random_uniform.cpp
+    op/experimental/transpose.hpp
     op/strided_slice.hpp
     op/floor.cpp
     op/floor.hpp
@@ -246,6 +238,10 @@ set (SRC
     op/greater.hpp
     op/greater_eq.cpp
     op/greater_eq.hpp
+    op/group_conv.hpp
+    op/group_conv.cpp
+    op/interpolate.cpp
+    op/interpolate.hpp
     op/less.cpp
     op/less.hpp
     op/less_eq.cpp
@@ -290,8 +286,16 @@ set (SRC
     op/passthrough.hpp
     op/power.cpp
     op/power.hpp
+    op/prior_box.cpp
+    op/prior_box.hpp
+    op/prior_box_clustered.cpp
+    op/prior_box_clustered.hpp
     op/product.cpp
     op/product.hpp
+    op/proposal.hpp
+    op/proposal.cpp
+    op/psroi_pooling.hpp
+    op/psroi_pooling.cpp
     op/reduce_logical_and.cpp
     op/reduce_logical_and.hpp
     op/reduce_logical_or.cpp
@@ -302,8 +306,14 @@ set (SRC
     op/reduce_mean.hpp
     op/reduce_sum.cpp
     op/reduce_sum.hpp
+    op/region_yolo.hpp
+    op/region_yolo.cpp
+    op/reorg_yolo.hpp
+    op/reorg_yolo.cpp
     op/roi_align.hpp
     op/roi_align.cpp
+    op/roi_pooling.hpp
+    op/roi_pooling.cpp
     op/round.cpp
     op/round.hpp
     op/quantize.cpp
@@ -312,6 +322,8 @@ set (SRC
     op/quantized_convolution.hpp
     op/quantized_dot.cpp
     op/quantized_dot.hpp
+    op/range.cpp
+    op/range.hpp
     op/recv.cpp
     op/recv.hpp
     op/relu.cpp
@@ -328,12 +340,18 @@ set (SRC
     op/reverse_sequence.hpp
     op/scatter_add.cpp
     op/scatter_add.hpp
+    op/scatter_elements_update.cpp
+    op/scatter_elements_update.hpp
     op/scatter_nd_add.cpp
     op/scatter_nd_add.hpp
+    op/scatter_update.cpp
+    op/scatter_update.hpp
     op/select.cpp
     op/select.hpp
     op/send.cpp
     op/send.hpp
+    op/shape_of.cpp
+    op/shape_of.hpp
     op/sigmoid.cpp
     op/sigmoid.hpp
     op/sign.cpp
@@ -346,6 +364,8 @@ set (SRC
     op/slice.hpp
     op/softmax.cpp
     op/softmax.hpp
+    op/split.cpp
+    op/split.hpp
     op/strided_slice.cpp
     op/strided_slice.hpp
     op/sqrt.cpp
@@ -364,8 +384,12 @@ set (SRC
     op/tanh.hpp
     op/tensor_iterator.cpp
     op/tensor_iterator.hpp
+    op/tile.cpp
+    op/tile.hpp
     op/topk.cpp
     op/topk.hpp
+    op/transpose.cpp
+    op/transpose.hpp
     op/xor.cpp
     op/xor.hpp
     op/fused/batch_mat_mul_transpose.cpp
@@ -393,7 +417,6 @@ set (SRC
     op/fused/grn.cpp
     op/fused/grn.hpp
     op/fused/group_conv.hpp
-    op/fused/group_conv.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
     op/fused/layer_norm.cpp
@@ -432,7 +455,6 @@ set (SRC
     op/fused/space_to_batch.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
-    op/fused/split.cpp
     op/fused/split.hpp
     op/fused/squared_difference.cpp
     op/fused/squared_difference.hpp
@@ -464,6 +486,8 @@ set (SRC
     op/util/logical_reduction.hpp
     op/util/rnn_cell_base.cpp
     op/util/rnn_cell_base.hpp
+    op/util/scatter_base.cpp
+    op/util/scatter_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
     ops.hpp
@@ -489,6 +513,7 @@ set (SRC
     pass/constant_folding_dyn_reshape.cpp
     pass/constant_folding_dyn_slice.cpp
     pass/constant_folding_gather.cpp
+    pass/constant_folding_scatter.cpp
     pass/constant_folding_logical_reduction.cpp
     pass/constant_folding_non_zero.cpp
     pass/constant_folding_one_hot.cpp
@@ -500,7 +525,6 @@ set (SRC
     pass/constant_folding_select.cpp
     pass/constant_folding_squeeze.cpp
     pass/constant_folding_unsqueeze.cpp
-    pass/constant_folding_shape_of.cpp
     pass/constant_folding_slice.cpp
     pass/constant_folding_split.cpp
     pass/constant_folding_variadic_split.cpp
@@ -599,6 +623,8 @@ set (SRC
     provenance.cpp
     provenance.hpp
     rank.hpp
+    rt_info.cpp
+    rt_info.hpp
     runtime/aligned_buffer.cpp
     runtime/aligned_buffer.hpp
     runtime/allocator.cpp
@@ -635,6 +661,7 @@ set (SRC
     type/float16.cpp
     type/float16.hpp
     type/element_type.cpp
+    type/element_type_traits.hpp
     type.cpp
     type.hpp
     util.cpp
