@@ -985,11 +985,26 @@ pair<bool, int64_t> ngraph::maximum_value(const Output<Node>& value)
 {
     static Evaluator<MaxValue>::op_handler_map handlers = {
         {op::Minimum::type_info, exec_minimum}, {op::Constant::type_info, exec_constant}};
-    Evaluator<MaxValue> evaluator(handlers);
+    Evaluator<MaxValue>::value_map value_map;
+    Evaluator<MaxValue> evaluator(handlers, value_map);
     auto val = evaluator.evaluate(value);
     if (val.m_element_type == element::Type_t::i64)
     {
         return pair<bool, int64_t>(true, val.m_int64_t);
     }
     return pair<bool, int64_t>(false, 0);
+}
+
+void ngraph::evaluate_nodes(std::map<RawNodeOutput, Output<Node>>& value_map,
+                            const OutputVector& values)
+{
+    Evaluator<Output<Node>> evaluator({}, value_map);
+    evaluator.set_univeral_handler(
+        [](Node* node, const OutputVector& input_values) -> OutputVector {
+            return node->constant_fold(input_values);
+        });
+    for (auto value : values)
+    {
+        evaluator.evaluate(value);
+    }
 }

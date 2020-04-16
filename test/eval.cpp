@@ -24,6 +24,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/shape_of.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -54,4 +55,24 @@ TEST(eval, max_eval_minimum_constant)
     auto result = maximum_value(m);
     ASSERT_TRUE(result.first);
     EXPECT_EQ(result.second, 27);
+}
+
+TEST(eval, evaluate_shape_of)
+{
+    auto p = make_shared<op::Parameter>(element::f32, PartialShape{-1, -1});
+    auto so = make_shared<op::v0::ShapeOf>(p);
+
+    auto p_arg = op::Constant::create<float>(
+        element::f32, Shape{2, 3}, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
+    map<RawNodeOutput, Output<Node>> value_map;
+    value_map[p->output(0)] = p_arg;
+    evaluate_nodes(value_map, {so->output(0)});
+    auto value = value_map.find(so->output(0));
+    ASSERT_TRUE(value != value_map.end());
+    auto c = as_type_ptr<op::v0::Constant>(value->second.get_node_shared_ptr());
+    ASSERT_TRUE(c);
+    EXPECT_EQ(c->get_output_element_type(0), element::i64);
+    EXPECT_EQ(c->get_output_partial_shape(0), (PartialShape{2}));
+    std::vector<int64_t> shape = c->get_vector<int64_t>();
+    ASSERT_EQ(shape, (vector<int64_t>{2, 3}));
 }

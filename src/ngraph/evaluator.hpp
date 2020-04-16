@@ -51,8 +51,9 @@ namespace ngraph
         /// Evaluator::get_value_map().
         ///
         /// \param Handlers for ops. Pairs of Node::type_info_t and handler functions.
-        Evaluator(const op_handler_map& handlers)
+        Evaluator(const op_handler_map& handlers, value_map& values)
             : m_handlers(handlers)
+            , m_value_map(values)
         {
         }
 
@@ -126,10 +127,10 @@ namespace ngraph
             void handle(Evaluator& evaluator, InstStack& inst_stack, Node* node) override
             {
                 // Request to analyze this value if we can
-                if (evaluator.get_handler(node))
+                if (auto handler = evaluator.get_handler(node))
                 {
                     // Ensure the inputs are processed and then execute the op handler
-                    inst_stack.push(InstPtr(new ExecuteInst(node)));
+                    inst_stack.push(InstPtr(new ExecuteInst(node, handler)));
                     for (auto v : node->input_values())
                     {
                         inst_stack.push(InstPtr(new ValueInst(v)));
@@ -153,8 +154,9 @@ namespace ngraph
         class ExecuteInst : public Inst
         {
         public:
-            ExecuteInst(Node* node)
+            ExecuteInst(Node* node, op_handler& handler)
                 : Inst(node)
+                , m_handler(handler)
             {
             }
 
@@ -167,12 +169,15 @@ namespace ngraph
                 {
                     inputs.push_back(evaluator.get_value_map().at(v));
                 }
-                std::vector<V> outputs = evaluator.get_handler(node)(node, inputs);
+                std::vector<V> outputs = m_handler(node, inputs);
                 for (size_t i = 0; i < outputs.size(); ++i)
                 {
                     evaluator.get_value_map()[node->output(i)] = outputs[i];
                 }
             }
+
+        private:
+            op_handler m_handler;
         };
 
     public:
@@ -202,6 +207,6 @@ namespace ngraph
         op_handler m_universal_handler;
         op_handler_map m_handlers;
         op_handler m_default_handler;
-        value_map m_value_map;
+        value_map& m_value_map;
     };
 }
