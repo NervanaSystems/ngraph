@@ -59,97 +59,149 @@ namespace ngraph
         /// \brief Retrieves the value_map, which holds all Output<Node> value associations.
         value_map& get_value_map() { return m_value_map; }
         const value_map& get_value_map() const { return m_value_map; }
+        /// \brief If set, handles all ops
+        const op_handler& get_univeral_handler() const { return m_universal_handler; }
+        /// \brief If set, handles all ops not in the handlers
+        const op_handler& get_default_handler() const { return m_default_handler; }
+        /// \brief If set, handles all ops
+        void set_univeral_handler(const op_handler& handler) { m_universal_handler = handler; }
+        /// \brief If set, handles all ops not in the handlers
+        void set_default_handler(const op_handler& handler) { m_default_handler = handler; }
     protected:
+        op_handler get_handler(Node* node)
+        {
+            op_handler handler = m_universal_handler;
+            if (!handler)
+            {
+                auto it = m_handlers.find(node->get_type_info());
+                if (it == m_handlers.end())
+                {
+                    handler = m_default_handler;
+                }
+                else
+                {
+                    handler = it->second;
+                }
+            }
+            return handler;
+        }
+
+        class Inst;
+        using InstPtr = std::unique_ptr<Inst>;
+        using InstStack = std::stack<InstPtr>;
+
         /// \brief Intstructions for evaluations state machine
         class Inst
         {
-        public:
-            /// \brief Ensure value has been analyzed
-            Inst(const Output<Node>& value)
-                : m_node(value.get_node())
-                , m_index(value.get_index())
-            {
-            }
-
-            Inst(const RawNodeOutput& value)
-                : m_node(value.node)
-                , m_index(value.index)
-            {
-            }
-
-            /// \brief All arguments have been handled; execute the node handler
+        protected:
             Inst(Node* node)
                 : m_node(node)
             {
             }
 
-            /// \brief True if this is a value instruction
-            bool is_value() const { return m_index >= 0; }
-            RawNodeOutput get_value() const { return RawNodeOutput(m_node, m_index); }
-            Node* get_node() const { return m_node; }
-        private:
+        public:
+            virtual ~Inst() {}
+            virtual void handle(Evaluator& evaluator, InstStack& inst_stack, Node* node) = 0;
+            Node* get_node() { return m_node; }
+        protected:
             Node* m_node;
-            int64_t m_index{-1};
+        };
+
+        /// \brief Ensure value has been analyzed
+        class ValueInst : public Inst
+        {
+        public:
+            ValueInst(const Output<Node>& value)
+                : Inst(value.get_node())
+                , m_index(value.get_index())
+            {
+            }
+
+            ValueInst(const RawNodeOutput& value)
+                : Inst(value.node)
+                , m_index(value.index)
+            {
+            }
+
+            void handle(Evaluator& evaluator, InstStack& inst_stack, Node* node) override
+            {
+                // Request to analyze this value if we can
+                if (evaluator.get_handler(node))
+                {
+                    // Ensure the inputs are processed and then execute the op handler
+                    inst_stack.push(InstPtr(new ExecuteInst(node)));
+                    for (auto v : node->input_values())
+                    {
+                        inst_stack.push(InstPtr(new ValueInst(v)));
+                    }
+                }
+                else
+                {
+                    // We don't know how to handle this op, so mark the outputs as unknown
+                    for (auto output : node->outputs())
+                    {
+                        evaluator.get_value_map()[output] = V();
+                    }
+                }
+            }
+
+        private:
+            int64_t m_index;
+        };
+
+        /// \brief All arguments have been handled; execute the node handler
+        class ExecuteInst : public Inst
+        {
+        public:
+            ExecuteInst(Node* node)
+                : Inst(node)
+            {
+            }
+
+            void handle(Evaluator& evaluator, InstStack& inst_stack, Node* node) override
+            {
+                // Request to execute the handleer. Pass what we know about the inputs to the
+                // handler and associate the results with the outputs
+                std::vector<V> inputs;
+                for (auto v : node->input_values())
+                {
+                    inputs.push_back(evaluator.get_value_map().at(v));
+                }
+                std::vector<V> outputs = evaluator.get_handler(node)(node, inputs);
+                for (size_t i = 0; i < outputs.size(); ++i)
+                {
+                    evaluator.get_value_map()[node->output(i)] = outputs[i];
+                }
+            }
         };
 
     public:
         /// \brief Determine information about value
         V evaluate(const Output<Node>& value)
         {
-            std::stack<Inst> inst_stack;
-            inst_stack.push(value);
+            InstStack inst_stack;
+            inst_stack.push(InstPtr(new ValueInst(value)));
             while (!inst_stack.empty())
             {
-                auto inst = inst_stack.top();
+                InstPtr inst;
+                std::swap(inst_stack.top(), inst);
+                // auto inst = inst_stack.top();
                 inst_stack.pop();
-                auto node = inst.get_node();
+                auto node = inst->get_node();
                 if (m_value_map.find(node->output(0)) != m_value_map.end())
                 {
                     // Already computed
                     continue;
                 }
-                if (inst.is_value())
-                {
-                    // Request to analyze this value if we can
-                    if (m_handlers.find(node->get_type_info()) != m_handlers.end())
-                    {
-                        // Ensure the inputs are processed and then execute the op handler
-                        inst_stack.push(node);
-                        for (auto v : node->input_values())
-                        {
-                            inst_stack.push(v);
-                        }
-                    }
-                    else
-                    {
-                        // We don't know how to handle this op, so mark the outputs as unknown
-                        for (auto output : node->outputs())
-                        {
-                            m_value_map[output] = V();
-                        }
-                    }
-                }
-                else
-                {
-                    // Request to execute the handleer. Pass what we know about the inputs to the
-                    // handler and associate the results with the outputs
-                    std::vector<V> inputs;
-                    for (auto v : node->input_values())
-                    {
-                        inputs.push_back(m_value_map.at(v));
-                    }
-                    std::vector<V> outputs = m_handlers.at(node->get_type_info())(node, inputs);
-                    for (size_t i = 0; i < outputs.size(); ++i)
-                    {
-                        m_value_map[node->output(i)] = outputs[i];
-                    }
-                }
+                inst->handle(*this, inst_stack, node);
             }
             return m_value_map.at(value);
         }
 
     protected:
+        op_handler m_universal_handler;
         op_handler_map m_handlers;
+        op_handler m_default_handler;
         value_map m_value_map;
     };
 }
