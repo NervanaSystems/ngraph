@@ -31,7 +31,7 @@ using namespace ngraph::onnx_import;
 
 static std::string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_text)
+NGRAPH_TEST(${BACKEND_NAME}, onnx_provenance_tag_text)
 {
     const auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/provenance_tag_add.prototxt"));
@@ -67,7 +67,7 @@ void test_provenance_tags(const std::shared_ptr<Function> function,
     EXPECT_TRUE(node_count > 0) << "Expected type of node doesn't exist in graph.";
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_only_output)
+NGRAPH_TEST(${BACKEND_NAME}, onnx_provenance_only_output)
 {
     test::ProvenanceEnabler provenance_enabler;
 
@@ -78,7 +78,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_only_output)
     test_provenance_tags<default_opset::Add>(function, "<ONNX Add (-> output_of_add)>");
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_node_name_and_outputs)
+NGRAPH_TEST(${BACKEND_NAME}, onnx_provenance_node_name_and_outputs)
 {
     test::ProvenanceEnabler provenance_enabler;
 
@@ -87,7 +87,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_node_name_and_outputs)
     test_provenance_tags<default_opset::Add>(function, "<ONNX Add (Add_node -> output_of_add)>");
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_multiple_outputs_op)
+NGRAPH_TEST(${BACKEND_NAME}, onnx_provenance_multiple_outputs_op)
 {
     test::ProvenanceEnabler provenance_enabler;
 
@@ -96,7 +96,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_multiple_outputs_op)
     test_provenance_tags<default_opset::TopK>(function, "<ONNX TopK (TOPK -> values, indices)>");
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_constants)
+NGRAPH_TEST(${BACKEND_NAME}, onnx_provenance_tagging_constants)
 {
     test::ProvenanceEnabler provenance_enabler;
 
@@ -106,7 +106,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_constants)
                                                   "<ONNX Input (initializer_of_A) Shape:{1}>");
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_parameters)
+NGRAPH_TEST(${BACKEND_NAME}, onnx_provenance_tagging_parameters)
 {
     test::ProvenanceEnabler provenance_enabler;
 
@@ -115,7 +115,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tagging_parameters)
     test_provenance_tags<default_opset::Parameter>(function, "<ONNX Input (input_B) Shape:{}>");
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, provenance_tag_downgrade_pass)
+NGRAPH_TEST(${BACKEND_NAME}, onnx_provenance_tag_downgrade_pass)
 {
     test::ProvenanceEnabler provenance_enabler;
 
