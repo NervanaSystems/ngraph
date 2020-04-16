@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "region_yolo.hpp"
+#include "ngraph/op/region_yolo.hpp"
 #include "ngraph/attribute_visitor.hpp"
 
 using namespace std;

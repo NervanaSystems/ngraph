@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "roi_pooling.hpp"
+#include "ngraph/op/roi_pooling.hpp"
 
 using namespace std;
 using namespace ngraph;
