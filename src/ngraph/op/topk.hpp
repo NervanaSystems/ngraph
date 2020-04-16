@@ -285,9 +285,6 @@ namespace ngraph
                 size_t read_k_from_constant_node(const std::shared_ptr<Node>& node,
                                                  const element::Type& k_element_type) const;
 
-                Mode mode_from_string(const std::string& mode) const;
-                SortType sort_type_from_string(const std::string& sort) const;
-
                 template <typename T>
                 size_t validate_and_get_k(const std::shared_ptr<op::Constant>& k_constant) const;
             };

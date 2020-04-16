@@ -455,8 +455,8 @@ op::v3::TopK::TopK(const Output<Node>& data,
     : Op{{data, k}}
     , m_axis{axis}
     , m_normalized_axis{0}
-    , m_mode{mode_from_string(mode)}
-    , m_sort{sort_type_from_string(sort)}
+    , m_mode{EnumNames<Mode>::as_enum(mode)}
+    , m_sort{EnumNames<SortType>::as_enum(sort)}
     , m_output_indices_type{output_indices_type}
 {
     constructor_validate_and_infer_types();
@@ -613,28 +613,6 @@ shared_ptr<Node> op::v3::TopK::clone_with_new_inputs(const OutputVector& new_arg
     new_v3_topk->set_output_indices_type(m_output_indices_type);
 
     return std::move(new_v3_topk);
-}
-
-op::v3::TopK::Mode op::v3::TopK::mode_from_string(const std::string& mode) const
-{
-    static const std::map<std::string, Mode> allowed_values = {{"max", Mode::MAX},
-                                                               {"min", Mode::MIN}};
-
-    NODE_VALIDATION_CHECK(this, allowed_values.count(mode) > 0, "Invalid 'mode' value passed in.");
-
-    return allowed_values.at(mode);
-}
-
-op::v3::TopK::SortType op::v3::TopK::sort_type_from_string(const std::string& sort) const
-{
-    static const std::map<std::string, SortType> allowed_values = {
-        {"none", SortType::NONE},
-        {"index", SortType::SORT_INDICES},
-        {"value", SortType::SORT_VALUES}};
-
-    NODE_VALIDATION_CHECK(this, allowed_values.count(sort) > 0, "Invalid 'sort' value passed in.");
-
-    return allowed_values.at(sort);
 }
 
 size_t op::v3::TopK::get_k() const
