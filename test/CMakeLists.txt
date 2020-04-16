@@ -550,7 +550,11 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
 
     string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
     string(REGEX REPLACE "([a-z0-9]+):(.*)" "\\1" BACKEND_DIR ${BACKEND_DIR})
-    set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+    if (EXISTS ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+        set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+    elseif(EXISTS ${PROJECT_SOURCE_DIR}/src/runtime/${BACKEND_DIR}/unit_test.manifest)
+        set(MANIFEST ${PROJECT_SOURCE_DIR}/src/runtime/${BACKEND_DIR}/unit_test.manifest)
+    endif()
 
     foreach(TEST_SRC ${MULTI_TEST_SRC})
         string(REPLACE ":" "_" BACKEND_NAME ${BACKEND_NAME})
