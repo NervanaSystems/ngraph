@@ -74,7 +74,15 @@ namespace ngraph
             public:
                 static constexpr NodeTypeInfo type_info{"LSTMCell", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                LSTMCell() = default;
+                LSTMCell()
+                    : m_input_forget(false)
+                    , m_weights_format(LSTMWeightsFormat::IFCO)
+                {
+                    m_activations = {"sigmoid", "tanh", "tanh"};
+                    m_activation_f = get_activation_function(0);
+                    m_activation_g = get_activation_function(1);
+                    m_activation_h = get_activation_function(2);
+                }
                 ///
                 /// \brief      Constructs LSTMCell node.
                 ///
