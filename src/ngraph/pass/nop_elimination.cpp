@@ -110,6 +110,7 @@ static bool eliminate_sum(const std::shared_ptr<Node>& node)
 static bool eliminate_convert(const std::shared_ptr<Node>& node)
 {
     auto convert = as_type_ptr<op::v0::Convert>(node);
+    cout << "Curr node: " << convert << endl;
     auto destination_type = convert->get_destination_type();
     static const std::set<NodeTypeInfo> type_agnostic{TI(op::v3::NonZero)};
 
@@ -127,8 +128,11 @@ static bool eliminate_convert(const std::shared_ptr<Node>& node)
     }
     if (destination_type == convert->get_argument(0)->get_element_type() || users_are_type_agnostic)
     {
-        return remove_node_update_name(node, convert->get_argument(0));
+        cout << " Removing node: " << node << endl;
+        replace_node_update_name(node, convert->get_argument(0));
+        return true;
     }
+    cout << "Not gone!: " << convert << endl;
     return false;
 }
 

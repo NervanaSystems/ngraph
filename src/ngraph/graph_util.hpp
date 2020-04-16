@@ -507,4 +507,7 @@ namespace ngraph
     NGRAPH_API
     bool remove_node_update_name(const std::shared_ptr<Node>& node,
                                  const std::shared_ptr<Node>& node_input);
+    NGRAPH_API
+    void replace_node_update_name(const std::shared_ptr<Node>& node,
+                                  const std::shared_ptr<Node>& node_input);
 }
