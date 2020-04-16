@@ -150,13 +150,14 @@ void op::GRUCell::pre_validate_and_infer_types()
 
     const Shape& b_shape{b_pshape.to_shape()};
 
-    NODE_VALIDATION_CHECK(this,
-                          (b_shape == Shape{(s_gates_count + m_linear_before_reset) * get_hidden_size()}),
-                          "Input tensor B must have shape (",
-                          (s_gates_count + m_linear_before_reset) * get_hidden_size(),
-                          "). Actual shape is:",
-                          b_shape,
-                          ".");
+    NODE_VALIDATION_CHECK(
+        this,
+        (b_shape == Shape{(s_gates_count + m_linear_before_reset) * get_hidden_size()}),
+        "Input tensor B must have shape (",
+        (s_gates_count + m_linear_before_reset) * get_hidden_size(),
+        "). Actual shape is:",
+        b_shape,
+        ".");
 }
 
 NodeVector op::GRUCell::decompose_op() const
@@ -176,7 +177,8 @@ NodeVector op::GRUCell::decompose_op() const
     //          Shape: [gates_count * hidden_size, hidden_size].
     // H_t    - The hidden state tensor at current time step. Shape: [batch_size, hidden_size].
     // B      - The sum of biases (weight and recurrence) for update, reset and hidden gates.
-    //          If linear_before_reset := true then biases for hidden gates are placed separately (weight and recurrence).
+    //          If linear_before_reset := true then biases for hidden gates are placed separately
+    //          (weight and recurrence).
     //          Shape: [gates_count * hidden_size] when linear_before_reset := false
     //          Shape: [(gates_count + 1) * hidden_size] when linear_before_reset := true
     //          Concatenation of `[Wb[zrh], Rb[zrh]]`.
@@ -245,10 +247,10 @@ NodeVector op::GRUCell::decompose_op() const
 
 void op::GRUCell::add_default_bias_input()
 {
-    Output<Node> B =
-        op::Constant::create(get_input_element_type(0),
-                             Shape{(s_gates_count + m_linear_before_reset) * get_hidden_size()},
-                             vector<float>((s_gates_count + m_linear_before_reset)  * get_hidden_size(), 0.f));
+    Output<Node> B = op::Constant::create(
+        get_input_element_type(0),
+        Shape{(s_gates_count + m_linear_before_reset) * get_hidden_size()},
+        vector<float>((s_gates_count + m_linear_before_reset) * get_hidden_size(), 0.f));
     set_argument(4, B);
 }
 
