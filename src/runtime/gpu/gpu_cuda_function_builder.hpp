@@ -18,21 +18,23 @@
 
 #include <string>
 
-#include "ngraph/ngraph_visibility.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/type.hpp"
+#include "gpu_cuda_context_manager.hpp"
+#include "gpu_util.hpp"
 
 namespace ngraph
 {
-    NGRAPH_API
-    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, std::shared_ptr<ngraph::Node> to);
-
-    NGRAPH_API
-    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, ngraph::NodeVector to);
-
-    NGRAPH_API
-    void copy_runtime_info(const ngraph::NodeVector& from, std::shared_ptr<ngraph::Node> to);
-
-    NGRAPH_API
-    void copy_runtime_info(const ngraph::NodeVector& from, ngraph::NodeVector to);
+    namespace runtime
+    {
+        namespace gpu
+        {
+            class CudaFunctionBuilder
+            {
+            public:
+                static std::shared_ptr<CUfunction> get(const std::string& name,
+                                                       const std::string& kernel,
+                                                       int number_of_options,
+                                                       const char** options);
+            };
+        }
+    }
 }

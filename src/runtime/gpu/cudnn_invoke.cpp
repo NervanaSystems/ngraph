@@ -14,25 +14,15 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
 #include <string>
 
-#include "ngraph/ngraph_visibility.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/type.hpp"
+#include "cudnn_invoke.hpp"
+#include "gpu_runtime_context.hpp"
 
-namespace ngraph
+extern "C" void ngraph::runtime::gpu::cudnn_utils::cudnn_invoke_primitive(GPURuntimeContext* ctx,
+                                                                          size_t primitive_index,
+                                                                          void** args,
+                                                                          void** result)
 {
-    NGRAPH_API
-    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, std::shared_ptr<ngraph::Node> to);
-
-    NGRAPH_API
-    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, ngraph::NodeVector to);
-
-    NGRAPH_API
-    void copy_runtime_info(const ngraph::NodeVector& from, std::shared_ptr<ngraph::Node> to);
-
-    NGRAPH_API
-    void copy_runtime_info(const ngraph::NodeVector& from, ngraph::NodeVector to);
+    (*ctx->cudnn_primitives[primitive_index])(args, result);
 }

@@ -14,25 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
+#include <memory>
 #include <string>
 
-#include "ngraph/ngraph_visibility.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/type.hpp"
+#include "cuda_error_check.hpp"
+#include "gpu_cuda_context_manager.hpp"
 
-namespace ngraph
+using namespace ngraph;
+
+runtime::gpu::CudaContextManager::CudaContextManager()
 {
-    NGRAPH_API
-    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, std::shared_ptr<ngraph::Node> to);
+    CUDA_SAFE_CALL(cuInit(0));
+    CUDA_SAFE_CALL(cuDeviceGet(&m_device, 0));
+    CUDA_SAFE_CALL(cuDevicePrimaryCtxRetain(&m_context, m_device));
+}
 
-    NGRAPH_API
-    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, ngraph::NodeVector to);
-
-    NGRAPH_API
-    void copy_runtime_info(const ngraph::NodeVector& from, std::shared_ptr<ngraph::Node> to);
-
-    NGRAPH_API
-    void copy_runtime_info(const ngraph::NodeVector& from, ngraph::NodeVector to);
+runtime::gpu::CudaContextManager::~CudaContextManager()
+{
+    CUDA_SAFE_CALL_NO_THROW(cuDevicePrimaryCtxRelease(m_device));
 }

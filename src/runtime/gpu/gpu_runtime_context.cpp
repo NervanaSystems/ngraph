@@ -14,25 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "gpu_runtime_context.hpp"
+#include "gpu_util.hpp"
 
-#include <string>
+using namespace ngraph;
 
-#include "ngraph/ngraph_visibility.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/type.hpp"
-
-namespace ngraph
+extern "C" void runtime::gpu::start_stopwatch(GPURuntimeContext* ctx, size_t idx)
 {
-    NGRAPH_API
-    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, std::shared_ptr<ngraph::Node> to);
+    ctx->stopwatch_pool->get(idx).start();
+}
 
-    NGRAPH_API
-    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, ngraph::NodeVector to);
-
-    NGRAPH_API
-    void copy_runtime_info(const ngraph::NodeVector& from, std::shared_ptr<ngraph::Node> to);
-
-    NGRAPH_API
-    void copy_runtime_info(const ngraph::NodeVector& from, ngraph::NodeVector to);
+extern "C" void runtime::gpu::stop_stopwatch(GPURuntimeContext* ctx, size_t idx)
+{
+    ctx->stopwatch_pool->get(idx).stop();
+}
+extern "C" size_t runtime::gpu::count_stopwatch(GPURuntimeContext* ctx, size_t idx)
+{
+    return ctx->stopwatch_pool->get(idx).get_call_count();
+}
+extern "C" size_t runtime::gpu::us_stopwatch(GPURuntimeContext* ctx, size_t idx)
+{
+    return ctx->stopwatch_pool->get(idx).get_total_microseconds();
 }
