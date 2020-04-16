@@ -31,6 +31,7 @@ using namespace ngraph;
 
 namespace ngraph
 {
+    // float
     constexpr DiscreteTypeInfo AttributeAdapter<float>::type_info;
     const double& AttributeAdapter<float>::get()
     {
@@ -48,6 +49,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
+    // double
     constexpr DiscreteTypeInfo AttributeAdapter<double>::type_info;
     const double& AttributeAdapter<double>::get()
     {
@@ -60,6 +62,24 @@ namespace ngraph
     }
 
     void AttributeAdapter<double>::set(const double& value)
+    {
+        m_value = value;
+        m_buffer_valid = false;
+    }
+
+    // bool
+    constexpr DiscreteTypeInfo AttributeAdapter<bool>::type_info;
+    const bool& AttributeAdapter<bool>::get()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = m_value;
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+
+    void AttributeAdapter<bool>::set(const bool& value)
     {
         m_value = value;
         m_buffer_valid = false;
@@ -221,10 +241,84 @@ namespace ngraph
     }
 #endif
 
+    // vector<int8_t>
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<int8_t>>::type_info;
+
+    const vector<int8_t>& AttributeAdapter<vector<int8_t>>::get() { return m_value; }
+    void AttributeAdapter<vector<int8_t>>::set(const vector<int8_t>& value) { m_value = value; }
+    // vector<int16_t>
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<int16_t>>::type_info;
+
+    const vector<int16_t>& AttributeAdapter<vector<int16_t>>::get() { return m_value; }
+    void AttributeAdapter<vector<int16_t>>::set(const vector<int16_t>& value) { m_value = value; }
+    // vector<int32_t>
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<int32_t>>::type_info;
+
+    const vector<int32_t>& AttributeAdapter<vector<int32_t>>::get() { return m_value; }
+    void AttributeAdapter<vector<int32_t>>::set(const vector<int32_t>& value) { m_value = value; }
+    // vector<int64_t>
     constexpr DiscreteTypeInfo AttributeAdapter<vector<int64_t>>::type_info;
 
     const vector<int64_t>& AttributeAdapter<vector<int64_t>>::get() { return m_value; }
     void AttributeAdapter<vector<int64_t>>::set(const vector<int64_t>& value) { m_value = value; }
+    // vector<uint8_t>
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<uint8_t>>::type_info;
+
+    const vector<int8_t>& AttributeAdapter<vector<uint8_t>>::get()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = copy_from<vector<int8_t>>(m_value);
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+
+    void AttributeAdapter<vector<uint8_t>>::set(const vector<int8_t>& value)
+    {
+        m_value = copy_from<vector<uint8_t>>(value);
+        m_buffer_valid = false;
+    }
+
+    // vector<uint16_t>
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<uint16_t>>::type_info;
+
+    const vector<int16_t>& AttributeAdapter<vector<uint16_t>>::get()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = copy_from<vector<int16_t>>(m_value);
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+
+    void AttributeAdapter<vector<uint16_t>>::set(const vector<int16_t>& value)
+    {
+        m_value = copy_from<vector<uint16_t>>(value);
+        m_buffer_valid = false;
+    }
+
+    // vector<uint32_t>
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<uint32_t>>::type_info;
+
+    const vector<int32_t>& AttributeAdapter<vector<uint32_t>>::get()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = copy_from<vector<int32_t>>(m_value);
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+
+    void AttributeAdapter<vector<uint32_t>>::set(const vector<int32_t>& value)
+    {
+        m_value = copy_from<vector<uint32_t>>(value);
+        m_buffer_valid = false;
+    }
+
+    // vector<uint64_t>
     constexpr DiscreteTypeInfo AttributeAdapter<vector<uint64_t>>::type_info;
 
     const vector<int64_t>& AttributeAdapter<vector<uint64_t>>::get()
@@ -243,6 +337,7 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
+    /// vector<float>
     constexpr DiscreteTypeInfo AttributeAdapter<vector<float>>::type_info;
 
     const vector<float>& AttributeAdapter<vector<float>>::get()
@@ -261,6 +356,26 @@ namespace ngraph
         m_buffer_valid = false;
     }
 
+    /// vector<double>
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<double>>::type_info;
+
+    const vector<double>& AttributeAdapter<vector<double>>::get()
+    {
+        if (!m_buffer_valid)
+        {
+            m_buffer = copy_from<vector<double>>(m_value);
+            m_buffer_valid = true;
+        }
+        return m_buffer;
+    }
+
+    void AttributeAdapter<vector<double>>::set(const vector<double>& value)
+    {
+        m_value = copy_from<vector<double>>(value);
+        m_buffer_valid = false;
+    }
+
+    /// vector<string>
     constexpr DiscreteTypeInfo AttributeAdapter<vector<string>>::type_info;
 
     const vector<string>& AttributeAdapter<vector<string>>::get()
