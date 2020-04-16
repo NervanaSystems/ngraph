@@ -24,15 +24,15 @@ static int INPUTS = 0;
 static int INDICES = 1;
 static int UPDATES = 2;
 
-constexpr NodeTypeInfo op::ScatterAdd::type_info;
+constexpr NodeTypeInfo op::v0::ScatterAdd::type_info;
 
-shared_ptr<Node> op::ScatterAdd::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::ScatterAdd::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ScatterAdd>(new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
 }
 
-void op::ScatterAdd::validate_and_infer_types()
+void op::v0::ScatterAdd::validate_and_infer_types()
 {
     element::Type inputs_et = get_input_element_type(INPUTS);
     element::Type indices_et = get_input_element_type(INDICES);
@@ -77,4 +77,27 @@ void op::ScatterAdd::validate_and_infer_types()
         this, compatible, "Updates shape must be indices_shape + inputs_shape[1:]");
 
     set_output_type(0, inputs_et, inputs_shape);
+}
+
+//------------------------------------------------------------------------------
+//
+//          Introduced in Opset 3
+//
+//------------------------------------------------------------------------------
+
+constexpr NodeTypeInfo op::v3::ScatterAdd::type_info;
+
+op::v3::ScatterAdd::ScatterAdd(const Output<Node>& data,
+                               const Output<Node>& indices,
+                               const Output<Node>& updates,
+                               const Output<Node>& axis)
+    : util::ScatterBase(data, indices, updates, axis)
+{
+}
+
+shared_ptr<Node> op::v3::ScatterAdd::clone_with_new_inputs(const OutputVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v3::ScatterAdd>(
+        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }

@@ -17,7 +17,7 @@
 #include <iostream>
 
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/experimental/transpose.hpp"
+#include "ngraph/op/transpose.hpp"
 
 using namespace std;
 using namespace ngraph;
