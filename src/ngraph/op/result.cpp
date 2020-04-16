@@ -31,8 +31,11 @@ op::Result::Result(const Output<Node>& arg, bool needs_default_layout)
     , m_needs_default_layout(needs_default_layout)
 {
     constructor_validate_and_infer_types();
-    // always borrow the placement conf even the default one
-    set_placement_index(input_value(0).get_node()->get_placement_index());
+}
+
+bool ngraph::op::v0::Result::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
 }
 
 void op::Result::validate_and_infer_types()
@@ -43,7 +46,7 @@ void op::Result::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Result::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
 

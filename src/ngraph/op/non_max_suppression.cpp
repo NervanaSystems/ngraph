@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/non_max_suppression.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
 
 using namespace std;
@@ -53,7 +54,8 @@ op::v1::NonMaxSuppression::NonMaxSuppression(
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v1::NonMaxSuppression::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::v1::NonMaxSuppression::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v1::NonMaxSuppression>(new_args.at(0),
@@ -65,24 +67,40 @@ shared_ptr<Node> op::v1::NonMaxSuppression::copy_with_new_args(const NodeVector&
                                                   m_sort_result_descending);
 }
 
+bool ngraph::op::v1::NonMaxSuppression::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("box_encoding", m_box_encoding);
+    visitor.on_attribute("sort_result_descending", m_sort_result_descending);
+    return true;
+}
+
 void op::v1::NonMaxSuppression::validate_and_infer_types()
 {
     const auto boxes_ps = get_input_partial_shape(0);
     const auto scores_ps = get_input_partial_shape(1);
+
+    // the spec doesn't say what exact type should be used for the output of this op
+    // that's why we're setting it to 64-bit integer to provide the maximum range of values support
+    // this will be changed (configurable) in the next version of this op
+    const auto& output_element_type = element::i64;
+
+    // NonMaxSuppression produces triplets
+    // that have the following format: [batch_index, class_index, box_index]
+    PartialShape out_shape = {Dimension::dynamic(), 3};
+
     if (boxes_ps.is_dynamic() || scores_ps.is_dynamic())
     {
-        set_output_type(0, get_input_element_type(0), PartialShape::dynamic(Rank::dynamic()));
+        set_output_type(0, output_element_type, out_shape);
         return;
     }
 
     NODE_VALIDATION_CHECK(this,
-                          boxes_ps.rank().is_static() && static_cast<size_t>(boxes_ps.rank()) == 3,
+                          boxes_ps.rank().is_static() && boxes_ps.rank().get_length() == 3,
                           "Expected a 3D tensor for the 'boxes' input. Got: ",
                           boxes_ps);
 
     NODE_VALIDATION_CHECK(this,
-                          scores_ps.rank().is_static() &&
-                              static_cast<size_t>(scores_ps.rank()) == 3,
+                          scores_ps.rank().is_static() && scores_ps.rank().get_length() == 3,
                           "Expected a 3D tensor for the 'scores' input. Got: ",
                           scores_ps);
 
@@ -125,26 +143,22 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
                           num_boxes_scores);
 
     NODE_VALIDATION_CHECK(this,
-                          boxes_ps[2].is_static() && static_cast<size_t>(boxes_ps[2]) == 4u,
+                          boxes_ps[2].is_static() && boxes_ps[2].get_length() == 4u,
                           "The last dimension of the 'boxes' input must be equal to 4. Got:",
                           boxes_ps[2]);
-
-    // NonMaxSuppression produces triplets
-    // that have the following format: [batch_index, class_index, box_index]
-    PartialShape out_shape = {Dimension::dynamic(), 3};
 
     const auto max_output_boxes_per_class = input_value(2).get_node_shared_ptr();
     if (num_boxes_boxes.is_static() && scores_ps[1].is_static() &&
         max_output_boxes_per_class->is_constant())
     {
-        const auto num_boxes = static_cast<int64_t>(num_boxes_boxes);
+        const auto num_boxes = num_boxes_boxes.get_length();
         const auto max_output_boxes_per_class = max_boxes_output_from_input();
-        const auto num_classes = static_cast<int64_t>(scores_ps[1]);
+        const auto num_classes = scores_ps[1].get_length();
 
         out_shape[0] = std::min(num_boxes, max_output_boxes_per_class * num_classes);
     }
     set_output_size(1);
-    set_output_type(0, element::i64, out_shape);
+    set_output_type(0, output_element_type, out_shape);
 }
 
 int64_t op::v1::NonMaxSuppression::max_boxes_output_from_input() const
@@ -157,3 +171,26 @@ int64_t op::v1::NonMaxSuppression::max_boxes_output_from_input() const
 
     return max_output_boxes;
 }
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::v1::NonMaxSuppression::BoxEncodingType>&
+        EnumNames<op::v1::NonMaxSuppression::BoxEncodingType>::get()
+    {
+        static auto enum_names = EnumNames<op::v1::NonMaxSuppression::BoxEncodingType>(
+            "op::v1::NonMaxSuppression::BoxEncodingType",
+            {{"corner", op::v1::NonMaxSuppression::BoxEncodingType::CORNER},
+             {"center", op::v1::NonMaxSuppression::BoxEncodingType::CENTER}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo
+        AttributeAdapter<op::v1::NonMaxSuppression::BoxEncodingType>::type_info;
+
+    std::ostream& operator<<(std::ostream& s,
+                             const op::v1::NonMaxSuppression::BoxEncodingType& type)
+    {
+        return s << as_string(type);
+    }
+} // namespace ngraph

@@ -60,9 +60,7 @@ void op::MVN::validate_and_infer_types()
         AxisSet reduction_axes;
         reduction_axes.insert(0);
         size_t start_axis = m_across_channels ? 1 : 2;
-        for (size_t i = start_axis;
-             i < static_cast<size_t>(input_value(0).get_partial_shape().rank());
-             ++i)
+        for (size_t i = start_axis; i < input_value(0).get_partial_shape().rank().get_length(); ++i)
         {
             reduction_axes.insert(i);
         }
@@ -101,7 +99,7 @@ NodeVector op::MVN::decompose_op() const
     }
 }
 
-shared_ptr<Node> op::MVN::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::MVN::clone_with_new_inputs(const OutputVector& new_args) const
 {
     NODE_VALIDATION_CHECK(this,
                           new_args.size() == 1,

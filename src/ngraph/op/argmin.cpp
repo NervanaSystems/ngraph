@@ -34,7 +34,7 @@ bool op::ArgMin::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::ArgMin::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ArgMin::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ArgMin>(new_args.at(0), m_axis, this->get_element_type());

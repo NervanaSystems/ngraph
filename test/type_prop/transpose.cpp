@@ -285,7 +285,8 @@ TEST(type_prop, transpose_input_order_et_wrong)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must have element type i64."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input order must have an integral number element type."));
     }
     catch (...)
     {

@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -27,7 +28,7 @@ namespace ngraph
     template <typename Type>
     class ValueAccessor;
 
-    /// ValueAccessor<void> is for values that do not provide
+    /// \brief ValueAccessor<void> provides an accessor for values that do not have get/set methonds
     template <>
     class NGRAPH_API ValueAccessor<void>
     {
@@ -36,7 +37,8 @@ namespace ngraph
         virtual ~ValueAccessor() {}
     };
 
-    /// ValueAccessor<T> represents values that support get/set through T
+    /// \brief Provides access to values via get/set methods
+    /// \tparam T The type of the value; may be wider than the value being accessed.
     template <typename T>
     class ValueAccessor : public ValueAccessor<void>
     {
@@ -52,6 +54,8 @@ namespace ngraph
         bool m_buffer_valid{false};
     };
 
+    /// \brief holds a reference to a value
+    /// \tparam Type the type of the referenced value
     template <typename Type>
     class ValueReference
     {
@@ -70,6 +74,8 @@ namespace ngraph
     {
     };
 
+    /// \brief Access an enum via a string
+    /// \tparam Type The enum class
     template <typename Type>
     class EnumAttributeAdapterBase : public ValueReference<Type>, public ValueAccessor<std::string>
     {
@@ -86,6 +92,7 @@ namespace ngraph
         }
     };
 
+    /// \brief Access a float as a double
     template <>
     class NGRAPH_API AttributeAdapter<float> : public ValueReference<float>,
                                                public ValueAccessor<double>
@@ -102,6 +109,7 @@ namespace ngraph
         void set(const double& value) override;
     };
 
+    /// \brief Access a double as a double
     template <>
     class NGRAPH_API AttributeAdapter<double> : public ValueReference<double>,
                                                 public ValueAccessor<double>
@@ -118,6 +126,24 @@ namespace ngraph
         void set(const double& value) override;
     };
 
+    /// \brief Access a bool as a bool
+    template <>
+    class NGRAPH_API AttributeAdapter<bool> : public ValueReference<bool>,
+                                              public ValueAccessor<bool>
+    {
+    public:
+        AttributeAdapter(bool& value)
+            : ValueReference<bool>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<bool>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const bool& get() override;
+        void set(const bool& value) override;
+    };
+
+    /// \brief Access an int8_t and an int16_t
     template <>
     class NGRAPH_API AttributeAdapter<int8_t> : public ValueReference<int8_t>,
                                                 public ValueAccessor<int64_t>
@@ -134,6 +160,7 @@ namespace ngraph
         void set(const int64_t& value) override;
     };
 
+    /// \brief Access an int16_t as an int64_t
     template <>
     class NGRAPH_API AttributeAdapter<int16_t> : public ValueReference<int16_t>,
                                                  public ValueAccessor<int64_t>
@@ -150,6 +177,7 @@ namespace ngraph
         void set(const int64_t& value) override;
     };
 
+    /// \brief Access an int32_t as an int64_t
     template <>
     class NGRAPH_API AttributeAdapter<int32_t> : public ValueReference<int32_t>,
                                                  public ValueAccessor<int64_t>
@@ -166,6 +194,7 @@ namespace ngraph
         void set(const int64_t& value) override;
     };
 
+    /// \brief Access an int64_t as an int64_t
     template <>
     class NGRAPH_API AttributeAdapter<int64_t> : public ValueReference<int64_t>,
                                                  public ValueAccessor<int64_t>
@@ -182,6 +211,7 @@ namespace ngraph
         void set(const int64_t& value) override;
     };
 
+    /// \brief Access a uint8_t as an int64_t
     template <>
     class NGRAPH_API AttributeAdapter<uint8_t> : public ValueReference<uint8_t>,
                                                  public ValueAccessor<int64_t>
@@ -198,6 +228,7 @@ namespace ngraph
         void set(const int64_t& value) override;
     };
 
+    /// \brief Access a uint16_t as an int64_t
     template <>
     class NGRAPH_API AttributeAdapter<uint16_t> : public ValueReference<uint16_t>,
                                                   public ValueAccessor<int64_t>
@@ -214,6 +245,7 @@ namespace ngraph
         void set(const int64_t& value) override;
     };
 
+    /// \brief Access a uint32_t as an int64_t
     template <>
     class NGRAPH_API AttributeAdapter<uint32_t> : public ValueReference<uint32_t>,
                                                   public ValueAccessor<int64_t>
@@ -230,6 +262,7 @@ namespace ngraph
         void set(const int64_t& value) override;
     };
 
+    /// \brief Access a uint64_t as an int64_t
     template <>
     class NGRAPH_API AttributeAdapter<uint64_t> : public ValueReference<uint64_t>,
                                                   public ValueAccessor<int64_t>
@@ -267,6 +300,59 @@ namespace ngraph
 
     /// Note: These class bodies cannot be defined with templates because of interactions
     /// between dllexport and templates on Windows.
+
+    /// \brief Access a vector<int8_t>
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<int8_t>>
+        : public ValueReference<std::vector<int8_t>>, public ValueAccessor<std::vector<int8_t>>
+    {
+    public:
+        AttributeAdapter(std::vector<int8_t>& value)
+            : ValueReference<std::vector<int8_t>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<int8_t>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<int8_t>& get() override;
+        void set(const std::vector<int8_t>& value) override;
+    };
+
+    /// \brief Access a vector<int16_t>
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<int16_t>>
+        : public ValueReference<std::vector<int16_t>>, public ValueAccessor<std::vector<int16_t>>
+    {
+    public:
+        AttributeAdapter(std::vector<int16_t>& value)
+            : ValueReference<std::vector<int16_t>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<int16_t>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<int16_t>& get() override;
+        void set(const std::vector<int16_t>& value) override;
+    };
+
+    /// \brief Access a vector<int32_t>
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<int32_t>>
+        : public ValueReference<std::vector<int32_t>>, public ValueAccessor<std::vector<int32_t>>
+    {
+    public:
+        AttributeAdapter(std::vector<int32_t>& value)
+            : ValueReference<std::vector<int32_t>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<int32_t>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<int32_t>& get() override;
+        void set(const std::vector<int32_t>& value) override;
+    };
+
+    /// \brief Access a vector<int64_t>
     template <>
     class NGRAPH_API AttributeAdapter<std::vector<int64_t>>
         : public ValueReference<std::vector<int64_t>>, public ValueAccessor<std::vector<int64_t>>
@@ -283,6 +369,58 @@ namespace ngraph
         void set(const std::vector<int64_t>& value) override;
     };
 
+    /// \brief Access a vector<uint8_t> as a vector<int8_t>
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<uint8_t>>
+        : public ValueReference<std::vector<uint8_t>>, public ValueAccessor<std::vector<int8_t>>
+    {
+    public:
+        AttributeAdapter(std::vector<uint8_t>& value)
+            : ValueReference<std::vector<uint8_t>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<uint8_t>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<int8_t>& get() override;
+        void set(const std::vector<int8_t>& value) override;
+    };
+
+    /// \brief Access a vector<uint16_t> as a vector<int16_t>
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<uint16_t>>
+        : public ValueReference<std::vector<uint16_t>>, public ValueAccessor<std::vector<int16_t>>
+    {
+    public:
+        AttributeAdapter(std::vector<uint16_t>& value)
+            : ValueReference<std::vector<uint16_t>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<uint16_t>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<int16_t>& get() override;
+        void set(const std::vector<int16_t>& value) override;
+    };
+
+    /// \brief Access a vector<uint32_t> as a vector<int32_t>
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<uint32_t>>
+        : public ValueReference<std::vector<uint32_t>>, public ValueAccessor<std::vector<int32_t>>
+    {
+    public:
+        AttributeAdapter(std::vector<uint32_t>& value)
+            : ValueReference<std::vector<uint32_t>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<uint32_t>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<int32_t>& get() override;
+        void set(const std::vector<int32_t>& value) override;
+    };
+
+    /// \brief Access a vector<uint64_t> as a vector<int64_t>
     template <>
     class NGRAPH_API AttributeAdapter<std::vector<uint64_t>>
         : public ValueReference<std::vector<uint64_t>>, public ValueAccessor<std::vector<int64_t>>
@@ -297,6 +435,58 @@ namespace ngraph
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
         const std::vector<int64_t>& get() override;
         void set(const std::vector<int64_t>& value) override;
+    };
+
+    /// \brief Access a vector<float>
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<float>>
+        : public ValueReference<std::vector<float>>, public ValueAccessor<std::vector<float>>
+    {
+    public:
+        AttributeAdapter(std::vector<float>& value)
+            : ValueReference<std::vector<float>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<float>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<float>& get() override;
+        void set(const std::vector<float>& value) override;
+    };
+
+    /// \brief Access a vector<double>
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<double>>
+        : public ValueReference<std::vector<double>>, public ValueAccessor<std::vector<double>>
+    {
+    public:
+        AttributeAdapter(std::vector<double>& value)
+            : ValueReference<std::vector<double>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<double>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<double>& get() override;
+        void set(const std::vector<double>& value) override;
+    };
+
+    /// \brief Access a vector<string>
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<std::string>>
+        : public ValueReference<std::vector<std::string>>,
+          public ValueAccessor<std::vector<std::string>>
+    {
+    public:
+        AttributeAdapter(std::vector<std::string>& value)
+            : ValueReference<std::vector<std::string>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<string>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<std::string>& get() override;
+        void set(const std::vector<std::string>& value) override;
     };
 
     template <typename A, typename B>

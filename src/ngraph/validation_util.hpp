@@ -33,6 +33,7 @@ namespace ngraph
                                         const PartialShape& data_batch_shape,
                                         const PartialShape& filters_shape);
 
+    NGRAPH_API
     PartialShape infer_windowed_reduction_output_shape(const Node* node,
                                                        const PartialShape& data_shape,
                                                        const Strides& data_dilation,
@@ -44,6 +45,7 @@ namespace ngraph
                                                        bool is_window_all_in_padding_allowed,
                                                        bool ceil_mode = false);
 
+    NGRAPH_API
     PartialShape infer_convolution_forward(const Node* node,
                                            const PartialShape& data_batch_shape,
                                            const Strides& data_dilation,
@@ -53,6 +55,7 @@ namespace ngraph
                                            const Strides& filter_strides,
                                            const Strides& filter_dilation);
 
+    NGRAPH_API
     PartialShape infer_batched_pooling_forward(const Node* node,
                                                const PartialShape& data_batch_shape,
                                                const CoordinateDiff& data_padding_below,
@@ -62,6 +65,7 @@ namespace ngraph
                                                bool is_window_all_in_padding_allowed,
                                                bool ceil_mode = false);
 
+    NGRAPH_API
     std::tuple<element::Type, PartialShape, PartialShape>
         infer_batch_norm_forward(const Node* node,
                                  element::Type input_element_type,
@@ -75,6 +79,7 @@ namespace ngraph
                                  const PartialShape& mean_shape,
                                  const PartialShape& variance_shape);
 
+    NGRAPH_API
     std::tuple<element::Type, PartialShape, PartialShape>
         infer_batch_norm_forward(const Node* node,
                                  element::Type input_element_type,
@@ -84,6 +89,7 @@ namespace ngraph
                                  const PartialShape& gamma_shape,
                                  const PartialShape& beta_shape);
 
+    NGRAPH_API
     void infer_auto_padding(const Shape& image_shape,
                             const Shape& filter_shape,
                             const Strides& filter_strides,
@@ -92,6 +98,7 @@ namespace ngraph
                             CoordinateDiff& padding_above,
                             CoordinateDiff& padding_below);
 
+    NGRAPH_API
     PartialShape infer_slice_shape(const Node* node,
                                    const PartialShape& input_shape,
                                    const std::vector<int64_t>& begin,
@@ -174,29 +181,12 @@ namespace ngraph
                            std::int64_t axis_range_min,
                            std::int64_t axis_range_max);
 
+    /// \brief Try to compute the maximum value of value
+    /// \return (true, max_value) if can be determined, or (false, 0) if not.
+    NGRAPH_API std::pair<bool, int64_t> maximum_value(const Output<Node>& value);
+
     namespace opset1
     {
-        ///
-        /// \brief      Calculates output spatial features size.
-        ///
-        /// \param[in]  input_data_shape      The input data shape
-        /// \param[in]  filters_shape         The filters shape
-        /// \param[in]  strides               The strides values.
-        /// \param[in]  dilations             The dilations values.
-        /// \param[in]  pads_begin            The paddings at the beginning of axis.
-        /// \param[in]  pads_end              The paddings at the end of axis.
-        /// \param[in]  output_padding    The output padding values.
-        /// \param      output_spatial_shape  The placeholder for computed output spatial shape.
-        ///
-        void infer_conv_backprop_output_spatial_shape(const Shape& input_data_shape,
-                                                      const Shape& filters_shape,
-                                                      const Strides& strides,
-                                                      const Strides& dilations,
-                                                      const CoordinateDiff& pads_begin,
-                                                      const CoordinateDiff& pads_end,
-                                                      const CoordinateDiff& output_padding,
-                                                      Shape& output_spatial_shape);
-
         ///
         /// \brief      Calculates padding values for ConvolutionBackpropData operator.
         ///
@@ -210,6 +200,7 @@ namespace ngraph
         /// \param      pads_begin        The placeholder for paddings at the beginning of axis.
         /// \param      pads_end          The placeholder for paddings at the end of axis.
         ///
+        NGRAPH_API
         void infer_conv_backprop_auto_padding(const Shape& input_data_shape,
                                               const Shape& filters_shape,
                                               const Shape& output_shape,
