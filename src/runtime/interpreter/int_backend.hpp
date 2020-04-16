@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
+#include "int_backend_visibility.hpp"
 
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/tensor.hpp"

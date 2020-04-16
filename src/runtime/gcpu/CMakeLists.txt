@@ -14,18 +14,18 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_GENERIC_CPU_ENABLE)
-    add_library(gcpu_backend SHARED gcpu_backend.cpp gcpu_executable.cpp)
-    if(NGRAPH_LIB_VERSIONING_ENABLE)
-        set_target_properties(gcpu_backend PROPERTIES
-            VERSION ${NGRAPH_VERSION}
-            SOVERSION ${NGRAPH_API_VERSION})
-    endif()
-    target_link_libraries(gcpu_backend PRIVATE ngraph interpreter_backend)
-    target_compile_definitions(gcpu_backend PRIVATE GCPU_BACKEND_DLL_EXPORTS)
+set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
-    install(TARGETS gcpu_backend
-        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
-        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
-    )
+add_library(gcpu_backend SHARED gcpu_backend.cpp gcpu_executable.cpp)
+if(NGRAPH_LIB_VERSIONING_ENABLE)
+    set_target_properties(gcpu_backend PROPERTIES
+        VERSION ${NGRAPH_VERSION}
+        SOVERSION ${NGRAPH_API_VERSION})
 endif()
+target_link_libraries(gcpu_backend PRIVATE ngraph interpreter_backend)
+target_compile_definitions(gcpu_backend PRIVATE GCPU_BACKEND_DLL_EXPORTS)
+
+install(TARGETS gcpu_backend
+    LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
+    ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+)

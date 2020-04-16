@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/interpreter/int_executable.hpp"
+#include "int_executable.hpp"
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
@@ -45,7 +45,7 @@ runtime::interpreter::OP_TYPEID runtime::interpreter::INTExecutable::get_typeid(
     // ...
     static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
 #define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, OP_TYPEID::ID_SUFFIX(NAME)},
-#include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
+#include "opset_int_tbl.hpp"
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;

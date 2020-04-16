@@ -22,7 +22,7 @@
 #include "gtest/gtest.h"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/runtime/interpreter/int_executable.hpp"
+#include "int_executable.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
