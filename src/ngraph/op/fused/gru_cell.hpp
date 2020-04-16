@@ -46,6 +46,7 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"GRUCell", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GRUCell()
+                    : m_linear_before_reset(false)
                 {
                     m_activations = {"sigmoid", "tanh"};
                     m_activation_f = get_activation_function(0);
@@ -120,8 +121,15 @@ namespace ngraph
                 /// \param[in]  R                     The recurrence weight tensor with shape:
                 ///                                   [gates_count * hidden_size, hidden_size].
                 /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
-                /// \param[in]  B                     The bias tensor for input gate with shape:
-                ///                                   [2 * gates_count * hidden_size].
+                /// \param[in]  B                     The sum of biases (weight and recurrence) for
+                /// update, reset and hidden gates.
+                ///                                   If linear_before_reset := true then biases for
+                ///                                   hidden gates are
+                ///                                   placed separately (weight and recurrence).
+                ///                                   Shape: [gates_count * hidden_size] if
+                ///                                   linear_before_reset := false
+                ///                                   Shape: [(gates_count + 1) * hidden_size] if
+                ///                                   linear_before_reset := true
                 /// \param[in]  activations           The vector of activation functions used inside
                 ///                                   recurrent cell.
                 /// \param[in]  activations_alpha     The vector of alpha parameters for activation
@@ -165,11 +173,11 @@ namespace ngraph
                 ///
                 /// \brief The Activation function f.
                 ///
-                util::ActivationFunction m_activation_f{};
+                util::ActivationFunction m_activation_f;
                 ///
                 /// \brief The Activation function g.
                 ///
-                util::ActivationFunction m_activation_g{};
+                util::ActivationFunction m_activation_g;
 
                 static constexpr std::size_t s_gates_count{3};
                 ///
@@ -179,7 +187,7 @@ namespace ngraph
                 /// hidden
                 ///       gate. It's done before multiplying by the output of the reset gate.
                 ///
-                bool m_linear_before_reset{};
+                bool m_linear_before_reset;
             };
         }
         using v0::GRUCell;

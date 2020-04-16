@@ -181,7 +181,6 @@ NodeVector op::GRUCell::decompose_op() const
     //          (weight and recurrence).
     //          Shape: [gates_count * hidden_size] when linear_before_reset := false
     //          Shape: [(gates_count + 1) * hidden_size] when linear_before_reset := true
-    //          Concatenation of `[Wb[zrh], Rb[zrh]]`.
     // Wb[zrh] - W bias vectors for update, reset and hidden gates.
     // Rb[zrh] - R bias vectors for update, reset and hidden gates.
 
