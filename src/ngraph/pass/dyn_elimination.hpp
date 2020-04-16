@@ -41,7 +41,7 @@ namespace ngraph
         /// <table>
         /// <tr>
         ///     <th>Original</th>
-        ///     <th>After %ConstantFolding
+        ///     <th>After %ConstantFolding</th>
         ///     <th>After %DynElimination</th>
         /// </tr>
         /// <tr>
