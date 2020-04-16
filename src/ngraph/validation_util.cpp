@@ -1001,7 +1001,7 @@ void ngraph::evaluate_nodes(std::map<RawNodeOutput, Output<Node>>& value_map,
     Evaluator<Output<Node>> evaluator({}, value_map);
     evaluator.set_univeral_handler(
         [](Node* node, const OutputVector& input_values) -> OutputVector {
-            return node->constant_fold(input_values);
+            return node->evaluate(input_values);
         });
     for (auto value : values)
     {

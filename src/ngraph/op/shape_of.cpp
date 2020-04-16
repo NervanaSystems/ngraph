@@ -50,7 +50,7 @@ shared_ptr<Node> op::ShapeOf::clone_with_new_inputs(const OutputVector& new_args
     return new_shape_of;
 }
 
-OutputVector op::ShapeOf::constant_fold(const OutputVector& input_values)
+OutputVector op::ShapeOf::evaluate(const OutputVector& input_values)
 {
     auto arg_match = input_values.at(0);
     auto partial_shape = arg_match.get_partial_shape();
