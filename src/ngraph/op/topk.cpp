@@ -455,8 +455,8 @@ op::v3::TopK::TopK(const Output<Node>& data,
     : Op{{data, k}}
     , m_axis{axis}
     , m_normalized_axis{0}
-    , m_mode{EnumNames<Mode>::as_enum(mode)}
-    , m_sort{EnumNames<SortType>::as_enum(sort)}
+    , m_mode{as_enum<Mode>(mode)}
+    , m_sort{as_enum<SortType>(sort)}
     , m_output_indices_type{output_indices_type}
 {
     constructor_validate_and_infer_types();
