@@ -351,7 +351,7 @@ static bool is_input_uniform_constant(shared_ptr<Node> op,
 // whole input tensor
 static bool simplify_gather(std::shared_ptr<Node> node)
 {
-    auto gather = as_type_ptr<op::Gather>(node);
+    auto gather = as_type_ptr<op::v1::Gather>(node);
 
     if (gather)
     {
@@ -359,6 +359,12 @@ static bool simplify_gather(std::shared_ptr<Node> node)
         auto data = node->get_argument(0);
         auto indices = node->get_argument(1);
 
+        // we need to know data and indices shape to infer if gather is Nop
+        if (data->get_output_partial_shape(0).is_dynamic() ||
+            indices->get_output_partial_shape(0).is_dynamic())
+        {
+            return false;
+        }
         // if rank of data and gather output dont match, we will skip
         if (data->get_shape().size() != node->get_shape().size())
         {
@@ -376,10 +382,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
         // lamba function to remove the gather op and rewire the
         // input data of gather to its users
         auto replace_gather = [&]() {
-            for (auto& output : gather->outputs())
-            {
-                output.replace(data->output(0));
-            }
+            remove_node_update_name(node, node->get_argument(0));
             return true;
         };
 
@@ -633,7 +636,7 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_
         {{op::Add::type_info, simplify_add},
          {op::Multiply::type_info, simplify_multiply},
          {op::Concat::type_info, simplify_concat},
-         {op::Gather::type_info, simplify_gather},
+         {op::v1::Gather::type_info, simplify_gather},
          {op::Sum::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::Sum, get_sum_constant>}},
          {op::Product::type_info,
