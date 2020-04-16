@@ -26,17 +26,17 @@ namespace ngraph
         /// \brief The DynElimination pass finds dynamic operations in a graph whose
         /// shape relevant inputs have already been resolved to static values, and
         /// replaces those dynamic operations with the equivalent operations using
-        /// statical inputs and attributes.
+        /// static inputs and attributes.
         /// \details This pass should be executed after the ConstantFolding pass.
         ///
-        /// The ConstantFolding and DynElimination pass are used together to transform
+        /// The ConstantFolding and DynElimination passes are used together to transform
         /// dynamic operations in a computation graph to static operations when the
         /// graph is executed with input data.
         ///
         /// In the example shown below, the original graph is constructed with dynamic
         /// broadcast operation. When the graph is executed with input data, the input
         /// shapes become available, by applying the ConstantFolding and DynElimination
-        /// pass, the graph is updated with dynamic broadcast being replaced by static
+        /// pass, the graph is updated with dynamic broadcast being replaced by a static
         /// broadcast operation.
         /// <table>
         /// <tr>
