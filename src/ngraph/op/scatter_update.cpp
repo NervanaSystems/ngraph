@@ -14,18 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/op/scatter_update.hpp"
+#include "ngraph/shape.hpp"
 
-#include "ngraph/pass/pass.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+constexpr NodeTypeInfo op::v3::ScatterUpdate::type_info;
+
+op::v3::ScatterUpdate::ScatterUpdate(const Output<Node>& data,
+                                     const Output<Node>& indices,
+                                     const Output<Node>& updates,
+                                     const Output<Node>& axis)
+    : util::ScatterBase(data, indices, updates, axis)
 {
-    namespace pass
-    {
-        class NGRAPH_API NopElimination : public FunctionPass
-        {
-        public:
-            bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-        };
-    }
+}
+
+shared_ptr<Node> op::v3::ScatterUpdate::clone_with_new_inputs(const OutputVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v3::ScatterUpdate>(
+        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }

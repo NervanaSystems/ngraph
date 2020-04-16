@@ -53,7 +53,6 @@ set(SRC
     check.cpp
     constant.cpp
     constant_folding.cpp
-    concat_fusion.cpp
     control_dependencies.cpp
     convert_u1_to_string.cpp
     coordinate.cpp
@@ -180,6 +179,7 @@ set(SRC
     type_prop/scatter_add.cpp
     type_prop/scatter_elements_update.cpp
     type_prop/scatter_nd.cpp
+    type_prop/scatter_update.cpp
     type_prop/select.cpp
     type_prop/shape_of.cpp
     type_prop/shuffle_channels.cpp
@@ -203,6 +203,12 @@ set(SRC
     util.cpp
     zero_dim_tensor_elimination.cpp
 )
+
+if(NGRAPH_INTERPRETER_ENABLE)
+    list(APPEND SRC
+        concat_fusion.cpp
+    )
+endif()
 
 # This code generates one source file per header file under ngraph/src where the source file
 # has just a single #include statement. This checks that each header in the source tree is
