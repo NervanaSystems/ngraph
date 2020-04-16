@@ -29,6 +29,7 @@
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/fused/unsqueeze.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/non_zero.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -136,6 +137,22 @@ static bool eliminate_concat(const std::shared_ptr<Node>& node)
     return false;
 }
 
+static bool eliminate_gather(const std::shared_ptr<Node>& node)
+{
+    auto gather = as_type_ptr<op::v0::Gather>(node);
+    // skip if shapes are dynamic
+    if (gather->get_input_partial_shape(0).is_dynamic() ||
+        gather->get_output_partial_shape(0).is_dynamic())
+    {
+        return false;
+    }
+    if (gather->get_input_shape(0) == gather->get_output_shape(0))
+    {
+        return remove_node_update_name(node, node->get_argument(0));
+    }
+    return false;
+}
+
 static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
 {
     auto node_input = node->get_argument(0);
@@ -198,6 +215,7 @@ static const std::unordered_map<NodeTypeInfo, std::function<bool(const std::shar
                {TI(op::v0::StopGradient), &eliminate_stop_gradient},
                {TI(op::v1::Reshape), &eliminate_reshape_v1},
                {TI(op::v0::Concat), &eliminate_concat},
+               {TI(op::v0::Gather), &eliminate_gather},
                {TI(op::v0::Squeeze), &eliminate_squeeze},
                {TI(op::v0::Unsqueeze), &eliminate_unsqueeze},
                {TI(op::v0::Broadcast), &eliminate_broadcast}};

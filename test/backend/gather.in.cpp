@@ -838,7 +838,7 @@ TEST(${BACKEND_NAME}, gather_3d_axis_default)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::Gather>(P, I);
-    auto f = make_shared<Function>(G, ParameterVector{P, I});
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P, I});
 
     auto backend = runtime::Backend::create("CPU");
 
@@ -869,7 +869,7 @@ TEST(${BACKEND_NAME}, gather_3d_axis_1_nop)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::Gather>(P, I, 1);
-    auto f = make_shared<Function>(G, ParameterVector{P, I});
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P, I});
 
     auto backend = runtime::Backend::create("CPU");
 
@@ -900,7 +900,7 @@ TEST(${BACKEND_NAME}, gather_3d_axis_2_nop)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::Gather>(P, I, 2);
-    auto f = make_shared<Function>(G, ParameterVector{P, I});
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P, I});
 
     auto backend = runtime::Backend::create("CPU");
 
@@ -931,7 +931,7 @@ TEST(${BACKEND_NAME}, gather_3d_indices_constant_axis_1)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = op::Constant::create<int32_t>(element::i32, Shape{2}, {0, 1});
     auto G = make_shared<op::Gather>(P, I, 1);
-    auto f = make_shared<Function>(G, ParameterVector{P});
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P});
 
     auto backend = runtime::Backend::create("CPU");
 
