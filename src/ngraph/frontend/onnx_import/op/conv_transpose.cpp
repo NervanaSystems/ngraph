@@ -147,19 +147,26 @@ namespace ngraph
                                 std::make_shared<default_opset::ShapeOf>(filters_shape);
                             const auto one_node =
                                 default_opset::Constant::create(element::i64, Shape{1}, {1});
-                            const auto remaining_shape_length =
-                                std::make_shared<default_opset::Subtract>(filters_rank, one_node);
-                            const auto split_part_lengths = std::make_shared<default_opset::Concat>(
-                                OutputVector{one_node, remaining_shape_length}, 0);
-                            const auto split_parts = std::make_shared<default_opset::VariadicSplit>(
-                                filters_shape,
-                                default_opset::Constant::create(element::i64, Shape{}, {0}),
-                                split_part_lengths);
+                            const auto zero_node =
+                                default_opset::Constant::create(element::i64, Shape{1}, {0});
+
+                            std::shared_ptr<ngraph::Node> in_c_dim =
+                                std::make_shared<default_opset::StridedSlice>(
+                                    filters_shape,
+                                    zero_node,                // begin
+                                    one_node,                 // end
+                                    std::vector<int64_t>{0},  // begin mask
+                                    std::vector<int64_t>{0}); // end mask
+
+                            const auto remaining_dims =
+                                std::make_shared<default_opset::StridedSlice>(
+                                    filters_shape,
+                                    one_node,                 // begin
+                                    filters_rank,             // end
+                                    std::vector<int64_t>{0},  // begin mask
+                                    std::vector<int64_t>{0}); // end mask
 
                             // Apply shape layout transformation:
-                            auto in_c_dim = split_parts->get_output_as_single_output_node(0);
-                            const auto remaining_dims =
-                                split_parts->get_output_as_single_output_node(1);
                             const auto groups_node =
                                 default_opset::Constant::create(element::i64, Shape{1}, {groups});
                             in_c_dim =
@@ -206,16 +213,12 @@ namespace ngraph
                                 std::make_shared<default_opset::Broadcast>(one_node,
                                                                            remaining_shape_length);
 
-                            // Split conv shape into (N), (C), (H, W, ...) in order to get C dim
-                            const auto split_part_lengths = std::make_shared<default_opset::Concat>(
-                                OutputVector{one_node, one_node, remaining_shape_length}, 0);
-                            const auto conv_split_parts =
-                                std::make_shared<default_opset::VariadicSplit>(
-                                    conv_shape,
-                                    default_opset::Constant::create(element::i64, Shape{}, {0}),
-                                    split_part_lengths);
-                            const auto C_dim =
-                                conv_split_parts->get_output_as_single_output_node(1);
+                            const auto C_dim = std::make_shared<default_opset::StridedSlice>(
+                                conv_shape,
+                                one_node,                 // begin
+                                two_node,                 // end
+                                std::vector<int64_t>{0},  // begin mask
+                                std::vector<int64_t>{0}); // end mask
 
                             // Construct new bias shape: [1, C, 1, 1, ... ]
                             bias_shape_node = std::make_shared<default_opset::Concat>(
