@@ -2486,7 +2486,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_bias_clip)
     const auto R =
         make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
 
     const auto gru_cell = make_shared<op::GRUCell>(X,
                                                    H_t,
@@ -2524,25 +2524,18 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_bias_clip)
          0.2903471f,  0.6796794f,  0.65131867f, 0.78163475f, 0.12058706f, 0.45591718f, 0.791677f,
          0.76497287f, 0.9895242f,  0.7845312f,  0.51267904f, 0.49030215f, 0.08498167f});
 
-    // B
-    test_case.add_input<float>({0.8286678f,
-                                0.9153158f,
-                                0.9581612f,
-                                0.6639213f,
-                                0.84239805f,
-                                0.5282445f,
-                                0.14153397f,
-                                0.22404431f,
-                                0.6549655f,
-                                0.9175602f,
-                                0.14958014f,
-                                0.49230585f,
-                                0.63162816f,
-                                0.4161903f,
-                                0.22148274f,
-                                0.50496656f,
-                                0.34798595f,
-                                0.6699164f});
+    // B (the sum of biases for W and R)
+    test_case.add_input<float>({
+        0.8286678f + 0.9175602f,
+        0.9153158f + 0.14958014f,
+        0.9581612f + 0.49230585f,
+        0.6639213f + 0.63162816f,
+        0.84239805f + 0.4161903f,
+        0.5282445f + 0.22148274f,
+        0.14153397f + 0.50496656f,
+        0.22404431f + 0.34798595f,
+        0.6549655f + 0.6699164f,
+    });
 
     test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
@@ -2566,7 +2559,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_linear_before_reset)
     const auto R =
         make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{(gates_count + 1) * hidden_size});
 
     const auto gru_cell = make_shared<op::GRUCell>(X,
                                                    H_t,
@@ -2602,22 +2595,16 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_linear_before_reset)
          0.37198433f, 0.06966069f, 0.4613444f,  0.10999731f, 0.78273284f, 0.21453214f, 0.10751773f,
          0.18332677f, 0.1326976f,  0.9998985f,  0.19263928f, 0.10979804f, 0.52575564f});
 
-    // B
-    test_case.add_input<float>({0.09875853f,
-                                0.37801138f,
-                                0.7729636f,
-                                0.78493553f,
-                                0.5662702f,
-                                0.12406381f,
+    // B (the sum of biases for W and R for z and r gates, and separately for W and R for h gate)
+    test_case.add_input<float>({0.61395123f, // 0.09875853f + 0.5151927f,
+                                1.08667738f, // 0.37801138f + 0.708666f,
+                                1.32600244f, // 0.7729636f + 0.55303884f,
+                                0.81917698f, // 0.78493553f + 0.03424145f,
+                                1.37736335f, // 0.5662702f + 0.81109315f,
+                                0.42931147f, // 0.12406381f + 0.30524766f,
                                 0.66729516f,
                                 0.7752771f,
                                 0.78819966f,
-                                0.5151927f,
-                                0.708666f,
-                                0.55303884f,
-                                0.03424145f,
-                                0.81109315f,
-                                0.30524766f,
                                 0.6606634f,
                                 0.99040645f,
                                 0.21112025f});
@@ -2644,7 +2631,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_activation_function)
     const auto R =
         make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{(gates_count + 1) * hidden_size});
 
     const auto gru_cell = make_shared<op::GRUCell>(X,
                                                    H_t,
@@ -2681,22 +2668,16 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_activation_function)
          0.37198433f, 0.06966069f, 0.4613444f,  0.10999731f, 0.78273284f, 0.21453214f, 0.10751773f,
          0.18332677f, 0.1326976f,  0.9998985f,  0.19263928f, 0.10979804f, 0.52575564f});
 
-    // B
-    test_case.add_input<float>({0.09875853f,
-                                0.37801138f,
-                                0.7729636f,
-                                0.78493553f,
-                                0.5662702f,
-                                0.12406381f,
+    // B (the sum of biases for W and R for z and r gates, and separately for W and R for h gate)
+    test_case.add_input<float>({0.09875853f + 0.5151927f,
+                                0.37801138f + 0.708666f,
+                                0.7729636f + 0.55303884f,
+                                0.78493553f + 0.03424145f,
+                                0.5662702f + 0.81109315f,
+                                0.12406381f + 0.30524766f,
                                 0.66729516f,
                                 0.7752771f,
                                 0.78819966f,
-                                0.5151927f,
-                                0.708666f,
-                                0.55303884f,
-                                0.03424145f,
-                                0.81109315f,
-                                0.30524766f,
                                 0.6606634f,
                                 0.99040645f,
                                 0.21112025f});
