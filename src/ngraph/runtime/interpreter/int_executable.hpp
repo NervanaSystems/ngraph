@@ -1685,6 +1685,18 @@ protected:
             reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint64_t>());
             break;
         }
+        case OP_TYPEID::ShapeOf_v3:
+        {
+            if (node.get_output_element_type(0) == element::i64)
+            {
+                reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint64_t>());
+            }
+            else if (node.get_output_element_type(0) == element::i32)
+            {
+                reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint32_t>());
+            }
+            break;
+        }
         case OP_TYPEID::Sigmoid:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
