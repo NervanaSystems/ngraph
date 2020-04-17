@@ -14,25 +14,19 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <cstdio>
+#include "nvcc/kernels.hpp"
+using namespace ngraph;
 
-#include <string>
-
-#include "ngraph/ngraph_visibility.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/type.hpp"
-
-namespace ngraph
+__global__ void example()
 {
-    NGRAPH_API
-    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, std::shared_ptr<ngraph::Node> to);
+    size_t tid = blockDim.x * blockIdx.x + threadIdx.x;
+    printf("Hello from tid = %d\n", tid);
+    __syncthreads();
+}
 
-    NGRAPH_API
-    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, ngraph::NodeVector to);
-
-    NGRAPH_API
-    void copy_runtime_info(const ngraph::NodeVector& from, std::shared_ptr<ngraph::Node> to);
-
-    NGRAPH_API
-    void copy_runtime_info(const ngraph::NodeVector& from, ngraph::NodeVector to);
+void runtime::gpu::example_kernel()
+{
+    example<<<1, 32>>>();
+    return;
 }
