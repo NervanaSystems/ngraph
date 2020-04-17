@@ -17,15 +17,12 @@
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
-set(EIGEN_GIT_TAG ded1e7b4960f0074fa147a8ed1c9926174958092)
-set(EIGEN_GIT_URL https://github.com/eigenteam/eigen-git-mirror)
+set(EIGEN_GIT_TAG 5ab87d8abafa63703e6c92e168e424ef2e195246)
+set(EIGEN_GIT_URL https://gitlab.com/libeigen/eigen)
 
 #------------------------------------------------------------------------------
 # Download Eigen
 #------------------------------------------------------------------------------
-
-# Revert prior changes to make incremental build work.
-set(EIGEN_PATCH_REVERT_COMMAND cd ${EXTERNAL_PROJECTS_ROOT}/eigen/src/ext_eigen && git reset HEAD --hard)
 
 ExternalProject_Add(
     ext_eigen
@@ -33,8 +30,6 @@ ExternalProject_Add(
     GIT_REPOSITORY ${EIGEN_GIT_URL}
     GIT_TAG ${EIGEN_GIT_TAG}
     UPDATE_COMMAND ""
-    PATCH_COMMAND ${EIGEN_PATCH_REVERT_COMMAND}
-    COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_SOURCE_DIR}/cmake/eigen.patch
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
