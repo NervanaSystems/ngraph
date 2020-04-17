@@ -30,10 +30,12 @@ op::v1::NonMaxSuppression::NonMaxSuppression(
     const Output<Node>& iou_threshold,
     const Output<Node>& score_threshold,
     const op::v1::NonMaxSuppression::BoxEncodingType box_encoding,
-    const bool sort_result_descending)
+    const bool sort_result_descending,
+    const string& output_type)
     : Op({boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold})
     , m_box_encoding{box_encoding}
     , m_sort_result_descending{sort_result_descending}
+    , m_output_type{output_type}
 {
     constructor_validate_and_infer_types();
 }
@@ -42,7 +44,8 @@ op::v1::NonMaxSuppression::NonMaxSuppression(
     const Output<Node>& boxes,
     const Output<Node>& scores,
     const op::v1::NonMaxSuppression::BoxEncodingType box_encoding,
-    const bool sort_result_descending)
+    const bool sort_result_descending,
+    const string& output_type)
     : Op({boxes,
           scores,
           op::Constant::create(element::i64, Shape{}, {0}),
@@ -50,6 +53,7 @@ op::v1::NonMaxSuppression::NonMaxSuppression(
           op::Constant::create(element::f32, Shape{}, {.0f})})
     , m_box_encoding{box_encoding}
     , m_sort_result_descending{sort_result_descending}
+    , m_output_type{output_type}
 {
     constructor_validate_and_infer_types();
 }
@@ -64,13 +68,15 @@ shared_ptr<Node>
                                                   new_args.at(3),
                                                   new_args.at(4),
                                                   m_box_encoding,
-                                                  m_sort_result_descending);
+                                                  m_sort_result_descending,
+                                                  m_output_type);
 }
 
 bool ngraph::op::v1::NonMaxSuppression::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("box_encoding", m_box_encoding);
     visitor.on_attribute("sort_result_descending", m_sort_result_descending);
+    visitor.on_attribute("output_type", m_output_type);
     return true;
 }
 
@@ -79,10 +85,15 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
     const auto boxes_ps = get_input_partial_shape(0);
     const auto scores_ps = get_input_partial_shape(1);
 
-    // the spec doesn't say what exact type should be used for the output of this op
-    // that's why we're setting it to 64-bit integer to provide the maximum range of values support
-    // this will be changed (configurable) in the next version of this op
-    const auto& output_element_type = element::i64;
+    NODE_VALIDATION_CHECK(this,
+                          m_output_type == "i64" || m_output_type == "i32",
+                          "Expected 'i64' or 'i32 for output_type. Got: ",
+                          m_output_type);
+    auto output_element_type = element::i64;
+    if (m_output_type == "i32")
+    {
+        output_element_type = element::i32;
+    }
 
     // NonMaxSuppression produces triplets
     // that have the following format: [batch_index, class_index, box_index]

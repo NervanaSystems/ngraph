@@ -54,7 +54,8 @@ namespace ngraph
                                   const Output<Node>& iou_threshold,
                                   const Output<Node>& score_threshold,
                                   const BoxEncodingType box_encoding = BoxEncodingType::CORNER,
-                                  const bool sort_result_descending = true);
+                                  const bool sort_result_descending = true,
+                                  const std::string& output_type = "i64");
 
                 /// \brief Constructs a NonMaxSuppression operation with default values for the last
                 ///        3 inputs
@@ -66,7 +67,8 @@ namespace ngraph
                 NonMaxSuppression(const Output<Node>& boxes,
                                   const Output<Node>& scores,
                                   const BoxEncodingType box_encoding = BoxEncodingType::CORNER,
-                                  const bool sort_result_descending = true);
+                                  const bool sort_result_descending = true,
+                                  const std::string& output_type = "i64");
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
@@ -88,6 +90,7 @@ namespace ngraph
             protected:
                 BoxEncodingType m_box_encoding = BoxEncodingType::CORNER;
                 bool m_sort_result_descending = true;
+                std::string m_output_type = "i64";
 
             private:
                 int64_t max_boxes_output_from_input() const;
