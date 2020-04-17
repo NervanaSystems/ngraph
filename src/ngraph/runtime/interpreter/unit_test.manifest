@@ -8,5 +8,5 @@ INTERPRETER.onnx_model_quant_conv_linear
 INTERPRETER.onnx_top_k_opset_10
 
 #ONNX Flatten with dynamic reshape
-flatten_axis
-flatten_neg_axis
+onnx_dyn_shapes_flatten_axis
+onnx_dyn_shapes_flatten_neg_axis
