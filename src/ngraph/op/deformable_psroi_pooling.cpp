@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,6 +68,19 @@ op::v1::DeformablePSROIPooling::DeformablePSROIPooling(const Output<Node>& input
     constructor_validate_and_infer_types();
 }
 
+bool op::v1::DeformablePSROIPooling::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("output_dim", m_output_dim);
+    visitor.on_attribute("spatial_scale", m_spatial_scale);
+    visitor.on_attribute("group_size", m_group_size);
+    visitor.on_attribute("mode", m_mode);
+    visitor.on_attribute("spatial_bins_x", m_spatial_bins_x);
+    visitor.on_attribute("spatial_bins_y", m_spatial_bins_y);
+    visitor.on_attribute("trans_std", m_trans_std);
+    visitor.on_attribute("part_size", m_part_size);
+    return true;
+}
+
 void op::v1::DeformablePSROIPooling::validate_and_infer_types()
 {
     const auto& input_et = get_input_element_type(0);
@@ -76,16 +89,15 @@ void op::v1::DeformablePSROIPooling::validate_and_infer_types()
     const auto& box_coords_pshape = get_input_partial_shape(1);
 
     NODE_VALIDATION_CHECK(this,
-                          input_pshape.rank().is_dynamic() ||
-                              static_cast<size_t>(input_pshape.rank()) == 4,
+                          input_pshape.rank().is_dynamic() || input_pshape.rank().get_length() == 4,
                           "Feature map input rank must equal to 4 (input rank: ",
-                          static_cast<size_t>(input_pshape.rank()),
+                          input_pshape.rank().get_length(),
                           ")");
     NODE_VALIDATION_CHECK(this,
                           box_coords_pshape.rank().is_dynamic() ||
-                              static_cast<size_t>(box_coords_pshape.rank()) == 2,
+                              box_coords_pshape.rank().get_length() == 2,
                           "Box coordinates input rank must equal to 2 (input rank: ",
-                          static_cast<size_t>(box_coords_pshape.rank()),
+                          box_coords_pshape.rank().get_length(),
                           ")");
 
     if (get_input_size() == 3) // offsets input is provided
@@ -93,9 +105,9 @@ void op::v1::DeformablePSROIPooling::validate_and_infer_types()
         const auto& offsets_pshape = get_input_partial_shape(2);
         NODE_VALIDATION_CHECK(this,
                               offsets_pshape.rank().is_dynamic() ||
-                                  static_cast<size_t>(offsets_pshape.rank()) == 4,
+                                  offsets_pshape.rank().get_length() == 4,
                               "Offsets input rank must equal to 4 (input rank: ",
-                              static_cast<size_t>(offsets_pshape.rank()),
+                              offsets_pshape.rank().get_length(),
                               ")");
     }
     int64_t output_rank = 4;
@@ -114,7 +126,7 @@ void op::v1::DeformablePSROIPooling::validate_and_infer_types()
 }
 
 shared_ptr<Node>
-    op::v1::DeformablePSROIPooling::copy_with_new_args(const NodeVector& new_args) const
+    op::v1::DeformablePSROIPooling::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 3)

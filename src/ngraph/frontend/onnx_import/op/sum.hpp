@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,8 @@ namespace ngraph
             {
                 inline NodeVector sum(const Node& node)
                 {
-                    return variadic::make_ng_variadic_op<ngraph::opset0::Add>(node);
+                    return variadic::make_ng_variadic_op<default_opset::Add>(
+                        node, ngraph::op::AutoBroadcastSpec::NONE);
                 }
 
             } // namespace set_1

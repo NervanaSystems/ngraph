@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,4 +24,8 @@ NGRAPH_OP(LogicalAnd, op::v1)
 NGRAPH_OP(LogicalOr, op::v1)
 NGRAPH_OP(LogicalXor, op::v1)
 NGRAPH_OP(LogicalNot, op::v1)
+#undef ID_SUFFIX
+
+#define ID_SUFFIX(NAME) NAME##_v3
+NGRAPH_OP(ShapeOf, op::v3)
 #undef ID_SUFFIX

@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,12 +19,13 @@ import sys
 import six
 
 # workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
-else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)
+if sys.platform != 'win32':
+    if six.PY3:
+        import os
+        flags = os.RTLD_NOW | os.RTLD_GLOBAL
+    else:
+        import ctypes
+        flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
+    sys.setdlopenflags(flags)
 
 from _pyngraph.passes import Manager

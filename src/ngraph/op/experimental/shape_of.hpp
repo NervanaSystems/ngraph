@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,32 +14,4 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include "ngraph/op/op.hpp"
-
-namespace ngraph
-{
-    namespace op
-    {
-        namespace v0
-        {
-            /// \brief Operation that returns the shape of its input argument as a tensor.
-            class NGRAPH_API ShapeOf : public Op
-            {
-            public:
-                static constexpr NodeTypeInfo type_info{"ShapeOf", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
-                ShapeOf() = default;
-                /// \brief Constructs a shape-of operation.
-                ShapeOf(const Output<Node>& arg);
-
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
-
-                void validate_and_infer_types() override;
-            };
-        }
-        using v0::ShapeOf;
-    }
-}
+#include "ngraph/op/shape_of.hpp"

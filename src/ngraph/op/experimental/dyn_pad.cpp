@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -103,7 +103,7 @@ void op::DynPad::validate_and_infer_types()
     set_output_type(0, arg_t, out_shape);
 }
 
-shared_ptr<Node> op::DynPad::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::DynPad::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<DynPad>(

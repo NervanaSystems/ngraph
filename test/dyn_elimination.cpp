@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,10 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pass/dyn_elimination.hpp"
 #include "gtest/gtest.h"
+
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/constant_folding.hpp"
+#include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/opset0_downgrade.hpp"
 #include "util/all_close_f.hpp"
 #include "util/test_tools.hpp"
 
@@ -47,7 +50,7 @@ TEST(dyn_elimination, transpose)
     ASSERT_TRUE(new_reshape);
 
     ASSERT_EQ(new_reshape->get_input_order(), (AxisVector{2, 3, 1, 0}));
-    ASSERT_EQ(new_reshape->output(0).get_shape(), (Shape{6, 8, 4, 2}));
+    ASSERT_EQ(new_reshape->get_output_shape(0), (Shape{6, 8, 4, 2}));
     ASSERT_EQ(new_reshape->get_output_element_type(0), element::boolean);
 }
 
@@ -178,30 +181,6 @@ TEST(dyn_elimination, replace_slice)
 
     ASSERT_EQ(f->get_results().at(0)->get_element_type(), element::f32);
     ASSERT_EQ(f->get_results().at(0)->get_shape(), (Shape{2, 4, 6, 8, 2, 2, 2}));
-}
-
-TEST(dyn_elimination, reshape)
-{
-    auto input_arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-    auto shape_arg = make_shared<op::Constant>(element::i64, Shape{3}, vector<int64_t>{0, 6, -1});
-
-    auto r = make_shared<op::DynReshape>(input_arg, shape_arg, true);
-
-    ASSERT_EQ(r->get_element_type(), element::f32);
-    ASSERT_EQ(r->get_shape(), (Shape{2, 6, 32}));
-
-    auto f = make_shared<Function>(r, ParameterVector{input_arg});
-
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::DynElimination>();
-    pass_manager.run_passes(f);
-
-    ASSERT_EQ(count_ops_of_type<op::DynReshape>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
-
-    ASSERT_EQ(f->get_results().at(0)->get_element_type(), element::f32);
-    ASSERT_EQ(f->get_results().at(0)->get_shape(), (Shape{2, 6, 32}));
 }
 
 TEST(dyn_elimination, range)

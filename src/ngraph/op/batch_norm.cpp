@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include <sstream>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/validation_util.hpp"
@@ -73,7 +74,8 @@ void op::BatchNormTraining::validate_and_infer_types()
     set_output_type(2, result_et, result_channel_shape);
 }
 
-std::shared_ptr<Node> op::BatchNormTraining::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node>
+    op::BatchNormTraining::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return std::make_shared<BatchNormTraining>(
@@ -164,7 +166,8 @@ void op::BatchNormInference::validate_and_infer_types()
     set_output_type(0, result_et, result_batch_shape);
 }
 
-std::shared_ptr<Node> op::BatchNormInference::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node>
+    op::BatchNormInference::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return std::make_shared<BatchNormInference>(
@@ -257,7 +260,7 @@ void op::BatchNormTrainingBackprop::validate_and_infer_types()
 }
 
 std::shared_ptr<Node>
-    op::BatchNormTrainingBackprop::copy_with_new_args(const NodeVector& new_args) const
+    op::BatchNormTrainingBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return std::make_shared<op::BatchNormTrainingBackprop>(new_args.at(2),

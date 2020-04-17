@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,7 +57,9 @@ namespace ngraph
                             const std::vector<float>& activations_beta);
 
                 RNNCellBase() = default;
+                virtual ~RNNCellBase() = default;
 
+                virtual bool visit_attributes(AttributeVisitor& visitor);
                 std::size_t get_hidden_size() const { return m_hidden_size; }
                 float get_clip() const { return m_clip; }
                 const std::vector<std::string>& get_activations() const { return m_activations; }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/node_output.hpp"
 
 namespace ngraph
 {
@@ -44,6 +45,7 @@ namespace ngraph
 
             std::shared_ptr<Node> get_node() const;
             size_t get_index() const { return m_index; }
+            ngraph::Output<Node> get_output() const;
             std::shared_ptr<Tensor> get_tensor_ptr() const { return m_tensor; }
             void set_tensor_ptr(const std::shared_ptr<Tensor>& tensor) { m_tensor = tensor; }
             void add_input(Input* input);

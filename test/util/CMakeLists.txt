@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(NOT NGRAPH_TEST_UTIL_ENABLE)
+    return()
+endif()
+
 set (SRC
     autodiff/backprop_function.cpp
     all_close_f.cpp
@@ -21,7 +25,7 @@ set (SRC
     test_tools.cpp
     test_control.cpp
     test_case.cpp
-    backend_utils.cpp
+    provenance_enabler.hpp
 )
 
 add_library(ngraph_test_util STATIC ${SRC})
@@ -32,11 +36,5 @@ endif()
 target_include_directories(ngraph_test_util PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(ngraph_test_util PRIVATE ngraph libgtest)
 add_dependencies(ngraph_test_util ext_gtest)
-
-if (NGRAPH_UNIT_TEST_OPENVINO_ENABLE)
-    add_definitions(-DNGRAPH_UNIT_TEST_OPENVINO_ENABLE)
-    target_include_directories(ngraph_test_util PUBLIC ${IE_MAIN_SOURCE_DIR}/include)
-    target_link_libraries(ngraph_test_util PRIVATE inference_engine)
-endif()
 
 install(TARGETS ngraph_test_util DESTINATION ${NGRAPH_INSTALL_LIB})

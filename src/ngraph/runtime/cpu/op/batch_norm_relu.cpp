@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -137,7 +137,7 @@ ngraph::op::BatchNormInferenceRelu::BatchNormInferenceRelu(double eps,
 }
 
 std::shared_ptr<ngraph::Node>
-    ngraph::op::BatchNormTrainingRelu::copy_with_new_args(const NodeVector& new_args) const
+    ngraph::op::BatchNormTrainingRelu::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() == 3)
     {
@@ -151,7 +151,7 @@ std::shared_ptr<ngraph::Node>
 }
 
 std::shared_ptr<ngraph::Node>
-    ngraph::op::BatchNormInferenceRelu::copy_with_new_args(const NodeVector& new_args) const
+    ngraph::op::BatchNormInferenceRelu::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 5)
     {

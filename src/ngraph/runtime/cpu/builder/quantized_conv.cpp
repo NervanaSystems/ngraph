@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -522,7 +522,7 @@ namespace ngraph
                     auto arg5_buffer_index =
                         external_function->get_buffer_index(args[5].get_name());
                     auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                    size_t arg3_size = node->input(3).get_tensor().size();
+                    size_t arg3_size = node->get_input_tensor(3).size();
 
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());
@@ -654,7 +654,7 @@ namespace ngraph
                     auto arg5_buffer_index =
                         external_function->get_buffer_index(args[5].get_name());
                     auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                    size_t arg3_size = node->input(3).get_tensor().size();
+                    size_t arg3_size = node->get_input_tensor(3).size();
 
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());

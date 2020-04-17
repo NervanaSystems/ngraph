@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,22 +32,21 @@ TEST(opset_transform, opset1_topk_upgrade_pass)
     const size_t k = 10;
     const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
     const auto topk_v0 = make_shared<op::v0::TopK>(data, axis, element::i32, k);
-    const auto result = make_shared<op::Result>(topk_v0);
+    const auto result = make_shared<op::Result>(topk_v0->output(0));
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset1Upgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
     const auto topk_v1 = as_type_ptr<op::v1::TopK>(pass_replacement_node);
     ASSERT_TRUE(topk_v1);
     EXPECT_EQ(topk_v1->get_axis(), axis);
     EXPECT_EQ(topk_v1->get_mode(), op::v1::TopK::Mode::MAX);
     EXPECT_EQ(topk_v1->get_sort_type(), op::v1::TopK::SortType::SORT_VALUES);
 
-    const auto values_out_element_type = topk_v1->output(0).get_element_type();
+    const auto values_out_element_type = topk_v1->get_output_element_type(0);
     EXPECT_EQ(values_out_element_type, data->get_element_type());
 }
 
@@ -62,15 +61,14 @@ TEST(opset_transform, opset1_topk_downgrade_pass)
     const auto elem_type = element::i64;
 
     const auto topk_v1 = make_shared<op::v1::TopK>(data, k_node, axis, mode, sort, elem_type);
-    const auto result = make_shared<op::Result>(topk_v1);
+    const auto result = make_shared<op::Result>(topk_v1->output(0));
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset0Downgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node =
-        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
     const auto topk_v0 = as_type_ptr<op::v0::TopK>(pass_replacement_node);
     ASSERT_TRUE(topk_v0);
     EXPECT_EQ(topk_v0->get_k(), k);

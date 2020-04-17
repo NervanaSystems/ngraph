@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ SYNOPSIS
 OPTIONS
         -m or --model    Path to ONNX protobuf file with extension .onnx or .prototext  
         -i or --input    Path to a raw binary file with an array of input data. If not provided, model will be executed with random data.
-        -b or --backend  nGraph backend name, such as INTERPRETER, CPU, GPU, NNP, PlaidML, INTELGPU, where available. Default backend: CPU
+        -b or --backend  nGraph backend name, such as INTERPRETER, CPU, GPU, NNP, INTELGPU, where available. Default backend: CPU
 
 )###";
 }

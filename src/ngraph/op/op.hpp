@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,9 +34,13 @@ namespace ngraph
                 : Node()
             {
             }
-            Op(const NodeVector& arguments);
             Op(const OutputVector& arguments);
-            Op(const std::string& node_type, const NodeVector& arguments);
+            // To only be removed by OpenVINO
+            NGRAPH_DEPRECATED("Use OutputVector constructor instead")
+            Op(const NodeVector& nodes)
+                : Op(as_output_vector(nodes))
+            {
+            }
         };
     }
 }

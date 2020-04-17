@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::Sigmoid::type_info;
 constexpr NodeTypeInfo op::SigmoidBackprop::type_info;
 
-shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Sigmoid::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Sigmoid>(new_args.at(0));
@@ -42,7 +42,7 @@ op::SigmoidBackprop::SigmoidBackprop(const Output<Node>& arg, const Output<Node>
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::SigmoidBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::SigmoidBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<SigmoidBackprop>(new_args.at(0), new_args.at(1));

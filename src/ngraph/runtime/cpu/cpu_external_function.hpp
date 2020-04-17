@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,10 +27,6 @@
 #include <utility>
 #include <vector>
 
-#if defined(NGRAPH_HALIDE)
-#include <Halide.h>
-#endif
-
 #if !defined(NGRAPH_DEX_ONLY)
 
 #include "ngraph/code_writer.hpp"
@@ -46,7 +42,7 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_debug_tracer.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/state/state.hpp"
@@ -69,8 +65,8 @@ namespace ngraph
             using OpFunction = std::function<void(CPU_ExternalFunction* external_function,
                                                   CodeWriter&,
                                                   const ngraph::Node*,
-                                                  const std::vector<TensorViewWrapper>& inputs,
-                                                  const std::vector<TensorViewWrapper>& outputs)>;
+                                                  const std::vector<TensorWrapper>& inputs,
+                                                  const std::vector<TensorWrapper>& outputs)>;
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 #endif
@@ -184,25 +180,6 @@ namespace ngraph
 
                 const std::vector<PerformanceCounter>& get_perf_counters();
 
-#if defined(NGRAPH_HALIDE)
-                std::unordered_map<std::string, Halide::Func>& get_halide_functions()
-                {
-                    return halide_functions;
-                }
-                std::unordered_map<std::string, Halide::ImageParam>& get_subgraph_params()
-                {
-                    return subgraph_params;
-                }
-                std::unordered_map<std::string, int>& get_subgraph_param_sizes()
-                {
-                    return subgraph_param_sizes;
-                }
-                std::unordered_map<std::string, size_t>> &get_subgraph_param_indices()
-                {
-                    return subgraph_param_indices;
-                }
-#endif
-
             protected:
                 void build(ngraph::pass::PassConfig& pass_config);
 
@@ -228,12 +205,12 @@ namespace ngraph
 #if !defined(NGRAPH_DEX_ONLY)
                 void emit_debug_function_entry(CodeWriter& writer,
                                                Node* node,
-                                               const std::vector<TensorViewWrapper>& in,
-                                               const std::vector<TensorViewWrapper>& out);
+                                               const std::vector<TensorWrapper>& in,
+                                               const std::vector<TensorWrapper>& out);
                 void emit_debug_function_exit(CodeWriter& writer,
                                               Node* node,
-                                              const std::vector<TensorViewWrapper>& in,
-                                              const std::vector<TensorViewWrapper>& out);
+                                              const std::vector<TensorWrapper>& in,
+                                              const std::vector<TensorWrapper>& out);
                 void handle_output_alias(
                     CodeWriter& writer,
                     const Node&,
@@ -343,13 +320,6 @@ namespace ngraph
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
                 std::vector<runtime::PerformanceCounter> m_perf_counters;
-
-#if defined(NGRAPH_HALIDE)
-                std::unordered_map<std::string, Halide::Func> halide_functions;
-                std::unordered_map<std::string, Halide::ImageParam> subgraph_params;
-                std::unordered_map<std::string, int> subgraph_param_sizes;
-                std::unordered_map<std::string, size_t> subgraph_param_indices;
-#endif
 
                 /// Map each node with mkldnn implementation to its mkldnn primitive creating
                 /// string, deps, mkldnn primitive index, and mkldnn scratchpad size.

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,52 +14,4 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include "ngraph/op/op.hpp"
-
-namespace ngraph
-{
-    namespace op
-    {
-        typedef struct
-        {
-            AxisSet axes;
-            std::string mode;
-            bool align_corners = true;
-            bool antialias = false;
-            std::vector<size_t> pads_begin;
-            std::vector<size_t> pads_end;
-        } InterpolateAttrs;
-
-        namespace v0
-        {
-            /// \brief Layer which performs bilinear interpolation
-            class NGRAPH_API Interpolate : public Op
-            {
-            public:
-                static constexpr NodeTypeInfo type_info{"Interpolate", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
-                Interpolate() = default;
-                /// \brief Constructs a Interpolate operation
-                ///
-                /// \param image	    Input image
-                /// \param output_shape Output shape of spatial axes
-                /// \param attrs        Interpolation attributes
-                Interpolate(const Output<Node>& image,
-                            const Output<Node>& output_shape,
-                            const InterpolateAttrs& attrs);
-
-                void validate_and_infer_types() override;
-
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
-
-                const InterpolateAttrs& get_attrs() const { return m_attrs; }
-            private:
-                InterpolateAttrs m_attrs;
-            };
-        }
-        using v0::Interpolate;
-    }
-}
+#include "ngraph/op/interpolate.hpp"

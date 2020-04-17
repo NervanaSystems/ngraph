@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,16 +17,16 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/op/experimental/layers/ctc_greedy_decoder.hpp"
-#include "ngraph/op/experimental/layers/detection_output.hpp"
-#include "ngraph/op/experimental/layers/interpolate.hpp"
-#include "ngraph/op/experimental/layers/prior_box.hpp"
-#include "ngraph/op/experimental/layers/prior_box_clustered.hpp"
-#include "ngraph/op/experimental/layers/proposal.hpp"
-#include "ngraph/op/experimental/layers/psroi_pooling.hpp"
-#include "ngraph/op/experimental/layers/region_yolo.hpp"
-#include "ngraph/op/experimental/layers/reorg_yolo.hpp"
-#include "ngraph/op/experimental/layers/roi_pooling.hpp"
+#include "ngraph/op/ctc_greedy_decoder.hpp"
+#include "ngraph/op/detection_output.hpp"
+#include "ngraph/op/interpolate.hpp"
+#include "ngraph/op/prior_box.hpp"
+#include "ngraph/op/prior_box_clustered.hpp"
+#include "ngraph/op/proposal.hpp"
+#include "ngraph/op/psroi_pooling.hpp"
+#include "ngraph/op/region_yolo.hpp"
+#include "ngraph/op/reorg_yolo.hpp"
+#include "ngraph/op/roi_pooling.hpp"
 
 #include <memory>
 using namespace std;
@@ -74,25 +74,25 @@ TEST(type_prop_layers, prior_box1)
 {
     op::PriorBoxAttrs attrs;
     attrs.min_size = {2.0f, 3.0f};
-    attrs.aspect_ratio = {1.0f, 2.0f, 0.5f};
+    attrs.aspect_ratio = {1.5f, 2.0f, 2.5f};
 
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {32, 32});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {300, 300});
     auto pb = make_shared<op::PriorBox>(layer_shape, image_shape, attrs);
-    ASSERT_EQ(pb->get_shape(), (Shape{2, 16384}));
+    ASSERT_EQ(pb->get_shape(), (Shape{2, 20480}));
 }
 
 TEST(type_prop_layers, prior_box2)
 {
     op::PriorBoxAttrs attrs;
     attrs.min_size = {2.0f, 3.0f};
-    attrs.aspect_ratio = {1.0f, 2.0f, 0.5f};
+    attrs.aspect_ratio = {1.5f, 2.0f, 2.5f};
     attrs.flip = true;
 
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {32, 32});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {300, 300});
     auto pb = make_shared<op::PriorBox>(layer_shape, image_shape, attrs);
-    ASSERT_EQ(pb->get_shape(), (Shape{2, 28672}));
+    ASSERT_EQ(pb->get_shape(), (Shape{2, 32768}));
 }
 
 TEST(type_prop_layers, prior_box3)

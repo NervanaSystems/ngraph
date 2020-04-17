@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -169,7 +169,7 @@ op::MaxPoolWithIndices::MaxPoolWithIndices(const Output<Node>& arg,
     set_output_type(1, element::i32, result_shape);
 }
 
-shared_ptr<Node> op::MaxPoolWithIndices::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::MaxPoolWithIndices::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {
@@ -342,7 +342,7 @@ op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const Output<Node>& a
 }
 
 shared_ptr<Node>
-    op::MaxPoolWithIndicesBackprop::copy_with_new_args(const NodeVector& new_args) const
+    op::MaxPoolWithIndicesBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {

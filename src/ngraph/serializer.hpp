@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ namespace ngraph
     /// \param indent If 0 then there is no formatting applied and the resulting string is the
     ///    most compact representation. If non-zero then the json string is formatted with the
     ///    indent level specified.
+    NGRAPH_API
     std::string serialize(std::shared_ptr<ngraph::Function> func, size_t indent = 0);
 
     /// \brief Serialize a Function to a json file
@@ -36,6 +37,7 @@ namespace ngraph
     /// \param indent If 0 then there is no formatting applied and the resulting string is the
     ///    most compact representation. If non-zero then the json string is formatted with the
     ///    indent level specified.
+    NGRAPH_API
     void serialize(const std::string& path,
                    std::shared_ptr<ngraph::Function> func,
                    size_t indent = 0);
@@ -46,21 +48,26 @@ namespace ngraph
     /// \param indent If 0 then there is no formatting applied and the json is the
     ///    most compact representation. If non-zero then the json is formatted with the
     ///    indent level specified.
+    NGRAPH_API
     void serialize(std::ostream& out, std::shared_ptr<ngraph::Function> func, size_t indent = 0);
 
     /// \brief Deserialize a Function
     /// \param in An isteam to the input data
+    NGRAPH_API
     std::shared_ptr<ngraph::Function> deserialize(std::istream& in);
 
     /// \brief Deserialize a Function
     /// \param str The json formatted string to deseriailze.
+    NGRAPH_API
     std::shared_ptr<ngraph::Function> deserialize(const std::string& str);
 
     /// \brief If enabled adds output shapes to the serialized graph
     /// \param enable Set to true to enable or false otherwise
     ///
     /// Option may be enabled by setting the environment variable NGRAPH_SERIALIZER_OUTPUT_SHAPES
+    NGRAPH_API
     void set_serialize_output_shapes(bool enable);
+    NGRAPH_API
     bool get_serialize_output_shapes();
 
     class WithSerializeOutputShapesEnabled

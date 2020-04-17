@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,11 +49,11 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            Output<Node> get_filters() { return input(1).get_source_output(); }
-            Output<Node> get_data_batch() { return input(0).get_source_output(); }
+            Output<Node> get_filters() { return input_value(1); }
+            Output<Node> get_data_batch() { return input_value(0); }
             bool with_relu() const { return m_with_relu; }
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                clone_with_new_inputs(const OutputVector& new_args) const override;
 
         protected:
             Strides m_window_movement_strides;

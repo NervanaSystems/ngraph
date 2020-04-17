@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,23 @@ namespace ngraph
     }
 }
 
+/// \brief The Common Subexpression Elimination pass removes duplicate computations in a given
+/// computation graph.
+///
+/// Two computations are considered to be duplicates of each other if both apply the same operation
+/// to the same set of inputs, with the same attributes.
+///
+/// In the example shown below, the original graph has duplicate Add computations.
+/// After applying this pass, the graph is optimized to have only one Add computation.
+/// <table>
+/// <tr><th>Before the pass:</th>
+///      <th> After the pass</th>
+/// </tr>
+/// <tr>
+///      <td> \image html add_commutative_precse.svg </td>
+///      <td> \image html add_commutative_postcse.svg </td>
+/// </tr>
+/// </table>
 class NGRAPH_API ngraph::pass::CommonSubexpressionElimination : public FunctionPass
 {
 public:

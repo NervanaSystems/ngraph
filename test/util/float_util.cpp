@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,22 +15,6 @@
 //*****************************************************************************
 
 #include "util/float_util.hpp"
-
-union FloatUnion {
-    FloatUnion() { i = 0; }
-    FloatUnion(float val) { f = val; }
-    FloatUnion(uint32_t val) { i = val; }
-    float f;
-    uint32_t i;
-};
-
-union DoubleUnion {
-    DoubleUnion() { i = 0; }
-    DoubleUnion(double val) { d = val; }
-    DoubleUnion(uint64_t val) { i = val; }
-    double d;
-    uint64_t i;
-};
 
 std::string ngraph::test::bfloat16_to_bits(bfloat16 f)
 {

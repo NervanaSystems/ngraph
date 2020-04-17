@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,11 +24,12 @@ namespace ngraph
     {
         namespace reference
         {
-            inline void shape_of(const Shape& arg_shape, uint64_t* out)
+            template <typename T>
+            inline void shape_of(const Shape& arg_shape, T* out)
             {
                 for (size_t i = 0; i < arg_shape.size(); i++)
                 {
-                    out[i] = static_cast<uint64_t>(arg_shape[i]);
+                    out[i] = static_cast<T>(arg_shape[i]);
                 }
             }
         }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,6 +87,10 @@ namespace ngraph
                                    out0_buffer_index,
                                    element_type](CPURuntimeContext* ctx,
                                                  CPUExecutionContext* /* ectx */) {
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+#endif
                     switch (element_type)
                     {
                     case Type_t::f32:
@@ -125,6 +129,9 @@ namespace ngraph
                         break;
                     default: NGRAPH_UNREACHABLE("Matmul element type is not supported");
                     }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
                 };
 
                 CPUKernelFunctor bias_functor = [](CPURuntimeContext* /* ctx */,
@@ -375,8 +382,8 @@ namespace ngraph
 
             static void batchMatMul(CPU_ExternalFunction* external_function,
                                     const ngraph::Node* node,
-                                    const std::vector<TensorViewWrapper>& args,
-                                    const std::vector<TensorViewWrapper>& out,
+                                    const std::vector<TensorWrapper>& args,
+                                    const std::vector<TensorWrapper>& out,
                                     bool transpose0,
                                     bool transpose1)
             {

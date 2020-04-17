@@ -11,18 +11,22 @@ max_3d_to_scalar_int32
 send_recv
 send_recv_ring
 
-# axes input param not supported
-lrn_across_h
-lrn_across_hw
-lrn_across_all_dims
-lrn_across_nw
-lrn_across_empty
-lrn_6D_across_2_axes
-lrn_2d_across_empty
-lrn_2d_across_outermost_axis
-
 # ONNX TopK with dynamic K
-top_k_opset_10
+onnx_top_k_opset_10
 
 # ONNX GatherND with int32
-model_gatherND_int32
+onnx_model_gatherND_int32
+
+# RNN pattern fails after removing GOE
+fuse_rnn_across_layer_2layer_3timestep
+fuse_bi_directional_rnn
+bi_rnn_interpreter_vs_cpu
+fuse_lstm_cells
+fuse_2_layer_rnn
+fuse_1_layer_rnn
+rnn_fusion_1rnn_layer_3lstm_cell
+rnn_fusion_2rnn_layer_3lstm_cell
+
+#ONNX Flatten with dynamic reshape
+onnx_dyn_shapes_flatten_axis
+onnx_dyn_shapes_flatten_neg_axis

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -285,7 +285,8 @@ TEST(type_prop, transpose_input_order_et_wrong)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must have element type i64."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input order must have an integral number element type."));
     }
     catch (...)
     {

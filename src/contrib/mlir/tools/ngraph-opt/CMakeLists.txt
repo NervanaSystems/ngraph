@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 set(LIBS
     mlir_backend
-    MLIROptMain
+    MLIROptLib
     MLIRPass
     MLIRParser
     LLVMSupport
@@ -27,5 +27,10 @@ add_executable(ngraph-opt
 )
 
 target_link_libraries(ngraph-opt PRIVATE ${LIBS})
+
+set_target_properties(ngraph-opt PROPERTIES
+                      RUNTIME_OUTPUT_DIRECTORY_DEBUG ${NGRAPH_BUILD_BIN}
+                      RUNTIME_OUTPUT_DIRECTORY_RELEASE ${NGRAPH_BUILD_BIN}
+)
 
 install(TARGETS ngraph-opt RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})

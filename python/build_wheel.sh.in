@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 set -e
 
 export PYBIND_HEADERS_PATH=@CMAKE_CURRENT_BINARY_DIR@/pybind11
-export NGRAPH_CPP_BUILD_PATH=@CMAKE_CURRENT_BINARY_DIR@/_install/@CMAKE_INSTALL_PREFIX@/
+export NGRAPH_CPP_BUILD_PATH=@CMAKE_CURRENT_BINARY_DIR@/_install/@CMAKE_INSTALL_PREFIX@/@NGRAPH_COMPONENT_PREFIX@
 export NGRAPH_ONNX_IMPORT_ENABLE=@NGRAPH_ONNX_IMPORT_ENABLE@
 export NGRAPH_VERSION=@NGRAPH_WHEEL_VERSION@
 

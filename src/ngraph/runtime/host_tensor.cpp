@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 #include <cstring>
 #include <memory>
 
+#include "ngraph/chrome_trace.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
-#include "ngraph/runtime/chrome_trace.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
 
@@ -97,7 +97,7 @@ const char* runtime::HostTensor::get_data_ptr() const
 
 void runtime::HostTensor::write(const void* source, size_t n)
 {
-    runtime::event::Duration d1("write", "HostTensor");
+    event::Duration d1("write", "HostTensor");
 
     if (n != m_buffer_size)
     {
@@ -109,7 +109,7 @@ void runtime::HostTensor::write(const void* source, size_t n)
 
 void runtime::HostTensor::read(void* target, size_t n) const
 {
-    runtime::event::Duration d1("read", "HostTensor");
+    event::Duration d1("read", "HostTensor");
     if (n != m_buffer_size)
     {
         throw out_of_range("partial tensor read access not supported");

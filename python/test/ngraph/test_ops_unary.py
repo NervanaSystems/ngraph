@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,11 +47,11 @@ def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     input_data = range_start + np.random.rand(2, 3, 4) * (range_end - range_start)
     expected = numpy_fn(input_data)
 
-    result = run_op_node([input_data], ng_api_fn)[0]
-    np.testing.assert_allclose(result, expected, rtol=0.001)
+    result = run_op_node([input_data], ng_api_fn)
+    assert np.allclose(result, expected, rtol=0.001)
 
-    result = run_op_numeric_data(input_data, ng_api_fn)[0]
-    np.testing.assert_allclose(result, expected, rtol=0.001)
+    result = run_op_numeric_data(input_data, ng_api_fn)
+    assert np.allclose(result, expected, rtol=0.001)
 
 
 @pytest.mark.parametrize('ng_api_fn, numpy_fn, input_data', [
@@ -95,8 +95,34 @@ def test_unary_op_scalar(ng_api_fn, numpy_fn, input_data):
 def test_logical_not(input_data):
     expected = np.logical_not(input_data)
 
-    result = run_op_node([input_data], ng.logical_not)[0]
+    result = run_op_node([input_data], ng.logical_not)
 
-    assert np.array_equal(result, expected)
-    result = run_op_numeric_data(input_data, ng.logical_not)[0]
-    assert np.array_equal(result, expected)
+    assert np.allclose(result, expected)
+    result = run_op_numeric_data(input_data, ng.logical_not)
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.skip_on_gpu
+def test_sigmoid():
+    input_data = np.array([-3.14, -1.0, 0.0, 2.71001, 1000.0], dtype=np.float32)
+    result = run_op_node([input_data], ng.sigmoid)
+
+    def sigmoid(x):
+        return 1.0 / (1.0 + np.exp(-x))
+
+    expected = np.array(list(map(sigmoid, input_data)))
+
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.skip_on_gpu
+def test_softmax():
+    axis = 0
+    input_tensor = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+
+    result = run_op_node([input_tensor], ng.ops.softmax, axis)
+
+    expected = [[0.00426978, 0.01160646, 0.03154963],
+                [0.08576079, 0.23312201, 0.63369132]]
+
+    assert np.allclose(result, expected)

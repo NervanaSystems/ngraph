@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -113,19 +113,19 @@ TEST(builder, numpy_transpose)
     Shape shape{2, 4};
     auto param = make_shared<op::Parameter>(element::f32, shape);
     auto transposed = as_type_ptr<op::Reshape>(builder::numpy_transpose(param));
-    EXPECT_EQ(Shape({4, 2}), transposed->get_output_shape());
+    EXPECT_EQ(Shape({4, 2}), transposed->get_output_shape(0));
 
     // Multidimensional Transpose
     shape = Shape{2, 4, 8};
     param = make_shared<op::Parameter>(element::f32, shape);
     transposed = as_type_ptr<op::Reshape>(builder::numpy_transpose(param));
-    EXPECT_EQ(Shape({8, 4, 2}), transposed->get_output_shape());
+    EXPECT_EQ(Shape({8, 4, 2}), transposed->get_output_shape(0));
 
     // Dimshuffle
     shape = Shape{2, 4, 8};
     param = make_shared<op::Parameter>(element::f32, shape);
     transposed = as_type_ptr<op::Reshape>(builder::numpy_transpose(param, AxisVector{2, 0, 1}));
-    EXPECT_EQ(Shape({8, 2, 4}), transposed->get_output_shape());
+    EXPECT_EQ(Shape({8, 2, 4}), transposed->get_output_shape(0));
 
     // Bad Orders
     EXPECT_ANY_THROW(as_type_ptr<op::Reshape>(builder::numpy_transpose(param, AxisVector{2})));

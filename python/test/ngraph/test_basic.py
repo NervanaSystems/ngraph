@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -211,3 +211,9 @@ def test_constant_get_data_unsigned_integer(data_type):
     node = ng.constant(input_data, dtype=data_type)
     retrieved_data = node.get_data()
     assert np.allclose(input_data, retrieved_data)
+
+
+def test_backend_config():
+    dummy_config = {'dummy_option': 'dummy_value'}
+    # Expect no throw
+    ng.runtime(backend_name=test.BACKEND_NAME).set_config(dummy_config)

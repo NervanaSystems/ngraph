@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,11 +36,13 @@ namespace ngraph
             MAX,
         };
 
+        NGRAPH_API
         std::ostream& operator<<(std::ostream& out, const Type& obj);
     }
 
     template <>
-    class AttributeAdapter<reduction::Type> : public EnumAttributeAdapterBase<reduction::Type>
+    class NGRAPH_API AttributeAdapter<reduction::Type>
+        : public EnumAttributeAdapterBase<reduction::Type>
     {
     public:
         AttributeAdapter(reduction::Type& value)
@@ -48,7 +50,6 @@ namespace ngraph
         {
         }
 
-        NGRAPH_API
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<reduction::Type>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
@@ -60,7 +61,6 @@ namespace ngraph
         virtual const std::string& get_name() const = 0;
         virtual int get_size() = 0;
         virtual int get_rank() = 0;
-        virtual void log_print(const std::string& timestamp, const std::vector<char>& buf) = 0;
 
         virtual void all_reduce(void* in,
                                 void* out,
@@ -75,5 +75,7 @@ namespace ngraph
     };
 
     void set_distributed_interface(std::unique_ptr<DistributedInterface> distributed_interface);
+
+    NGRAPH_API
     DistributedInterface* get_distributed_interface();
 }

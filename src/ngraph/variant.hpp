@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include <string>
 
 #include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/type.hpp"
 
 namespace ngraph
@@ -30,6 +31,16 @@ namespace ngraph
     public:
         virtual ~Variant() {}
         virtual const VariantTypeInfo& get_type_info() const = 0;
+
+        virtual std::shared_ptr<ngraph::Variant> init(const std::shared_ptr<ngraph::Node>& node)
+        {
+            return nullptr;
+        }
+
+        virtual std::shared_ptr<ngraph::Variant> merge(const ngraph::NodeVector& nodes)
+        {
+            return nullptr;
+        }
     };
 
     template <typename VT>

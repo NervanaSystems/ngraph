@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,11 +58,11 @@ public:
 
     /// \brief Query the list of registered devices
     /// \returns A vector of all registered devices.
-    static std::vector<std::string> get_registered_backends();
+    static NGRAPH_API std::vector<std::string> get_registered_backends();
 
 private:
     static void initialize_backends();
-    static std::shared_ptr<runtime::Backend> create_backend(const std::string& type);
+    static std::shared_ptr<runtime::Backend> create_backend(std::string type);
     static std::unordered_map<std::string, BackendConstructor>& get_registry();
 
     static std::unordered_map<std::string, BackendConstructor> s_registered_backend;

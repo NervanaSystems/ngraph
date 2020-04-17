@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,7 +56,6 @@ namespace ngraph
                 {
                     return m_in_place_oi_pairs;
                 }
-
                 bool is_cacheable() const { return m_cacheable; }
                 void set_cacheable(bool val) { m_cacheable = val; }
             private:

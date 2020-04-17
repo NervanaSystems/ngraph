@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
+
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -48,6 +49,7 @@ namespace ngraph
         class Tensor;
     }
 
+    NGRAPH_API
     std::string to_cplusplus_sourcecode_literal(bool val);
 
     template <typename T>
@@ -74,13 +76,18 @@ namespace ngraph
         return os.str();
     }
 
+    NGRAPH_API
     size_t hash_combine(const std::vector<size_t>& list);
+    NGRAPH_API
     void dump(std::ostream& out, const void*, size_t);
-
     std::string to_lower(const std::string& s);
+    NGRAPH_API
     std::string to_upper(const std::string& s);
+    NGRAPH_API
     std::string trim(const std::string& s);
+    NGRAPH_API
     std::vector<std::string> split(const std::string& s, char delimiter, bool trim = false);
+
     template <typename T>
     std::string locale_string(T x)
     {
@@ -90,7 +97,7 @@ namespace ngraph
         return ss.str();
     }
 
-    class stopwatch
+    class NGRAPH_API stopwatch
     {
     public:
         void start()
@@ -158,9 +165,17 @@ namespace ngraph
     /// template specializations for float and double to handle INFINITY, -INFINITY
     /// and NaN values.
     template <>
-    float parse_string<float>(const std::string& s);
+    NGRAPH_API float parse_string<float>(const std::string& s);
     template <>
-    double parse_string<double>(const std::string& s);
+    NGRAPH_API double parse_string<double>(const std::string& s);
+
+    /// template specializations for int8_t and uint8_t to handle the fact that default
+    /// implementation ends up treating values as characters so that the number "0" turns into
+    /// the parsed value 48, which is it's ASCII value
+    template <>
+    NGRAPH_API int8_t parse_string<int8_t>(const std::string& s);
+    template <>
+    NGRAPH_API uint8_t parse_string<uint8_t>(const std::string& s);
 
     /// Parses a list of strings containing literals of the underlying type.
     template <typename T>
@@ -190,18 +205,37 @@ namespace ngraph
     void check_fp_values_isnan(const char* name, const float* array, size_t n);
     void check_fp_values_isnan(const char* name, const double* array, size_t n);
 
+    NGRAPH_API
     void* ngraph_malloc(size_t size);
+    NGRAPH_API
     void ngraph_free(void*);
 
+    NGRAPH_API
     size_t round_up(size_t size, size_t alignment);
     bool is_valid_permutation(ngraph::AxisVector permutation, ngraph::Rank rank = Rank::dynamic());
     template <typename T>
     T apply_permutation(T input, ngraph::AxisVector order);
 
+    extern template NGRAPH_API AxisVector apply_permutation<AxisVector>(AxisVector input,
+                                                                        AxisVector order);
+
+    extern template NGRAPH_API Coordinate apply_permutation<Coordinate>(Coordinate input,
+                                                                        AxisVector order);
+
+    extern template NGRAPH_API Strides apply_permutation<Strides>(Strides input, AxisVector order);
+
+    extern template NGRAPH_API Shape apply_permutation<Shape>(Shape input, AxisVector order);
+
+    template <>
+    NGRAPH_API PartialShape apply_permutation(PartialShape input, AxisVector order);
+
+    NGRAPH_API
     AxisVector get_default_order(size_t rank);
+
     NGRAPH_API
     AxisVector get_default_order(const Shape& shape);
 
+    NGRAPH_API
     AxisVector get_permutation_to_default_order(const AxisVector& axis_order);
 
     //
@@ -214,8 +248,8 @@ namespace ngraph
     {
         std::shared_ptr<Function> fprop;
         std::shared_ptr<Function> bprop;
-        std::vector<Node*> fprop_output_nodes;
-        NodeMap node_param_map;
+        std::vector<RawNodeOutput> fprop_output_nodes;
+        RawNodeOutputMap node_param_map;
     };
 
     //
@@ -226,6 +260,7 @@ namespace ngraph
     // The last argument is the adjoints coming into the bprop function, the output
     // bprop function will have these nodes as the first N input parameters
     //
+    NGRAPH_API
     FpropCache cache_fprop(std::shared_ptr<Function> fprop, std::shared_ptr<Function> bprop);
 
     // NodeExecutors are used in compiler optimization passes like ConstantFolding to execute a node
@@ -356,6 +391,7 @@ namespace ngraph
     /// the patch version number.
     ///
     /// \note Throws a runtime_error if there is an error during parsing
+    NGRAPH_API
     void parse_version_string(
         std::string version, size_t& major, size_t& minor, size_t& patch, std::string& extra);
 } // end namespace ngraph
@@ -363,6 +399,7 @@ namespace ngraph
 template <typename T>
 std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
 
-std::vector<float> read_float_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
+std::vector<float> NGRAPH_API read_float_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
 
+NGRAPH_API
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

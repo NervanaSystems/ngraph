@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,15 +39,14 @@ namespace ngraph
                 Convert(const Output<Node>& arg, const ngraph::element::Type& destination_type);
 
                 void validate_and_infer_types() override;
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 const element::Type& get_destination_type() const { return m_destination_type; }
                 void set_destination_type(const element::Type& destination_type)
                 {
                     m_destination_type = destination_type;
                 }
-
                 const element::Type& get_convert_element_type() const { return m_destination_type; }
                 void set_convert_element_type(const element::Type& destination_type)
                 {

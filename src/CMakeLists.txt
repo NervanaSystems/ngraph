@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ if (NGRAPH_MLIR_ENABLE)
 endif()
 
 add_subdirectory(ngraph)
+
+add_subdirectory(runtime)
 
 if (NGRAPH_TOOLS_ENABLE)
     add_subdirectory(tools)

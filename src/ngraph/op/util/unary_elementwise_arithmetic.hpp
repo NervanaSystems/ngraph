@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,22 +52,13 @@ namespace ngraph
                 UnaryElementwiseArithmetic();
                 /// \brief Constructs a unary elementwise arithmetic operation.
                 ///
-                /// \param arg Node that produces the input tensor.
-                UnaryElementwiseArithmetic(const std::shared_ptr<Node>& arg);
-                /// \brief Constructs a unary elementwise arithmetic operation.
-                ///
                 /// \param arg Output that produces the input tensor.
                 UnaryElementwiseArithmetic(const Output<Node>& arg);
-
-                /// \brief Constructs a unary elementwise arithmetic operation.
-                ///
-                /// \param arg Node that produces the input tensor.
-                UnaryElementwiseArithmetic(const std::string& node_type,
-                                           const std::shared_ptr<Node>& arg);
 
             public:
                 void validate_and_infer_types() override;
                 bool is_unary_elementwise_arithmetic() const override { return true; }
+                bool visit_attributes(AttributeVisitor& visitor) override;
             };
         }
     }

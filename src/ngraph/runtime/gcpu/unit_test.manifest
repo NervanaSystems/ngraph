@@ -1,0 +1,12 @@
+tile_3d_small_data_rank
+tile_3d_few_repeats
+fake_quantize_pdpd
+convert_float32_bf16
+convert_bf16_float32
+
+GCPU.onnx_model_quant_conv_linear
+GCPU.onnx_top_k_opset_10
+
+#ONNX Flatten with dynamic reshape
+onnx_dyn_shapes_flatten_axis
+onnx_dyn_shapes_flatten_neg_axis

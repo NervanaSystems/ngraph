@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -177,11 +177,11 @@ static void to_vector_test(const PartialShape& input_pshape, const std::vector<S
 {
     auto x = make_shared<op::Parameter>(element::f32, input_pshape);
 
-    shared_ptr<Node> x_new_shape = make_shared<op::ShapeOf>(x);
+    shared_ptr<Node> x_new_shape = make_shared<op::v0::ShapeOf>(x);
     x_new_shape = make_shared<op::Product>(x_new_shape, AxisSet{0});
     x_new_shape = make_shared<op::Reshape>(x_new_shape, AxisVector{}, Shape{1});
 
-    auto x_reshaped = make_shared<op::DynReshape>(x, x_new_shape);
+    auto x_reshaped = make_shared<op::v1::Reshape>(x, x_new_shape, true);
 
     auto f = make_shared<Function>(NodeVector{x_reshaped}, ParameterVector{x});
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
@@ -237,10 +237,10 @@ static void reverse_shape_test(const PartialShape& input_pshape,
 {
     auto x = make_shared<op::Parameter>(element::f32, input_pshape);
 
-    shared_ptr<Node> x_new_shape = make_shared<op::ShapeOf>(x);
+    shared_ptr<Node> x_new_shape = make_shared<op::v0::ShapeOf>(x);
     x_new_shape = make_shared<op::Reverse>(x_new_shape, AxisSet{0});
 
-    auto x_reshaped = make_shared<op::DynReshape>(x, x_new_shape);
+    auto x_reshaped = make_shared<op::v1::Reshape>(x, x_new_shape, true);
 
     auto f = make_shared<Function>(NodeVector{x_reshaped}, ParameterVector{x});
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);

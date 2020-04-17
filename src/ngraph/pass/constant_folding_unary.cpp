@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/round.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
@@ -32,6 +33,7 @@
 #include "ngraph/runtime/reference/negate.hpp"
 #include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
+#include "ngraph/runtime/reference/round.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
 
@@ -42,7 +44,7 @@ bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
     return is_type<op::Abs>(n) || is_type<op::Ceiling>(n) || is_type<op::Floor>(n) ||
            is_type<op::Negative>(n) || is_type<op::Not>(n) || is_type<op::Relu>(n) ||
-           is_type<op::Sign>(n) || is_type<op::Sqrt>(n);
+           is_type<op::Round>(n) || is_type<op::Sign>(n) || is_type<op::Sqrt>(n);
 }
 
 template <class T>
@@ -50,25 +52,15 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
                                              shared_ptr<Node> unary,
                                              NodeExecutorTy func)
 {
-    // check sqrt arg
-    if (is_type<op::Sqrt>(unary))
-    {
-        std::vector<T> values{constant->get_vector<T>()};
-        if (std::any_of(values.begin(), values.end(), [](T i) { return i < T(0); }))
-        {
-            throw ngraph_error("Square root of negative value");
-        }
-    }
-
-    auto out_shape = unary->get_shape();
-    vector<T> out_vec(shape_size(out_shape));
+    const Shape& out_shape = unary->get_shape();
+    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
 
     if (func != nullptr)
     {
         vector<void*> inputs;
         inputs.push_back(const_cast<void*>(constant->get_data_ptr()));
         vector<void*> outputs;
-        outputs.push_back(out_vec.data());
+        outputs.push_back(buffer.get_ptr<T>());
 
         func(inputs, outputs);
     }
@@ -77,47 +69,57 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         if (is_type<op::Abs>(unary))
         {
             runtime::reference::abs<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::Ceiling>(unary))
         {
             runtime::reference::ceiling<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::Floor>(unary))
         {
             runtime::reference::floor<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::v1::LogicalNot>(unary))
         {
             runtime::reference::logical_not<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::Negative>(unary))
         {
             runtime::reference::negate<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::v0::Not>(unary))
         {
             runtime::reference::logical_not<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::Relu>(unary))
         {
             runtime::reference::relu<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
+        }
+        else if (is_type<op::Round>(unary))
+        {
+            runtime::reference::round<T>(
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::Sign>(unary))
         {
             runtime::reference::sign<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else if (is_type<op::Sqrt>(unary))
         {
+            std::vector<T> values{constant->get_vector<T>()};
+            if (std::any_of(values.begin(), values.end(), [](T i) { return i < T(0); }))
+            {
+                throw ngraph_error("Square root of negative value");
+            }
             runtime::reference::sqrt<T>(
-                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
         else
         {
@@ -125,7 +127,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         }
     }
 
-    return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
+    return make_shared<op::Constant>(constant->get_element_type(), out_shape, buffer.get_ptr<T>());
 }
 
 void pass::ConstantFolding::construct_constant_unary()

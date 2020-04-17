@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,6 +59,7 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/op/round.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
@@ -100,6 +101,7 @@
 #include "ngraph/runtime/cpu/kernel/or.hpp"
 #include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
+#include "ngraph/runtime/cpu/kernel/round.hpp"
 #include "ngraph/runtime/cpu/kernel/sign.hpp"
 #include "ngraph/runtime/cpu/kernel/sin.hpp"
 #include "ngraph/runtime/cpu/kernel/sinh.hpp"
@@ -109,7 +111,6 @@
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
 #include "ngraph/runtime/cpu/kernel/xor.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
-#include "ngraph/runtime/cpu/op/halide_op.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -367,6 +368,12 @@ namespace ngraph
             }
 
             template <>
+            void Builder::BUILDER_DECL(ngraph::op::Round)
+            {
+                BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::round);
+            }
+
+            template <>
             void Builder::BUILDER_DECL(ngraph::op::Negative)
             {
                 BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::negative);
@@ -557,13 +564,19 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Sqrt)
             {
-                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sqrt);
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::checked_sqrt);
             }
 
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Floor)
             {
                 BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::floor);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Round)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::round);
             }
 
             template <>
@@ -666,9 +679,7 @@ namespace ngraph
                 static BuildOpMap build_dispatcher{
                     {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
                     {TI(ngraph::op::CompiledKernel),
-                     &runtime::cpu::Builder::build<ngraph::op::CompiledKernel>},
-                    {TI(ngraph::runtime::cpu::op::HalideOp),
-                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::HalideOp>}};
+                     &runtime::cpu::Builder::build<ngraph::op::CompiledKernel>}};
 
                 return build_dispatcher;
             }
@@ -699,6 +710,7 @@ namespace ngraph
                 REGISTER_OP_BUILDER(Negative);
                 REGISTER_OP_BUILDER(Exp);
                 REGISTER_OP_BUILDER(Log);
+                REGISTER_OP_BUILDER(Round);
                 REGISTER_OP_BUILDER(Sqrt);
                 REGISTER_OP_BUILDER(Sign);
                 REGISTER_OP_BUILDER(Sin);
@@ -740,6 +752,7 @@ namespace ngraph
                 REGISTER_CF_BUILDER(And);
                 REGISTER_CF_BUILDER(Or);
                 REGISTER_CF_BUILDER(Xor);
+                REGISTER_CF_BUILDER(Round);
                 REGISTER_CF_BUILDER(Sign);
                 REGISTER_CF_BUILDER(Not);
                 REGISTER_CF_BUILDER(Power);

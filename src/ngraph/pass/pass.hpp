@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -115,4 +115,5 @@ class NGRAPH_API ngraph::pass::CallGraphPass : public PassBase
 public:
     virtual ~CallGraphPass();
     virtual bool run_on_call_graph(const std::list<std::shared_ptr<ngraph::Node>>&) = 0;
+    virtual bool run_on_call_graph(const std::vector<std::shared_ptr<ngraph::Node>>&);
 };

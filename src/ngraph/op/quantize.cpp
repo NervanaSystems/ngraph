@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ void op::Quantize::validate_and_infer_types()
     for (auto axis : m_axes)
     {
         NODE_VALIDATION_CHECK(this,
-                              input_rank.is_dynamic() || axis < size_t(input_rank),
+                              input_rank.is_dynamic() || axis < input_rank.get_length(),
                               "Quantization axis (",
                               axis,
                               ") must be less than input shape rank (",
@@ -122,7 +122,7 @@ void op::Quantize::validate_and_infer_types()
 
         vector<Dimension> injected_scale_zero_point_dims;
 
-        for (size_t j = 0; j < size_t(input_shape.rank()); j++)
+        for (size_t j = 0; j < input_shape.rank().get_length(); j++)
         {
             if (m_axes.count(j) != 0)
             {
@@ -153,7 +153,7 @@ void op::Quantize::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::Quantize::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Quantize::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Quantize>(

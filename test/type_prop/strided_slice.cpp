@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ using namespace ngraph;
 TEST(type_prop, strided_slice_begin_incorrect_type)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-    auto begin = make_shared<op::Parameter>(element::i32, Shape{4});
+    auto begin = make_shared<op::Parameter>(element::f16, Shape{4});
     auto end = make_shared<op::Parameter>(element::i64, Shape{4});
     try
     {
@@ -37,7 +37,7 @@ TEST(type_prop, strided_slice_begin_incorrect_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Begin mask must have element type i64"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Begin mask must be an integral number"));
     }
     catch (...)
     {
@@ -49,7 +49,7 @@ TEST(type_prop, strided_slice_end_incorrect_type)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
     auto begin = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto end = make_shared<op::Parameter>(element::i32, Shape{4});
+    auto end = make_shared<op::Parameter>(element::boolean, Shape{4});
     try
     {
         auto strided_slice = make_shared<op::v1::StridedSlice>(
@@ -59,7 +59,7 @@ TEST(type_prop, strided_slice_end_incorrect_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("End mask must have element type i64"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("End mask must be an integral number"));
     }
     catch (...)
     {
@@ -154,6 +154,34 @@ TEST(type_prop, strided_slice_end_incorrect_shape)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("End input must be 1D (end rank:"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, strided_slice_default_stride_dynamic_shape_input)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto begin = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto end = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto strided_slice = make_shared<op::v1::StridedSlice>(
+        data, begin, end, vector<int64_t>{0, 0}, vector<int64_t>{0, 0});
+
+    ASSERT_TRUE(strided_slice->input_value(3).get_partial_shape().compatible(PartialShape{2}));
+
+    try
+    {
+        end = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+        strided_slice = make_shared<op::v1::StridedSlice>(
+            data, begin, end, vector<int64_t>{0, 0}, vector<int64_t>{0, 0});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Unknown data to calculate default strides exception not thrown.";
+    }
+    catch (const CheckFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Begin input must be 1D"));
     }
     catch (...)
     {

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_scalar)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{};
     auto r = make_shared<op::Slice>(A, Coordinate{}, Coordinate{});
-    auto f = make_shared<Function>(r, ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(r), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

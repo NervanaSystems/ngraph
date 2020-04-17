@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@
 #include "ngraph/opsets/opset0.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/validation_util.hpp"
 #include "topk.hpp"
-#include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
 namespace
@@ -35,9 +35,9 @@ namespace
     {
         std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
 
-        auto data = node.get_ng_inputs().at(0);
-        auto data_rank = data->get_shape().size();
-        return ngraph::onnx_import::common::validate_axis(node, axis, data_rank);
+        const auto data = node.get_ng_inputs().at(0);
+        const auto data_rank = data->get_output_partial_shape(0).rank();
+        return ngraph::normalize_axis(node.get_description(), axis, data_rank);
     }
 
     /// \return Return the second input to the TopK node reshaped to a scalar.

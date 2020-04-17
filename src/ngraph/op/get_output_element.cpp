@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::GetOutputElement::type_info;
 
 op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
-    : Op({Output<Node>{arg, n}})
+    : Op({arg->output(n)})
     , m_n{n}
 {
     constructor_validate_and_infer_types();
@@ -40,13 +40,13 @@ void op::GetOutputElement::validate_and_infer_types()
                           get_input_size(),
                           " inputs.");
 
-    set_output_type(0, input(0).get_element_type(), input(0).get_partial_shape());
+    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::GetOutputElement::clone_with_new_inputs(const OutputVector& inputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<GetOutputElement>(new_args.at(0), m_n);
+    auto& value = inputs.at(0);
+    return make_shared<op::GetOutputElement>(value.get_node_shared_ptr(), value.get_index());
 }
 
 Output<Node> op::GetOutputElement::get_as_output() const

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,10 +17,11 @@
 #include <algorithm>
 #include <thread>
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 
@@ -37,14 +38,14 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
     , m_compiled_destroy_ctx_func(compiled_destroy_ctx_func)
     , m_compiled_function(compiled_function)
 {
-    const auto envConcurrency = std::getenv("NGRAPH_CPU_CONCURRENCY");
-    m_num_ctx = envConcurrency == nullptr ? 1 : std::atoi(envConcurrency);
+    const auto envConcurrency = getenv_int("NGRAPH_CPU_CONCURRENCY");
+    m_num_ctx = envConcurrency <= 0 ? 1 : envConcurrency;
     if (m_num_ctx > std::thread::hardware_concurrency())
     {
         throw ngraph_error(
             "Unexpected value specified for NGRAPH_CPU_CONCURRENCY "
             "(" +
-            std::string(envConcurrency) + "). Please specify a value in range [1-" +
+            std::to_string(envConcurrency) + "). Please specify a value in range [1-" +
             std::to_string(std::thread::hardware_concurrency()) + "]");
     }
 
@@ -77,8 +78,8 @@ void runtime::cpu::CPU_CallFrame::inner_call(
 
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
-        shared_ptr<runtime::cpu::CPUTensorView> tv =
-            static_pointer_cast<runtime::cpu::CPUTensorView>(input_tvs[i]);
+        shared_ptr<runtime::cpu::CPUTensor> tv =
+            static_pointer_cast<runtime::cpu::CPUTensor>(input_tvs[i]);
         if (disable_caching)
         {
             m_ctx_vec[id]->p_en[i] = true;
@@ -92,8 +93,8 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        shared_ptr<runtime::cpu::CPUTensorView> tv =
-            static_pointer_cast<runtime::cpu::CPUTensorView>(output_tvs[i]);
+        shared_ptr<runtime::cpu::CPUTensor> tv =
+            static_pointer_cast<runtime::cpu::CPUTensor>(output_tvs[i]);
         outputs.push_back(tv->get_data_ptr());
     }
 
@@ -234,14 +235,13 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
 
         ctx->states = m_external_function->m_states.data();
 #if defined(NGRAPH_TBB_ENABLE)
-        if (m_external_function->is_direct_execution() &&
-            std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+        if (m_external_function->is_direct_execution() && getenv_bool("NGRAPH_CPU_USE_TBB"))
         {
             // For codegen mode, graph and global control are now part of the code generated
             // CPURuntimeContextCG class.
             ctx->G = new tbb::flow::graph;
-            const auto envParallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
-            const auto parallelism = envParallelism == nullptr ? 1 : std::atoi(envParallelism);
+            const auto envParallelism = getenv_int("NGRAPH_INTER_OP_PARALLELISM");
+            const auto parallelism = envParallelism <= 0 ? 1 : envParallelism;
             ctx->c =
                 new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
         }
@@ -281,8 +281,7 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         }
 
 #if defined(NGRAPH_TBB_ENABLE)
-        if (m_external_function->is_direct_execution() &&
-            std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+        if (m_external_function->is_direct_execution() && getenv_bool("NGRAPH_CPU_USE_TBB"))
         {
             // For codegen mode, graph and global control are now part of a code generated
             // CPURuntimeContext class.

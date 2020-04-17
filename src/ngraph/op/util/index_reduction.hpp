@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,15 +35,6 @@ namespace ngraph
                 IndexReduction();
 
                 IndexReduction(const Output<Node>& arg,
-                               uint64_t axis,
-                               const element::Type& index_element_type);
-
-                IndexReduction(const std::shared_ptr<Node>& arg,
-                               uint64_t axis,
-                               const element::Type& index_element_type);
-
-                IndexReduction(const std::string& node_type,
-                               const std::shared_ptr<Node>& arg,
                                uint64_t axis,
                                const element::Type& index_element_type);
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ namespace ngraph
             class NGRAPH_API FusedOp : public Op
             {
             public:
-                bool supports_decompose() const override { return true; }
+                bool supports_decompose() const final { return true; }
                 // Fused op decomposition can be performed in the presence of
                 // partial shapes
                 virtual bool can_decompose_with_partial_shapes() { return false; }
@@ -57,15 +57,7 @@ namespace ngraph
 
                 /// \brief Constructs a FusedOp
                 ///
-                /// \param args Nodes that produce the input tensors for the fused op
-                FusedOp(const NodeVector& args);
-
                 FusedOp(const OutputVector& args);
-
-                /// \brief Constructs a FusedOp
-                ///
-                /// \param args Nodes that produce the input tensors for the fused op
-                FusedOp(const std::string& node_type, const NodeVector& args);
             };
         }
     }

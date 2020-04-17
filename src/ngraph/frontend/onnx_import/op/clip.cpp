@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
 #include "clip.hpp"
 #include "default_opset.hpp"
 #include "ngraph/builder/make_constant.hpp"
-#include "ngraph/opsets/opset0.hpp"
 
 namespace ngraph
 {
@@ -49,8 +48,8 @@ namespace ngraph
             {
                 NodeVector clip(const Node& node)
                 {
-                    NodeVector inputs{node.get_ng_inputs()};
-                    std::shared_ptr<ngraph::Node> data = inputs.at(0);
+                    const NodeVector inputs{node.get_ng_inputs()};
+                    const std::shared_ptr<ngraph::Node> data = inputs.at(0);
                     const element::Type data_type = data->get_element_type();
                     const Shape data_shape = data->get_shape();
                     std::shared_ptr<ngraph::Node> min;
@@ -80,15 +79,10 @@ namespace ngraph
                             data_type, data_shape, std::numeric_limits<double>::max());
                     }
 
-                    auto max_of_min_and_data = std::make_shared<ngraph::opset0::Maximum>(
-                        min,
-                        data,
-                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY));
+                    const auto max_of_min_and_data =
+                        std::make_shared<default_opset::Maximum>(min, data);
 
-                    return {std::make_shared<ngraph::opset0::Minimum>(
-                        max,
-                        max_of_min_and_data,
-                        ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
+                    return {std::make_shared<default_opset::Minimum>(max, max_of_min_and_data)};
                 }
 
             } // namespace set_11

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ op::CPULeakyRelu::CPULeakyRelu(const Output<Node>& arg, float alpha)
     set_output_type(0, arg.get_element_type(), arg.get_shape());
 }
 
-shared_ptr<Node> op::CPULeakyRelu::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::CPULeakyRelu::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {

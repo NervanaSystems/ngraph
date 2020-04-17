@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/validation_util.hpp"
@@ -132,7 +133,7 @@ op::v0::MaxPool::MaxPool(const Output<Node>& arg, const Shape& window_shape)
 {
 }
 
-shared_ptr<Node> op::v0::MaxPool::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::MaxPool::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::MaxPool>(new_args.at(0),
@@ -229,7 +230,7 @@ void op::v0::MaxPoolBackprop::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), forward_arg_shape);
 }
 
-shared_ptr<Node> op::v0::MaxPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::MaxPoolBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (this->get_input_size() == 3)
@@ -303,6 +304,17 @@ op::v1::MaxPool::MaxPool(const Output<Node>& arg,
 {
 }
 
+bool ngraph::op::v1::MaxPool::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("pads_begin", m_pads_begin);
+    visitor.on_attribute("pads_end", m_pads_end);
+    visitor.on_attribute("kernel", m_kernel);
+    visitor.on_attribute("rounding_type", m_rounding_type);
+    visitor.on_attribute("auto_pad", m_auto_pad);
+    return true;
+}
+
 void op::v1::MaxPool::validate_and_infer_types()
 {
     if (0 == m_strides.size())
@@ -356,7 +368,7 @@ void op::v1::MaxPool::validate_and_infer_types()
                                                   m_rounding_type == op::RoundingType::CEIL));
 }
 
-shared_ptr<Node> op::v1::MaxPool::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::MaxPool::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::MaxPool>(
@@ -441,7 +453,7 @@ void op::v1::MaxPoolBackprop::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), forward_arg_shape);
 }
 
-shared_ptr<Node> op::v1::MaxPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::MaxPoolBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (this->get_input_size() == 3)

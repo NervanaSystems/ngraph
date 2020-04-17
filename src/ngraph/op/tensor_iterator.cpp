@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -141,13 +141,6 @@ shared_ptr<op::TensorIterator::OutputDescription>
 
 Input<Node> op::TensorIterator::input_for_value(const Output<Node>& value)
 {
-    for (auto input : inputs())
-    {
-        if (input.get_source_output() == value)
-        {
-            return input;
-        }
-    }
     auto input_index = get_input_size();
     set_argument(input_index, value);
     return Input<Node>(this, input_index);
@@ -436,9 +429,9 @@ void op::TensorIterator::validate_and_infer_types()
     }
 }
 
-std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node> op::TensorIterator::clone_with_new_inputs(const OutputVector& new_args) const
 {
-    auto op = make_shared<op::TensorIterator>(as_output_vector(new_args));
+    auto op = make_shared<op::TensorIterator>(new_args);
     op->set_output_size(m_output_descriptions.size());
 
     std::vector<::ngraph::element::Type> types(m_body->get_parameters().size());
@@ -451,9 +444,9 @@ std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& n
             if (input_description->m_input_index == input_index)
             {
                 types[input_description->m_body_parameter_index] =
-                    new_args[input_index]->get_element_type();
+                    new_args[input_index].get_element_type();
                 new_shapes[input_description->m_body_parameter_index] =
-                    new_args[input_index]->get_output_partial_shape(0);
+                    new_args[input_index].get_partial_shape();
 
                 if (new_shapes[input_description->m_body_parameter_index].is_static())
                 {
@@ -468,6 +461,7 @@ std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& n
         }
     }
 
+    op->m_num_iterations = m_num_iterations;
     auto func = std::make_shared<Function>(m_body->get_results(), m_body->get_parameters());
     auto spec_func = specialize_function(
         func, types, new_shapes, std::vector<void*>(new_args.size(), nullptr), false, true);

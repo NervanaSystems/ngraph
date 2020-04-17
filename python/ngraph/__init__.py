@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2019 Intel Corporation
+# Copyright 2017-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -60,6 +60,7 @@ from ngraph.ops import greater
 from ngraph.ops import greater_eq
 from ngraph.ops import grn
 from ngraph.ops import group_convolution
+from ngraph.ops import group_convolution_backprop_data
 from ngraph.ops import hard_sigmoid
 from ngraph.ops import less
 from ngraph.ops import less_eq
@@ -68,10 +69,9 @@ from ngraph.ops import logical_and
 from ngraph.ops import logical_or
 from ngraph.ops import logical_not
 from ngraph.ops import lrn
-from ngraph.ops import max
+from ngraph.ops import matmul
 from ngraph.ops import max_pool
 from ngraph.ops import maximum
-from ngraph.ops import min
 from ngraph.ops import minimum
 from ngraph.ops import multiply
 from ngraph.ops import mvn
@@ -81,34 +81,45 @@ from ngraph.ops import one_hot
 from ngraph.ops import pad
 from ngraph.ops import parameter
 from ngraph.ops import power
-from ngraph.ops import prod
 from ngraph.ops import prelu
 from ngraph.ops import quantize
 from ngraph.ops import quantized_convolution
 from ngraph.ops import quantized_dot
+from ngraph.ops import reduce_max
+from ngraph.ops import reduce_mean
+from ngraph.ops import reduce_min
+from ngraph.ops import reduce_prod
+from ngraph.ops import reduce_sum
 from ngraph.ops import relu
 from ngraph.ops import replace_slice
 from ngraph.ops import reshape
+from ngraph.ops import result
 from ngraph.ops import reverse
 from ngraph.ops import rnn_cell
 from ngraph.ops import scale_shift
 from ngraph.ops import select
+from ngraph.ops import shape_of
 from ngraph.ops import shuffle_channels
+from ngraph.ops import sigmoid
 from ngraph.ops import sign
 from ngraph.ops import sin
 from ngraph.ops import sinh
 from ngraph.ops import slice
 from ngraph.ops import softmax
+from ngraph.ops import split
 from ngraph.ops import space_to_depth
+from ngraph.ops import strided_slice
 from ngraph.ops import sqrt
 from ngraph.ops import squared_difference
 from ngraph.ops import squeeze
 from ngraph.ops import subtract
-from ngraph.ops import sum
 from ngraph.ops import tan
 from ngraph.ops import tanh
+from ngraph.ops import tile
 from ngraph.ops import topk
+from ngraph.ops import transpose
 from ngraph.ops import unsqueeze
+from ngraph.ops import variadic_split
 
 
 from ngraph.runtime import runtime

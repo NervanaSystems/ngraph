@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_wrapper.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/dropout.hpp"
@@ -41,8 +41,8 @@
     emit<op_name>(CPU_ExternalFunction * external_function,                                        \
                   CodeWriter & writer,                                                             \
                   const ngraph::Node* node,                                                        \
-                  const std::vector<TensorViewWrapper>& args,                                      \
-                  const std::vector<TensorViewWrapper>& out)
+                  const std::vector<TensorWrapper>& args,                                          \
+                  const std::vector<TensorWrapper>& out)
 
 namespace ngraph
 {
@@ -57,8 +57,8 @@ namespace ngraph
                 static void emit(CPU_ExternalFunction* /* external_function */,
                                  CodeWriter& /* writer */,
                                  const ngraph::Node* node,
-                                 const std::vector<TensorViewWrapper>& /* args */,
-                                 const std::vector<TensorViewWrapper>& /* out */)
+                                 const std::vector<TensorWrapper>& /* args */,
+                                 const std::vector<TensorWrapper>& /* out */)
                 {
                     throw std::runtime_error("Unimplemented op '" + node->description() +
                                              "' in CPU emitter");
@@ -67,8 +67,8 @@ namespace ngraph
                 static void nop(CPU_ExternalFunction* /* external_function */,
                                 CodeWriter& /* writer */,
                                 const ngraph::Node* /* node */,
-                                const std::vector<TensorViewWrapper>& /* args */,
-                                const std::vector<TensorViewWrapper>& /* out */)
+                                const std::vector<TensorWrapper>& /* args */,
+                                const std::vector<TensorWrapper>& /* out */)
                 {
                 }
 
@@ -76,18 +76,15 @@ namespace ngraph
                 static void emitBatchNorm(CPU_ExternalFunction* external_function,
                                           CodeWriter& writer,
                                           const ngraph::Node* node,
-                                          const std::vector<TensorViewWrapper>& args,
-                                          const std::vector<TensorViewWrapper>& out,
+                                          const std::vector<TensorWrapper>& args,
+                                          const std::vector<TensorWrapper>& out,
                                           bool append_relu,
                                           bool training);
 
             private:
-                static std::string emit_vector(const TensorViewWrapper&,
-                                               const std::string& name = "");
-                static std::string emit_array1d(const TensorViewWrapper&,
-                                                const std::string& name = "");
-                static std::string emit_matrix(const TensorViewWrapper&,
-                                               const std::string& name = "");
+                static std::string emit_vector(const TensorWrapper&, const std::string& name = "");
+                static std::string emit_array1d(const TensorWrapper&, const std::string& name = "");
+                static std::string emit_matrix(const TensorWrapper&, const std::string& name = "");
 
                 static std::string emit_for_lt(const std::string& prefix, size_t index, size_t to);
                 static std::string emit_indices(const std::vector<std::string> indices);

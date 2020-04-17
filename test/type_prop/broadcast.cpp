@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -231,6 +231,51 @@ TEST(type_prop, broadcast_v1_axes_mapping)
     ASSERT_EQ(bc->get_shape(), (Shape{2, 3, 1}));
 }
 
+TEST(type_prop, broadcast_v1_target_shape_as_concat_with_constants)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{16});
+    auto target_shape_constant_1 = op::Constant::create<int64_t>(element::i64, Shape{1}, {1});
+    auto target_shape_constant_2 = op::Constant::create<int64_t>(element::i64, Shape{1}, {16});
+    auto target_shape_constant_3 = op::Constant::create<int64_t>(element::i64, Shape{1}, {50});
+    auto target_shape_constant_4 = op::Constant::create<int64_t>(element::i64, Shape{1}, {50});
+    std::int64_t axis = 0;
+    std::vector<std::shared_ptr<Node>> args{target_shape_constant_1,
+                                            target_shape_constant_2,
+                                            target_shape_constant_3,
+                                            target_shape_constant_4};
+    auto target_shape = make_shared<op::Concat>(args, axis);
+    auto axes_mapping = op::Constant::create<int64_t>(element::i64, Shape{1}, {1});
+    auto bc = make_shared<op::v1::Broadcast>(
+        param, target_shape, axes_mapping, ngraph::op::AutoBroadcastSpec::NONE);
+    ASSERT_TRUE(bc->get_output_partial_shape(0).rank().is_static());
+    ASSERT_TRUE(bc->get_output_partial_shape(0).rank().same_scheme(Rank{4}));
+    ASSERT_TRUE(bc->get_output_partial_shape(0).is_static());
+    ASSERT_TRUE(bc->get_output_partial_shape(0).same_scheme(PartialShape{1, 16, 50, 50}));
+}
+
+TEST(type_prop, broadcast_v1_target_shape_as_concat_with_node)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{16});
+    auto target_shape_constant_1 = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto target_shape_constant_2 = op::Constant::create<int64_t>(element::i64, Shape{1}, {16});
+    auto target_shape_constant_3 = op::Constant::create<int64_t>(element::i64, Shape{1}, {50});
+    auto target_shape_constant_4 = op::Constant::create<int64_t>(element::i64, Shape{1}, {50});
+    std::int64_t axis = 0;
+    std::vector<std::shared_ptr<Node>> args{target_shape_constant_1,
+                                            target_shape_constant_2,
+                                            target_shape_constant_3,
+                                            target_shape_constant_4};
+    auto target_shape = make_shared<op::Concat>(args, axis);
+    auto axes_mapping = op::Constant::create<int64_t>(element::i64, Shape{1}, {1});
+    auto bc = make_shared<op::v1::Broadcast>(
+        param, target_shape, axes_mapping, ngraph::op::AutoBroadcastSpec::NONE);
+    ASSERT_TRUE(bc->get_output_partial_shape(0).rank().is_static());
+    ASSERT_TRUE(bc->get_output_partial_shape(0).rank().same_scheme(Rank{4}));
+    ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
+    ASSERT_TRUE(bc->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), 16, 50, 50}));
+}
+
 TEST(type_prop, broadcast_v1_fail_rank)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
@@ -361,13 +406,17 @@ TEST(type_prop, broadcast_v1_axes_wrong_rank)
     }
 }
 
-TEST(type_prop, broadcast_v1_output_partial_shape_dynamic)
+TEST(type_prop, broadcast_v1_fully_dynamic_target_shape)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
     auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
 
     auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
+    ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
+
+    bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
     ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
 }
 
@@ -381,12 +430,12 @@ TEST(type_prop, broadcast_v1_broadcast_shape_et_wrong)
     try
     {
         auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
-        FAIL() << "Broadcast: did not detect shape element type not i64";
+        FAIL() << "Broadcast: did not detect shape element type not integral number";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Broadcast shape must have element type i64"));
+                             std::string("Broadcast shape must be an integral number"));
     }
     catch (...)
     {
@@ -404,12 +453,12 @@ TEST(type_prop, broadcast_v1_axes_et_wrong)
     try
     {
         auto bc = make_shared<op::v1::Broadcast>(arg, bc_shape, bc_axes);
-        FAIL() << "Broadcast: did not detect axes element type not i64";
+        FAIL() << "Broadcast: did not detect axes element type not integral numbers";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Broadcast axes must have element type i64"));
+                             std::string("Broadcast axes must be integral numbers, but are:"));
     }
     catch (...)
     {

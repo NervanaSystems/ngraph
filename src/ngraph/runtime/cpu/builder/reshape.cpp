@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ namespace ngraph
                 arg_shape = reshape->get_argument(0)->get_shape();
                 auto arg_rank = arg_shape.size();
 
-                result_shape = reshape->get_output_shape();
+                result_shape = reshape->get_output_shape(0);
                 auto result_rank = result_shape.size();
                 auto& result_element_type = reshape->get_element_type();
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,48 +44,88 @@ static_assert(sizeof(float16) == 2, "class float16 must be exactly 2 bytes");
 
 float16::float16(float value)
 {
+    // Work in 32-bit and shift right 16 in the end
     union {
         float fv;
         uint32_t iv;
     };
     fv = value;
-    uint32_t hidden_one = 0x00800000;
-    uint32_t sign = iv & 0x80000000;
-    uint32_t biased_exp = (iv & 0x7F800000) >> 23;
-    uint32_t raw_frac = (iv & 0x007FFFFF);
-    int32_t exp = biased_exp - 127;
-    int32_t min_exp = -14 - frac_size;
-    if (biased_exp == 0 || exp < min_exp)
+    // sign
+    constexpr uint32_t smask = 0x80000000;
+    // floqt32 exp
+    constexpr uint32_t emask_32 = 0x7F800000;
+    // float32 frac
+    constexpr uint32_t fmask_32 = 0x007fffff;
+    // float16 exp
+    constexpr uint32_t emask_16 = 0x7c000000;
+    // float16 frac
+    constexpr uint32_t fmask_16 = 0x03ff0000;
+    // bits for half to even round
+    constexpr uint32_t rhalf_16 = 0x0001ffff;
+    // bit value for normal round
+    constexpr uint32_t rnorm_16 = 0x00007fff;
+    // bit value for half to even round
+    constexpr uint32_t reven_16 = 0x00008000;
+    // value for an non-half to even round
+    constexpr uint32_t rodd_16 = 0x000018000;
+
+    // exp bits in position
+    uint32_t biased_exp_field_32 = iv & emask_32;
+    uint32_t frac = (iv & fmask_32) << 3;
+    if (biased_exp_field_32 == emask_32)
     {
-        // Goes to 0
-        biased_exp = 0;
+        // Inf or NaN
+        if (frac != 0)
+        {
+            // NaN
+            frac &= fmask_16;
+            if (frac == 0)
+            {
+                frac = 0x00010000;
+            }
+        }
+        m_value = ((iv & smask) | emask_16 | frac) >> 16;
+        return;
     }
-    else if (biased_exp == 0xFF)
+    if (biased_exp_field_32 == 0)
     {
-        // Infinity or NAN.
-        biased_exp = 0x1F;
-        raw_frac = raw_frac >> (23 - frac_size);
+        m_value = (iv & smask) >> 16;
+        return;
     }
-    else if (exp < -14)
+    int16_t biased_exp_16 = (biased_exp_field_32 >> 23) - 127 + 15;
+    // In the normalized_16 realm
+    if ((frac & rhalf_16) == rodd_16 || (frac & rnorm_16) != 0)
     {
-        // denorm
-        biased_exp = 0;
-        raw_frac |= hidden_one;
-        uint32_t exp_shift = (-15 - exp) + 1;
-        uint32_t shift = exp_shift + (23 - frac_size);
-        raw_frac = (raw_frac + (hidden_one >> (frac_size - exp_shift + 1))) >> shift;
+        frac += reven_16;
+        if (0 != (frac & emask_16))
+        {
+            frac &= emask_16;
+            biased_exp_16++;
+        }
     }
-    else if (exp > 15 || (exp == 15 && raw_frac > 0x7fef00 /* numpy overflow value */))
+    frac &= fmask_16;
+    if (biased_exp_16 > 30)
     {
-        biased_exp = 0x1F;
-        raw_frac = 0;
+        // Infinity
+        m_value = ((iv & smask) | emask_16 | 0) >> 16;
+        return;
     }
-    else if ((biased_exp != 0 || raw_frac != 0))
+    if (biased_exp_16 > 0)
     {
-        raw_frac = (raw_frac + 0x1000) >> (23 - frac_size);
-        biased_exp = exp + exp_bias;
+        m_value = ((iv & smask) | biased_exp_16 << 26 | frac) >> 16;
+        return;
     }
-    m_value = (sign >> 16) | (biased_exp << frac_size) | raw_frac;
+    // Restore the hidden 1
+    frac = 0x04000000 | ((iv & fmask_32) << 3);
+    // Will any bits be shifted off?
+    uint32_t sticky = (frac & ((1 << (1 - biased_exp_16)) - 1)) ? 1 : 0;
+    frac >>= 1 + (-biased_exp_16);
+    frac |= sticky;
+    if (((frac & rhalf_16) == rodd_16) || ((frac & rnorm_16) != 0))
+    {
+        frac += reven_16;
+    }
+    m_value = ((iv & smask) | frac) >> 16;
 }
 
 std::string float16::to_string() const
@@ -164,6 +204,12 @@ float16::operator float() const
     frac = frac << (23 - frac_size);
     i_val = static_cast<uint32_t>((m_value & 0x8000)) << 16 | (fexp << 23) | frac;
     return f_val;
+}
+
+bool std::isnan(float16 x)
+{
+    // Sign doesn't matter, frac not zero (infinity)
+    return (x.to_bits() & 0x7FFF) > 0x7c00;
 }
 
 uint16_t float16::to_bits() const

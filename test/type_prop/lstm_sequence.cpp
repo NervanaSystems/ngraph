@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,10 +51,10 @@ TEST(type_prop, lstm_sequence)
     EXPECT_EQ(lstm_sequence->get_activations()[2], "tanh");
     EXPECT_EQ(lstm_sequence->get_clip_threshold(), 0.f);
     EXPECT_FALSE(lstm_sequence->get_input_forget());
-    EXPECT_EQ(lstm_sequence->output(0).get_element_type(), element::f32);
-    EXPECT_EQ(lstm_sequence->output(0).get_shape(), (Shape{1, 1, 2, 3}));
-    EXPECT_EQ(lstm_sequence->output(1).get_element_type(), element::f32);
-    EXPECT_EQ(lstm_sequence->output(1).get_shape(), (Shape{1, 2, 3}));
-    EXPECT_EQ(lstm_sequence->output(2).get_element_type(), element::f32);
-    EXPECT_EQ(lstm_sequence->output(2).get_shape(), (Shape{1, 2, 3}));
+    EXPECT_EQ(lstm_sequence->get_output_element_type(0), element::f32);
+    EXPECT_EQ(lstm_sequence->get_output_shape(0), (Shape{1, 1, 2, 3}));
+    EXPECT_EQ(lstm_sequence->get_output_element_type(1), element::f32);
+    EXPECT_EQ(lstm_sequence->get_output_shape(1), (Shape{1, 2, 3}));
+    EXPECT_EQ(lstm_sequence->get_output_element_type(2), element::f32);
+    EXPECT_EQ(lstm_sequence->get_output_shape(2), (Shape{1, 2, 3}));
 }

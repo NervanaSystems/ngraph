@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 
 namespace ngraph
 {
-    class BernoulliRNGState : public State
+    class NGRAPH_API BernoulliRNGState : public State
     {
     public:
         BernoulliRNGState(unsigned int seed, double probability)

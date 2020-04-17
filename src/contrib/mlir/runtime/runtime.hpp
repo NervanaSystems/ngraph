@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,6 +33,13 @@ namespace ngraph
     {
         namespace ngmlir
         {
+            struct MemRefArg
+            {
+                void* m_tensor;
+                std::vector<size_t> m_shape;
+                std::vector<size_t> m_strides;
+            };
+
             /// Base class for an MLIR runtime. An MLIR runtime owns the MLIR Context and owns
             /// the final compiled module. It supports invoking the module with specific arguments
             class MLIRRuntime
@@ -43,7 +50,7 @@ namespace ngraph
                 /// Overload with module op
                 void set_module(mlir::ModuleOp& module) { m_module = module; }
                 /// Executes a pre-compiled subgraph
-                virtual void run(void* args) = 0;
+                virtual void run(const std::vector<MemRefArg>& args, bool firstIteration) = 0;
 
                 /// Get the MLIR module that this runtime owns
                 mlir::OwningModuleRef& get_module() { return m_module; }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,6 +48,7 @@ namespace ngraph
                                 const int axis = 1,
                                 const size_t groups = 1UL);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 size_t get_zero_based_axis() const;
 
                 virtual void pre_validate_and_infer_types() override;
@@ -55,7 +56,7 @@ namespace ngraph
                 virtual NodeVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 int get_axis() const { return m_axis; }
                 size_t get_groups() const { return m_groups; }

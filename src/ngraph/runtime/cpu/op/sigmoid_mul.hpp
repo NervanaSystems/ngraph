@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,10 +47,10 @@ namespace ngraph
                                             const Output<Node>& input_1,
                                             const FunctionType input_0_type,
                                             const FunctionType input_1_type);
-            /// WARNING: copy_with_new_args() implicitly expects new args must match the original
+            /// WARNING: clone_with_new_inputs() implicitly expects new args must match the original
             /// input function types.
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                clone_with_new_inputs(const OutputVector& new_args) const override;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const OutputVector& deltas) override;
             FunctionType get_input_func_type(const unsigned int index) const
@@ -85,7 +85,7 @@ namespace ngraph
                                     const Output<Node>& delta,
                                     const std::array<FunctionType, 2>& input_type);
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                clone_with_new_inputs(const OutputVector& new_args) const override;
             FunctionType get_input_func_type(const unsigned int index) const
             {
                 return m_input_type[index];

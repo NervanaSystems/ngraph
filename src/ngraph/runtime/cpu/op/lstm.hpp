@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,33 +32,22 @@ namespace ngraph
             CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"Lstm", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-// INPUTS:
-// [0] - {Xt} input tensor of layout TNC, Shape{sequence length*batch_size,
-//       feature_size}
-// [1] - recurrent state tensors {ht_1 | ct_1} of Shape{sequence length*batch_size,
-//       feature_size}
-// [2] - initializer for the input weights matrix, used for the linear transformation of
-//       the inputs.
-// [3] - initializer for the recurrent weights matrix, used for the linear
-//       transformation of the recurrent state.
-// [4] - Initializer for the bias vector w.r.to inputs + hidden state (ibh_bias +
-//       hbh_bias)
+            // INPUTS:
+            // [0] - {Xt} input tensor of layout TNC, Shape{sequence length*batch_size,
+            //       feature_size}
+            // [1] - recurrent state tensors {ht_1 | ct_1} of Shape{sequence length*batch_size,
+            //       feature_size}
+            // [2] - initializer for the input weights matrix, used for the linear transformation of
+            //       the inputs.
+            // [3] - initializer for the recurrent weights matrix, used for the linear
+            //       transformation of the recurrent state.
+            // [4] - Initializer for the bias vector w.r.to inputs + hidden state (ibh_bias +
+            //       hbh_bias)
 
-// OUTPUT VALUE: A tuple with the following structure:
-//   [0] - ht, output tensor with shape (sequence_length*batch_size, num_hidden) .
-//   [1] - {ht | ct} output recurrent state tensor with the same shape as states
+            // OUTPUT VALUE: A tuple with the following structure:
+            //   [0] - ht, output tensor with shape (sequence_length*batch_size, num_hidden) .
+            //   [1] - {ht | ct} output recurrent state tensor with the same shape as states
 
-#if MKLDNN_VERSION_MAJOR < 1
-            // This version of the LSTM op supports MKLDNN emitter code, this can be used standalone
-            // for computing RNN
-            // without fusing RNN cell (LSTM)'s across time steps.
-            Lstm(const Output<Node>& src_layer,
-                 const Output<Node>& src_iter,
-                 const Output<Node>& weights_layer,
-                 const Output<Node>& weights_iter,
-                 const Output<Node>& bias,
-                 ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
-#else
             Lstm(const Output<Node>& src_layer,
                  const Output<Node>& src_iter,
                  const Output<Node>& src_iter_c,
@@ -66,7 +55,6 @@ namespace ngraph
                  const Output<Node>& weights_iter,
                  const Output<Node>& bias,
                  ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
-#endif
             Shape get_output_tensor_shape() const { return m_output_tensor_shape; }
             Shape get_output_cell_shape() const { return m_output_cell_shape; }
             ngraph::runtime::cpu::rnn_utils::rnntype get_rnn_type() const { return m_rnntype; }
@@ -80,7 +68,7 @@ namespace ngraph
             size_t get_direction() const { return m_direction; }
             size_t get_num_fused_layers() const { return m_num_fused_layers; }
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                clone_with_new_inputs(const OutputVector& new_args) const override;
 
         private:
             Shape m_output_tensor_shape;

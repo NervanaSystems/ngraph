@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -89,11 +89,12 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
                << "' does not match Result type '" << results[i]->get_element_type() << "'";
             throw runtime_error(ss.str());
         }
-        if (!(outputs[i]->get_partial_shape()).relaxes(results[i]->get_output_partial_shape(0)))
+        if (!outputs[i]->get_partial_shape().relaxes(results[i]->get_output_partial_shape(0)))
         {
             stringstream ss;
             ss << "Output " << i << " shape " << outputs[i]->get_partial_shape()
-               << " does not match Result shape " << results[i]->get_output_partial_shape(0);
+               << " does not match max Result shape "
+               << results[i]->get_output_partial_shape(0).get_max_shape();
             throw runtime_error(ss.str());
         }
     }
@@ -135,7 +136,19 @@ shared_ptr<runtime::Tensor> runtime::Executable::create_input_tensor(size_t /* i
     throw runtime_error("create_input_tensor unimplemented");
 }
 
+shared_ptr<runtime::Tensor> runtime::Executable::create_input_tensor(size_t /* input_index */,
+                                                                     void* /* memory_pointer */)
+{
+    throw runtime_error("create_input_tensor unimplemented");
+}
+
 shared_ptr<runtime::Tensor> runtime::Executable::create_output_tensor(size_t /* output_index */)
+{
+    throw runtime_error("create_output_tensor unimplemented");
+}
+
+shared_ptr<runtime::Tensor> runtime::Executable::create_output_tensor(size_t /* output_index */,
+                                                                      void* /* memory_pointer */)
 {
     throw runtime_error("create_output_tensor unimplemented");
 }
@@ -146,9 +159,21 @@ vector<shared_ptr<runtime::Tensor>>
     throw runtime_error("create_input_tensor unimplemented");
 }
 
+vector<shared_ptr<runtime::Tensor>> runtime::Executable::create_input_tensor(
+    size_t /* input_index */, size_t /* pipeline_depth */, std::vector<void*> /* memory_pointer */)
+{
+    throw runtime_error("create_input_tensor unimplemented");
+}
+
 vector<shared_ptr<runtime::Tensor>>
     runtime::Executable::create_output_tensor(size_t /* output_index */,
                                               size_t /* pipeline_depth */)
+{
+    throw runtime_error("create_output_tensor unimplemented");
+}
+
+vector<shared_ptr<runtime::Tensor>> runtime::Executable::create_output_tensor(
+    size_t /* output_index */, size_t /* pipeline_depth */, std::vector<void*> /* memory_pointer */)
 {
     throw runtime_error("create_output_tensor unimplemented");
 }

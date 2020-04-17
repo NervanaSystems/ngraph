@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,16 +68,17 @@ namespace ngraph
                                   const BoxEncodingType box_encoding = BoxEncodingType::CORNER,
                                   const bool sort_result_descending = true);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 BoxEncodingType get_box_encoding() const { return m_box_encoding; }
                 void set_box_encoding(const BoxEncodingType box_encoding)
                 {
                     m_box_encoding = box_encoding;
                 }
-
                 bool get_sort_result_descending() const { return m_sort_result_descending; }
                 void set_sort_result_descending(const bool sort_result_descending)
                 {
@@ -93,4 +94,23 @@ namespace ngraph
             };
         }
     }
+
+    NGRAPH_API
+    std::ostream& operator<<(std::ostream& s,
+                             const op::v1::NonMaxSuppression::BoxEncodingType& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v1::NonMaxSuppression::BoxEncodingType>
+        : public EnumAttributeAdapterBase<op::v1::NonMaxSuppression::BoxEncodingType>
+    {
+    public:
+        AttributeAdapter(op::v1::NonMaxSuppression::BoxEncodingType& value)
+            : EnumAttributeAdapterBase<op::v1::NonMaxSuppression::BoxEncodingType>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v1::NonMaxSuppression::BoxEncodingType>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

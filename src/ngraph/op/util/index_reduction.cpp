@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 
 using namespace std;
@@ -29,25 +30,6 @@ op::util::IndexReduction::IndexReduction(const Output<Node>& arg,
                                          uint64_t axis,
                                          const element::Type& index_element_type)
     : Op({arg})
-{
-    set_reduction_axis(axis);
-    set_index_element_type(index_element_type);
-}
-
-op::util::IndexReduction::IndexReduction(const std::shared_ptr<Node>& arg,
-                                         uint64_t axis,
-                                         const element::Type& index_element_type)
-    : Op(check_single_output_args({arg}))
-{
-    set_reduction_axis(axis);
-    set_index_element_type(index_element_type);
-}
-
-op::util::IndexReduction::IndexReduction(const std::string& node_type,
-                                         const std::shared_ptr<Node>& arg,
-                                         uint64_t axis,
-                                         const element::Type& index_element_type)
-    : Op(node_type, check_single_output_args({arg}))
 {
     set_reduction_axis(axis);
     set_index_element_type(index_element_type);
@@ -76,9 +58,10 @@ void op::util::IndexReduction::validate_and_infer_types()
     const PartialShape& arg_shape = get_input_partial_shape(0);
     Rank rank = arg_shape.rank();
 
-    NODE_VALIDATION_CHECK(this, rank.is_dynamic() || size_t(rank) >= 1, "Argument rank is zero.");
+    NODE_VALIDATION_CHECK(
+        this, rank.is_dynamic() || rank.get_length() >= 1, "Argument rank is zero.");
     NODE_VALIDATION_CHECK(this,
-                          rank.is_dynamic() || m_axis < size_t(rank),
+                          rank.is_dynamic() || m_axis < rank.get_length(),
                           "Reduction axis (",
                           m_axis,
                           ") is not less than argument rank (",
@@ -97,15 +80,15 @@ void op::util::IndexReduction::validate_and_infer_types()
         if (d.is_static())
         {
             NODE_VALIDATION_CHECK(this,
-                                  0 != size_t(d),
+                                  0 != d.get_length(),
                                   "Tensor reduction axis can not be empty, shape is: ",
                                   arg_shape);
         }
 
-        std::vector<Dimension> output_dims(size_t(rank) - 1);
+        std::vector<Dimension> output_dims(rank.get_length() - 1);
         size_t j = 0;
 
-        for (size_t i = 0; i < size_t(rank) - 1; i++)
+        for (size_t i = 0; i < rank.get_length() - 1; i++)
         {
             if (j == m_axis)
             {

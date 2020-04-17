@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/interpreter/int_executable.hpp"
+#include "ngraph/chrome_trace.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
@@ -27,7 +28,6 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/chrome_trace.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
@@ -36,9 +36,9 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-runtime::interpreter::OP_TYPEID
-    runtime::interpreter::INTExecutable::get_typeid(const NodeTypeInfo& type_info)
+runtime::interpreter::OP_TYPEID runtime::interpreter::INTExecutable::get_typeid(const Node& node)
 {
+    const NodeTypeInfo& type_info = node.get_type_info();
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
     // {Abs::type_info, OP_TYPEID::Abs},
     // {Acos::type_info, OP_TYPEID::Acos},
@@ -63,7 +63,13 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
+#ifdef INTERPRETER_FORCE_SERIALIZE
+    // To verify that the serializer works correctly let's just run this graph round-trip
+    string ser = serialize(function);
+    m_function = deserialize(ser);
+#else
     m_function = clone_function(*function);
+#endif
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();
@@ -95,7 +101,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    runtime::event::Duration d1("call", "Interpreter");
+    event::Duration d1("call", "Interpreter");
 
     // convert inputs to HostTensor
     vector<shared_ptr<HostTensor>> func_inputs;
@@ -137,14 +143,14 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        descriptor::Tensor* tensor = &output->output(0).get_tensor();
+        descriptor::Tensor* tensor = &output->get_output_tensor(0);
         tensor_map.insert({tensor, func_outputs[output_count]});
     }
 
     // for each ordered op in the graph
     for (auto op : m_nodes)
     {
-        runtime::event::Duration d2(op->description(), "Interpreter");
+        event::Duration d2(op->description(), "Interpreter");
         if (op->is_parameter())
         {
             continue;

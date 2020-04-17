@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -80,7 +80,7 @@ const vector<int64_t>& AttributeAdapter<CoordinateDiff>::get()
 
 void AttributeAdapter<CoordinateDiff>::set(const vector<int64_t>& value)
 {
-    m_value = copy_from<CoordinateDiff>(m_value);
+    m_value = copy_from<CoordinateDiff>(value);
     m_buffer_valid = false;
 }
 

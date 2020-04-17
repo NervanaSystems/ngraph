@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,12 @@
 //*****************************************************************************
 
 #include "ngraph/op/strided_slice.hpp"
+#include "ngraph/attribute_visitor.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 #include <algorithm>
@@ -44,6 +49,37 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+namespace
+{
+    shared_ptr<Node> calculate_default_strides(const Output<Node>& begin, const Output<Node>& end)
+    {
+        const auto begin_pshape = begin.get_partial_shape();
+        const auto end_pshape = end.get_partial_shape();
+
+        size_t strides_length = 0;
+        if (begin_pshape.rank().is_static() && begin_pshape.rank().get_length() == 1 &&
+            begin_pshape[0].is_static())
+        {
+            strides_length = begin_pshape[0].get_length();
+        }
+        else if (end_pshape.rank().is_static() && end_pshape.rank().get_length() == 1 &&
+                 end_pshape[0].is_static())
+        {
+            strides_length = end_pshape[0].get_length();
+        }
+        else // dynamic case
+        {
+            NGRAPH_CHECK(begin_pshape.rank().is_static() && begin_pshape.rank().get_length() == 1,
+                         "Begin input must be 1D");
+            return std::make_shared<op::v1::Broadcast>(op::Constant::create(element::i64, {}, {1}),
+                                                       std::make_shared<op::ShapeOf>(begin));
+        }
+
+        return op::Constant::create(
+            element::i64, Shape{strides_length}, vector<int64_t>(strides_length, 1));
+    }
+}
+
 op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
                                    const Output<Node>& begin,
                                    const Output<Node>& end,
@@ -55,9 +91,7 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     : StridedSlice(data,
                    begin,
                    end,
-                   op::Constant::create(element::i64,
-                                        Shape{begin_mask.size()},
-                                        vector<int64_t>(begin_mask.size(), 1)),
+                   calculate_default_strides(begin, end),
                    begin_mask,
                    end_mask,
                    new_axis_mask,
@@ -66,17 +100,27 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
 {
 }
 
+bool ngraph::op::v1::StridedSlice::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("begin_mask", m_begin_mask);
+    visitor.on_attribute("end_mask", m_end_mask);
+    visitor.on_attribute("new_axis_mask", m_new_axis_mask);
+    visitor.on_attribute("shrink_axis_mask", m_shrink_axis_mask);
+    visitor.on_attribute("ellipsis_mask", m_ellipsis_mask);
+    return true;
+}
+
 void op::v1::StridedSlice::validate_and_infer_types()
 {
     const auto& begin_mask_et = get_input_element_type(1);
     const auto& end_mask_et = get_input_element_type(2);
     NODE_VALIDATION_CHECK(this,
-                          begin_mask_et.compatible(element::Type_t::i64),
-                          "Begin mask must have element type i64, but has ",
+                          begin_mask_et.is_integral_number(),
+                          "Begin mask must be an integral number, but is: ",
                           begin_mask_et);
     NODE_VALIDATION_CHECK(this,
-                          end_mask_et.compatible(element::Type_t::i64),
-                          "End mask must have element type i64, but has ",
+                          end_mask_et.is_integral_number(),
+                          "End mask must be an integral number, but is: ",
                           end_mask_et);
 
     auto are_mask_elem_in_range = [](size_t e) { return e == 0 || e == 1; };
@@ -107,7 +151,7 @@ void op::v1::StridedSlice::validate_and_infer_types()
     if (begin_shape.rank().is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(begin_shape.rank()) == 1,
+                              begin_shape.rank().get_length() == 1,
                               "Begin input must be 1D (begin rank: ",
                               begin_shape.rank(),
                               ").");
@@ -116,7 +160,7 @@ void op::v1::StridedSlice::validate_and_infer_types()
     if (end_shape.rank().is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(end_shape.rank()) == 1,
+                              end_shape.rank().get_length() == 1,
                               "End input must be 1D (end rank: ",
                               end_shape.rank(),
                               ").");
@@ -136,9 +180,9 @@ void op::v1::StridedSlice::validate_and_infer_types()
                         get_input_element_type(0),
                         infer_slice_shape(this,
                                           get_input_partial_shape(0),
-                                          begin_const->get_vector<int64_t>(),
-                                          end_const->get_vector<int64_t>(),
-                                          strides->get_vector<int64_t>(),
+                                          begin_const->cast_vector<int64_t>(),
+                                          end_const->cast_vector<int64_t>(),
+                                          strides->cast_vector<int64_t>(),
                                           convert_mask_to_axis_set(get_begin_mask()),
                                           convert_mask_to_axis_set(get_end_mask()),
                                           convert_mask_to_axis_set(get_new_axis_mask()),
@@ -164,7 +208,7 @@ AxisSet op::v1::StridedSlice::convert_mask_to_axis_set(const std::vector<int64_t
     return axis_set;
 }
 
-shared_ptr<Node> op::v1::StridedSlice::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::StridedSlice::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::StridedSlice>(new_args.at(0),

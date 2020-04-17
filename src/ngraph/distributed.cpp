@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/distributed.hpp"
-#include "ngraph/distributed/mlsl.hpp"
 #include "ngraph/distributed/null.hpp"
-#include "ngraph/distributed/open_mpi.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/type.hpp"
 
@@ -56,16 +54,8 @@ DistributedInterface* ngraph::get_distributed_interface()
 {
     if (nullptr == s_distributed_interface)
     {
-#ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
-        set_distributed_interface(std::unique_ptr<DistributedInterface>(
-            new ngraph::distributed::OpenMPIDistributedInterface()));
-#elif defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-        set_distributed_interface(std::unique_ptr<DistributedInterface>(
-            new ngraph::distributed::MLSLDistributedInterface()));
-#else
-        set_distributed_interface(std::unique_ptr<DistributedInterface>(
-            new ngraph::distributed::NullDistributedInterface()));
-#endif
+        set_distributed_interface(
+            std::unique_ptr<DistributedInterface>(new ngraph::distributed::Null()));
     }
     return s_distributed_interface.get();
 }

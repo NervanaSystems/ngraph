@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -119,7 +119,7 @@ NodeVector op::PartialSlice::decompose_op() const
     return {out};
 }
 
-shared_ptr<Node> op::PartialSlice::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::PartialSlice::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {
@@ -132,12 +132,18 @@ shared_ptr<Node> op::PartialSlice::copy_with_new_args(const NodeVector& new_args
 void op::PartialSlice::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
+    PartialShape data_pshape = get_input_partial_shape(0);
 
     NODE_VALIDATION_CHECK(this,
                           input_element_type.is_dynamic() || input_element_type.is_real(),
                           "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
                           input_element_type,
                           ").");
+
+    if (data_pshape.is_dynamic())
+    {
+        set_output_type(0, input_element_type, PartialShape::dynamic());
+    }
 }
 
 void op::PartialSlice::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
@@ -208,7 +214,7 @@ NodeVector op::PartialSliceBackprop::decompose_op() const
     return {din};
 }
 
-shared_ptr<Node> op::PartialSliceBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::PartialSliceBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {
@@ -222,11 +228,16 @@ shared_ptr<Node> op::PartialSliceBackprop::copy_with_new_args(const NodeVector& 
 void op::PartialSliceBackprop::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
+    PartialShape data_pshape = get_input_partial_shape(0);
+    PartialShape delta_pshape = get_input_partial_shape(1);
 
     NODE_VALIDATION_CHECK(this,
                           input_element_type.is_dynamic() || input_element_type.is_real(),
                           "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
                           input_element_type,
                           ").");
-    set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+    if (data_pshape.is_dynamic() || delta_pshape.is_dynamic())
+    {
+        set_output_type(0, input_element_type, PartialShape::dynamic());
+    }
 }

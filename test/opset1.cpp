@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -145,7 +145,7 @@ TEST(opset, check_opset1)
     CHECK_OPSET(op::v0::TensorIterator, opset1::TensorIterator)
     CHECK_OPSET(op::v0::Tile, opset1::Tile)
     CHECK_OPSET(op::v1::TopK, opset1::TopK)
-    CHECK_OPSET(op::v0::Transpose, opset1::Transpose)
+    CHECK_OPSET(op::v1::Transpose, opset1::Transpose)
     CHECK_OPSET(op::v0::Unsqueeze, opset1::Unsqueeze)
     CHECK_OPSET(op::v1::VariadicSplit, opset1::VariadicSplit)
     CHECK_OPSET(op::v0::Xor, opset1::Xor)
@@ -160,7 +160,7 @@ public:
     void validate_and_infer_types() override{};
 
     virtual std::shared_ptr<Node>
-        copy_with_new_args(const NodeVector& /* new_args */) const override
+        clone_with_new_inputs(const OutputVector& /* new_args */) const override
     {
         return make_shared<NewOp>();
     };
@@ -188,4 +188,17 @@ TEST(opset, new_op)
     // Fred should be in the copy
     fred = shared_ptr<Node>(opset1_copy.create("Fred"));
     EXPECT_TRUE(fred);
+    // Fred should not be in the registry
+    ASSERT_FALSE(FactoryRegistry<Node>::get().has_factory<NewOp>());
+}
+
+TEST(opset, dump)
+{
+    OpSet opset1_copy(get_opset1());
+    cout << "All opset1 operations: ";
+    for (const auto& t : opset1_copy.get_types_info())
+    {
+        std::cout << t.name << " ";
+    }
+    cout << endl;
 }

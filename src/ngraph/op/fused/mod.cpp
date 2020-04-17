@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 #include "ngraph/op/fused/mod.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/convert.hpp"
@@ -33,6 +34,12 @@ op::v1::Mod::Mod(const Output<Node>& A,
     : FusedOp({A, B})
     , m_auto_broadcast(auto_broadcast)
 {
+}
+
+bool ngraph::op::v1::Mod::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("auto_broadcast", m_auto_broadcast);
+    return true;
 }
 
 NodeVector op::v1::Mod::decompose_op() const
@@ -55,7 +62,7 @@ NodeVector op::v1::Mod::decompose_op() const
     return {make_shared<op::v1::Multiply>(dividend_sign, mod, m_auto_broadcast)};
 }
 
-shared_ptr<Node> op::v1::Mod::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Mod::clone_with_new_inputs(const OutputVector& new_args) const
 {
     return make_shared<Mod>(new_args.at(0), new_args.at(1), m_auto_broadcast);
 }
