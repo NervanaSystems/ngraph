@@ -18,7 +18,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/variant.hpp"
 
-ngraph::Node::RTMap mergeRuntimeInfo(const std::vector<std::shared_ptr<const ngraph::Node>>& nodes)
+ngraph::Node::RTMap mergeRuntimeInfo(const ngraph::NodeVector& nodes)
 {
     ngraph::Node::RTMap mergedInfo;
     for (auto& node : nodes)
@@ -48,8 +48,7 @@ void ngraph::copy_runtime_info(std::shared_ptr<ngraph::Node> from, std::shared_p
     rtInfoTo = rtInfoFrom;
 }
 
-void ngraph::copy_runtime_info(std::shared_ptr<ngraph::Node> from,
-                               const std::vector<std::shared_ptr<ngraph::Node>>& to)
+void ngraph::copy_runtime_info(std::shared_ptr<ngraph::Node> from, ngraph::NodeVector to)
 {
     for (auto& op : to)
     {
@@ -57,15 +56,13 @@ void ngraph::copy_runtime_info(std::shared_ptr<ngraph::Node> from,
     }
 }
 
-void ngraph::copy_runtime_info(const std::vector<std::shared_ptr<const ngraph::Node>>& from,
-                               std::shared_ptr<ngraph::Node> to)
+void ngraph::copy_runtime_info(const ngraph::NodeVector& from, std::shared_ptr<ngraph::Node> to)
 {
     auto& rtInfoTo = to->get_rt_info();
     rtInfoTo = mergeRuntimeInfo(from);
 }
 
-void ngraph::copy_runtime_info(const std::vector<std::shared_ptr<const ngraph::Node>>& from,
-                               const std::vector<std::shared_ptr<ngraph::Node>>& to)
+void ngraph::copy_runtime_info(const ngraph::NodeVector& from, ngraph::NodeVector to)
 {
     auto mergedInfo = mergeRuntimeInfo(from);
     for (auto& node : to)
