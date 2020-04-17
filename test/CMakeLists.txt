@@ -53,7 +53,6 @@ set(SRC
     check.cpp
     constant.cpp
     constant_folding.cpp
-    concat_fusion.cpp
     control_dependencies.cpp
     convert_u1_to_string.cpp
     coordinate.cpp
@@ -204,6 +203,12 @@ set(SRC
     util.cpp
     zero_dim_tensor_elimination.cpp
 )
+
+if(NGRAPH_INTERPRETER_ENABLE)
+    list(APPEND SRC
+        concat_fusion.cpp
+    )
+endif()
 
 # This code generates one source file per header file under ngraph/src where the source file
 # has just a single #include statement. This checks that each header in the source tree is
@@ -412,6 +417,7 @@ endif()
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND MULTI_TEST_SRC
             onnx/onnx_import.in.cpp
+            onnx/onnx_import_const_folding.in.cpp
             onnx/onnx_import_convpool.in.cpp
             onnx/onnx_import_dyn_shapes.in.cpp
             onnx/onnx_import_provenance.in.cpp
@@ -434,7 +440,11 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
 
     string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
     string(REGEX REPLACE "([a-z0-9]+):(.*)" "\\1" BACKEND_DIR ${BACKEND_DIR})
-    set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+    if (EXISTS ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+        set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+    elseif(EXISTS ${PROJECT_SOURCE_DIR}/src/runtime/${BACKEND_DIR}/unit_test.manifest)
+        set(MANIFEST ${PROJECT_SOURCE_DIR}/src/runtime/${BACKEND_DIR}/unit_test.manifest)
+    endif()
 
     foreach(TEST_SRC ${MULTI_TEST_SRC})
         string(REPLACE ":" "_" BACKEND_NAME ${BACKEND_NAME})
