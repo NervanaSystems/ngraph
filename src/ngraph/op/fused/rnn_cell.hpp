@@ -67,8 +67,7 @@ namespace ngraph
                 /// \param[in]  X                     The input tensor with shape: [batch_size,
                 ///                                   input_size].
                 /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
-                /// with
-                ///                                   shape: [batch_size, hidden_size].
+                ///                                   with shape: [batch_size, hidden_size].
                 /// \param[in]  W                     The weight tensor with shape: [hidden_size,
                 ///                                   input_size].
                 /// \param[in]  R                     The recurrence weight tensor with shape:
@@ -83,8 +82,7 @@ namespace ngraph
                 ///                                   functions in order respective to activation
                 ///                                   list.
                 /// \param[in]  clip                  The value defining clipping range [-clip,
-                /// clip] on
-                ///                                   input of activation functions.
+                ///                                   clip] on input of activation functions.
                 ///
                 RNNCell(
                     const Output<Node>& X,
@@ -103,8 +101,7 @@ namespace ngraph
                 /// \param[in]  X                     The input tensor with shape: [batch_size,
                 ///                                   input_size].
                 /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
-                /// with
-                ///                                   shape: [batch_size, hidden_size].
+                ///                                   with shape: [batch_size, hidden_size].
                 /// \param[in]  W                     The weight tensor with shape: [hidden_size,
                 ///                                   input_size].
                 /// \param[in]  R                     The recurrence weight tensor with shape:
@@ -121,8 +118,7 @@ namespace ngraph
                 ///                                   functions in order respective to activation
                 ///                                   list.
                 /// \param[in]  clip                  The value defining clipping range [-clip,
-                /// clip] on
-                ///                                   input of activation functions.
+                ///                                   clip] on input of activation functions.
                 ///
                 RNNCell(
                     const Output<Node>& X,

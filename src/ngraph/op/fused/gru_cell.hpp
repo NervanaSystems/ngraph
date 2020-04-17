@@ -56,10 +56,9 @@ namespace ngraph
                 /// \brief      Constructs GRUCell node.
                 ///
                 /// \param[in]  X                     The input tensor with shape: [batch_size,
-                /// input_size].
+                ///                                   input_size].
                 /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
-                /// with
-                ///                                   shape: [batch_size, hidden_size].
+                ///                                   with shape: [batch_size, hidden_size].
                 /// \param[in]  W                     The weight tensor with shape:
                 ///                                   [gates_count * hidden_size, input_size].
                 /// \param[in]  R                     The recurrence weight tensor with shape:
@@ -78,8 +77,7 @@ namespace ngraph
                 /// \param[in]  X                     The input tensor with shape: [batch_size,
                 ///                                   input_size].
                 /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
-                /// with
-                ///                                   shape: [batch_size, hidden_size].
+                ///                                   with shape: [batch_size, hidden_size].
                 /// \param[in]  W                     The weight tensor with shape:
                 ///                                   [gates_count * hidden_size, input_size].
                 /// \param[in]  R                     The recurrence weight tensor with shape:
@@ -94,8 +92,7 @@ namespace ngraph
                 ///                                   functions in order respective to activation
                 ///                                   list.
                 /// \param[in]  clip                  The value defining clipping range [-clip,
-                /// clip] on
-                ///                                   input of activation functions.
+                ///                                   clip] on input of activation functions.
                 ///
                 GRUCell(const Output<Node>& X,
                         const Output<Node>& initial_hidden_state,
@@ -112,17 +109,16 @@ namespace ngraph
                 /// \brief      Constructs GRUCell node.
                 ///
                 /// \param[in]  X                     The input tensor with shape: [batch_size,
-                /// input_size].
+                ///                                   input_size].
                 /// \param[in]  initial_hidden_state  The hidden state tensor at current time step
-                /// with
-                ///                                   shape: [batch_size, hidden_size].
+                ///                                   with shape: [batch_size, hidden_size].
                 /// \param[in]  W                     The weight tensor with shape: [gates_count *
                 ///                                   hidden_size, input_size].
                 /// \param[in]  R                     The recurrence weight tensor with shape:
                 ///                                   [gates_count * hidden_size, hidden_size].
                 /// \param[in]  hidden_size           The number of hidden units for recurrent cell.
                 /// \param[in]  B                     The sum of biases (weight and recurrence) for
-                /// update, reset and hidden gates.
+                ///                                   update, reset and hidden gates.
                 ///                                   If linear_before_reset := true then biases for
                 ///                                   hidden gates are
                 ///                                   placed separately (weight and recurrence).
@@ -139,12 +135,10 @@ namespace ngraph
                 ///                                   functions in order respective to activation
                 ///                                   list.
                 /// \param[in]  clip                  The value defining clipping range [-clip,
-                /// clip] on
-                ///                                   input of activation functions.
+                ///                                   clip] on input of activation functions.
                 /// \param[in]  linear_before_reset   Whether or not to apply the linear
-                /// transformation
-                ///                                   before multiplying by the output of the reset
-                ///                                   gate.
+                ///                                   transformation before multiplying by the
+                ///                                   output of the reset gate.
                 ///
                 GRUCell(const Output<Node>& X,
                         const Output<Node>& initial_hidden_state,
@@ -184,8 +178,7 @@ namespace ngraph
                 /// \brief Control whether or not apply the linear transformation.
                 ///
                 /// \note The linear transformation may be applied when computing the output of
-                /// hidden
-                ///       gate. It's done before multiplying by the output of the reset gate.
+                ///       hidden gate. It's done before multiplying by the output of the reset gate.
                 ///
                 bool m_linear_before_reset;
             };
