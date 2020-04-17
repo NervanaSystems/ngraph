@@ -16,7 +16,11 @@
 
 #include "ngraph/op/strided_slice.hpp"
 #include "ngraph/attribute_visitor.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 #include <algorithm>
@@ -45,6 +49,37 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+namespace
+{
+    shared_ptr<Node> calculate_default_strides(const Output<Node>& begin, const Output<Node>& end)
+    {
+        const auto begin_pshape = begin.get_partial_shape();
+        const auto end_pshape = end.get_partial_shape();
+
+        size_t strides_length = 0;
+        if (begin_pshape.rank().is_static() && begin_pshape.rank().get_length() == 1 &&
+            begin_pshape[0].is_static())
+        {
+            strides_length = begin_pshape[0].get_length();
+        }
+        else if (end_pshape.rank().is_static() && end_pshape.rank().get_length() == 1 &&
+                 end_pshape[0].is_static())
+        {
+            strides_length = end_pshape[0].get_length();
+        }
+        else // dynamic case
+        {
+            NGRAPH_CHECK(begin_pshape.rank().is_static() && begin_pshape.rank().get_length() == 1,
+                         "Begin input must be 1D");
+            return std::make_shared<op::v1::Broadcast>(op::Constant::create(element::i64, {}, {1}),
+                                                       std::make_shared<op::ShapeOf>(begin));
+        }
+
+        return op::Constant::create(
+            element::i64, Shape{strides_length}, vector<int64_t>(strides_length, 1));
+    }
+}
+
 op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
                                    const Output<Node>& begin,
                                    const Output<Node>& end,
@@ -56,9 +91,7 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     : StridedSlice(data,
                    begin,
                    end,
-                   op::Constant::create(element::i64,
-                                        Shape{begin_mask.size()},
-                                        vector<int64_t>(begin_mask.size(), 1)),
+                   calculate_default_strides(begin, end),
                    begin_mask,
                    end_mask,
                    new_axis_mask,
