@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS FALSE)
+
 include(FindOpenMP)
 
 if (NGRAPH_CPU_STATIC_LIB_ENABLE)
@@ -191,9 +193,6 @@ if (NGRAPH_CPU_ENABLE)
         set_target_properties(cpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
-    endif()
-    if (NGRAPH_USE_LEGACY_MKLDNN)
-        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_USE_LEGACY_MKLDNN")
     endif()
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
