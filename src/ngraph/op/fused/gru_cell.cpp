@@ -224,8 +224,8 @@ NodeVector op::GRUCell::decompose_op() const
     if (m_linear_before_reset)
     {
         // ht = g(Xt*(Wh^T) + (rt (.) (Ht-1*(Rh^T) + Rbh)) + Wbh)
-        auto Ht_Rh_Rbh = add(Ht_R_zrh[2], biases_zrh[2]);
-        h_t = m_activation_g(clip(add(Xt_W_zrh[2], add(mul(r_t, Ht_Rh_Rbh), biases_zrh[3]))));
+        auto Ht_Rh_Rbh = add(Ht_R_zrh[2], biases_zrh[3]);
+        h_t = m_activation_g(clip(add(Xt_W_zrh[2], add(mul(r_t, Ht_Rh_Rbh), biases_zrh[2]))));
     }
     else
     {
