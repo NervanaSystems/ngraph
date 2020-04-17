@@ -465,3 +465,81 @@ TEST(type_prop, broadcast_v1_axes_et_wrong)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, broadcast_v2_shape)
+{
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1});
+    const auto shape = op::Constant::create(element::i64, {2}, {1, 4});
+    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
+
+    ASSERT_EQ(broadcast_v2->get_element_type(), element::f32);
+    ASSERT_EQ(broadcast_v2->get_shape(), (Shape{1, 4, 4}));
+    ASSERT_EQ(broadcast_v2->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{2})));
+}
+
+TEST(type_prop, broadcast_v2_shape_2)
+{
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{3, 1});
+    const auto shape = op::Constant::create(element::i64, {3}, {2, 1, 6});
+    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
+
+    ASSERT_EQ(broadcast_v2->get_element_type(), element::f32);
+    ASSERT_EQ(broadcast_v2->get_shape(), (Shape{2, 3, 6}));
+    ASSERT_EQ(broadcast_v2->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
+}
+
+TEST(type_prop, broadcast_v2_shape_3)
+{
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 1});
+    const auto shape = op::Constant::create(element::i64, {2}, {2, 4});
+    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
+
+    ASSERT_EQ(broadcast_v2->get_element_type(), element::f32);
+    ASSERT_EQ(broadcast_v2->get_shape(), (Shape{2, 4}));
+    ASSERT_EQ(broadcast_v2->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{1})));
+}
+
+TEST(type_prop, broadcast_v2_shape_4)
+{
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 1});
+    const auto shape = op::Constant::create(element::i64, {2}, {3, 1});
+    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
+
+    ASSERT_EQ(broadcast_v2->get_element_type(), element::f32);
+    ASSERT_EQ(broadcast_v2->get_shape(), (Shape{1, 3, 1}));
+    ASSERT_EQ(broadcast_v2->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{})));
+}
+
+TEST(type_prop, broadcast_v2_shape_5)
+{
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 1});
+    const auto shape = op::Constant::create(element::i64, {3}, {3, 1, 3});
+    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
+
+    ASSERT_EQ(broadcast_v2->get_element_type(), element::f32);
+    ASSERT_EQ(broadcast_v2->get_shape(), (Shape{3, 3, 3}));
+    ASSERT_EQ(broadcast_v2->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
+}
+
+TEST(type_prop, broadcast_v2_shape_5_type_infer)
+{
+    const auto arg = make_shared<op::Parameter>(element::u16, Shape{1, 3, 1});
+    const auto shape = op::Constant::create(element::i64, {3}, {3, 1, 3});
+    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
+
+    ASSERT_EQ(broadcast_v2->get_element_type(), element::u16);
+    ASSERT_EQ(broadcast_v2->get_shape(), (Shape{3, 3, 3}));
+    ASSERT_EQ(broadcast_v2->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
+}

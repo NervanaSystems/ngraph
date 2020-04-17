@@ -236,7 +236,21 @@ void op::v2::Broadcast::validate_and_infer_types()
 
             if (shape_constant)
             {
-                const auto target_shape = shape_constant->get_shape_val();
+                auto target_shape = shape_constant->get_shape_val();
+
+                if (m_broadcast_spec.m_type == AutoBroadcastType::BIDIRECTIONAL)
+                {
+                    const auto target_padded_rank = std::max(arg_shape.size(), target_shape.size());
+                    while (arg_shape.size() < target_padded_rank)
+                    {
+                        arg_shape.insert(arg_shape.begin(), 1);
+                    }
+                    while (target_shape.size() < target_padded_rank)
+                    {
+                        target_shape.insert(target_shape.begin(), 1);
+                    }
+                    result_shape = target_shape;
+                }
                 auto start_axis = (m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
                                       ? m_broadcast_spec.m_axis
                                       : target_shape.size() - arg_shape.size();
@@ -259,14 +273,57 @@ void op::v2::Broadcast::validate_and_infer_types()
                     result_shape[i] = std::max(arg_shape[i - start_axis], target_shape[i]);
                 }
             }
+
+            // if (shape_constant)
+            //{
+            //    const auto target_shape = shape_constant->get_shape_val();
+            //    int64_t start_axis = (m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
+            //                          ? m_broadcast_spec.m_axis
+            //                          : target_shape.size() - arg_shape.size();
+            //    /*NODE_VALIDATION_CHECK(this,
+            //                          start_axis >= 0,
+            //                          "Broadcast target_shape has smaller rank ",
+            //                          target_shape.size(),
+            //                          " than arg shape ",
+            //                          arg_shape.size());*/
+            //    const auto target_rank = std::max(target_shape.size(), arg_shape.size());
+            //    start_axis = std::abs(start_axis);
+            //    auto test_shape = arg_shape.size() > target_shape.size() ? arg_shape :
+            //    target_shape;
+            //    for (auto i = start_axis; i < target_rank; i++)
+            //    {/*
+            //        NODE_VALIDATION_CHECK(
+            //            this,
+            //            arg_shape[i - start_axis] == 1 || target_shape[i] == 1 ||
+            //                arg_shape[i - start_axis] == target_shape[i],
+            //            "Broadcast incorrect target shape. Expecting either 1 or ",
+            //            arg_shape[i - start_axis],
+            //            " . Got ",
+            //            target_shape[i]);*/
+            //        if(arg_shape.size() > target_shape.size())
+            //        {
+            //            if(i - start_axis < target_shape.size() && i < arg_shape.size())
+            //            {
+            //                test_shape[i] = std::max(arg_shape[i], target_shape[i - start_axis]);
+            //            }
+            //        }
+            //        else if(i - start_axis < arg_shape.size() && i < target_shape.size())
+            //        {
+            //            test_shape[i] = std::max(arg_shape[i - start_axis], target_shape[i]);
+            //        }
+            //        /*
+            //        else if(i<arg_shape.size())
+            //        {
+            //            test_shape[i] = arg_shape[i];
+            //        }
+            //        else if(i<target_shape.size())
+            //        {
+            //            test_shape[i] = target_shape[i];
+            //        }*/
+            //    }
+            //    set_output_type(0, get_input_element_type(0), PartialShape(test_shape));
+            //}
         }
-    }
-    if(m_broadcast_spec.m_type == AutoBroadcastType::BIDIRECTIONAL)
-    {
-        // TODO
-         const auto target_shape = shape_constant->get_shape_val();
-         Shape arg0_padded_shape = result_shape.to_shape();
-         Shape arg1_padded_shape = target_shape;
     }
 
     set_input_is_relevant_to_shape(0); // arg - Result element type
