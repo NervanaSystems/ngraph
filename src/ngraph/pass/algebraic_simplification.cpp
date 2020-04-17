@@ -379,13 +379,6 @@ static bool simplify_gather(std::shared_ptr<Node> node)
             return false;
         }
 
-        // lamba function to remove the gather op and rewire the
-        // input data of gather to its users
-        auto replace_gather = [&]() {
-            remove_node_update_name(node, node->get_argument(0));
-            return true;
-        };
-
         // case_1 : if the input tensor is of shape (4, 1, 4)
         // and axis = 1, then the gather would be simply
         // gathering the whole input tensor, so we can optimize this
@@ -393,7 +386,8 @@ static bool simplify_gather(std::shared_ptr<Node> node)
 
         if (data->get_shape()[axis] == 1)
         {
-            replace_gather();
+            remove_node_update_name(node, node->get_argument(0));
+            return true;
         }
 
 // case_2 : if the input tensor is of shape (4, 3, 4)
@@ -406,11 +400,12 @@ static bool simplify_gather(std::shared_ptr<Node> node)
     std::iota(ref_indices.begin(), ref_indices.end(), 0);                                          \
     if (ref_indices == indices_node->get_vector<T>())                                              \
     {                                                                                              \
-        replace_gather();                                                                          \
+        remove_node_update_name(node, node->get_argument(0));                                      \
+        return true;                                                                               \
     }
 
         // check if the indices is constant
-        auto indices_node = std::dynamic_pointer_cast<ngraph::op::Constant>(node->get_argument(1));
+        auto indices_node = as_type_ptr<ngraph::op::Constant>(node->get_argument(1));
         if (!indices_node)
         {
             return false;
