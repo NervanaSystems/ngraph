@@ -550,21 +550,19 @@ static bool simplify_reduction(shared_ptr<Node> n)
 // input -> transpose({1, 0}) -> squeeze({1}) => {1, 0} -> gather({1}) -> squeeze()
 static bool simplify_transpose(shared_ptr<Node> n)
 {
-    NGRAPH_DEBUG << "In simplify_transpose for " << n->get_name();
-    auto squeeze = as_type_ptr<op::Squeeze>(n);
-    auto reshape = as_type_ptr<op::Reshape>(n);
+    NGRAPH_DEBUG << "In simplify_transpose for " << n;
 
     // create transpose squeeze pattern
     auto input = make_shared<pattern::op::Label>(element::i64, Shape{1, 2});
-    auto cnst_perm_lable =
-        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
-    auto t = make_shared<op::Transpose>(input, cnst_perm_lable);
+    auto cnst_perm_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::v0::Constant>());
+    auto t = make_shared<op::v1::Transpose>(input, cnst_perm_label);
 
-    if (squeeze)
+    if (auto squeeze = as_type_ptr<op::v0::Squeeze>(n))
     {
-        auto cnst_axis_lable = make_shared<pattern::op::Label>(
-            element::i64, Shape{1}, pattern::has_class<op::Constant>());
-        auto s = make_shared<op::Squeeze>(t, cnst_axis_lable);
+        auto cnst_axis_label = make_shared<pattern::op::Label>(
+            element::i64, Shape{1}, pattern::has_class<op::v0::Constant>());
+        auto s = make_shared<op::Squeeze>(t, cnst_axis_label);
         auto t_s_matcher = make_shared<pattern::Matcher>(s, "transpose_squeeze_pattern");
         if (!t_s_matcher->match(n))
         {
@@ -573,10 +571,10 @@ static bool simplify_transpose(shared_ptr<Node> n)
         }
         NGRAPH_DEBUG << "Match pattern " << t_s_matcher->get_name();
         auto t_s_pattern_value_map = t_s_matcher->get_pattern_map();
-        auto cnst_perm_op = as_type_ptr<op::Constant>(t_s_pattern_value_map[cnst_perm_lable]);
-        auto cnst_axis_op = as_type_ptr<op::Constant>(t_s_pattern_value_map[cnst_axis_lable]);
+        auto cnst_perm_op = as_type_ptr<op::Constant>(t_s_pattern_value_map[cnst_perm_label]);
+        auto cnst_axis_op = as_type_ptr<op::Constant>(t_s_pattern_value_map[cnst_axis_label]);
 
-        auto replace_gather_op = make_shared<op::v0::Gather>(cnst_perm_op, cnst_axis_op);
+        auto replace_gather_op = make_shared<op::v1::Gather>(cnst_perm_op, cnst_axis_op);
         auto replace_squeeze_op =
             make_shared<op::Squeeze>(t_s_pattern_value_map[input], replace_gather_op);
 
@@ -584,9 +582,9 @@ static bool simplify_transpose(shared_ptr<Node> n)
         return true;
     }
 
-    if (reshape)
+    if (auto reshape = as_type_ptr<op::v1::Reshape>(n))
     {
-        auto r = make_shared<op::Reshape>(t, AxisVector{0, 1}, Shape{1, 1});
+        auto r = make_shared<op::v1::Reshape>(t, AxisVector{0, 1}, Shape{1, 1});
         auto t_r_matcher = make_shared<pattern::Matcher>(r, "transpose_reshape_pattern");
 
         if (!t_r_matcher->match(n))
@@ -596,7 +594,7 @@ static bool simplify_transpose(shared_ptr<Node> n)
         }
         NGRAPH_DEBUG << "Match pattern " << t_r_matcher->get_name();
         auto t_r_pattern_value_map = t_r_matcher->get_pattern_map();
-        auto cnst_perm_op = as_type_ptr<op::Constant>(t_r_pattern_value_map[cnst_perm_lable]);
+        auto cnst_perm_op = as_type_ptr<op::Constant>(t_r_pattern_value_map[cnst_perm_label]);
 
         auto matched_root = t_r_matcher->get_match_root();
         auto matched_transpose_op = matched_root->get_input_node_shared_ptr(0);
