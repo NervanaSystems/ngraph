@@ -30,7 +30,6 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
-#include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/log.hpp"
@@ -50,7 +49,6 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"
-#include "util/all_close_f.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
 
@@ -692,4 +690,49 @@ TEST(algebraic_simplification, gather_3d_indices_constant_axis_1)
     // since we are fetching the whole tensor using gather op
     auto gather_ops = get_ops_of_type<op::v1::Gather>(f);
     EXPECT_EQ(gather_ops.size(), 0);
+}
+
+TEST(algebraic_simplification, gather_shapeof)
+{
+    auto check_usecase = [](const Shape& shape,
+                            bool is_scalar_index,
+                            const std::vector<int64_t>& indices_val,
+                            int64_t axis_val) {
+        auto indices = is_scalar_index
+                           ? op::Constant::create<int64_t>(element::i64, Shape{}, indices_val)
+                           : op::Constant::create<int64_t>(
+                                 element::i64, Shape{indices_val.size()}, indices_val);
+        auto axis = op::Constant::create<int64_t>(element::i64, Shape{}, {axis_val});
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto A1 = make_shared<op::v0::Abs>(A);
+        auto B = make_shared<op::v1::Gather>(A1, indices, axis);
+        auto B1 = make_shared<op::v0::ShapeOf>(B);
+        auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
+        auto optimized_f = clone_function(*baseline_f);
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::Validate>();
+        pass_manager.register_pass<pass::AlgebraicSimplification>();
+        pass_manager.run_passes(optimized_f);
+
+        ASSERT_EQ(baseline_f->get_results()[0]->get_shape(),
+                  optimized_f->get_results()[0]->get_shape());
+
+        vector<vector<float>> args{
+            vector<float>{5.5, 6.4, 7.9, 3.4, 2.3, 1.1, 4.3, 2.5, 6.3, 9.1, 2.1, 8.3}};
+        auto baseline_results = execute<float, int64_t>(baseline_f, args, "INTERPRETER");
+        auto optimized_results = execute<float, int64_t>(optimized_f, args, "INTERPRETER");
+        EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+        ASSERT_EQ(count_ops_of_type<op::v0::ShapeOf>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v1::Gather>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v0::ShapeOf>(optimized_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v1::Gather>(optimized_f), 1);
+    };
+
+    check_usecase(Shape{2, 3, 2, 1}, true, std::vector<int64_t>{0}, 0);
+    check_usecase(Shape{2, 3, 2, 1}, true, std::vector<int64_t>{0}, 3);
+    check_usecase(Shape{3, 4}, true, std::vector<int64_t>{3}, 1);
+    check_usecase(Shape{12}, true, std::vector<int64_t>{0}, 0);
+    check_usecase(Shape{2, 3, 2, 1}, false, std::vector<int64_t>{0, 2}, 1);
+    check_usecase(Shape{2, 3, 2, 1}, false, std::vector<int64_t>{0}, 2);
 }
