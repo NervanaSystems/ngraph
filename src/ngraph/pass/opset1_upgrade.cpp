@@ -220,15 +220,6 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::DynReshape> node)
-    {
-        auto zero_flag = false;
-        auto replacement_node =
-            make_shared<op::v1::Reshape>(node->input_value(0), node->input_value(1), zero_flag);
-        replace_node(node, replacement_node);
-        return replacement_node;
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::Equal> node)
     {
         return op_cast_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
@@ -298,14 +289,13 @@ namespace
 
             auto reshaped_filters = builder::reshape(node->input_value(1), filters_shape);
 
-            replacement_node =
-                make_shared<op::v1::GroupConvolution>(node->input(0).get_source_output(),
-                                                      reshaped_filters,
-                                                      strides,
-                                                      pads_begin,
-                                                      pads_end,
-                                                      dilations,
-                                                      auto_pad);
+            replacement_node = make_shared<op::v1::GroupConvolution>(node->input_value(0),
+                                                                     reshaped_filters,
+                                                                     strides,
+                                                                     pads_begin,
+                                                                     pads_end,
+                                                                     dilations,
+                                                                     auto_pad);
         }
         replace_node(node, replacement_node);
         return replacement_node;
@@ -471,7 +461,7 @@ namespace
         NGRAPH_CHECK(output_pshape[one_hot_axis].is_static(),
                      "OneHot:v0 one hot axis dimension must be static ",
                      *node);
-        const auto depth = static_cast<int64_t>(output_pshape[one_hot_axis]);
+        const auto depth = output_pshape[one_hot_axis].get_length();
         const auto depth_node = op::Constant::create(element::i64, Shape{}, {depth});
 
         const auto on_value = op::Constant::create(element::i64, Shape{}, {1});

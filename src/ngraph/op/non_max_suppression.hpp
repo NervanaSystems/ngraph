@@ -71,14 +71,14 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 BoxEncodingType get_box_encoding() const { return m_box_encoding; }
                 void set_box_encoding(const BoxEncodingType box_encoding)
                 {
                     m_box_encoding = box_encoding;
                 }
-
                 bool get_sort_result_descending() const { return m_sort_result_descending; }
                 void set_sort_result_descending(const bool sort_result_descending)
                 {
@@ -95,6 +95,7 @@ namespace ngraph
         }
     }
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s,
                              const op::v1::NonMaxSuppression::BoxEncodingType& type);
 

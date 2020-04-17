@@ -88,6 +88,7 @@
 #include "op/mul.hpp"
 #include "op/neg.hpp"
 #include "op/non_max_suppression.hpp"
+#include "op/non_zero.hpp"
 #include "op/not.hpp"
 #include "op/onehot.hpp"
 #include "op/or.hpp"
@@ -101,8 +102,11 @@
 #include "op/reduce.hpp"
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
+#include "op/resize.hpp"
 #include "op/reverse_sequence.hpp"
+#include "op/roi_align.hpp"
 #include "op/round.hpp"
+#include "op/scatter_elements.hpp"
 #include "op/scatter_nd.hpp"
 #include "op/selu.hpp"
 #include "op/shape.hpp"
@@ -125,6 +129,7 @@
 #include "op/tan.hpp"
 #include "op/tanh.hpp"
 #include "op/thresholded_relu.hpp"
+#include "op/tile.hpp"
 #include "op/topk.hpp"
 #include "op/transpose.hpp"
 #include "op/unsqueeze.hpp"
@@ -313,6 +318,7 @@ namespace ngraph
             REGISTER_OPERATOR("Mul", 7, mul);
             REGISTER_OPERATOR("Neg", 1, neg);
             REGISTER_OPERATOR("NonMaxSuppression", 1, non_max_suppression);
+            REGISTER_OPERATOR("NonZero", 1, non_zero);
             REGISTER_OPERATOR("Not", 1, logical_not);
             REGISTER_OPERATOR("Or", 1, logical_or);
             REGISTER_OPERATOR("OneHot", 1, onehot);
@@ -336,8 +342,12 @@ namespace ngraph
             REGISTER_OPERATOR("ReduceSumSquare", 1, reduce_sum_square);
             REGISTER_OPERATOR("Relu", 1, relu);
             REGISTER_OPERATOR("Reshape", 1, reshape);
+            REGISTER_OPERATOR("Resize", 1, resize);
             REGISTER_OPERATOR("ReverseSequence", 1, reverse_sequence);
+            REGISTER_OPERATOR("RoiAlign", 1, roi_align);
             REGISTER_OPERATOR("Round", 1, round);
+            REGISTER_OPERATOR("Scatter", 1, scatter_elements);
+            REGISTER_OPERATOR("ScatterElements", 1, scatter_elements);
             REGISTER_OPERATOR("ScatterND", 1, scatter_nd);
             REGISTER_OPERATOR("Selu", 1, selu);
             REGISTER_OPERATOR("Shape", 1, shape);
@@ -348,6 +358,7 @@ namespace ngraph
             REGISTER_OPERATOR("Sinh", 1, sinh);
             REGISTER_OPERATOR("Size", 1, size);
             REGISTER_OPERATOR("Slice", 1, slice);
+            REGISTER_OPERATOR("Slice", 10, slice);
             REGISTER_OPERATOR("Softmax", 1, softmax);
             REGISTER_OPERATOR("Softplus", 1, softplus);
             REGISTER_OPERATOR("Softsign", 1, softsign);
@@ -362,6 +373,7 @@ namespace ngraph
             REGISTER_OPERATOR("Tan", 1, tan);
             REGISTER_OPERATOR("Tanh", 1, tanh);
             REGISTER_OPERATOR("ThresholdedRelu", 1, thresholded_relu);
+            REGISTER_OPERATOR("Tile", 1, tile);
             REGISTER_OPERATOR("TopK", 1, topk);
             REGISTER_OPERATOR("TopK", 10, topk);
             REGISTER_OPERATOR("TopK", 11, topk);

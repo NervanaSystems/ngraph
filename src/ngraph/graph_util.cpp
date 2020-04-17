@@ -148,13 +148,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
                  " must be equal output_order size: ",
                  output_order.size());
 
-    NGRAPH_CHECK(!target->get_users().empty(),
-                 "Attempted to replace unreachable node '",
-                 *target,
-                 "'. Replacement: '",
-                 *replacement,
-                 "'");
-
     // Fix input/output descriptors
     NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
 
@@ -204,7 +197,6 @@ void ngraph::replace_node(const std::shared_ptr<Node>& target,
         throw ngraph_error("Result nodes cannot be replaced.");
     }
 
-    NGRAPH_CHECK(!target->get_users().empty(), "Attempted to replace unreachable node '", *target);
     NGRAPH_CHECK(target->get_output_size() == replacement_values.size());
 
     unordered_set<shared_ptr<Node>> replacement_nodes;
@@ -888,4 +880,32 @@ void ngraph::traverse_functions(std::shared_ptr<Function> p,
                                 std::function<void(std::shared_ptr<Function>)> f)
 {
     f(p);
+}
+
+bool ngraph::remove_node_update_name(const std::shared_ptr<Node>& node,
+                                     const std::shared_ptr<Node>& node_input)
+{
+    bool has_result_output = false;
+    for (auto& output : node->output(0).get_target_inputs())
+    {
+        if (as_type<op::Result>(output.get_node()))
+        {
+            has_result_output = true;
+        }
+    }
+    // ignore trivial elimination
+    if (has_result_output && as_type_ptr<ngraph::op::Parameter>(node_input))
+    {
+        return false;
+    }
+    if (!has_result_output || node_input->get_users().size() == 1)
+    {
+        if (has_result_output && !std::dynamic_pointer_cast<ngraph::op::Parameter>(node_input))
+        {
+            node_input->set_friendly_name(node->get_friendly_name());
+        }
+        replace_node(node, node_input);
+        return true;
+    }
+    return false;
 }

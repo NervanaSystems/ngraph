@@ -15,6 +15,11 @@
 //*****************************************************************************
 
 #include "ngraph/validation_util.hpp"
+#include "ngraph/evaluator.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -142,9 +147,9 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t data_padded_dilated_dim = -1;
             if (data_dim_static)
             {
-                data_padded_dilated_dim = (static_cast<int64_t>(data_dilation[i]) *
-                                           (static_cast<int64_t>(data_shape[i]) - 1)) +
-                                          1 + data_padding_below[i] + data_padding_above[i];
+                data_padded_dilated_dim =
+                    (static_cast<int64_t>(data_dilation[i]) * (data_shape[i].get_length() - 1)) +
+                    1 + data_padding_below[i] + data_padding_above[i];
                 NODE_VALIDATION_CHECK(
                     node,
                     data_padded_dilated_dim > 0,
@@ -158,9 +163,9 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t window_dilated_dim = -1;
             if (window_dim_static)
             {
-                window_dilated_dim = static_cast<int64_t>(window_dilation[i]) *
-                                         (static_cast<int64_t>(window_shape[i]) - 1) +
-                                     1;
+                window_dilated_dim =
+                    static_cast<int64_t>(window_dilation[i]) * (window_shape[i].get_length() - 1) +
+                    1;
 
                 NODE_VALIDATION_CHECK(node,
                                       window_dilated_dim > 0,
@@ -719,17 +724,17 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                 // so according to tensorflow and numpy we just get 0
                 if (lb < 0)
                 {
-                    lb = std::max(int64_t(input_shape[input_shape_idx]) + lb, int64_t(0));
+                    lb = std::max(input_shape[input_shape_idx].get_length() + lb, int64_t(0));
                 }
 
                 if (ub < 0)
                 {
-                    ub = std::max(int64_t(input_shape[input_shape_idx]) + ub, int64_t(0));
+                    ub = std::max(input_shape[input_shape_idx].get_length() + ub, int64_t(0));
                 }
 
                 // apply restrictions when begin or end values more than max possible values.
-                lb = std::min(int64_t(input_shape[input_shape_idx]), lb);
-                ub = std::min(int64_t(input_shape[input_shape_idx]), ub);
+                lb = std::min(input_shape[input_shape_idx].get_length(), lb);
+                ub = std::min(input_shape[input_shape_idx].get_length(), ub);
 
                 // set default value for stride or use given value
                 int64_t stride = 1;
@@ -746,14 +751,14 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                     // apply masks
                     if (begin_mask.count(axis))
                     {
-                        lb = int64_t(input_shape[input_shape_idx]) - 1;
+                        lb = input_shape[input_shape_idx].get_length() - 1;
                     }
                     if (end_mask.count(axis))
                     {
                         ub = -1;
                     }
 
-                    lb = std::min(lb, int64_t(input_shape[input_shape_idx]) - 1);
+                    lb = std::min(lb, input_shape[input_shape_idx].get_length() - 1);
                     lb -= 1; // we always get 1st element, so we need decrease range
                     if (ub <= lb)
                     {
@@ -769,7 +774,7 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                     }
                     if (end_mask.count(axis))
                     {
-                        ub = int64_t(input_shape[input_shape_idx]);
+                        ub = input_shape[input_shape_idx].get_length();
                     }
 
                     lb += 1; // we always get 1st element, so we need decrease range
@@ -829,7 +834,7 @@ int64_t ngraph::normalize_axis(const std::string& node_description,
         return axis;
     }
 
-    const auto tensor_rank_value = static_cast<int64_t>(tensor_rank);
+    const auto tensor_rank_value = tensor_rank.get_length();
     return normalize_axis(
         node_description, axis, tensor_rank_value, -tensor_rank_value, tensor_rank_value - 1);
 }
@@ -866,30 +871,7 @@ int64_t ngraph::normalize_axis(const std::string& node_description,
         axis = axis + tensor_rank;
     }
 
-    return static_cast<int64_t>(axis);
-}
-
-void ngraph::opset1::infer_conv_backprop_output_spatial_shape(const Shape& input_data_shape,
-                                                              const Shape& filters_shape,
-                                                              const Strides& strides,
-                                                              const Strides& dilations,
-                                                              const CoordinateDiff& pads_begin,
-                                                              const CoordinateDiff& pads_end,
-                                                              const CoordinateDiff& output_padding,
-                                                              Shape& output_spatial_shape)
-{
-    size_t num_spatial_dims = input_data_shape.size();
-    NGRAPH_CHECK(filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
-                 dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
-                 pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
-
-    for (size_t i = 0; i < num_spatial_dims; ++i)
-    {
-        size_t val = strides[i] * (input_data_shape[i] - 1) +
-                     dilations[i] * (filters_shape[i] - 1) + 1 - pads_begin[i] - pads_end[i] +
-                     output_padding[i];
-        output_spatial_shape.push_back(val);
-    }
+    return int64_t(axis);
 }
 
 void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_shape,
@@ -918,7 +900,7 @@ void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_sh
         int total_padding = strides[i] * (input_data_shape[i] - 1) +
                             dilations[i] * (filters_shape[i] - 1) + 1 - output_shape[i] +
                             output_padding[i];
-        if (auto_pad_type == op::PadType::SAME_UPPER)
+        if (auto_pad_type != op::PadType::SAME_UPPER)
         {
             pads_begin[i] = total_padding / 2;
             pads_end[i] = total_padding - pads_begin[i];
@@ -929,4 +911,85 @@ void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_sh
             pads_begin[i] = total_padding - pads_end[i];
         }
     }
+}
+
+namespace
+{
+    /// \brief Scalar variant describes value of an Output
+    struct MaxValue
+    {
+        /// \brief No information known about the output
+        MaxValue()
+            : m_element_type(element::Type_t::undefined)
+        {
+        }
+        /// \brief int64_t assoiated with the output
+        MaxValue(int64_t value)
+            : m_element_type(element::Type_t::i64)
+            , m_int64_t(value)
+        {
+        }
+        element::Type_t m_element_type;
+        element_type_traits<element::Type_t::i64>::value_type m_int64_t;
+    };
+
+    vector<MaxValue> exec_constant(Node* node, vector<MaxValue>& inputs)
+    {
+        auto op = as_type<op::Constant>(node);
+        auto shape = op->get_output_partial_shape(0);
+        if (shape.rank().is_static() && shape.rank().get_length() == 0)
+        {
+            auto et = op->get_output_element_type(0);
+            if (et == element::i64)
+            {
+                vector<int64_t> elts = op->get_vector<int64_t>();
+                return {MaxValue(elts[0])};
+            }
+        }
+        return {MaxValue()};
+    }
+
+    vector<MaxValue> exec_minimum(Node* node, vector<MaxValue>& inputs)
+    {
+        auto op = as_type<op::Minimum>(node);
+        auto shape = op->get_output_partial_shape(0);
+        if (shape.rank().is_static() && shape.rank().get_length() == 0)
+        {
+            auto et = op->get_output_element_type(0);
+            if (et == element::i64)
+            {
+                int64_t min_value = numeric_limits<int64_t>::max();
+                {
+                    auto v1 = inputs.at(0);
+                    if (v1.m_element_type == et)
+                    {
+                        min_value = min(min_value, v1.m_int64_t);
+                    }
+                }
+                {
+                    auto v2 = inputs.at(1);
+                    if (v2.m_element_type == et)
+                    {
+                        min_value = min(min_value, v2.m_int64_t);
+                    }
+                }
+                return {min_value == numeric_limits<int64_t>::max() ? MaxValue()
+                                                                    : MaxValue(min_value)};
+            }
+        }
+        return {MaxValue()};
+    }
+}
+
+pair<bool, int64_t> ngraph::maximum_value(const Output<Node>& value)
+{
+    static Evaluator<MaxValue>::op_handler_map handlers = {
+        {op::Minimum::type_info, exec_minimum}, {op::Constant::type_info, exec_constant}};
+    Evaluator<MaxValue> evaluator(handlers);
+    auto val = evaluator.evaluate(value);
+    if (val.m_element_type == element::Type_t::i64)
+    {
+        return pair<bool, int64_t>(true, val.m_int64_t);
+    }
+    return pair<bool, int64_t>(false, 0);
 }

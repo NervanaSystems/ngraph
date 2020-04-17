@@ -81,14 +81,8 @@ void Function::validate_nodes_and_infer_types()
     for (auto& node : get_ordered_ops())
     {
         node->revalidate_and_infer_types();
-    }
-}
 
-void Function::init()
-{
-    validate_nodes_and_infer_types();
-
-    traverse_nodes(this, [&](shared_ptr<Node> node) {
+        // If we find a parameter make sure it is in the list of parameters of the function
         if (node->is_parameter())
         {
             auto it = std::find(m_parameters.begin(), m_parameters.end(), node);
@@ -97,7 +91,12 @@ void Function::init()
                 throw ngraph_error("Function references undeclared parameter");
             }
         }
-    });
+    }
+}
+
+void Function::init()
+{
+    validate_nodes_and_infer_types();
 }
 
 std::vector<shared_ptr<Node>> Function::get_ordered_ops() const
@@ -248,7 +247,7 @@ size_t Function::get_graph_size() const
         if (node->description() == "Constant")
         {
             const Shape& shape = node->get_output_shape(0);
-            size_t const_size = node->output(0).get_element_type().size();
+            size_t const_size = node->get_output_element_type(0).size();
             if (shape.size() == 0)
             {
                 total_size += const_size;

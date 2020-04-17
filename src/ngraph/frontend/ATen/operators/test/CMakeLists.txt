@@ -48,11 +48,11 @@ set(SRC
     dummy.cpp
 )
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../../../../test)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 
 add_executable(ATen-test ${SRC})
 
-target_include_directories(ATen-test PRIVATE "../../../../../../test")
+target_include_directories(ATen-test PRIVATE ${PROJECT_BINARY_DIR}/test)
 
 target_link_libraries(ATen-test PRIVATE ngraph_test_util)
 target_link_libraries(ATen-test PRIVATE ngraph libgtest)

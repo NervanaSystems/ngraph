@@ -60,6 +60,13 @@ namespace ngraph
 
     class Function;
 
+    // Intermal, controls whether GetOutputElement nodes are elided
+    // Defaults to being elided. Transformer should set to false if
+    // it has passes that depend on GetOutputElement.
+    NGRAPH_API void set_remove_goe(bool value)
+        NGRAPH_DEPRECATED("Remove dependencies on GetOrderedOutput");
+    NGRAPH_API bool get_remove_goe() NGRAPH_DEPRECATED("Remove dependencies on GetOrderedOutput");
+
     namespace op
     {
         struct AutoBroadcastSpec;
@@ -95,6 +102,7 @@ namespace ngraph
 
     NGRAPH_API
     OutputVector as_output_vector(const NodeVector& args);
+    NGRAPH_API
     NodeVector as_node_vector(const OutputVector& values);
     /// Returns a ResultVector referencing values.
     ResultVector as_result_vector(const OutputVector& values);
@@ -122,6 +130,10 @@ namespace ngraph
         friend class Output;
 
     public:
+        /// \brief Verifies that attributes and inputs are consistent and computes output shapes
+        /// and element types. Must be implemented by concrete child classes so that it
+        /// can be run any number of times.
+        ///
         /// Throws if the node is invalid.
         virtual void validate_and_infer_types();
 
@@ -149,20 +161,13 @@ namespace ngraph
         /// \param output_size Number of outputs for this node
         Node(const OutputVector& arguments, size_t output_size = 1);
 
-        /// \brief Construct a node with arguments. Will be deprecated.
-        Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
-
-        /// \brief Constructor for Node subclasses that have metaclasses. Will be deprecated.
-        /// \param arguments The 0th output of node i will connect to input i
-        /// \param output_size Number of outputs for this node
-        Node(const NodeVector& arguments, size_t output_size = 1);
-
         // For back-compatibility
-        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
-        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+            NGRAPH_DEPRECATED("use OutputVector version instead")
         {
-            generate_adjoints(adjoints, as_node_vector(deltas));
+            generate_adjoints(adjoints, as_output_vector(deltas));
         }
+        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas) {}
         /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows
         /// on deep networks.
         void safe_delete(NodeVector& nodes, bool recurse);
@@ -181,6 +186,9 @@ namespace ngraph
         virtual const op::AutoBroadcastSpec& get_autob() const;
         /// \returns true if the node can decompose
         virtual bool supports_decompose() const { return false; }
+        /// \brief Can replace a node with a constant during constant folding.
+        /// \returns vector of outputs to replace node outputs. Empty outputs will not be replaced.
+        virtual OutputVector constant_fold() { return {}; }
         /// \brief Decomposes the FusedOp into a sub-graph consisting of core ngraph ops
         ///
         /// \return A vector of nodes comprising the sub-graph. The order of output
@@ -323,11 +331,10 @@ namespace ngraph
         size_t get_output_size() const;
 
         /// Returns the element type for output i
-        // TODO: deprecate in favor of node->output(i).get_element_type()
         const element::Type& get_output_element_type(size_t i) const;
 
         /// Checks that there is exactly one output and returns its element type
-        // TODO: deprecate in favor of node->output(0).get_element_type() with a suitable check in
+        // TODO: deprecate in favor of node->get_output_element_type(0) with a suitable check in
         // the calling code, or updates to the calling code if it is making an invalid assumption
         // of only one output.
         const element::Type& get_element_type() const;
@@ -338,8 +345,20 @@ namespace ngraph
         /// Returns the partial shape for output i
         const PartialShape& get_output_partial_shape(size_t i) const;
 
-        std::shared_ptr<Node> get_output_as_single_output_node(size_t i,
-                                                               bool for_get_output_element = true);
+        /// Second argument is ignored
+        /// Returns the node if i=0 and the node has 1 output, otherwise a GetOutputElement
+        /// If the node is a GetOutputElement, applies to the underlying node
+        std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
+
+        /// Return the output to use when converting to an Output<Node> with no index specified.
+        /// Throws when not supported.
+        Output<const Node> get_default_output() const;
+        Output<Node> get_default_output();
+
+        /// Returns the output of the default output, or throws if there is none
+        virtual size_t get_default_output_index() const;
+        /// Throws no default
+        size_t no_default_index() const;
 
         /// Checks that there is exactly one output and returns its shape
         // TODO: deprecate in favor of node->get_output_shape(0) with a suitable check in the
@@ -356,7 +375,7 @@ namespace ngraph
 
         /// Checks that there is exactly one output and returns its tensor.
         descriptor::Tensor& get_output_tensor() const NGRAPH_DEPRECATED(
-            "use node->output(0).get_tensor() instead; insert a check that the node has only one "
+            "use node->get_output_tensor(0) instead; insert a check that the node has only one "
             "output, or update calling code not to assume only one output");
 
         /// Returns the tensor of output i
@@ -373,6 +392,8 @@ namespace ngraph
         /// Returns the set of inputs using output i
         const std::vector<descriptor::Input*>& get_output_inputs(size_t i) const
             NGRAPH_DEPRECATED("use node->output(i).get_target_inputs() instead");
+
+        std::set<Input<Node>> get_output_target_inputs(size_t i) const;
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
@@ -395,10 +416,9 @@ namespace ngraph
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
-        // Will be deprecated
-        virtual NodeVector get_arguments() const;
-        // Will be deprecated
-        std::shared_ptr<Node> get_argument(size_t index) const;
+        virtual NodeVector get_arguments() const NGRAPH_DEPRECATED("Use input_values().");
+        std::shared_ptr<Node> get_argument(size_t index) const
+            NGRAPH_DEPRECATED("use input_value(i).");
 
         Node* get_input_node_ptr(size_t index) const;
         std::shared_ptr<Node> get_input_node_shared_ptr(size_t index) const;
@@ -408,11 +428,11 @@ namespace ngraph
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const
             NGRAPH_DEPRECATED("use copy_with_new_inputs instead");
 
+    public:
         // TODO: When all copy_with_new_args have been replaced with copy_with_new_inputs, make
         // this pure and remove copy_with_new_args
         virtual std::shared_ptr<Node> clone_with_new_inputs(const OutputVector& inputs) const;
 
-    public:
         std::shared_ptr<Node> copy_with_new_inputs(const OutputVector& new_args) const;
 
         std::shared_ptr<Node> copy_with_new_inputs(
@@ -522,6 +542,8 @@ namespace ngraph
                                  const Output<Node>& pattern_value,
                                  const Output<Node>& graph_value);
 
+        virtual bool match_node(pattern::Matcher* matcher, const Output<Node>& graph_value);
+
     private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
@@ -556,6 +578,11 @@ namespace ngraph
             , index(value.get_index())
         {
         }
+        RawNodeOutput(Node* node, size_t index)
+            : node(node)
+            , index(index)
+        {
+        }
         RawNodeOutput(const RawNodeOutput&) = default;
         RawNodeOutput() = default;
         RawNodeOutput& operator=(const RawNodeOutput&) = default;
@@ -583,7 +610,7 @@ namespace ngraph
 
     using RawNodeOutputMap = std::map<RawNodeOutput, Output<Node>>;
 
-    class NodeValidationFailure : public CheckFailure
+    class NGRAPH_API NodeValidationFailure : public CheckFailure
     {
     public:
         NodeValidationFailure(const CheckLocInfo& check_loc_info,

@@ -42,7 +42,7 @@ namespace ngraph
                      const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         } // namespace v0
 
@@ -67,7 +67,7 @@ namespace ngraph
                          AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 size_t get_version() const override { return 1; }
             };
         } // namespace v1
