@@ -26,9 +26,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v2::Broadcast::type_info;
+constexpr NodeTypeInfo op::v3::Broadcast::type_info;
 
-op::v2::Broadcast::Broadcast(const Output<Node>& arg,
+op::v3::Broadcast::Broadcast(const Output<Node>& arg,
                              const Output<Node>& target_shape,
                              const Output<Node>& axes_mapping,
                              const AutoBroadcastSpec& broadcast_spec)
@@ -38,7 +38,7 @@ op::v2::Broadcast::Broadcast(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::v2::Broadcast::Broadcast(const Output<Node>& arg,
+op::v3::Broadcast::Broadcast(const Output<Node>& arg,
                              const Output<Node>& target_shape,
                              const AutoBroadcastSpec& broadcast_spec)
     : Op({arg, target_shape, op::v0::Constant::create(element::u8, Shape{}, {0})->output(0)})
@@ -47,13 +47,13 @@ op::v2::Broadcast::Broadcast(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-bool op::v2::Broadcast::visit_attributes(AttributeVisitor& visitor)
+bool op::v3::Broadcast::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("broadcast_spec", m_broadcast_spec);
     return true;
 }
 
-std::pair<bool, AxisSet> op::v2::Broadcast::get_broadcast_axes() const
+std::pair<bool, AxisSet> op::v3::Broadcast::get_broadcast_axes() const
 {
     AxisSet broadcast_axes;
     bool axes_known = false;
@@ -108,7 +108,7 @@ std::pair<bool, AxisSet> op::v2::Broadcast::get_broadcast_axes() const
     return std::make_pair(axes_known, broadcast_axes);
 }
 
-void op::v2::Broadcast::validate_and_infer_types()
+void op::v3::Broadcast::validate_and_infer_types()
 {
     // shape node should have integer data type. For now we only allow i64
     auto shape_et = get_input_element_type(1);
@@ -273,56 +273,6 @@ void op::v2::Broadcast::validate_and_infer_types()
                     result_shape[i] = std::max(arg_shape[i - start_axis], target_shape[i]);
                 }
             }
-
-            // if (shape_constant)
-            //{
-            //    const auto target_shape = shape_constant->get_shape_val();
-            //    int64_t start_axis = (m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
-            //                          ? m_broadcast_spec.m_axis
-            //                          : target_shape.size() - arg_shape.size();
-            //    /*NODE_VALIDATION_CHECK(this,
-            //                          start_axis >= 0,
-            //                          "Broadcast target_shape has smaller rank ",
-            //                          target_shape.size(),
-            //                          " than arg shape ",
-            //                          arg_shape.size());*/
-            //    const auto target_rank = std::max(target_shape.size(), arg_shape.size());
-            //    start_axis = std::abs(start_axis);
-            //    auto test_shape = arg_shape.size() > target_shape.size() ? arg_shape :
-            //    target_shape;
-            //    for (auto i = start_axis; i < target_rank; i++)
-            //    {/*
-            //        NODE_VALIDATION_CHECK(
-            //            this,
-            //            arg_shape[i - start_axis] == 1 || target_shape[i] == 1 ||
-            //                arg_shape[i - start_axis] == target_shape[i],
-            //            "Broadcast incorrect target shape. Expecting either 1 or ",
-            //            arg_shape[i - start_axis],
-            //            " . Got ",
-            //            target_shape[i]);*/
-            //        if(arg_shape.size() > target_shape.size())
-            //        {
-            //            if(i - start_axis < target_shape.size() && i < arg_shape.size())
-            //            {
-            //                test_shape[i] = std::max(arg_shape[i], target_shape[i - start_axis]);
-            //            }
-            //        }
-            //        else if(i - start_axis < arg_shape.size() && i < target_shape.size())
-            //        {
-            //            test_shape[i] = std::max(arg_shape[i - start_axis], target_shape[i]);
-            //        }
-            //        /*
-            //        else if(i<arg_shape.size())
-            //        {
-            //            test_shape[i] = arg_shape[i];
-            //        }
-            //        else if(i<target_shape.size())
-            //        {
-            //            test_shape[i] = target_shape[i];
-            //        }*/
-            //    }
-            //    set_output_type(0, get_input_element_type(0), PartialShape(test_shape));
-            //}
         }
     }
 
@@ -332,14 +282,14 @@ void op::v2::Broadcast::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), result_shape);
 }
 
-shared_ptr<Node> op::v2::Broadcast::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v3::Broadcast::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v2::Broadcast>(
+    return make_shared<v3::Broadcast>(
         new_args.at(0), new_args.at(1), new_args.at(2), m_broadcast_spec);
 }
 
-void op::v2::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v3::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
