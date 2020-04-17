@@ -30,6 +30,7 @@
 #ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
 #endif
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
@@ -144,7 +145,7 @@ namespace ngraph
     }     // namespace runtime
 } // namespace ngraph
 
-class ngraph::runtime::interpreter::INTExecutable : public Executable
+class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTExecutable : public Executable
 {
     friend class INTBackend;
 
@@ -771,11 +772,6 @@ protected:
                            dot->get_reduction_axes_count());
             break;
         }
-        case OP_TYPEID::DynReshape:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
         case OP_TYPEID::DynSlice:
         {
             throw unsupported_op("Unsupported op '" + node.description() + "'");
@@ -1189,8 +1185,8 @@ protected:
             reference::pad(args[0]->get_data_ptr<const T>(),
                            args[1]->get_data_ptr<const T>(),
                            out[0]->get_data_ptr<T>(),
-                           node.input(0).get_shape(),
-                           node.output(0).get_shape(),
+                           node.get_input_shape(0),
+                           node.get_output_shape(0),
                            pad->get_padding_below(),
                            pad->get_padding_above(),
                            pad->get_pad_mode());
@@ -1687,6 +1683,18 @@ protected:
         case OP_TYPEID::ShapeOf:
         {
             reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint64_t>());
+            break;
+        }
+        case OP_TYPEID::ShapeOf_v3:
+        {
+            if (node.get_output_element_type(0) == element::i64)
+            {
+                reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint64_t>());
+            }
+            else if (node.get_output_element_type(0) == element::i32)
+            {
+                reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint32_t>());
+            }
             break;
         }
         case OP_TYPEID::Sigmoid:

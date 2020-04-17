@@ -61,6 +61,11 @@
 // Defines a new LLVM debug type for this file to be used by LLVM_DEBUG macro.
 #define DEBUG_TYPE "mlir-compiler"
 
+static llvm::cl::opt<bool> clEnableNgKernelLibFusion(
+    "ngraph-kernel-lib-fusion",
+    llvm::cl::init(false),
+    llvm::cl::desc("Enable the ngraph pass that fuses ops to use kernel library"));
+
 using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::ArrayRef;
@@ -130,11 +135,9 @@ void MLIRCompiler::buildNgDialectModule()
 void MLIRCompiler::optimizeNgDialect()
 {
     mlir::PassManager pm(&m_context);
-    //pm.addPass(ngraph::pass::createNgDialectFusedOpsPass());
-
-    if (clEnableOpFusion)
+    if (clEnableNgKernelLibFusion)
     {
-        pm.addPass(mlir::createNgOpFusionPass());
+        pm.addPass(ngraph::pass::createNgDialectFusedOpsPass());
     }
 
     // Apply any generic pass manager command line options.

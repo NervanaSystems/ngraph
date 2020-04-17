@@ -37,8 +37,9 @@ namespace ngraph
                 /// \param arg Node that produces the input tensor.
                 Log(const Output<Node>& arg);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

@@ -31,48 +31,73 @@ namespace ngraph
             Shape get_kernel_shape(const Node& node)
             {
                 const auto& data_shape = node.get_ng_inputs().at(0)->get_output_partial_shape(0);
-                const size_t input_spatial_dims = static_cast<size_t>(data_shape.rank()) - 2;
+                const size_t input_spatial_dims = data_shape.rank().get_length() - 2;
                 return node.get_attribute_value<std::vector<size_t>>(
                     "kernel_shape", std::vector<size_t>(input_spatial_dims, 1UL));
             }
 
             namespace detail
             {
-                /// \brief              Helper method used to read vector attribute
-                /// \note               Default value is vector of size spatial dims filled with
-                ///                     ones
+                /// \brief      Gets the attribute default value.
                 ///
-                /// \param   node       Node from which attribute is read
-                /// \param   attr_name  Attribute name (such as `strides`, `dilations`)
+                /// \param[in]  node       The node we get attribute value from.
+                /// \param[in]  attr_name  The attribute name.
                 ///
-                /// \return             Read vector attribute if available or default value
-                std::vector<std::size_t> get_attribute_value(const Node& node,
-                                                             const std::string& attr_name)
+                /// \return     The attribute default value.
+                ///
+                std::vector<std::size_t> get_attr_default_value(const Node& node,
+                                                                const std::string& attr_name)
                 {
-                    if (node.has_attribute(attr_name))
-                    {
-                        return node.get_attribute_value<std::vector<std::size_t>>(attr_name);
-                    }
                     const auto data_rank =
                         node.get_ng_inputs().at(0)->get_output_partial_shape(0).rank();
                     CHECK_VALID_NODE(node,
                                      data_rank.is_static(),
                                      "If '",
                                      attr_name,
-                                     "' is not provided data rank must be static");
-                    const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
+                                     "' is not provided data rank must be static.");
+                    const auto data_spatial_dims = data_rank.get_length() - 2;
+
                     return std::vector<std::size_t>(data_spatial_dims, 1UL);
+                }
+
+                ///
+                /// \brief      Helper method used to read vector attribute.
+                ///
+                /// \note       Default value is vector of size spatial dims filled with ones.
+                ///
+                /// \param[in]  node         Node from which attribute is read
+                /// \param[in]  attr_name    Attribute name (such as `strides`, `dilations`)
+                /// \param[in]  kernel_rank  The optional kernel rank.
+                ///
+                /// \return     Read vector attribute if available or default value
+                ///
+                std::vector<std::size_t> get_attribute_value(const Node& node,
+                                                             const std::string& attr_name,
+                                                             const std::size_t kernel_rank = 0UL)
+                {
+                    if (node.has_attribute(attr_name))
+                    {
+                        return node.get_attribute_value<std::vector<std::size_t>>(attr_name);
+                    }
+                    else if (kernel_rank != 0)
+                    {
+                        return std::vector<std::size_t>(kernel_rank, 1UL);
+                    }
+                    else
+                    {
+                        return get_attr_default_value(node, attr_name);
+                    }
                 }
             } // namespace detail
 
-            Strides get_strides(const Node& node)
+            Strides get_strides(const Node& node, const std::size_t kernel_rank)
             {
-                return detail::get_attribute_value(node, "strides");
+                return detail::get_attribute_value(node, "strides", kernel_rank);
             }
 
-            Strides get_dilations(const Node& node)
+            Strides get_dilations(const Node& node, const std::size_t kernel_rank)
             {
-                return detail::get_attribute_value(node, "dilations");
+                return detail::get_attribute_value(node, "dilations", kernel_rank);
             }
 
             ngraph::op::PadType get_auto_pad(const Node& node)
@@ -132,7 +157,7 @@ namespace ngraph
                 CHECK_VALID_NODE(node,
                                  data_rank.is_static(),
                                  "The rank of node must be static in order to calculate pads");
-                const auto data_spatial_dims = static_cast<size_t>(data_rank) - 2;
+                const auto data_spatial_dims = data_rank.get_length() - 2;
 
                 return get_pads(node, data_spatial_dims);
             }

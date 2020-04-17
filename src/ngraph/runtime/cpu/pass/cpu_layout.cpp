@@ -25,6 +25,7 @@
 #include "cpu_layout.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
@@ -38,8 +39,8 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/op.hpp"
@@ -73,11 +74,7 @@ using namespace mkldnn;
 using namespace ngraph;
 using namespace ngraph::runtime::cpu;
 
-#if MKLDNN_VERSION_MAJOR < 1
-#define FORMAT format
-#else
 #define FORMAT format_tag
-#endif
 
 // Check if the input layout matches the layout requested in `required_mds`
 // If not, insert a layout conversion node between the input tensor and
@@ -98,9 +95,9 @@ static shared_ptr<Node>
                            to_string(node->get_input_size()) + ")");
     }
 
-    for (const descriptor::Input& input : node->get_inputs())
+    for (auto input : node->inputs())
     {
-        const auto& output = input.get_output();
+        auto output = input.get_source_output();
         auto tv = output.get_tensor_ptr();
         auto tvl =
             std::dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
@@ -127,24 +124,15 @@ static shared_ptr<Node>
         {
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
             layout->set_mkldnn_md(required_mds[index]);
-            auto new_node = std::shared_ptr<Node>(
-                new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
+            auto new_node = make_shared<runtime::cpu::op::ConvertLayout>(output, layout);
             new_args.push_back(new_node);
             replace_node = true;
-#if MKLDNN_VERSION_MAJOR < 1
-            NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
-                         << output.get_node()->get_name()
-                         << "(layout: " << tvl->get_mkldnn_md().data.format << ") and "
-                         << node->get_name() << "(layout: " << required_mds[index].data.format
-                         << ")";
-#else
             NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
                          << output.get_node()->get_name() << " and " << node->get_name();
-#endif
         }
         else
         {
-            new_args.push_back(output.get_node());
+            new_args.push_back(output);
         }
         index++;
     }
@@ -184,10 +172,6 @@ static void set_output_layouts(shared_ptr<Node>& node, const vector<memory::desc
         auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
         layout->set_mkldnn_md(output_mds[i]);
         tv->set_tensor_layout(layout);
-#if MKLDNN_VERSION_MAJOR < 1
-        NGRAPH_DEBUG << "Setting Node: " << node->get_name()
-                     << " output layout: " << output_mds[i].data.format << endl;
-#endif
     }
 }
 
@@ -198,9 +182,9 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
     OutputVector new_args;
     bool replace_node = false;
     uint32_t index = 0;
-    for (descriptor::Input& input : node->get_inputs())
+    for (auto input : node->inputs())
     {
-        const auto& output = input.get_output();
+        auto output = input.get_source_output();
         auto tv = output.get_tensor_ptr();
         auto et = tv->get_element_type();
         auto shape = tv->get_shape();
@@ -215,33 +199,25 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
             {
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
                 layout->set_mkldnn_md(native_md);
-                auto new_node = std::shared_ptr<Node>(new runtime::cpu::op::ConvertLayout(
-                    output.get_node(), output.get_index(), layout));
-                new_args.push_back(new_node);
+                auto new_node = make_shared<runtime::cpu::op::ConvertLayout>(output, layout);
+                new_args.push_back(new_node->output(0));
                 if (use_replace)
                 {
                     replace_node = true;
                 }
                 else
                 {
-                    input.replace_output(new_node->get_outputs().at(0));
+                    input.replace_source_output(new_node->output(0));
                 }
-
-#if MKLDNN_VERSION_MAJOR < 1
-                NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
-                             << output.get_node()->get_name()
-                             << "(layout: " << cpu_tvl->get_mkldnn_md().data.format << ") and "
-                             << node->get_name() << "(layout: default)";
-#endif
             }
             else
             {
-                new_args.push_back(output.get_node());
+                new_args.push_back(output);
             }
         }
         else
         {
-            new_args.push_back(output.get_node());
+            new_args.push_back(output);
         }
         index++;
     }
@@ -293,16 +269,10 @@ static void set_layouts_unaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction*
     auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
     // Non MKLDNN kernels can handle MKLDNN layouts as long as there are not padded
     bool md_check;
-#if MKLDNN_VERSION_MAJOR < 1
-    md_check = input_md.data.format != mkldnn_format_undef &&
-               !mkldnn_utils::is_mkldnn_padded_layout(
-                   input_md, ngraph::get_default_order(node->get_input_shape(0)));
-#else
     md_check = input_md.data.format_kind !=
                    static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::undef) &&
                !mkldnn_utils::is_mkldnn_padded_layout(
                    input_md, ngraph::get_default_order(node->get_input_shape(0)));
-#endif
     if (mkldnn_utils::use_mkldnn_kernel(node.get()) || md_check)
     {
         vector<memory::desc> o_mds;
@@ -321,14 +291,6 @@ void set_layouts_binaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* exter
     std::vector<mkldnn::memory::desc> arg_mds{mkldnn_utils::get_input_mkldnn_md(node.get(), 0),
                                               mkldnn_utils::get_input_mkldnn_md(node.get(), 1)};
     bool md_check;
-#if MKLDNN_VERSION_MAJOR < 1
-    md_check = arg_mds[0].data.format != mkldnn_format_undef &&
-               arg_mds[1].data.format != mkldnn_format_undef &&
-               !mkldnn_utils::is_mkldnn_padded_layout(
-                   arg_mds[0], ngraph::get_default_order(node->get_input_shape(0))) &&
-               !mkldnn_utils::is_mkldnn_padded_layout(
-                   arg_mds[1], ngraph::get_default_order(node->get_input_shape(1)));
-#else
     md_check = arg_mds[0].data.format_kind !=
                    static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::undef) &&
                arg_mds[1].data.format_kind !=
@@ -337,18 +299,12 @@ void set_layouts_binaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* exter
                    arg_mds[0], ngraph::get_default_order(node->get_input_shape(0))) &&
                !mkldnn_utils::is_mkldnn_padded_layout(
                    arg_mds[1], ngraph::get_default_order(node->get_input_shape(1)));
-#endif
     if (mkldnn_utils::use_mkldnn_kernel(node.get()) || md_check)
     {
         vector<memory::desc> i_mds;
         vector<memory::desc> o_mds;
-        int select = 0;
-        char* ngraph_pass_cpu_layout_eltwise = std::getenv("NGRAPH_PASS_CPU_LAYOUT_ELTWISE");
-        if (ngraph_pass_cpu_layout_eltwise != nullptr)
-        {
-            const int user_select = std::atoi(ngraph_pass_cpu_layout_eltwise);
-            select = (user_select == 0 || user_select == 1) ? user_select : select;
-        }
+        const int32_t user_select = getenv_int("NGRAPH_PASS_CPU_LAYOUT_ELTWISE");
+        int select = (user_select == 0 || user_select == 1) ? user_select : 0;
         i_mds.push_back(arg_mds[select]);
         i_mds.push_back(arg_mds[select]);
         o_mds.push_back(arg_mds[select]);
@@ -491,16 +447,6 @@ namespace ngraph
                     }
                     convolution_forward::primitive_desc prim_desc(*fwd_desc,
                                                                   executor::global_cpu_engine);
-#if MKLDNN_VERSION_MAJOR < 1
-                    i_mds.push_back(prim_desc.src_primitive_desc().desc());
-                    i_mds.push_back(prim_desc.weights_primitive_desc().desc());
-
-                    if (use_bias)
-                    {
-                        i_mds.push_back(prim_desc.bias_primitive_desc().desc());
-                    }
-                    o_mds.push_back(prim_desc.dst_primitive_desc().desc());
-#else
                     i_mds.push_back(prim_desc.src_desc());
                     i_mds.push_back(prim_desc.weights_desc());
 
@@ -509,7 +455,6 @@ namespace ngraph
                         i_mds.push_back(prim_desc.bias_desc());
                     }
                     o_mds.push_back(prim_desc.dst_desc());
-#endif
                 }
 
                 template <typename T, bool use_bias>
@@ -578,16 +523,6 @@ namespace ngraph
                     }
                     inner_product_forward::primitive_desc prim_desc(*fwd_desc,
                                                                     executor::global_cpu_engine);
-#if MKLDNN_VERSION_MAJOR < 1
-                    i_mds.push_back(prim_desc.src_primitive_desc().desc());
-                    i_mds.push_back(prim_desc.weights_primitive_desc().desc());
-
-                    if (use_bias)
-                    {
-                        i_mds.push_back(prim_desc.bias_primitive_desc().desc());
-                    }
-                    o_mds.push_back(prim_desc.dst_primitive_desc().desc());
-#else
                     i_mds.push_back(prim_desc.src_desc());
                     i_mds.push_back(prim_desc.weights_desc());
 
@@ -596,7 +531,6 @@ namespace ngraph
                         i_mds.push_back(prim_desc.bias_desc());
                     }
                     o_mds.push_back(prim_desc.dst_desc());
-#endif
                 }
 
                 template <>
@@ -978,19 +912,11 @@ namespace ngraph
 
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-#if MKLDNN_VERSION_MAJOR < 1
-                        i_mds.push_back(deconv_prim_desc.weights_primitive_desc()
-                                            .desc()); // TODO: Find what format this is?
-                        i_mds.push_back(deconv_prim_desc.src_primitive_desc().desc());
-                        i_mds.push_back(deconv_prim_desc.bias_primitive_desc().desc());
-                        o_mds.push_back(deconv_prim_desc.dst_primitive_desc().desc());
-#else
                         i_mds.push_back(
                             deconv_prim_desc.weights_desc()); // TODO: Find what format this is?
                         i_mds.push_back(deconv_prim_desc.src_desc());
                         i_mds.push_back(deconv_prim_desc.bias_desc());
                         o_mds.push_back(deconv_prim_desc.dst_desc());
-#endif
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
@@ -1070,15 +996,9 @@ namespace ngraph
 
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-#if MKLDNN_VERSION_MAJOR < 1
-                        i_mds.push_back(prim_desc.weights_primitive_desc().desc());
-                        i_mds.push_back(prim_desc.diff_dst_primitive_desc().desc());
-                        o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
-#else
                         i_mds.push_back(prim_desc.weights_desc());
                         i_mds.push_back(prim_desc.diff_dst_desc());
                         o_mds.push_back(prim_desc.diff_src_desc());
-#endif
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -1181,15 +1101,6 @@ namespace ngraph
                                                                       executor::global_cpu_engine);
                     convolution_backward_weights::primitive_desc prim_desc(
                         *bwd_desc, executor::global_cpu_engine, fwd_prim_desc);
-#if MKLDNN_VERSION_MAJOR < 1
-                    i_mds.push_back(prim_desc.src_primitive_desc().desc());
-                    i_mds.push_back(prim_desc.diff_dst_primitive_desc().desc());
-                    o_mds.push_back(prim_desc.diff_weights_primitive_desc().desc());
-                    if (use_bias)
-                    {
-                        o_mds.push_back(prim_desc.diff_bias_primitive_desc().desc());
-                    }
-#else
                     i_mds.push_back(prim_desc.src_desc());
                     i_mds.push_back(prim_desc.diff_dst_desc());
                     o_mds.push_back(prim_desc.diff_weights_desc());
@@ -1197,7 +1108,6 @@ namespace ngraph
                     {
                         o_mds.push_back(prim_desc.diff_bias_desc());
                     }
-#endif
                 }
 
                 template <>
@@ -1285,11 +1195,7 @@ namespace ngraph
                         auto prim_desc =
                             pooling_forward::primitive_desc(desc, executor::global_cpu_engine);
                         i_mds.push_back(input_desc);
-#if MKLDNN_VERSION_MAJOR < 1
-                        o_mds.push_back(prim_desc.dst_primitive_desc().desc());
-#else
                         o_mds.push_back(prim_desc.dst_desc());
-#endif
                     }
                     catch (const mkldnn::error& e)
                     {
@@ -1307,14 +1213,8 @@ namespace ngraph
                         }
                         else
                         {
-#if MKLDNN_VERSION_MAJOR < 1
-                            throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                               to_string(input_desc.data.format) +
-                                               MKLDNN_ERROR_MESSAGE);
-#else
                             throw ngraph_error("MKLDNN Unsupported pooling layout" +
                                                MKLDNN_ERROR_MESSAGE);
-#endif
                         }
                     }
                 }
@@ -1398,22 +1298,12 @@ namespace ngraph
                             auto prim_desc = pooling_backward::primitive_desc(
                                 bwd_desc, executor::global_cpu_engine, fwd_prim_desc);
                             i_mds.push_back(input_desc);
-#if MKLDNN_VERSION_MAJOR < 1
-                            o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
-#else
                             o_mds.push_back(prim_desc.diff_src_desc());
-#endif
                         }
                         catch (const mkldnn::error& e)
                         {
-#if MKLDNN_VERSION_MAJOR < 1
-                            throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                               to_string(input_desc.data.format) +
-                                               MKLDNN_ERROR_MESSAGE);
-#else
                             throw ngraph_error("MKLDNN Unsupported pooling layout" +
                                                MKLDNN_ERROR_MESSAGE);
-#endif
                         }
 
                         node = insert_input_conversions(external_function, node, i_mds);
@@ -1468,19 +1358,11 @@ namespace ngraph
                         auto prim_desc =
                             pooling_forward::primitive_desc(desc, executor::global_cpu_engine);
                         i_mds.push_back(input_desc);
-#if MKLDNN_VERSION_MAJOR < 1
-                        o_mds.push_back(prim_desc.dst_primitive_desc().desc());
-#else
                         o_mds.push_back(prim_desc.dst_desc());
-#endif
 
                         if (pk == prop_kind::forward_training)
                         {
-#if MKLDNN_VERSION_MAJOR < 1
-                            o_mds.push_back(prim_desc.workspace_primitive_desc().desc());
-#else
                             o_mds.push_back(prim_desc.workspace_desc());
-#endif
                         }
                     }
                     catch (const mkldnn::error& e)
@@ -1508,23 +1390,13 @@ namespace ngraph
                                                                   mkldnn_padding_above PADDING);
                                 auto prim_desc = pooling_forward::primitive_desc(
                                     desc, executor::global_cpu_engine);
-#if MKLDNN_VERSION_MAJOR < 1
-                                o_mds.push_back(prim_desc.workspace_primitive_desc().desc());
-#else
                                 o_mds.push_back(prim_desc.workspace_desc());
-#endif
                             }
                         }
                         else
                         {
-#if MKLDNN_VERSION_MAJOR < 1
-                            throw ngraph_error("MKLDNN Unsupported pooling fwd layout" +
-                                               to_string(input_desc.data.format) +
-                                               MKLDNN_ERROR_MESSAGE);
-#else
                             throw ngraph_error("MKLDNN Unsupported pooling fwd layout" +
                                                MKLDNN_ERROR_MESSAGE);
-#endif
                         }
                     }
                 }
@@ -1536,30 +1408,6 @@ namespace ngraph
                     {
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         auto tv = node->get_output_tensor_ptr(0);
-#if MKLDNN_VERSION_MAJOR < 1
-                        auto fmt = static_cast<mkldnn::memory::format>(input_md.data.format);
-                        if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
-                            !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
-                        {
-                            // Cannot pass through layout information for blocked layouts at the
-                            // moment
-                            set_native_layouts(external_function, node);
-                        }
-                        else
-                        {
-                            // mkldnn expects nhwc for int8, avoids reorder
-                            if (fmt == mkldnn::memory::format::nchw ||
-                                fmt == mkldnn::memory::format::nChw8c ||
-                                fmt == mkldnn::memory::format::nChw16c)
-                            {
-                                fmt = mkldnn::memory::format::nhwc;
-                            }
-                            vector<memory::desc> o_mds;
-                            o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
-                                node.get(), 0, true, static_cast<memory::format>(fmt)));
-                            set_output_layouts(node, o_mds);
-                        }
-#else
                         auto fmt =
                             static_cast<mkldnn::memory::format_kind>(input_md.data.format_kind);
                         // blocked
@@ -1596,7 +1444,6 @@ namespace ngraph
                             }
                             set_output_layouts(node, o_mds);
                         }
-#endif
                     }
                     else
                     {
@@ -1611,28 +1458,6 @@ namespace ngraph
                     {
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         auto tv = node->get_output_tensor_ptr(0);
-#if MKLDNN_VERSION_MAJOR < 1
-                        auto fmt = static_cast<mkldnn::memory::format>(input_md.data.format);
-                        if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
-                            !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
-                        {
-                            // Cannot pass through layout information for blocked layouts at the
-                            // moment
-                            set_native_layouts(external_function, node);
-                        }
-                        else
-                        {
-                            // reorder as default nchw layout
-                            if (fmt == mkldnn::memory::format::nhwc)
-                            {
-                                fmt = mkldnn::memory::format::nchw;
-                            }
-                            vector<memory::desc> o_mds;
-                            o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
-                                node.get(), 0, true, static_cast<memory::format>(fmt)));
-                            set_output_layouts(node, o_mds);
-                        }
-#else
                         auto fmt =
                             static_cast<mkldnn::memory::format_kind>(input_md.data.format_kind);
                         if (fmt == mkldnn::memory::format_kind::undef ||
@@ -1664,7 +1489,6 @@ namespace ngraph
                             }
                             set_output_layouts(node, o_mds);
                         }
-#endif
                     }
                     else
                     {
@@ -1782,11 +1606,7 @@ namespace ngraph
 
                         if (with_indices)
                         {
-#if MKLDNN_VERSION_MAJOR < 1
-                            i_mds.push_back(fwd_prim_desc.workspace_primitive_desc().desc());
-#else
                             i_mds.push_back(fwd_prim_desc.workspace_desc());
-#endif
                         }
                         else if (node->get_input_size() == 3)
                         {
@@ -1867,7 +1687,7 @@ namespace ngraph
                     (void)md;
                     auto axis_order = reshape->get_input_order();
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->get_output_shape(0);
                     if (input_shape.size() != output_shape.size())
                         return false;
 
@@ -1888,7 +1708,7 @@ namespace ngraph
                                             AxisVector& squeezed_axis)
                 {
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->get_output_shape(0);
 
                     if (input_shape.size() <= output_shape.size())
                         return false;
@@ -1924,7 +1744,7 @@ namespace ngraph
                                             AxisVector& expanded_axis)
                 {
                     auto input_shape = reshape->get_input_shape(0);
-                    auto output_shape = reshape->get_output_shape();
+                    auto output_shape = reshape->get_output_shape(0);
 
                     if (input_shape.size() >= output_shape.size())
                         return false;
@@ -1963,7 +1783,7 @@ namespace ngraph
                     {
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         auto input_shape = reshape->get_input_shape(0);
-                        auto output_shape = reshape->get_output_shape();
+                        auto output_shape = reshape->get_output_shape(0);
                         AxisVector squeezed_axis;
                         AxisVector expanded_axis;
 
@@ -2048,19 +1868,11 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::GetOutputElement)
                 {
-#if MKLDNN_VERSION_MAJOR < 1
-                    if (mkldnn_utils::get_input_mkldnn_md(node.get(), 0).data.format ==
-                        mkldnn_format_undef)
-                    {
-                        set_native_layouts(external_function, node);
-                    }
-#else
                     if (mkldnn_utils::get_input_mkldnn_md(node.get(), 0).data.format_kind ==
                         static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::undef))
                     {
                         set_native_layouts(external_function, node);
                     }
-#endif
                     else
                     {
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
@@ -2113,20 +1925,11 @@ namespace ngraph
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-#if MKLDNN_VERSION_MAJOR < 1
-                        auto kernel_layout = static_cast<memory::format>(kernel_md.data.format);
-                        if (!mkldnn_utils::is_mkldnn_blocked_data_format(kernel_layout))
-                        {
-                            // Propagate delta layout
-                            kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 1);
-                        }
-#else
                         if (!mkldnn_utils::is_mkldnn_desc_blocked_data_format(kernel_md))
                         {
                             // Propagate delta layout
                             kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 1);
                         }
-#endif
 
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
@@ -2270,20 +2073,11 @@ namespace ngraph
                         auto out2_md = mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 2, true, memory::FORMAT::x);
 
-#if MKLDNN_VERSION_MAJOR < 1
-                        auto kernel_layout = static_cast<memory::format>(kernel_md.data.format);
-                        if (!mkldnn_utils::is_mkldnn_blocked_data_format(kernel_layout))
-                        {
-                            // Propagate delta layout
-                            kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 5);
-                        }
-#else
                         if (!mkldnn_utils::is_mkldnn_desc_blocked_data_format(kernel_md))
                         {
                             // Propagate delta layout
                             kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 5);
                         }
-#endif
 
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
@@ -2319,39 +2113,6 @@ namespace ngraph
                         auto result_shape = slice->get_output_shape(0);
 
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-#if MKLDNN_VERSION_MAJOR < 1
-                        NGRAPH_DEBUG << "input memory format: " << input_md.data.format << "\n";
-                        auto result_format =
-                            static_cast<mkldnn::memory::format>(input_md.data.format);
-
-                        // check lower bounds and output shape
-                        for (auto i = 0; i < input_md.data.ndims; i++)
-                        {
-                            auto block_size = input_md.data.layout_desc.blocking.block_dims[i];
-                            if (block_size != 0 && (lower_bounds[i] % block_size != 0 ||
-                                                    result_shape[i] % block_size != 0))
-                            {
-                                NGRAPH_DEBUG << "slice: number of channels in lower bounds or "
-                                                "output shape is not multiple of block size, "
-                                                "set native layout\n";
-                                set_native_layouts(external_function, node);
-                                return;
-                            }
-                        }
-
-                        if (result_format == mkldnn::memory::blocked)
-                        {
-                            set_native_layouts(external_function, node);
-                        }
-                        else
-                        {
-                            vector<memory::desc> o_mds;
-                            auto result_desc = mkldnn_utils::create_default_mkldnn_md(
-                                node.get(), 0, true, result_format);
-                            o_mds.push_back(result_desc);
-                            set_output_layouts(node, o_mds);
-                        }
-#else
                         // TODO Do we need more cases?
                         mkldnn::memory::format_tag result_format =
                             mkldnn::memory::format_tag::undef;
@@ -2421,7 +2182,6 @@ namespace ngraph
                             o_mds.push_back(result_desc);
                             set_output_layouts(node, o_mds);
                         }
-#endif
                     }
                     else
                     {
@@ -2438,26 +2198,6 @@ namespace ngraph
                     auto concat_dim = concat->get_concatenation_axis();
                     auto result_desc = mkldnn_utils::create_default_mkldnn_md(
                         node.get(), 0, true, memory::FORMAT::any);
-#if MKLDNN_VERSION_MAJOR < 1
-                    std::vector<mkldnn::memory::primitive_desc> inputs_pd;
-                    for (size_t i = 0; i < node->get_input_size(); i++)
-                    {
-                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), i);
-                        inputs_pd.push_back(
-                            mkldnn::memory::primitive_desc(input_md, executor::global_cpu_engine));
-                    }
-                    try
-                    {
-                        auto prim_desc = concat::primitive_desc(
-                            result_desc, static_cast<int>(concat_dim), inputs_pd);
-
-                        for (size_t i = 0; i < node->get_input_size(); i++)
-                        {
-                            i_mds.push_back(inputs_pd[i].desc());
-                        }
-                        o_mds.push_back(prim_desc.dst_primitive_desc().desc());
-                    }
-#else
                     std::vector<mkldnn::memory::desc> inputs_desc;
                     for (size_t i = 0; i < node->get_input_size(); i++)
                     {
@@ -2473,7 +2213,6 @@ namespace ngraph
                                                                 executor::global_cpu_engine);
                         o_mds.push_back(prim_desc.dst_desc());
                     }
-#endif
                     catch (const mkldnn::error& e)
                     {
                         throw ngraph_error("setting layouts on Concat failed with MKLDNN error: " +
@@ -2554,16 +2293,10 @@ namespace ngraph
                     auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                     auto tv = node->get_output_tensor_ptr(0);
 
-#if MKLDNN_VERSION_MAJOR < 1
-                    if (input_md.data.format == mkldnn_blocked ||
-                        input_md.data.format == mkldnn_format_undef ||
-                        !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
-#else
                     if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(input_md) ||
                         input_md.data.format_kind ==
                             static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::undef) ||
                         !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
-#endif
 
                     {
                         // Cannot pass through layout information for blocked layouts at the moment
@@ -2572,13 +2305,6 @@ namespace ngraph
                     else
                     {
                         vector<memory::desc> o_mds;
-#if MKLDNN_VERSION_MAJOR < 1
-                        o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
-                            node.get(),
-                            0,
-                            true,
-                            static_cast<memory::format>(input_md.data.format)));
-#else
                         auto strides = input_md.data.format_desc.blocking.strides;
                         memory::dims strides_arg;
                         for (auto i = 0; i < input_md.data.ndims; i++)
@@ -2587,7 +2313,6 @@ namespace ngraph
                         }
                         o_mds.push_back(mkldnn_utils::create_default_mkldnn_md_with_strides(
                             node.get(), 0, strides_arg, true));
-#endif
                         set_output_layouts(node, o_mds);
                     }
                 }

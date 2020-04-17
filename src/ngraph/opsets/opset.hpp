@@ -32,6 +32,7 @@ namespace ngraph
         static std::mutex& get_mutex();
 
     public:
+        OpSet() {}
         std::set<NodeTypeInfo>::size_type size() const
         {
             std::lock_guard<std::mutex> guard(get_mutex());
@@ -45,7 +46,7 @@ namespace ngraph
             std::lock_guard<std::mutex> guard(get_mutex());
             m_op_types.insert(type_info);
             m_name_type_info_map[name] = type_info;
-            ngraph::FactoryRegistry<Node>::get().register_factory(type_info, factory);
+            m_factory_registry.register_factory(type_info, factory);
         }
 
         /// \brief Insert OP_TYPE into the opset with a special name and the default factory
@@ -88,17 +89,21 @@ namespace ngraph
         }
 
         /// \brief Return true if node's type is in the opset
-        bool contains_op_type(Node* node) const
+        bool contains_op_type(const Node* node) const
         {
             std::lock_guard<std::mutex> guard(get_mutex());
             return m_op_types.find(node->get_type_info()) != m_op_types.end();
         }
 
+        ngraph::FactoryRegistry<ngraph::Node>& get_factory_registry() { return m_factory_registry; }
     protected:
+        ngraph::FactoryRegistry<ngraph::Node> m_factory_registry;
         std::set<NodeTypeInfo> m_op_types;
         std::map<std::string, NodeTypeInfo> m_name_type_info_map;
     };
 
     const NGRAPH_API OpSet& get_opset0();
     const NGRAPH_API OpSet& get_opset1();
+    const NGRAPH_API OpSet& get_opset2();
+    const NGRAPH_API OpSet& get_opset3();
 }

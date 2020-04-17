@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <iterator>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -46,6 +47,16 @@ op::util::RNNCellBase::RNNCellBase(size_t hidden_size,
     , m_activations_alpha(activations_alpha)
     , m_activations_beta(activations_beta)
 {
+}
+
+bool ngraph::op::util::RNNCellBase::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("hidden_size", m_hidden_size);
+    visitor.on_attribute("activations", m_activations);
+    visitor.on_attribute("activations_alpha", m_activations_alpha);
+    visitor.on_attribute("activations_beta", m_activations_beta);
+    visitor.on_attribute("clip", m_clip);
+    return true;
 }
 
 op::util::ActivationFunction op::util::RNNCellBase::get_activation_function(size_t idx) const

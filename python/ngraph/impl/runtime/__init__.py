@@ -19,13 +19,14 @@ import sys
 import six
 
 # workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
-else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)
+if sys.platform != 'win32':
+    if six.PY3:
+        import os
+        flags = os.RTLD_NOW | os.RTLD_GLOBAL
+    else:
+        import ctypes
+        flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
+    sys.setdlopenflags(flags)
 
 from _pyngraph.runtime import Backend
 from _pyngraph.runtime import Executable

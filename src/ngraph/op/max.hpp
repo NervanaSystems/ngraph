@@ -48,7 +48,7 @@ namespace ngraph
                 Max(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The default value for Max.
                 virtual std::shared_ptr<Node> get_default_value() const override;
@@ -75,7 +75,7 @@ namespace ngraph
 
                 size_t get_version() const override { return 1; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
 

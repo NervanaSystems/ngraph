@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include "ngraph/op/fused/elu.hpp"
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/add.hpp"
@@ -37,6 +38,12 @@ op::Elu::Elu(const Output<Node>& data, const double alpha)
     constructor_validate_and_infer_types();
 }
 
+bool ngraph::op::v0::Elu::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("alpha", m_alpha);
+    return true;
+}
+
 NodeVector op::Elu::decompose_op() const
 {
     auto data = input_value(0);
@@ -54,7 +61,7 @@ NodeVector op::Elu::decompose_op() const
             alpha_node};
 }
 
-shared_ptr<Node> op::Elu::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Elu::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Elu>(new_args.at(0), m_alpha);

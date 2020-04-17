@@ -35,7 +35,6 @@ std::string ngraph::placement_to_string(Placement placement)
     case Placement::CPU: return "CPU";
     case Placement::GPU: return "GPU";
     case Placement::NNP: return "NNP";
-    case Placement::PLAIDML: return "PlaidML";
     }
     throw runtime_error("unhandled placement type");
 }
