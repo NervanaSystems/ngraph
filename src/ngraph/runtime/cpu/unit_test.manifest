@@ -28,5 +28,5 @@ rnn_fusion_1rnn_layer_3lstm_cell
 rnn_fusion_2rnn_layer_3lstm_cell
 
 #ONNX Flatten with dynamic reshape
-flatten_axis
-flatten_neg_axis
+onnx_dyn_shapes_flatten_axis
+onnx_dyn_shapes_flatten_neg_axis

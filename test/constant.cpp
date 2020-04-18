@@ -1192,3 +1192,175 @@ TEST(constant, convert_input)
     EXPECT_TRUE((test_convert<uint64_t, uint32_t>()));
     EXPECT_TRUE((test_convert<uint64_t, uint64_t>()));
 }
+
+template <typename T1, typename T2>
+::testing::AssertionResult test_uniform_ctor()
+{
+    Shape shape{5};
+    vector<T1> expected{3, 3, 3, 3, 3};
+    auto c1 = make_shared<op::Constant>(element::from<T2>(), shape, 3);
+    vector<T1> actual = c1->template cast_vector<T1>();
+    ::testing::AssertionResult rc =
+        (actual == expected ? ::testing::AssertionSuccess() : ::testing::AssertionFailure());
+    rc << "Construction of uniform Constant failed";
+    return rc;
+}
+
+TEST(constant, construct_uniform)
+{
+    EXPECT_TRUE((test_uniform_ctor<float, float>()));
+    EXPECT_TRUE((test_uniform_ctor<float, double>()));
+    EXPECT_TRUE((test_uniform_ctor<float, float16>()));
+    EXPECT_TRUE((test_uniform_ctor<float, bfloat16>()));
+    EXPECT_TRUE((test_uniform_ctor<float, int8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float, int16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float, int32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float, int64_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float, uint8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float, uint16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float, uint32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float, uint64_t>()));
+
+    EXPECT_TRUE((test_uniform_ctor<double, float>()));
+    EXPECT_TRUE((test_uniform_ctor<double, double>()));
+    EXPECT_TRUE((test_uniform_ctor<double, float16>()));
+    EXPECT_TRUE((test_uniform_ctor<double, bfloat16>()));
+    EXPECT_TRUE((test_uniform_ctor<double, int8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<double, int16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<double, int32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<double, int64_t>()));
+    EXPECT_TRUE((test_uniform_ctor<double, uint8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<double, uint16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<double, uint32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<double, uint64_t>()));
+
+    EXPECT_TRUE((test_uniform_ctor<float16, float>()));
+    EXPECT_TRUE((test_uniform_ctor<float16, double>()));
+    EXPECT_TRUE((test_uniform_ctor<float16, float16>()));
+    EXPECT_TRUE((test_uniform_ctor<float16, bfloat16>()));
+    EXPECT_TRUE((test_uniform_ctor<float16, int8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float16, int16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float16, int32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float16, int64_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float16, uint8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float16, uint16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float16, uint32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<float16, uint64_t>()));
+
+    EXPECT_TRUE((test_uniform_ctor<bfloat16, float>()));
+    EXPECT_TRUE((test_uniform_ctor<bfloat16, double>()));
+    EXPECT_TRUE((test_uniform_ctor<bfloat16, float16>()));
+    EXPECT_TRUE((test_uniform_ctor<bfloat16, bfloat16>()));
+    EXPECT_TRUE((test_uniform_ctor<bfloat16, int8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<bfloat16, int16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<bfloat16, int32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<bfloat16, int64_t>()));
+    EXPECT_TRUE((test_uniform_ctor<bfloat16, uint8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<bfloat16, uint16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<bfloat16, uint32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<bfloat16, uint64_t>()));
+
+    EXPECT_TRUE((test_uniform_ctor<int8_t, float>()));
+    EXPECT_TRUE((test_uniform_ctor<int8_t, double>()));
+    EXPECT_TRUE((test_uniform_ctor<int8_t, float16>()));
+    EXPECT_TRUE((test_uniform_ctor<int8_t, bfloat16>()));
+    EXPECT_TRUE((test_uniform_ctor<int8_t, int8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int8_t, int16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int8_t, int32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int8_t, int64_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int8_t, uint8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int8_t, uint16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int8_t, uint32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int8_t, uint64_t>()));
+
+    EXPECT_TRUE((test_uniform_ctor<int16_t, float>()));
+    EXPECT_TRUE((test_uniform_ctor<int16_t, double>()));
+    EXPECT_TRUE((test_uniform_ctor<int16_t, float16>()));
+    EXPECT_TRUE((test_uniform_ctor<int16_t, bfloat16>()));
+    EXPECT_TRUE((test_uniform_ctor<int16_t, int8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int16_t, int16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int16_t, int32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int16_t, int64_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int16_t, uint8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int16_t, uint16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int16_t, uint32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int16_t, uint64_t>()));
+
+    EXPECT_TRUE((test_uniform_ctor<int32_t, float>()));
+    EXPECT_TRUE((test_uniform_ctor<int32_t, double>()));
+    EXPECT_TRUE((test_uniform_ctor<int32_t, float16>()));
+    EXPECT_TRUE((test_uniform_ctor<int32_t, bfloat16>()));
+    EXPECT_TRUE((test_uniform_ctor<int32_t, int8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int32_t, int16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int32_t, int32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int32_t, int64_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int32_t, uint8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int32_t, uint16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int32_t, uint32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int32_t, uint64_t>()));
+
+    EXPECT_TRUE((test_uniform_ctor<int64_t, float>()));
+    EXPECT_TRUE((test_uniform_ctor<int64_t, double>()));
+    EXPECT_TRUE((test_uniform_ctor<int64_t, float16>()));
+    EXPECT_TRUE((test_uniform_ctor<int64_t, bfloat16>()));
+    EXPECT_TRUE((test_uniform_ctor<int64_t, int8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int64_t, int16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int64_t, int32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int64_t, int64_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int64_t, uint8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int64_t, uint16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int64_t, uint32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<int64_t, uint64_t>()));
+
+    EXPECT_TRUE((test_uniform_ctor<uint8_t, float>()));
+    EXPECT_TRUE((test_uniform_ctor<uint8_t, double>()));
+    EXPECT_TRUE((test_uniform_ctor<uint8_t, float16>()));
+    EXPECT_TRUE((test_uniform_ctor<uint8_t, bfloat16>()));
+    EXPECT_TRUE((test_uniform_ctor<uint8_t, int8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint8_t, int16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint8_t, int32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint8_t, int64_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint8_t, uint8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint8_t, uint16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint8_t, uint32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint8_t, uint64_t>()));
+
+    EXPECT_TRUE((test_uniform_ctor<uint16_t, float>()));
+    EXPECT_TRUE((test_uniform_ctor<uint16_t, double>()));
+    EXPECT_TRUE((test_uniform_ctor<uint16_t, float16>()));
+    EXPECT_TRUE((test_uniform_ctor<uint16_t, bfloat16>()));
+    EXPECT_TRUE((test_uniform_ctor<uint16_t, int8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint16_t, int16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint16_t, int32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint16_t, int64_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint16_t, uint8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint16_t, uint16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint16_t, uint32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint16_t, uint64_t>()));
+
+    EXPECT_TRUE((test_uniform_ctor<uint32_t, float>()));
+    EXPECT_TRUE((test_uniform_ctor<uint32_t, double>()));
+    EXPECT_TRUE((test_uniform_ctor<uint32_t, float16>()));
+    EXPECT_TRUE((test_uniform_ctor<uint32_t, bfloat16>()));
+    EXPECT_TRUE((test_uniform_ctor<uint32_t, int8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint32_t, int16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint32_t, int32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint32_t, int64_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint32_t, uint8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint32_t, uint16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint32_t, uint32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint32_t, uint64_t>()));
+
+    EXPECT_TRUE((test_uniform_ctor<uint64_t, float>()));
+    EXPECT_TRUE((test_uniform_ctor<uint64_t, double>()));
+    EXPECT_TRUE((test_uniform_ctor<uint64_t, float16>()));
+    EXPECT_TRUE((test_uniform_ctor<uint64_t, bfloat16>()));
+    EXPECT_TRUE((test_uniform_ctor<uint64_t, int8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint64_t, int16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint64_t, int32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint64_t, int64_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint64_t, uint8_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint64_t, uint16_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint64_t, uint32_t>()));
+    EXPECT_TRUE((test_uniform_ctor<uint64_t, uint64_t>()));
+}

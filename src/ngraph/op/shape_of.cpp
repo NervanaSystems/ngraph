@@ -14,24 +14,125 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/shape_of.hpp"
+#include <algorithm>
+#include <vector>
+
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/gather.hpp"
+#include "ngraph/op/shape_of.hpp"
 #include "ngraph/pass/constant_folding.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::ShapeOf::type_info;
+constexpr NodeTypeInfo op::v3::ShapeOf::type_info;
 
-op::ShapeOf::ShapeOf(const Output<Node>& arg)
+op::v3::ShapeOf::ShapeOf(const Output<Node>& arg, element::Type output_type)
+    : Op({arg})
+    , m_output_type(output_type)
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::v3::ShapeOf::validate_and_infer_types()
+{
+    NODE_VALIDATION_CHECK(this,
+                          m_output_type == element::i64 || m_output_type == element::i32,
+                          "Output type must be i32 or i64");
+    set_input_is_relevant_to_value(0, false);
+    set_output_type(0, m_output_type, PartialShape{get_input_partial_shape(0).rank()});
+}
+
+bool ngraph::op::v3::ShapeOf::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("output_type", m_output_type);
+    return true;
+}
+
+shared_ptr<Node> op::v3::ShapeOf::clone_with_new_inputs(const OutputVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    auto new_shape_of = make_shared<op::v3::ShapeOf>(new_args.at(0), m_output_type);
+    new_shape_of->set_is_foldable(m_is_foldable);
+    return new_shape_of;
+}
+
+namespace
+{
+    OutputVector constant_fold_shape_of(const std::shared_ptr<Node>& shape_of_node,
+                                        element::Type output_type,
+                                        bool is_foldable)
+    {
+        auto shape_of_input = shape_of_node->input_value(0);
+        auto partial_shape = shape_of_input.get_partial_shape();
+        OutputVector replacements;
+        if (partial_shape.is_static())
+        {
+            NGRAPH_CHECK(pass::revalidate_and_ensure_static(shape_of_node));
+            auto arg_shape = shape_of_input.get_shape();
+            replacements = OutputVector{std::make_shared<op::v0::Constant>(
+                output_type, Shape{arg_shape.size()}, arg_shape)};
+        }
+        else if (partial_shape.rank().is_static() && is_foldable)
+        {
+            auto shape_of = shape_of_node->copy_with_new_inputs({shape_of_input});
+            // Ugly
+            if (auto ps = as_type_ptr<op::v0::ShapeOf>(shape_of))
+            {
+                ps->set_is_foldable(false);
+            }
+            else if (auto ps = as_type_ptr<op::v3::ShapeOf>(shape_of))
+            {
+                ps->set_is_foldable(false);
+            }
+            auto dimensions = OutputVector{};
+            auto output_dimensions = vector<Dimension>(partial_shape);
+            for (int64_t i = 0; i < output_dimensions.size(); ++i)
+            {
+                if (output_dimensions[i].is_static())
+                {
+                    auto temp = std::make_shared<op::v0::Constant>(
+                        output_type,
+                        Shape{1},
+                        std::vector<int64_t>{output_dimensions[i].get_length()});
+                    temp->set_friendly_name("ConstDim/" + temp->get_name());
+                    dimensions.push_back(temp);
+                }
+                else
+                {
+                    auto index = std::make_shared<op::v0::Constant>(
+                        output_type, Shape{1}, std::vector<int64_t>{i});
+                    auto axis = std::make_shared<op::v0::Constant>(
+                        element::i64, Shape{}, std::vector<int64_t>{0});
+                    auto temp = make_shared<op::v1::Gather>(shape_of, index, axis);
+                    temp->set_friendly_name("DynDim/" + temp->get_name());
+                    dimensions.push_back(temp);
+                }
+            }
+
+            replacements = OutputVector{std::make_shared<op::Concat>(dimensions, 0)};
+        }
+        return replacements;
+    }
+}
+
+OutputVector op::v3::ShapeOf::constant_fold()
+{
+    return constant_fold_shape_of(shared_from_this(), m_output_type, m_is_foldable);
+}
+
+// op::v0::ShapeOf
+constexpr NodeTypeInfo op::v0::ShapeOf::type_info;
+
+op::v0::ShapeOf::ShapeOf(const Output<Node>& arg)
     : Op({arg})
 {
     constructor_validate_and_infer_types();
 }
 
-void op::ShapeOf::validate_and_infer_types()
+void op::v0::ShapeOf::validate_and_infer_types()
 {
     set_input_is_relevant_to_value(0, false);
     set_output_type(0, element::i64, PartialShape{get_input_partial_shape(0).rank()});
@@ -42,54 +143,15 @@ bool ngraph::op::v0::ShapeOf::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::ShapeOf::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::ShapeOf::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    auto new_shape_of = make_shared<ShapeOf>(new_args.at(0));
+    auto new_shape_of = make_shared<op::v0::ShapeOf>(new_args.at(0));
     new_shape_of->set_is_foldable(m_is_foldable);
     return new_shape_of;
 }
 
-OutputVector op::ShapeOf::constant_fold()
+OutputVector op::v0::ShapeOf::constant_fold()
 {
-    auto arg_match = input_value(0);
-    auto partial_shape = arg_match.get_partial_shape();
-    OutputVector replacements;
-    if (partial_shape.is_static())
-    {
-        NGRAPH_CHECK(pass::revalidate_and_ensure_static(shared_from_this()));
-        auto arg_shape = arg_match.get_shape();
-        replacements = OutputVector{
-            make_shared<op::Constant>(element::i64, Shape{arg_shape.size()}, arg_shape.data())};
-    }
-    else if (partial_shape.rank().is_static() && m_is_foldable)
-    {
-        auto shape_of = make_shared<op::ShapeOf>(arg_match);
-        shape_of->set_is_foldable(false);
-        auto dimensions = OutputVector{};
-        auto output_dimensions = vector<Dimension>(partial_shape);
-        for (size_t i = 0; i < output_dimensions.size(); ++i)
-        {
-            if (output_dimensions[i].is_static())
-            {
-                auto temp =
-                    op::Constant::create(element::i64,
-                                         Shape{1},
-                                         {static_cast<int64_t>(output_dimensions[i].get_length())});
-                temp->set_friendly_name("ConstDim/" + temp->get_name());
-                dimensions.push_back(temp);
-            }
-            else
-            {
-                auto index = op::Constant::create(element::i64, Shape{1}, {i});
-                auto axis = op::Constant::create(element::i64, Shape{}, {0});
-                auto temp = make_shared<op::v1::Gather>(shape_of, index, axis);
-                temp->set_friendly_name("DynDim/" + temp->get_name());
-                dimensions.push_back(temp);
-            }
-        }
-
-        replacements = OutputVector{std::make_shared<op::Concat>(dimensions, 0)};
-    }
-    return replacements;
+    return constant_fold_shape_of(shared_from_this(), element::i64, m_is_foldable);
 }
