@@ -64,21 +64,18 @@ shared_ptr<Node> op::v3::ShapeOf::clone_with_new_inputs(const OutputVector& new_
 namespace
 {
     template <element::Type_t ET>
-    inline bool evaluate_shape_of(const Shape& shape, const EvaluatorTensorPtr& output_value)
+    inline bool try_evaluate_shape_of(const Shape& shape, const EvaluatorTensorPtr& output_value)
     {
         return (ET == output_value->get_element_type()) &&
                (runtime::reference::shape_of(shape, output_value->get_ptr<ET>()), true);
     }
 
-    void evaluate_shape_of(const EvaluatorTensorPtr& output_value,
+    bool evaluate_shape_of(const EvaluatorTensorPtr& output_value,
                            const EvaluatorTensorPtr& input_value)
     {
         Shape shape = input_value->get_shape();
-        if (!(evaluate_shape_of<element::Type_t::i32>(shape, output_value) ||
-              evaluate_shape_of<element::Type_t::i64>(shape, output_value)))
-        {
-            NGRAPH_CHECK(false, "Invalid element type: ", output_value->get_element_type());
-        }
+        return try_evaluate_shape_of<element::Type_t::i32>(shape, output_value) ||
+               try_evaluate_shape_of<element::Type_t::i64>(shape, output_value);
     }
 
     bool constant_fold_shape_of(Node* shape_of_node,
@@ -147,12 +144,7 @@ namespace
 bool op::v3::ShapeOf::evaluate(const EvaluatorTensorVector& output_values,
                                const EvaluatorTensorVector& input_values)
 {
-    if (input_values[0]->get_partial_shape().is_static())
-    {
-        evaluate_shape_of(output_values[0], input_values[0]);
-        return true;
-    }
-    return false;
+    return evaluate_shape_of(output_values[0], input_values[0]);
 }
 
 bool op::v3::ShapeOf::constant_fold(OutputVector& output_values, const OutputVector& input_values)
@@ -191,12 +183,7 @@ shared_ptr<Node> op::v0::ShapeOf::clone_with_new_inputs(const OutputVector& new_
 bool op::v0::ShapeOf::evaluate(const EvaluatorTensorVector& output_values,
                                const EvaluatorTensorVector& input_values)
 {
-    if (input_values[0]->get_partial_shape().is_static())
-    {
-        evaluate_shape_of(output_values[0], input_values[0]);
-        return true;
-    }
-    return false;
+    return evaluate_shape_of(output_values[0], input_values[0]);
 }
 
 bool op::v0::ShapeOf::constant_fold(OutputVector& output_values, const OutputVector& input_values)

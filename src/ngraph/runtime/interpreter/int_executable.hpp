@@ -226,17 +226,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::Add:
-        {
-            const op::Add* add = static_cast<const op::Add*>(&node);
-            reference::add<T>(args[0]->get_data_ptr<const T>(),
-                              args[1]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_input_shape(1),
-                              add->get_autob());
-            break;
-        }
         case OP_TYPEID::All:
         {
             const op::All* all = static_cast<const op::All*>(&node);
@@ -1871,6 +1860,7 @@ protected:
         case OP_TYPEID::TensorIterator:
         case OP_TYPEID::UnknownOp:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
+        case OP_TYPEID::Add:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShapeOf_v3:
         case OP_TYPEID::Softmax: NGRAPH_CHECK(false, "Op not handled by evaluator method:", node);
