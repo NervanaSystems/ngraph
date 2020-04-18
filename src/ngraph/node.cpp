@@ -25,6 +25,7 @@
 #include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -1112,6 +1113,41 @@ bool Node::evaluate(const EvaluatorTensorVector& output_values,
 
 bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_values)
 {
+    // If all the inputs are constants, try to evaluate the outputs
+    EvaluatorTensorVector input_tensors;
+    for (auto input : input_values)
+    {
+        if (auto constant = as_type_ptr<op::v0::Constant>(input.get_node_shared_ptr()))
+        {
+            input_tensors.push_back(constant->get_evaluator_tensor(0));
+        }
+        else
+        {
+            return false;
+        }
+    }
+    EvaluatorTensorVector output_tensors;
+    OutputVector output_constants;
+    for (auto output : outputs())
+    {
+        auto element_type = output.get_element_type();
+        auto partial_shape = output.get_partial_shape();
+        if (partial_shape.is_dynamic() || element_type.is_dynamic())
+        {
+            return false;
+        }
+        auto constant = make_shared<op::v0::Constant>(element_type, partial_shape.get_shape());
+        // Would be better to auto-create when getting the pointer so we only allocate if we're
+        // going to evaluate
+        constant->allocate_buffer();
+        output_constants.push_back(constant);
+        output_tensors.push_back(constant->get_evaluator_tensor(0));
+    }
+    if (evaluate(output_tensors, input_tensors))
+    {
+        swap(output_values, output_constants);
+        return true;
+    }
     return false;
 }
 

@@ -340,33 +340,7 @@ shared_ptr<op::Constant> fold_constant_binary_arithmetic(shared_ptr<op::Constant
     }
     else
     {
-        if (auto add_v0_node = as_type_ptr<op::v0::Add>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            runtime::reference::add<Tin>(a->get_data_ptr<Tin>(),
-                                         b->get_data_ptr<Tin>(),
-                                         data_ptr,
-                                         a->get_shape(),
-                                         b->get_shape(),
-                                         add_v0_node->get_autob());
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else if (auto add_v1_node = as_type_ptr<op::v1::Add>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            runtime::reference::add<Tin>(a->get_data_ptr<Tin>(),
-                                         b->get_data_ptr<Tin>(),
-                                         data_ptr,
-                                         a->get_shape(),
-                                         b->get_shape(),
-                                         add_v1_node->get_autob());
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else if (auto divide_v0_node = as_type_ptr<op::v0::Divide>(binary))
+        if (auto divide_v0_node = as_type_ptr<op::v0::Divide>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
@@ -561,20 +535,20 @@ shared_ptr<op::Constant> fold_constant_binary_helper(shared_ptr<op::Constant> a,
 
 bool is_supported_binary_op(std::shared_ptr<Node> n)
 {
-    return (
-        is_type<op::v0::Add>(n) || is_type<op::v1::Add>(n) || is_type<op::v0::Multiply>(n) ||
-        is_type<op::v1::Multiply>(n) || is_type<op::v0::Divide>(n) || is_type<op::v1::Divide>(n) ||
-        is_type<op::v0::Power>(n) || is_type<op::v1::Power>(n) || is_type<op::v0::Equal>(n) ||
-        is_type<op::v1::Equal>(n) || is_type<op::v0::NotEqual>(n) || is_type<op::v1::NotEqual>(n) ||
-        is_type<op::v0::Greater>(n) || is_type<op::v1::Greater>(n) ||
-        is_type<op::v0::GreaterEq>(n) || is_type<op::v1::GreaterEqual>(n) ||
-        is_type<op::v0::Less>(n) || is_type<op::v1::Less>(n) || is_type<op::v0::LessEq>(n) ||
-        is_type<op::v1::LessEqual>(n) || is_type<op::v0::Maximum>(n) ||
-        is_type<op::v1::Maximum>(n) || is_type<op::v0::Minimum>(n) || is_type<op::v1::Minimum>(n) ||
-        is_type<op::v0::And>(n) || is_type<op::v1::LogicalAnd>(n) || is_type<op::v0::Or>(n) ||
-        is_type<op::v1::LogicalOr>(n) || is_type<op::v0::Xor>(n) ||
-        is_type<op::v1::LogicalXor>(n) || is_type<op::v0::Subtract>(n) ||
-        is_type<op::v1::Subtract>(n));
+    return (is_type<op::v0::Multiply>(n) || is_type<op::v1::Multiply>(n) ||
+            is_type<op::v0::Divide>(n) || is_type<op::v1::Divide>(n) || is_type<op::v0::Power>(n) ||
+            is_type<op::v1::Power>(n) || is_type<op::v0::Equal>(n) || is_type<op::v1::Equal>(n) ||
+            is_type<op::v0::NotEqual>(n) || is_type<op::v1::NotEqual>(n) ||
+            is_type<op::v0::Greater>(n) || is_type<op::v1::Greater>(n) ||
+            is_type<op::v0::GreaterEq>(n) || is_type<op::v1::GreaterEqual>(n) ||
+            is_type<op::v0::Less>(n) || is_type<op::v1::Less>(n) || is_type<op::v0::LessEq>(n) ||
+            is_type<op::v1::LessEqual>(n) || is_type<op::v0::Maximum>(n) ||
+            is_type<op::v1::Maximum>(n) || is_type<op::v0::Minimum>(n) ||
+            is_type<op::v1::Minimum>(n) || is_type<op::v0::And>(n) ||
+            is_type<op::v1::LogicalAnd>(n) || is_type<op::v0::Or>(n) ||
+            is_type<op::v1::LogicalOr>(n) || is_type<op::v0::Xor>(n) ||
+            is_type<op::v1::LogicalXor>(n) || is_type<op::v0::Subtract>(n) ||
+            is_type<op::v1::Subtract>(n));
 }
 
 void pass::ConstantFolding::construct_constant_binary()
