@@ -98,13 +98,11 @@ import numpy as np
 a = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]], dtype=np.int32)
 b = np.array([[3, 3, 3], [2, 2, 2], [1, 1, 1]], dtype=np.int32)
 c = a + b
-result = c.flatten();
     )",
              py::globals(),
              locals);
 
-    auto sum = locals["result"].cast<py::array_t<int32_t>>();
-    auto buf = sum.request();
+    auto buf = locals["c"].cast<py::array_t<int32_t>>().request();
     vector<int32_t> n_result;
     n_result.assign((int32_t*)buf.ptr, (int32_t*)buf.ptr + buf.size);
     EXPECT_TRUE(test::all_close(read_vector<int32_t>(t_result), n_result));
