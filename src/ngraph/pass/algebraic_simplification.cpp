@@ -503,8 +503,12 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
 {
     auto shapeof = as_type_ptr<op::v0::ShapeOf>(node);
     auto gather = as_type_ptr<op::v1::Gather>(shapeof->input_value(0).get_node_shared_ptr());
+    if (!gather)
+    {
+        return false;
+    }
     auto indices = as_type_ptr<op::Constant>(gather->input_value(1).get_node_shared_ptr());
-    if (!gather || !indices || indices->get_shape() != Shape{} ||
+    if (!indices || indices->get_shape() != Shape{} ||
         gather->get_axis() == std::numeric_limits<int64_t>::max())
     {
         NGRAPH_DEBUG << gather << " cannot simplify shapeof->gather";
