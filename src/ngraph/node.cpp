@@ -22,6 +22,7 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
+#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -1101,4 +1102,33 @@ vector<Output<const Node>> Node::outputs() const
     }
 
     return result;
+}
+
+bool Node::evaluate(EvaluatorTensorVector& output_values, const EvaluatorTensorVector& input_values)
+{
+    return false;
+}
+
+bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_values)
+{
+    return false;
+}
+
+namespace
+{
+    class NullEvaluatorTensor : public EvaluatorTensor
+    {
+    public:
+        NullEvaluatorTensor(const ngraph::Output<ngraph::Node>& value)
+            : EvaluatorTensor(value)
+        {
+        }
+
+        virtual void* get_data_ptr() override { return nullptr; }
+    };
+}
+
+EvaluatorTensorPtr Node::get_evaluator_tensor(size_t index)
+{
+    return make_shared<NullEvaluatorTensor>(output(index));
 }

@@ -19,6 +19,7 @@
 #include <cstring>
 
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -104,6 +105,8 @@ namespace ngraph
 
         /// \brief Replace all users of this value with replacement
         void replace(const Output<Node>& replacement);
+
+        EvaluatorTensorPtr get_evaluator_tensor() const;
 
         bool operator==(const Output& other) const;
         bool operator!=(const Output& other) const;

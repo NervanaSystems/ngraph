@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#pragma once
+
 #include <map>
 #include <stack>
 #include <utility>

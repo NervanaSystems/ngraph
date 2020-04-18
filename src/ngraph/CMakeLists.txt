@@ -88,6 +88,8 @@ set (SRC
     env_util.cpp
     env_util.hpp
     evaluator.hpp
+    evaluator_tensor.cpp
+    evaluator_tensor.hpp
     except.hpp
     factory.cpp
     factory.hpp

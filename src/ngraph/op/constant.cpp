@@ -17,6 +17,7 @@
 #include <cmath>
 #include <cstdio>
 
+#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/util.hpp"
@@ -285,6 +286,22 @@ op::Constant::Constant(const element::Type& type,
         }
         m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
     }
+}
+
+op::Constant::Constant(const element::Type& type, const Shape& shape)
+    : m_element_type(type)
+    , m_shape(shape)
+    , m_data(nullptr)
+{
+    constructor_validate_and_infer_types();
+}
+
+void* op::Constant::allocate_buffer()
+{
+    m_data = make_shared<runtime::AlignedBuffer>(shape_size(m_shape) * m_element_type.size(),
+                                                 host_alignment());
+
+    return m_data->get_ptr();
 }
 
 op::Constant::Constant(const element::Type& type, const Shape& shape, const void* data)
@@ -596,6 +613,27 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
 #pragma GCC diagnostic pop
 #endif
     return rc;
+}
+
+namespace
+{
+    class ConstantEvaluatorTensor : public EvaluatorTensor
+    {
+    public:
+        ConstantEvaluatorTensor(const std::shared_ptr<Node>& constant, void* data_ptr)
+            : EvaluatorTensor(constant->output(0))
+            , m_data_ptr(data_ptr)
+        {
+        }
+        virtual void* get_data_ptr() override { return m_data_ptr; }
+        std::shared_ptr<Node> m_constant;
+        void* m_data_ptr;
+    };
+}
+
+EvaluatorTensorPtr op::Constant::get_evaluator_tensor(size_t index)
+{
+    return make_shared<ConstantEvaluatorTensor>(shared_from_this(), m_data->get_ptr());
 }
 
 constexpr NodeTypeInfo op::ScalarConstantLike::type_info;

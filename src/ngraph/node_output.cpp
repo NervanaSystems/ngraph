@@ -137,6 +137,15 @@ namespace ngraph
         }
     }
 
+    EvaluatorTensorPtr Output<Node>::get_evaluator_tensor() const
+    {
+        if (m_node)
+        {
+            return m_node->get_evaluator_tensor(m_index);
+        }
+        return nullptr;
+    }
+
     Output<const Node>::Output(const Node* node, size_t index)
         : m_node(node->shared_from_this())
         , m_index(index)

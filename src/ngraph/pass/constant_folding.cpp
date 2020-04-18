@@ -36,8 +36,8 @@ void ngraph::pass::ConstantFolding::construct_constant_default()
 {
     add_handler("Constant folding defaults",
                 [](const std::shared_ptr<Node>& node) -> bool {
-                    OutputVector replacements = node->evaluate(node->input_values());
-                    if (replacements.empty())
+                    OutputVector replacements(node->get_output_size());
+                    if (!node->constant_fold(replacements, node->input_values()))
                     {
                         return false;
                     }

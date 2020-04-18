@@ -995,13 +995,63 @@ pair<bool, int64_t> ngraph::maximum_value(const Output<Node>& value)
     return pair<bool, int64_t>(false, 0);
 }
 
+void ngraph::evaluate_nodes(std::map<RawNodeOutput, EvaluatorTensorPtr>& value_map,
+                            const OutputVector& values)
+{
+    Evaluator<EvaluatorTensorPtr> evaluator({}, value_map);
+    evaluator.set_univeral_handler(
+        [](Node* node, const EvaluatorTensorVector& input_tensors) -> EvaluatorTensorVector {
+            EvaluatorTensorVector output_tensors;
+            for (auto v : node->outputs())
+            {
+                // For now, use Constant to hold the tensors
+                auto c = make_shared<op::v0::Constant>(v.get_element_type(), v.get_shape());
+                c->allocate_buffer();
+                output_tensors.push_back(c->get_evaluator_tensor(0));
+            }
+            if (node->evaluate(output_tensors, input_tensors))
+            {
+                return output_tensors;
+            }
+            else
+            {
+                return {};
+            }
+        });
+    for (auto value : values)
+    {
+        evaluator.evaluate(value);
+    }
+}
+
 void ngraph::evaluate_nodes(std::map<RawNodeOutput, Output<Node>>& value_map,
                             const OutputVector& values)
 {
     Evaluator<Output<Node>> evaluator({}, value_map);
     evaluator.set_univeral_handler(
         [](Node* node, const OutputVector& input_values) -> OutputVector {
-            return node->evaluate(input_values);
+            EvaluatorTensorVector input_tensors;
+            for (auto v : input_values)
+            {
+                input_tensors.push_back(v.get_evaluator_tensor());
+            }
+            OutputVector output_values;
+            EvaluatorTensorVector output_tensors;
+            for (auto v : node->outputs())
+            {
+                auto c = make_shared<op::Constant>(v.get_element_type(), v.get_shape());
+                c->allocate_buffer();
+                output_values.push_back(c);
+                output_tensors.push_back(c->get_evaluator_tensor(0));
+            }
+            if (node->evaluate(output_tensors, input_tensors))
+            {
+                return output_values;
+            }
+            else
+            {
+                return {};
+            }
         });
     for (auto value : values)
     {

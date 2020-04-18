@@ -76,6 +76,11 @@ namespace ngraph
                     m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
                 }
 
+                /// \brief Create unitialized constant
+                Constant(const element::Type& type, const Shape& shape);
+                /// \brief Allocate a buffer and return a pointer to it
+                void* allocate_buffer();
+
                 /// \brief Constructs a tensor constant
                 ///        This constructor is mainly to support deserialization of constants.
                 ///
@@ -168,6 +173,8 @@ namespace ngraph
 
                 /// \return The initialization literals for the tensor constant.
                 std::vector<std::string> get_value_strings() const;
+
+                EvaluatorTensorPtr get_evaluator_tensor(size_t index) override;
 
                 template <typename T>
                 std::vector<T> get_vector() const
@@ -409,7 +416,7 @@ namespace ngraph
                 /// \param value The value of the scalar.
                 template <typename T>
                 ScalarConstantLike(const Output<Node>& like, T value)
-                    : Constant({like})
+                    : Constant(OutputVector{like})
                     , m_value(static_cast<double>(value))
                 {
                     constructor_validate_and_infer_types();

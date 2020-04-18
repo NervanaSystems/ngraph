@@ -19,6 +19,7 @@
 
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
+#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
 
@@ -116,4 +117,25 @@ void runtime::HostTensor::read(void* target, size_t n) const
     }
     const char* source = get_data_ptr();
     memcpy(target, source, n);
+}
+
+namespace
+{
+    class HostTensorEvaluatorTensor : public EvaluatorTensor
+    {
+    public:
+        HostTensorEvaluatorTensor(runtime::HostTensor& host_tensor)
+            : EvaluatorTensor(host_tensor.get_element_type(), host_tensor.get_partial_shape())
+            , m_host_tensor(host_tensor)
+        {
+        }
+        void* get_data_ptr() override { return m_host_tensor.get_data_ptr(); }
+    private:
+        runtime::HostTensor& m_host_tensor;
+    };
+}
+
+EvaluatorTensorPtr runtime::HostTensor::get_evaluator_tensor()
+{
+    return make_shared<HostTensorEvaluatorTensor>(*this);
 }

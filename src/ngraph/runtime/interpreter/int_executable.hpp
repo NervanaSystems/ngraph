@@ -1680,23 +1680,6 @@ protected:
             memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
             break;
         }
-        case OP_TYPEID::ShapeOf:
-        {
-            reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint64_t>());
-            break;
-        }
-        case OP_TYPEID::ShapeOf_v3:
-        {
-            if (node.get_output_element_type(0) == element::i64)
-            {
-                reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint64_t>());
-            }
-            else if (node.get_output_element_type(0) == element::i32)
-            {
-                reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint32_t>());
-            }
-            break;
-        }
         case OP_TYPEID::Sigmoid:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1897,6 +1880,9 @@ protected:
         case OP_TYPEID::TensorIterator:
         case OP_TYPEID::UnknownOp:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
+        case OP_TYPEID::ShapeOf:
+        case OP_TYPEID::ShapeOf_v3:
+            NGRAPH_CHECK(false, "Op not handled by evaluator method:", node);
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif

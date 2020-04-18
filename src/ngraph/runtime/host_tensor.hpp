@@ -69,6 +69,9 @@ public:
     /// \param n Number of bytes to read, must be integral number of elements.
     void read(void* p, size_t n) const override;
 
+    /// \brief Get an evaluator tensor that uses this host tensor for data
+    EvaluatorTensorPtr get_evaluator_tensor();
+
 private:
     HostTensor(const HostTensor&) = delete;
     HostTensor(HostTensor&&) = delete;
