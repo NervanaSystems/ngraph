@@ -80,6 +80,102 @@ namespace ngraph
                 Constant(const element::Type& type, const Shape& shape);
                 /// \brief Allocate a buffer and return a pointer to it
                 void* allocate_buffer();
+                /// \brief Constructs a uniform tensor constant.
+                ///
+                /// \param type The element type of the tensor constant.
+                /// \param shape The shape of the tensor constant.
+                /// \param value A scalar for initializing the uniform tensor constant. The
+                ///               value is broadcast to the specified shape.
+                template <class T,
+                          class = typename std::enable_if<std::is_fundamental<T>::value>::type>
+                Constant(const element::Type& type, Shape shape, T value)
+                    : m_element_type(type)
+                    , m_shape(shape)
+                    , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
+                                                        host_alignment()))
+                {
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
+                    switch (type)
+                    {
+                    case element::Type_t::boolean:
+                        std::fill_n(static_cast<char*>(m_data->get_ptr()),
+                                    shape_size(m_shape),
+                                    static_cast<char>(value));
+                        break;
+                    case element::Type_t::bf16:
+                        std::fill_n(static_cast<bfloat16*>(m_data->get_ptr()),
+                                    shape_size(m_shape),
+                                    static_cast<bfloat16>(value));
+                        break;
+                    case element::Type_t::f16:
+                        std::fill_n(static_cast<float16*>(m_data->get_ptr()),
+                                    shape_size(m_shape),
+                                    static_cast<float16>(value));
+                        break;
+                    case element::Type_t::f32:
+                        std::fill_n(static_cast<float*>(m_data->get_ptr()),
+                                    shape_size(m_shape),
+                                    static_cast<float>(value));
+                        break;
+                    case element::Type_t::f64:
+                        std::fill_n(static_cast<double*>(m_data->get_ptr()),
+                                    shape_size(m_shape),
+                                    static_cast<double>(value));
+                        break;
+                    case element::Type_t::i8:
+                        std::fill_n(static_cast<int8_t*>(m_data->get_ptr()),
+                                    shape_size(m_shape),
+                                    static_cast<int8_t>(value));
+                        break;
+                    case element::Type_t::i16:
+                        std::fill_n(static_cast<int16_t*>(m_data->get_ptr()),
+                                    shape_size(m_shape),
+                                    static_cast<int16_t>(value));
+                        break;
+                    case element::Type_t::i32:
+                        std::fill_n(static_cast<int32_t*>(m_data->get_ptr()),
+                                    shape_size(m_shape),
+                                    static_cast<int32_t>(value));
+                        break;
+                    case element::Type_t::i64:
+                        std::fill_n(static_cast<int64_t*>(m_data->get_ptr()),
+                                    shape_size(m_shape),
+                                    static_cast<int64_t>(value));
+                        break;
+                    case element::Type_t::u8:
+                        std::fill_n(static_cast<uint8_t*>(m_data->get_ptr()),
+                                    shape_size(m_shape),
+                                    static_cast<uint8_t>(value));
+                        break;
+                    case element::Type_t::u16:
+                        std::fill_n(static_cast<uint16_t*>(m_data->get_ptr()),
+                                    shape_size(m_shape),
+                                    static_cast<uint16_t>(value));
+                        break;
+                    case element::Type_t::u32:
+                        std::fill_n(static_cast<uint32_t*>(m_data->get_ptr()),
+                                    shape_size(m_shape),
+                                    static_cast<uint32_t>(value));
+                        break;
+                    case element::Type_t::u64:
+                        std::fill_n(static_cast<uint64_t*>(m_data->get_ptr()),
+                                    shape_size(m_shape),
+                                    static_cast<uint64_t>(value));
+                        break;
+                    case element::Type_t::u1: throw std::runtime_error("unsupported type");
+                    case element::Type_t::undefined: throw std::runtime_error("unsupported type");
+                    case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
+                    }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
+                    constructor_validate_and_infer_types();
+                    m_all_elements_bitwise_identical = true;
+                }
 
                 /// \brief Constructs a tensor constant
                 ///        This constructor is mainly to support deserialization of constants.
