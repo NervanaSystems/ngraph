@@ -53,7 +53,6 @@ set(SRC
     check.cpp
     constant.cpp
     constant_folding.cpp
-    concat_fusion.cpp
     control_dependencies.cpp
     convert_u1_to_string.cpp
     coordinate.cpp
@@ -67,6 +66,7 @@ set(SRC
     float16.cpp
     includes.cpp
     input_output_assign.cpp
+    intervals.cpp
     main.cpp
     misc.cpp
     ngraph_api.cpp
@@ -179,6 +179,7 @@ set(SRC
     type_prop/scatter_add.cpp
     type_prop/scatter_elements_update.cpp
     type_prop/scatter_nd.cpp
+    type_prop/scatter_update.cpp
     type_prop/select.cpp
     type_prop/shape_of.cpp
     type_prop/shuffle_channels.cpp
@@ -202,6 +203,12 @@ set(SRC
     util.cpp
     zero_dim_tensor_elimination.cpp
 )
+
+if(NGRAPH_INTERPRETER_ENABLE)
+    list(APPEND SRC
+        concat_fusion.cpp
+    )
+endif()
 
 # This code generates one source file per header file under ngraph/src where the source file
 # has just a single #include statement. This checks that each header in the source tree is
@@ -275,10 +282,6 @@ if(NGRAPH_GPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
 endif()
 
-if (NGRAPH_PLAIDML_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
-endif()
-
 if (NGRAPH_GENERIC_CPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
 endif()
@@ -314,6 +317,7 @@ set(MULTI_TEST_SRC
     backend/batch_norm.in.cpp
     backend/broadcast.in.cpp
     backend/builder_flatten.in.cpp
+    backend/builder_reduce_ops_opset1.in.cpp
     backend/ceiling.in.cpp
     backend/comparison.in.cpp
     backend/computation_reuse.in.cpp
@@ -524,6 +528,7 @@ endif()
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND MULTI_TEST_SRC
             onnx/onnx_import.in.cpp
+            onnx/onnx_import_const_folding.in.cpp
             onnx/onnx_import_convpool.in.cpp
             onnx/onnx_import_dyn_shapes.in.cpp
             onnx/onnx_import_provenance.in.cpp
@@ -546,23 +551,16 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
 
     string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
     string(REGEX REPLACE "([a-z0-9]+):(.*)" "\\1" BACKEND_DIR ${BACKEND_DIR})
-    set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+    if (EXISTS ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+        set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+    elseif(EXISTS ${PROJECT_SOURCE_DIR}/src/runtime/${BACKEND_DIR}/unit_test.manifest)
+        set(MANIFEST ${PROJECT_SOURCE_DIR}/src/runtime/${BACKEND_DIR}/unit_test.manifest)
+    endif()
 
     foreach(TEST_SRC ${MULTI_TEST_SRC})
-        set(BACKEND_DEVICE_NAME ${BACKEND_NAME})
-        string(REPLACE ":" "_" BACKEND_NAME ${BACKEND_DEVICE_NAME})
+        string(REPLACE ":" "_" BACKEND_NAME ${BACKEND_NAME})
         string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
-
-        # Do a custom configure
-        # This is like cmake configure but for a backend named INTERPRETER_TEST we replace
-        #    "${BACKEND_NAME}" with "INTERPRETER:TEST"
-        #    ${BACKEND_NAME} with INTERPRETER_TEST
-        # pay close attention to the quotes around the strings above as that is the literal replacement
-        file(READ ${TEST_SRC} FILE_CONTENTS_TMP)
-        string(REPLACE "\"\${BACKEND_NAME}\"" "\"${BACKEND_DEVICE_NAME}\"" FILE_CONTENTS_TMP "${FILE_CONTENTS_TMP}")
-        string(CONFIGURE "${FILE_CONTENTS_TMP}" FILE_CONTENTS_TMP)
-        file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} "${FILE_CONTENTS_TMP}")
-
+        configure_file(${TEST_SRC} ${TARGET_NAME})
         set(SRC ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} ${SRC})
     endforeach()
 
@@ -614,12 +612,6 @@ if (NGRAPH_TOOLS_ENABLE)
     set(NBENCH "${NBENCH_PATH}/nbench")
     target_compile_definitions(unit-test PRIVATE NBENCH_PATH="${NBENCH}")
     add_dependencies(unit-test nbench)
-endif()
-
-if (NGRAPH_PLAIDML_ENABLE)
-    target_link_libraries(unit-test PRIVATE plaidml_backend)
-    # Some PlaidML devices aren't so precise, so we increase the allowable tolerance.
-    target_compile_definitions(unit-test PRIVATE "PlaidML_FLOAT_TOLERANCE_BITS=12")
 endif()
 
 if (NGRAPH_IE_ENABLE)

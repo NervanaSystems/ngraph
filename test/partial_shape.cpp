@@ -66,11 +66,6 @@ TEST(partial_shape, dim_construction_dynamic)
     ASSERT_TRUE(dim.is_dynamic());
 }
 
-TEST(partial_shape, dim_construction_size_t_max)
-{
-    EXPECT_ANY_THROW({ Dimension d{Dimension::s_dynamic_val}; });
-}
-
 TEST(partial_shape, dim_conversion_dynamic)
 {
     EXPECT_ANY_THROW({ Dimension::dynamic().get_length(); });
