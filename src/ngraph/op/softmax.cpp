@@ -159,40 +159,33 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 namespace
 {
     template <element::Type_t ET>
-    inline bool kernel_selector(const element::Type_t& element_type,
-                                const EvaluatorTensorPtr& out,
-                                const EvaluatorTensorPtr& arg,
-                                const Shape& shape,
-                                const AxisSet& axes)
+    inline bool evaluate_softmax(const EvaluatorTensorPtr& arg,
+                                 const EvaluatorTensorPtr& out,
+                                 const Shape& shape,
+                                 const AxisSet& axes)
     {
-        if (element_type == ET)
-        {
-            runtime::reference::softmax(arg->get_ptr<ET>(), out->get_ptr<ET>(), shape, axes);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return (ET == arg->get_element_type()) &&
+               (runtime::reference::softmax(arg->get_ptr<ET>(), out->get_ptr<ET>(), shape, axes),
+                true);
     }
 
-    void evaluate_softmax(const EvaluatorTensorPtr& out,
-                          const EvaluatorTensorPtr& arg,
+    void evaluate_softmax(const EvaluatorTensorPtr& arg,
+                          const EvaluatorTensorPtr& out,
                           const AxisSet& axes)
     {
         auto shape = out->get_shape();
-        auto element_type = out->get_element_type();
-        if (!(kernel_selector<element::Type_t::f32>(element_type, out, arg, shape, axes) ||
-              kernel_selector<element::Type_t::f64>(element_type, out, arg, shape, axes)))
+        if (!(evaluate_softmax<element::Type_t::f32>(arg, out, shape, axes) ||
+              evaluate_softmax<element::Type_t::f64>(arg, out, shape, axes)))
         {
-            NGRAPH_CHECK(false, "Softmax not supported for type ", element_type);
+            NGRAPH_CHECK(false, "Softmax not supported for type ", arg->get_element_type());
         }
     }
 }
 
-bool op::v0::Softmax::evaluate(EvaluatorTensorVector& outputs, const EvaluatorTensorVector& inputs)
+bool op::v0::Softmax::evaluate(const EvaluatorTensorVector& outputs,
+                               const EvaluatorTensorVector& inputs)
 {
-    evaluate_softmax(outputs[0], inputs[0], get_axes());
+    evaluate_softmax(inputs[0], outputs[0], get_axes());
     return true;
 }
 
@@ -235,9 +228,10 @@ shared_ptr<Node> op::v1::Softmax::clone_with_new_inputs(const OutputVector& new_
     return make_shared<op::v1::Softmax>(new_args.at(0), m_axis);
 }
 
-bool op::v1::Softmax::evaluate(EvaluatorTensorVector& outputs, const EvaluatorTensorVector& inputs)
+bool op::v1::Softmax::evaluate(const EvaluatorTensorVector& outputs,
+                               const EvaluatorTensorVector& inputs)
 {
-    evaluate_softmax(outputs[0], inputs[0], AxisSet{m_axis});
+    evaluate_softmax(inputs[0], outputs[0], AxisSet{m_axis});
     return true;
 }
 

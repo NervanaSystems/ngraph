@@ -1104,7 +1104,8 @@ vector<Output<const Node>> Node::outputs() const
     return result;
 }
 
-bool Node::evaluate(EvaluatorTensorVector& output_values, const EvaluatorTensorVector& input_values)
+bool Node::evaluate(const EvaluatorTensorVector& output_values,
+                    const EvaluatorTensorVector& input_values)
 {
     return false;
 }

@@ -190,7 +190,7 @@ namespace ngraph
         virtual EvaluatorTensorPtr get_evaluator_tensor(size_t index);
         /// \brief Evaluates the op on input_values putting results in output_values
         /// \returns true if successful
-        virtual bool evaluate(EvaluatorTensorVector& output_values,
+        virtual bool evaluate(const EvaluatorTensorVector& output_values,
                               const EvaluatorTensorVector& input_values);
         virtual bool constant_fold(OutputVector& output_values, const OutputVector& inputs_values);
         /// \brief Decomposes the FusedOp into a sub-graph consisting of core ngraph ops

@@ -64,30 +64,20 @@ shared_ptr<Node> op::v3::ShapeOf::clone_with_new_inputs(const OutputVector& new_
 namespace
 {
     template <element::Type_t ET>
-    inline bool kernel_selector(const element::Type_t& element_type,
-                                const Shape& shape,
-                                const EvaluatorTensorPtr& output_value)
+    inline bool evaluate_shape_of(const Shape& shape, const EvaluatorTensorPtr& output_value)
     {
-        if (element_type == ET)
-        {
-            runtime::reference::shape_of(shape, output_value->get_ptr<ET>());
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return (ET == output_value->get_element_type()) &&
+               (runtime::reference::shape_of(shape, output_value->get_ptr<ET>()), true);
     }
 
-    void evaluate_shape_of(const element::Type_t& element_type,
-                           const EvaluatorTensorPtr& output_value,
+    void evaluate_shape_of(const EvaluatorTensorPtr& output_value,
                            const EvaluatorTensorPtr& input_value)
     {
         Shape shape = input_value->get_shape();
-        if (!(kernel_selector<element::Type_t::i32>(element_type, shape, output_value) ||
-              kernel_selector<element::Type_t::i64>(element_type, shape, output_value)))
+        if (!(evaluate_shape_of<element::Type_t::i32>(shape, output_value) ||
+              evaluate_shape_of<element::Type_t::i64>(shape, output_value)))
         {
-            NGRAPH_CHECK(false, "Invalid element type: ", element_type);
+            NGRAPH_CHECK(false, "Invalid element type: ", output_value->get_element_type());
         }
     }
 
@@ -105,8 +95,7 @@ namespace
             auto constant =
                 make_shared<op::v0::Constant>(output_type, shape_of_node->get_output_shape(0));
             constant->allocate_buffer();
-            evaluate_shape_of(output_type,
-                              constant->get_evaluator_tensor(0),
+            evaluate_shape_of(constant->get_evaluator_tensor(0),
                               shape_of_input.get_evaluator_tensor());
             replacement = constant;
             return true;
@@ -155,12 +144,12 @@ namespace
     }
 }
 
-bool op::v3::ShapeOf::evaluate(EvaluatorTensorVector& output_values,
+bool op::v3::ShapeOf::evaluate(const EvaluatorTensorVector& output_values,
                                const EvaluatorTensorVector& input_values)
 {
     if (input_values[0]->get_partial_shape().is_static())
     {
-        evaluate_shape_of(m_output_type, output_values[0], input_values[0]);
+        evaluate_shape_of(output_values[0], input_values[0]);
         return true;
     }
     return false;
@@ -199,12 +188,12 @@ shared_ptr<Node> op::v0::ShapeOf::clone_with_new_inputs(const OutputVector& new_
     return new_shape_of;
 }
 
-bool op::v0::ShapeOf::evaluate(EvaluatorTensorVector& output_values,
+bool op::v0::ShapeOf::evaluate(const EvaluatorTensorVector& output_values,
                                const EvaluatorTensorVector& input_values)
 {
     if (input_values[0]->get_partial_shape().is_static())
     {
-        evaluate_shape_of(element::i64, output_values[0], input_values[0]);
+        evaluate_shape_of(output_values[0], input_values[0]);
         return true;
     }
     return false;
