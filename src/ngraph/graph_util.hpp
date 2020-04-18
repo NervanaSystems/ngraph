@@ -503,4 +503,8 @@ namespace ngraph
     bool check_for_cycles(const ngraph::Function* func,
                           ngraph::NodeVector& cycle_nodes,
                           bool& is_bkwd_cycle);
+
+    NGRAPH_API
+    bool remove_node_update_name(const std::shared_ptr<Node>& node,
+                                 const std::shared_ptr<Node>& node_input);
 }

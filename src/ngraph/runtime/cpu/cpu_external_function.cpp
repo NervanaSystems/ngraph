@@ -84,12 +84,10 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/random_uniform.hpp"
-#include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/softmax_crossentropy.hpp"
@@ -98,6 +96,7 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
@@ -141,6 +140,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/tile.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
@@ -1226,23 +1226,11 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         }
         else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
         {
-#if MKLDNN_VERSION_MAJOR < 1
-            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
             return false;
-#else
-            // TODO: will be supported in mkldnn v1.1
-            return false;
-#endif
         }
         else if (typeid(ngraph::op::Gelu) == typeid(node))
         {
-#if MKLDNN_VERSION_MAJOR < 1
-            // TODO: (gauri): need to differentiate which implementation : erf vs tanh
             return false;
-#else
-            // TODO: will be supported in mkldnn v1.1
-            return false;
-#endif
         }
         // GroupConvolution is only supported with MKLDNN
         else if (auto conv = as_type<ngraph::op::GroupConvolution>(const_cast<Node*>(&node)))
@@ -1279,6 +1267,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(VanillaRNNFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(RNNFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(AlgebraicSimplification, true, ngraph::pass)
@@ -1294,11 +1283,15 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported)
     REGISTER_KNOBBED_PASS(CPUPreFusion, true, runtime::cpu::pass)
 
-    // Disable CPUFusion if MLIR is enabled to preserve core ops.
+// Disable CPUFusion if MLIR is enabled to preserve core ops.
+#ifdef NGRAPH_MLIR_ENABLE
     if (!getenv_bool("NGRAPH_MLIR"))
     {
+#endif
         REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass)
+#ifdef NGRAPH_MLIR_ENABLE
     }
+#endif
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)

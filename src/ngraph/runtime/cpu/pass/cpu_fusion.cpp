@@ -45,8 +45,8 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/gelu.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
@@ -544,7 +544,7 @@ static bool switch_nodes(std::shared_ptr<ngraph::Node> node1,
         return false;
     }
 
-    auto target_inputs = node2->output(0).get_target_inputs();
+    auto target_inputs = node2->get_output_target_inputs(0);
     // Remove the control_dependency, which shouldn't be there, but in case
     // Other control_dependencies will work out fine even after switch.
     node2->remove_control_dependency(node1);
@@ -1182,76 +1182,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     auto m = std::make_shared<pattern::Matcher>(pdivide, "CPUFusion.Dropout");
     this->add_matcher(m, callback);
 }
-
-#if MKLDNN_VERSION_MAJOR < 1
-void ngraph::runtime::cpu::pass::CPUFusion::construct_gelubackprop()
-{
-    Shape shape{2, 2, 1, 1};
-    auto input = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto gbpfactor = std::make_shared<ngraph::op::GeluBackpropFactor>(input);
-    auto gbpfactor_label =
-        std::make_shared<pattern::op::Label>(gbpfactor, nullptr, NodeVector{gbpfactor});
-
-    auto delta = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto mult = std::make_shared<ngraph::op::Multiply>(gbpfactor, delta);
-    auto mult_label = std::make_shared<pattern::op::Label>(mult, nullptr, NodeVector{mult});
-
-    auto callback = [input, delta, gbpfactor_label, mult_label](pattern::Matcher& m) {
-
-        NGRAPH_DEBUG << "In callback for construct_gelubackprop against "
-                     << m.get_match_root()->get_name();
-
-        auto pattern_map = m.get_pattern_map();
-
-        if (m.get_match_root()->get_element_type() != element::f32)
-        {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
-                         << " type is not float!";
-            return false;
-        }
-
-        auto m_mult = std::static_pointer_cast<ngraph::op::Multiply>(m.get_match_root());
-
-        auto m_gbpfactor = std::static_pointer_cast<ngraph::op::GeluBackpropFactor>(
-            m.get_match_root()->get_argument(0));
-        if (m_gbpfactor->get_users().size() > 1)
-        {
-            NGRAPH_DEBUG << "GeluBackpropFactor has more than one user";
-            return false;
-        }
-
-        const PartialShape& mult1_shape = m_mult->get_input_partial_shape(0);
-        const PartialShape& mult2_shape = m_mult->get_input_partial_shape(1);
-        if (mult1_shape.rank().is_dynamic() || mult2_shape.rank().is_dynamic())
-        {
-            NGRAPH_DEBUG << "In construct_gelubackprop: some shapes are dynamic.";
-            return false;
-        }
-
-        if (pattern_map[input]->get_element_type() != pattern_map[delta]->get_element_type())
-        {
-            NGRAPH_DEBUG << "In construct_gelubackprop: types mismatch\n";
-            return false;
-        }
-
-        if (m_mult->get_argument(0)->get_shape() != m_mult->get_argument(1)->get_shape())
-        {
-            NGRAPH_DEBUG << "Input shapes for mult are different. shape1: "
-                         << m_mult->get_argument(1)->get_shape()
-                         << ", shape2: " << m_mult->get_argument(1)->get_shape() << "\n";
-            return false;
-        }
-
-        // No further checks needed.
-        auto gbp_n =
-            std::make_shared<ngraph::op::GeluBackprop>(pattern_map[input], pattern_map[delta]);
-        ngraph::replace_node(m.get_match_root(), gbp_n);
-        return true;
-    };
-    auto m = std::make_shared<pattern::Matcher>(mult, "CPUFusion.GeluBackprop");
-    this->add_matcher(m, callback);
-}
-#endif
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
 {
@@ -2029,57 +1959,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
         prelu, "CPUFusion.deconvolution_affine_folding_relu");
     this->add_matcher(m, callback);
 }
-
-#if MKLDNN_VERSION_MAJOR < 1
-void ngraph::runtime::cpu::pass::CPUFusion::construct_fuse_lstm_recurrent_state()
-{
-    auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
-    auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
-    auto weights_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{100, 400});
-    auto weights_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{100, 400});
-    auto bias_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
-    ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
-        ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
-    auto lstm1 = std::make_shared<ngraph::op::Lstm>(src_layer_label,
-                                                    src_iter_label,
-                                                    weights_layer_label,
-                                                    weights_iter_label,
-                                                    bias_label,
-                                                    rnn_type);
-
-    auto lstm1_goe0 = std::make_shared<ngraph::op::GetOutputElement>(lstm1, 0);
-    auto lstm1_goe1 = std::make_shared<ngraph::op::GetOutputElement>(lstm1, 1);
-    auto lstm1_goe0_label =
-        std::make_shared<pattern::op::Label>(lstm1_goe0, nullptr, NodeVector{lstm1_goe0});
-    auto lstm1_goe1_label =
-        std::make_shared<pattern::op::Label>(lstm1_goe1, nullptr, NodeVector{lstm1_goe1});
-    auto lstm1_goe0_slice = std::make_shared<ngraph::op::Slice>(
-        lstm1_goe0_label, Coordinate{0, 0}, Coordinate{10, 100});
-    auto lstm1_goe1_slice = std::make_shared<ngraph::op::Slice>(
-        lstm1_goe1_label, Coordinate{10, 0}, Coordinate{20, 100});
-
-    auto concat =
-        std::make_shared<ngraph::op::Concat>(NodeVector{lstm1_goe0_slice, lstm1_goe1_slice}, 0);
-    auto concat_label = std::make_shared<pattern::op::Label>(concat, nullptr, NodeVector{concat});
-
-    auto callback = [lstm1, lstm1_goe0_label, concat_label, lstm1_goe1_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In Lstm concat fusion" << m.get_match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
-
-        if (pattern_map[lstm1_goe0_label]->get_arguments()[0] !=
-            pattern_map[lstm1_goe1_label]->get_arguments()[0])
-        {
-            return false;
-        }
-        // we can replace the concat lstm_goe_1 which had both recurrent state tensor
-        ngraph::replace_node(pattern_map[concat_label], pattern_map[lstm1_goe1_label]);
-        return true;
-    };
-    auto m = std::make_shared<ngraph::pattern::Matcher>(concat_label,
-                                                        "CPUFusion.fuse_lstm_recurrent_state");
-    this->add_matcher(m, callback);
-}
-#endif
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
 {
