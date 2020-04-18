@@ -25,6 +25,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/runtime/reference/softmax.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -155,6 +156,46 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
     adjoints.add_delta(x, adjoint);
 }
 
+namespace
+{
+    template <element::Type_t ET>
+    inline bool kernel_selector(const element::Type_t& element_type,
+                                const EvaluatorTensorPtr& out,
+                                const EvaluatorTensorPtr& arg,
+                                const Shape& shape,
+                                const AxisSet& axes)
+    {
+        if (element_type == ET)
+        {
+            runtime::reference::softmax(arg->get_ptr<ET>(), out->get_ptr<ET>(), shape, axes);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    void evaluate_softmax(const EvaluatorTensorPtr& out,
+                          const EvaluatorTensorPtr& arg,
+                          const AxisSet& axes)
+    {
+        auto shape = out->get_shape();
+        auto element_type = out->get_element_type();
+        if (!(kernel_selector<element::Type_t::f32>(element_type, out, arg, shape, axes) ||
+              kernel_selector<element::Type_t::f64>(element_type, out, arg, shape, axes)))
+        {
+            NGRAPH_CHECK(false, "Softmax not supported for type ", element_type);
+        }
+    }
+}
+
+bool op::v0::Softmax::evaluate(EvaluatorTensorVector& outputs, const EvaluatorTensorVector& inputs)
+{
+    evaluate_softmax(outputs[0], inputs[0], get_axes());
+    return true;
+}
+
 // *** SOFTMAX OP SET V1 ***
 constexpr NodeTypeInfo op::v1::Softmax::type_info;
 
@@ -194,12 +235,19 @@ shared_ptr<Node> op::v1::Softmax::clone_with_new_inputs(const OutputVector& new_
     return make_shared<op::v1::Softmax>(new_args.at(0), m_axis);
 }
 
+bool op::v1::Softmax::evaluate(EvaluatorTensorVector& outputs, const EvaluatorTensorVector& inputs)
+{
+    evaluate_softmax(outputs[0], inputs[0], AxisSet{m_axis});
+    return true;
+}
+
 void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                         const OutputVector& /* deltas */)
 {
     throw ngraph_error("op::v1::Softmax::generate_adjoints function is not implemented yet");
 
-    /* This might work, but as of this writing we have no way to test it, so we are being careful
+    /* This might work, but as of this writing we have no way to test it, so we are being
+    careful
     auto delta = deltas.at(0);
 
     auto z = delta * shared_from_this();
