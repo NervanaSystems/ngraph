@@ -1005,48 +1005,13 @@ void ngraph::evaluate_nodes(std::map<RawNodeOutput, EvaluatorTensorPtr>& value_m
             for (auto v : node->outputs())
             {
                 // For now, use Constant to hold the tensors
-                auto c = make_shared<op::v0::Constant>(v.get_element_type(), v.get_shape());
-                c->allocate_buffer();
-                output_tensors.push_back(c->get_evaluator_tensor(0));
+                auto c =
+                    op::v0::Constant::create_evaluator_tensor(v.get_element_type(), v.get_shape());
+                output_tensors.push_back(c);
             }
             if (node->evaluate(output_tensors, input_tensors))
             {
                 return output_tensors;
-            }
-            else
-            {
-                return {};
-            }
-        });
-    for (auto value : values)
-    {
-        evaluator.evaluate(value);
-    }
-}
-
-void ngraph::evaluate_nodes(std::map<RawNodeOutput, Output<Node>>& value_map,
-                            const OutputVector& values)
-{
-    Evaluator<Output<Node>> evaluator({}, value_map);
-    evaluator.set_univeral_handler(
-        [](Node* node, const OutputVector& input_values) -> OutputVector {
-            EvaluatorTensorVector input_tensors;
-            for (auto v : input_values)
-            {
-                input_tensors.push_back(v.get_evaluator_tensor());
-            }
-            OutputVector output_values;
-            EvaluatorTensorVector output_tensors;
-            for (auto v : node->outputs())
-            {
-                auto c = make_shared<op::Constant>(v.get_element_type(), v.get_shape());
-                c->allocate_buffer();
-                output_values.push_back(c);
-                output_tensors.push_back(c->get_evaluator_tensor(0));
-            }
-            if (node->evaluate(output_tensors, input_tensors))
-            {
-                return output_values;
             }
             else
             {

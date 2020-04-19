@@ -617,23 +617,55 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
 
 namespace
 {
-    class ConstantEvaluatorTensor : public EvaluatorTensor
+    class ConstantEvaluatorTensorImp : public op::Constant::ConstantEvaluatorTensor
     {
     public:
-        ConstantEvaluatorTensor(const std::shared_ptr<Node>& constant, void* data_ptr)
-            : EvaluatorTensor(constant->output(0))
+        ConstantEvaluatorTensorImp(const element::Type element_type,
+                                   const PartialShape& partial_shape)
+            : ConstantEvaluatorTensor(element_type, partial_shape)
+        {
+        }
+        ConstantEvaluatorTensorImp(const std::shared_ptr<op::v0::Constant>& constant,
+                                   void* data_ptr)
+            : ConstantEvaluatorTensor(constant->output(0))
+            , m_constant(constant)
             , m_data_ptr(data_ptr)
         {
         }
-        virtual void* get_data_ptr() override { return m_data_ptr; }
-        std::shared_ptr<Node> m_constant;
+        void* get_data_ptr() override
+        {
+            if (!m_constant)
+            {
+                NGRAPH_CHECK(m_element_type.is_static(),
+                             "Attempt to create a constant with a dynamic element type: ",
+                             m_element_type);
+                NGRAPH_CHECK(m_partial_shape.is_static(),
+                             "Attempt to create a constant with a dynamic shape: ",
+                             m_partial_shape);
+                m_constant =
+                    make_shared<op::v0::Constant>(m_element_type, m_partial_shape.get_shape());
+                m_data_ptr = m_constant->allocate_buffer();
+            }
+            return m_data_ptr;
+        }
+        shared_ptr<op::v0::Constant> get_constant() override { return m_constant; }
+    private:
+        std::shared_ptr<op::v0::Constant> m_constant;
         void* m_data_ptr;
     };
 }
 
-EvaluatorTensorPtr op::Constant::get_evaluator_tensor(size_t index)
+op::Constant::ConstantEvaluatorTensorPtr
+    op::Constant::create_evaluator_tensor(const shared_ptr<op::v0::Constant>& constant)
 {
-    return make_shared<ConstantEvaluatorTensor>(shared_from_this(), m_data->get_ptr());
+    return make_shared<ConstantEvaluatorTensorImp>(constant, constant->get_data_ptr_nc());
+}
+
+op::Constant::ConstantEvaluatorTensorPtr
+    op::Constant::create_evaluator_tensor(const element::Type element_type,
+                                          const PartialShape& partial_shape)
+{
+    return make_shared<ConstantEvaluatorTensorImp>(element_type, partial_shape);
 }
 
 constexpr NodeTypeInfo op::ScalarConstantLike::type_info;

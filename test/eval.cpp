@@ -64,15 +64,17 @@ TEST(eval, evaluate_shape_of)
 
     auto p_arg = op::Constant::create<float>(
         element::f32, Shape{2, 3}, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
-    map<RawNodeOutput, Output<Node>> value_map;
-    value_map[p->output(0)] = p_arg;
+    auto p_arg_tensor = op::v0::Constant::create_evaluator_tensor(p_arg);
+    map<RawNodeOutput, EvaluatorTensorPtr> value_map;
+    value_map[p->output(0)] = p_arg_tensor;
     evaluate_nodes(value_map, {so->output(0)});
     auto value = value_map.find(so->output(0));
     ASSERT_TRUE(value != value_map.end());
-    auto c = as_type_ptr<op::v0::Constant>(value->second.get_node_shared_ptr());
+    auto c = value->second;
     ASSERT_TRUE(c);
-    EXPECT_EQ(c->get_output_element_type(0), element::i64);
-    EXPECT_EQ(c->get_output_partial_shape(0), (PartialShape{2}));
-    std::vector<int64_t> shape = c->get_vector<int64_t>();
-    ASSERT_EQ(shape, (vector<int64_t>{2, 3}));
+    EXPECT_EQ(c->get_element_type(), element::i64);
+    EXPECT_EQ(c->get_partial_shape(), (PartialShape{2}));
+    int64_t* shape = c->get_ptr<element::Type_t::i64>();
+    ASSERT_EQ(shape[0], 2);
+    ASSERT_EQ(shape[1], 3);
 }

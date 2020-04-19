@@ -126,6 +126,7 @@ namespace ngraph
     }
     bool Output<Node>::operator<=(const Output& other) const { return !(*this > other); }
     bool Output<Node>::operator>=(const Output& other) const { return !(*this < other); }
+    Output<Node>::operator bool() const { return m_index != 0 || m_node; }
     void Output<Node>::eliminate_goe()
     {
         if (remove_goe)
@@ -135,15 +136,6 @@ namespace ngraph
                 *this = m_node->input_value(0);
             }
         }
-    }
-
-    EvaluatorTensorPtr Output<Node>::get_evaluator_tensor() const
-    {
-        if (m_node)
-        {
-            return m_node->get_evaluator_tensor(m_index);
-        }
-        return nullptr;
     }
 
     Output<const Node>::Output(const Node* node, size_t index)
@@ -232,6 +224,7 @@ namespace ngraph
         }
     }
 
+    Output<const Node>::operator bool() const { return m_index != 0 || m_node; }
     std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
     {
         return output.get_node()->write_description(out, 0) << "[" << output.get_index()

@@ -69,8 +69,22 @@ public:
     /// \param n Number of bytes to read, must be integral number of elements.
     void read(void* p, size_t n) const override;
 
+    class NGRAPH_API HostEvaluatorTensor : public EvaluatorTensor
+    {
+    protected:
+        using EvaluatorTensor::EvaluatorTensor;
+        virtual std::shared_ptr<HostTensor> get_host_tensor() = 0;
+
+    public:
+    };
+    using HostEvaluatorTensorPtr = std::shared_ptr<HostEvaluatorTensor>;
     /// \brief Get an evaluator tensor that uses this host tensor for data
-    EvaluatorTensorPtr get_evaluator_tensor();
+    static HostEvaluatorTensorPtr create_evaluator_tensor(std::shared_ptr<HostTensor> host_tensor);
+    /// \brief Get an evaluator tensor that creates a host tensor on demand
+    /// \param element_type Constraint for element type
+    /// \param partial_shape Constraint for partial shape
+    static HostEvaluatorTensorPtr create_evaluator_tensor(const element::Type& element_type,
+                                                          const PartialShape& partial_shape);
 
 private:
     HostTensor(const HostTensor&) = delete;

@@ -190,8 +190,6 @@ namespace ngraph
     /// \param value_map Key is RawNodeOutput in graph, value is the computed value. Updated by the
     /// function.
     /// \param values Root set of values to try to compute
-    NGRAPH_API void evaluate_nodes(std::map<RawNodeOutput, Output<Node>>& value_map,
-                                   const OutputVector& values);
     NGRAPH_API void evaluate_nodes(std::map<RawNodeOutput, EvaluatorTensorPtr>& value_map,
                                    const OutputVector& values);
 

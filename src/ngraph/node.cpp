@@ -1119,13 +1119,14 @@ bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_
     {
         if (auto constant = as_type_ptr<op::v0::Constant>(input.get_node_shared_ptr()))
         {
-            input_tensors.push_back(constant->get_evaluator_tensor(0));
+            input_tensors.push_back(op::v0::Constant::create_evaluator_tensor(constant));
         }
         else
         {
             return false;
         }
     }
+    vector<op::Constant::ConstantEvaluatorTensorPtr> output_constant_tensors;
     EvaluatorTensorVector output_tensors;
     OutputVector output_constants;
     for (auto output : outputs())
@@ -1136,36 +1137,17 @@ bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_
         {
             return false;
         }
-        auto constant = make_shared<op::v0::Constant>(element_type, partial_shape.get_shape());
-        // Would be better to auto-create when getting the pointer so we only allocate if we're
-        // going to evaluate
-        constant->allocate_buffer();
-        output_constants.push_back(constant);
-        output_tensors.push_back(constant->get_evaluator_tensor(0));
+        auto tensor = op::v0::Constant::create_evaluator_tensor(element_type, partial_shape);
+        output_constant_tensors.push_back(tensor);
+        output_tensors.push_back(tensor);
     }
     if (evaluate(output_tensors, input_tensors))
     {
-        swap(output_values, output_constants);
+        for (size_t i = 0; i < output_constant_tensors.size(); ++i)
+        {
+            output_values[i] = output_constant_tensors[i]->get_constant();
+        }
         return true;
     }
     return false;
-}
-
-namespace
-{
-    class NullEvaluatorTensor : public EvaluatorTensor
-    {
-    public:
-        NullEvaluatorTensor(const ngraph::Output<ngraph::Node>& value)
-            : EvaluatorTensor(value)
-        {
-        }
-
-        virtual void* get_data_ptr() override { return nullptr; }
-    };
-}
-
-EvaluatorTensorPtr Node::get_evaluator_tensor(size_t index)
-{
-    return make_shared<NullEvaluatorTensor>(output(index));
 }

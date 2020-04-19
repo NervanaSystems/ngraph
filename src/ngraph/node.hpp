@@ -187,7 +187,6 @@ namespace ngraph
         virtual const op::AutoBroadcastSpec& get_autob() const;
         /// \returns true if the node can decompose
         virtual bool supports_decompose() const { return false; }
-        virtual EvaluatorTensorPtr get_evaluator_tensor(size_t index);
         /// \brief Evaluates the op on input_values putting results in output_values
         /// \returns true if successful
         virtual bool evaluate(const EvaluatorTensorVector& output_values,

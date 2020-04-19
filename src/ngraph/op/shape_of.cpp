@@ -89,13 +89,16 @@ namespace
         {
             NGRAPH_CHECK(pass::revalidate_and_ensure_static(shape_of_node->shared_from_this()));
             auto arg_shape = shape_of_input.get_shape();
-            auto constant =
-                make_shared<op::v0::Constant>(output_type, shape_of_node->get_output_shape(0));
-            constant->allocate_buffer();
-            evaluate_shape_of(constant->get_evaluator_tensor(0),
-                              shape_of_input.get_evaluator_tensor());
-            replacement = constant;
-            return true;
+            auto result_tensor = op::v0::Constant::create_evaluator_tensor(
+                output_type, shape_of_node->get_output_shape(0));
+            if (evaluate_shape_of(
+                    result_tensor,
+                    op::v0::Constant::create_evaluator_tensor(output_type, partial_shape)))
+            {
+                replacement = result_tensor->get_constant();
+                return true;
+            }
+            return false;
         }
         else if (partial_shape.rank().is_static() && is_foldable)
         {

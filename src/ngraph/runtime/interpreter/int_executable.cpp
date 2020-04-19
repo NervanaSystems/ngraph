@@ -217,12 +217,12 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         EvaluatorTensorVector out_tensors;
         for (auto out : op_outputs)
         {
-            out_tensors.push_back(out->get_evaluator_tensor());
+            out_tensors.push_back(runtime::HostTensor::create_evaluator_tensor(out));
         }
         EvaluatorTensorVector in_tensors;
         for (auto in : op_inputs)
         {
-            in_tensors.push_back(in->get_evaluator_tensor());
+            in_tensors.push_back(runtime::HostTensor::create_evaluator_tensor(in));
         }
         if (!op->evaluate(out_tensors, in_tensors))
         {

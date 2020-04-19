@@ -270,7 +270,23 @@ namespace ngraph
                 /// \return The initialization literals for the tensor constant.
                 std::vector<std::string> get_value_strings() const;
 
-                EvaluatorTensorPtr get_evaluator_tensor(size_t index) override;
+                class ConstantEvaluatorTensor : public EvaluatorTensor
+                {
+                    using EvaluatorTensor::EvaluatorTensor;
+
+                public:
+                    virtual std::shared_ptr<Constant> get_constant() = 0;
+                };
+                using ConstantEvaluatorTensorPtr = std::shared_ptr<ConstantEvaluatorTensor>;
+
+                /// \brief Create an EvaluatorTensor that references this constant's storage
+                /// \param The constant
+                static ConstantEvaluatorTensorPtr
+                    create_evaluator_tensor(const std::shared_ptr<op::v0::Constant>& constant);
+                /// \brief Create an EvaluatorTensor that create a constant when needed
+                static ConstantEvaluatorTensorPtr
+                    create_evaluator_tensor(const element::Type element_type,
+                                            const PartialShape& partial_shape);
 
                 template <typename T>
                 std::vector<T> get_vector() const

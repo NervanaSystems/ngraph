@@ -121,21 +121,50 @@ void runtime::HostTensor::read(void* target, size_t n) const
 
 namespace
 {
-    class HostTensorEvaluatorTensor : public EvaluatorTensor
+    // Wraps an existing HostTensor
+    class HostTensorEvaluatorTensor : public runtime::HostTensor::HostEvaluatorTensor
     {
     public:
-        HostTensorEvaluatorTensor(runtime::HostTensor& host_tensor)
-            : EvaluatorTensor(host_tensor.get_element_type(), host_tensor.get_partial_shape())
+        HostTensorEvaluatorTensor(const element::Type& element_type,
+                                  const PartialShape& partial_shape)
+            : HostEvaluatorTensor(element_type, partial_shape)
+        {
+        }
+        HostTensorEvaluatorTensor(shared_ptr<runtime::HostTensor> host_tensor)
+            : HostEvaluatorTensor(host_tensor->get_element_type(), host_tensor->get_partial_shape())
             , m_host_tensor(host_tensor)
         {
         }
-        void* get_data_ptr() override { return m_host_tensor.get_data_ptr(); }
+        void* get_data_ptr() override
+        {
+            if (!m_host_tensor)
+            {
+                NGRAPH_CHECK(m_element_type.is_static(),
+                             "Attempt to create host tensor with a dynamic element type: ",
+                             m_element_type);
+                NGRAPH_CHECK(m_partial_shape.is_static(),
+                             "Attempt to create a host tensor with a dynamic shape: ",
+                             m_partial_shape);
+                m_host_tensor =
+                    make_shared<runtime::HostTensor>(m_element_type, m_partial_shape.get_shape());
+            }
+            return m_host_tensor->get_data_ptr();
+        }
+        shared_ptr<runtime::HostTensor> get_host_tensor() override { return m_host_tensor; }
     private:
-        runtime::HostTensor& m_host_tensor;
+        shared_ptr<runtime::HostTensor> m_host_tensor;
     };
 }
 
-EvaluatorTensorPtr runtime::HostTensor::get_evaluator_tensor()
+runtime::HostTensor::HostEvaluatorTensorPtr
+    runtime::HostTensor::create_evaluator_tensor(std::shared_ptr<runtime::HostTensor> host_tensor)
 {
-    return make_shared<HostTensorEvaluatorTensor>(*this);
+    return make_shared<HostTensorEvaluatorTensor>(host_tensor);
+}
+
+runtime::HostTensor::HostEvaluatorTensorPtr
+    runtime::HostTensor::create_evaluator_tensor(const element::Type& element_type,
+                                                 const PartialShape& partial_shape)
+{
+    return make_shared<HostTensorEvaluatorTensor>(element_type, partial_shape);
 }
