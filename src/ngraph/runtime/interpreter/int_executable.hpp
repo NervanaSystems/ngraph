@@ -1540,14 +1540,6 @@ protected:
                                node.get_output_shape(0));
             break;
         }
-        case OP_TYPEID::Result:
-        {
-            const op::Result* res = static_cast<const op::Result*>(&node);
-            reference::result(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              shape_size(res->get_shape()));
-            break;
-        }
         case OP_TYPEID::Reverse:
         {
             const op::Reverse* reverse = static_cast<const op::Reverse*>(&node);
@@ -1861,6 +1853,7 @@ protected:
         case OP_TYPEID::UnknownOp:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
+        case OP_TYPEID::Result:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShapeOf_v3:
         case OP_TYPEID::Softmax: NGRAPH_CHECK(false, "Op not handled by evaluator method:", node);

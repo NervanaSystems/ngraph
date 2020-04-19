@@ -192,7 +192,6 @@ namespace ngraph
             {
                 InstPtr inst;
                 std::swap(inst_stack.top(), inst);
-                // auto inst = inst_stack.top();
                 inst_stack.pop();
                 auto node = inst->get_node();
                 if (m_value_map.find(node->output(0)) != m_value_map.end())

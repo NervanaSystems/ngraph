@@ -61,20 +61,22 @@ TEST(eval, evaluate_shape_of)
 {
     auto p = make_shared<op::Parameter>(element::f32, PartialShape{-1, -1});
     auto so = make_shared<op::v0::ShapeOf>(p);
-
+    auto fun = make_shared<Function>(OutputVector{so}, ParameterVector{p});
     auto p_arg = op::Constant::create<float>(
         element::f32, Shape{2, 3}, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
-    auto p_arg_tensor = op::v0::Constant::create_evaluator_tensor(p_arg);
-    map<RawNodeOutput, EvaluatorTensorPtr> value_map;
-    value_map[p->output(0)] = p_arg_tensor;
-    evaluate_nodes(value_map, {so->output(0)});
-    auto value = value_map.find(so->output(0));
-    ASSERT_TRUE(value != value_map.end());
-    auto c = value->second;
+    EvaluatorTensorVector inputs;
+    inputs.push_back(op::v0::Constant::create_evaluator_tensor(p_arg));
+    EvaluatorTensorVector outputs;
+    auto result = fun->get_results()[0];
+    auto result_tensor = op::v0::Constant::create_evaluator_tensor(
+        result->get_output_element_type(0), result->get_output_shape(0));
+    outputs.push_back(result_tensor);
+    ASSERT_TRUE(fun->evaluate(outputs, inputs));
+    auto c = result_tensor->get_constant();
     ASSERT_TRUE(c);
-    EXPECT_EQ(c->get_element_type(), element::i64);
-    EXPECT_EQ(c->get_partial_shape(), (PartialShape{2}));
-    int64_t* shape = c->get_ptr<element::Type_t::i64>();
-    ASSERT_EQ(shape[0], 2);
-    ASSERT_EQ(shape[1], 3);
+    EXPECT_EQ(c->get_output_element_type(0), element::i64);
+    EXPECT_EQ(c->get_output_partial_shape(0), (PartialShape{2}));
+    auto cshape = c->get_vector<int64_t>();
+    vector<int64_t> arg_shape{2, 3};
+    ASSERT_EQ(cshape, arg_shape);
 }

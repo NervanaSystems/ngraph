@@ -185,13 +185,15 @@ namespace ngraph
     /// \return (true, max_value) if can be determined, or (false, 0) if not.
     NGRAPH_API std::pair<bool, int64_t> maximum_value(const Output<Node>& value);
 
-    /// \brief Evaluates values, treating values in value_map as already computed. value_map is
+    /// \brief Evaluates outputs, treating values in value_map as already computed. value_map is
     /// updated.
     /// \param value_map Key is RawNodeOutput in graph, value is the computed value. Updated by the
     /// function.
-    /// \param values Root set of values to try to compute
+    /// \param output_tensor_map Tensors to use for particular outputs
+    /// \param outputs Root set of values to try to compute
     NGRAPH_API void evaluate_nodes(std::map<RawNodeOutput, EvaluatorTensorPtr>& value_map,
-                                   const OutputVector& values);
+                                   std::map<RawNodeOutput, EvaluatorTensorPtr>& output_tensor_map,
+                                   const OutputVector& outputs);
 
     namespace opset1
     {

@@ -16,8 +16,8 @@
 
 #include "ngraph/validation_util.hpp"
 #include "ngraph/evaluator.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/minimum.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type_traits.hpp"
 #include "ngraph/util.hpp"
@@ -996,18 +996,27 @@ pair<bool, int64_t> ngraph::maximum_value(const Output<Node>& value)
 }
 
 void ngraph::evaluate_nodes(std::map<RawNodeOutput, EvaluatorTensorPtr>& value_map,
-                            const OutputVector& values)
+                            std::map<RawNodeOutput, EvaluatorTensorPtr>& output_tensor_map,
+                            const OutputVector& outputs)
 {
     Evaluator<EvaluatorTensorPtr> evaluator({}, value_map);
     evaluator.set_univeral_handler(
-        [](Node* node, const EvaluatorTensorVector& input_tensors) -> EvaluatorTensorVector {
+        [&output_tensor_map](Node* node,
+                             const EvaluatorTensorVector& input_tensors) -> EvaluatorTensorVector {
             EvaluatorTensorVector output_tensors;
             for (auto v : node->outputs())
             {
-                // For now, use Constant to hold the tensors
-                auto c =
-                    op::v0::Constant::create_evaluator_tensor(v.get_element_type(), v.get_shape());
-                output_tensors.push_back(c);
+                auto it = output_tensor_map.find(v);
+                if (it == output_tensor_map.end())
+                {
+                    auto c = runtime::HostTensor::create_evaluator_tensor(v.get_element_type(),
+                                                                          v.get_shape());
+                    output_tensors.push_back(c);
+                }
+                else
+                {
+                    output_tensors.push_back(it->second);
+                }
             }
             if (node->evaluate(output_tensors, input_tensors))
             {
@@ -1018,7 +1027,7 @@ void ngraph::evaluate_nodes(std::map<RawNodeOutput, EvaluatorTensorPtr>& value_m
                 return {};
             }
         });
-    for (auto value : values)
+    for (auto value : outputs)
     {
         evaluator.evaluate(value);
     }
