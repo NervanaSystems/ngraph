@@ -112,8 +112,6 @@ namespace ngraph
         bool operator<=(const Output& other) const;
         bool operator>=(const Output& other) const;
 
-        operator bool() const;
-
     private:
         std::shared_ptr<Node> m_node;
         size_t m_index{0};
@@ -182,8 +180,6 @@ namespace ngraph
         bool operator>(const Output& other) const;
         bool operator<=(const Output& other) const;
         bool operator>=(const Output& other) const;
-
-        operator bool() const;
 
     private:
         std::shared_ptr<const Node> m_node;

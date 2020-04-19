@@ -50,7 +50,7 @@ void ngraph::pass::ConstantFolding::construct_constant_default()
                     {
                         auto node_output = node->output(i);
                         auto replacement = replacements.at(i);
-                        if (replacement && (node_output != replacement))
+                        if (replacement.get_node_shared_ptr() && (node_output != replacement))
                         {
                             node_output.replace(replacement);
                             result = true;

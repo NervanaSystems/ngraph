@@ -126,7 +126,6 @@ namespace ngraph
     }
     bool Output<Node>::operator<=(const Output& other) const { return !(*this > other); }
     bool Output<Node>::operator>=(const Output& other) const { return !(*this < other); }
-    Output<Node>::operator bool() const { return m_index != 0 || m_node; }
     void Output<Node>::eliminate_goe()
     {
         if (remove_goe)
@@ -224,7 +223,6 @@ namespace ngraph
         }
     }
 
-    Output<const Node>::operator bool() const { return m_index != 0 || m_node; }
     std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
     {
         return output.get_node()->write_description(out, 0) << "[" << output.get_index()
