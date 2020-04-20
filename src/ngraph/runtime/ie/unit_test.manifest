@@ -12,114 +12,114 @@
 
 
 # Not supported ONNX op: QuantizeLinear
-model_quantize_linear
-model_quantize_linear_zero_point
-model_quantize_linear_axis_zero
-model_quantize_linear_axis_negative
+onnx_model_quantize_linear
+onnx_model_quantize_linear_zero_point
+onnx_model_quantize_linear_axis_zero
+onnx_model_quantize_linear_axis_negative
 
 # Not supported ONNX op: DequantizeLinear
-model_dequantize_linear
-model_dequantize_linear_scalar_zero_scale_uint8
-model_dequantize_linear_scalar_zero_scale_int8
-model_dequantize_linear_1d_zero_scale_uint8
-model_dequantize_linear_1d_zero_scale_int8
-model_dequantize_linear_1d_zero_scale_int8_4d
-model_dequantize_linear_1d_zero_scale_uint8_negative_axis
+onnx_model_dequantize_linear
+onnx_model_dequantize_linear_scalar_zero_scale_uint8
+onnx_model_dequantize_linear_scalar_zero_scale_int8
+onnx_model_dequantize_linear_1d_zero_scale_uint8
+onnx_model_dequantize_linear_1d_zero_scale_int8
+onnx_model_dequantize_linear_1d_zero_scale_int8_4d
+onnx_model_dequantize_linear_1d_zero_scale_uint8_negative_axis
 
 # Not supported ONNX op: QLinearConv
-model_quant_conv_linear
-model_quant_conv_linear_2d
-model_quant_conv_linear_3d
+onnx_model_quant_conv_linear
+onnx_model_quant_conv_linear_2d
+onnx_model_quant_conv_linear_3d
 
 # Not supported ONNX op: QLinearMatMul
-model_qlinear_matmul
-model_qlinear_matmul_3d
+onnx_model_qlinear_matmul
+onnx_model_qlinear_matmul_3d
 
 # Not supported ONNX op: ConvInteger
-model_conv_integer
-model_conv_integer_zero_point_zero
-model_conv_integer_no_zero_point
-model_conv_integer_pads
+onnx_model_conv_integer
+onnx_model_conv_integer_zero_point_zero
+onnx_model_conv_integer_no_zero_point
+onnx_model_conv_integer_pads
 
 # Not supported ONNX op: MatMulInteger
-model_matmul_integer
-model_matmul_integer_zero_point_zero
-model_matmul_integer_no_zero_point
-model_matmul_integer_scalar
-model_matmul_integer_4d
-model_matmul_integer_4d_zero_point
-model_matmul_integer_4d_no_zero_point
+onnx_model_matmul_integer
+onnx_model_matmul_integer_zero_point_zero
+onnx_model_matmul_integer_no_zero_point
+onnx_model_matmul_integer_scalar
+onnx_model_matmul_integer_4d
+onnx_model_matmul_integer_4d_zero_point
+onnx_model_matmul_integer_4d_no_zero_point
 
 # Not supported ONNX op: ScatterND
-model_scatterND
+onnx_model_scatterND
 
 # Not supported ONNX op: GatherND
-model_gatherND_int32
-model_gatherND_float
+onnx_model_gatherND_int32
+onnx_model_gatherND_float
 
 # Not supported ONNX op: Round
-model_round
+onnx_model_round
 
 # Not supported ONNX op: CumSum
-model_cum_sum_1d
-model_cum_sum_2d_axis_input
-model_cum_sum_2d_dynamic_axis_input
-model_cum_sum_3d_exclusive_reverse
+onnx_model_cum_sum_1d
+onnx_model_cum_sum_2d_axis_input
+onnx_model_cum_sum_2d_dynamic_axis_input
+onnx_model_cum_sum_3d_exclusive_reverse
 
 # Cannot cast ngraph node LSTMSequence to CNNLayer
-model_lstm_fwd_with_clip
-model_lstm_fwd_mixed_seq
-model_lstm_fwd_hardsigmoid_activation
-model_lstm_fwd_large_batch_no_clip
-model_lstm_bdir_short_input_seq
-model_lstm_mixed_seq_reverse
+onnx_model_lstm_fwd_with_clip
+onnx_model_lstm_fwd_mixed_seq
+onnx_model_lstm_fwd_hardsigmoid_activation
+onnx_model_lstm_fwd_large_batch_no_clip
+onnx_model_lstm_bdir_short_input_seq
+onnx_model_lstm_mixed_seq_reverse
 
 # Result mismatch
-model_depth_to_space_chw
-model_space_to_depth_chw
-model_split_equal_parts_default
-model_split_equal_parts_2d
-model_split_variable_parts_2d
-model_argmin_no_keepdims
-model_batch_norm_default
-model_softmax
-model_elu
-model_top_k
-top_k_opset_10_const_k
-top_k_opset_11_const_k_smallest
-model_erf
-model_addmul_abc
+onnx_model_depth_to_space_chw
+onnx_model_space_to_depth_chw
+onnx_model_split_equal_parts_default
+onnx_model_split_equal_parts_2d
+onnx_model_split_variable_parts_2d
+onnx_model_argmin_no_keepdims
+onnx_model_batch_norm_default
+onnx_model_softmax
+onnx_model_elu
+onnx_model_top_k
+onnx_top_k_opset_10_const_k
+onnx_top_k_opset_11_const_k_smallest
+onnx_model_erf
+onnx_model_addmul_abc
 
 # data [<name>] doesn't exist
-model_expand_static_shape
-model_sum_one_input
-model_shape
-model_eye_like
+onnx_model_expand_static_shape
+onnx_model_sum_one_input
+onnx_model_shape
+onnx_model_eye_like
 convert_float32_bool
 broadcast_trivial
 aliased_output
 bool_init_raw
 bool_const_op
-model_tile
-model_tile_static
+onnx_model_tile
+onnx_model_tile_static
 
 # [NOT_IMPLEMENTED] Input image format BOOL is not supported yet...
 bool_input_or
 
 # Layer <name> input port 1 is not connected to any data
-model_conv_transpose_w_groups
-model_convtranspose_output_shape
-model_convtranspose_output_shape_auto_pads_same_upper
-model_convtranspose_output_shape_auto_pads_same_lower
-model_convtranspose_groups_w_pads
-model_convtranspose_groups_pads_bias
-model_prelu
+onnx_model_conv_transpose_w_groups
+onnx_model_convtranspose_output_shape
+onnx_model_convtranspose_output_shape_auto_pads_same_upper
+onnx_model_convtranspose_output_shape_auto_pads_same_lower
+onnx_model_convtranspose_groups_w_pads
+onnx_model_convtranspose_groups_pads_bias
+onnx_model_prelu
 
 # [NOT_IMPLEMENTED] Input image format I64 is not supported yet...
-model_global_lp_pool_p0
-model_mod
-model_constant_of_shape_float_zeros
-model_constant_of_shape_int_ones
+onnx_model_global_lp_pool_p0
+onnx_model_mod
+onnx_model_constant_of_shape_float_zeros
+onnx_model_constant_of_shape_int_ones
 ab_plus_c_inference
 dynamic_rank_input_inference
 expand_1_dyn_shape
@@ -132,23 +132,23 @@ expand_uint16_dyn_shape
 minimum_int64
 
 # TopK Incorrect input data/index values precision
-model_argmax_int32
-model_argmin_int32
+onnx_model_argmax_int32
+onnx_model_argmin_int32
 arg_max_dyn_shape
 
 # Constant has zero dimension that is not allowable
-top_k_opset_10
-model_one_hot_with_axis
-model_one_hot_without_axis
+onnx_top_k_opset_10
+onnx_model_one_hot_with_axis
+onnx_model_one_hot_without_axis
 
 # Positive input shape should be the same as negative input shape
-model_where
+onnx_model_where
 
 # y Incorrect input precision. Only FP32 is supported!
-model_erf_int32
+onnx_model_erf_int32
 
 # Could not eliminate all Dyn nodes
-model_conv_with_dynamic_batch
+onnx_model_conv_with_dynamic_batch
 
 # Segmentation fault
 bool_init_and
@@ -1114,6 +1114,52 @@ matmul_0x2_2x0
 matmul_3x2_2x0
 matmul_2x3_3x3_int64
 
+onnx_dyn_shapes_ab_plus_c_inference
+onnx_dyn_shapes_dynamic_rank_input_inference
+onnx_dyn_shapes_model_conv_with_dynamic_batch
+onnx_dyn_shapes_arg_max_dyn_shape
+onnx_dyn_shapes_arg_min_no_keep_dims_dyn_shape
+onnx_dyn_shapes_expand_1_dyn_shape
+onnx_dyn_shapes_expand_2_dyn_shape
+onnx_dyn_shapes_expand_3_dyn_shape
+onnx_dyn_shapes_expand_4_dyn_shape
+onnx_dyn_shapes_expand_5_dyn_shape
+onnx_dyn_shapes_expand_6_dyn_shape
+onnx_dyn_shapes_expand_uint16_dyn_shape
+onnx_dyn_shapes_model_tile
+onnx_dyn_shapes_model_tile_static
+onnx_dyn_shapes_model_convtranspose_dyn_data
+onnx_dyn_shapes_model_convtranspose_dyn_filters
+onnx_dyn_shapes_transpose
+onnx_dyn_shapes_flatten_axis_0
+onnx_dyn_shapes_flatten_axis
+onnx_dyn_shapes_flatten_neg_axis
+onnx_dyn_shapes_model_global_lp_dynamic_hw
+onnx_dyn_shapes_slice_10_2d_input
+onnx_dyn_shapes_slice_10_default_steps
+onnx_dyn_shapes_slice_10_slice_2d_default_steps_dyn_begin_end
+onnx_dyn_shapes_slice_10_clamp_neg_ends
+onnx_dyn_shapes_slice_10_3d_input
+onnx_dyn_shapes_slice_10_3d_input_neg_axes
+onnx_dyn_shapes_slice_10_3d_input_20_axes
+onnx_dyn_shapes_slice_10_4d_input_23_axes
+onnx_dyn_shapes_slice_10_4d_input_0231_axes_ends_max
+onnx_dyn_shapes_slice_10_4d_input_2103_axes_ends_max
+onnx_dyn_shapes_slice_10_4d_input_23_axes_21_steps
+
+onnx_bool_const_op
+onnx_bool_init_and
+onnx_bool_input_or
+onnx_bool_init_raw
+shape_of_scalar_v0
+shape_of_scalar_v3
+shape_of_vector_v0
+shape_of_vector_v3
+shape_of_matrix_v0
+shape_of_matrix_v3
+shape_of_5d_v0
+shape_of_5d_v3
+
 #-------------------------------------------------------------------------------
 #
 #       Inference Engine CPU plugin excludes
@@ -1130,15 +1176,16 @@ IE_CPU/DynReplaceSliceTest.dyn_replace_slice
 IE_CPU/FlattenTest.flatten
 
 # Segfault
-onnx_IE_CPU.model_conv2d_strides_padding
-onnx_IE_CPU.model_conv2d_strides_no_padding
-onnx_IE_CPU.model_conv2d_strides_assymetric_padding
-onnx_IE_CPU.model_conv2d_dilation_assymetric_pads_strides
-onnx_IE_CPU.model_instance_normalization
-onnx_IE_CPU.model_reverse_sequence_1_batch_0
+IE_CPU.onnx_model_conv2d_strides_padding
+IE_CPU.onnx_model_conv2d_strides_no_padding
+IE_CPU.onnx_model_conv2d_strides_assymetric_padding
+IE_CPU.onnx_model_conv2d_dilation_assymetric_pads_strides
+IE_CPU.onnx_model_instance_normalization
+IE_CPU.onnx_model_reverse_sequence_1_batch_0
+IE_CPU.onnx_model_reverse_sequence_0_batch_1
 
-# [PARAMETER_MISMATCH] Failed to set Blob with precision FP32
-onnx_IE_CPU.model_reverse_sequence_0_batch_1
+#Node <name> contains empty child edge for index 0
+IE_CPU.backwards_log
 
 #-------------------------------------------------------------------------------
 #
@@ -1146,85 +1193,85 @@ onnx_IE_CPU.model_reverse_sequence_0_batch_1
 #
 #-------------------------------------------------------------------------------
 
-onnx_IE_GPU.model_reshape_reduced_dims
-onnx_IE_GPU.model_reshape_reordered_dims
-onnx_IE_GPU.model_reshape_extended_dims
-onnx_IE_GPU.model_reshape_single_dim
-onnx_IE_GPU.model_reshape_negative_dim
-onnx_IE_GPU.model_reshape_negative_with_zero_dim
-onnx_IE_GPU.model_reshape_output_shape_as_input
-onnx_IE_GPU.model_depth_to_space
-onnx_IE_GPU.model_space_to_depth
-onnx_IE_GPU.model_squeeze
-onnx_IE_GPU.model_unsqueeze
-onnx_IE_GPU.model_unsqueeze_negative_axes
-onnx_IE_GPU.model_concat
-onnx_IE_GPU.model_concat_negative_axis
-onnx_IE_GPU.model_flatten
-onnx_IE_GPU.model_average_pool_2d
-onnx_IE_GPU.model_average_pool_2d_pads
-onnx_IE_GPU.model_max_pool_2d_pads
-onnx_IE_GPU.model_global_lp_pool_p1
-onnx_IE_GPU.test_test_case
-onnx_IE_GPU.test_test_case_mutliple_inputs
-onnx_IE_GPU.model_add_abc
-onnx_IE_GPU.model_binary_add_abc
-onnx_IE_GPU.model_add_abc_initializers
-onnx_IE_GPU.model_override_op
-onnx_IE_GPU.model_custom_op
-onnx_IE_GPU.model_custom_op_default_domain
-onnx_IE_GPU.model_missing_op_domain
-onnx_IE_GPU.model_missing_input
-onnx_IE_GPU.model_initializer_wo_input
-onnx_IE_GPU.model_addmul_abc
-onnx_IE_GPU.model_relu
-onnx_IE_GPU.model_sum_opset1
-onnx_IE_GPU.model_sum
-onnx_IE_GPU.model_min_two_inputs_opset1
-onnx_IE_GPU.model_min_two_inputs
-onnx_IE_GPU.model_max_opset1
-onnx_IE_GPU.model_max
-onnx_IE_GPU.model_gemm_abc
-onnx_IE_GPU.model_matmul
-onnx_IE_GPU.model_sub
-onnx_IE_GPU.model_div
-onnx_IE_GPU.model_add_bcast
-onnx_IE_GPU.model_reduce_log_sum
-onnx_IE_GPU.model_reduce_log_sum_exp
-onnx_IE_GPU.model_reduce_l1
-onnx_IE_GPU.model_reduce_max
-onnx_IE_GPU.model_reduce_mean
-onnx_IE_GPU.model_reduce_min
-onnx_IE_GPU.model_reduce_prod
-onnx_IE_GPU.model_reduce_sum
-onnx_IE_GPU.model_reduce_sum_square
-onnx_IE_GPU.model_leaky_relu
-onnx_IE_GPU.model_selu
-onnx_IE_GPU.model_sigmoid
-onnx_IE_GPU.model_tanh
-onnx_IE_GPU.model_thresholded_relu
-onnx_IE_GPU.model_matmul_vec_ten3d
-onnx_IE_GPU.model_softplus
-onnx_IE_GPU.model_softplus_infinity
-onnx_IE_GPU.model_sum_opset8
-onnx_IE_GPU.model_atanh
-onnx_IE_GPU.model_sinh
-onnx_IE_GPU.model_cosh
-onnx_IE_GPU.model_sign
-onnx_IE_GPU.model_shrink_float
-onnx_IE_GPU.model_shrink_int
-onnx_IE_GPU.model_lp_norm_p1
-onnx_IE_GPU.model_reverse_sequence_0_batch_1
-onnx_IE_GPU.model_reverse_sequence_1_batch_0
-onnx_IE_GPU.matmul_float_type
-onnx_IE_GPU.model_pad_constant
-onnx_IE_GPU.model_reciprocal
-onnx_dyn_shapes_IE_GPU.model_atanh_1_3
-onnx_dyn_shapes_IE_GPU.model_atanh_3_2
-onnx_dyn_shapes_IE_GPU.avg_pool_dyn_shape
-onnx_dyn_shapes_IE_GPU.max_pool_dyn_shape
-onnx_dyn_shapes_IE_GPU.global_avg_pool_dyn_shape
-onnx_dyn_shapes_IE_GPU.global_max_pool_dyn_shape
+IE_GPU.onnx_model_reshape_reduced_dims
+IE_GPU.onnx_model_reshape_reordered_dims
+IE_GPU.onnx_model_reshape_extended_dims
+IE_GPU.onnx_model_reshape_single_dim
+IE_GPU.onnx_model_reshape_negative_dim
+IE_GPU.onnx_model_reshape_negative_with_zero_dim
+IE_GPU.onnx_model_reshape_output_shape_as_input
+IE_GPU.onnx_model_depth_to_space
+IE_GPU.onnx_model_space_to_depth
+IE_GPU.onnx_model_squeeze
+IE_GPU.onnx_model_unsqueeze
+IE_GPU.onnx_model_unsqueeze_negative_axes
+IE_GPU.onnx_model_concat
+IE_GPU.onnx_model_concat_negative_axis
+IE_GPU.onnx_model_flatten
+IE_GPU.onnx_model_average_pool_2d
+IE_GPU.onnx_model_average_pool_2d_pads
+IE_GPU.onnx_model_max_pool_2d_pads
+IE_GPU.onnx_model_global_lp_pool_p1
+IE_GPU.onnx_test_test_case
+IE_GPU.onnx_test_test_case_mutliple_inputs
+IE_GPU.onnx_model_add_abc
+IE_GPU.onnx_model_binary_add_abc
+IE_GPU.onnx_model_add_abc_initializers
+IE_GPU.onnx_model_override_op
+IE_GPU.onnx_model_custom_op
+IE_GPU.onnx_model_custom_op_default_domain
+IE_GPU.onnx_model_missing_op_domain
+IE_GPU.onnx_model_missing_input
+IE_GPU.onnx_model_initializer_wo_input
+IE_GPU.onnx_model_addmul_abc
+IE_GPU.onnx_model_relu
+IE_GPU.onnx_model_sum_opset1
+IE_GPU.onnx_model_sum
+IE_GPU.onnx_model_min_two_inputs_opset1
+IE_GPU.onnx_model_min_two_inputs
+IE_GPU.onnx_model_max_opset1
+IE_GPU.onnx_model_max
+IE_GPU.onnx_model_gemm_abc
+IE_GPU.onnx_model_matmul
+IE_GPU.onnx_model_sub
+IE_GPU.onnx_model_div
+IE_GPU.onnx_model_add_bcast
+IE_GPU.onnx_model_reduce_log_sum
+IE_GPU.onnx_model_reduce_log_sum_exp
+IE_GPU.onnx_model_reduce_l1
+IE_GPU.onnx_model_reduce_max
+IE_GPU.onnx_model_reduce_mean
+IE_GPU.onnx_model_reduce_min
+IE_GPU.onnx_model_reduce_prod
+IE_GPU.onnx_model_reduce_sum
+IE_GPU.onnx_model_reduce_sum_square
+IE_GPU.onnx_model_leaky_relu
+IE_GPU.onnx_model_selu
+IE_GPU.onnx_model_sigmoid
+IE_GPU.onnx_model_tanh
+IE_GPU.onnx_model_thresholded_relu
+IE_GPU.onnx_model_matmul_vec_ten3d
+IE_GPU.onnx_model_softplus
+IE_GPU.onnx_model_softplus_infinity
+IE_GPU.onnx_model_sum_opset8
+IE_GPU.onnx_model_atanh
+IE_GPU.onnx_model_sinh
+IE_GPU.onnx_model_cosh
+IE_GPU.onnx_model_sign
+IE_GPU.onnx_model_shrink_float
+IE_GPU.onnx_model_shrink_int
+IE_GPU.onnx_model_lp_norm_p1
+IE_GPU.onnx_model_reverse_sequence_0_batch_1
+IE_GPU.onnx_model_reverse_sequence_1_batch_0
+IE_GPU.onnx_matmul_float_type
+IE_GPU.onnx_model_pad_constant
+IE_GPU.onnx_model_reciprocal
+IE_GPU.onnx_dyn_shapes_model_atanh_1_3
+IE_GPU.onnx_dyn_shapes_model_atanh_3_2
+IE_GPU.onnx_dyn_shapes_avg_pool_dyn_shape
+IE_GPU.onnx_dyn_shapes_max_pool_dyn_shape
+IE_GPU.onnx_dyn_shapes_global_avg_pool_dyn_shape
+IE_GPU.onnx_dyn_shapes_global_max_pool_dyn_shape
 
 IE_GPU.tanh
 IE_GPU.tan
@@ -1397,26 +1444,26 @@ IE_GPU.max_pool_2d_1channel_1image_padded
 IE_GPU/concat_vector_params.concat_vector_large
 IE_GPU/DynReplaceSliceTest.dyn_replace_slice
 IE_GPU/FlattenTest.flatten
-onnx_IE_GPU.model_conv2d_strides_padding
-onnx_IE_GPU.model_conv2d_strides_no_padding
-onnx_IE_GPU.model_conv2d_strides_assymetric_padding
-onnx_IE_GPU.model_conv2d_dilation_assymetric_pads_strides
-onnx_IE_GPU.model_conv3d_bias
-onnx_IE_GPU.model_global_lp_pool_p2
-onnx_IE_GPU.model_global_lp_pool_p3
-onnx_IE_GPU.model_mean_opset1
-onnx_IE_GPU.model_mean
-onnx_IE_GPU.model_reduce_l2
-onnx_IE_GPU.model_acosh
-onnx_IE_GPU.model_asinh
-onnx_IE_GPU.model_hardmax
-onnx_IE_GPU.model_lp_norm_p2
-onnx_IE_GPU.model_lp_norm_default
-onnx_IE_GPU.model_instance_normalization
-onnx_dyn_shapes_IE_GPU.model_acosh_1_3
-onnx_dyn_shapes_IE_GPU.model_acosh_3_2
-onnx_dyn_shapes_IE_GPU.model_asinh_1_3
-onnx_dyn_shapes_IE_GPU.model_asinh_3_2
+IE_GPU.onnx_model_conv2d_strides_padding
+IE_GPU.onnx_model_conv2d_strides_no_padding
+IE_GPU.onnx_model_conv2d_strides_assymetric_padding
+IE_GPU.onnx_model_conv2d_dilation_assymetric_pads_strides
+IE_GPU.onnx_model_conv3d_bias
+IE_GPU.onnx_model_global_lp_pool_p2
+IE_GPU.onnx_model_global_lp_pool_p3
+IE_GPU.onnx_model_mean_opset1
+IE_GPU.onnx_model_mean
+IE_GPU.onnx_model_reduce_l2
+IE_GPU.onnx_model_acosh
+IE_GPU.onnx_model_asinh
+IE_GPU.onnx_model_hardmax
+IE_GPU.onnx_model_lp_norm_p2
+IE_GPU.onnx_model_lp_norm_default
+IE_GPU.onnx_model_instance_normalization
+IE_GPU.onnx_dyn_shapes_model_acosh_1_3
+IE_GPU.onnx_dyn_shapes_model_acosh_3_2
+IE_GPU.onnx_dyn_shapes_model_asinh_1_3
+IE_GPU.onnx_dyn_shapes_model_asinh_3_2
 IE_GPU.sum_matrix_6d
 IE_GPU.sqrt
 IE_GPU.gather_scalar_indices_no_axis_2d_input
