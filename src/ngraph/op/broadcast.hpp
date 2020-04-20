@@ -47,8 +47,8 @@ namespace ngraph
                 ///                       axes_mapping - [0, 2] => Broadcast along axes 1 and 3.
                 ///                       axes_mapping - [0, 3] => Broadcast along axes 1 and 2.
                 /// \param broadcast_spec Broadcast specification to use for determining broadcast
-                ///                       axes. 'axes_mapping' is ignored if broadcast_spec is not
-                ///                       NONE
+                ///                       axes. 'axes_mapping' should not be provided if mode other
+                ///                       than explicit (none) is used.
                 Broadcast(const Output<Node>& arg,
                           const Output<Node>& target_shape,
                           const Output<Node>& axes_mapping,

@@ -60,6 +60,10 @@ NodeVector ngraph::pass::explicit_broadcast(std::shared_ptr<Node>& node)
         {
             rc = as_node_vector(builder::pdpd_broadcast(node->input_values(), autob.m_axis));
         }
+        else if (autob.m_type == op::AutoBroadcastType::BIDIRECTIONAL)
+        {
+            throw ngraph_error("BIDIRECTIONAL mode is not supported");
+        }
         else
         {
             throw ngraph_error("Unsupported implicit broadcast type");

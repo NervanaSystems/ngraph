@@ -78,11 +78,12 @@ namespace ngraph
     template <>
     EnumNames<op::AutoBroadcastType>& EnumNames<op::AutoBroadcastType>::get()
     {
-        static auto enum_names =
-            EnumNames<op::AutoBroadcastType>("op::AutoBroadcastType",
-                                             {{"NONE", op::AutoBroadcastType::NONE},
-                                              {"NUMPY", op::AutoBroadcastType::NUMPY},
-                                              {"PDPD", op::AutoBroadcastType::PDPD}});
+        static auto enum_names = EnumNames<op::AutoBroadcastType>(
+            "op::AutoBroadcastType",
+            {{"NONE", op::AutoBroadcastType::NONE},
+             {"NUMPY", op::AutoBroadcastType::NUMPY},
+             {"PDPD", op::AutoBroadcastType::PDPD},
+             {"BIDIRECTIONAL", op::AutoBroadcastType::BIDIRECTIONAL}});
         return enum_names;
     }
 
