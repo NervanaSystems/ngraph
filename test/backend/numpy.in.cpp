@@ -90,13 +90,14 @@ NGRAPH_TEST(${BACKEND_NAME}, numpy_add_abc)
     auto handle = backend->compile(f);
     handle->call_with_validate({t_result}, {t_a, t_b});
 
-    // auto locals = py::dict("a"_a = a, "b"_a = b);
-    auto locals = py::dict();
+    auto v_a = a.get_vector();
+    auto v_b = b.get_vector();
+    auto n_a = py::array_t<int32_t>(a.get_shape(), v_a.data());
+    auto n_b = py::array_t<int32_t>(b.get_shape(), v_b.data());
+    auto locals = py::dict("a"_a = n_a, "b"_a = n_b);
     py::exec(R"(
 import numpy as np
 
-a = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]], dtype=np.int32)
-b = np.array([[3, 3, 3], [2, 2, 2], [1, 1, 1]], dtype=np.int32)
 c = a + b
     )",
              py::globals(),
