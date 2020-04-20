@@ -138,16 +138,32 @@ static bool eliminate_concat(const std::shared_ptr<Node>& node)
 
 static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
 {
-    auto node_input = node->get_argument(0);
+    auto input = node->get_argument(0);
     // check if reshape is not identity op
-    if (node_input->get_output_partial_shape(0).is_dynamic() ||
-        node->get_output_partial_shape(0).is_dynamic() ||
-        node_input->get_output_shape(0) != node->get_output_shape(0))
+    if (input->get_output_partial_shape(0).is_dynamic() ||
+        node->get_output_partial_shape(0).is_dynamic())
     {
-        NGRAPH_DEBUG << "Not a no-op; Shapes are different!";
+        NGRAPH_DEBUG << node << " has dynamic shapes.";
         return false;
     }
-    return remove_node_update_name(node, node_input);
+    // remove identity op
+    if (input->get_output_shape(0) == node->get_output_shape(0))
+    {
+        return remove_node_update_name(node, input);
+    }
+    // eliminate redundant reshape, squeeze, or unsqueeze
+    if (as_type_ptr<op::v0::Squeeze>(input) || as_type_ptr<op::v0::Unsqueeze>(input) ||
+        as_type_ptr<op::v1::Reshape>(input))
+    {
+        auto shape = node->get_shape();
+        std::vector<int64_t> vi;
+        vi.assign(shape.begin(), shape.end());
+        auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+        auto new_reshape = make_shared<op::v1::Reshape>(input->get_argument(0), pat, false);
+        return remove_node_update_name(node, new_reshape);
+    }
+
+    return false;
 }
 
 static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
