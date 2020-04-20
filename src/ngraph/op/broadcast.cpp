@@ -35,6 +35,10 @@ op::v3::Broadcast::Broadcast(const Output<Node>& arg,
     : Op({arg, target_shape, axes_mapping})
     , m_broadcast_spec(broadcast_spec)
 {
+    NODE_VALIDATION_CHECK(this,
+                          m_broadcast_spec.m_type == AutoBroadcastType::NONE,
+                          "axes_mapping input should not be provided for mode other than explicit");
+
     constructor_validate_and_infer_types();
 }
 
@@ -44,6 +48,10 @@ op::v3::Broadcast::Broadcast(const Output<Node>& arg,
     : Op({arg, target_shape, op::v0::Constant::create(element::u8, Shape{}, {0})->output(0)})
     , m_broadcast_spec(broadcast_spec)
 {
+    NODE_VALIDATION_CHECK(this,
+                          m_broadcast_spec.m_type != AutoBroadcastType::NONE,
+                          "axes_mapping input should be provided if explicit mode is used");
+
     constructor_validate_and_infer_types();
 }
 
@@ -240,6 +248,7 @@ void op::v3::Broadcast::validate_and_infer_types()
 
                 if (m_broadcast_spec.m_type == AutoBroadcastType::BIDIRECTIONAL)
                 {
+                    // Add left padding to shorter target or argument shape
                     const auto target_padded_rank = std::max(arg_shape.size(), target_shape.size());
                     while (arg_shape.size() < target_padded_rank)
                     {
@@ -251,6 +260,7 @@ void op::v3::Broadcast::validate_and_infer_types()
                     }
                     result_shape = target_shape;
                 }
+
                 auto start_axis = (m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
                                       ? m_broadcast_spec.m_axis
                                       : target_shape.size() - arg_shape.size();

@@ -31,7 +31,7 @@ namespace ngraph
             class NGRAPH_API Broadcast : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"Broadcast", 1};
+                static constexpr NodeTypeInfo type_info{"Broadcast", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a broadcast operation.
                 Broadcast() = default;
@@ -88,7 +88,7 @@ namespace ngraph
                 AutoBroadcastSpec m_broadcast_spec;
             };
         } // namespace v3
-      
+
         namespace v1
         {
             /// \brief Operation which "adds" axes to an input tensor, replicating elements from the
