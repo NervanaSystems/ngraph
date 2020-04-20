@@ -108,13 +108,23 @@ NGRAPH_OP(ReorgYolo, ngraph::op::v0) // Missing in opset1
 NGRAPH_OP(Reshape, ngraph::op::v1)
 NGRAPH_OP(Result, ngraph::op::v0)
 
+// Moved out of opset2, it was added to opset1 by mistake
+// NGRAPH_OP(Reverse, ngraph::op::v1)
+
 NGRAPH_OP(ReverseSequence, ngraph::op::v0)
+
+// Moved out of opset2, it was added to opset1 by mistake
+// NGRAPH_OP(RNNCell, ngraph::op::v0)
 
 NGRAPH_OP(ROIPooling, ngraph::op::v0) // Missing in opset1
 
 NGRAPH_OP(Select, ngraph::op::v1)
 NGRAPH_OP(Selu, ngraph::op::v0)
+// Superseded
 NGRAPH_OP(ShapeOf, ngraph::op::v0)
+
+// Moved out of opset2, it was added to opset1 by mistake
+// NGRAPH_OP(ShuffleChannels, ngraph::op::v0)
 
 NGRAPH_OP(Sign, ngraph::op::v0)
 NGRAPH_OP(Sigmoid, ngraph::op::v0)
@@ -136,6 +146,9 @@ NGRAPH_OP(Transpose, ngraph::op::v1)
 NGRAPH_OP(Unsqueeze, ngraph::op::v0)
 NGRAPH_OP(VariadicSplit, ngraph::op::v1)
 
+// Moved out of opset2, it was added to opset1 by mistake
+// NGRAPH_OP(Xor, ngraph::op::v0)
+
 // New operations added in opset2
 NGRAPH_OP(Gelu, ngraph::op::v0)
 NGRAPH_OP(BatchToSpace, ngraph::op::v1)
@@ -146,4 +159,5 @@ NGRAPH_OP(NonZero, ngraph::op::v3)
 NGRAPH_OP(ROIAlign, ngraph::op::v3)
 NGRAPH_OP(ScatterElementsUpdate, ngraph::op::v3)
 NGRAPH_OP(ScatterUpdate, ngraph::op::v3)
+NGRAPH_OP(ShapeOf, ngraph::op::v3)
 NGRAPH_OP(TopK, ngraph::op::v3)
