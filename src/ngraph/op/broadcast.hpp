@@ -65,7 +65,6 @@ namespace ngraph
                           const AutoBroadcastSpec& broadcast_spec =
                               AutoBroadcastSpec(AutoBroadcastType::NUMPY));
                 bool visit_attributes(AttributeVisitor& visitor) override;
-                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
                 std::shared_ptr<Node>

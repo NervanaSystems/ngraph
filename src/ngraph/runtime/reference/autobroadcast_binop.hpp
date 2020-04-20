@@ -218,6 +218,7 @@ namespace ngraph
                                 elementwise_functor(arg0[arg0_transform.index(output_coord)],
                                                     arg1[arg1_transform.index(arg1_coord)]);
                         }
+                        break;
                     }
                 case op::AutoBroadcastType::BIDIRECTIONAL:
                 {
@@ -429,6 +430,7 @@ namespace ngraph
                                                 arg1[arg1_transform.index(output_coord)],
                                                 arg2[arg2_transform.index(arg2_coord)]);
                     }
+                    break;
                 }
                 case op::AutoBroadcastType::BIDIRECTIONAL:
                 {
