@@ -208,6 +208,33 @@ namespace ngraph
             public:
                 static constexpr NodeTypeInfo type_info{"TopK", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a TopK operation
+                TopK() = default;
+                /// \brief Constructs a TopK operation with two outputs: values and indices.
+                ///        By default the indices output is described by i32 data type.
+                ///
+                /// \param data The input tensor
+                /// \param k Specifies how many maximum/minimum elements should be computed
+                ///          (note: scalar input tensor)
+                /// \param axis The axis along which to compute top k indices
+                /// \param mode Specifies which operation (min or max) is used to select
+                ///             the biggest element of two.
+                /// \param sort Specifies order of output elements and/or indices
+                ///             Accepted values: none, index, value
+                /// \param index_element_type Specyfies type of produced indices
+                TopK(const Output<Node>& data,
+                     const Output<Node>& k,
+                     const int64_t axis,
+                     const std::string& mode,
+                     const std::string& sort,
+                     const element::Type& index_element_type = element::i32);
+
+                TopK(const Output<Node>& data,
+                     const Output<Node>& k,
+                     const int64_t axis,
+                     const Mode mode,
+                     const SortType sort,
+                     const element::Type& index_element_type = element::i32);
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
             };

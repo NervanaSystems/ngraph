@@ -424,6 +424,28 @@ void op::v1::TopK::set_k(size_t k)
 // v3 version starts
 constexpr NodeTypeInfo op::v3::TopK::type_info;
 
+op::v3::TopK::TopK(const Output<Node>& data,
+                   const Output<Node>& k,
+                   const int64_t axis,
+                   const std::string& mode,
+                   const std::string& sort,
+                   const element::Type& index_element_type)
+    : op::v1::TopK{data, k, axis, mode, sort, index_element_type}
+{
+    constructor_validate_and_infer_types();
+}
+
+op::v3::TopK::TopK(const Output<Node>& data,
+                   const Output<Node>& k,
+                   const int64_t axis,
+                   const Mode mode,
+                   const SortType sort,
+                   const element::Type& index_element_type)
+    : op::v1::TopK{data, k, axis, mode, sort, index_element_type}
+{
+    constructor_validate_and_infer_types();
+}
+
 bool ngraph::op::v3::TopK::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("axis", m_axis);
