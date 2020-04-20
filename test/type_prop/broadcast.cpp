@@ -201,12 +201,12 @@ TEST(type_prop, broadcast_partial_rank_static_dynamic_shape_mismatch_wrong_size)
 
 // Because v3::Broadcast is backward compatible to v1::Broadcast all v1::Broadcast tests should pass
 template <typename T>
-class type_prop : public ::testing::Test
+class BroadcastTests : public ::testing::Test
 {
 };
-TYPED_TEST_CASE_P(type_prop);
+TYPED_TEST_CASE_P(BroadcastTests);
 
-TYPED_TEST_P(type_prop, broadcast_numpy)
+TYPED_TEST_P(BroadcastTests, broadcast_numpy)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
@@ -216,7 +216,7 @@ TYPED_TEST_P(type_prop, broadcast_numpy)
     ASSERT_EQ(bc->get_shape(), (Shape{2, 3, 6}));
 }
 
-TYPED_TEST_P(type_prop, broadcast_pdpd)
+TYPED_TEST_P(BroadcastTests, broadcast_pdpd)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
@@ -227,7 +227,7 @@ TYPED_TEST_P(type_prop, broadcast_pdpd)
     ASSERT_EQ(bc->get_shape(), (Shape{2, 3, 6}));
 }
 
-TYPED_TEST_P(type_prop, broadcast_axes_mapping)
+TYPED_TEST_P(BroadcastTests, broadcast_axes_mapping)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 1});
@@ -238,7 +238,7 @@ TYPED_TEST_P(type_prop, broadcast_axes_mapping)
     ASSERT_EQ(bc->get_shape(), (Shape{2, 3, 1}));
 }
 
-TYPED_TEST_P(type_prop, broadcast_target_shape_as_concat_with_constants)
+TYPED_TEST_P(BroadcastTests, broadcast_target_shape_as_concat_with_constants)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{16});
     auto target_shape_constant_1 = op::Constant::create<int64_t>(element::i64, Shape{1}, {1});
@@ -260,7 +260,7 @@ TYPED_TEST_P(type_prop, broadcast_target_shape_as_concat_with_constants)
     ASSERT_TRUE(bc->get_output_partial_shape(0).same_scheme(PartialShape{1, 16, 50, 50}));
 }
 
-TYPED_TEST_P(type_prop, broadcast_target_shape_as_concat_with_node)
+TYPED_TEST_P(BroadcastTests, broadcast_target_shape_as_concat_with_node)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{16});
     auto target_shape_constant_1 = make_shared<op::Parameter>(element::i64, Shape{1});
@@ -283,7 +283,7 @@ TYPED_TEST_P(type_prop, broadcast_target_shape_as_concat_with_node)
         PartialShape{Dimension::dynamic(), 16, 50, 50}));
 }
 
-TYPED_TEST_P(type_prop, broadcast_fail_rank)
+TYPED_TEST_P(BroadcastTests, broadcast_fail_rank)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 1});
@@ -306,7 +306,7 @@ TYPED_TEST_P(type_prop, broadcast_fail_rank)
     }
 }
 
-TYPED_TEST_P(type_prop, broadcast_fail_transpose)
+TYPED_TEST_P(BroadcastTests, broadcast_fail_transpose)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 1, 3});
@@ -329,7 +329,7 @@ TYPED_TEST_P(type_prop, broadcast_fail_transpose)
     }
 }
 
-TYPED_TEST_P(type_prop, broadcast_fail_axes_map)
+TYPED_TEST_P(BroadcastTests, broadcast_fail_axes_map)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 1});
@@ -350,7 +350,7 @@ TYPED_TEST_P(type_prop, broadcast_fail_axes_map)
     }
 }
 
-TYPED_TEST_P(type_prop, broadcast_fail_axes_map_shape)
+TYPED_TEST_P(BroadcastTests, broadcast_fail_axes_map_shape)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 3});
@@ -371,7 +371,7 @@ TYPED_TEST_P(type_prop, broadcast_fail_axes_map_shape)
     }
 }
 
-TYPED_TEST_P(type_prop, broadcast_shape_wrong_rank)
+TYPED_TEST_P(BroadcastTests, broadcast_shape_wrong_rank)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1, 1});
@@ -392,7 +392,7 @@ TYPED_TEST_P(type_prop, broadcast_shape_wrong_rank)
     }
 }
 
-TYPED_TEST_P(type_prop, broadcast_axes_wrong_rank)
+TYPED_TEST_P(BroadcastTests, broadcast_axes_wrong_rank)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
@@ -413,7 +413,7 @@ TYPED_TEST_P(type_prop, broadcast_axes_wrong_rank)
     }
 }
 
-TYPED_TEST_P(type_prop, broadcast_fully_dynamic_target_shape)
+TYPED_TEST_P(BroadcastTests, broadcast_fully_dynamic_target_shape)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto bc_shape = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
@@ -427,7 +427,7 @@ TYPED_TEST_P(type_prop, broadcast_fully_dynamic_target_shape)
     ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
 }
 
-TYPED_TEST_P(type_prop, broadcast_broadcast_shape_et_wrong)
+TYPED_TEST_P(BroadcastTests, broadcast_broadcast_shape_et_wrong)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     // wrong element type
@@ -450,7 +450,7 @@ TYPED_TEST_P(type_prop, broadcast_broadcast_shape_et_wrong)
     }
 }
 
-TYPED_TEST_P(type_prop, broadcast_axes_et_wrong)
+TYPED_TEST_P(BroadcastTests, broadcast_axes_et_wrong)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
@@ -473,7 +473,7 @@ TYPED_TEST_P(type_prop, broadcast_axes_et_wrong)
     }
 }
 
-REGISTER_TYPED_TEST_CASE_P(type_prop,
+REGISTER_TYPED_TEST_CASE_P(BroadcastTests,
                            broadcast_numpy,
                            broadcast_pdpd,
                            broadcast_axes_mapping,
@@ -490,7 +490,7 @@ REGISTER_TYPED_TEST_CASE_P(type_prop,
                            broadcast_axes_et_wrong);
 
 typedef ::testing::Types<op::v1::Broadcast, op::v3::Broadcast> BroadcastTypes;
-INSTANTIATE_TYPED_TEST_CASE_P(, type_prop, BroadcastTypes);
+INSTANTIATE_TYPED_TEST_CASE_P(type_prop, BroadcastTests, BroadcastTypes);
 
 TEST(type_prop, broadcast_v3_bidirectional_mode_string)
 {
