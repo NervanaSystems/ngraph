@@ -56,6 +56,9 @@ NGRAPH_TEST(${BACKEND_NAME}, numpy_abc)
 
     int a = 3, b = 4;
 
+    // Setup python interpreter.
+    py::scoped_interpreter guard{};
+
     auto locals = py::dict("a"_a = a, "b"_a = b);
     py::exec(R"(
         c = a + b
@@ -90,11 +93,19 @@ NGRAPH_TEST(${BACKEND_NAME}, numpy_add_abc)
     auto handle = backend->compile(f);
     handle->call_with_validate({t_result}, {t_a, t_b});
 
+    // Steps for running embedded python
+    // 1. Setup scoped python interpreter.
+    py::scoped_interpreter guard{};
+
+    // 2. Make a copy of test input
     auto v_a = a.get_vector();
     auto v_b = b.get_vector();
+    // 3. Change format to numpy friendly
     auto n_a = py::array_t<int32_t>(a.get_shape(), v_a.data());
     auto n_b = py::array_t<int32_t>(b.get_shape(), v_b.data());
+    // 4. Create variable dictionary (args) to pass to python
     auto locals = py::dict("a"_a = n_a, "b"_a = n_b);
+    // 5. Execute embedded python script
     py::exec(R"(
 import numpy as np
 
@@ -102,9 +113,12 @@ c = a + b
     )",
              py::globals(),
              locals);
-
-    auto buf = locals["c"].cast<py::array_t<int32_t>>().request();
+    // 6. Fetch variable from python
+    auto n_c = locals["c"].cast<py::array_t<int32_t>>();
+    // 7. Convert python result to a vector
+    auto buf = n_c.request();
     vector<int32_t> n_result;
     n_result.assign((int32_t*)buf.ptr, (int32_t*)buf.ptr + buf.size);
+
     EXPECT_TRUE(test::all_close(read_vector<int32_t>(t_result), n_result));
 }

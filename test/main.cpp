@@ -59,9 +59,6 @@ int main(int argc, char** argv)
     ngraph::runtime::ngmlir::initializeNGraphMLIR();
 #endif
 
-    // Setup python interpreter.
-    py::scoped_interpreter guard{};
-
     int rc = RUN_ALL_TESTS();
 
     return rc;
