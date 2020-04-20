@@ -121,7 +121,7 @@ NGRAPH_OP(ROIPooling, ngraph::op::v0) // Missing in opset1
 NGRAPH_OP(Select, ngraph::op::v1)
 NGRAPH_OP(Selu, ngraph::op::v0)
 // Superseded
-NGRAPH_OP(ShapeOf, ngraph::op::v0)
+// NGRAPH_OP(ShapeOf, ngraph::op::v0)
 
 // Moved out of opset2, it was added to opset1 by mistake
 // NGRAPH_OP(ShuffleChannels, ngraph::op::v0)
