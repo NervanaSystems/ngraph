@@ -21,18 +21,18 @@ from test.ngraph.util import run_op_node, get_runtime
 
 
 @pytest.mark.parametrize('ng_api_helper, numpy_function, reduction_axes', [
-    (ng.max, np.max, None),
-    (ng.min, np.min, None),
-    (ng.sum, np.sum, None),
-    (ng.prod, np.prod, None),
-    (ng.max, np.max, (0, )),
-    (ng.min, np.min, (0, )),
-    (ng.sum, np.sum, (0, )),
-    (ng.prod, np.prod, (0, )),
-    (ng.max, np.max, (0, 2)),
-    (ng.min, np.min, (0, 2)),
-    (ng.sum, np.sum, (0, 2)),
-    (ng.prod, np.prod, (0, 2)),
+    (ng.reduce_max, np.max, [0, 1, 2, 3]),
+    (ng.reduce_min, np.min, [0, 1, 2, 3]),
+    (ng.reduce_sum, np.sum, [0, 1, 2, 3]),
+    (ng.reduce_prod, np.prod, [0, 1, 2, 3]),
+    (ng.reduce_max, np.max, [0]),
+    (ng.reduce_min, np.min, [0]),
+    (ng.reduce_sum, np.sum, [0]),
+    (ng.reduce_prod, np.prod, [0]),
+    (ng.reduce_max, np.max, [0, 2]),
+    (ng.reduce_min, np.min, [0, 2]),
+    (ng.reduce_sum, np.sum, [0, 2]),
+    (ng.reduce_prod, np.prod, [0, 2]),
 ])
 @pytest.mark.skip_on_gpu
 def test_reduction_ops(ng_api_helper, numpy_function, reduction_axes):
@@ -40,8 +40,8 @@ def test_reduction_ops(ng_api_helper, numpy_function, reduction_axes):
     np.random.seed(133391)
     input_data = np.random.randn(*shape).astype(np.float32)
 
-    expected = numpy_function(input_data, axis=reduction_axes)
-    result = run_op_node([input_data], ng_api_helper, reduction_axes)
+    expected = numpy_function(input_data, axis=tuple(reduction_axes))
+    result = run_op_node([input_data, reduction_axes], ng_api_helper)
     assert np.allclose(result, expected)
 
 
@@ -78,18 +78,40 @@ def test_topk():
                                     [12, 8, 4],
                                     [6, 1, 5],
                                     [3, 11, 7]], dtype=np.float32))
-    comp_topk = ng.topk(input_x, 4, 0)
+    K = ng.constant(4)
+    comp_topk = ng.topk(input_x, K, 0, 'max', 'SORT_VALUES')
+
     model0 = runtime.computation(ng.get_output_element(comp_topk, 0))
     result0 = model0()
     assert np.allclose(result0,
-                       np.array([[1, 3, 0],
-                                 [0, 1, 3],
-                                 [2, 0, 2],
-                                 [3, 2, 1]], dtype=np.int32))
-    model1 = runtime.computation(ng.get_output_element(comp_topk, 1))
-    result1 = model1()
-    assert np.allclose(result1,
                        np.array([[12, 11, 10],
                                  [9, 8, 7],
                                  [6, 2, 5],
                                  [3, 1, 4]], dtype=np.float32))
+
+    model1 = runtime.computation(ng.get_output_element(comp_topk, 1))
+    result1 = model1()
+    assert np.allclose(result1,
+                       np.array([[1, 3, 0],
+                                 [0, 1, 3],
+                                 [2, 0, 2],
+                                 [3, 2, 1]], dtype=np.int32))
+
+
+@pytest.mark.parametrize('ng_api_helper, numpy_function, reduction_axes', [
+    (ng.reduce_mean, np.mean, [0, 1, 2, 3]),
+    (ng.reduce_mean, np.mean, [0]),
+    (ng.reduce_mean, np.mean, [0, 2]),
+])
+@pytest.mark.skip_on_gpu
+@pytest.mark.skip_on_cpu
+@pytest.mark.skip_on_interpreter
+@pytest.mark.skip_on_intelgpu
+def test_reduce_mean_op(ng_api_helper, numpy_function, reduction_axes):
+    shape = [2, 4, 3, 2]
+    np.random.seed(133391)
+    input_data = np.random.randn(*shape).astype(np.float32)
+
+    expected = numpy_function(input_data, axis=tuple(reduction_axes))
+    result = run_op_node([input_data, reduction_axes], ng_api_helper)
+    assert np.allclose(result, expected)

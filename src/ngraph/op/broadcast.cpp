@@ -16,6 +16,7 @@
 
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/attribute_visitor.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/partial_shape.hpp"
@@ -40,7 +41,7 @@ op::v1::Broadcast::Broadcast(const Output<Node>& arg,
 op::v1::Broadcast::Broadcast(const Output<Node>& arg,
                              const Output<Node>& target_shape,
                              const AutoBroadcastSpec& broadcast_spec)
-    : Op({arg, target_shape, op::Constant::create(element::u8, Shape{}, {0})->output(0)})
+    : Op({arg, target_shape, op::v0::Constant::create(element::u8, Shape{}, {0})->output(0)})
     , m_broadcast_spec(broadcast_spec)
 {
     constructor_validate_and_infer_types();
@@ -59,14 +60,13 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
 
     if (m_broadcast_spec.m_type == AutoBroadcastType::NONE)
     {
-        if (get_input_partial_shape(1).is_static() &&
-            input_value(2).get_node_shared_ptr()->is_constant())
+        const auto axes_mapping_constant =
+            as_type_ptr<op::v0::Constant>(input_value(2).get_node_shared_ptr());
+        if (get_input_partial_shape(1).is_static() && axes_mapping_constant)
         {
             auto target_shape = get_input_shape(1);
             NGRAPH_CHECK(target_shape.size() == 1);
-            auto axes_mapping_val =
-                static_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr())
-                    ->get_axis_vector_val();
+            auto axes_mapping_val = axes_mapping_constant->get_axis_vector_val();
 
             std::vector<size_t> axes(target_shape[0]);
             std::iota(axes.begin(), axes.end(), 0);
@@ -81,7 +81,7 @@ std::pair<bool, AxisSet> op::v1::Broadcast::get_broadcast_axes() const
     else if (m_broadcast_spec.m_type == AutoBroadcastType::NUMPY ||
              m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
     {
-        if (get_input_partial_shape(0).is_static() && output(0).get_partial_shape().is_static())
+        if (get_input_partial_shape(0).is_static() && get_output_partial_shape(0).is_static())
         {
             auto arg_shape = get_input_shape(0);
             auto result_shape = get_output_shape(0);
@@ -139,10 +139,35 @@ void op::v1::Broadcast::validate_and_infer_types()
     }
 
     PartialShape result_shape{PartialShape::dynamic()};
-    if (input_value(1).get_node_shared_ptr()->is_constant())
+
+    const auto shape_constant = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr());
+
+    if (shape_constant)
     {
-        result_shape = static_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr())
-                           ->get_shape_val();
+        result_shape = shape_constant->get_shape_val();
+    }
+    else if (auto concat = as_type_ptr<op::v0::Concat>(input_value(1).get_node_shared_ptr()))
+    {
+        auto concat_inputs = concat->inputs();
+
+        if (concat->get_output_partial_shape(0).is_static() && concat->get_shape().size() == 1 &&
+            concat_inputs.size() == shape_size(concat->get_shape()))
+        {
+            auto output_partial_shape = vector<Dimension>{};
+            for (const auto& concat_input : concat_inputs)
+            {
+                auto source_node_ptr = concat_input.get_source_output().get_node_shared_ptr();
+                if (auto source_const_ptr = as_type_ptr<op::v0::Constant>(source_node_ptr))
+                {
+                    output_partial_shape.push_back(source_const_ptr->get_axis_vector_val()[0]);
+                }
+                else
+                {
+                    output_partial_shape.push_back(Dimension::dynamic());
+                }
+            }
+            result_shape = PartialShape(output_partial_shape);
+        }
     }
 
     if (m_broadcast_spec.m_type == AutoBroadcastType::NONE)
@@ -162,14 +187,11 @@ void op::v1::Broadcast::validate_and_infer_types()
                                   " doesn't match rank of input tensor ",
                                   arg_shape.size());
 
-            if (input_value(1).get_node_shared_ptr()->is_constant() &&
-                input_value(2).get_node_shared_ptr()->is_constant())
+            if (shape_constant && input_value(2).get_node_shared_ptr()->is_constant())
             {
-                auto target_shape =
-                    static_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr())
-                        ->get_shape_val();
+                auto target_shape = shape_constant->get_shape_val();
                 auto axes_mapping_val =
-                    static_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr())
+                    as_type_ptr<op::v0::Constant>(input_value(2).get_node_shared_ptr())
                         ->get_axis_vector_val();
                 // axes_mapping needs to be in sorted order
                 NODE_VALIDATION_CHECK(
@@ -210,11 +232,9 @@ void op::v1::Broadcast::validate_and_infer_types()
         {
             auto arg_shape = get_input_shape(0);
 
-            if (input_value(1).get_node_shared_ptr()->is_constant())
+            if (shape_constant)
             {
-                auto target_shape =
-                    static_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr())
-                        ->get_shape_val();
+                const auto target_shape = shape_constant->get_shape_val();
                 auto start_axis = (m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
                                       ? m_broadcast_spec.m_axis
                                       : target_shape.size() - arg_shape.size();

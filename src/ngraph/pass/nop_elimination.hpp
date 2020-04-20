@@ -25,7 +25,6 @@ namespace ngraph
         class NGRAPH_API NopElimination : public FunctionPass
         {
         public:
-            NopElimination() { set_property(PassProperty::REQUIRE_STATIC_SHAPE, true); }
             bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
         };
     }

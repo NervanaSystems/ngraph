@@ -34,7 +34,7 @@ runtime::cpu::op::ConvertLayout::ConvertLayout(
 }
 
 shared_ptr<Node>
-    runtime::cpu::op::ConvertLayout::copy_with_new_args(const NodeVector& new_args) const
+    runtime::cpu::op::ConvertLayout::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {

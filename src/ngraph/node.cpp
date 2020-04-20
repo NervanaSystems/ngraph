@@ -41,20 +41,6 @@ Node::Node(size_t output_size)
     set_output_size(output_size);
 }
 
-Node::Node(const std::string& node_type, const NodeVector& arguments, size_t output_size)
-    : m_node_type(node_type)
-{
-    set_arguments(arguments);
-    set_output_size(output_size);
-}
-
-Node::Node(const NodeVector& arguments, size_t output_size)
-    : Node()
-{
-    set_arguments(arguments);
-    set_output_size(output_size);
-}
-
 Node::Node(const OutputVector& arguments, size_t output_size)
     : Node()
 {
@@ -738,6 +724,18 @@ const std::vector<descriptor::Input*>& Node::get_output_inputs(size_t i) const
     NGRAPH_CHECK(
         i < m_outputs.size(), "index '", i, "' out of range in get_output_inputs(size_t i)");
     return m_outputs[i].get_inputs();
+}
+
+std::set<Input<Node>> Node::get_output_target_inputs(size_t i) const
+{
+    std::set<Input<Node>> result;
+
+    for (auto& input : m_outputs.at(i).get_inputs())
+    {
+        result.emplace(input->get_raw_pointer_node(), input->get_index());
+    }
+
+    return result;
 }
 
 descriptor::Tensor& Node::get_output_tensor(size_t i) const

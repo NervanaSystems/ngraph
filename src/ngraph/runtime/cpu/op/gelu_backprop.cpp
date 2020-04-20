@@ -29,7 +29,7 @@ op::GeluBackprop::GeluBackprop(const Output<ngraph::Node>& arg, const Output<ngr
     set_output_type(0, get_input_element_type(0), arg.get_shape());
 }
 
-shared_ptr<Node> op::GeluBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::GeluBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<GeluBackprop>(new_args.at(0), new_args.at(1));

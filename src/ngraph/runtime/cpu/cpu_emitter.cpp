@@ -4319,7 +4319,7 @@ namespace ngraph
                 const ngraph::op::CompiledKernel* ck =
                     static_cast<const ngraph::op::CompiledKernel*>(node);
 
-                NodeVector output_nodes = ck->get_kernel_outputs();
+                OutputVector outputs = ck->get_kernel_outputs();
                 NodeVector node_list = ck->get_node_list();
 
                 for (size_t i = 0; i < args.size(); i++)
@@ -4334,8 +4334,10 @@ namespace ngraph
                 for (size_t i = 0; i < out.size(); i++)
                 {
                     std::string sname = std::string(out[i].get_name()) + "[i]";
-                    // TODO: no support for multiple-output ops in loop kernel
-                    auto entry = std::make_pair(&output_nodes.at(i)->get_outputs().at(0), sname);
+                    auto output = outputs[i];
+                    auto output_node = output.get_node();
+                    auto entry =
+                        std::make_pair(&output_node->get_outputs().at(output.get_index()), sname);
                     loop_symbol_table.insert(entry);
                 }
 
