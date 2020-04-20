@@ -53,7 +53,7 @@ def test_node_factory_topk():
     k = ng.parameter([], dtype=dtype, name='B')
 
     factory = _NodeFactory('opset1')
-    node = factory.create('TopK', [data, k], {'axis': 1, 'mode': 'max', 'sort': 'SORT_VALUES'})
+    node = factory.create('TopK', [data, k], {'axis': 1, 'mode': 'max', 'sort': 'value'})
 
     assert node.get_type_name() == 'TopK'
     assert node.get_output_size() == 2
