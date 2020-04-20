@@ -55,7 +55,7 @@ static bool eliminate_pad(const std::shared_ptr<Node>& node)
 
     if (pad->get_input_shape(0) == pad->get_output_shape(0))
     {
-        return remove_node_update_name(node, node->get_argument(0));
+        return remove_node_update_name(node, node->input_value(0).get_node_shared_ptr());
     }
     return false;
 }
@@ -65,7 +65,7 @@ static bool eliminate_sum(const std::shared_ptr<Node>& node)
     auto sum = as_type_ptr<op::v0::Sum>(node);
     if (sum->get_reduction_axes().empty())
     {
-        return remove_node_update_name(node, node->get_argument(0));
+        return remove_node_update_name(node, node->input_value(0).get_node_shared_ptr());
     }
     return false;
 }
@@ -80,12 +80,12 @@ static bool eliminate_convert(const std::shared_ptr<Node>& node)
         is_out_type_agnostic = type_agnostic.count(out.get_node()->get_type_info()) == 1;
     }
     auto convert = as_type_ptr<op::v0::Convert>(node);
-    auto input = convert->get_argument(0);
+    auto input = convert->input_value(0).get_node_shared_ptr();
     if (convert->get_convert_element_type() == input->get_element_type() || is_out_type_agnostic)
     {
         if (is_out_type_agnostic && as_type_ptr<op::v0::Convert>(input))
         {
-            input = input->get_argument(0);
+            input = input->input_value(0).get_node_shared_ptr();
         }
         return remove_node_update_name(node, input);
     }
@@ -103,7 +103,7 @@ static bool eliminate_slice(const std::shared_ptr<Node>& node)
     }
     if (slice->get_input_shape(0) == slice->get_output_shape(0))
     {
-        return remove_node_update_name(node, node->get_argument(0));
+        return remove_node_update_name(node, node->input_value(0).get_node_shared_ptr());
     }
     return false;
 }
@@ -119,14 +119,14 @@ static bool eliminate_broadcast(const std::shared_ptr<Node>& node)
     }
     if (broadcast->get_input_shape(0) == broadcast->get_output_shape(0))
     {
-        return remove_node_update_name(node, node->get_argument(0));
+        return remove_node_update_name(node, node->input_value(0).get_node_shared_ptr());
     }
     return false;
 }
 
 static bool eliminate_concat(const std::shared_ptr<Node>& node)
 {
-    auto node_input = node->get_argument(0);
+    auto node_input = node->input_value(0).get_node_shared_ptr();
 
     // remove concat with single input
     if (node->get_input_size() == 1)
@@ -138,7 +138,7 @@ static bool eliminate_concat(const std::shared_ptr<Node>& node)
 
 static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
 {
-    auto input = node->get_argument(0);
+    auto input = node->input_value(0).get_node_shared_ptr();
     // check if reshape is not identity op
     if (input->get_output_partial_shape(0).is_dynamic() ||
         node->get_output_partial_shape(0).is_dynamic())
@@ -159,7 +159,8 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
         std::vector<int64_t> vi;
         vi.assign(shape.begin(), shape.end());
         auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
-        auto new_reshape = make_shared<op::v1::Reshape>(input->get_argument(0), pat, false);
+        auto new_reshape =
+            make_shared<op::v1::Reshape>(input->input_value(0).get_node_shared_ptr(), pat, false);
         return remove_node_update_name(node, new_reshape);
     }
 
@@ -169,16 +170,17 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
 static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
 {
     auto unsqueeze = as_type_ptr<op::v0::Unsqueeze>(node);
-    auto input = unsqueeze->get_argument(0);
+    auto input = unsqueeze->input_value(0).get_node_shared_ptr();
     // eliminate redundant squeeze->unsqueeze
     if (auto squeeze = as_type_ptr<op::v0::Squeeze>(input))
     {
-        if (!ngraph::compare_constants(squeeze->get_argument(1), unsqueeze->get_argument(1)))
+        if (!ngraph::compare_constants(squeeze->input_value(1).get_node_shared_ptr(),
+                                       unsqueeze->input_value(1).get_node_shared_ptr()))
         {
             NGRAPH_DEBUG << "squeeze->unsqueeze axes do not match";
             return false;
         }
-        return remove_node_update_name(unsqueeze, squeeze->get_argument(0));
+        return remove_node_update_name(unsqueeze, squeeze->input_value(0).get_node_shared_ptr());
     }
     return false;
 }
@@ -186,23 +188,24 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
 static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
 {
     auto squeeze = as_type_ptr<op::v0::Squeeze>(node);
-    auto input = squeeze->get_argument(0);
+    auto input = squeeze->input_value(0).get_node_shared_ptr();
     // eliminate redundant unsqueeze->squeeze
     if (auto unsqueeze = as_type_ptr<op::v0::Unsqueeze>(input))
     {
-        if (!ngraph::compare_constants(unsqueeze->get_argument(1), squeeze->get_argument(1)))
+        if (!ngraph::compare_constants(unsqueeze->input_value(1).get_node_shared_ptr(),
+                                       squeeze->input_value(1).get_node_shared_ptr()))
         {
             NGRAPH_DEBUG << "unsqueeze->squeeze axes do not match";
             return false;
         }
-        return remove_node_update_name(squeeze, unsqueeze->get_argument(0));
+        return remove_node_update_name(squeeze, unsqueeze->input_value(0).get_node_shared_ptr());
     }
     return false;
 }
 
 static bool eliminate_stop_gradient(const std::shared_ptr<Node>& node)
 {
-    remove_node_update_name(node, node->get_argument(0));
+    remove_node_update_name(node, node->input_value(0).get_node_shared_ptr());
     return true;
 }
 
