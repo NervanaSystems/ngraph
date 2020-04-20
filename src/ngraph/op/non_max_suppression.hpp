@@ -24,7 +24,7 @@ namespace ngraph
     {
         namespace v1
         {
-            /// \brief Elementwise addition operation.
+            /// \brief NonMaxSuppression operation
             ///
             class NGRAPH_API NonMaxSuppression : public Op
             {
@@ -41,14 +41,14 @@ namespace ngraph
 
                 /// \brief Constructs a NonMaxSuppression operation.
                 ///
-                /// \param boxes Output that produces a tensor with box coordinates.
-                /// \param scores Output that produces ta tensor
-                /// \param max_output_boxes_per_class Auto broadcast specification
-                /// \param iou_threshold Auto broadcast specification
-                /// \param score_threshold Auto broadcast specification
-                /// \param box_encoding Auto broadcast specification
-                /// \param sort_result_descending Auto broadcast specification
-                /// \param output_type TODO
+                /// \param boxes Node producing the box coordinates
+                /// \param scores Node producing the box scores
+                /// \param max_output_boxes_per_class Node producing maximum number of boxes to be selected per class
+                /// \param iou_threshold Node producing intersection over union threshold
+                /// \param score_threshold Node producing minimum score threshold
+                /// \param box_encoding Specifies the format of boxes data encoding
+                /// \param sort_result_descending Specifies whether it is necessary to sort selected boxes across batches
+                /// \param output_type Specifies the output tensor type
                 NonMaxSuppression(const Output<Node>& boxes,
                                   const Output<Node>& scores,
                                   const Output<Node>& max_output_boxes_per_class,
@@ -61,11 +61,11 @@ namespace ngraph
                 /// \brief Constructs a NonMaxSuppression operation with default values for the last
                 ///        3 inputs
                 ///
-                /// \param boxes Output that produces a tensor with box coordinates.
-                /// \param scores Output that produces ta tensor
-                /// \param box_encoding Auto broadcast specification
-                /// \param sort_result_descending Auto broadcast specification
-                /// \param output_type TODO
+                /// \param boxes Node producing the box coordinates
+                /// \param scores Node producing the box coordinates
+                /// \param box_encoding Specifies the format of boxes data encoding
+                /// \param sort_result_descending Specifies whether it is necessary to sort selected boxes across batches
+                /// \param output_type Specifies the output tensor type
                 NonMaxSuppression(const Output<Node>& boxes,
                                   const Output<Node>& scores,
                                   const BoxEncodingType box_encoding = BoxEncodingType::CORNER,
