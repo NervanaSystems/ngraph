@@ -158,25 +158,8 @@ namespace ngraph
             }
             return ::testing::AssertionSuccess();
         }
-    }
-}
-
-static void fill_rand(std::vector<std::vector<float>>& args)
-{
-    ngraph::test::Uniform<float> rng{0, 1, 0};
-    for (auto& v : args)
-    {
-        rng.initialize(v);
-    }
-}
-
-static void fill_rand(std::vector<std::vector<int64_t>>& args)
-{
-    for (auto& v : args)
-    {
-        std::generate(v.begin(), v.end(), rand);
-    }
-}
+    } // namespace test
+} // namespace ngraph
 
 // apply pass, execute and compare with INTERPRETER using random data
 template <typename T, typename TIN, typename TOUT = TIN>
@@ -194,8 +177,16 @@ bool compare_pass_int(std::shared_ptr<ngraph::Function>& baseline_f,
         for (auto& p : baseline_f->get_parameters())
         {
             args.emplace_back(shape_size(p->get_shape()), 0);
+            if (std::is_integral<TIN>())
+            {
+                std::generate(args.back().begin(), args.back().end(), rand);
+            }
+            else
+            {
+                static ngraph::test::Uniform<float> rng{0, 1, 0};
+                rng.initialize(args.back());
+            }
         }
-        fill_rand(args);
     }
     auto baseline_results = execute<TIN, TOUT>(baseline_f, args, "INTERPRETER");
     auto optimized_results = execute<TIN, TOUT>(optimized_f, args, "INTERPRETER");
