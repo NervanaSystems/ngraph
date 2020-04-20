@@ -301,12 +301,14 @@ void op::v1::TopK::validate_and_infer_types()
         }
         else
         {
-            output_shape[m_normalized_axis] =
-                Dimension(0, input_partial_shape[m_normalized_axis].get_max_length());
             auto max_k = maximum_value(input_value(1));
             if (max_k.first)
             {
                 output_shape[m_normalized_axis] &= Dimension(0, max_k.second);
+            }
+            else
+            {
+                output_shape[m_normalized_axis] = -1;
             }
         }
     }
