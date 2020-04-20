@@ -1131,13 +1131,8 @@ bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_
     OutputVector output_constants;
     for (auto output : outputs())
     {
-        auto element_type = output.get_element_type();
-        auto partial_shape = output.get_partial_shape();
-        if (partial_shape.is_dynamic() || element_type.is_dynamic())
-        {
-            return false;
-        }
-        auto tensor = op::v0::Constant::create_evaluator_tensor(element_type, partial_shape);
+        auto tensor = op::v0::Constant::create_evaluator_tensor(output.get_element_type(),
+                                                                output.get_partial_shape());
         output_constant_tensors.push_back(tensor);
         output_tensors.push_back(tensor);
     }
