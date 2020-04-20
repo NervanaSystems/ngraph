@@ -33,7 +33,6 @@
 #include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
-#include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/all.hpp"
 #include "ngraph/runtime/reference/allreduce.hpp"
 #include "ngraph/runtime/reference/and.hpp"
@@ -58,7 +57,6 @@
 #include "ngraph/runtime/reference/cosh.hpp"
 #include "ngraph/runtime/reference/cum_sum.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
-#include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/runtime/reference/embedding_lookup.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
@@ -76,17 +74,13 @@
 #include "ngraph/runtime/reference/lrn.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
-#include "ngraph/runtime/reference/maximum.hpp"
 #include "ngraph/runtime/reference/min.hpp"
-#include "ngraph/runtime/reference/minimum.hpp"
-#include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
 #include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/not_equal.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
 #include "ngraph/runtime/reference/or.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
-#include "ngraph/runtime/reference/power.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
 #include "ngraph/runtime/reference/random_uniform.hpp"
@@ -102,7 +96,6 @@
 #include "ngraph/runtime/reference/scatter_nd_add.hpp"
 #include "ngraph/runtime/reference/select.hpp"
 #include "ngraph/runtime/reference/send.hpp"
-#include "ngraph/runtime/reference/shape_of.hpp"
 #include "ngraph/runtime/reference/sigmoid.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
 #include "ngraph/runtime/reference/sin.hpp"
@@ -110,7 +103,6 @@
 #include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/runtime/reference/softmax.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
-#include "ngraph/runtime/reference/subtract.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
@@ -736,18 +728,6 @@ protected:
 
             break;
         }
-        case OP_TYPEID::Divide:
-        {
-            const op::Divide* divop = static_cast<const op::Divide*>(&node);
-            reference::divide<T>(args[0]->get_data_ptr<const T>(),
-                                 args[1]->get_data_ptr<const T>(),
-                                 out[0]->get_data_ptr<T>(),
-                                 node.get_input_shape(0),
-                                 node.get_input_shape(1),
-                                 divop->get_autob(),
-                                 divop->is_pythondiv());
-            break;
-        }
         case OP_TYPEID::Dot:
         {
             const op::Dot* dot = static_cast<const op::Dot*>(&node);
@@ -1041,17 +1021,6 @@ protected:
                               max->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::Maximum:
-        {
-            auto maximum = static_cast<const op::Maximum*>(&node);
-            reference::maximum<T>(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  maximum->get_autob());
-            break;
-        }
         case OP_TYPEID::MaxPool:
         {
             const op::MaxPool* max_pool = static_cast<const op::MaxPool*>(&node);
@@ -1090,28 +1059,6 @@ protected:
                               node.get_input_shape(0),
                               node.get_output_shape(0),
                               min->get_reduction_axes());
-            break;
-        }
-        case OP_TYPEID::Minimum:
-        {
-            auto minimum = static_cast<const op::Minimum*>(&node);
-            reference::minimum<T>(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  minimum->get_autob());
-            break;
-        }
-        case OP_TYPEID::Multiply:
-        {
-            auto multiply = static_cast<const op::Multiply*>(&node);
-            reference::multiply<T>(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   multiply->get_autob());
             break;
         }
         case OP_TYPEID::Negative:
@@ -1179,17 +1126,6 @@ protected:
                            pad->get_padding_below(),
                            pad->get_padding_above(),
                            pad->get_pad_mode());
-            break;
-        }
-        case OP_TYPEID::Power:
-        {
-            auto power = static_cast<const op::Power*>(&node);
-            reference::power<T>(args[0]->get_data_ptr<const T>(),
-                                args[1]->get_data_ptr<const T>(),
-                                out[0]->get_data_ptr<T>(),
-                                node.get_input_shape(0),
-                                node.get_input_shape(1),
-                                power->get_autob());
             break;
         }
         case OP_TYPEID::Product:
@@ -1719,17 +1655,6 @@ protected:
         }
         case OP_TYPEID::StopGradient: { throw unsupported_op("Unsupported op 'StopGradient'");
         }
-        case OP_TYPEID::Subtract:
-        {
-            auto subtract = static_cast<const op::Subtract*>(&node);
-            reference::subtract<T>(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   subtract->get_autob());
-            break;
-        }
         case OP_TYPEID::Sum:
         {
             const op::Sum* sum = static_cast<const op::Sum*>(&node);
@@ -1853,10 +1778,16 @@ protected:
         case OP_TYPEID::UnknownOp:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
+        case OP_TYPEID::Divide:
+        case OP_TYPEID::Maximum:
+        case OP_TYPEID::Minimum:
+        case OP_TYPEID::Multiply:
+        case OP_TYPEID::Power:
         case OP_TYPEID::Result:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShapeOf_v3:
-        case OP_TYPEID::Softmax: NGRAPH_CHECK(false, "Op not handled by evaluator method:", node);
+        case OP_TYPEID::Softmax:
+        case OP_TYPEID::Subtract: NGRAPH_CHECK(false, "Op not handled by evaluator method:", node);
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif

@@ -17,6 +17,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/runtime/reference/divide.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -78,6 +79,60 @@ shared_ptr<Node> ngraph::operator/(const Output<Node>& arg0, const Output<Node>&
     return make_shared<op::v0::Divide>(arg0, arg1);
 }
 
+namespace
+{
+    template <element::Type_t ET>
+    bool try_evaluate_divide(const EvaluatorTensorPtr& arg0,
+                             const EvaluatorTensorPtr& arg1,
+                             const EvaluatorTensorPtr& out,
+                             const op::AutoBroadcastSpec& broadcast_spec,
+                             bool pythondiv)
+    {
+        return (ET == arg0->get_element_type()) && (runtime::reference::divide(arg0->get_ptr<ET>(),
+                                                                               arg1->get_ptr<ET>(),
+                                                                               out->get_ptr<ET>(),
+                                                                               arg0->get_shape(),
+                                                                               arg1->get_shape(),
+                                                                               broadcast_spec,
+                                                                               pythondiv),
+                                                    true);
+    }
+
+    bool evaluate_divide(const EvaluatorTensorPtr& arg0,
+                         const EvaluatorTensorPtr& arg1,
+                         const EvaluatorTensorPtr& out,
+                         const op::AutoBroadcastSpec& broadcast_spec,
+                         bool pythondiv)
+    {
+        return try_evaluate_divide<element::Type_t::i8>(
+                   arg0, arg1, out, broadcast_spec, pythondiv) ||
+               try_evaluate_divide<element::Type_t::i16>(
+                   arg0, arg1, out, broadcast_spec, pythondiv) ||
+               try_evaluate_divide<element::Type_t::i32>(
+                   arg0, arg1, out, broadcast_spec, pythondiv) ||
+               try_evaluate_divide<element::Type_t::i64>(
+                   arg0, arg1, out, broadcast_spec, pythondiv) ||
+               try_evaluate_divide<element::Type_t::u8>(
+                   arg0, arg1, out, broadcast_spec, pythondiv) ||
+               try_evaluate_divide<element::Type_t::u16>(
+                   arg0, arg1, out, broadcast_spec, pythondiv) ||
+               try_evaluate_divide<element::Type_t::u32>(
+                   arg0, arg1, out, broadcast_spec, pythondiv) ||
+               try_evaluate_divide<element::Type_t::u64>(
+                   arg0, arg1, out, broadcast_spec, pythondiv) ||
+               try_evaluate_divide<element::Type_t::f32>(
+                   arg0, arg1, out, broadcast_spec, pythondiv) ||
+               try_evaluate_divide<element::Type_t::f64>(
+                   arg0, arg1, out, broadcast_spec, pythondiv);
+    }
+}
+
+bool op::v0::Divide::evaluate(const EvaluatorTensorVector& outputs,
+                              const EvaluatorTensorVector& inputs)
+{
+    return evaluate_divide(inputs[0], inputs[1], outputs[0], get_autob(), is_pythondiv());
+}
+
 // ------------------------------ v1 -------------------------------------------
 
 constexpr NodeTypeInfo op::v1::Divide::type_info;
@@ -128,4 +183,10 @@ void op::v1::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const Outpu
 
     adjoints.add_delta(x, delta / y);
     adjoints.add_delta(y, -delta * shared_from_this() / y);
+}
+
+bool op::v1::Divide::evaluate(const EvaluatorTensorVector& outputs,
+                              const EvaluatorTensorVector& inputs)
+{
+    return evaluate_divide(inputs[0], inputs[1], outputs[0], get_autob(), is_pythondiv());
 }

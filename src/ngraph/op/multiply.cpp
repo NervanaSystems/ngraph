@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/runtime/reference/multiply.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -53,6 +54,48 @@ void op::v0::Multiply::generate_adjoints(autodiff::Adjoints& adjoints, const Out
     adjoints.add_delta(y, x * delta);
 }
 
+namespace
+{
+    template <element::Type_t ET>
+    bool try_evaluate_multiply(const EvaluatorTensorPtr& arg0,
+                               const EvaluatorTensorPtr& arg1,
+                               const EvaluatorTensorPtr& out,
+                               const op::AutoBroadcastSpec& broadcast_spec)
+    {
+        return (ET == arg0->get_element_type()) &&
+               (runtime::reference::multiply(arg0->get_ptr<ET>(),
+                                             arg1->get_ptr<ET>(),
+                                             out->get_ptr<ET>(),
+                                             arg0->get_shape(),
+                                             arg1->get_shape(),
+                                             broadcast_spec),
+                true);
+    }
+
+    bool evaluate_multiply(const EvaluatorTensorPtr& arg0,
+                           const EvaluatorTensorPtr& arg1,
+                           const EvaluatorTensorPtr& out,
+                           const op::AutoBroadcastSpec& broadcast_spec)
+    {
+        return try_evaluate_multiply<element::Type_t::i8>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_multiply<element::Type_t::i16>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_multiply<element::Type_t::i32>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_multiply<element::Type_t::i64>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_multiply<element::Type_t::u8>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_multiply<element::Type_t::u16>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_multiply<element::Type_t::u32>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_multiply<element::Type_t::u64>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_multiply<element::Type_t::f32>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_multiply<element::Type_t::f64>(arg0, arg1, out, broadcast_spec);
+    }
+}
+
+bool op::v0::Multiply::evaluate(const EvaluatorTensorVector& outputs,
+                                const EvaluatorTensorVector& inputs)
+{
+    return evaluate_multiply(inputs[0], inputs[1], outputs[0], get_autob());
+}
+
 // ------------------------------------ v1 -------------------------------------
 
 constexpr NodeTypeInfo op::v1::Multiply::type_info;
@@ -85,6 +128,12 @@ void op::v1::Multiply::generate_adjoints(autodiff::Adjoints& adjoints, const Out
 
     adjoints.add_delta(x, delta * y);
     adjoints.add_delta(y, x * delta);
+}
+
+bool op::v1::Multiply::evaluate(const EvaluatorTensorVector& outputs,
+                                const EvaluatorTensorVector& inputs)
+{
+    return evaluate_multiply(inputs[0], inputs[1], outputs[0], get_autob());
 }
 
 // -----------------------------------------------------------------------------
