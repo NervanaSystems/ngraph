@@ -22,6 +22,13 @@ using namespace std;
 
 constexpr NodeTypeInfo op::v3::NonZero::type_info;
 
+op::v3::NonZero::NonZero(const Output<Node>& arg, const std::string& index_element_type)
+    : Op({arg})
+    , m_index_element_type(EnumNames<element::Type_t>::as_enum(index_element_type))
+{
+    constructor_validate_and_infer_types();
+}
+
 op::v3::NonZero::NonZero(const Output<Node>& arg, const element::Type& index_element_type)
     : Op({arg})
     , m_index_element_type(index_element_type)

@@ -42,6 +42,13 @@ namespace ngraph
                 /// \brief Constructs a NonZero operation.
                 ///
                 /// \param arg Node that produces the input tensor.
+                /// \param index_element_type produce indices. Currently, only 'int64' or 'int32'
+                /// are
+                ///                           supported
+                NonZero(const Output<Node>& arg, const std::string& index_element_type);
+                /// \brief Constructs a NonZero operation.
+                ///
+                /// \param arg Node that produces the input tensor.
                 /// \param index_element_type produce indices. Currently, only int64 or int32 are
                 ///                           supported
                 NonZero(const Output<Node>& arg, const element::Type& index_element_type);
