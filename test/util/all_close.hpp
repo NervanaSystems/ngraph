@@ -21,7 +21,9 @@
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "random.hpp"
 #include "test_tools.hpp"
 
 namespace ngraph
@@ -157,4 +159,45 @@ namespace ngraph
             return ::testing::AssertionSuccess();
         }
     }
+}
+
+static void fill_rand(std::vector<std::vector<float>>& args)
+{
+    ngraph::test::Uniform<float> rng{0, 1, 0};
+    for (auto& v : args)
+    {
+        rng.initialize(v);
+    }
+}
+
+static void fill_rand(std::vector<std::vector<int64_t>>& args)
+{
+    for (auto& v : args)
+    {
+        std::generate(v.begin(), v.end(), rand);
+    }
+}
+
+// apply pass, execute and compare with INTERPRETER using random data
+template <typename T, typename TIN, typename TOUT = TIN>
+bool compare_pass_int(std::shared_ptr<ngraph::Function>& baseline_f,
+                      std::shared_ptr<ngraph::Function>& optimized_f,
+                      std::vector<std::vector<TIN>> args = std::vector<std::vector<TIN>>{})
+{
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<ngraph::pass::Validate>();
+    pass_manager.register_pass<T>();
+    pass_manager.run_passes(optimized_f);
+
+    if (args.size() == 0)
+    {
+        for (auto& p : baseline_f->get_parameters())
+        {
+            args.emplace_back(shape_size(p->get_shape()), 0);
+        }
+        fill_rand(args);
+    }
+    auto baseline_results = execute<TIN, TOUT>(baseline_f, args, "INTERPRETER");
+    auto optimized_results = execute<TIN, TOUT>(optimized_f, args, "INTERPRETER");
+    return ngraph::test::all_close(baseline_results.at(0), optimized_results.at(0));
 }
