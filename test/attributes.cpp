@@ -612,14 +612,16 @@ TEST(attributes, non_max_suppression_op_custom_attributes)
 
     auto box_encoding = opset1::NonMaxSuppression::BoxEncodingType::CENTER;
     bool sort_result_descending = false;
+    element::Type output_type = element::i32;
 
-    auto nms =
-        make_shared<opset1::NonMaxSuppression>(boxes, scores, box_encoding, sort_result_descending);
+    auto nms = make_shared<opset1::NonMaxSuppression>(
+        boxes, scores, box_encoding, sort_result_descending, output_type);
     NodeBuilder builder(nms);
     auto g_nms = as_type_ptr<opset1::NonMaxSuppression>(builder.create());
 
     EXPECT_EQ(g_nms->get_box_encoding(), nms->get_box_encoding());
     EXPECT_EQ(g_nms->get_sort_result_descending(), nms->get_sort_result_descending());
+    EXPECT_EQ(g_nms->get_output_type(), nms->get_output_type());
 }
 
 TEST(attributes, non_max_suppression_op_default_attributes)
@@ -634,6 +636,7 @@ TEST(attributes, non_max_suppression_op_default_attributes)
 
     EXPECT_EQ(g_nms->get_box_encoding(), nms->get_box_encoding());
     EXPECT_EQ(g_nms->get_sort_result_descending(), nms->get_sort_result_descending());
+    EXPECT_EQ(g_nms->get_output_type(), nms->get_output_type());
 }
 
 TEST(attributes, normalize_l2_op)

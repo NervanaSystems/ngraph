@@ -48,6 +48,7 @@ namespace ngraph
                 /// \param score_threshold Auto broadcast specification
                 /// \param box_encoding Auto broadcast specification
                 /// \param sort_result_descending Auto broadcast specification
+                /// \param output_type TODO
                 NonMaxSuppression(const Output<Node>& boxes,
                                   const Output<Node>& scores,
                                   const Output<Node>& max_output_boxes_per_class,
@@ -55,7 +56,7 @@ namespace ngraph
                                   const Output<Node>& score_threshold,
                                   const BoxEncodingType box_encoding = BoxEncodingType::CORNER,
                                   const bool sort_result_descending = true,
-                                  const std::string& output_type = "i64");
+                                  const ngraph::element::Type& output_type = ngraph::element::i64);
 
                 /// \brief Constructs a NonMaxSuppression operation with default values for the last
                 ///        3 inputs
@@ -64,11 +65,12 @@ namespace ngraph
                 /// \param scores Output that produces ta tensor
                 /// \param box_encoding Auto broadcast specification
                 /// \param sort_result_descending Auto broadcast specification
+                /// \param output_type TODO
                 NonMaxSuppression(const Output<Node>& boxes,
                                   const Output<Node>& scores,
                                   const BoxEncodingType box_encoding = BoxEncodingType::CORNER,
                                   const bool sort_result_descending = true,
-                                  const std::string& output_type = "i64");
+                                  const ngraph::element::Type& output_type = ngraph::element::i64);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
@@ -87,10 +89,17 @@ namespace ngraph
                     m_sort_result_descending = sort_result_descending;
                 }
 
+                element::Type get_output_type() const { return m_output_type; }
+                void set_output_type(const element::Type& output_type)
+                {
+                    m_output_type = output_type;
+                }
+                using Node::set_output_type;
+
             protected:
                 BoxEncodingType m_box_encoding = BoxEncodingType::CORNER;
                 bool m_sort_result_descending = true;
-                std::string m_output_type = "i64";
+                ngraph::element::Type m_output_type = ngraph::element::i64;
 
             private:
                 int64_t max_boxes_output_from_input() const;

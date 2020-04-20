@@ -31,7 +31,7 @@ op::v1::NonMaxSuppression::NonMaxSuppression(
     const Output<Node>& score_threshold,
     const op::v1::NonMaxSuppression::BoxEncodingType box_encoding,
     const bool sort_result_descending,
-    const string& output_type)
+    const element::Type& output_type)
     : Op({boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold})
     , m_box_encoding{box_encoding}
     , m_sort_result_descending{sort_result_descending}
@@ -45,7 +45,7 @@ op::v1::NonMaxSuppression::NonMaxSuppression(
     const Output<Node>& scores,
     const op::v1::NonMaxSuppression::BoxEncodingType box_encoding,
     const bool sort_result_descending,
-    const string& output_type)
+    const element::Type& output_type)
     : Op({boxes,
           scores,
           op::Constant::create(element::i64, Shape{}, {0}),
@@ -86,14 +86,8 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
     const auto scores_ps = get_input_partial_shape(1);
 
     NODE_VALIDATION_CHECK(this,
-                          m_output_type == "i64" || m_output_type == "i32",
-                          "Expected 'i64' or 'i32 for output_type. Got: ",
-                          m_output_type);
-    auto output_element_type = element::i64;
-    if (m_output_type == "i32")
-    {
-        output_element_type = element::i32;
-    }
+                          m_output_type == element::i64 || m_output_type == element::i32,
+                          "Output type must be i32 or i64");
 
     // NonMaxSuppression produces triplets
     // that have the following format: [batch_index, class_index, box_index]
@@ -101,7 +95,7 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
 
     if (boxes_ps.is_dynamic() || scores_ps.is_dynamic())
     {
-        set_output_type(0, output_element_type, out_shape);
+        set_output_type(0, m_output_type, out_shape);
         return;
     }
 
@@ -169,7 +163,7 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
         out_shape[0] = std::min(num_boxes, max_output_boxes_per_class * num_classes);
     }
     set_output_size(1);
-    set_output_type(0, output_element_type, out_shape);
+    set_output_type(0, m_output_type, out_shape);
 }
 
 int64_t op::v1::NonMaxSuppression::max_boxes_output_from_input() const

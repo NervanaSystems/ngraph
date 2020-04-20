@@ -180,7 +180,7 @@ TEST(type_prop, nms_output_shape_i32)
                                                score_threshold,
                                                op::v1::NonMaxSuppression::BoxEncodingType::CORNER,
                                                true,
-                                               "i32");
+                                               element::i32);
 
     ASSERT_EQ(nms->get_element_type(), element::i32);
     ASSERT_EQ(nms->get_shape(), (Shape{1, 3}));
