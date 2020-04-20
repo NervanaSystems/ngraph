@@ -43,17 +43,16 @@ using namespace ngraph;
 
 #define TI(x) x::type_info
 
-static bool eliminate_pad(const std::shared_ptr<Node>& node)
+static bool eliminate_nop(const std::shared_ptr<Node>& node)
 {
-    auto pad = as_type_ptr<op::v0::Pad>(node);
     // skip if shapes are dynamic
-    if (pad->get_input_partial_shape(0).is_dynamic() ||
-        pad->get_output_partial_shape(0).is_dynamic())
+    if (node->get_input_partial_shape(0).is_dynamic() ||
+        node->get_output_partial_shape(0).is_dynamic())
     {
         return false;
     }
 
-    if (pad->get_input_shape(0) == pad->get_output_shape(0))
+    if (node->get_input_shape(0) == node->get_output_shape(0))
     {
         return remove_node_update_name(node, node->input_value(0).get_node_shared_ptr());
     }
@@ -88,38 +87,6 @@ static bool eliminate_convert(const std::shared_ptr<Node>& node)
             input = input->input_value(0).get_node_shared_ptr();
         }
         return remove_node_update_name(node, input);
-    }
-    return false;
-}
-
-static bool eliminate_slice(const std::shared_ptr<Node>& node)
-{
-    auto slice = as_type_ptr<op::v0::Slice>(node);
-    // skip if shapes are dynamic
-    if (slice->get_input_partial_shape(0).is_dynamic() ||
-        slice->get_output_partial_shape(0).is_dynamic())
-    {
-        return false;
-    }
-    if (slice->get_input_shape(0) == slice->get_output_shape(0))
-    {
-        return remove_node_update_name(node, node->input_value(0).get_node_shared_ptr());
-    }
-    return false;
-}
-
-static bool eliminate_broadcast(const std::shared_ptr<Node>& node)
-{
-    auto broadcast = as_type_ptr<op::v0::Broadcast>(node);
-    // skip if shapes are dynamic
-    if (broadcast->get_input_partial_shape(0).is_dynamic() ||
-        broadcast->get_output_partial_shape(0).is_dynamic())
-    {
-        return false;
-    }
-    if (broadcast->get_input_shape(0) == broadcast->get_output_shape(0))
-    {
-        return remove_node_update_name(node, node->input_value(0).get_node_shared_ptr());
     }
     return false;
 }
@@ -210,16 +177,17 @@ static bool eliminate_stop_gradient(const std::shared_ptr<Node>& node)
 }
 
 static const std::unordered_map<NodeTypeInfo, std::function<bool(const std::shared_ptr<Node>&)>>
-    dispatcher{{TI(op::v0::Pad), &eliminate_pad},
+    dispatcher{{TI(op::v0::Pad), &eliminate_nop},
+               {TI(op::v1::Pad), &eliminate_nop},
                {TI(op::v0::Sum), &eliminate_sum},
                {TI(op::v0::Convert), &eliminate_convert},
-               {TI(op::v0::Slice), &eliminate_slice},
+               {TI(op::v0::Slice), &eliminate_nop},
                {TI(op::v0::StopGradient), &eliminate_stop_gradient},
                {TI(op::v1::Reshape), &eliminate_reshape_v1},
                {TI(op::v0::Concat), &eliminate_concat},
                {TI(op::v0::Squeeze), &eliminate_squeeze},
                {TI(op::v0::Unsqueeze), &eliminate_unsqueeze},
-               {TI(op::v0::Broadcast), &eliminate_broadcast}};
+               {TI(op::v0::Broadcast), &eliminate_nop}};
 
 bool pass::NopElimination::run_on_function(std::shared_ptr<Function> function)
 {
