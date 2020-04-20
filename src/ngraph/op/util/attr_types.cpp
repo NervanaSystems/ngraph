@@ -111,9 +111,9 @@ namespace ngraph
     {
         static auto enum_names =
             EnumNames<op::TopKSortType>("op::TopKSortType",
-                                        {{"NONE", op::TopKSortType::NONE},
-                                         {"SORT_INDICES", op::TopKSortType::SORT_INDICES},
-                                         {"SORT_VALUES", op::TopKSortType::SORT_VALUES}});
+                                        {{"none", op::TopKSortType::NONE},
+                                         {"index", op::TopKSortType::SORT_INDICES},
+                                         {"value", op::TopKSortType::SORT_VALUES}});
         return enum_names;
     }
     template <>
