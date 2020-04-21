@@ -31,10 +31,10 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::v3::GRUCell::type_info;
 
 op::v3::GRUCell::GRUCell(const Output<Node>& X,
-                     const Output<Node>& initial_hidden_state,
-                     const Output<Node>& W,
-                     const Output<Node>& R,
-                     size_t hidden_size)
+                         const Output<Node>& initial_hidden_state,
+                         const Output<Node>& W,
+                         const Output<Node>& R,
+                         size_t hidden_size)
     : GRUCell(X,
               initial_hidden_state,
               W,
@@ -49,15 +49,15 @@ op::v3::GRUCell::GRUCell(const Output<Node>& X,
 }
 
 op::v3::GRUCell::GRUCell(const Output<Node>& X,
-                     const Output<Node>& initial_hidden_state,
-                     const Output<Node>& W,
-                     const Output<Node>& R,
-                     size_t hidden_size,
-                     const vector<string>& activations,
-                     const vector<float>& activations_alpha,
-                     const vector<float>& activations_beta,
-                     float clip,
-                     bool linear_before_reset)
+                         const Output<Node>& initial_hidden_state,
+                         const Output<Node>& W,
+                         const Output<Node>& R,
+                         size_t hidden_size,
+                         const vector<string>& activations,
+                         const vector<float>& activations_alpha,
+                         const vector<float>& activations_beta,
+                         float clip,
+                         bool linear_before_reset)
     : FusedOp({X, initial_hidden_state, W, R})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
@@ -69,16 +69,16 @@ op::v3::GRUCell::GRUCell(const Output<Node>& X,
 }
 
 op::v3::GRUCell::GRUCell(const Output<Node>& X,
-                     const Output<Node>& initial_hidden_state,
-                     const Output<Node>& W,
-                     const Output<Node>& R,
-                     const Output<Node>& B,
-                     size_t hidden_size,
-                     const vector<string>& activations,
-                     const vector<float>& activations_alpha,
-                     const vector<float>& activations_beta,
-                     float clip,
-                     bool linear_before_reset)
+                         const Output<Node>& initial_hidden_state,
+                         const Output<Node>& W,
+                         const Output<Node>& R,
+                         const Output<Node>& B,
+                         size_t hidden_size,
+                         const vector<string>& activations,
+                         const vector<float>& activations_alpha,
+                         const vector<float>& activations_beta,
+                         float clip,
+                         bool linear_before_reset)
     : FusedOp({X, initial_hidden_state, W, R, B})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
