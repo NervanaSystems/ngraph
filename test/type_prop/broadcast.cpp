@@ -490,7 +490,9 @@ REGISTER_TYPED_TEST_CASE_P(BroadcastTests,
                            broadcast_axes_et_wrong);
 
 typedef ::testing::Types<op::v1::Broadcast, op::v3::Broadcast> BroadcastTypes;
-INSTANTIATE_TYPED_TEST_CASE_P(type_prop, BroadcastTests, BroadcastTypes);
+// the last empty argument resolves compiler warning on MAC:
+// `must specify at least one argument for '...'` (variadic macro)
+INSTANTIATE_TYPED_TEST_CASE_P(type_prop, BroadcastTests, BroadcastTypes, );
 
 TEST(type_prop, broadcast_v3_bidirectional_mode_string)
 {
