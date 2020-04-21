@@ -17,11 +17,13 @@
 #include <algorithm>
 #include <vector>
 
+#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/shape_of.hpp"
 #include "ngraph/pass/constant_folding.hpp"
+#include "ngraph/runtime/reference/shape_of.hpp"
 #include "ngraph/type/element_type_traits.hpp"
 
 using namespace std;
@@ -61,19 +63,42 @@ shared_ptr<Node> op::v3::ShapeOf::clone_with_new_inputs(const OutputVector& new_
 
 namespace
 {
-    OutputVector constant_fold_shape_of(const std::shared_ptr<Node>& shape_of_node,
-                                        element::Type output_type,
-                                        bool is_foldable)
+    template <element::Type_t ET>
+    inline bool try_evaluate_shape_of(const Shape& shape, const EvaluatorTensorPtr& output_value)
     {
-        auto shape_of_input = shape_of_node->input_value(0);
+        return (ET == output_value->get_element_type()) &&
+               (runtime::reference::shape_of(shape, output_value->get_ptr<ET>()), true);
+    }
+
+    bool evaluate_shape_of(const EvaluatorTensorPtr& output_value,
+                           const EvaluatorTensorPtr& input_value)
+    {
+        Shape shape = input_value->get_shape();
+        return try_evaluate_shape_of<element::Type_t::i32>(shape, output_value) ||
+               try_evaluate_shape_of<element::Type_t::i64>(shape, output_value);
+    }
+
+    bool constant_fold_shape_of(Node* shape_of_node,
+                                Output<Node>& replacement,
+                                const Output<Node>& shape_of_input,
+                                bool is_foldable)
+    {
         auto partial_shape = shape_of_input.get_partial_shape();
-        OutputVector replacements;
+        auto output_type = shape_of_node->get_output_element_type(0);
         if (partial_shape.is_static())
         {
-            NGRAPH_CHECK(pass::revalidate_and_ensure_static(shape_of_node));
+            NGRAPH_CHECK(pass::revalidate_and_ensure_static(shape_of_node->shared_from_this()));
             auto arg_shape = shape_of_input.get_shape();
-            replacements = OutputVector{std::make_shared<op::v0::Constant>(
-                output_type, Shape{arg_shape.size()}, arg_shape)};
+            auto result_tensor = op::v0::Constant::create_evaluator_tensor(
+                output_type, shape_of_node->get_output_shape(0));
+            if (evaluate_shape_of(
+                    result_tensor,
+                    op::v0::Constant::create_evaluator_tensor(output_type, partial_shape)))
+            {
+                replacement = result_tensor->get_constant();
+                return true;
+            }
+            return false;
         }
         else if (partial_shape.rank().is_static() && is_foldable)
         {
@@ -112,15 +137,22 @@ namespace
                 }
             }
 
-            replacements = OutputVector{std::make_shared<op::Concat>(dimensions, 0)};
+            replacement = std::make_shared<op::Concat>(dimensions, 0);
+            return true;
         }
-        return replacements;
+        return false;
     }
 }
 
-OutputVector op::v3::ShapeOf::constant_fold()
+bool op::v3::ShapeOf::evaluate(const EvaluatorTensorVector& output_values,
+                               const EvaluatorTensorVector& input_values)
 {
-    return constant_fold_shape_of(shared_from_this(), m_output_type, m_is_foldable);
+    return evaluate_shape_of(output_values[0], input_values[0]);
+}
+
+bool op::v3::ShapeOf::constant_fold(OutputVector& output_values, const OutputVector& input_values)
+{
+    return constant_fold_shape_of(this, output_values[0], input_values[0], m_is_foldable);
 }
 
 // op::v0::ShapeOf
@@ -151,7 +183,13 @@ shared_ptr<Node> op::v0::ShapeOf::clone_with_new_inputs(const OutputVector& new_
     return new_shape_of;
 }
 
-OutputVector op::v0::ShapeOf::constant_fold()
+bool op::v0::ShapeOf::evaluate(const EvaluatorTensorVector& output_values,
+                               const EvaluatorTensorVector& input_values)
 {
-    return constant_fold_shape_of(shared_from_this(), element::i64, m_is_foldable);
+    return evaluate_shape_of(output_values[0], input_values[0]);
+}
+
+bool op::v0::ShapeOf::constant_fold(OutputVector& output_values, const OutputVector& input_values)
+{
+    return constant_fold_shape_of(this, output_values[0], input_values[0], m_is_foldable);
 }
