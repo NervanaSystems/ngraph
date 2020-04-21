@@ -549,54 +549,75 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
     bool rc = false;
     auto transpose = as_type_ptr<op::Transpose>(n);
 
-    if (transpose)
+    if (!transpose)
+        return false;
+
+    PartialShape shape = n->input_value(0).get_partial_shape();
+    if (shape.is_dynamic())
     {
-        auto perm = as_type_ptr<op::Constant>(n->get_argument(1));
-        auto perm_value = perm->get_vector<int64_t>();
-        auto data = n->get_argument(0);
-        auto data_shape = n->input_value(0).get_partial_shape().to_shape();
-
-        // Check if input shape contains a Dim of value 1
-        vector<int> indices_of_one; // index of dim 1 in data_shape
-        for (int i = 0; i < data_shape.size(); i++)
-        {
-            if (data_shape[i] == 1)
-            {
-                indices_of_one.push_back(i);
-            }
-        }
-
-        if (indices_of_one.size() == 0)
+        if (shape.rank().is_dynamic())
             return false;
 
-        // Remove indices of 1 from perm_value and check if the other
-        // dimensions haven't interchanged
-        vector<int64_t> perm_value_copy = perm_value;
-
-        for (int i = 0; i < perm_value.size(); i++)
+        int count_dynamic_dims = 0;
+        for (int i = 0; i < shape.rank().get_length(); i++)
         {
-            if (count(indices_of_one.begin(), indices_of_one.end(), perm_value[i]))
+            if (shape[i].is_dynamic())
             {
-                perm_value_copy.erase(perm_value_copy.begin() +
-                                      (i - (perm_value.size() - perm_value_copy.size())));
+                count_dynamic_dims++;
+                shape[i] = 2; // any non 1 number
             }
         }
 
-        // If all the indices are in increasing order,
-        // then the other dims are unchanged and only dim of 1
-        // has changed its position
-        for (int i = 0; i + 1 < perm_value_copy.size(); i++)
-        {
-            if (perm_value_copy[i] > perm_value_copy[i + 1])
-                return false; // not a valid permutation
-        }
-
-        auto reshape_op = make_shared<op::Reshape>(data,
-                                                   AxisVector(perm_value.begin(), perm_value.end()),
-                                                   n->get_output_partial_shape(0).to_shape());
-        replace_node(n, reshape_op);
-        rc = true;
+        if (count_dynamic_dims > 1)
+            return false; // only works on one dynamic dim
     }
+
+    auto perm = as_type_ptr<op::Constant>(n->get_argument(1));
+    auto perm_value = perm->get_vector<int64_t>();
+    auto data = n->get_argument(0);
+    auto data_shape = shape.to_shape();
+
+    // Check if input shape contains a Dim of value 1
+    vector<int> indices_of_one; // index of dim 1 in data_shape
+    for (int i = 0; i < data_shape.size(); i++)
+    {
+        if (data_shape[i] == 1)
+        {
+            indices_of_one.push_back(i);
+        }
+    }
+
+    if (indices_of_one.size() == 0)
+        return false;
+
+    // Remove indices of 1 from perm_value and check if the other
+    // dimensions haven't interchanged
+    vector<int64_t> perm_value_copy = perm_value;
+
+    for (int i = 0; i < perm_value.size(); i++)
+    {
+        if (count(indices_of_one.begin(), indices_of_one.end(), perm_value[i]))
+        {
+            perm_value_copy.erase(perm_value_copy.begin() +
+                                  (i - (perm_value.size() - perm_value_copy.size())));
+        }
+    }
+
+    // If all the indices are in increasing order,
+    // then the other dims are unchanged and only dim of 1
+    // has changed its position
+    for (int i = 0; i + 1 < perm_value_copy.size(); i++)
+    {
+        if (perm_value_copy[i] > perm_value_copy[i + 1])
+            return false; // not a valid permutation
+    }
+
+    auto constant_node =
+        ngraph::op::Constant::create(element::i64, Shape{data_shape.size()}, data_shape);
+    auto reshape_op = make_shared<op::v1::Reshape>(data, constant_node, false);
+    replace_node(n, reshape_op);
+    rc = true;
+
     return rc;
 }
 
