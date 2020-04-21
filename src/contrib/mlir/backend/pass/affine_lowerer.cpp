@@ -71,7 +71,7 @@ namespace
         NGraphOpLowering(StringRef rootOpName, MLIRContext* context, DialectLoweringPass& pass)
             : ConversionPattern(rootOpName, /*benefit=*/1, context)
             , pass(pass)
-            , context(context) {};
+            , context(context){};
 
     protected:
         // Back-reference to the lowering pass which contains the lowering state, including the
@@ -90,9 +90,9 @@ namespace
         {                                                                                          \
         }                                                                                          \
                                                                                                    \
-        LogicalResult matchAndRewrite(Operation* op,                                          \
-                                           ArrayRef<Value> operands,                               \
-                                           ConversionPatternRewriter& rewriter) const override;    \
+        LogicalResult matchAndRewrite(Operation* op,                                               \
+                                      ArrayRef<Value> operands,                                    \
+                                      ConversionPatternRewriter& rewriter) const override;         \
     };
 
 #include "op_lowerers.inc"
@@ -109,8 +109,8 @@ namespace
 
         /// Hook for derived classes to implement combined matching and rewriting.
         LogicalResult matchAndRewrite(Operation* op,
-                                           ArrayRef<Value> operands,
-                                           ConversionPatternRewriter& rewriter) const override
+                                      ArrayRef<Value> operands,
+                                      ConversionPatternRewriter& rewriter) const override
         {
             auto funcOp = cast<FuncOp>(op);
             FunctionType type = funcOp.getType();
@@ -1157,7 +1157,7 @@ namespace
     }
 
 #define REWRITER(OP)                                                                               \
-    LogicalResult OP##Conversion::matchAndRewrite(                                            \
+    LogicalResult OP##Conversion::matchAndRewrite(                                                 \
         Operation* op, ArrayRef<Value> operands, ConversionPatternRewriter& rewriter) const
 
     REWRITER(NGAddOp)
@@ -1673,8 +1673,10 @@ namespace
         }
     }
 
-    static LLVM::AddressOfOp
-        getGlobalAddr(int32_t index, PatternRewriter& rewriter, DialectLoweringPass& pass, MLIRContext *context)
+    static LLVM::AddressOfOp getGlobalAddr(int32_t index,
+                                           PatternRewriter& rewriter,
+                                           DialectLoweringPass& pass,
+                                           MLIRContext* context)
     {
         auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
         auto globalTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
@@ -1768,8 +1770,6 @@ namespace
             index = pass.insertAttrs(attrs, AttrsType::POOL3D);
         }
         // Get callback func
-        //auto module = pass.getOperation();
-        //auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
         auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
         auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
         auto int64Ty = rewriter.getIntegerType(64);
@@ -2762,7 +2762,7 @@ namespace
                       ArrayRef<Value> operands,
                       PatternRewriter& rewriter,
                       DialectLoweringPass& pass,
-                      MLIRContext *context)
+                      MLIRContext* context)
     {
         auto pooling = cast<OP>(op);
         auto loc = pooling.getLoc();

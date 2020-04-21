@@ -19,13 +19,13 @@
 
 #include "type.hpp"
 
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/raw_ostream.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/StandardTypes.h"
-#include "llvm/ADT/STLExtras.h"
 #include "ngraph/assertion.hpp"
 
 using llvm::ArrayRef;

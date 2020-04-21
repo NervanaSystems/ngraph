@@ -36,7 +36,6 @@ using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::ArrayRef;
 
-using namespace mlir;
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
@@ -49,7 +48,8 @@ namespace
     /// CompiledKernel node, it
     /// translates the graph down to nGraph dialect
 
-    class NgDialectConversionPass : public PassWrapper<NgDialectConversionPass, OperationPass<ModuleOp>>
+    class NgDialectConversionPass
+        : public mlir::PassWrapper<NgDialectConversionPass, mlir::OperationPass<mlir::ModuleOp>>
     {
     public:
         using TensorList = std::vector<descriptor::Tensor*>;
@@ -690,7 +690,7 @@ mlir::Operation* NgDialectConversionPass::createIndexReduction(const ngraph::Nod
     return op;
 }
 
-std::unique_ptr<Pass>
+std::unique_ptr<mlir::Pass>
     ngraph::pass::createNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
                                                 mlir::MLIRContext* context)
 {

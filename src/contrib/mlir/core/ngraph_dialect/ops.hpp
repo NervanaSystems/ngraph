@@ -20,12 +20,13 @@
 #pragma once
 
 #include <cstdarg>
+#include "llvm/ADT/STLExtras.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/IR/OpImplementation.h"
 #include "mlir/IR/OperationSupport.h"
 #include "mlir/IR/StandardTypes.h"
-#include "llvm/ADT/STLExtras.h"
+#include "mlir/Interfaces/SideEffects.h"
 
 // attributes
 // Currently table-gen dictates that enum attributes are in global namespace

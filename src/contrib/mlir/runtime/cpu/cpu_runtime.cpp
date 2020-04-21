@@ -92,7 +92,7 @@ void MLIRCPURuntime::bindArguments(const std::vector<MemRefArg>& args)
 {
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
-    auto name = clEnableBarePtrMemRefLowering ? "main" : "_mlir_ciface_main";
+    auto name = clEnableBarePtrMemRefLowering ? "_mlir_ciface_main" : "main";
     auto func = m_module->lookupSymbol<mlir::LLVM::LLVMFuncOp>(name);
     NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
 
@@ -151,27 +151,15 @@ void MLIRCPURuntime::execute(bool firstIteration)
     {
         if (firstIteration)
         {
-            auto invocationResult = m_engine->invoke("_mlir_ciface_callback_init");
+            auto invocationResult = m_engine->invoke("callback_init");
             if (clDumpObjectFile)
             {
                 m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
                                                                     : clObjectFilename.getValue());
             }
-            NGRAPH_CHECK(!invocationResult,
-                         "JIT invocation of '_mlir_ciface_callback_init' failed\n");
+            NGRAPH_CHECK(!invocationResult, "JIT invocation of 'callback_init' failed\n");
         }
 
-        auto invocationResult =
-            m_engine->invoke("_mlir_ciface_main", llvm::MutableArrayRef<void*>(m_invokeArgs));
-        if (clDumpObjectFile)
-        {
-            m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
-                                                                : clObjectFilename.getValue());
-        }
-        NGRAPH_CHECK(!invocationResult, "JIT invocation of '_mlir_ciface_main' failed\n");
-    }
-    else
-    {
         auto invocationResult =
             m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invokeArgs));
         if (clDumpObjectFile)
@@ -180,6 +168,17 @@ void MLIRCPURuntime::execute(bool firstIteration)
                                                                 : clObjectFilename.getValue());
         }
         NGRAPH_CHECK(!invocationResult, "JIT invocation of 'main' failed\n");
+    }
+    else
+    {
+        auto invocationResult =
+            m_engine->invoke("_mlir_ciface_main", llvm::MutableArrayRef<void*>(m_invokeArgs));
+        if (clDumpObjectFile)
+        {
+            m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
+                                                                : clObjectFilename.getValue());
+        }
+        NGRAPH_CHECK(!invocationResult, "JIT invocation of '_mlir_ciface_main' failed\n");
     }
 }
 
