@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/add.hpp"
+#include "ngraph/runtime/reference/add.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -64,6 +65,47 @@ shared_ptr<Node> ngraph::operator+(const Output<Node>& arg0, const Output<Node>&
     return make_shared<op::Add>(arg0, arg1);
 }
 
+namespace
+{
+    template <element::Type_t ET>
+    bool try_evaluate_add(const EvaluatorTensorPtr& arg0,
+                          const EvaluatorTensorPtr& arg1,
+                          const EvaluatorTensorPtr& out,
+                          const op::AutoBroadcastSpec& broadcast_spec)
+    {
+        return (ET == arg0->get_element_type()) && (runtime::reference::add(arg0->get_ptr<ET>(),
+                                                                            arg1->get_ptr<ET>(),
+                                                                            out->get_ptr<ET>(),
+                                                                            arg0->get_shape(),
+                                                                            arg1->get_shape(),
+                                                                            broadcast_spec),
+                                                    true);
+    }
+
+    bool evaluate_add(const EvaluatorTensorPtr& arg0,
+                      const EvaluatorTensorPtr& arg1,
+                      const EvaluatorTensorPtr& out,
+                      const op::AutoBroadcastSpec& broadcast_spec)
+    {
+        return try_evaluate_add<element::Type_t::i8>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_add<element::Type_t::i16>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_add<element::Type_t::i32>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_add<element::Type_t::i64>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_add<element::Type_t::u8>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_add<element::Type_t::u16>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_add<element::Type_t::u32>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_add<element::Type_t::u64>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_add<element::Type_t::f32>(arg0, arg1, out, broadcast_spec) ||
+               try_evaluate_add<element::Type_t::f64>(arg0, arg1, out, broadcast_spec);
+    }
+}
+
+bool op::v0::Add::evaluate(const EvaluatorTensorVector& outputs,
+                           const EvaluatorTensorVector& inputs)
+{
+    return evaluate_add(inputs[0], inputs[1], outputs[0], get_autob());
+}
+
 // ------------------------------- v1 ------------------------------------------
 
 constexpr NodeTypeInfo op::v1::Add::type_info;
@@ -102,4 +144,10 @@ void op::v1::Add::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
 
     adjoints.add_delta(x, delta);
     adjoints.add_delta(y, delta);
+}
+
+bool op::v1::Add::evaluate(const EvaluatorTensorVector& outputs,
+                           const EvaluatorTensorVector& inputs)
+{
+    return evaluate_add(inputs[0], inputs[1], outputs[0], get_autob());
 }
