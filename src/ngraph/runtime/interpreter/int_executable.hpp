@@ -119,8 +119,6 @@
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/bernoulli_rng_state.hpp"
 #include "ngraph/state/uniform_rng_state.hpp"
-#include "ngraph/type/bfloat16.hpp"
-#include "ngraph/type/float16.hpp"
 
 namespace ngraph
 {
@@ -549,16 +547,6 @@ protected:
                 reference::convert_to_bool<T>(
                     args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<char>(), element_count);
                 break;
-            case element::Type_t::f16:
-                reference::convert<T>(args[0]->get_data_ptr<const T>(),
-                                      out[0]->get_data_ptr<float16>(),
-                                      element_count);
-                break;
-            case element::Type_t::bf16:
-                reference::convert<T>(args[0]->get_data_ptr<const T>(),
-                                      out[0]->get_data_ptr<bfloat16>(),
-                                      element_count);
-                break;
             case element::Type_t::f32:
                 reference::convert<T>(
                     args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<float>(), element_count);
@@ -611,6 +599,8 @@ protected:
             case element::Type_t::undefined:
             case element::Type_t::dynamic:
             case element::Type_t::u1:
+            case element::Type_t::bf16:
+            case element::Type_t::f16:
                 ss << "unsupported element type " << type << " op Convert";
                 throw std::runtime_error(ss.str());
             }
