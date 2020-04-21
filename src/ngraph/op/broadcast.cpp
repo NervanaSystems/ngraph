@@ -278,7 +278,7 @@ void op::v3::Broadcast::validate_and_infer_types()
                             arg_shape[i - start_axis] == target_shape[i],
                         "Broadcast incorrect target shape. Expecting either 1 or ",
                         arg_shape[i - start_axis],
-                        " . Got ",
+                        ". Got ",
                         target_shape[i]);
                     result_shape[i] = std::max(arg_shape[i - start_axis], target_shape[i]);
                 }

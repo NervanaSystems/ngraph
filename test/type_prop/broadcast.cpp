@@ -643,3 +643,49 @@ TEST(type_prop, broadcast_v3_shape_6_type_infer)
     ASSERT_EQ(broadcast_v3->get_shape(), (Shape{3, 3, 3}));
     ASSERT_EQ(broadcast_v3->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
 }
+
+TEST(type_prop, broadcast_v3_incorrect_target_shape)
+{
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
+    const auto shape = op::Constant::create(element::i64, {3}, {8, 6, 4});
+    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+
+    try
+    {
+        const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+        FAIL() << "Not applicable breadcast exception not thrown";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Broadcast incorrect target shape. Expecting either 1 or 4. Got 8"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, broadcast_v3_incorrect_target_shape_2)
+{
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2});
+    const auto shape = op::Constant::create(element::i64, {2}, {2, 3});
+    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+
+    try
+    {
+        const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+        FAIL() << "Not applicable breadcast exception not thrown";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Broadcast incorrect target shape. Expecting either 1 or 2. Got 3"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
