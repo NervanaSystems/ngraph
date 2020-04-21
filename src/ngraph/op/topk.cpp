@@ -463,3 +463,33 @@ void op::v3::TopK::validate_and_infer_types()
                           get_input_element_type(1));
     op::v1::TopK::validate_and_infer_types();
 }
+
+size_t op::v3::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
+                                               const element::Type& k_element_type) const
+{
+    const auto k_constant = as_type_ptr<op::Constant>(node);
+
+    size_t k = 0;
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
+    switch (static_cast<element::Type_t>(k_element_type))
+    {
+    case element::Type_t::i8: k = validate_and_get_k<int8_t>(k_constant); break;
+    case element::Type_t::i16: k = validate_and_get_k<int16_t>(k_constant); break;
+    case element::Type_t::i32: k = validate_and_get_k<int32_t>(k_constant); break;
+    case element::Type_t::i64: k = validate_and_get_k<int64_t>(k_constant); break;
+    case element::Type_t::u8: k = validate_and_get_k<uint8_t>(k_constant); break;
+    case element::Type_t::u16: k = validate_and_get_k<uint16_t>(k_constant); break;
+    case element::Type_t::u32: k = validate_and_get_k<uint32_t>(k_constant); break;
+    case element::Type_t::u64: k = validate_and_get_k<uint64_t>(k_constant); break;
+    default: break;
+    }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+    return k;
+}

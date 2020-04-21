@@ -191,8 +191,8 @@ namespace ngraph
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
 
-                size_t read_k_from_constant_node(const std::shared_ptr<Node>& node,
-                                                 const element::Type& k_element_type) const;
+                virtual size_t read_k_from_constant_node(const std::shared_ptr<Node>& node,
+                                                         const element::Type& k_element_type) const;
 
                 template <typename T>
                 size_t validate_and_get_k(const std::shared_ptr<op::Constant>& k_constant) const;
@@ -237,6 +237,11 @@ namespace ngraph
                      const element::Type& index_element_type = element::i32);
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
+
+            protected:
+                virtual size_t
+                    read_k_from_constant_node(const std::shared_ptr<Node>& node,
+                                              const element::Type& k_element_type) const override;
             };
         } // namespace v3
 
