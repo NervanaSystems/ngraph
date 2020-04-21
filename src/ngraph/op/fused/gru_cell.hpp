@@ -30,7 +30,7 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v3
         {
             ///
             /// \brief      Class for GRU cell node.
@@ -183,6 +183,6 @@ namespace ngraph
                 bool m_linear_before_reset;
             };
         }
-        using v0::GRUCell;
+        using v3::GRUCell;
     }
 }
