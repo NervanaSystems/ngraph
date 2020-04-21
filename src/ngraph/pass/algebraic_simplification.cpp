@@ -547,7 +547,7 @@ static bool simplify_reduction(shared_ptr<Node> n)
 static bool replace_transpose_with_reshape(shared_ptr<Node> n)
 {
     bool rc = false;
-    auto transpose = as_type_ptr<op::Transpose>(n);
+    auto transpose = as_type_ptr<op::v1::Transpose>(n);
 
     if (!transpose)
         return false;
