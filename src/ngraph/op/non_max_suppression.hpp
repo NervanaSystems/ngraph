@@ -24,6 +24,80 @@ namespace ngraph
     {
         namespace v1
         {
+            /// \brief Elementwise addition operation.
+            ///
+            class NGRAPH_API NonMaxSuppression : public Op
+            {
+            public:
+                enum class BoxEncodingType
+                {
+                    CORNER,
+                    CENTER
+                };
+
+                static constexpr NodeTypeInfo type_info{"NonMaxSuppression", 1};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                NonMaxSuppression() = default;
+
+                /// \brief Constructs a NonMaxSuppression operation.
+                ///
+                /// \param boxes Node producing the box coordinates
+                /// \param scores Node producing the box scores
+                /// \param max_output_boxes_per_class Node producing maximum number of boxes to be
+                /// selected per class
+                /// \param iou_threshold Node producing intersection over union threshold
+                /// \param score_threshold Node producing minimum score threshold
+                /// \param box_encoding Specifies the format of boxes data encoding
+                NonMaxSuppression(const Output<Node>& boxes,
+                                  const Output<Node>& scores,
+                                  const Output<Node>& max_output_boxes_per_class,
+                                  const Output<Node>& iou_threshold,
+                                  const Output<Node>& score_threshold,
+                                  const BoxEncodingType box_encoding = BoxEncodingType::CORNER,
+                                  const bool sort_result_descending = true);
+
+                /// \brief Constructs a NonMaxSuppression operation with default values for the last
+                ///        3 inputs
+                ///
+                /// \param boxes Node producing the box coordinates
+                /// \param scores Node producing the box coordinates
+                /// \param box_encoding Specifies the format of boxes data encoding
+                /// \param sort_result_descending Specifies whether it is necessary to sort selected
+                /// boxes across batches
+                /// \param output_type Specifies the output tensor type
+                NonMaxSuppression(const Output<Node>& boxes,
+                                  const Output<Node>& scores,
+                                  const BoxEncodingType box_encoding = BoxEncodingType::CORNER,
+                                  const bool sort_result_descending = true);
+
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                void validate_and_infer_types() override;
+
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+
+                BoxEncodingType get_box_encoding() const { return m_box_encoding; }
+                void set_box_encoding(const BoxEncodingType box_encoding)
+                {
+                    m_box_encoding = box_encoding;
+                }
+                bool get_sort_result_descending() const { return m_sort_result_descending; }
+                void set_sort_result_descending(const bool sort_result_descending)
+                {
+                    m_sort_result_descending = sort_result_descending;
+                }
+
+            protected:
+                BoxEncodingType m_box_encoding = BoxEncodingType::CORNER;
+                bool m_sort_result_descending = true;
+
+            private:
+                int64_t max_boxes_output_from_input() const;
+            };
+        } // namespace v1
+
+        namespace v3
+        {
             /// \brief NonMaxSuppression operation
             ///
             class NGRAPH_API NonMaxSuppression : public Op
@@ -107,8 +181,8 @@ namespace ngraph
             private:
                 int64_t max_boxes_output_from_input() const;
             };
-        }
-    }
+        } // namespace v3
+    }     // namespace op
 
     NGRAPH_API
     std::ostream& operator<<(std::ostream& s,
@@ -128,4 +202,23 @@ namespace ngraph
             "AttributeAdapter<op::v1::NonMaxSuppression::BoxEncodingType>", 1};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
-}
+
+    NGRAPH_API
+    std::ostream& operator<<(std::ostream& s,
+                             const op::v3::NonMaxSuppression::BoxEncodingType& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v3::NonMaxSuppression::BoxEncodingType>
+        : public EnumAttributeAdapterBase<op::v3::NonMaxSuppression::BoxEncodingType>
+    {
+    public:
+        AttributeAdapter(op::v3::NonMaxSuppression::BoxEncodingType& value)
+            : EnumAttributeAdapterBase<op::v3::NonMaxSuppression::BoxEncodingType>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v3::NonMaxSuppression::BoxEncodingType>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+} // namespace ngraph

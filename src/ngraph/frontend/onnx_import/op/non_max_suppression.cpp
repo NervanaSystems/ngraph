@@ -94,8 +94,7 @@ namespace ngraph
                         iou_threshold,
                         score_threshold,
                         box_encoding,
-                        false,
-                        element::i64)};
+                        false)};
                 }
 
             } // namespace set_1
