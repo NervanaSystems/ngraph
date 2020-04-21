@@ -351,22 +351,19 @@ static bool is_input_uniform_constant(shared_ptr<Node> op,
 // whole input tensor
 static bool simplify_gather(std::shared_ptr<Node> node)
 {
-    auto gather = as_type_ptr<op::v1::Gather>(node);
-
-    if (gather)
+    if (auto gather = as_type_ptr<op::v1::Gather>(node))
     {
         // check if we are gathering the whole input
-        auto data = node->get_argument(0);
-        auto indices = node->get_argument(1);
+        auto data = gather->input_value(0);
+        auto indices = gather->input_value(1);
 
         // we need to know data and indices shape to infer if gather is Nop
-        if (data->get_output_partial_shape(0).is_dynamic() ||
-            indices->get_output_partial_shape(0).is_dynamic())
+        if (data.get_partial_shape().is_dynamic() || indices.get_partial_shape().is_dynamic())
         {
             return false;
         }
         // if rank of data and gather output dont match, we will skip
-        if (data->get_shape().size() != node->get_shape().size())
+        if (data.get_shape().size() != node->get_shape().size())
         {
             return false;
         }
@@ -384,29 +381,20 @@ static bool simplify_gather(std::shared_ptr<Node> node)
         // gathering the whole input tensor, so we can optimize this
         // op has Nop
 
-        if (data->get_shape()[axis] == 1)
+        if (data.get_shape()[axis] == 1)
         {
             remove_node_update_name(node, node->get_argument(0));
             return true;
         }
 
-// case_2 : if the input tensor is of shape (4, 3, 4)
-// we need to check the contents of indices, if indices
-// is 1D tensor of value {0, 1, 2}, we can optimize this
-// op has Nop
-
-#define COMPARE_AND_REPLACE_GATHER(T)                                                              \
-    std::vector<T> ref_indices(data->get_shape()[axis], 0);                                        \
-    std::iota(ref_indices.begin(), ref_indices.end(), 0);                                          \
-    if (ref_indices == indices_node->get_vector<T>())                                              \
-    {                                                                                              \
-        remove_node_update_name(node, node->get_argument(0));                                      \
-        return true;                                                                               \
-    }
+        // case_2 : if the input tensor is of shape (4, 3, 4)
+        // we need to check the contents of indices, if indices
+        // is 1D tensor of value {0, 1, 2}, we can optimize this
+        // op has Nop
 
         // check if the indices is constant
-        auto indices_node = as_type_ptr<ngraph::op::Constant>(node->get_argument(1));
-        if (!indices_node)
+        auto constant_indices = as_type_ptr<op::Constant>(gather->get_argument(1));
+        if (!constant_indices)
         {
             return false;
         }
@@ -414,13 +402,12 @@ static bool simplify_gather(std::shared_ptr<Node> node)
         {
             // if ref_inidices == indices, we are capturing the
             // entire input tensor
-            if (indices->get_element_type() == element::i32)
+            std::vector<int64_t> ref_indices(data.get_shape()[axis], 0);
+            std::iota(ref_indices.begin(), ref_indices.end(), 0);
+            if (ref_indices == constant_indices->get_vector<int64_t>())
             {
-                COMPARE_AND_REPLACE_GATHER(int32_t);
-            }
-            else
-            {
-                COMPARE_AND_REPLACE_GATHER(int64_t);
+                remove_node_update_name(node, node->get_argument(0));
+                return true;
             }
         }
     }
