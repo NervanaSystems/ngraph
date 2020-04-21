@@ -80,7 +80,8 @@ static bool eliminate_convert(const std::shared_ptr<Node>& node)
     }
     auto convert = as_type_ptr<op::v0::Convert>(node);
     auto input = convert->input_value(0).get_node_shared_ptr();
-    if (convert->get_convert_element_type() == input->get_element_type() || is_out_type_agnostic)
+    if (convert->get_convert_element_type() == input->get_output_element_type(0) ||
+        is_out_type_agnostic)
     {
         if (is_out_type_agnostic && as_type_ptr<op::v0::Convert>(input))
         {
