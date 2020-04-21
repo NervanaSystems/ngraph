@@ -678,7 +678,7 @@ TEST(algebraic_simplification, gather_3d_indices_constant_axis_1)
     Shape indices_shape{2};
     Shape out_shape{3, 2, 1};
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
-    auto I = op::Constant::create<int32_t>(element::i32, Shape{2}, {0, 1});
+    auto I = op::Constant::create<int64_t>(element::i64, Shape{2}, {0, 1});
     auto axes = op::Constant::create(element::i64, Shape{}, {1});
     auto G = make_shared<op::v1::Gather>(P, I, axes);
     auto f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P});
