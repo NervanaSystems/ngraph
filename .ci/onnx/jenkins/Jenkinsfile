@@ -136,7 +136,7 @@ pipeline {
                     dir("${WORKDIR}/${CI_DIR}") {
                         CI_FUNCTIONS = load "ci.groovy"
                         dockerfilesDir = "./dockerfiles"
-                        parallelStagesMap = CI_FUNCTIONS.getConfigurationsMap(dockerfilesDir, NGRAPH_ONNX_BRANCH, NGRAPH_BRANCH)
+                         parallelStagesMap = CI_FUNCTIONS.getConfigurationsMap(dockerfilesDir, NGRAPH_ONNX_BRANCH, NGRAPH_BRANCH)
                         parallel parallelStagesMap
                     }
                 }
