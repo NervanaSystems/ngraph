@@ -546,10 +546,11 @@ static bool simplify_reduction(shared_ptr<Node> n)
 
 static bool replace_transpose_with_reshape(shared_ptr<Node> n)
 {
-    bool rc = false;
     auto transpose = as_type_ptr<op::v1::Transpose>(n);
 
     PartialShape shape = n->input_value(0).get_partial_shape();
+    int dyn_dim_index = 0;
+    bool is_dyn_dim = false;
     if (shape.is_dynamic())
     {
         if (shape.rank().is_dynamic())
@@ -564,6 +565,7 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
             {
                 count_dynamic_dims++;
                 shape[i] = 2; // any non 1 number
+                dyn_dim_index = i;
             }
         }
 
@@ -571,6 +573,8 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
         {
             return false; // only works on one dynamic dim
         }
+
+        is_dyn_dim = true;
     }
 
     auto perm = as_type_ptr<op::Constant>(n->get_argument(1));
@@ -621,13 +625,22 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
         }
     }
 
+    if (is_dyn_dim)
+    {
+        data_shape[dyn_dim_index] = -1;
+    }
+
+    Shape output_shape;
+    for (int i = 0; i < data_shape.size(); i++)
+    {
+        output_shape.push_back(data_shape[perm_value[i]]);
+    }
+
     auto constant_node =
-        ngraph::op::Constant::create(element::i64, Shape{data_shape.size()}, data_shape);
+        ngraph::op::Constant::create(element::i64, Shape{output_shape.size()}, output_shape);
     auto reshape_op = make_shared<op::v1::Reshape>(data, constant_node, false);
     replace_node(n, reshape_op);
-    rc = true;
-
-    return rc;
+    return true;
 }
 
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
