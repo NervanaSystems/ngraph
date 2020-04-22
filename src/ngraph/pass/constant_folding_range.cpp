@@ -29,7 +29,7 @@ shared_ptr<op::Constant> fold_constant_range(shared_ptr<op::Constant> start,
     runtime::AlignedBuffer buffer(shape_size(range->get_shape()) * sizeof(T));
     T* data_ptr = buffer.get_ptr<T>();
     runtime::reference::range<T>(
-        start->get_vector<T>().data(), step->get_vector<T>().data(), range->get_shape(), data_ptr);
+        start->get_data_ptr<T>(), step->get_data_ptr<T>(), range->get_shape(), data_ptr);
 
     return make_shared<op::Constant>(range->get_element_type(), range->get_shape(), data_ptr);
 }
