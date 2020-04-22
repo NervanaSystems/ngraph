@@ -340,26 +340,33 @@ TEST(type_prop, topk_rank_static_dynamic_k_known_ok)
         PartialShape{Dimension::dynamic(), 2, Dimension::dynamic()}));
 }
 
-TEST(type_prop, topk_v1_negative_axis_support)
+// Since v3::TopK is backward compatible with v1::TopK all of these tests should pass
+template <typename T>
+class type_prop : public ::testing::Test
+{
+};
+TYPED_TEST_CASE_P(type_prop);
+
+TYPED_TEST_P(type_prop, topk_negative_axis_support)
 {
     const auto data_shape = Shape{1, 2, 3, 4};
     const auto data = make_shared<op::Parameter>(element::f32, data_shape);
     const auto k = op::Constant::create(element::i64, Shape{}, {2});
     const int64_t axis = -2;
 
-    const auto topk = make_shared<op::v1::TopK>(data, k, axis, "max", "value");
+    const auto topk = make_shared<TypeParam>(data, k, axis, "max", "value");
 
     ASSERT_EQ(topk->get_provided_axis(), axis);
     ASSERT_EQ(topk->get_axis(), data_shape.at(1));
 }
 
-TEST(type_prop, topk_v1_negative_axis_dynamic_rank)
+TYPED_TEST_P(type_prop, topk_negative_axis_dynamic_rank)
 {
     const auto data_shape = PartialShape::dynamic();
     const auto data = make_shared<op::Parameter>(element::f32, data_shape);
     const auto k = op::Constant::create(element::i64, Shape{}, {2});
     const int64_t axis = -2;
-    const auto topk = make_shared<op::v1::TopK>(data, k, axis, "max", "value");
+    const auto topk = make_shared<TypeParam>(data, k, axis, "max", "value");
 
     try
     {
@@ -374,3 +381,8 @@ TEST(type_prop, topk_v1_negative_axis_dynamic_rank)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+REGISTER_TYPED_TEST_CASE_P(type_prop, topk_negative_axis_support, topk_negative_axis_dynamic_rank);
+
+typedef ::testing::Types<op::v1::TopK, op::v3::TopK> TopKTypes;
+INSTANTIATE_TYPED_TEST_CASE_P(, type_prop, TopKTypes);
