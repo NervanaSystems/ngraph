@@ -459,7 +459,7 @@ void op::v3::TopK::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(1).is_integral_number(),
-                          "K input have to be an integer type. Which not match the provided one:",
+                          "K input has to be an integer type, which does match the provided one:",
                           get_input_element_type(1));
     op::v1::TopK::validate_and_infer_types();
 }
