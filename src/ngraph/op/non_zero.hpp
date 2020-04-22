@@ -41,17 +41,23 @@ namespace ngraph
                 NonZero() = default;
                 /// \brief Constructs a NonZero operation.
                 ///
+                /// \note The output type is int64.
+                ///
+                /// \param arg Node that produces the input tensor.
+                NonZero(const Output<Node>& arg);
+                /// \brief Constructs a NonZero operation.
+                ///
                 /// \param arg Node that produces the input tensor.
                 /// \param output_type produce indices. Currently, only 'int64' or 'int32'
                 /// are
                 ///                           supported
-                NonZero(const Output<Node>& arg, const std::string& output_type = "i64");
+                NonZero(const Output<Node>& arg, const std::string& output_type);
                 /// \brief Constructs a NonZero operation.
                 ///
                 /// \param arg Node that produces the input tensor.
                 /// \param output_type produce indices. Currently, only int64 or int32 are
                 ///                           supported
-                NonZero(const Output<Node>& arg, const element::Type& output_type = element::i64);
+                NonZero(const Output<Node>& arg, const element::Type& output_type);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
@@ -65,7 +71,7 @@ namespace ngraph
                 using Node::set_output_type;
 
             protected:
-                element::Type m_output_type;
+                element::Type m_output_type = element::i64;
             };
         }
         using v3::NonZero;

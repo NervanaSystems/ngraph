@@ -22,6 +22,12 @@ using namespace std;
 
 constexpr NodeTypeInfo op::v3::NonZero::type_info;
 
+op::v3::NonZero::NonZero(const Output<Node>& arg)
+    : Op({arg})
+{
+    constructor_validate_and_infer_types();
+}
+
 op::v3::NonZero::NonZero(const Output<Node>& arg, const std::string& output_type)
     : Op({arg})
     , m_output_type(EnumNames<element::Type_t>::as_enum(output_type))

@@ -188,7 +188,7 @@ void pass::ConstantFolding::construct_constant_non_zero()
 {
     const auto data_label = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 2, 3}, pattern::has_class<op::Constant>());
-    const auto non_zero = make_shared<op::v3::NonZero>(data_label, element::i64);
+    const auto non_zero = make_shared<op::v3::NonZero>(data_label);
 
     auto constant_non_zero_callback = [data_label](pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
