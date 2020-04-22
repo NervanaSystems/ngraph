@@ -143,7 +143,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        descriptor::Tensor* tensor = &output->output(0).get_tensor();
+        descriptor::Tensor* tensor = &output->get_output_tensor(0);
         tensor_map.insert({tensor, func_outputs[output_count]});
     }
 
@@ -214,7 +214,20 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         {
             m_timer_map[op].start();
         }
-        generate_calls(type, *op.get(), op_outputs, op_inputs);
+        EvaluatorTensorVector out_tensors;
+        for (auto out : op_outputs)
+        {
+            out_tensors.push_back(runtime::HostTensor::create_evaluator_tensor(out));
+        }
+        EvaluatorTensorVector in_tensors;
+        for (auto in : op_inputs)
+        {
+            in_tensors.push_back(runtime::HostTensor::create_evaluator_tensor(in));
+        }
+        if (!op->evaluate(out_tensors, in_tensors))
+        {
+            generate_calls(type, *op.get(), op_outputs, op_inputs);
+        }
         if (m_performance_counters_enabled)
         {
             m_timer_map[op].stop();

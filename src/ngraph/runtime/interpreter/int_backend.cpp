@@ -16,7 +16,6 @@
 
 #include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 
-#include "ngraph/component_manager.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"

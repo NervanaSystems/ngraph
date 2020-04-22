@@ -173,7 +173,7 @@ void ngraph::op::v1::SpaceToBatch::pre_validate_and_infer_types()
 }
 
 std::shared_ptr<Node>
-    ngraph::op::v1::SpaceToBatch::copy_with_new_args(const ngraph::NodeVector& new_args) const
+    ngraph::op::v1::SpaceToBatch::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<SpaceToBatch>(

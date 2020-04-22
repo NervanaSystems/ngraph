@@ -50,6 +50,7 @@ public:
         LOGICAL_REDUCTION,
         CONCAT,
         GATHER,
+        SCATTER,
         SLICE,
         DYN_SLICE,
         STRIDED_SLICE,
@@ -83,12 +84,13 @@ public:
         construct_constant_quantize();
         construct_constant_dequantize();
         construct_constant_convert();
-        construct_constant_shape_of();
         construct_constant_reverse();
         construct_constant_arithmetic_reduction();
         construct_constant_logical_reduction();
         construct_constant_concat();
+        construct_constant_gather_with_subgraph();
         construct_constant_gather();
+        construct_constant_scatter_elements_update();
         construct_constant_slice();
         construct_constant_dyn_slice();
         construct_constant_strided_slice();
@@ -101,6 +103,7 @@ public:
         construct_constant_one_hot();
         construct_constant_tile();
         construct_constant_non_zero();
+        construct_constant_default();
     }
 
 private:
@@ -113,12 +116,13 @@ private:
     void construct_constant_quantize();
     void construct_constant_dequantize();
     void construct_constant_convert();
-    void construct_constant_shape_of();
     void construct_constant_reverse();
     void construct_constant_arithmetic_reduction();
     void construct_constant_logical_reduction();
     void construct_constant_concat();
+    void construct_constant_gather_with_subgraph();
     void construct_constant_gather();
+    void construct_constant_scatter_elements_update();
     void construct_constant_slice();
     void construct_constant_dyn_slice();
     void construct_constant_strided_slice();
@@ -133,6 +137,7 @@ private:
     void construct_constant_one_hot();
     void construct_constant_tile();
     void construct_constant_non_zero();
+    void construct_constant_default();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
 };

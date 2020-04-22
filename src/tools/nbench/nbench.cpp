@@ -30,7 +30,6 @@
 
 #include "benchmark.hpp"
 #include "benchmark_pipelined.hpp"
-#include "ngraph/component_manager.hpp"
 #include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
@@ -44,27 +43,9 @@
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/utils.hpp"
-#endif
 
 using namespace std;
 using namespace ngraph;
-
-static void configure_static_backends()
-{
-#ifdef NGRAPH_CPU_ENABLE
-    ngraph_register_cpu_backend();
-#endif
-#ifdef NGRAPH_INTERPRETER_ENABLE
-    ngraph_register_interpreter_backend();
-#endif
-
-#ifdef NGRAPH_MLIR_ENABLE
-    // Initialize MLIR
-    ngraph::runtime::ngmlir::initializeNGraphMLIR();
-#endif
-}
 
 class PerfShape : public ngraph::runtime::PerformanceCounter
 {
@@ -188,7 +169,6 @@ int main(int argc, char** argv)
     bool dot_file = false;
     bool double_buffer = false;
 
-    configure_static_backends();
     for (int i = 1; i < argc; i++)
     {
         string arg = argv[i];
@@ -384,7 +364,7 @@ OPTIONS
                     {
                         total_constant_count++;
                         const Shape& shape = node->get_output_shape(0);
-                        size_t const_size = node->output(0).get_element_type().size();
+                        size_t const_size = node->get_output_element_type(0).size();
                         if (shape.size() == 0)
                         {
                             total_constant_bytes += const_size;
@@ -399,7 +379,7 @@ OPTIONS
                     {
                         total_parameter_count++;
                         const Shape& shape = node->get_output_shape(0);
-                        size_t size = node->output(0).get_element_type().size() * shape_size(shape);
+                        size_t size = node->get_output_element_type(0).size() * shape_size(shape);
                         total_parameter_bytes += size;
                     }
                     else if (is_type<op::Result>(node))
