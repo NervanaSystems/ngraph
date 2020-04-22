@@ -370,7 +370,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
 
         auto axis = gather->get_axis();
 
-        if (axis == std::numeric_limits<int64_t>::max())
+        if (axis == op::v1::Gather::AXIS_NOT_SET_VALUE)
         {
             NGRAPH_DEBUG << "axis value not set";
             return false;
@@ -383,8 +383,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
 
         if (data.get_shape()[axis] == 1)
         {
-            remove_node_update_name(node, node->get_argument(0));
-            return true;
+            return remove_node_update_name(node, gather->input_value(0).get_node_shared_ptr());
         }
 
         // case_2 : if the input tensor is of shape (4, 3, 4)
@@ -393,7 +392,8 @@ static bool simplify_gather(std::shared_ptr<Node> node)
         // op has Nop
 
         // check if the indices is constant
-        auto constant_indices = as_type_ptr<op::Constant>(gather->get_argument(1));
+        auto constant_indices =
+            as_type_ptr<op::Constant>(gather->input_value(1).get_node_shared_ptr());
         if (!constant_indices)
         {
             return false;
@@ -406,8 +406,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
             std::iota(ref_indices.begin(), ref_indices.end(), 0);
             if (ref_indices == constant_indices->get_vector<int64_t>())
             {
-                remove_node_update_name(node, node->get_argument(0));
-                return true;
+                return remove_node_update_name(node, gather->input_value(0).get_node_shared_ptr());
             }
         }
     }
