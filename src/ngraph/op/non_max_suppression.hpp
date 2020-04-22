@@ -109,7 +109,7 @@ namespace ngraph
                     CENTER
                 };
 
-                static constexpr NodeTypeInfo type_info{"NonMaxSuppression", 1};
+                static constexpr NodeTypeInfo type_info{"NonMaxSuppression", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 NonMaxSuppression() = default;
 
