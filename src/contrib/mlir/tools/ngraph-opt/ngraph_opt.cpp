@@ -61,10 +61,6 @@ static llvm::cl::opt<bool>
                   llvm::cl::desc("Run the verifier after each transformation pass"),
                   llvm::cl::init(true));
 
-static llvm::cl::opt<bool> allowUnregisteredDialects("allow-unregistered-dialects",
-                                                     llvm::cl::desc("Allow unregistered dialects"),
-                                                     llvm::cl::init(true));
-
 int main(int argc, char** argv)
 {
     llvm::InitLLVM y(argc, argv);
@@ -89,5 +85,5 @@ int main(int argc, char** argv)
                                     split_input_file,
                                     verify_diagnostics,
                                     verify_passes,
-                                    allowUnregisteredDialects));
+                                    /*allowUnregisteredDialects = */ false));
 }
