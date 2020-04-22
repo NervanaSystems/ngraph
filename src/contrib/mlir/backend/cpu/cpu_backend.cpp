@@ -205,18 +205,14 @@ void MLIRCPUBackend::lowerStandardDialect()
     // specified, we lower memref arguments to bare pointers to the memref element type.
     if (clEnableBarePtrMemRefLowering)
     {
-        LowerToLLVMOptions llvmOptions = {/*useAlloca=*/false,
-                                          /*useBarePtrCallConv=*/true,
-                                          /*emitCWrappers=*/false};
-
+        LowerToLLVMOptions llvmOptions;
+        llvmOptions.useBarePtrCallConv = true, llvmOptions.emitCWrappers = false,
         pm.addPass(mlir::createLowerToLLVMPass(llvmOptions));
     }
     else
     {
-        LowerToLLVMOptions llvmOptions = {/*useAlloca=*/false,
-                                          /*useBarePtrCallConv=*/false,
-                                          /*emitCWrappers=*/true};
-
+        LowerToLLVMOptions llvmOptions;
+        llvmOptions.useBarePtrCallConv = false, llvmOptions.emitCWrappers = true,
         pm.addPass(mlir::createLowerToLLVMPass(llvmOptions));
     }
 
