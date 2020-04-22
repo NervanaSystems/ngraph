@@ -43,7 +43,7 @@ static shared_ptr<op::Constant>
 
     if (auto max = as_type_ptr<op::Max>(reduction_node))
     {
-        runtime::reference::max<T>(constant->get_vector<T>().data(),
+        runtime::reference::max<T>(constant->get_data_ptr<T>(),
                                    data_ptr,
                                    constant->get_output_shape(0),
                                    reduction_node->get_shape(),
@@ -61,7 +61,7 @@ static shared_ptr<op::Constant>
                 shape_no_keep_dims.push_back(input_shape[i]);
             }
         }
-        runtime::reference::max<T>(constant->get_vector<T>().data(),
+        runtime::reference::max<T>(constant->get_data_ptr<T>(),
                                    data_ptr,
                                    constant->get_output_shape(0),
                                    shape_no_keep_dims,
@@ -69,7 +69,7 @@ static shared_ptr<op::Constant>
     }
     else if (auto min = as_type_ptr<op::Min>(reduction_node))
     {
-        runtime::reference::min<T>(constant->get_vector<T>().data(),
+        runtime::reference::min<T>(constant->get_data_ptr<T>(),
                                    data_ptr,
                                    constant->get_output_shape(0),
                                    reduction_node->get_shape(),
@@ -87,7 +87,7 @@ static shared_ptr<op::Constant>
                 shape_no_keep_dims.push_back(input_shape[i]);
             }
         }
-        runtime::reference::min<T>(constant->get_vector<T>().data(),
+        runtime::reference::min<T>(constant->get_data_ptr<T>(),
                                    data_ptr,
                                    constant->get_output_shape(0),
                                    shape_no_keep_dims,
@@ -95,7 +95,7 @@ static shared_ptr<op::Constant>
     }
     else if (auto prod = as_type_ptr<op::Product>(reduction_node))
     {
-        runtime::reference::product<T>(constant->get_vector<T>().data(),
+        runtime::reference::product<T>(constant->get_data_ptr<T>(),
                                        data_ptr,
                                        constant->get_output_shape(0),
                                        reduction_node->get_shape(),
@@ -113,7 +113,7 @@ static shared_ptr<op::Constant>
                 shape_no_keep_dims.push_back(input_shape[i]);
             }
         }
-        runtime::reference::product<T>(constant->get_vector<T>().data(),
+        runtime::reference::product<T>(constant->get_data_ptr<T>(),
                                        data_ptr,
                                        constant->get_output_shape(0),
                                        shape_no_keep_dims,
@@ -121,7 +121,7 @@ static shared_ptr<op::Constant>
     }
     else if (auto sum = as_type_ptr<op::Sum>(reduction_node))
     {
-        runtime::reference::sum<T>(constant->get_vector<T>().data(),
+        runtime::reference::sum<T>(constant->get_data_ptr<T>(),
                                    data_ptr,
                                    constant->get_output_shape(0),
                                    reduction_node->get_shape(),
@@ -139,7 +139,7 @@ static shared_ptr<op::Constant>
                 shape_no_keep_dims.push_back(input_shape[i]);
             }
         }
-        runtime::reference::sum<T>(constant->get_vector<T>().data(),
+        runtime::reference::sum<T>(constant->get_data_ptr<T>(),
                                    data_ptr,
                                    constant->get_output_shape(0),
                                    shape_no_keep_dims,
@@ -157,7 +157,7 @@ static shared_ptr<op::Constant>
                 shape_no_keep_dims.push_back(input_shape[i]);
             }
         }
-        runtime::reference::mean<T>(constant->get_vector<T>().data(),
+        runtime::reference::mean<T>(constant->get_data_ptr<T>(),
                                     data_ptr,
                                     constant->get_output_shape(0),
                                     shape_no_keep_dims,
