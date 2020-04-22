@@ -550,13 +550,17 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
     auto transpose = as_type_ptr<op::v1::Transpose>(n);
 
     if (!transpose)
+    {
         return false;
+    }
 
     PartialShape shape = n->input_value(0).get_partial_shape();
     if (shape.is_dynamic())
     {
         if (shape.rank().is_dynamic())
+        {
             return false;
+        }
 
         int count_dynamic_dims = 0;
         for (int i = 0; i < shape.rank().get_length(); i++)
@@ -569,7 +573,9 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
         }
 
         if (count_dynamic_dims > 1)
+        {
             return false; // only works on one dynamic dim
+        }
     }
 
     auto perm = as_type_ptr<op::Constant>(n->get_argument(1));
@@ -588,7 +594,9 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
     }
 
     if (indices_of_one.size() == 0)
+    {
         return false;
+    }
 
     // Remove indices of 1 from perm_value and check if the other
     // dimensions haven't interchanged
@@ -609,7 +617,9 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
     for (int i = 0; i + 1 < perm_value_copy.size(); i++)
     {
         if (perm_value_copy[i] > perm_value_copy[i + 1])
+        {
             return false; // not a valid permutation
+        }
     }
 
     auto constant_node =
