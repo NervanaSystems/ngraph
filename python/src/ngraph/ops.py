@@ -1272,6 +1272,43 @@ def dot(left_node, right_node, reduction_axes_count=None, name=None):
         return Dot(left_node, right_node, reduction_axes_count)
 
 
+@nameable_op
+def binary_convolution(data,                    # type: Node
+                filters,                        # type: Node
+                strides,                        # type: List[int]
+                pads_begin,                     # type: List[int]
+                pads_end,                       # type: List[int]
+                dilations,                      # type: List[int]
+                mode,                           # type: str
+                pad_value,                      # type: float
+                auto_pad='EXPLICIT',            # type: str
+                name=None,                      # type: str
+                ):
+    # type: (...) -> Node
+    """Create node performing convolution with binary weights, binary input and integer output.
+
+    :param data: The node providing data batch tensor.
+    :param filter: The node providing filters tensor.
+    :param strides: The kernel window movement strides.
+    :param pads_begin: The number of zero padding elements to add on each axis below 0 coordinate.
+    :param pads_end: The number of zero padding elements to add on each axis above max coordinate
+    :param dilations: The data batch dilation strides.
+    :param mode: Defines how input tensor 0/1 values and weights 0/1 are interpreted.
+    :param pad_value: Floating-point value used to fill pad area.
+    :param auto_pad: The type of padding. Range of values: explicit, same_upper, same_lower, valid.
+    :param name: The optional new name for output node.
+    :return: New node performing binary convolution operation.
+    """
+    return _get_node_factory().create('BinaryConvolution',
+                                      [data, filters],
+                                      {'strides': strides,
+                                       'pads_begin': pads_begin,
+                                       'pads_end': pads_end,
+                                       'dilations': dilations,
+                                       'mode': mode,
+                                       'pad_value': pad_value,
+                                       'auto_pad': auto_pad})
+
 # convpool ops
 @nameable_op
 def convolution(data,                           # type: Node
