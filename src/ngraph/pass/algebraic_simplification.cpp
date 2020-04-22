@@ -549,11 +549,6 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
     bool rc = false;
     auto transpose = as_type_ptr<op::v1::Transpose>(n);
 
-    if (!transpose)
-    {
-        return false;
-    }
-
     PartialShape shape = n->input_value(0).get_partial_shape();
     if (shape.is_dynamic())
     {
@@ -580,7 +575,7 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
 
     auto perm = as_type_ptr<op::Constant>(n->get_argument(1));
     auto perm_value = perm->get_vector<int64_t>();
-    auto data = n->get_argument(0);
+    auto data = n->input_value(0).get_node_shared_ptr();
     auto data_shape = shape.to_shape();
 
     // Check if input shape contains a Dim of value 1
