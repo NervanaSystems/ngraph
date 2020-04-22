@@ -574,6 +574,10 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
     }
 
     auto perm = as_type_ptr<op::Constant>(n->get_argument(1));
+    if (!perm)
+    {
+        return false;
+    }
     auto perm_value = perm->get_vector<int64_t>();
     auto data = n->input_value(0).get_node_shared_ptr();
     auto data_shape = shape.to_shape();
