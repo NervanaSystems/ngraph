@@ -81,6 +81,7 @@
 #include "ngraph/runtime/reference/minimum.hpp"
 #include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
+#include "ngraph/runtime/reference/non_zero.hpp"
 #include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/not_equal.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
@@ -1119,6 +1120,15 @@ protected:
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::negate<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
+        case OP_TYPEID::NonZero_v3:
+        {
+            size_t output_count = 0;
+            reference::non_zero<T, int64_t>(args[0]->get_data_ptr<const T>(),
+                                            out[0]->get_data_ptr<int64_t>(),
+                                            node.get_input_shape(0),
+                                            &output_count);
             break;
         }
         case OP_TYPEID::LogicalNot_v1:
