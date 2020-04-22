@@ -59,6 +59,14 @@ int main(int argc, char** argv)
     ngraph::runtime::ngmlir::initializeNGraphMLIR();
 #endif
 
+    // Setup embedded python interpreter and import numpy
+    py::scoped_interpreter guard{};
+    py::exec(R"(
+import numpy as np
+)",
+            py::globals(),
+            py::dict());
+
     int rc = RUN_ALL_TESTS();
 
     return rc;
