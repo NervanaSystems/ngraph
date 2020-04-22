@@ -42,16 +42,16 @@ namespace ngraph
                 /// \brief Constructs a NonZero operation.
                 ///
                 /// \param arg Node that produces the input tensor.
-                /// \param index_element_type produce indices. Currently, only 'int64' or 'int32'
+                /// \param output_type produce indices. Currently, only 'int64' or 'int32'
                 /// are
                 ///                           supported
-                NonZero(const Output<Node>& arg, const std::string& index_element_type);
+                NonZero(const Output<Node>& arg, const std::string& output_type = "i64");
                 /// \brief Constructs a NonZero operation.
                 ///
                 /// \param arg Node that produces the input tensor.
-                /// \param index_element_type produce indices. Currently, only int64 or int32 are
+                /// \param output_type produce indices. Currently, only int64 or int32 are
                 ///                           supported
-                NonZero(const Output<Node>& arg, const element::Type& index_element_type);
+                NonZero(const Output<Node>& arg, const element::Type& output_type = element::i64);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
@@ -59,16 +59,13 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
-                element::Type get_output_type() const { return m_index_element_type; }
-                void set_output_type(element::Type output_type)
-                {
-                    m_index_element_type = output_type;
-                }
+                element::Type get_output_type() const { return m_output_type; }
+                void set_output_type(element::Type output_type) { m_output_type = output_type; }
                 // Overload collision with method on Node
                 using Node::set_output_type;
 
             protected:
-                element::Type m_index_element_type;
+                element::Type m_output_type;
             };
         }
         using v3::NonZero;
