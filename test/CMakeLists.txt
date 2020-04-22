@@ -53,7 +53,6 @@ set(SRC
     check.cpp
     constant.cpp
     constant_folding.cpp
-    concat_fusion.cpp
     control_dependencies.cpp
     convert_u1_to_string.cpp
     coordinate.cpp
@@ -62,10 +61,12 @@ set(SRC
     cse.cpp
     dyn_elimination.cpp
     element_type.cpp
+    eval.cpp
     file_util.cpp
     float16.cpp
     includes.cpp
     input_output_assign.cpp
+    intervals.cpp
     main.cpp
     misc.cpp
     ngraph_api.cpp
@@ -178,6 +179,7 @@ set(SRC
     type_prop/scatter_add.cpp
     type_prop/scatter_elements_update.cpp
     type_prop/scatter_nd.cpp
+    type_prop/scatter_update.cpp
     type_prop/select.cpp
     type_prop/shape_of.cpp
     type_prop/shuffle_channels.cpp
@@ -201,6 +203,12 @@ set(SRC
     util.cpp
     zero_dim_tensor_elimination.cpp
 )
+
+if(NGRAPH_INTERPRETER_ENABLE)
+    list(APPEND SRC
+        concat_fusion.cpp
+    )
+endif()
 
 # This code generates one source file per header file under ngraph/src where the source file
 # has just a single #include statement. This checks that each header in the source tree is
@@ -274,10 +282,6 @@ if(NGRAPH_GPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
 endif()
 
-if (NGRAPH_PLAIDML_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
-endif()
-
 if (NGRAPH_GENERIC_CPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
 endif()
@@ -313,6 +317,7 @@ set(MULTI_TEST_SRC
     backend/batch_norm.in.cpp
     backend/broadcast.in.cpp
     backend/builder_flatten.in.cpp
+    backend/builder_reduce_ops_opset1.in.cpp
     backend/ceiling.in.cpp
     backend/comparison.in.cpp
     backend/computation_reuse.in.cpp
@@ -400,117 +405,6 @@ set(MULTI_TEST_SRC
     backend/zero_sized.in.cpp
 )
 
-if (NGRAPH_IE_ENABLE)
-    set(MULTI_TEST_SRC
-            backend/abc.in.cpp
-            backend/abs.in.cpp
-            backend/acos.in.cpp
-            backend/add.in.cpp
-            backend/aliased_output.in.cpp
-            backend/all.in.cpp
-            backend/any.in.cpp
-            backend/arg_reduce.in.cpp
-            backend/asin.in.cpp
-            backend/atan.in.cpp
-            backend/atan2.in.cpp
-            backend/auto_broadcast.in.cpp
-            backend/batch_mat_mul.in.cpp
-            backend/broadcast.in.cpp
-            backend/builder_flatten.in.cpp
-            backend/ceiling.in.cpp
-            backend/comparison.in.cpp
-            backend/computation_reuse.in.cpp
-            backend/concat.in.cpp
-            backend/convert.in.cpp
-            backend/convolution.in.cpp
-            backend/cos.in.cpp
-            backend/cosh.in.cpp
-            backend/cum_sum.in.cpp
-            backend/divide.in.cpp
-            backend/dot.in.cpp
-            backend/dyn_broadcast.in.cpp
-            backend/dyn_replace_slice_reference.in.cpp
-            backend/dyn_reshape.in.cpp
-            backend/dyn_slice_reference.in.cpp
-            backend/strided_slice.in.cpp
-            backend/dynamic.in.cpp
-            backend/embedding_lookup.in.cpp
-            backend/erf.in.cpp
-            backend/exp.in.cpp
-            backend/floor.in.cpp
-            backend/function_name.in.cpp
-            backend/fused_op.in.cpp
-            backend/gather.in.cpp
-            backend/generate_mask.in.cpp
-            backend/group_convolution.in.cpp
-            backend/layer_norm.in.cpp
-            backend/log.in.cpp
-            backend/logical_and.in.cpp
-            backend/logical_or.in.cpp
-            backend/logical_xor.in.cpp
-            backend/lrn.in.cpp
-            backend/max.in.cpp
-            backend/maximum.in.cpp
-            backend/min.in.cpp
-            backend/minimum.in.cpp
-            backend/multiple_backends.in.cpp
-            backend/multiple_result.in.cpp
-            backend/multiply.in.cpp
-            backend/negative.in.cpp
-            backend/node_name.in.cpp
-            backend/not.in.cpp
-            backend/numeric.in.cpp
-            backend/one_hot.in.cpp
-            backend/pad.in.cpp
-            backend/parameter_as_output.in.cpp
-            backend/partial_slice.in.cpp
-            backend/pool.in.cpp
-            backend/power.in.cpp
-            backend/product.in.cpp
-            backend/quantize_dequantize.in.cpp
-            backend/quantized_convolution.in.cpp
-            backend/quantized_dot.in.cpp
-            backend/random_uniform.in.cpp
-            backend/range.in.cpp
-            backend/relu.in.cpp
-            backend/replace_slice.in.cpp
-            backend/reshape.in.cpp
-            backend/reverse_sequence.in.cpp
-            backend/reverse.in.cpp
-            backend/scatter.in.cpp
-            backend/select.in.cpp
-            backend/shape_of.in.cpp
-            backend/sigmoid.in.cpp
-            backend/sign.in.cpp
-            backend/sin.in.cpp
-            backend/sinh.in.cpp
-            backend/slice.in.cpp
-            backend/softmax.in.cpp
-            backend/sqrt.in.cpp
-            backend/subtract.in.cpp
-            backend/sum.in.cpp
-            backend/tan.in.cpp
-            backend/tanh.in.cpp
-            backend/tile.in.cpp
-            backend/transpose.in.cpp
-            backend/unhandled_op.in.cpp
-            backend/validate_call.in.cpp
-            backend/zero_sized.in.cpp
-
-#            This files should be commented,because they are not working for a while.
-#            Need to fix for IE plugin:
-#            backend/api.in.cpp
-#            backend/batch_norm.in.cpp
-#            backend/gelu.in.cpp
-#            backend/topk.in.cpp
-
-#            Other issues:
-#            backend/autodiff.in.cpp
-#            backend/constant.in.cpp
-#            backend/convolution_reference.in.cpp
-            )
-endif()
-
 if (NGRAPH_MLIR_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
     list(APPEND SRC mlir/ops_test.cpp)
@@ -523,6 +417,7 @@ endif()
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND MULTI_TEST_SRC
             onnx/onnx_import.in.cpp
+            onnx/onnx_import_const_folding.in.cpp
             onnx/onnx_import_convpool.in.cpp
             onnx/onnx_import_dyn_shapes.in.cpp
             onnx/onnx_import_provenance.in.cpp
@@ -545,23 +440,16 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
 
     string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
     string(REGEX REPLACE "([a-z0-9]+):(.*)" "\\1" BACKEND_DIR ${BACKEND_DIR})
-    set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+    if (EXISTS ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+        set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+    elseif(EXISTS ${PROJECT_SOURCE_DIR}/src/runtime/${BACKEND_DIR}/unit_test.manifest)
+        set(MANIFEST ${PROJECT_SOURCE_DIR}/src/runtime/${BACKEND_DIR}/unit_test.manifest)
+    endif()
 
     foreach(TEST_SRC ${MULTI_TEST_SRC})
-        set(BACKEND_DEVICE_NAME ${BACKEND_NAME})
-        string(REPLACE ":" "_" BACKEND_NAME ${BACKEND_DEVICE_NAME})
+        string(REPLACE ":" "_" BACKEND_NAME ${BACKEND_NAME})
         string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
-
-        # Do a custom configure
-        # This is like cmake configure but for a backend named INTERPRETER_TEST we replace
-        #    "${BACKEND_NAME}" with "INTERPRETER:TEST"
-        #    ${BACKEND_NAME} with INTERPRETER_TEST
-        # pay close attention to the quotes around the strings above as that is the literal replacement
-        file(READ ${TEST_SRC} FILE_CONTENTS_TMP)
-        string(REPLACE "\"\${BACKEND_NAME}\"" "\"${BACKEND_DEVICE_NAME}\"" FILE_CONTENTS_TMP "${FILE_CONTENTS_TMP}")
-        string(CONFIGURE "${FILE_CONTENTS_TMP}" FILE_CONTENTS_TMP)
-        file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} "${FILE_CONTENTS_TMP}")
-
+        configure_file(${TEST_SRC} ${TARGET_NAME})
         set(SRC ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} ${SRC})
     endforeach()
 
@@ -613,12 +501,6 @@ if (NGRAPH_TOOLS_ENABLE)
     set(NBENCH "${NBENCH_PATH}/nbench")
     target_compile_definitions(unit-test PRIVATE NBENCH_PATH="${NBENCH}")
     add_dependencies(unit-test nbench)
-endif()
-
-if (NGRAPH_PLAIDML_ENABLE)
-    target_link_libraries(unit-test PRIVATE plaidml_backend)
-    # Some PlaidML devices aren't so precise, so we increase the allowable tolerance.
-    target_compile_definitions(unit-test PRIVATE "PlaidML_FLOAT_TOLERANCE_BITS=12")
 endif()
 
 if (NGRAPH_IE_ENABLE)

@@ -130,6 +130,7 @@ namespace ngraph
     /// \return     If any negative axis in vector, it counts from the last to the first
     ///             axis, by adding tensor_rank to axis.
     ///
+    NGRAPH_API
     std::vector<size_t> normalize_axes(const std::string& node_description,
                                        const std::vector<int64_t>& axes,
                                        const Rank& tensor_rank);
@@ -143,6 +144,7 @@ namespace ngraph
     /// \return    Checking if axis is in range [-tensor_rank, tensor_rank-1], otherwise
     ///            returns error. If negative axis, it counts from the last to the first axis,
     ///            by adding tensor_rank to axis.
+    NGRAPH_API
     int64_t normalize_axis(const std::string& node_description,
                            std::int64_t axis,
                            const Rank& tensor_rank);
@@ -158,6 +160,7 @@ namespace ngraph
     /// \return     Checking if axis is in range [axis_range_min, axis_range_max], otherwise
     ///             returns error. If negative axis, it counts from the last to the first axis,
     ///             by adding tensor_rank to axis.
+    NGRAPH_API
     int64_t normalize_axis(const Node* node,
                            std::int64_t axis,
                            std::uint64_t tensor_rank,
@@ -175,11 +178,26 @@ namespace ngraph
     /// \return     Checking if axis is in range [axis_range_min, axis_range_max], otherwise
     ///             returns error. If negative axis, it counts from the last to the first axis,
     ///             by adding tensor_rank to axis.
+    NGRAPH_API
     int64_t normalize_axis(const std::string& node_description,
                            std::int64_t axis,
                            std::uint64_t tensor_rank,
                            std::int64_t axis_range_min,
                            std::int64_t axis_range_max);
+
+    /// \brief Try to compute the maximum value of value
+    /// \return (true, max_value) if can be determined, or (false, 0) if not.
+    NGRAPH_API std::pair<bool, int64_t> maximum_value(const Output<Node>& value);
+
+    /// \brief Evaluates outputs, treating values in value_map as already computed. value_map is
+    /// updated.
+    /// \param value_map Key is RawNodeOutput in graph, value is the computed value. Updated by the
+    /// function.
+    /// \param output_tensor_map Tensors to use for particular outputs
+    /// \param outputs Root set of values to try to compute
+    NGRAPH_API void evaluate_nodes(std::map<RawNodeOutput, EvaluatorTensorPtr>& value_map,
+                                   std::map<RawNodeOutput, EvaluatorTensorPtr>& output_tensor_map,
+                                   const OutputVector& outputs);
 
     namespace opset1
     {

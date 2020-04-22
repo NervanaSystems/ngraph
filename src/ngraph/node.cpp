@@ -22,8 +22,10 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
+#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -38,20 +40,6 @@ atomic<size_t> Node::m_next_instance_id(0);
 Node::Node(size_t output_size)
     : Node()
 {
-    set_output_size(output_size);
-}
-
-Node::Node(const std::string& node_type, const NodeVector& arguments, size_t output_size)
-    : m_node_type(node_type)
-{
-    set_arguments(arguments);
-    set_output_size(output_size);
-}
-
-Node::Node(const NodeVector& arguments, size_t output_size)
-    : Node()
-{
-    set_arguments(arguments);
     set_output_size(output_size);
 }
 
@@ -1115,4 +1103,46 @@ vector<Output<const Node>> Node::outputs() const
     }
 
     return result;
+}
+
+bool Node::evaluate(const EvaluatorTensorVector& output_values,
+                    const EvaluatorTensorVector& input_values)
+{
+    return false;
+}
+
+bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_values)
+{
+    // If all the inputs are constants, try to evaluate the outputs
+    EvaluatorTensorVector input_tensors;
+    for (auto input : input_values)
+    {
+        if (auto constant = as_type_ptr<op::v0::Constant>(input.get_node_shared_ptr()))
+        {
+            input_tensors.push_back(op::v0::Constant::create_evaluator_tensor(constant));
+        }
+        else
+        {
+            return false;
+        }
+    }
+    vector<op::Constant::ConstantEvaluatorTensorPtr> output_constant_tensors;
+    EvaluatorTensorVector output_tensors;
+    OutputVector output_constants;
+    for (auto output : outputs())
+    {
+        auto tensor = op::v0::Constant::create_evaluator_tensor(output.get_element_type(),
+                                                                output.get_partial_shape());
+        output_constant_tensors.push_back(tensor);
+        output_tensors.push_back(tensor);
+    }
+    if (evaluate(output_tensors, input_tensors))
+    {
+        for (size_t i = 0; i < output_constant_tensors.size(); ++i)
+        {
+            output_values[i] = output_constant_tensors[i]->get_constant();
+        }
+        return true;
+    }
+    return false;
 }

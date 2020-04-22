@@ -12,10 +12,10 @@ send_recv
 send_recv_ring
 
 # ONNX TopK with dynamic K
-top_k_opset_10
+onnx_top_k_opset_10
 
 # ONNX GatherND with int32
-model_gatherND_int32
+onnx_model_gatherND_int32
 
 # RNN pattern fails after removing GOE
 fuse_rnn_across_layer_2layer_3timestep
@@ -26,3 +26,7 @@ fuse_2_layer_rnn
 fuse_1_layer_rnn
 rnn_fusion_1rnn_layer_3lstm_cell
 rnn_fusion_2rnn_layer_3lstm_cell
+
+#ONNX Flatten with dynamic reshape
+onnx_dyn_shapes_flatten_axis
+onnx_dyn_shapes_flatten_neg_axis

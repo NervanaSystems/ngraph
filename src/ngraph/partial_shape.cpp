@@ -36,6 +36,79 @@ bool ngraph::PartialShape::is_static() const
                                            [](const Dimension& d) { return d.is_static(); });
 }
 
+bool ngraph::PartialShape::operator==(const PartialShape& partial_shape) const
+{
+    if (rank() != partial_shape.rank())
+    {
+        return false;
+    }
+    if (rank().is_dynamic())
+    {
+        return true;
+    }
+    for (auto i = 0; i < rank().get_length(); ++i)
+    {
+        if (m_dimensions[i] != partial_shape.m_dimensions[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ngraph::PartialShape::operator!=(const PartialShape& partial_shape) const
+{
+    return !(*this == partial_shape);
+}
+
+Shape ngraph::PartialShape::get_max_shape() const
+{
+    if (rank().is_dynamic())
+    {
+        return Shape();
+    }
+    else
+    {
+        Shape shape;
+        for (auto dimension : m_dimensions)
+        {
+            shape.push_back(dimension.get_interval().get_max_val());
+        }
+        return shape;
+    }
+}
+
+Shape ngraph::PartialShape::get_min_shape() const
+{
+    if (rank().is_dynamic())
+    {
+        return Shape();
+    }
+    else
+    {
+        Shape shape;
+        for (auto dimension : m_dimensions)
+        {
+            shape.push_back(dimension.get_interval().get_min_val());
+        }
+        return shape;
+    }
+}
+
+Shape ngraph::PartialShape::get_shape() const
+{
+    NGRAPH_CHECK(rank().is_static(), "get_shape() must be called on a static shape");
+    Shape shape;
+    for (auto dimension : m_dimensions)
+    {
+        auto min_val = dimension.get_interval().get_min_val();
+        auto max_val = dimension.get_interval().get_max_val();
+        NGRAPH_CHECK(min_val == max_val, "get_shape() must be called on a static shape");
+        shape.push_back(min_val);
+    }
+    return shape;
+}
+
 PartialShape ngraph::operator+(const PartialShape& s1, const PartialShape& s2)
 {
     if (s1.rank().is_dynamic() || s2.rank().is_dynamic())
