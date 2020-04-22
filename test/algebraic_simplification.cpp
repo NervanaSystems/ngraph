@@ -600,11 +600,11 @@ TEST(algebraic_simplification, replace_transpose_with_reshape)
 {
     auto check_usecase = [](const Shape& shape, const std::vector<int64_t>& perm_value) {
         auto param = make_shared<op::Parameter>(element::f32, shape);
-        auto param1 = make_shared<op::v0::Abs>(param);
         auto constant_perm =
             make_shared<op::Constant>(element::i64, Shape{perm_value.size()}, perm_value);
-        auto transpose = make_shared<op::v1::Transpose>(param1, constant_perm);
-        auto f = make_shared<Function>(transpose, ParameterVector{param});
+        auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
+        auto transpose1 = make_shared<op::v0::Abs>(transpose);
+        auto f = make_shared<Function>(transpose1, ParameterVector{param});
 
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::AlgebraicSimplification>();
@@ -630,11 +630,11 @@ TEST(algebraic_simplification, replace_transpose_with_reshape_fail)
 {
     auto check_usecase = [](const Shape& shape, const std::vector<int64_t>& perm_value) {
         auto param = make_shared<op::Parameter>(element::f32, shape);
-        auto param1 = make_shared<op::v0::Abs>(param);
         auto constant_perm =
             make_shared<op::Constant>(element::i64, Shape{perm_value.size()}, perm_value);
-        auto transpose = make_shared<op::v1::Transpose>(param1, constant_perm);
-        auto f = make_shared<Function>(transpose, ParameterVector{param});
+        auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
+        auto transpose1 = make_shared<op::v0::Abs>(transpose);
+        auto f = make_shared<Function>(transpose1, ParameterVector{param});
 
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::AlgebraicSimplification>();
@@ -653,11 +653,11 @@ TEST(algebraic_simplification, replace_transpose_with_reshape_4d_1_dyn_dim)
 {
     auto shape_in = PartialShape{Dimension::dynamic(), 20, 1, 1};
     auto param = make_shared<op::Parameter>(element::f32, shape_in);
-    auto param1 = make_shared<op::v0::Abs>(param);
     auto constant_perm =
         make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 2, 3, 1});
-    auto transpose = make_shared<op::v1::Transpose>(param1, constant_perm);
-    auto baseline_f = make_shared<Function>(transpose, ParameterVector{param});
+    auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
+    auto transpose1 = make_shared<op::v0::Abs>(transpose);
+    auto baseline_f = make_shared<Function>(transpose1, ParameterVector{param});
     auto optimized_f = clone_function(*baseline_f);
 
     pass::Manager pass_manager;
@@ -674,11 +674,11 @@ TEST(algebraic_simplification, replace_transpose_with_reshape_5d_2_dyn_dim)
 {
     auto shape_in = PartialShape{Dimension::dynamic(), Dimension::dynamic(), 20, 1, 1};
     auto param = make_shared<op::Parameter>(element::f32, shape_in);
-    auto param1 = make_shared<op::v0::Abs>(param);
     auto constant_perm =
         make_shared<op::Constant>(element::i64, Shape{5}, vector<int64_t>{0, 1, 3, 2, 4});
-    auto transpose = make_shared<op::v1::Transpose>(param1, constant_perm);
-    auto f = make_shared<Function>(transpose, ParameterVector{param});
+    auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
+    auto transpose1 = make_shared<op::v0::Abs>(transpose);
+    auto f = make_shared<Function>(transpose1, ParameterVector{param});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();

@@ -639,8 +639,7 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
     auto constant_node =
         ngraph::op::Constant::create(element::i64, Shape{output_shape.size()}, output_shape);
     auto reshape_op = make_shared<op::v1::Reshape>(data, constant_node, false);
-    replace_node(n, reshape_op);
-    return true;
+    return remove_node_update_name(n, reshape_op);
 }
 
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
