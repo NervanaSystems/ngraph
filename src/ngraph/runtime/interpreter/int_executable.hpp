@@ -1814,7 +1814,6 @@ protected:
         case OP_TYPEID::PartialSliceBackprop:
         case OP_TYPEID::Passthrough:
         case OP_TYPEID::PRelu:
-        case OP_TYPEID::Range:
         case OP_TYPEID::RNNCell:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ScaleShift:
