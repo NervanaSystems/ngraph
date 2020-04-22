@@ -507,24 +507,54 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
     {
         return false;
     }
-    auto indices = gather->input_value(1).get_node_shared_ptr();
-    auto gather_in_ps = gather->get_input_partial_shape(0);
-    auto indices_ps = indices->get_output_partial_shape(0);
+    auto gather_in_rank = gather->get_input_partial_shape(0).rank();
+    auto indices_rank = gather->get_input_partial_shape(1).rank();
     auto axis = gather->get_axis();
-    if (gather_in_ps.rank().is_dynamic() || indices_ps.rank().is_dynamic() ||
-        indices_ps.rank().get_length() != 0 || axis == op::v1::Gather::AXIS_NOT_SET_VALUE)
+    if (gather_in_rank.is_dynamic() || indices_rank.is_dynamic() ||
+        axis == op::v1::Gather::AXIS_NOT_SET_VALUE)
     {
-        NGRAPH_DEBUG << gather << " cannot simplify shapeof->gather";
+        NGRAPH_DEBUG << gather << " cannot simplify gather->shapeof";
         return false;
     }
+
+    auto zero_axis = op::Constant::create<int64_t>(element::i64, Shape{}, {0});
+    shared_ptr<Node> replace_node;
     auto new_shapeof = make_shared<op::v0::ShapeOf>(gather->input_value(0).get_node_shared_ptr());
-    auto new_axis = op::Constant::create<int64_t>(element::i64, Shape{}, {0});
-    std::vector<int64_t> vi(gather_in_ps.rank().get_length());
-    std::iota(vi.begin(), vi.end(), 0);
-    vi.erase(vi.begin() + axis);
-    auto new_indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
-    auto new_gather = make_shared<op::v1::Gather>(new_shapeof, new_indices, new_axis);
-    return remove_node_update_name(shapeof, new_gather);
+    if (indices_rank.get_length() == 0)
+    {
+        std::vector<int64_t> vi(gather_in_rank.get_length());
+        std::iota(vi.begin(), vi.end(), 0);
+        vi.erase(vi.begin() + axis);
+        auto new_indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+        replace_node = make_shared<op::v1::Gather>(new_shapeof, new_indices, zero_axis);
+    }
+    else
+    {
+        NodeVector concat_inputs;
+        if (axis > 0)
+        {
+            std::vector<int64_t> vi(axis);
+            std::iota(vi.begin(), vi.end(), 0);
+            auto indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+            auto gather = make_shared<op::v1::Gather>(new_shapeof, indices, zero_axis);
+            concat_inputs.push_back(gather);
+        }
+        auto shapeof_indices =
+            make_shared<op::v0::ShapeOf>(gather->input_value(1).get_node_shared_ptr());
+
+        concat_inputs.push_back(shapeof_indices);
+
+        if (gather_in_rank.get_length() - 1 > axis)
+        {
+            std::vector<int64_t> vi(gather_in_rank.get_length() - (axis + 1));
+            std::iota(vi.begin(), vi.end(), axis + 1);
+            auto indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+            auto gather = make_shared<op::v1::Gather>(new_shapeof, indices, zero_axis);
+            concat_inputs.push_back(gather);
+        }
+        replace_node = make_shared<op::v0::Concat>(concat_inputs, 0);
+    }
+    return remove_node_update_name(shapeof, replace_node);
 }
 
 static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)

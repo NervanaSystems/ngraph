@@ -725,8 +725,15 @@ TEST(algebraic_simplification, gather_shapeof)
 
         ASSERT_EQ(count_ops_of_type<op::v0::ShapeOf>(baseline_f), 1);
         ASSERT_EQ(count_ops_of_type<op::v1::Gather>(baseline_f), 1);
-        ASSERT_EQ(count_ops_of_type<op::v0::ShapeOf>(optimized_f), 1);
-        ASSERT_EQ(count_ops_of_type<op::v1::Gather>(optimized_f), 1);
+        if (is_scalar_index)
+        {
+            ASSERT_EQ(count_ops_of_type<op::v0::ShapeOf>(optimized_f), 1);
+            ASSERT_EQ(count_ops_of_type<op::v1::Gather>(optimized_f), 1);
+        }
+        else
+        {
+            ASSERT_EQ(count_ops_of_type<op::v0::Concat>(optimized_f), 1);
+        }
     };
 
     check_usecase(Shape{2, 3, 2, 1}, true, std::vector<int64_t>{0}, 0);
@@ -735,4 +742,50 @@ TEST(algebraic_simplification, gather_shapeof)
     check_usecase(Shape{12}, true, std::vector<int64_t>{0}, 0);
     check_usecase(Shape{2, 3, 2, 1}, false, std::vector<int64_t>{0, 2}, 1);
     check_usecase(Shape{2, 3, 2, 1}, false, std::vector<int64_t>{0}, 2);
+}
+
+TEST(algebraic_simplification, dyn_gather_shapeof)
+{
+    auto check_usecase = [](std::shared_ptr<op::Parameter> data,
+                            std::shared_ptr<op::Parameter> indices,
+                            int64_t axis_val,
+                            bool is_scalar_index) {
+        auto axis = op::Constant::create<int64_t>(element::i64, Shape{}, {axis_val});
+        auto A1 = make_shared<op::v0::Abs>(data);
+        auto B = make_shared<op::v1::Gather>(A1, indices, axis);
+        auto B1 = make_shared<op::v0::ShapeOf>(B);
+        auto baseline_f =
+            make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{data, indices});
+        auto optimized_f = clone_function(*baseline_f);
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::Validate>();
+        pass_manager.register_pass<pass::AlgebraicSimplification>();
+        pass_manager.run_passes(optimized_f);
+
+        ASSERT_EQ(baseline_f->get_results()[0]->get_output_partial_shape(0),
+                  optimized_f->get_results()[0]->get_output_partial_shape(0));
+
+        ASSERT_EQ(count_ops_of_type<op::v0::ShapeOf>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v1::Gather>(baseline_f), 1);
+        if (is_scalar_index)
+        {
+            ASSERT_EQ(count_ops_of_type<op::v0::ShapeOf>(optimized_f), 1);
+            ASSERT_EQ(count_ops_of_type<op::v1::Gather>(optimized_f), 1);
+        }
+        else
+        {
+            ASSERT_EQ(count_ops_of_type<op::v0::Concat>(optimized_f), 1);
+        }
+    };
+
+    check_usecase(make_shared<op::Parameter>(element::f32, PartialShape{2, 3, -1}),
+                  make_shared<op::Parameter>(element::f32, PartialShape{0, 1}),
+                  0,
+                  false);
+    check_usecase(
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 3, -1}),
+        make_shared<op::Parameter>(element::f32,
+                                   PartialShape{Dimension::dynamic(), Dimension::dynamic()}),
+        0,
+        false);
 }
