@@ -295,10 +295,7 @@ void op::v1::TopK::validate_and_infer_types()
     if (output_shape.rank().is_static())
     {
         m_normalized_axis = ngraph::normalize_axis(this, m_axis, output_shape.rank());
-        if (k != 0)
-        {
-            output_shape[m_normalized_axis] = k;
-        }
+        output_shape[m_normalized_axis] = (k == 0) ? -1 : k;
     }
 
     set_output_size(2);
