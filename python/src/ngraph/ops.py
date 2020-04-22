@@ -1273,17 +1273,17 @@ def dot(left_node, right_node, reduction_axes_count=None, name=None):
 
 
 @nameable_op
-def binary_convolution(data,                    # type: Node
-                filters,                        # type: Node
-                strides,                        # type: List[int]
-                pads_begin,                     # type: List[int]
-                pads_end,                       # type: List[int]
-                dilations,                      # type: List[int]
-                mode,                           # type: str
-                pad_value,                      # type: float
-                auto_pad='EXPLICIT',            # type: str
-                name=None,                      # type: str
-                ):
+def binary_convolution(data,                           # type: Node
+                       filters,                        # type: Node
+                       strides,                        # type: List[int]
+                       pads_begin,                     # type: List[int]
+                       pads_end,                       # type: List[int]
+                       dilations,                      # type: List[int]
+                       mode,                           # type: str
+                       pad_value,                      # type: float
+                       auto_pad='EXPLICIT',            # type: str
+                       name=None,                      # type: str
+                       ):
     # type: (...) -> Node
     """Create node performing convolution with binary weights, binary input and integer output.
 
