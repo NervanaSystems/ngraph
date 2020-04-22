@@ -21,9 +21,11 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/node_output.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/range.hpp"
 #include "ngraph/op/shape_of.hpp"
 #include "ngraph/validation_util.hpp"
 
@@ -79,4 +81,38 @@ TEST(eval, evaluate_shape_of)
     auto cshape = c->get_vector<int64_t>();
     vector<int64_t> arg_shape{2, 3};
     ASSERT_EQ(cshape, arg_shape);
+}
+
+TEST(eval, evaluate_dynamic_range_sum)
+{
+    auto p_start = make_shared<op::Parameter>(element::f32, PartialShape{});
+    auto p_stop = make_shared<op::Parameter>(element::f32, PartialShape{});
+    auto p_step = make_shared<op::Parameter>(element::f32, PartialShape{});
+    auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{});
+    auto range = make_shared<op::v0::Range>(p_start, p_stop, p_step);
+    auto add = make_shared<op::v1::Add>(range, p1);
+    auto fun =
+        make_shared<Function>(OutputVector{add}, ParameterVector{p_start, p_stop, p_step, p1});
+    auto p_start_val = op::Constant::create<float>(element::f32, Shape{}, {1.0f});
+    auto p_stop_val = op::Constant::create<float>(element::f32, Shape{}, {10.0f});
+    auto p_step_val = op::Constant::create<float>(element::f32, Shape{}, {3.0f});
+    auto p1_val = op::Constant::create<float>(element::f32, Shape{}, {7.0f});
+    EvaluatorTensorVector inputs;
+    inputs.push_back(op::v0::Constant::create_evaluator_tensor(p_start_val));
+    inputs.push_back(op::v0::Constant::create_evaluator_tensor(p_stop_val));
+    inputs.push_back(op::v0::Constant::create_evaluator_tensor(p_step_val));
+    inputs.push_back(op::v0::Constant::create_evaluator_tensor(p1_val));
+    EvaluatorTensorVector outputs;
+    auto result = fun->get_results()[0];
+    auto result_tensor =
+        op::v0::Constant::create_evaluator_tensor(element::dynamic, PartialShape::dynamic());
+    outputs.push_back(result_tensor);
+    ASSERT_TRUE(fun->evaluate(outputs, inputs));
+    auto c = result_tensor->get_constant();
+    ASSERT_TRUE(c);
+    EXPECT_EQ(c->get_output_element_type(0), element::f32);
+    EXPECT_EQ(c->get_output_partial_shape(0), (PartialShape{3}));
+    auto cval = c->get_vector<float>();
+    vector<float> seq{8.0f, 11.0f, 14.0f};
+    ASSERT_EQ(cval, seq);
 }

@@ -127,11 +127,12 @@ namespace
     public:
         HostTensorEvaluatorTensor(const element::Type& element_type,
                                   const PartialShape& partial_shape)
-            : HostEvaluatorTensor(element_type, partial_shape)
+            : HostEvaluatorTensor(element_type, partial_shape, false)
         {
         }
         HostTensorEvaluatorTensor(shared_ptr<runtime::HostTensor> host_tensor)
-            : HostEvaluatorTensor(host_tensor->get_element_type(), host_tensor->get_partial_shape())
+            : HostEvaluatorTensor(
+                  host_tensor->get_element_type(), host_tensor->get_partial_shape(), true)
             , m_host_tensor(host_tensor)
         {
         }
@@ -147,6 +148,7 @@ namespace
                              m_partial_shape);
                 m_host_tensor =
                     make_shared<runtime::HostTensor>(m_element_type, m_partial_shape.get_shape());
+                set_is_allocated();
             }
             return m_host_tensor->get_data_ptr();
         }

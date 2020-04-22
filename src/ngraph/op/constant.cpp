@@ -622,12 +622,12 @@ namespace
     public:
         ConstantEvaluatorTensorImp(const element::Type element_type,
                                    const PartialShape& partial_shape)
-            : ConstantEvaluatorTensor(element_type, partial_shape)
+            : ConstantEvaluatorTensor(element_type, partial_shape, false)
         {
         }
         ConstantEvaluatorTensorImp(const std::shared_ptr<op::v0::Constant>& constant,
                                    void* data_ptr)
-            : ConstantEvaluatorTensor(constant->output(0))
+            : ConstantEvaluatorTensor(constant->output(0), true)
             , m_constant(constant)
             , m_data_ptr(data_ptr)
         {
@@ -645,6 +645,7 @@ namespace
                 m_constant =
                     make_shared<op::v0::Constant>(m_element_type, m_partial_shape.get_shape());
                 m_data_ptr = m_constant->allocate_buffer();
+                set_is_allocated();
             }
             return m_data_ptr;
         }

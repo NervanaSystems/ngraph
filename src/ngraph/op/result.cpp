@@ -63,6 +63,7 @@ void op::Result::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVec
 
 bool op::Result::evaluate(const EvaluatorTensorVector& outputs, const EvaluatorTensorVector& inputs)
 {
+    outputs[0]->set_unary(this, inputs[0]);
     void* output = outputs[0]->get_data_ptr();
     void* input = inputs[0]->get_data_ptr();
     memcpy(output, input, outputs[0]->get_size_in_bytes());

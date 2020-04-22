@@ -29,26 +29,85 @@ namespace ngraph
     class Node;
     template <typename T>
     class Output;
+    class EvaluatorTensor;
+    // This is the name we want to use; a handle to the API implementation
+    using EvaluatorTensorPtr = std::shared_ptr<EvaluatorTensor>;
+    using EvaluatorTensorVector = std::vector<EvaluatorTensorPtr>;
+
+    NGRAPH_API
+    std::string node_evaluation_failure_loc_string(const Node* node);
+
+    class NGRAPH_API NodeEvaluationFailure : public CheckFailure
+    {
+    public:
+        NodeEvaluationFailure(const CheckLocInfo& check_loc_info,
+                              const Node* node,
+                              const std::string& explanation)
+            : CheckFailure(check_loc_info, node_evaluation_failure_loc_string(node), explanation)
+        {
+        }
+    };
+
+#define NODE_EVALUATION_CHECK(node, ...)                                                           \
+    NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), __VA_ARGS__)
 
     /// \brief A generic handle to (potential) storage with element type and shape information
     class NGRAPH_API EvaluatorTensor
     {
     protected:
-        EvaluatorTensor(const element::Type& element_type, const PartialShape& partial_shape);
+        EvaluatorTensor(const element::Type& element_type,
+                        const PartialShape& partial_shape,
+                        bool is_allocated);
         /// \brief Get type/shape from value
-        EvaluatorTensor(const Output<Node>& value);
+        EvaluatorTensor(const Output<Node>& value, bool is_allocated);
+
+        /// \brief Marks the tensor as allocated
+        void set_is_allocated();
 
     public:
         virtual ~EvaluatorTensor();
-        /// \return pointer to storage
+        /// \return pointer to storage. The element type and shape must be static when this is
+        /// called.
         virtual void* get_data_ptr() = 0;
-
+        /// \return The current element type
         const element::Type& get_element_type() const;
+        /// \return The current partial shape
         const PartialShape& get_partial_shape() const;
+        /// \return the static shape
         const Shape get_shape() const;
-        size_t get_element_count();
-        size_t get_size_in_bytes();
+        /// \return The number of elements in the shape
+        size_t get_element_count() const;
+        /// \return The number of bytes in the shape
+        size_t get_size_in_bytes() const;
+        /// \return True if storage has been allocated
+        bool get_is_allocated() const;
+        /// \brief Set the element type. Must be compatible with the current element type.
+        /// \param node The node being evaluated, for context
+        /// \param element_type The element type
+        void set_element_type(Node* node, const element::Type& element_type);
+        /// \brief Set the shape for allocation. Must be compatible with the current partial shape.
+        void set_allocation_shape(Node* context, const Shape& shape);
+        /// \brief Set the actual shape of the tensor. Dimension 0 can be less than the allocation
+        /// shape, all other dimensions must agree with the allocation shape.
+        /// \param node The node being evaluated (for errors)
+        /// \param shape The shape being set
+        void set_shape(Node* node, const Shape& shape);
+        /// \brief Set the shape of a node from an input
+        /// \param node The node being evaluated (for errors)
+        /// \param arg The input argument
+        void set_unary(Node* node, const EvaluatorTensorPtr& arg);
+        /// \brief Set the shape of the tensor using broadcast rules
+        /// \param node The node being evaluated (for errors)
+        /// \param autob The broadcast mode
+        /// \param arg0 The first argument
+        /// \param arg1 The second argument
+        void set_broadcast(Node* node,
+                           const op::AutoBroadcastSpec& autob,
+                           const EvaluatorTensorPtr& arg0,
+                           const EvaluatorTensorPtr& arg1);
 
+        /// \brief Get a pointer of the appropriate type. Will allocate if necessary.
+        /// \tparam The element type
         template <element::Type_t ET>
         typename element_type_traits<ET>::value_type* get_ptr()
         {
@@ -58,9 +117,6 @@ namespace ngraph
     protected:
         element::Type m_element_type;
         PartialShape m_partial_shape;
+        bool m_is_allocated;
     };
-
-    // This is the name we want to use; a handle to the API implementation
-    using EvaluatorTensorPtr = std::shared_ptr<EvaluatorTensor>;
-    using EvaluatorTensorVector = std::vector<EvaluatorTensorPtr>;
 }

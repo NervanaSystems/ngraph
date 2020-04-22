@@ -1496,11 +1496,6 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::Range:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
         case OP_TYPEID::Relu:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1853,6 +1848,7 @@ protected:
         case OP_TYPEID::UnknownOp:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
+        case OP_TYPEID::Range:
         case OP_TYPEID::Result:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShapeOf_v3:

@@ -15,22 +15,32 @@
 //*****************************************************************************
 
 #include "ngraph/evaluator_tensor.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/node_output.hpp"
 #include "ngraph/type/element_type.hpp"
+
+std::string ngraph::node_evaluation_failure_loc_string(const Node* node)
+{
+    std::stringstream ss;
+    ss << "While evaluating node '" << *node << "'";
+    return ss.str();
+}
 
 ngraph::EvaluatorTensor::~EvaluatorTensor()
 {
 }
 
 ngraph::EvaluatorTensor::EvaluatorTensor(const element::Type& element_type,
-                                         const PartialShape& partial_shape)
+                                         const PartialShape& partial_shape,
+                                         bool is_allocated)
     : m_element_type(element_type)
     , m_partial_shape(partial_shape)
+    , m_is_allocated(is_allocated)
 {
 }
 
-ngraph::EvaluatorTensor::EvaluatorTensor(const Output<Node>& value)
-    : EvaluatorTensor(value.get_element_type(), value.get_partial_shape())
+ngraph::EvaluatorTensor::EvaluatorTensor(const Output<Node>& value, bool is_allocated)
+    : EvaluatorTensor(value.get_element_type(), value.get_partial_shape(), is_allocated)
 {
 }
 
@@ -49,12 +59,119 @@ const ngraph::Shape ngraph::EvaluatorTensor::get_shape() const
     return m_partial_shape.get_shape();
 }
 
-size_t ngraph::EvaluatorTensor::get_element_count()
+size_t ngraph::EvaluatorTensor::get_element_count() const
 {
     return shape_size(get_partial_shape().get_shape());
 }
 
-size_t ngraph::EvaluatorTensor::get_size_in_bytes()
+size_t ngraph::EvaluatorTensor::get_size_in_bytes() const
 {
     return get_element_type().size() * get_element_count();
+}
+
+void ngraph::EvaluatorTensor::set_element_type(Node* node, const element::Type& element_type)
+{
+    NODE_EVALUATION_CHECK(node,
+                          m_element_type.is_dynamic() || m_element_type == element_type,
+                          "Can not change a static element type");
+    m_element_type = element_type;
+}
+
+void ngraph::EvaluatorTensor::set_is_allocated()
+{
+    m_is_allocated = true;
+}
+
+bool ngraph::EvaluatorTensor::get_is_allocated() const
+{
+    return m_is_allocated;
+}
+
+void ngraph::EvaluatorTensor::set_allocation_shape(Node* node, const Shape& shape)
+{
+    if (m_is_allocated)
+    {
+        NODE_EVALUATION_CHECK(node,
+                              PartialShape(shape) == m_partial_shape,
+                              "Attempt to change the allocation shape to:",
+                              shape,
+                              " of an allocated tensor with shape: ",
+                              m_partial_shape);
+    }
+    else
+    {
+        NODE_EVALUATION_CHECK(node,
+                              PartialShape(shape).refines(m_partial_shape),
+                              "Allocation shape ",
+                              shape,
+                              " must be compatible with the partial shape: ",
+                              m_partial_shape);
+    }
+    m_partial_shape = shape;
+}
+
+void ngraph::EvaluatorTensor::set_shape(Node* node, const Shape& shape)
+{
+    if (m_is_allocated)
+    {
+        // We can shorten the first dimension
+        NODE_EVALUATION_CHECK(node,
+                              m_partial_shape.rank().get_length() == shape.size(),
+                              "Rank can not be changed. Attempt to set shape to: ",
+                              shape,
+                              " from allocation shape: ",
+                              m_partial_shape);
+        NODE_EVALUATION_CHECK(node,
+                              shape.size() == 0 || shape[0] <= m_partial_shape[0].get_length());
+    }
+    else
+    {
+        NODE_EVALUATION_CHECK(node,
+                              PartialShape(shape).refines(m_partial_shape),
+                              "Allocation shape ",
+                              shape,
+                              " must be compatible with the partial shape: ",
+                              m_partial_shape);
+    }
+    m_partial_shape = shape;
+}
+
+void ngraph::EvaluatorTensor::set_unary(Node* node, const EvaluatorTensorPtr& arg)
+{
+    set_element_type(node, arg->get_element_type());
+    set_shape(node, arg->get_partial_shape().get_shape());
+}
+
+void ngraph::EvaluatorTensor::set_broadcast(Node* node,
+                                            const op::AutoBroadcastSpec& autob,
+                                            const EvaluatorTensorPtr& arg0,
+                                            const EvaluatorTensorPtr& arg1)
+{
+    element::Type element_type = arg0->get_element_type();
+    NODE_EVALUATION_CHECK(
+        node,
+        element::Type::merge(element_type, element_type, arg1->get_element_type()),
+        "Argument element types are inconsistent.");
+    set_element_type(node, element_type);
+
+    PartialShape pshape = arg0->get_partial_shape();
+    if (autob.m_type == op::AutoBroadcastType::NONE)
+    {
+        NODE_EVALUATION_CHECK(node,
+                              PartialShape::merge_into(pshape, arg1->get_partial_shape()),
+                              "Argument shapes are inconsistent.");
+    }
+    else if (autob.m_type == op::AutoBroadcastType::NUMPY ||
+             autob.m_type == op::AutoBroadcastType::PDPD)
+    {
+        NODE_EVALUATION_CHECK(
+            node,
+            PartialShape::broadcast_merge_into(pshape, arg1->get_partial_shape(), autob),
+            "Argument shapes are inconsistent.");
+    }
+    else
+    {
+        NODE_EVALUATION_CHECK(node, false, "Unsupported auto broadcast specification");
+    }
+    set_shape(node, pshape.get_shape());
 }

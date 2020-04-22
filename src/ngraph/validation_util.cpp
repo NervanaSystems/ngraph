@@ -1010,7 +1010,7 @@ void ngraph::evaluate_nodes(std::map<RawNodeOutput, EvaluatorTensorPtr>& value_m
                 if (it == output_tensor_map.end())
                 {
                     auto c = runtime::HostTensor::create_evaluator_tensor(v.get_element_type(),
-                                                                          v.get_shape());
+                                                                          v.get_partial_shape());
                     output_tensors.push_back(c);
                 }
                 else

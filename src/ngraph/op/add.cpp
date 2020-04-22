@@ -82,11 +82,14 @@ namespace
                                                     true);
     }
 
-    bool evaluate_add(const EvaluatorTensorPtr& arg0,
+    bool evaluate_add(Node* node,
+                      const op::AutoBroadcastSpec& autob,
+                      const EvaluatorTensorPtr& arg0,
                       const EvaluatorTensorPtr& arg1,
                       const EvaluatorTensorPtr& out,
                       const op::AutoBroadcastSpec& broadcast_spec)
     {
+        out->set_broadcast(node, autob, arg0, arg1);
         return try_evaluate_add<element::Type_t::i8>(arg0, arg1, out, broadcast_spec) ||
                try_evaluate_add<element::Type_t::i16>(arg0, arg1, out, broadcast_spec) ||
                try_evaluate_add<element::Type_t::i32>(arg0, arg1, out, broadcast_spec) ||
@@ -103,7 +106,7 @@ namespace
 bool op::v0::Add::evaluate(const EvaluatorTensorVector& outputs,
                            const EvaluatorTensorVector& inputs)
 {
-    return evaluate_add(inputs[0], inputs[1], outputs[0], get_autob());
+    return evaluate_add(this, get_autob(), inputs[0], inputs[1], outputs[0], get_autob());
 }
 
 // ------------------------------- v1 ------------------------------------------
@@ -149,5 +152,5 @@ void op::v1::Add::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
 bool op::v1::Add::evaluate(const EvaluatorTensorVector& outputs,
                            const EvaluatorTensorVector& inputs)
 {
-    return evaluate_add(inputs[0], inputs[1], outputs[0], get_autob());
+    return evaluate_add(this, get_autob(), inputs[0], inputs[1], outputs[0], get_autob());
 }
