@@ -33,10 +33,10 @@ static bool read_tracing_env_var()
     return is_enabled;
 }
 
-mutex runtime::event::Manager::s_file_mutex;
-bool runtime::event::Manager::s_tracing_enabled = read_tracing_env_var();
+mutex event::Manager::s_file_mutex;
+bool event::Manager::s_tracing_enabled = read_tracing_env_var();
 
-runtime::event::Duration::Duration(const string& name, const string& category, const string& args)
+event::Duration::Duration(const string& name, const string& category, const string& args)
 {
     if (Manager::is_tracing_enabled())
     {
@@ -48,7 +48,7 @@ runtime::event::Duration::Duration(const string& name, const string& category, c
     }
 }
 
-void runtime::event::Duration::stop()
+void event::Duration::stop()
 {
     if (Manager::is_tracing_enabled())
     {
@@ -56,7 +56,7 @@ void runtime::event::Duration::stop()
     }
 }
 
-void runtime::event::Duration::write()
+void event::Duration::write()
 {
     if (Manager::is_tracing_enabled())
     {
@@ -64,31 +64,31 @@ void runtime::event::Duration::write()
 
         lock_guard<mutex> lock(Manager::get_mutex());
 
-        ofstream& out = runtime::event::Manager::get_output_stream();
+        ofstream& out = event::Manager::get_output_stream();
+        string str;
         if (out.is_open() == false)
         {
-            runtime::event::Manager::open();
+            event::Manager::open();
         }
         else
         {
-            Manager::get_output_stream() << ",\n";
+            str += ",\n";
         }
 
-        Manager::get_output_stream() <<
-            R"({"name":")" << m_name << R"(","cat":")" << m_category << R"(","ph":"X","pid":)"
-                                     << Manager::get_process_id() << R"(,"tid":)"
-                                     << Manager::get_thread_id() <<
-            R"(,"ts":)" << m_start << R"(,"dur":)" << (stop_time - m_start);
+        str +=
+            R"({"name":")" + m_name + R"(","cat":")" + m_category + R"(","ph":"X","pid":)" +
+            Manager::get_process_id() + R"(,"tid":)" + Manager::get_thread_id() +
+            R"(,"ts":)" + to_string(m_start) + R"(,"dur":)" + to_string(stop_time - m_start);
         if (!m_args.empty())
         {
-            out <<
-                R"(,"args":)" << m_args;
+            str += R"(,"args":)" + m_args;
         }
-        out << "}";
+        str += "}";
+        out << str;
     }
 }
 
-runtime::event::Object::Object(const string& name, const string& args)
+event::Object::Object(const string& name, const string& args)
     : m_name{name}
     , m_id{static_cast<size_t>(chrono::high_resolution_clock::now().time_since_epoch().count())}
 {
@@ -96,39 +96,39 @@ runtime::event::Object::Object(const string& name, const string& args)
     {
         lock_guard<mutex> lock(Manager::get_mutex());
 
-        ofstream& out = runtime::event::Manager::get_output_stream();
+        ofstream& out = event::Manager::get_output_stream();
+        string str;
         if (out.is_open() == false)
         {
-            runtime::event::Manager::open();
+            event::Manager::open();
         }
         else
         {
-            Manager::get_output_stream() << ",\n";
+            str += ",\n";
         }
-        out << R"({"name":")" << m_name << R"(","ph":"N","id":")" << m_id <<
-            R"(","ts":)" << Manager::get_current_microseconds() <<
-            R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id();
+        str += R"({"name":")" + m_name + R"(","ph":"N","id":")" + to_string(m_id) +
+               R"(","ts":)" + to_string(Manager::get_current_microseconds()) +
+               R"(,"pid":)" + Manager::get_process_id() + R"(,"tid":)" + Manager::get_thread_id();
         if (!args.empty())
         {
-            out <<
-                R"(,"args":)" << args;
+            str += R"(,"args":)" + args;
         }
-        out << "}";
+        str += "}";
 
         write_snapshot(out, args);
     }
 }
 
-void runtime::event::Object::snapshot(const string& args)
+void event::Object::snapshot(const string& args)
 {
     if (Manager::is_tracing_enabled())
     {
         lock_guard<mutex> lock(Manager::get_mutex());
 
-        ofstream& out = runtime::event::Manager::get_output_stream();
+        ofstream& out = event::Manager::get_output_stream();
         if (out.is_open() == false)
         {
-            runtime::event::Manager::open();
+            event::Manager::open();
         }
         else
         {
@@ -138,42 +138,42 @@ void runtime::event::Object::snapshot(const string& args)
     }
 }
 
-void runtime::event::Object::write_snapshot(ostream& out, const string& args)
+void event::Object::write_snapshot(ostream& out, const string& args)
 {
-    out << R"({"name":")" << m_name << R"(","ph":"O","id":")" << m_id <<
-        R"(","ts":)" << Manager::get_current_microseconds() <<
-        R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id();
+    string str = R"({"name":")" + m_name + R"(","ph":"O","id":")" + to_string(m_id) +
+                 R"(","ts":)" + to_string(Manager::get_current_microseconds()) +
+                 R"(,"pid":)" + Manager::get_process_id() + R"(,"tid":)" + Manager::get_thread_id();
     if (!args.empty())
     {
-        out <<
-            R"(,"args":)" << args;
+        str += R"(,"args":)" + args;
     }
-    out << "}";
+    str += "}";
+    out << str;
 }
 
-void runtime::event::Object::destroy()
+void event::Object::destroy()
 {
     if (Manager::is_tracing_enabled())
     {
         lock_guard<mutex> lock(Manager::get_mutex());
 
-        ofstream& out = runtime::event::Manager::get_output_stream();
+        ofstream& out = event::Manager::get_output_stream();
         if (out.is_open() == false)
         {
-            runtime::event::Manager::open();
+            event::Manager::open();
         }
         else
         {
             Manager::get_output_stream() << ",\n";
         }
-        out << R"({"name":")" << m_name << R"(","ph":"D","id":")" << m_id <<
-            R"(","ts":)" << Manager::get_current_microseconds() <<
-            R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id()
-            << "}";
+        string str = R"({"name":")" + m_name + R"(","ph":"D","id":")" + to_string(m_id) +
+                     R"(","ts":)" + to_string(Manager::get_current_microseconds()) +
+                     R"(,"pid":)" + Manager::get_process_id() + R"(,"tid":)" +
+                     Manager::get_thread_id() + "}";
     }
 }
 
-void runtime::event::Manager::open(const string& path)
+void event::Manager::open(const string& path)
 {
     ofstream& out = get_output_stream();
     if (out.is_open() == false)
@@ -183,7 +183,7 @@ void runtime::event::Manager::open(const string& path)
     }
 }
 
-void runtime::event::Manager::close()
+void event::Manager::close()
 {
     ofstream& out = get_output_stream();
     if (out.is_open())
@@ -193,34 +193,34 @@ void runtime::event::Manager::close()
     }
 }
 
-ofstream& runtime::event::Manager::get_output_stream()
+ofstream& event::Manager::get_output_stream()
 {
     static ofstream s_event_log;
     return s_event_log;
 }
 
-const string& runtime::event::Manager::get_process_id()
+const string& event::Manager::get_process_id()
 {
     static const string s_pid = to_string(getpid());
     return s_pid;
 }
 
-void runtime::event::Manager::enable_event_tracing()
+void event::Manager::enable_event_tracing()
 {
     s_tracing_enabled = true;
 }
 
-void runtime::event::Manager::disable_event_tracing()
+void event::Manager::disable_event_tracing()
 {
     s_tracing_enabled = false;
 }
 
-bool runtime::event::Manager::is_event_tracing_enabled()
+bool event::Manager::is_event_tracing_enabled()
 {
     return s_tracing_enabled;
 }
 
-string runtime::event::Manager::get_thread_id()
+string event::Manager::get_thread_id()
 {
     thread::id tid = this_thread::get_id();
     static map<thread::id, string> tid_map;

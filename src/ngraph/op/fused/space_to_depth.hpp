@@ -66,7 +66,7 @@ namespace ngraph
                 virtual NodeVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 std::size_t m_blocksize;
@@ -77,6 +77,7 @@ namespace ngraph
         using v0::SpaceToDepth;
     } // namespace op
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const op::v0::SpaceToDepth::SpaceToDepthMode& type);
 
     template <>

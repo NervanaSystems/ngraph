@@ -19,6 +19,7 @@
 
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
+#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
 
@@ -97,7 +98,7 @@ const char* runtime::HostTensor::get_data_ptr() const
 
 void runtime::HostTensor::write(const void* source, size_t n)
 {
-    runtime::event::Duration d1("write", "HostTensor");
+    event::Duration d1("write", "HostTensor");
 
     if (n != m_buffer_size)
     {
@@ -109,11 +110,61 @@ void runtime::HostTensor::write(const void* source, size_t n)
 
 void runtime::HostTensor::read(void* target, size_t n) const
 {
-    runtime::event::Duration d1("read", "HostTensor");
+    event::Duration d1("read", "HostTensor");
     if (n != m_buffer_size)
     {
         throw out_of_range("partial tensor read access not supported");
     }
     const char* source = get_data_ptr();
     memcpy(target, source, n);
+}
+
+namespace
+{
+    // Wraps an existing HostTensor
+    class HostTensorEvaluatorTensor : public runtime::HostTensor::HostEvaluatorTensor
+    {
+    public:
+        HostTensorEvaluatorTensor(const element::Type& element_type,
+                                  const PartialShape& partial_shape)
+            : HostEvaluatorTensor(element_type, partial_shape)
+        {
+        }
+        HostTensorEvaluatorTensor(shared_ptr<runtime::HostTensor> host_tensor)
+            : HostEvaluatorTensor(host_tensor->get_element_type(), host_tensor->get_partial_shape())
+            , m_host_tensor(host_tensor)
+        {
+        }
+        void* get_data_ptr() override
+        {
+            if (!m_host_tensor)
+            {
+                NGRAPH_CHECK(m_element_type.is_static(),
+                             "Attempt to create host tensor with a dynamic element type: ",
+                             m_element_type);
+                NGRAPH_CHECK(m_partial_shape.is_static(),
+                             "Attempt to create a host tensor with a dynamic shape: ",
+                             m_partial_shape);
+                m_host_tensor =
+                    make_shared<runtime::HostTensor>(m_element_type, m_partial_shape.get_shape());
+            }
+            return m_host_tensor->get_data_ptr();
+        }
+        shared_ptr<runtime::HostTensor> get_host_tensor() override { return m_host_tensor; }
+    private:
+        shared_ptr<runtime::HostTensor> m_host_tensor;
+    };
+}
+
+runtime::HostTensor::HostEvaluatorTensorPtr
+    runtime::HostTensor::create_evaluator_tensor(std::shared_ptr<runtime::HostTensor> host_tensor)
+{
+    return make_shared<HostTensorEvaluatorTensor>(host_tensor);
+}
+
+runtime::HostTensor::HostEvaluatorTensorPtr
+    runtime::HostTensor::create_evaluator_tensor(const element::Type& element_type,
+                                                 const PartialShape& partial_shape)
+{
+    return make_shared<HostTensorEvaluatorTensor>(element_type, partial_shape);
 }

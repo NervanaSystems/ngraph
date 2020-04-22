@@ -45,7 +45,7 @@ void op::v0::Reverse::validate_and_infer_types()
         for (size_t axis : m_reversed_axes)
         {
             NODE_VALIDATION_CHECK(this,
-                                  axis < size_t(input_rank),
+                                  axis < input_rank.get_length(),
                                   "Reverse axis (",
                                   axis,
                                   ") is out of bounds (argument shape: ",
@@ -57,7 +57,7 @@ void op::v0::Reverse::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), input_shape);
 }
 
-shared_ptr<Node> op::v0::Reverse::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Reverse::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::Reverse>(new_args.at(0), m_reversed_axes);
@@ -116,22 +116,22 @@ void op::v1::Reverse::validate_and_infer_types()
     if (rev_axes_rank.is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(rev_axes_rank) == 1,
+                              rev_axes_rank.get_length() == 1,
                               "The reversed_axes input must be a 1D tensor (got ",
-                              static_cast<size_t>(rev_axes_rank),
+                              rev_axes_rank.get_length(),
                               ").");
 
         if (m_mode == Mode::MASK)
         {
             if (input_rank.is_static() && rev_axes_shape[0].is_static())
             {
-                const auto rev_axes_mask_elems_count = static_cast<size_t>(rev_axes_shape[0]);
+                const auto rev_axes_mask_elems_count = rev_axes_shape[0].get_length();
                 NODE_VALIDATION_CHECK(this,
-                                      rev_axes_mask_elems_count == static_cast<size_t>(input_rank),
+                                      rev_axes_mask_elems_count == input_rank.get_length(),
                                       "The number of elements in the reversed_axes tensor (",
                                       rev_axes_mask_elems_count,
                                       ") must match the input data tensor rank (",
-                                      static_cast<size_t>(input_rank),
+                                      input_rank.get_length(),
                                       ") in 'mask' mode.");
             }
         }
@@ -139,7 +139,7 @@ void op::v1::Reverse::validate_and_infer_types()
 
     if (input_rank.is_static())
     {
-        const auto rank = static_cast<size_t>(input_rank);
+        const auto rank = input_rank.get_length();
         const auto rev_axes_node = input_value(1).get_node_shared_ptr();
 
         if (rev_axes_node->is_constant())
@@ -167,7 +167,7 @@ void op::v1::Reverse::validate_and_infer_types()
                                       "Some of the provided axes (",
                                       rev_axes,
                                       ") are out of bounds (input rank: ",
-                                      static_cast<size_t>(input_rank),
+                                      input_rank.get_length(),
                                       ").");
             }
         }
@@ -176,7 +176,7 @@ void op::v1::Reverse::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), input_shape);
 }
 
-shared_ptr<Node> op::v1::Reverse::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Reverse::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v1::Reverse>(new_args.at(0), new_args.at(1), m_mode);

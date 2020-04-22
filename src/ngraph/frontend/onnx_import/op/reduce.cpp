@@ -14,13 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstddef>  // std::size_t
-#include <iterator> // std::begin, std::end
-#include <numeric>  // std::accumulate
+#include <functional>
+#include <memory>
 
 #include "default_opset.hpp"
-#include "ngraph/shape.hpp"
+#include "ngraph/builder/norm.hpp"
+#include "ngraph/node.hpp"
 #include "reduce.hpp"
+#include "utils/reduction.hpp"
 
 namespace ngraph
 {
@@ -30,55 +31,124 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector reduce_mean(const Node& node)
+                NodeVector reduce_log_sum(const Node& node)
                 {
-                    const auto data = node.get_ng_inputs().at(0);
-                    const auto& data_shape = data->get_output_partial_shape(0);
-
-                    // sum up the input data along the reduction axes
-                    const auto sum_node = reduction::make_ng_reduction_op(
+                    std::shared_ptr<ngraph::Node> sum_node{reduction::make_ng_reduction_op(
                         node,
-                        data,
+                        node.get_ng_inputs().at(0),
                         std::make_shared<default_opset::ReduceSum,
                                          const std::shared_ptr<ngraph::Node>&,
                                          const std::shared_ptr<ngraph::Node>&,
-                                         bool>);
+                                         bool>)};
+                    return {std::make_shared<default_opset::Log>(sum_node)};
+                }
 
-                    // calculate the product of dimensions pointed to by reduction axes
-                    size_t reduced_elems_count = 1U;
+                NodeVector reduce_log_sum_exp(const Node& node)
+                {
+                    auto exp_node =
+                        std::make_shared<default_opset::Exp>(node.get_ng_inputs().at(0));
+                    std::shared_ptr<ngraph::Node> sum_node{reduction::make_ng_reduction_op(
+                        node,
+                        exp_node,
+                        std::make_shared<default_opset::ReduceSum,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
+                    return {std::make_shared<default_opset::Log>(sum_node)};
+                }
 
-                    if (data_shape.is_static())
-                    {
-                        const auto input_shape = data_shape.to_shape();
+                NodeVector reduce_l1(const Node& node)
+                {
+                    auto l1_norm_reduction = [](const std::shared_ptr<ngraph::Node>& node,
+                                                const ngraph::AxisSet& axis_set) {
+                        const auto axis_set_const = default_opset::Constant::create(
+                            element::i64, {axis_set.size()}, axis_set.to_vector());
+                        return ngraph::builder::opset1::l1_norm(node, axis_set_const, 0.f);
+                    };
 
-                        // calculate the product of dimensions pointed to by reduction axes
-                        // this value represents the number of input tensor values that were reduced
-                        for (const auto axis : reduction::detail::get_reduction_axes(node))
-                        {
-                            reduced_elems_count *= input_shape.at(axis);
-                        }
-                    }
-                    else
-                    {
-                        for (const auto axis : reduction::detail::get_reduction_axes(node))
-                        {
-                            const auto dim_to_reduce = data_shape[axis];
-                            NGRAPH_CHECK(dim_to_reduce.is_static(),
-                                         "Axis ",
-                                         axis,
-                                         " in the input data tensor needs to be statically "
-                                         "specified to create a ReduceMean operation");
+                    return {reduction::make_ng_reduction_op(
+                        node, node.get_ng_inputs().at(0), l1_norm_reduction)};
+                }
 
-                            reduced_elems_count *= static_cast<size_t>(dim_to_reduce);
-                        }
-                    }
+                NodeVector reduce_l2(const Node& node)
+                {
+                    auto l2_norm_reduction = [](const std::shared_ptr<ngraph::Node>& node,
+                                                const ngraph::AxisSet& axis_set) {
+                        const auto axis_set_const = default_opset::Constant::create(
+                            element::i64, {axis_set.size()}, axis_set.to_vector());
+                        return ngraph::builder::opset1::l2_norm(
+                            node, axis_set_const, 0.f, ngraph::builder::BiasMode::ADD, false);
+                    };
+                    return {reduction::make_ng_reduction_op(
+                        node, node.get_ng_inputs().at(0), l2_norm_reduction)};
+                }
 
-                    const auto const_node = default_opset::Constant::create(
-                        sum_node->get_element_type(), {}, {reduced_elems_count});
+                NodeVector reduce_max(const Node& node)
+                {
+                    return {reduction::make_ng_reduction_op(
+                        node,
+                        node.get_ng_inputs().at(0),
+                        std::make_shared<default_opset::ReduceMax,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
+                }
 
-                    // divide the sum node containing reduced values by the number
-                    // of those values to obtain the mean
-                    return {std::make_shared<default_opset::Divide>(sum_node, const_node)};
+                NodeVector reduce_mean(const Node& node)
+                {
+                    return {reduction::make_ng_reduction_op(
+                        node,
+                        node.get_ng_inputs().at(0),
+                        std::make_shared<default_opset::ReduceMean,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
+                }
+
+                NodeVector reduce_min(const Node& node)
+                {
+                    return {reduction::make_ng_reduction_op(
+                        node,
+                        node.get_ng_inputs().at(0),
+                        std::make_shared<default_opset::ReduceMin,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
+                }
+
+                NodeVector reduce_prod(const Node& node)
+                {
+                    return {reduction::make_ng_reduction_op(
+                        node,
+                        node.get_ng_inputs().at(0),
+                        std::make_shared<default_opset::ReduceProd,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
+                }
+
+                NodeVector reduce_sum(const Node& node)
+                {
+                    return {reduction::make_ng_reduction_op(
+                        node,
+                        node.get_ng_inputs().at(0),
+                        std::make_shared<default_opset::ReduceSum,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
+                }
+
+                NodeVector reduce_sum_square(const Node& node)
+                {
+                    auto input = std::shared_ptr<ngraph::Node>{node.get_ng_inputs().at(0)};
+                    auto square_node = std::make_shared<default_opset::Multiply>(input, input);
+                    return {reduction::make_ng_reduction_op(
+                        node,
+                        square_node,
+                        std::make_shared<default_opset::ReduceSum,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         bool>)};
                 }
 
             } // namespace set_1

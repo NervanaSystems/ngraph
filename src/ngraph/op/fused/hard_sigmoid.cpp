@@ -65,9 +65,9 @@ void op::HardSigmoid::pre_validate_and_infer_types()
                               beta_shape);
     }
 
-    const auto& data_et = input(0).get_element_type();
-    const auto& alpha_et = input(1).get_element_type();
-    const auto& beta_et = input(2).get_element_type();
+    const auto& data_et = get_input_element_type(0);
+    const auto& alpha_et = get_input_element_type(1);
+    const auto& beta_et = get_input_element_type(2);
 
     NODE_VALIDATION_CHECK(
         this,
@@ -98,7 +98,7 @@ NodeVector op::HardSigmoid::decompose_op() const
         std::make_shared<op::v1::Maximum>(alpha_x_plus_beta, zero_node), one_node)};
 }
 
-shared_ptr<Node> op::HardSigmoid::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::HardSigmoid::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
 

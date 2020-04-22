@@ -38,7 +38,7 @@ op::v0::Gather::Gather(const Output<Node>& params, const Output<Node>& indices, 
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v0::Gather::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Gather::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::Gather>(new_args.at(PARAMS), new_args.at(INDICES), m_axis);
@@ -61,26 +61,24 @@ void op::v0::Gather::validate_and_infer_types()
     // output rank is rank(params) + rank(indices) - 1
     NODE_VALIDATION_CHECK(this,
                           params_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(params_shape.rank()) >
-                                  static_cast<size_t>(m_axis),
+                              params_shape.rank().get_length() > static_cast<size_t>(m_axis),
                           "params rank is expected to be at least axis + 1");
 
     PartialShape result_shape;
     if (params_shape.rank().is_static() && indices_shape.rank().is_static())
     {
-        std::vector<Dimension> result_dims(static_cast<size_t>(params_shape.rank()) +
-                                           static_cast<size_t>(indices_shape.rank()) - 1);
+        std::vector<Dimension> result_dims(params_shape.rank().get_length() +
+                                           indices_shape.rank().get_length() - 1);
         size_t i = 0;
         for (; i < static_cast<size_t>(m_axis); i++)
         {
             result_dims[i] = params_shape[i];
         }
-        for (size_t j = 0; j < static_cast<size_t>(indices_shape.rank()); i++, j++)
+        for (size_t j = 0; j < indices_shape.rank().get_length(); i++, j++)
         {
             result_dims[i] = indices_shape[j];
         }
-        for (size_t j = static_cast<size_t>(m_axis) + 1;
-             j < static_cast<size_t>(params_shape.rank());
+        for (size_t j = static_cast<size_t>(m_axis) + 1; j < params_shape.rank().get_length();
              i++, j++)
         {
             result_dims[i] = params_shape[j];
@@ -206,7 +204,7 @@ void op::v1::Gather::generate_adjoints(autodiff::Adjoints& /* adjoints */,
     throw ngraph_error("Not yet implemented");
 }
 
-shared_ptr<Node> op::v1::Gather::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Gather::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::Gather>(new_args.at(PARAMS), new_args.at(INDICES), new_args.at(AXIS));

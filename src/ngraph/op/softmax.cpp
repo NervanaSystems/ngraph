@@ -25,6 +25,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/runtime/reference/softmax.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -97,7 +98,7 @@ void op::v0::Softmax::validate_and_infer_types()
             for (auto axis : m_axes)
             {
                 NODE_VALIDATION_CHECK(this,
-                                      axis < static_cast<size_t>(input_shape.rank()),
+                                      axis < input_shape.rank().get_length(),
                                       "Reduction axis (",
                                       axis,
                                       ") is out of bounds (argument shape: ",
@@ -119,7 +120,7 @@ void op::v0::Softmax::validate_and_infer_types()
     set_input_is_relevant_to_shape(1);
 }
 
-shared_ptr<Node> op::v0::Softmax::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Softmax::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Softmax>(new_args.at(0), new_args.at(1));
@@ -155,6 +156,35 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
     adjoints.add_delta(x, adjoint);
 }
 
+namespace
+{
+    template <element::Type_t ET>
+    inline bool try_evaluate_softmax(const EvaluatorTensorPtr& arg,
+                                     const EvaluatorTensorPtr& out,
+                                     const Shape& shape,
+                                     const AxisSet& axes)
+    {
+        return (ET == arg->get_element_type()) &&
+               (runtime::reference::softmax(arg->get_ptr<ET>(), out->get_ptr<ET>(), shape, axes),
+                true);
+    }
+
+    bool evaluate_softmax(const EvaluatorTensorPtr& arg,
+                          const EvaluatorTensorPtr& out,
+                          const AxisSet& axes)
+    {
+        auto shape = out->get_shape();
+        return try_evaluate_softmax<element::Type_t::f32>(arg, out, shape, axes) ||
+               try_evaluate_softmax<element::Type_t::f64>(arg, out, shape, axes);
+    }
+}
+
+bool op::v0::Softmax::evaluate(const EvaluatorTensorVector& outputs,
+                               const EvaluatorTensorVector& inputs)
+{
+    return evaluate_softmax(inputs[0], outputs[0], get_axes());
+}
+
 // *** SOFTMAX OP SET V1 ***
 constexpr NodeTypeInfo op::v1::Softmax::type_info;
 
@@ -176,7 +206,7 @@ void op::v1::Softmax::validate_and_infer_types()
     const PartialShape& input_shape = get_input_partial_shape(0);
     if (input_shape.rank().is_static())
         NODE_VALIDATION_CHECK(this,
-                              m_axis < static_cast<size_t>(input_shape.rank()),
+                              m_axis < input_shape.rank().get_length(),
                               "Reduction axis (",
                               m_axis,
                               ") is out of bounds (argument shape: ",
@@ -188,10 +218,16 @@ void op::v1::Softmax::validate_and_infer_types()
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 }
 
-shared_ptr<Node> op::v1::Softmax::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Softmax::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v1::Softmax>(new_args.at(0), m_axis);
+}
+
+bool op::v1::Softmax::evaluate(const EvaluatorTensorVector& outputs,
+                               const EvaluatorTensorVector& inputs)
+{
+    return evaluate_softmax(inputs[0], outputs[0], AxisSet{m_axis});
 }
 
 void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& /* adjoints */,
@@ -199,7 +235,8 @@ void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 {
     throw ngraph_error("op::v1::Softmax::generate_adjoints function is not implemented yet");
 
-    /* This might work, but as of this writing we have no way to test it, so we are being careful
+    /* This might work, but as of this writing we have no way to test it, so we are being
+    careful
     auto delta = deltas.at(0);
 
     auto z = delta * shared_from_this();
@@ -227,7 +264,7 @@ void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 
     auto adjoint = z - builder::make_with_numpy_broadcast<op::Multiply>(output(0), zreshape);
 
-    auto x = input(0).get_source_output();
+    auto x = input_value(0);
     adjoints.add_delta(x, adjoint);
     */
 }

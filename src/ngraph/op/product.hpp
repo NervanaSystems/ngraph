@@ -49,7 +49,7 @@ namespace ngraph
                 virtual std::shared_ptr<Node> get_default_value() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
         // default opset version

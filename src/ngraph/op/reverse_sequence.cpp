@@ -60,7 +60,7 @@ void op::ReverseSequence::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(
         this,
-        indices_rank.is_dynamic() || size_t(indices_rank) == 1,
+        indices_rank.is_dynamic() || indices_rank.get_length() == 1,
         "Sequence indices must be a 1-dimensional tensor (sequence indices shape: ",
         get_input_partial_shape(1),
         ").");
@@ -91,7 +91,7 @@ void op::ReverseSequence::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), output_shape);
 }
 
-shared_ptr<Node> op::ReverseSequence::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ReverseSequence::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     auto res =

@@ -56,7 +56,7 @@ namespace ngraph
                 Output<Node> get_data_batch() { return input_value(0); }
                 bool with_relu() const { return true; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 Strides m_window_movement_strides;
