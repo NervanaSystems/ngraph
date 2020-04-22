@@ -43,15 +43,9 @@ namespace ngraph
             class NGRAPH_API GRUCell : public util::FusedOp, public util::RNNCellBase
             {
             public:
-                static constexpr NodeTypeInfo type_info{"GRUCell", 0};
+                static constexpr NodeTypeInfo type_info{"GRUCell", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                GRUCell()
-                    : m_linear_before_reset(false)
-                {
-                    m_activations = {"sigmoid", "tanh"};
-                    m_activation_f = get_activation_function(0);
-                    m_activation_g = get_activation_function(1);
-                };
+                GRUCell();
                 ///
                 /// \brief      Constructs GRUCell node.
                 ///

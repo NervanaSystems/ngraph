@@ -1649,7 +1649,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                                     groups);
             break;
         }
-        case OP_TYPEID::GRUCell:
+        case OP_TYPEID::GRUCell_v3:
         {
             auto hidden_size = node_js.at("hidden_size").get<size_t>();
             auto clip = node_js.at("clip").get<float>();
@@ -3195,7 +3195,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["bias"] = tmp->get_bias();
         break;
     }
-    case OP_TYPEID::GRUCell:
+    case OP_TYPEID::GRUCell_v3:
     {
         auto tmp = static_cast<const op::GRUCell*>(&n);
         node["hidden_size"] = tmp->get_hidden_size();

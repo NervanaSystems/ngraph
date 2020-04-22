@@ -30,6 +30,14 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v3::GRUCell::type_info;
 
+op::v3::GRUCell::GRUCell()
+    : m_linear_before_reset(false)
+{
+    m_activations = {"sigmoid", "tanh"};
+    m_activation_f = get_activation_function(0);
+    m_activation_g = get_activation_function(1);
+}
+
 op::v3::GRUCell::GRUCell(const Output<Node>& X,
                          const Output<Node>& initial_hidden_state,
                          const Output<Node>& W,
