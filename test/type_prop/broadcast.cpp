@@ -529,29 +529,6 @@ TEST(type_prop, broadcast_v3_shape_unexpected_axes_mapping_input)
     }
 }
 
-TEST(type_prop, broadcast_v3_not_provided_axes_input_for_explicit_mode)
-{
-    const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1});
-    const auto shape = make_shared<op::Parameter>(element::i16, Shape{2});
-    const auto broadcast_spec = op::AutoBroadcastType::EXPLICIT;
-
-    try
-    {
-        const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
-        FAIL() << "axes_mapping input should be provided if explicit mode is used";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("axes_mapping input should be provided if explicit mode is used"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
 TEST(type_prop, broadcast_v3_shape)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1});
