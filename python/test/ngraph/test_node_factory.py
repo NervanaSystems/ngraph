@@ -48,13 +48,12 @@ def test_node_factory_wrapper_add():
 
 
 def test_node_factory_topk():
-    dtype = np.int8
-    data = ng.parameter([2, 2], dtype=dtype, name='A')
-    k = ng.parameter([], dtype=dtype, name='B')
-
+    dtype = np.int32
+    data = ng.parameter([2, 10], dtype=dtype, name='A')
+    k = ng.constant(3, dtype=dtype, name='B')
     factory = _NodeFactory('opset1')
     node = factory.create('TopK', [data, k], {'axis': 1, 'mode': 'max', 'sort': 'SORT_VALUES'})
 
     assert node.get_type_name() == 'TopK'
     assert node.get_output_size() == 2
-    assert list(node.get_output_shape(0)) == [2, 2]
+    assert list(node.get_output_shape(0)) == [2, 3]

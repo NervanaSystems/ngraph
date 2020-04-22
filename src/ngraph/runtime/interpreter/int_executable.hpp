@@ -226,17 +226,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::Add:
-        {
-            const op::Add* add = static_cast<const op::Add*>(&node);
-            reference::add<T>(args[0]->get_data_ptr<const T>(),
-                              args[1]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_input_shape(1),
-                              add->get_autob());
-            break;
-        }
         case OP_TYPEID::All:
         {
             const op::All* all = static_cast<const op::All*>(&node);
@@ -1551,14 +1540,6 @@ protected:
                                node.get_output_shape(0));
             break;
         }
-        case OP_TYPEID::Result:
-        {
-            const op::Result* res = static_cast<const op::Result*>(&node);
-            reference::result(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              shape_size(res->get_shape()));
-            break;
-        }
         case OP_TYPEID::Reverse:
         {
             const op::Reverse* reverse = static_cast<const op::Reverse*>(&node);
@@ -1680,11 +1661,6 @@ protected:
             memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
             break;
         }
-        case OP_TYPEID::ShapeOf:
-        {
-            reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint64_t>());
-            break;
-        }
         case OP_TYPEID::Sigmoid:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1732,15 +1708,6 @@ protected:
                                 slice->get_upper_bounds(),
                                 slice->get_strides(),
                                 node.get_output_shape(0));
-            break;
-        }
-        case OP_TYPEID::Softmax:
-        {
-            const op::Softmax* softmax = static_cast<const op::Softmax*>(&node);
-            reference::softmax<T>(args[0]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_output_shape(0),
-                                  softmax->get_axes());
             break;
         }
         case OP_TYPEID::Sqrt:
@@ -1885,6 +1852,11 @@ protected:
         case OP_TYPEID::TensorIterator:
         case OP_TYPEID::UnknownOp:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
+        case OP_TYPEID::Add:
+        case OP_TYPEID::Result:
+        case OP_TYPEID::ShapeOf:
+        case OP_TYPEID::ShapeOf_v3:
+        case OP_TYPEID::Softmax: NGRAPH_CHECK(false, "Op not handled by evaluator method:", node);
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif

@@ -28,14 +28,11 @@ namespace ngraph
     void copy_runtime_info(std::shared_ptr<ngraph::Node> from, std::shared_ptr<ngraph::Node> to);
 
     NGRAPH_API
-    void copy_runtime_info(std::shared_ptr<ngraph::Node> from,
-                           const std::vector<std::shared_ptr<ngraph::Node>>& to);
+    void copy_runtime_info(std::shared_ptr<ngraph::Node> from, ngraph::NodeVector to);
 
     NGRAPH_API
-    void copy_runtime_info(const std::vector<std::shared_ptr<const ngraph::Node>>& from,
-                           std::shared_ptr<ngraph::Node> to);
+    void copy_runtime_info(const ngraph::NodeVector& from, std::shared_ptr<ngraph::Node> to);
 
     NGRAPH_API
-    void copy_runtime_info(const std::vector<std::shared_ptr<const ngraph::Node>>& from,
-                           const std::vector<std::shared_ptr<ngraph::Node>>& to);
+    void copy_runtime_info(const ngraph::NodeVector& from, ngraph::NodeVector to);
 }
