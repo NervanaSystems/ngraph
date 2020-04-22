@@ -199,6 +199,28 @@ TEST(type_prop, broadcast_partial_rank_static_dynamic_shape_mismatch_wrong_size)
     }
 }
 
+TEST(type_prop, broadcast_v1_biderectional_not_supported)
+{
+    const auto param = make_shared<op::Parameter>(element::f32, PartialShape{1, 1});
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {1, 1, 1});
+    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+    try
+    {
+        auto bc = make_shared<op::v1::Broadcast>(param, target_shape, broadcast_spec);
+        FAIL() << "Not supported broadcast mode exception not thrown";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "BIDIRECTIONAL mode is not supported for Broadcast:v1, you should use Broadcast:v3");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 // Because v3::Broadcast is backward compatible to v1::Broadcast all v1::Broadcast tests should pass
 template <typename T>
 class BroadcastTests : public ::testing::Test
@@ -502,6 +524,7 @@ TEST(type_prop, broadcast_v3_bidirectional_mode_string)
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, "BIDIRECTIONAL");
 
     ASSERT_EQ(broadcast_v3->get_broadcast_spec(), op::AutoBroadcastType::BIDIRECTIONAL);
+    ASSERT_EQ(broadcast_v3->get_version(), 3);
 }
 
 TEST(type_prop, broadcast_v3_shape_unexpected_axes_mapping_input)
@@ -522,6 +545,29 @@ TEST(type_prop, broadcast_v3_shape_unexpected_axes_mapping_input)
         EXPECT_HAS_SUBSTRING(
             error.what(),
             std::string("axes_mapping input should not be provided for mode other than explicit"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, broadcast_v3_not_provided_axes_input_for_explicit_mode)
+{
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1});
+    const auto shape = make_shared<op::Parameter>(element::i16, Shape{2});
+    const auto broadcast_spec = op::AutoBroadcastType::EXPLICIT;
+
+    try
+    {
+        const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+        FAIL() << "axes_mapping input should be provided if explicit mode is used";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("axes_mapping input should be provided if explicit mode is used"));
     }
     catch (...)
     {
