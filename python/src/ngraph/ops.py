@@ -68,6 +68,7 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
     """
     return make_constant_node(value, dtype)
 
+
 @nameable_op
 def ctc_greedy_decoder(data, sequence_mask, merge_repeated=True, name=None):
     # type: (Node, Node, bool, str) -> Node
@@ -79,7 +80,8 @@ def ctc_greedy_decoder(data, sequence_mask, merge_repeated=True, name=None):
     :param name: Optional name for output node.
     :return: The new node performing an CTCGreedyDecoder operation on input tensor.
     """
-    return _get_node_factory().create('CTCGreedyDecoder', [data, sequence_mask], {"ctc_merge_repeated": merge_repeated})
+    return _get_node_factory().create('CTCGreedyDecoder', [data, sequence_mask], {
+        "ctc_merge_repeated": merge_repeated})
 
 
 @nameable_op
