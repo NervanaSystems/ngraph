@@ -97,7 +97,7 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NumericType, str) -> Node
     :param name: Optional output node name.
     :return: The new node performing an ELU operation on its input data element-wise.
     """
-    return Elu(as_node(data), alpha)
+    return _get_node_factory().create('Elu', [as_node(data)], {'alpha': alpha})
 
 
 @nameable_op
