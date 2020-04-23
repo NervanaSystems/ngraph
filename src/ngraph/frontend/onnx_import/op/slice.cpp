@@ -65,13 +65,13 @@ namespace ngraph
                         return mask;
                     }
 
-                    /// \brief Adjsut ONNX Slice indices: starts, ends, steps to StridedSlice:v1
+                    /// \brief Adjust ONNX Slice indices: starts, ends, steps to StridedSlice:v1
                     /// interface.
                     ///
                     /// \note StridedSlice:v1 doesn't support axes paramets.
                     ///       The axes parameters detrmines to which dimension of input data slice
                     ///       operation should be applied.
-                    ///       The retuned sub-graph provide proper adjustement of Slice indices if
+                    ///       The returned sub-graph provides proper adjustement of Slice indices if
                     ///       it is needed.
                     ///
                     /// \param[in] indices               Parameters of Slice operator: starts, ends,
