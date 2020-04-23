@@ -709,19 +709,8 @@ TEST(algebraic_simplification, gather_shapeof)
         auto B1 = make_shared<op::v0::ShapeOf>(B);
         auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
         auto optimized_f = clone_function(*baseline_f);
-        pass::Manager pass_manager;
-        pass_manager.register_pass<pass::Validate>();
-        pass_manager.register_pass<pass::AlgebraicSimplification>();
-        pass_manager.run_passes(optimized_f);
-
-        ASSERT_EQ(baseline_f->get_results()[0]->get_shape(),
-                  optimized_f->get_results()[0]->get_shape());
-
-        vector<vector<float>> args{
-            vector<float>{5.5, 6.4, 7.9, 3.4, 2.3, 1.1, 4.3, 2.5, 6.3, 9.1, 2.1, 8.3}};
-        auto baseline_results = execute<float, int64_t>(baseline_f, args, "INTERPRETER");
-        auto optimized_results = execute<float, int64_t>(optimized_f, args, "INTERPRETER");
-        EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+        EXPECT_TRUE((compare_pass_int<pass::AlgebraicSimplification, float, int64_t>(baseline_f,
+                                                                                     optimized_f)));
 
         ASSERT_EQ(count_ops_of_type<op::v0::ShapeOf>(baseline_f), 1);
         ASSERT_EQ(count_ops_of_type<op::v1::Gather>(baseline_f), 1);

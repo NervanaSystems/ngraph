@@ -58,7 +58,10 @@ namespace ngraph
             {
             public:
                 static constexpr NodeTypeInfo type_info{"Gather", 1};
-                static const int64_t AXIS_NOT_SET_VALUE = std::numeric_limits<int64_t>::max();
+                enum
+                {
+                    AXIS_NOT_SET_VALUE = std::numeric_limits<int64_t>::max()
+                };
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Gather() = default;
                 /// \param params The tensor from which slices are gathered

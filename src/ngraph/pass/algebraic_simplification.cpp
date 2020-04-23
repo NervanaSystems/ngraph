@@ -498,7 +498,8 @@ static bool simplify_log(shared_ptr<Node> n)
     return false;
 }
 
-// optimizes `gather->shapeof` into `shapeof->gather` for 0D gather indices
+// optimizes `gather->shapeof` into `shapeof->gather` for 0D indices
+// other cases into Concat of shapeof/gather(data) + shapeof(indices)
 static bool simplify_gather_shapeof(shared_ptr<Node> node)
 {
     auto shapeof = as_type_ptr<op::v0::ShapeOf>(node);
