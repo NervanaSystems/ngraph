@@ -770,11 +770,6 @@ if (NOT WIN32)
     target_link_libraries(ngraph PRIVATE dl)
 endif()
 
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
-    target_link_libraries(ngraph PRIVATE onnx_import)
-endif()
-
 # Build subdirectories for all build types on Windows
 if(WIN32)
     foreach(BUILD_TYPE Release Debug RelWithDebInfo MinSizeRel)

@@ -80,6 +80,7 @@ namespace ngraph
     size_t hash_combine(const std::vector<size_t>& list);
     NGRAPH_API
     void dump(std::ostream& out, const void*, size_t);
+    NGRAPH_API
     std::string to_lower(const std::string& s);
     NGRAPH_API
     std::string to_upper(const std::string& s);

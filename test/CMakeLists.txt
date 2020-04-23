@@ -489,6 +489,10 @@ if (MSVC)
     target_compile_options(unit-test PRIVATE "/bigobj")
 endif()
 
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_link_libraries(unit-test PRIVATE onnx_import_interface)
+endif()
+
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)

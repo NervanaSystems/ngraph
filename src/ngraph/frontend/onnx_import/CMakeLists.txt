@@ -16,7 +16,7 @@
 
 set(ONNX_OPSET_VERSION 11 CACHE INTERNAL "Supported version of ONNX operator set")
 
-add_library(onnx_import_interface OBJECT
+add_library(onnx_import_interface SHARED
         core/node.cpp
         core/node.hpp
         core/operator_set.hpp
@@ -248,9 +248,6 @@ add_library(onnx_import STATIC
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
-add_dependencies(onnx_import_interface onnx onnx_proto)
-add_dependencies(onnx_import onnx_import_interface)
-
 set_target_properties(onnx_import PROPERTIES
                       CXX_VISIBILITY_PRESET hidden
                       C_VISIBILITY_PRESET hidden
@@ -259,7 +256,9 @@ set_target_properties(onnx_import PROPERTIES
 target_include_directories(onnx_import
     SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
-target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} onnx_proto)
+
+target_link_libraries(onnx_import_interface PRIVATE ngraph onnx_import onnx_proto)
+target_link_libraries(onnx_import PRIVATE ngraph onnx_proto)
 
 target_compile_definitions(onnx_import PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
 
@@ -272,7 +271,6 @@ target_include_directories(onnx_import_interface SYSTEM PRIVATE ${ONNX_IMPORT_IN
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 
 target_compile_definitions(onnx_import_interface PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
-target_compile_definitions(onnx_import_interface PRIVATE -DONNX_ML=ON)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
@@ -285,3 +283,5 @@ endif()
 
 target_compile_definitions(onnx_import PRIVATE ngraph_EXPORTS)
 target_compile_definitions(onnx_import_interface PRIVATE ngraph_EXPORTS)
+
+install(TARGETS onnx_import_interface DESTINATION ${NGRAPH_INSTALL_LIB})
