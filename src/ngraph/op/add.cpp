@@ -86,39 +86,24 @@ namespace
                       const EvaluatorTensorPtr& out,
                       const op::AutoBroadcastSpec& broadcast_spec)
     {
+// Use a macro here so that it is guaranteed that the case argument and the templated
+// function call match in type
+#define CASE(a)                                                                                    \
+    case a: evaluate<a>(arg0, arg1, out, broadcast_spec); break;
+
         bool rc = true;
         switch (arg0->get_element_type())
         {
-        case element::Type_t::i8:
-            evaluate<element::Type_t::i8>(arg0, arg1, out, broadcast_spec);
-            break;
-        case element::Type_t::i16:
-            evaluate<element::Type_t::i16>(arg0, arg1, out, broadcast_spec);
-            break;
-        case element::Type_t::i32:
-            evaluate<element::Type_t::i32>(arg0, arg1, out, broadcast_spec);
-            break;
-        case element::Type_t::i64:
-            evaluate<element::Type_t::i64>(arg0, arg1, out, broadcast_spec);
-            break;
-        case element::Type_t::u8:
-            evaluate<element::Type_t::u8>(arg0, arg1, out, broadcast_spec);
-            break;
-        case element::Type_t::u16:
-            evaluate<element::Type_t::u16>(arg0, arg1, out, broadcast_spec);
-            break;
-        case element::Type_t::u32:
-            evaluate<element::Type_t::u32>(arg0, arg1, out, broadcast_spec);
-            break;
-        case element::Type_t::u64:
-            evaluate<element::Type_t::u64>(arg0, arg1, out, broadcast_spec);
-            break;
-        case element::Type_t::f32:
-            evaluate<element::Type_t::f32>(arg0, arg1, out, broadcast_spec);
-            break;
-        case element::Type_t::f64:
-            evaluate<element::Type_t::f64>(arg0, arg1, out, broadcast_spec);
-            break;
+            CASE(element::Type_t::i8);
+            CASE(element::Type_t::i16);
+            CASE(element::Type_t::i32);
+            CASE(element::Type_t::i64);
+            CASE(element::Type_t::u8);
+            CASE(element::Type_t::u16);
+            CASE(element::Type_t::u32);
+            CASE(element::Type_t::u64);
+            CASE(element::Type_t::f32);
+            CASE(element::Type_t::f64);
         default: rc = false; break;
         }
         return rc;
