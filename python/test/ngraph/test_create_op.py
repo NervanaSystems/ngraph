@@ -20,9 +20,37 @@ import ngraph as ng
 from test.ngraph.util import run_op_node, get_runtime
 
 
-@pytest.mark.parametrize('dtype', [np.float32, np.float64,
-                                   np.int8, np.int16, np.int32, np.int64,
-                                   np.uint8, np.uint16, np.uint32, np.uint64])
+np_types = [np.float32, np.float64, np.int8, np.int16, np.int32, np.int64,
+            np.uint8, np.uint16, np.uint32, np.uint64]
+
+
+@pytest.mark.parametrize('dtype', np_types)
+@pytest.mark.skip_on_gpu
+def test_binary_convolution(dtype):
+
+    strides = np.array([1, 1])
+    pads_begin = np.array([0, 0])
+    pads_end = np.array([0, 0])
+    dilations = np.array([1, 1])
+    mode = 'xnor-popcount'
+    pad_value = 0.
+
+    input0_shape = [1, 1, 9, 9]
+    input1_shape = [1, 1, 3, 3]
+    expected_shape = [1, 1, 7, 7]
+
+    parameter_input0 = ng.parameter(input0_shape, name='Input0', dtype=dtype)
+    parameter_input1 = ng.parameter(input1_shape, name='Input1', dtype=dtype)
+
+    node = ng.binary_convolution(parameter_input0, parameter_input1,
+                                 strides, pads_begin, pads_end, dilations, mode, pad_value)
+
+    assert node.get_type_name() == 'BinaryConvolution'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == expected_shape
+
+
+@pytest.mark.parametrize('dtype', np_types)
 @pytest.mark.skip_on_gpu
 def test_ctc_greedy_decoder(dtype):
     input0_shape = [20, 8, 128]
