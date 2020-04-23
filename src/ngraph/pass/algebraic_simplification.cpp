@@ -43,18 +43,6 @@
 using namespace std;
 using namespace ngraph;
 
-bool is_uniform_constant(const Input<Node>& input)
-{
-    bool rc = false;
-    auto node = input.get_source_output().get_node();
-    if (node->get_type_info() == op::Constant::type_info)
-    {
-        auto constant = as_type<op::Constant>(node);
-        rc = constant->get_all_data_elements_bitwise_identical();
-    }
-    return rc;
-}
-
 template <typename T>
 static shared_ptr<pattern::Matcher>
     create_binary_matcher(shared_ptr<pattern::op::Label> label,
@@ -324,7 +312,11 @@ static bool is_uniform_constant(const op::Constant* constant, int value)
 
 static shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
 {
-    set<Node::type_info_t> nomath = {op::v0::Broadcast::type_info, op::v0::Reshape::type_info};
+    set<Node::type_info_t> nomath = {op::v0::Broadcast::type_info,
+                                     op::v0::Reshape::type_info,
+                                     op::v1::Broadcast::type_info,
+                                     op::v1::Reshape::type_info};
+    ;
     while (nomath.find(op->get_type_info()) != nomath.end())
     {
         op = op->get_input_node_shared_ptr(0);
@@ -431,10 +423,9 @@ static bool simplify_gather(std::shared_ptr<Node> node)
 // a * broadcast(0) -> broadcast(0)
 // a * 1 -> a
 // a * broadcast(1) -> a
-static bool simplify_multiply(shared_ptr<Node> n)
+static bool simplify_multiply(shared_ptr<Node> multiply)
 {
     bool rc = false;
-    auto multiply = as_type_ptr<op::v0::Multiply>(n);
     if (multiply)
     {
         shared_ptr<Node> constant;
@@ -462,10 +453,9 @@ static bool simplify_multiply(shared_ptr<Node> n)
 //
 // a + 0 -> a
 // a + broadcast(0) -> a
-static bool simplify_add(shared_ptr<Node> n)
+static bool simplify_add(shared_ptr<Node> add)
 {
     bool rc = false;
-    auto add = as_type_ptr<op::v0::Add>(n);
     if (add)
     {
         shared_ptr<Node> constant;
@@ -694,6 +684,8 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_
        {{op::v0::Add::type_info, simplify_add},
          {op::v0::Multiply::type_info, simplify_multiply},
 	 {op::v1::Gather::type_info, simplify_gather},
+         {op::v1::Add::type_info, simplify_add},
+         {op::v1::Multiply::type_info, simplify_multiply},
          {op::v0::Concat::type_info, simplify_concat},
          {op::v0::ShapeOf::type_info, simplify_gather_shapeof},
          {op::v0::Sum::type_info,

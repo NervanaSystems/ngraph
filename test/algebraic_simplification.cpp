@@ -90,6 +90,41 @@ TEST(algebraic_simplification, add_types_shapes)
     }
 }
 
+TEST(algebraic_simplification, add_v1_types_shapes)
+{
+    Shape shapes[] = {Shape{}, Shape{2, 2}, Shape{3, 3, 3}};
+    element::Type types[] = {element::i32, element::f32, element::f64};
+    for (auto type : types)
+    {
+        for (auto shape : shapes)
+        {
+            pass::Manager pass_manager;
+            pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+            auto a = make_shared<op::Parameter>(type, shape);
+            auto b = make_shared<op::Parameter>(type, shape);
+            auto c = make_shared<op::Parameter>(type, shape);
+            auto iconst0 = ngraph::make_constant_from_string("0", type, shape);
+            auto add_a_0 = make_shared<op::v1::Add>(a, iconst0);
+            auto add_a_0_0 = make_shared<op::v1::Add>(add_a_0, iconst0);
+            auto add_b_0 = make_shared<op::v1::Add>(b, iconst0);
+            auto add_b_0_0 = make_shared<op::v1::Add>(add_b_0, iconst0);
+
+            auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0},
+                                                ParameterVector{a, b, c});
+            pass_manager.run_passes(f);
+
+            ASSERT_EQ(count_ops_of_type<op::v1::Add>(f), 0);
+            auto expected = ngraph::NodeVector{a, b, a, c, b};
+            auto results = f->get_results();
+            for (size_t i = 0; i < results.size(); i++)
+            {
+                ASSERT_EQ(expected.at(i), results.at(i)->get_argument(0));
+            }
+        }
+    }
+}
+
 TEST(algebraic_simplification, add_broadcast)
 {
     Shape shape{2, 2};
@@ -111,6 +146,36 @@ TEST(algebraic_simplification, add_broadcast)
     pass_manager.run_passes(f);
 
     ASSERT_EQ(count_ops_of_type<op::Add>(f), 0);
+    auto expected = ngraph::NodeVector{a, b, a, c, b};
+    auto results = f->get_results();
+    for (size_t i = 0; i < results.size(); i++)
+    {
+        ASSERT_EQ(expected.at(i), results.at(i)->get_argument(0));
+    }
+}
+
+TEST(algebraic_simplification, add_v1_broadcast_v1)
+{
+    Shape shape{2, 2};
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto c = make_shared<op::Parameter>(element::i32, shape);
+    auto iconst0 = ngraph::make_zero(element::i32, Shape{});
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {2, 2});
+    auto const_broadcast = make_shared<op::v1::Broadcast>(iconst0, target_shape);
+    auto add_a_0 = make_shared<op::v1::Add>(a, const_broadcast);
+    auto add_a_0_0 = make_shared<op::v1::Add>(add_a_0, const_broadcast);
+    auto add_b_0 = make_shared<op::v1::Add>(b, const_broadcast);
+    auto add_b_0_0 = make_shared<op::v1::Add>(add_b_0, const_broadcast);
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0},
+                                        ParameterVector{a, b, c});
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Add>(f), 0);
     auto expected = ngraph::NodeVector{a, b, a, c, b};
     auto results = f->get_results();
     for (size_t i = 0; i < results.size(); i++)
@@ -148,6 +213,36 @@ TEST(algebraic_simplification, multiply_broadcast_0)
     }
 }
 
+TEST(algebraic_simplification, multiply_v1_broadcast_v1_0)
+{
+    Shape shape{2, 2};
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto c = make_shared<op::Parameter>(element::i32, shape);
+    auto iconst0 = ngraph::make_zero(element::i32, Shape{});
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {2, 2});
+    auto const_broadcast = make_shared<op::v1::Broadcast>(iconst0, target_shape);
+    auto mul_a_0 = make_shared<op::v1::Multiply>(a, const_broadcast);
+    auto mul_a_0_0 = make_shared<op::v1::Multiply>(mul_a_0, const_broadcast);
+    auto mul_b_0 = make_shared<op::v1::Multiply>(b, const_broadcast);
+    auto mul_b_0_0 = make_shared<op::v1::Multiply>(mul_b_0, const_broadcast);
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, mul_a_0_0, c, mul_b_0_0},
+                                        ParameterVector{a, b, c});
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Multiply>(f), 0);
+    auto expected = ngraph::NodeVector{a, b, const_broadcast, c, const_broadcast};
+    auto results = f->get_results();
+    for (size_t i = 0; i < results.size(); i++)
+    {
+        ASSERT_EQ(expected.at(i), results.at(i)->get_argument(0));
+    }
+}
+
 TEST(algebraic_simplification, multiply_broadcast_1)
 {
     Shape shape{2, 2};
@@ -168,6 +263,34 @@ TEST(algebraic_simplification, multiply_broadcast_1)
     pass_manager.run_passes(f);
 
     ASSERT_EQ(count_ops_of_type<op::Multiply>(f), 0);
+    auto expected = ngraph::NodeVector{a, b, a, c, b};
+    auto results = f->get_results();
+    for (size_t i = 0; i < results.size(); i++)
+    {
+        ASSERT_EQ(expected[i], results[i]->get_argument(0));
+    }
+}
+
+TEST(algebraic_simplification, multiply_v1_broadcast_v1_1)
+{
+    Shape shape{2, 2};
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto c = make_shared<op::Parameter>(element::i32, shape);
+    auto const_broadcast = ngraph::builder::make_constant<int32_t>(element::i32, shape, 1);
+    auto mul_a_0 = make_shared<op::v1::Multiply>(a, const_broadcast);
+    auto mul_a_0_0 = make_shared<op::v1::Multiply>(mul_a_0, const_broadcast);
+    auto mul_b_0 = make_shared<op::v1::Multiply>(b, const_broadcast);
+    auto mul_b_0_0 = make_shared<op::v1::Multiply>(mul_b_0, const_broadcast);
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, mul_a_0_0, c, mul_b_0_0},
+                                        ParameterVector{a, b, c});
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Multiply>(f), 0);
     auto expected = ngraph::NodeVector{a, b, a, c, b};
     auto results = f->get_results();
     for (size_t i = 0; i < results.size(); i++)
@@ -200,6 +323,30 @@ TEST(algebraic_simplification, zero_plus_zero_commutativity)
     ASSERT_EQ(f->get_results().at(4)->get_argument(0), b);
 }
 
+TEST(algebraic_simplification, zero_plus_zero_commutativity_v1)
+{
+    Shape shape{};
+    auto type = element::f32;
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    auto a = make_shared<op::Parameter>(type, shape);
+    auto b = make_shared<op::Parameter>(type, shape);
+    auto c = make_shared<op::Parameter>(type, shape);
+    auto iconst0 = ngraph::make_constant_from_string("0", type, shape);
+    auto add_a_0 = make_shared<op::v1::Add>(iconst0, iconst0);
+    auto add_a_0_0 = make_shared<op::v1::Add>(iconst0, iconst0);
+    auto add_b_0 = make_shared<op::v1::Add>(iconst0, b);
+    auto add_b_0_0 = make_shared<op::v1::Add>(iconst0, b);
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0},
+                                        ParameterVector{a, b, c});
+    pass_manager.run_passes(f);
+
+    ASSERT_TRUE(ngraph::is_zero(f->get_results().at(2)->get_argument(0)));
+    ASSERT_EQ(f->get_results().at(4)->get_argument(0), b);
+}
+
 TEST(algebraic_simplification, zero_multiply_zero_one)
 {
     Shape shape{};
@@ -214,6 +361,29 @@ TEST(algebraic_simplification, zero_multiply_zero_one)
     auto iconst1 = ngraph::make_constant_from_string("1", type, shape);
     auto add_a_0 = iconst0 * iconst0;
     auto add_b_0 = iconst1 * iconst0;
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0, c, add_b_0},
+                                        ParameterVector{a, b, c});
+    pass_manager.run_passes(f);
+
+    ASSERT_TRUE(ngraph::is_zero(f->get_results().at(2)->get_argument(0)));
+    ASSERT_TRUE(ngraph::is_zero(f->get_results().at(4)->get_argument(0)));
+}
+
+TEST(algebraic_simplification, zero_multiply_zero_one_v1)
+{
+    Shape shape{};
+    auto type = element::f32;
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    auto a = make_shared<op::Parameter>(type, shape);
+    auto b = make_shared<op::Parameter>(type, shape);
+    auto c = make_shared<op::Parameter>(type, shape);
+    auto iconst0 = ngraph::make_constant_from_string("0", type, shape);
+    auto iconst1 = ngraph::make_constant_from_string("1", type, shape);
+    auto add_a_0 = make_shared<op::v1::Multiply>(iconst0, iconst0);
+    auto add_b_0 = make_shared<op::v1::Multiply>(iconst1, iconst0);
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0, c, add_b_0},
                                         ParameterVector{a, b, c});
@@ -239,6 +409,64 @@ TEST(algebraic_simplification, add_negative_tests)
     auto add_a_0_0 = add_a_0 + iconst2;
     auto add_b_0 = b + abs_a;
     auto add_b_0_0 = add_b_0 + abs_a;
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0},
+                                        ParameterVector{a, b, c});
+    pass_manager.run_passes(f);
+
+    auto expected = ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0};
+    auto results = f->get_results();
+    for (size_t i = 0; i < results.size(); i++)
+    {
+        ASSERT_EQ(expected.at(i), results.at(i)->get_argument(0));
+    }
+}
+
+TEST(algebraic_simplification, add_negative_tests_v1)
+{
+    Shape shape{};
+    auto type = element::f32;
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    auto a = make_shared<op::Parameter>(type, shape);
+    auto b = make_shared<op::Parameter>(type, shape);
+    auto c = make_shared<op::Parameter>(type, shape);
+    auto abs_a = make_shared<op::Abs>(a);
+    auto iconst2 = ngraph::make_constant_from_string("2", type, shape);
+    auto add_a_0 = make_shared<op::v1::Add>(a, iconst2);
+    auto add_a_0_0 = make_shared<op::v1::Add>(add_a_0, iconst2);
+    auto add_b_0 = make_shared<op::v1::Add>(b, abs_a);
+    auto add_b_0_0 = make_shared<op::v1::Add>(add_b_0, abs_a);
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0},
+                                        ParameterVector{a, b, c});
+    pass_manager.run_passes(f);
+
+    auto expected = ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0};
+    auto results = f->get_results();
+    for (size_t i = 0; i < results.size(); i++)
+    {
+        ASSERT_EQ(expected.at(i), results.at(i)->get_argument(0));
+    }
+}
+
+TEST(algebraic_simplification, multiply_negative_tests_v1)
+{
+    Shape shape{};
+    auto type = element::f32;
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    auto a = make_shared<op::Parameter>(type, shape);
+    auto b = make_shared<op::Parameter>(type, shape);
+    auto c = make_shared<op::Parameter>(type, shape);
+    auto abs_a = make_shared<op::Abs>(a);
+    auto iconst2 = ngraph::make_constant_from_string("2", type, shape);
+    auto add_a_0 = make_shared<op::v1::Multiply>(a, iconst2);
+    auto add_a_0_0 = make_shared<op::v1::Multiply>(add_a_0, iconst2);
+    auto add_b_0 = make_shared<op::v1::Multiply>(b, abs_a);
+    auto add_b_0_0 = make_shared<op::v1::Multiply>(add_b_0, abs_a);
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0},
                                         ParameterVector{a, b, c});
