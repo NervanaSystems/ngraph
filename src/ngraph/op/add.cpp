@@ -68,7 +68,7 @@ shared_ptr<Node> ngraph::operator+(const Output<Node>& arg0, const Output<Node>&
 namespace
 {
     template <element::Type_t ET>
-    void evaluate(const EvaluatorTensorPtr& arg0,
+    bool evaluate(const EvaluatorTensorPtr& arg0,
                   const EvaluatorTensorPtr& arg1,
                   const EvaluatorTensorPtr& out,
                   const op::AutoBroadcastSpec& broadcast_spec)
@@ -79,6 +79,7 @@ namespace
                                 arg0->get_shape(),
                                 arg1->get_shape(),
                                 broadcast_spec);
+        return true;
     }
 
     bool evaluate_add(const EvaluatorTensorPtr& arg0,
@@ -89,7 +90,7 @@ namespace
 // Use a macro here so that it is guaranteed that the case argument and the templated
 // function call match in type
 #define CASE(a)                                                                                    \
-    case a: evaluate<a>(arg0, arg1, out, broadcast_spec); break;
+    case a: rc = evaluate<a>(arg0, arg1, out, broadcast_spec); break;
 
         bool rc = true;
         switch (arg0->get_element_type())
