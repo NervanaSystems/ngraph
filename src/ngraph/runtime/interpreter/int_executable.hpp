@@ -1124,6 +1124,8 @@ protected:
         }
         case OP_TYPEID::NonZero_v3:
         {
+            // WIP - still need to figure out how is the out[0] tensor size is
+            // determined.
             size_t output_count = 0;
             reference::non_zero<T, int64_t>(args[0]->get_data_ptr<const T>(),
                                             out[0]->get_data_ptr<int64_t>(),
