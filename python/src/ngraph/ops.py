@@ -1089,8 +1089,9 @@ def broadcast_to(node, new_shape, axis=None, name=None):
 
 
 @nameable_op
-def fake_quantize(data, input_low, input_high, output_low, output_high, levels, name=None):
-    # type: (Node, Node, Node, Node, Node, int, str) -> Node
+def fake_quantize(data, input_low, input_high, output_low, output_high,
+                  levels, auto_broadcast='NUMPY', name=None):
+    # type: (Node, Node, Node, Node, Node, int, str, str) -> Node
     r"""Perform an element-wise linear quantization on input data.
 
     Input floating point values are quantized into a discrete set of floating point values.
@@ -1109,15 +1110,19 @@ def fake_quantize(data, input_low, input_high, output_low, output_high, levels, 
             \dfrac{round( \dfrac{data - input\_low}{(input\_high - input\_low)\cdot (levels-1)})}
             {(levels-1)\cdot (output\_high - output\_low)} + output\_low
 
-    :param data:         The node with data tensor.
-    :param input_low:    The node with the minimum for input values.
-    :param input_high:   The node with the maximum for input values.
-    :param output_low:   The node with the minimum quantized value.
-    :param output_high:  The node with the maximum quantized value.
-    :param levels:       The number of quantization levels. Integer value.
+    :param data:           The node with data tensor.
+    :param input_low:      The node with the minimum for input values.
+    :param input_high:     The node with the maximum for input values.
+    :param output_low:     The node with the minimum quantized value.
+    :param output_high:    The node with the maximum quantized value.
+    :param levels:         The number of quantization levels. Integer value.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :return: New node with quantized value.
     """
-    return FakeQuantize(data, input_low, input_high, output_low, output_high, levels)
+    return _get_node_factory().create('FakeQuantize',
+                                      [data, input_low, input_high, output_low, output_high],
+                                      {'levels': levels, 'auto_broadcast': auto_broadcast})
 
 
 @nameable_op
