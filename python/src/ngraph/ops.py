@@ -814,15 +814,19 @@ def tan(node, name=None):  # type: (NodeInput, str) -> Node
 
 # Binary ops
 @binary_op
-def divide(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def divide(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, str) -> Node
     """Return node which applies f(x) = A/B to the input nodes element-wise.
 
     :param left_node: The node providing dividend data.
     :param right_node: The node providing divisor data.
+    :param right_node: Specifies rules used for auto-broadcasting of input tensors.
     :param name: Optional name for output node.
     :return: The node performing element-wise division.
     """
-    return Divide(left_node, right_node)
+    return _get_node_factory().create('Divide',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast})
 
 
 @binary_op
