@@ -23,7 +23,9 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -39,6 +41,9 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"Constant", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Constant() = default;
+
+                Constant(const std::shared_ptr<runtime::HostTensor>& tensor);
+
                 /// \brief Constructs a tensor constant.
                 ///
                 /// \param type The element type of the tensor constant.
@@ -47,11 +52,9 @@ namespace ngraph
                 ///               size of values must match the size of the shape.
                 template <typename T>
                 Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
-                    : m_element_type(type)
-                    , m_shape(shape)
-                    , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
-                                                        host_alignment()))
+                    : Constant(type, shape)
                 {
+                    allocate_buffer();
                     NODE_VALIDATION_CHECK(
                         this,
                         values.size() == 1 || values.size() == shape_size(m_shape),
@@ -89,11 +92,10 @@ namespace ngraph
                 template <class T,
                           class = typename std::enable_if<std::is_fundamental<T>::value>::type>
                 Constant(const element::Type& type, Shape shape, T value)
-                    : m_element_type(type)
-                    , m_shape(shape)
-                    , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
-                                                        host_alignment()))
+                    : Constant(type, shape)
                 {
+                    allocate_buffer();
+                    auto size = shape_size(m_shape);
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
@@ -102,69 +104,108 @@ namespace ngraph
                     switch (type)
                     {
                     case element::Type_t::boolean:
-                        std::fill_n(static_cast<char*>(m_data->get_ptr()),
-                                    shape_size(m_shape),
-                                    static_cast<char>(value));
+                        std::fill_n(
+                            m_tensor->get_data_ptr<element::Type_t::boolean>(),
+                            size,
+                            static_cast<
+                                typename element_type_traits<element::Type_t::boolean>::value_type>(
+                                value));
                         break;
                     case element::Type_t::bf16:
-                        std::fill_n(static_cast<bfloat16*>(m_data->get_ptr()),
-                                    shape_size(m_shape),
-                                    static_cast<bfloat16>(value));
+                        std::fill_n(
+                            m_tensor->get_data_ptr<element::Type_t::bf16>(),
+                            size,
+                            static_cast<
+                                typename element_type_traits<element::Type_t::bf16>::value_type>(
+                                value));
                         break;
                     case element::Type_t::f16:
-                        std::fill_n(static_cast<float16*>(m_data->get_ptr()),
-                                    shape_size(m_shape),
-                                    static_cast<float16>(value));
+                        std::fill_n(
+                            m_tensor->get_data_ptr<element::Type_t::f16>(),
+                            size,
+                            static_cast<
+                                typename element_type_traits<element::Type_t::f16>::value_type>(
+                                value));
                         break;
                     case element::Type_t::f32:
-                        std::fill_n(static_cast<float*>(m_data->get_ptr()),
-                                    shape_size(m_shape),
-                                    static_cast<float>(value));
+                        std::fill_n(
+                            m_tensor->get_data_ptr<element::Type_t::f32>(),
+                            size,
+                            static_cast<
+                                typename element_type_traits<element::Type_t::f32>::value_type>(
+                                value));
                         break;
                     case element::Type_t::f64:
-                        std::fill_n(static_cast<double*>(m_data->get_ptr()),
-                                    shape_size(m_shape),
-                                    static_cast<double>(value));
+                        std::fill_n(
+                            m_tensor->get_data_ptr<element::Type_t::f64>(),
+                            size,
+                            static_cast<
+                                typename element_type_traits<element::Type_t::f64>::value_type>(
+                                value));
                         break;
                     case element::Type_t::i8:
-                        std::fill_n(static_cast<int8_t*>(m_data->get_ptr()),
-                                    shape_size(m_shape),
-                                    static_cast<int8_t>(value));
+                        std::fill_n(
+                            m_tensor->get_data_ptr<element::Type_t::i8>(),
+                            size,
+                            static_cast<
+                                typename element_type_traits<element::Type_t::i8>::value_type>(
+                                value));
                         break;
                     case element::Type_t::i16:
-                        std::fill_n(static_cast<int16_t*>(m_data->get_ptr()),
-                                    shape_size(m_shape),
-                                    static_cast<int16_t>(value));
+                        std::fill_n(
+                            m_tensor->get_data_ptr<element::Type_t::i16>(),
+                            size,
+                            static_cast<
+                                typename element_type_traits<element::Type_t::i16>::value_type>(
+                                value));
                         break;
                     case element::Type_t::i32:
-                        std::fill_n(static_cast<int32_t*>(m_data->get_ptr()),
-                                    shape_size(m_shape),
-                                    static_cast<int32_t>(value));
+                        std::fill_n(
+                            m_tensor->get_data_ptr<element::Type_t::i32>(),
+                            size,
+                            static_cast<
+                                typename element_type_traits<element::Type_t::i32>::value_type>(
+                                value));
                         break;
                     case element::Type_t::i64:
-                        std::fill_n(static_cast<int64_t*>(m_data->get_ptr()),
-                                    shape_size(m_shape),
-                                    static_cast<int64_t>(value));
+                        std::fill_n(
+                            m_tensor->get_data_ptr<element::Type_t::i64>(),
+                            size,
+                            static_cast<
+                                typename element_type_traits<element::Type_t::i64>::value_type>(
+                                value));
                         break;
                     case element::Type_t::u8:
-                        std::fill_n(static_cast<uint8_t*>(m_data->get_ptr()),
-                                    shape_size(m_shape),
-                                    static_cast<uint8_t>(value));
+                        std::fill_n(
+                            m_tensor->get_data_ptr<element::Type_t::u8>(),
+                            size,
+                            static_cast<
+                                typename element_type_traits<element::Type_t::u8>::value_type>(
+                                value));
                         break;
                     case element::Type_t::u16:
-                        std::fill_n(static_cast<uint16_t*>(m_data->get_ptr()),
-                                    shape_size(m_shape),
-                                    static_cast<uint16_t>(value));
+                        std::fill_n(
+                            m_tensor->get_data_ptr<element::Type_t::u16>(),
+                            size,
+                            static_cast<
+                                typename element_type_traits<element::Type_t::u16>::value_type>(
+                                value));
                         break;
                     case element::Type_t::u32:
-                        std::fill_n(static_cast<uint32_t*>(m_data->get_ptr()),
-                                    shape_size(m_shape),
-                                    static_cast<uint32_t>(value));
+                        std::fill_n(
+                            m_tensor->get_data_ptr<element::Type_t::u32>(),
+                            size,
+                            static_cast<
+                                typename element_type_traits<element::Type_t::u32>::value_type>(
+                                value));
                         break;
                     case element::Type_t::u64:
-                        std::fill_n(static_cast<uint64_t*>(m_data->get_ptr()),
-                                    shape_size(m_shape),
-                                    static_cast<uint64_t>(value));
+                        std::fill_n(
+                            m_tensor->get_data_ptr<element::Type_t::u64>(),
+                            size,
+                            static_cast<
+                                typename element_type_traits<element::Type_t::u64>::value_type>(
+                                value));
                         break;
                     case element::Type_t::u1: throw std::runtime_error("unsupported type");
                     case element::Type_t::undefined: throw std::runtime_error("unsupported type");
@@ -270,24 +311,7 @@ namespace ngraph
                 /// \return The initialization literals for the tensor constant.
                 std::vector<std::string> get_value_strings() const;
 
-                class ConstantEvaluatorTensor : public EvaluatorTensor
-                {
-                    using EvaluatorTensor::EvaluatorTensor;
-
-                public:
-                    virtual std::shared_ptr<Constant> get_constant() = 0;
-                };
-                using ConstantEvaluatorTensorPtr = std::shared_ptr<ConstantEvaluatorTensor>;
-
-                /// \brief Create an EvaluatorTensor that references this constant's storage
-                /// \param The constant
-                static ConstantEvaluatorTensorPtr
-                    create_evaluator_tensor(const std::shared_ptr<op::v0::Constant>& constant);
-                /// \brief Create an EvaluatorTensor that create a constant when needed
-                static ConstantEvaluatorTensorPtr
-                    create_evaluator_tensor(const element::Type element_type,
-                                            const PartialShape& partial_shape);
-
+                std::shared_ptr<runtime::HostTensor> get_tensor() { return m_tensor; }
                 template <typename T>
                 std::vector<T> get_vector() const
                 {
@@ -297,7 +321,7 @@ namespace ngraph
                     }
 
                     std::vector<T> rc;
-                    const T* p = reinterpret_cast<const T*>(m_data->get_ptr());
+                    const T* p = static_cast<const T*>(m_tensor->get_data_ptr());
                     for (size_t i = 0; i < shape_size(m_shape); i++)
                     {
                         rc.push_back(p[i]);
@@ -399,7 +423,10 @@ namespace ngraph
                     return rc;
                 }
 
-                const void* get_data_ptr() const { return (m_data ? m_data->get_ptr() : nullptr); }
+                const void* get_data_ptr() const
+                {
+                    return (m_tensor ? m_tensor->get_data_ptr() : nullptr);
+                }
                 template <typename T>
                 const T* get_data_ptr() const
                 {
@@ -414,7 +441,7 @@ namespace ngraph
                 std::string convert_value_to_string(size_t index) const;
 
             protected:
-                void* get_data_ptr_nc() { return (m_data ? m_data->get_ptr() : nullptr); }
+                void* get_data_ptr_nc() { return (m_tensor ? m_tensor->get_data_ptr() : nullptr); }
                 Constant(const OutputVector& args)
                     : Op(args)
                     , m_shape({})
@@ -508,7 +535,7 @@ namespace ngraph
                 static constexpr size_t host_alignment() { return 64; }
                 element::Type m_element_type;
                 Shape m_shape{};
-                std::shared_ptr<runtime::AlignedBuffer> m_data;
+                std::shared_ptr<runtime::HostTensor> m_tensor;
                 bool m_all_elements_bitwise_identical;
                 bool are_all_data_elements_bitwise_identical() const;
             };

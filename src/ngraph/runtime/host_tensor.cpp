@@ -86,12 +86,12 @@ runtime::HostTensor::~HostTensor()
     }
 }
 
-char* runtime::HostTensor::get_data_ptr()
+void* runtime::HostTensor::get_data_ptr()
 {
     return m_aligned_buffer_pool;
 }
 
-const char* runtime::HostTensor::get_data_ptr() const
+const void* runtime::HostTensor::get_data_ptr() const
 {
     return m_aligned_buffer_pool;
 }
@@ -104,7 +104,7 @@ void runtime::HostTensor::write(const void* source, size_t n)
     {
         throw out_of_range("partial tensor write not supported");
     }
-    char* target = get_data_ptr();
+    void* target = get_data_ptr();
     memcpy(target, source, n);
 }
 
@@ -115,7 +115,7 @@ void runtime::HostTensor::read(void* target, size_t n) const
     {
         throw out_of_range("partial tensor read access not supported");
     }
-    const char* source = get_data_ptr();
+    const void* source = get_data_ptr();
     memcpy(target, source, n);
 }
 

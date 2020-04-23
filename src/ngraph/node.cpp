@@ -1119,20 +1119,21 @@ bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_
     {
         if (auto constant = as_type_ptr<op::v0::Constant>(input.get_node_shared_ptr()))
         {
-            input_tensors.push_back(op::v0::Constant::create_evaluator_tensor(constant));
+            input_tensors.push_back(
+                runtime::HostTensor::create_evaluator_tensor(constant->get_tensor()));
         }
         else
         {
             return false;
         }
     }
-    vector<op::Constant::ConstantEvaluatorTensorPtr> output_constant_tensors;
+    vector<runtime::HostTensor::HostEvaluatorTensorPtr> output_constant_tensors;
     EvaluatorTensorVector output_tensors;
     OutputVector output_constants;
     for (auto output : outputs())
     {
-        auto tensor = op::v0::Constant::create_evaluator_tensor(output.get_element_type(),
-                                                                output.get_partial_shape());
+        auto tensor = runtime::HostTensor::create_evaluator_tensor(output.get_element_type(),
+                                                                   output.get_partial_shape());
         output_constant_tensors.push_back(tensor);
         output_tensors.push_back(tensor);
     }
@@ -1140,7 +1141,8 @@ bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_
     {
         for (size_t i = 0; i < output_constant_tensors.size(); ++i)
         {
-            output_values[i] = output_constant_tensors[i]->get_constant();
+            output_values[i] =
+                make_shared<op::Constant>(output_constant_tensors[i]->get_host_tensor());
         }
         return true;
     }
