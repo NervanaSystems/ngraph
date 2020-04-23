@@ -75,7 +75,8 @@ namespace ngraph
             {
             public:
                 static constexpr NodeTypeInfo type_info{"Add", 1};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                const NodeTypeInfo& get_type_info() const override { std::cerr << "TYPE INFO FROM ADD !!! 1 !!!\n"; return type_info; }
+                
                 /// \brief Constructs an uninitialized addition operation
                 Add()
                     : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NUMPY)
@@ -100,7 +101,7 @@ namespace ngraph
 
                 std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
-                bool visit_attributes(AttributeVisitor& visitor) override;
+                //bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual bool is_commutative() const override { return true; }
                 size_t get_version() const override { return 1; }
                 bool evaluate(const EvaluatorTensorVector& outputs,
@@ -112,6 +113,24 @@ namespace ngraph
             };
 
         } // namespace v1
+        namespace v2
+        {
+            class NGRAPH_API Add : public v1::Add
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Add", 2};
+                const NodeTypeInfo& get_type_info() const override { std::cerr << "TYPE INFO FROM ADD 2\n"; return type_info; }
+
+                using v1::Add::Add;
+
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+                //bool visit_attributes(AttributeVisitor& visitor) override;
+                size_t get_version() const override { return 2; }
+            };
+
+        } // namespace v1
+            
         using v0::Add;
     } // namespace op
 

@@ -269,10 +269,14 @@ namespace ngraph
         // TODO(amprocte): should be protected
         void set_input_is_relevant_to_value(size_t i, bool relevant = true);
 
+protected:
+
         // TODO(amprocte): should this be protected?
         void set_output_type(size_t i,
                              const element::Type& element_type,
                              const PartialShape& pshape);
+
+public:
 
         virtual bool is_parameter() const { return false; }
         virtual bool is_output() const;

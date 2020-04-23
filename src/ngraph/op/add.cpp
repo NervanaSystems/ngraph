@@ -117,12 +117,13 @@ op::v1::Add::Add(const Output<Node>& arg0,
 {
     constructor_validate_and_infer_types();
 }
-
+#if 0
 bool op::v1::Add::visit_attributes(AttributeVisitor& visitor)
 {
     BinaryElementwiseArithmetic::visit_attributes(visitor);
     return true;
 }
+#endif
 
 shared_ptr<Node> op::v1::Add::clone_with_new_inputs(const OutputVector& new_args) const
 {
@@ -150,4 +151,12 @@ bool op::v1::Add::evaluate(const EvaluatorTensorVector& outputs,
                            const EvaluatorTensorVector& inputs)
 {
     return evaluate_add(inputs[0], inputs[1], outputs[0], get_autob());
+}
+
+constexpr NodeTypeInfo op::v2::Add::type_info;
+
+shared_ptr<Node> op::v2::Add::clone_with_new_inputs(const OutputVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<op::v2::Add>(new_args.at(0), new_args.at(1), this->get_autob());
 }
