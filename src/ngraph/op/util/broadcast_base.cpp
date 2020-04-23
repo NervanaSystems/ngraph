@@ -21,12 +21,10 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/partial_shape.hpp"
 
+#include <numeric>
+
 using namespace std;
 using namespace ngraph;
-/*
-op::util::BroadcastBase::BroadcastBase()
-{
-}*/
 
 op::util::BroadcastBase::BroadcastBase(const Output<Node>& arg,
                                        const Output<Node>& target_shape,

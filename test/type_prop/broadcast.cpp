@@ -199,7 +199,7 @@ TEST(type_prop, broadcast_partial_rank_static_dynamic_shape_mismatch_wrong_size)
     }
 }
 
-TEST(type_prop, broadcast_v1_biderectional_not_supported)
+TEST(type_prop, broadcast_v1_bidirectional_not_supported)
 {
     const auto param = make_shared<op::Parameter>(element::f32, PartialShape{1, 1});
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {1, 1, 1});

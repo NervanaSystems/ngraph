@@ -62,7 +62,7 @@ NodeVector ngraph::pass::explicit_broadcast(std::shared_ptr<Node>& node)
         }
         else if (autob.m_type == op::AutoBroadcastType::BIDIRECTIONAL)
         {
-            throw ngraph_error("BIDIRECTIONAL mode is not supported");
+            rc = as_node_vector(builder::numpy_broadcast_outputs(node->input_values()));
         }
         else
         {

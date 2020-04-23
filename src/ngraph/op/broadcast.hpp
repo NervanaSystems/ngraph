@@ -42,8 +42,7 @@ namespace ngraph
                 /// \param target_shape   The shape of the output tensor.
                 /// \param axes_mapping   The axis positions (0-based) in the result that correspond
                 ///                       to input axes. 'Arg' tensor is broadcast along the
-                ///                       remaining
-                ///                       axes.
+                ///                       remaining axes.
                 ///                       E.g., Input Shape - [3, 4], Target Shape - [3, 5, 4, 4]
                 ///                       axes_mapping - [0, 2] => Broadcast along axes 1 and 3.
                 ///                       axes_mapping - [0, 3] => Broadcast along axes 1 and 2.
@@ -93,8 +92,7 @@ namespace ngraph
                 /// \param target_shape   The shape of the output tensor.
                 /// \param axes_mapping   The axis positions (0-based) in the result that correspond
                 ///                       to input axes. 'Arg' tensor is broadcast along the
-                ///                       remaining
-                ///                       axes.
+                ///                       remaining axes.
                 ///                       E.g., Input Shape - [3, 4], Target Shape - [3, 5, 4, 4]
                 ///                       axes_mapping - [0, 2] => Broadcast along axes 1 and 3.
                 ///                       axes_mapping - [0, 3] => Broadcast along axes 1 and 2.
