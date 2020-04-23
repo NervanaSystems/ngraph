@@ -682,7 +682,7 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
         }
     }
 
-    auto shape_of = make_shared<op::v0::ShapeOf>(data);
+    auto shape_of = make_shared<op::v3::ShapeOf>(data);
     auto gather = make_shared<op::Gather>(shape_of, perm);
     auto reshape_op = make_shared<op::v1::Reshape>(data, gather, false);
     return remove_node_update_name(n, reshape_op);
