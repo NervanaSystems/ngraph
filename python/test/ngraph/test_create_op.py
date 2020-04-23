@@ -29,8 +29,8 @@ def test_ctc_greedy_decoder(dtype):
     input1_shape = [20, 8]
     expected_shape = [8, 20, 1, 1]
 
-    parameter_input0 = ng.parameter(input0_shape, name='Input0', dtype=np.uint8)
-    parameter_input1 = ng.parameter(input1_shape, name='Input1', dtype=np.uint8)
+    parameter_input0 = ng.parameter(input0_shape, name='Input0', dtype=dtype)
+    parameter_input1 = ng.parameter(input1_shape, name='Input1', dtype=dtype)
 
     node = ng.ctc_greedy_decoder(parameter_input0, parameter_input1)
     assert list(node.shape) == expected_shape
