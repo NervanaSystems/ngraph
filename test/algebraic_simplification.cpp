@@ -666,8 +666,6 @@ TEST(algebraic_simplification, replace_transpose_with_reshape_4d_1_dyn_dim)
 
     ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(optimized_f), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(optimized_f), 1);
-    ASSERT_EQ(baseline_f->get_results()[0]->get_output_partial_shape(0),
-              optimized_f->get_results()[0]->get_output_partial_shape(0));
 }
 
 TEST(algebraic_simplification, replace_transpose_with_reshape_5d_2_dyn_dim)
@@ -678,12 +676,32 @@ TEST(algebraic_simplification, replace_transpose_with_reshape_5d_2_dyn_dim)
         make_shared<op::Constant>(element::i64, Shape{5}, vector<int64_t>{0, 1, 3, 2, 4});
     auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
     auto transpose1 = make_shared<op::v0::Abs>(transpose);
-    auto f = make_shared<Function>(transpose1, ParameterVector{param});
+    auto baseline_f = make_shared<Function>(transpose1, ParameterVector{param});
+    auto optimized_f = clone_function(*baseline_f);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.run_passes(f);
+    pass_manager.run_passes(optimized_f);
 
-    ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(f), 1);
-    ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(optimized_f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(optimized_f), 1);
+}
+
+TEST(algebraic_simplification, replace_transpose_with_reshape_5d_2_dyn_dim_fail)
+{
+    auto shape_in = PartialShape{Dimension::dynamic(), Dimension::dynamic(), 20, 1, 1};
+    auto param = make_shared<op::Parameter>(element::f32, shape_in);
+    auto constant_perm =
+        make_shared<op::Constant>(element::i64, Shape{5}, vector<int64_t>{0, 2, 1, 4, 3});
+    auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
+    auto transpose1 = make_shared<op::v0::Abs>(transpose);
+    auto baseline_f = make_shared<Function>(transpose1, ParameterVector{param});
+    auto optimized_f = clone_function(*baseline_f);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(optimized_f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(optimized_f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(optimized_f), 0);
 }

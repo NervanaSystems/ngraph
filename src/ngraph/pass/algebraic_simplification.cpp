@@ -28,10 +28,12 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/shape_of.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
@@ -549,7 +551,7 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
     auto transpose = as_type_ptr<op::v1::Transpose>(n);
 
     PartialShape shape = n->input_value(0).get_partial_shape();
-    int dyn_dim_index = 0;
+    vector<int> dynamic_dims_indices;
     bool is_dyn_dim = false;
     if (shape.is_dynamic())
     {
@@ -558,26 +560,19 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
             return false;
         }
 
-        int count_dynamic_dims = 0;
         for (int i = 0; i < shape.rank().get_length(); i++)
         {
             if (shape[i].is_dynamic())
             {
-                count_dynamic_dims++;
+                dynamic_dims_indices.push_back(i);
                 shape[i] = 2; // any non 1 number
-                dyn_dim_index = i;
             }
-        }
-
-        if (count_dynamic_dims > 1)
-        {
-            return false; // only works on one dynamic dim
         }
 
         is_dyn_dim = true;
     }
 
-    auto perm = as_type_ptr<op::Constant>(n->get_argument(1));
+    auto perm = as_type_ptr<op::Constant>(n->input_value(1).get_node_shared_ptr());
     if (!perm)
     {
         return false;
@@ -625,20 +620,9 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
         }
     }
 
-    if (is_dyn_dim)
-    {
-        data_shape[dyn_dim_index] = -1;
-    }
-
-    Shape output_shape;
-    for (int i = 0; i < data_shape.size(); i++)
-    {
-        output_shape.push_back(data_shape[perm_value[i]]);
-    }
-
-    auto constant_node =
-        ngraph::op::Constant::create(element::i64, Shape{output_shape.size()}, output_shape);
-    auto reshape_op = make_shared<op::v1::Reshape>(data, constant_node, false);
+    auto shape_of = make_shared<op::v0::ShapeOf>(data);
+    auto gather = make_shared<op::Gather>(shape_of, perm);
+    auto reshape_op = make_shared<op::v1::Reshape>(data, gather, false);
     return remove_node_update_name(n, reshape_op);
 }
 
