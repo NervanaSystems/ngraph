@@ -464,6 +464,6 @@ setup(
     install_requires=requirements,
     zip_safe=False,
     extras_require={
-        'onnx': ['onnx']
+        'onnx': ['onnx'],
     },
 )
