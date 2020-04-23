@@ -49,6 +49,8 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/serializer.hpp"
+#include "util/all_close.hpp"
+#include "util/all_close_f.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
 
@@ -704,4 +706,100 @@ TEST(algebraic_simplification, replace_transpose_with_reshape_5d_2_dyn_dim_fail)
 
     ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(optimized_f), 1);
     ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(optimized_f), 0);
+}
+
+// the following gather test will be used to test when
+// gather is Nop and will be removed during `simplify_gather`
+// algebraic_simplification pass
+
+TEST(algebraic_simplification, gather_3d_axis_default)
+{
+    Shape params_shape{1, 3, 2};
+    Shape indices_shape{1};
+    Shape out_shape{1, 3, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto axes = op::Constant::create(element::i64, Shape{}, {0});
+    auto G = make_shared<op::v1::Gather>(P, I, axes);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P, I});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    pass_manager.run_passes(f);
+    ASSERT_EQ(f->get_results().at(0)->get_argument(0)->get_argument(0), P);
+
+    // the pass should short cut the Gather i/p with the gather users
+    // since we are fetching the whole tensor using gather op
+    auto gather_ops = get_ops_of_type<op::v1::Gather>(f);
+    EXPECT_EQ(gather_ops.size(), 0);
+}
+
+TEST(algebraic_simplification, gather_3d_axis_1_nop)
+{
+    Shape params_shape{3, 1, 2};
+    Shape indices_shape{1};
+    Shape out_shape{3, 1, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto axes = op::Constant::create(element::i64, Shape{}, {1});
+    auto G = make_shared<op::v1::Gather>(P, I, axes);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P, I});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    pass_manager.run_passes(f);
+    ASSERT_EQ(f->get_results().at(0)->get_argument(0)->get_argument(0), P);
+
+    // the pass should short cut the Gather i/p with the gather users
+    // since we are fetching the whole tensor using gather op
+    auto gather_ops = get_ops_of_type<op::v1::Gather>(f);
+    EXPECT_EQ(gather_ops.size(), 0);
+}
+
+TEST(algebraic_simplification, gather_3d_axis_2_nop)
+{
+    Shape params_shape{3, 2, 1};
+    Shape indices_shape{1};
+    Shape out_shape{3, 2, 1};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto axes = op::Constant::create(element::i64, Shape{}, {2});
+    auto G = make_shared<op::v1::Gather>(P, I, axes);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P, I});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    pass_manager.run_passes(f);
+    ASSERT_EQ(f->get_results().at(0)->get_argument(0)->get_argument(0), P);
+
+    // the pass should short cut the Gather i/p with the gather users
+    // since we are fetching the whole tensor using gather op
+    auto gather_ops = get_ops_of_type<op::v1::Gather>(f);
+    EXPECT_EQ(gather_ops.size(), 0);
+}
+
+TEST(algebraic_simplification, gather_3d_indices_constant_axis_1)
+{
+    Shape params_shape{3, 2, 1};
+    Shape indices_shape{2};
+    Shape out_shape{3, 2, 1};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = op::Constant::create<int64_t>(element::i64, Shape{2}, {0, 1});
+    auto axes = op::Constant::create(element::i64, Shape{}, {1});
+    auto G = make_shared<op::v1::Gather>(P, I, axes);
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    pass_manager.run_passes(f);
+    ASSERT_EQ(f->get_results().at(0)->get_argument(0)->get_argument(0), P);
+
+    // the pass should short cut the Gather i/p with the gather users
+    // since we are fetching the whole tensor using gather op
+    auto gather_ops = get_ops_of_type<op::v1::Gather>(f);
+    EXPECT_EQ(gather_ops.size(), 0);
 }

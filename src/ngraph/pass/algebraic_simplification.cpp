@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <memory>
+#include <numeric>
 #include <set>
 
 #include "algebraic_simplification.hpp"
@@ -348,6 +349,72 @@ static bool is_input_uniform_constant(shared_ptr<Node> op,
     return rc;
 }
 
+//`simplify_gather`, optimizes gather if Gather is gathering the
+// whole input tensor
+static bool simplify_gather(std::shared_ptr<Node> node)
+{
+    if (auto gather = as_type_ptr<op::v1::Gather>(node))
+    {
+        // check if we are gathering the whole input
+        auto data = gather->input_value(0);
+        auto indices = gather->input_value(1);
+
+        // we need to know data and indices shape to infer if gather is Nop
+        if (data.get_partial_shape().is_dynamic() || indices.get_partial_shape().is_dynamic())
+        {
+            return false;
+        }
+        // if rank of data and gather output dont match, we will skip
+        if (data.get_shape().size() != node->get_shape().size())
+        {
+            return false;
+        }
+
+        auto axis = gather->get_axis();
+
+        if (axis == op::v1::Gather::AXIS_NOT_SET_VALUE)
+        {
+            NGRAPH_DEBUG << "axis value not set";
+            return false;
+        }
+
+        // case_1 : if the input tensor is of shape (4, 1, 4)
+        // and axis = 1, then the gather would be simply
+        // gathering the whole input tensor, so we can optimize this
+        // op has Nop
+
+        if (data.get_shape()[axis] == 1)
+        {
+            return remove_node_update_name(node, gather->input_value(0).get_node_shared_ptr());
+        }
+
+        // case_2 : if the input tensor is of shape (4, 3, 4)
+        // we need to check the contents of indices, if indices
+        // is 1D tensor of value {0, 1, 2}, we can optimize this
+        // op has Nop
+
+        // check if the indices is constant
+        auto constant_indices =
+            as_type_ptr<op::Constant>(gather->input_value(1).get_node_shared_ptr());
+        if (!constant_indices)
+        {
+            return false;
+        }
+        else
+        {
+            // if ref_inidices == indices, we are capturing the
+            // entire input tensor
+            std::vector<int64_t> ref_indices(data.get_shape()[axis], 0);
+            std::iota(ref_indices.begin(), ref_indices.end(), 0);
+            if (ref_indices == constant_indices->get_vector<int64_t>())
+            {
+                return remove_node_update_name(node, gather->input_value(0).get_node_shared_ptr());
+            }
+        }
+    }
+    return false;
+}
+
 //`simplify_multiply` optimizes the following 4 *base* cases
 //(8 cases in total including variants due to commutativity)
 //
@@ -551,8 +618,6 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
     auto transpose = as_type_ptr<op::v1::Transpose>(n);
 
     PartialShape shape = n->input_value(0).get_partial_shape();
-    vector<int> dynamic_dims_indices;
-    bool is_dyn_dim = false;
     if (shape.is_dynamic())
     {
         if (shape.rank().is_dynamic())
@@ -564,12 +629,9 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
         {
             if (shape[i].is_dynamic())
             {
-                dynamic_dims_indices.push_back(i);
                 shape[i] = 2; // any non 1 number
             }
         }
-
-        is_dyn_dim = true;
     }
 
     auto perm = as_type_ptr<op::Constant>(n->input_value(1).get_node_shared_ptr());
@@ -632,6 +694,7 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_
         {{op::Add::type_info, simplify_add},
          {op::Multiply::type_info, simplify_multiply},
          {op::Concat::type_info, simplify_concat},
+         {op::v1::Gather::type_info, simplify_gather},
          {op::Sum::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::Sum, get_sum_constant>}},
          {op::Product::type_info,
