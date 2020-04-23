@@ -69,7 +69,7 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 virtual void validate_and_infer_types() override;
 
@@ -160,7 +160,7 @@ namespace ngraph
                 {
                     return m_data_dilation_strides_backward;
                 }
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
             protected:
                 Shape m_filters_shape;
@@ -216,7 +216,7 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 virtual void validate_and_infer_types() override;
 

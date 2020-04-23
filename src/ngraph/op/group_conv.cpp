@@ -475,7 +475,7 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
     set_output_type(0, result_et, output_pshape);
 }
 
-NodeVector op::v1::GroupConvolutionBackpropData::decompose_op() const
+OutputVector op::v1::GroupConvolutionBackpropData::decompose_op() const
 {
     auto data = input_value(0);
     auto filters = input_value(1);
@@ -490,7 +490,7 @@ NodeVector op::v1::GroupConvolutionBackpropData::decompose_op() const
     std::transform(std::begin(sliced_filters),
                    std::end(sliced_filters),
                    std::begin(sliced_filters),
-                   [](const std::shared_ptr<Node>& n) -> std::shared_ptr<Node> {
+                   [](const Output<Node>& n) -> std::shared_ptr<Node> {
                        return builder::opset1::squeeze(n);
                    });
 
@@ -720,7 +720,7 @@ shared_ptr<Node> op::v0::GroupConvolution::clone_with_new_inputs(const OutputVec
     }
 }
 
-NodeVector op::v0::GroupConvolution::decompose_op() const
+OutputVector op::v0::GroupConvolution::decompose_op() const
 {
     auto data = input_value(0);
     auto filters = input_value(1);
@@ -743,7 +743,7 @@ NodeVector op::v0::GroupConvolution::decompose_op() const
             // Remove group dimmension after slicing
             sliced_filter = make_shared<op::Reshape>(
                 sliced_filters[group],
-                get_default_order(sliced_filters[group]->get_shape().size()),
+                get_default_order(sliced_filters[group].get_shape().size()),
                 Shape(std::next(std::begin(filters_shape), 1), std::end(filters_shape)));
         }
         convolution_nodes.push_back(
@@ -835,7 +835,7 @@ shared_ptr<Node>
                                                              get_groups());
 }
 
-NodeVector op::v0::GroupConvolutionBackpropData::decompose_op() const
+OutputVector op::v0::GroupConvolutionBackpropData::decompose_op() const
 {
     auto filters = input_value(1);
     auto output_delta = input_value(2);
@@ -934,7 +934,7 @@ shared_ptr<Node> op::v0::GroupConvolutionBackpropFilters::clone_with_new_inputs(
                                                                 get_groups());
 }
 
-NodeVector op::v0::GroupConvolutionBackpropFilters::decompose_op() const
+OutputVector op::v0::GroupConvolutionBackpropFilters::decompose_op() const
 {
     auto data_batch = input_value(0);
     auto filters = input_value(1);

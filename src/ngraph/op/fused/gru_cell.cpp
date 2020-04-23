@@ -153,7 +153,7 @@ void op::GRUCell::pre_validate_and_infer_types()
                           ".");
 }
 
-NodeVector op::GRUCell::decompose_op() const
+OutputVector op::GRUCell::decompose_op() const
 {
     // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
     // The names used below are analogous to the one used in ONNX documentation.
@@ -194,13 +194,13 @@ NodeVector op::GRUCell::decompose_op() const
     Output<Node> B = input_value(4);
 
     // Get W and R biases separately.
-    NodeVector b_W_R = builder::split(B, 2);
+    OutputVector b_W_R = builder::split(B, 2);
     // Each tensor has shape: [gates_count * hidden_size]
     const auto& Wb = b_W_R.at(0);
     const auto& Rb = b_W_R.at(1);
 
     // Split W bias into zr and h gates.
-    NodeVector Wb_zr_h =
+    OutputVector Wb_zr_h =
         builder::split(Wb, vector<size_t>{2 * get_hidden_size(), get_hidden_size()});
     // Tensor shape: [2 * hidden_size]
     const auto& Wb_zr = Wb_zr_h.at(0);
@@ -208,7 +208,7 @@ NodeVector op::GRUCell::decompose_op() const
     const auto& Wb_h = Wb_zr_h.at(1);
 
     // Split R bias into zr and h gates.
-    NodeVector Rb_zr_h =
+    OutputVector Rb_zr_h =
         builder::split(Rb, vector<size_t>{2 * get_hidden_size(), get_hidden_size()});
     // Tensor shape: [2 * hidden_size]
     const auto& Rb_zr = Rb_zr_h.at(0);
@@ -216,7 +216,7 @@ NodeVector op::GRUCell::decompose_op() const
     const auto& Rb_h = Rb_zr_h.at(1);
 
     // Split R weights into zr and h gates.
-    NodeVector R_zr_h = builder::split(R, vector<size_t>{2 * get_hidden_size(), get_hidden_size()});
+    OutputVector R_zr_h = builder::split(R, vector<size_t>{2 * get_hidden_size(), get_hidden_size()});
     // Tensor shape: [2 * hidden_size, hidden_size]
     const auto& R_zr = R_zr_h.at(0);
     // Tensor shape: [hidden_size, hidden_size]
@@ -225,7 +225,7 @@ NodeVector op::GRUCell::decompose_op() const
     // Xt*(W^T)
     auto Xt_W = make_shared<op::Dot>(X, builder::transpose(W));
     // Split Xt_W into zr and h gates.
-    NodeVector Xt_W_zr_h =
+    OutputVector Xt_W_zr_h =
         builder::split(Xt_W, vector<size_t>{2 * get_hidden_size(), get_hidden_size()}, 1);
     // Tensor shape: [batch_size, 2 * hidden_size]
     const auto& Xt_W_zr = Xt_W_zr_h.at(0);
@@ -238,7 +238,7 @@ NodeVector op::GRUCell::decompose_op() const
     // Tensor shape: [batch_size, 2 * hidden_size]
     auto zr_t = m_activation_f(clip(add(Xt_W_zr, add(Ht_R_zr, add(Wb_zr, Rb_zr)))));
     // Split into update and reset gates.
-    NodeVector zr_t_gates = builder::split(zr_t, 2, 1);
+    OutputVector zr_t_gates = builder::split(zr_t, 2, 1);
     // Tensor shape: [batch_size, hidden_size]
     const auto& z_t = zr_t_gates.at(0);
     const auto& r_t = zr_t_gates.at(1);
@@ -260,9 +260,9 @@ NodeVector op::GRUCell::decompose_op() const
         h_t = m_activation_g(clip(add(Xt_W_h, add(rt_Ht_Rh, add(Rb_h, Wb_h)))));
     }
 
-    auto one = op::Constant::create(z_t->get_element_type(),
-                                    z_t->get_shape(),
-                                    vector<float>(shape_size(z_t->get_shape()), 1.f));
+    auto one = op::Constant::create(z_t.get_element_type(),
+                                    z_t.get_shape(),
+                                    vector<float>(shape_size(z_t.get_shape()), 1.f));
 
     // Ht = (1 - zt) (.) ht + zt (.) Ht-1
     H_t = add(mul(sub(one, z_t), h_t), mul(z_t, H_t));

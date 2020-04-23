@@ -94,7 +94,7 @@ AxisSet op::NormalizeL2::get_reduction_axes() const
     return axes;
 }
 
-NodeVector op::NormalizeL2::decompose_op() const
+OutputVector op::NormalizeL2::decompose_op() const
 {
     Output<Node> data{input_value(0)};
     const Shape input_shape{data.get_shape()};

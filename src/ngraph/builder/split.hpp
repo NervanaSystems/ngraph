@@ -31,7 +31,7 @@ namespace ngraph
         ///
         /// \return     The vector containing multiple nodes we split input node into.
         ///
-        NodeVector split(const Output<Node>& value,
+        OutputVector split(const Output<Node>& value,
                          const std::vector<size_t>& length_parts,
                          size_t axis = 0);
 
@@ -49,7 +49,7 @@ namespace ngraph
         ///
         /// \return     The vector containing multiple nodes we split input node into.
         ///
-        NodeVector split(const Output<Node>& value, size_t split_parts, int axis = 0);
+        OutputVector split(const Output<Node>& value, size_t split_parts, int axis = 0);
 
         namespace opset1
         {
@@ -66,7 +66,7 @@ namespace ngraph
             /// \return     The vector containing multiple nodes we split input node into.
             ///             The vector is output of Split:v1 op
             ///
-            NodeVector split(const Output<Node>& value,
+            OutputVector split(const Output<Node>& value,
                              const std::vector<size_t>& split_lengths,
                              int64_t axis = 0);
 
@@ -86,7 +86,7 @@ namespace ngraph
             /// \return     The vector containing multiple nodes we split input node into.
             ///             The vector is output of VariadicSplit:v1 op
             ///
-            NodeVector split(const Output<Node>& value, size_t num_splits, int64_t axis = 0);
+            OutputVector split(const Output<Node>& value, size_t num_splits, int64_t axis = 0);
         }
     } // namespace builder
 } // namespace ngraph

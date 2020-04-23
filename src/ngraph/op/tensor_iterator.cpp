@@ -204,10 +204,10 @@ Output<Node> op::TensorIterator::get_concatenated_slices(const Output<Node>& bod
     return Output<Node>(shared_from_this(), output_index);
 }
 
-NodeVector op::TensorIterator::decompose_op() const
+OutputVector op::TensorIterator::decompose_op() const
 {
     // Stub
-    return NodeVector{};
+    return OutputVector{};
 }
 
 void op::TensorIterator::revalidate_and_infer_types_for_body_ops()

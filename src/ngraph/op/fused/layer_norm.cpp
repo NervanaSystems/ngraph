@@ -65,7 +65,7 @@ op::LayerNorm::LayerNorm(const Output<Node>& data,
 }
 
 // All input shape should be static by this point
-NodeVector op::LayerNorm::decompose_op() const
+OutputVector op::LayerNorm::decompose_op() const
 {
     const PartialShape& data_shape = get_input_partial_shape(0);
     if (data_shape.is_dynamic())
@@ -138,7 +138,7 @@ NodeVector op::LayerNorm::decompose_op() const
     }
 
     // Return output nodes
-    NodeVector retval;
+    OutputVector retval;
     retval.emplace_back(norm);
     if (m_keep_stats)
     {
@@ -338,7 +338,7 @@ op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
 }
 
 // All input shape should be static by this point
-NodeVector op::LayerNormBackprop::decompose_op() const
+OutputVector op::LayerNormBackprop::decompose_op() const
 {
     const PartialShape& data_shape = get_input_partial_shape(0);
     if (data_shape.is_dynamic())
@@ -438,7 +438,7 @@ NodeVector op::LayerNormBackprop::decompose_op() const
                    builder::mean(-d_data * norm, post_reduction_axes), shape, post_axis_set);
     d_data = d_data + d_mean + d_stddev;
 
-    NodeVector retval;
+    OutputVector retval;
     retval.emplace_back(d_data);
 
     // Get gradients for affine

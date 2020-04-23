@@ -70,7 +70,7 @@ void op::MVN::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-NodeVector op::MVN::decompose_op() const
+OutputVector op::MVN::decompose_op() const
 {
     auto data = input_value(0);
     auto data_shape = data.get_shape(); // assume that data has n and c channels.

@@ -49,7 +49,7 @@ bool ngraph::op::v0::SpaceToDepth::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-NodeVector op::SpaceToDepth::decompose_op() const
+OutputVector op::SpaceToDepth::decompose_op() const
 {
     auto data = input_value(0);
     auto data_shape = data.get_shape();

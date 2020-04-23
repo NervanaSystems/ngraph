@@ -43,7 +43,7 @@ bool ngraph::op::v0::Gelu::visit_attributes(AttributeVisitor& visitor)
 }
 
 // f(x) = 0.5 * x * (1.0 + erf( x / sqrt(2.0) )
-NodeVector op::Gelu::decompose_op() const
+OutputVector op::Gelu::decompose_op() const
 {
     auto data = input_value(0);
 
@@ -125,7 +125,7 @@ shared_ptr<Node> op::GeluBackpropFactor::clone_with_new_inputs(const OutputVecto
     return make_shared<GeluBackpropFactor>(new_args.at(0));
 }
 
-NodeVector op::GeluBackpropFactor::decompose_op() const
+OutputVector op::GeluBackpropFactor::decompose_op() const
 {
     auto x = input_value(0);
 
