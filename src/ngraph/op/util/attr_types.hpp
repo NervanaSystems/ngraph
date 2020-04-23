@@ -20,6 +20,7 @@
 #include <ostream>
 
 #include "ngraph/attribute_adapter.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/type.hpp"
 
@@ -298,4 +299,20 @@ namespace ngraph
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastSpec>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
+
+    class AttributeVisitor;
+
+    namespace op
+    {
+        ///
+        /// \brief      This class provides base interface for attribute structures.
+        ///
+        class NGRAPH_API AttributeStructure
+        {
+        public:
+            AttributeStructure() = default;
+
+            virtual void visit_attributes(ngraph::AttributeVisitor& visitor) = 0;
+        };
+    }
 }
