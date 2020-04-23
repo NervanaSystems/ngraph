@@ -81,7 +81,7 @@ def ctc_greedy_decoder(data, sequence_mask, merge_repeated=True, name=None):
     :return: The new node performing an CTCGreedyDecoder operation on input tensor.
     """
     return _get_node_factory().create('CTCGreedyDecoder', [data, sequence_mask], {
-        "ctc_merge_repeated": merge_repeated})
+        'ctc_merge_repeated': merge_repeated})
 
 
 @nameable_op
@@ -698,6 +698,7 @@ def exp(node, name=None):  # type: (NodeInput, str) -> Node
     """
     return _get_node_factory().create('Exp', [node])
 
+
 @unary_op
 def log(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies natural logarithm to the input node element-wise.
@@ -823,6 +824,8 @@ def divide(left_node, right_node, auto_broadcast='NUMPY', name=None):
     :param right_node: The node providing divisor data.
     :param right_node: Specifies rules used for auto-broadcasting of input tensors.
     :param name: Optional name for output node.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :return: The node performing element-wise division.
     """
     return _get_node_factory().create('Divide',
@@ -878,7 +881,7 @@ def power(left_node, right_node, auto_broadcast='NUMPY', name=None):
     :param right_node: The node providing the exponent of operation.
     :param name: The optional name for the new output node.
     :param auto_broadcast: The type of broadcasting specifies rules used for
-                           auto-broadcasting of input tensors
+                           auto-broadcasting of input tensors.
     :return: The new node performing element-wise exponentiation operation on input nodes.
     """
     return _get_node_factory().create('Power',
