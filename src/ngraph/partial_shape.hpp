@@ -191,6 +191,8 @@ namespace ngraph
         Shape get_max_shape() const;
         /// Get the min bounding shape
         Shape get_min_shape() const;
+        /// Get the unique shape
+        Shape get_shape() const;
 
         /// \brief Try to merge one shape into another.
         /// \param[in,out] dst The shape that `src` will be merged into.

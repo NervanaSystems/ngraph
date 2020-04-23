@@ -88,6 +88,8 @@ set (SRC
     env_util.cpp
     env_util.hpp
     evaluator.hpp
+    evaluator_tensor.cpp
+    evaluator_tensor.hpp
     except.hpp
     factory.cpp
     factory.hpp
@@ -728,7 +730,7 @@ add_subdirectory(runtime)
 target_compile_definitions(ngraph
     PRIVATE
         SHARED_LIB_PREFIX="${CMAKE_SHARED_LIBRARY_PREFIX}"
-        SHARED_LIB_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+        SHARED_LIB_SUFFIX="${IE_BUILD_POSTFIX}${CMAKE_SHARED_LIBRARY_SUFFIX}"
 )
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph PROPERTIES
