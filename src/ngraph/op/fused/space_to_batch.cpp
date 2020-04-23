@@ -124,7 +124,7 @@ OutputVector op::v1::SpaceToBatch::decompose_op() const
     }
     flat_node = builder::opset1::reshape(flat_node, squeezed_shape);
 
-    return NodeVector{flat_node};
+    return OutputVector{flat_node};
 }
 
 void ngraph::op::v1::SpaceToBatch::pre_validate_and_infer_types()

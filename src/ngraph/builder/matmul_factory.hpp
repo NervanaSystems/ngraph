@@ -41,7 +41,7 @@ namespace ngraph
             /// \brief Create a sub-graph representing an ONNX MatMul operation.
             ///
             /// \return NodeVector containing the sub-graph output node.
-            virtual NodeVector make_matmul_op();
+            virtual OutputVector make_matmul_op();
 
         protected:
             /// \return Output representing the left operand.

@@ -95,7 +95,7 @@ OutputVector op::MVN::decompose_op() const
         variance = variance + eps_node;
         variance = std::make_shared<op::Broadcast>(variance, data_shape, m_reduction_axes);
 
-        return as_node_vector({mean_normalization / variance});
+        return OutputVector{mean_normalization / variance};
     }
 }
 

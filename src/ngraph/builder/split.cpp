@@ -66,8 +66,8 @@ namespace
 }
 
 OutputVector builder::split(const Output<ngraph::Node>& value,
-                          const std::vector<size_t>& length_parts,
-                          size_t axis)
+                            const std::vector<size_t>& length_parts,
+                            size_t axis)
 {
     size_t start_index{0};
     OutputVector outputs;
@@ -94,8 +94,8 @@ OutputVector builder::split(const Output<Node>& value, size_t split_parts, int a
 }
 
 OutputVector builder::opset1::split(const Output<Node>& value,
-                                  const std::vector<size_t>& split_lengths,
-                                  int64_t axis)
+                                    const std::vector<size_t>& split_lengths,
+                                    int64_t axis)
 {
     const auto axis_node = ngraph::opset1::Constant::create(element::u64, Shape{}, {axis});
     const auto split_lengths_node =
