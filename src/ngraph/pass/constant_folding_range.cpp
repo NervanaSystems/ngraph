@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
-#include "ngraph/op/experimental/range.hpp"
+#include "ngraph/op/range.hpp"
 #include "ngraph/runtime/reference/range.hpp"
 
 using namespace std;

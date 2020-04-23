@@ -19,7 +19,7 @@ include(ExternalProject)
 set(MLIR_LLVM_REPO_URL https://github.com/llvm/llvm-project.git)
 
 # Change these commit IDs to move to latest stable versions
-set(MLIR_LLVM_COMMIT_ID 35b685270b410f6a1351c2a527021f22330c25b9)
+set(MLIR_LLVM_COMMIT_ID 2f8b4545f496)
 
 # MLIR environment variables. Some of them are used by LIT tool.
 

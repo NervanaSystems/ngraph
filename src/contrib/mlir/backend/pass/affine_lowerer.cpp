@@ -28,8 +28,8 @@
 
 #include <llvm/ADT/DenseSet.h>
 #include <llvm/Support/Debug.h>
-#include <mlir/Dialect/AffineOps/EDSC/Builders.h>
-#include <mlir/Dialect/AffineOps/EDSC/Intrinsics.h>
+#include <mlir/Dialect/Affine/EDSC/Builders.h>
+#include <mlir/Dialect/Affine/EDSC/Intrinsics.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 #include <mlir/Dialect/StandardOps/EDSC/Intrinsics.h>
 #include <mlir/IR/AffineExpr.h>
@@ -70,12 +70,14 @@ namespace
     public:
         NGraphOpLowering(StringRef rootOpName, MLIRContext* context, DialectLoweringPass& pass)
             : ConversionPattern(rootOpName, /*benefit=*/1, context)
-            , pass(pass){};
+            , pass(pass)
+            , context(context){};
 
     protected:
         // Back-reference to the lowering pass which contains the lowering state, including the
         // nGraph type converter.
         DialectLoweringPass& pass;
+        MLIRContext* context;
     };
 
 // Conversion classes declarations
@@ -88,9 +90,9 @@ namespace
         {                                                                                          \
         }                                                                                          \
                                                                                                    \
-        PatternMatchResult matchAndRewrite(Operation* op,                                          \
-                                           ArrayRef<Value> operands,                               \
-                                           ConversionPatternRewriter& rewriter) const override;    \
+        LogicalResult matchAndRewrite(Operation* op,                                               \
+                                      ArrayRef<Value> operands,                                    \
+                                      ConversionPatternRewriter& rewriter) const override;         \
     };
 
 #include "op_lowerers.inc"
@@ -106,9 +108,9 @@ namespace
         }
 
         /// Hook for derived classes to implement combined matching and rewriting.
-        PatternMatchResult matchAndRewrite(Operation* op,
-                                           ArrayRef<Value> operands,
-                                           ConversionPatternRewriter& rewriter) const override
+        LogicalResult matchAndRewrite(Operation* op,
+                                      ArrayRef<Value> operands,
+                                      ConversionPatternRewriter& rewriter) const override
         {
             auto funcOp = cast<FuncOp>(op);
             FunctionType type = funcOp.getType();
@@ -119,7 +121,7 @@ namespace
             {
                 if (failed(converter.convertSignatureArg(i, type.getInput(i), result)))
                 {
-                    return matchFailure();
+                    return failure();
                 }
             }
 
@@ -130,7 +132,7 @@ namespace
                 SmallVector<Type, 4> convertedResults;
                 if (failed(converter.convertTypes(funcTypeResults, convertedResults)))
                 {
-                    return matchFailure();
+                    return failure();
                 }
 
                 // Add result types as input args without mapping
@@ -146,7 +148,7 @@ namespace
             // Tell the rewriter to convert the region signature.
             rewriter.applySignatureConversion(&newFuncOp.getBody(), result);
             rewriter.replaceOp(op, llvm::None);
-            return matchSuccess();
+            return success();
         }
 
         /// The type converter to use when rewriting the signature.
@@ -206,7 +208,8 @@ namespace
     void lowerPooling(Operation* op,
                       ArrayRef<Value> operands,
                       PatternRewriter& rewriter,
-                      DialectLoweringPass& pass);
+                      DialectLoweringPass& pass,
+                      MLIRContext* context);
 
     ValueHandle createZeroConstant(mlir::Type type);
     ValueHandle createOneConstant(mlir::Type type);
@@ -309,10 +312,10 @@ namespace
     }
 
     /// Dialect Lowering Pass to affine ops
-    class DialectLoweringPass : public ModulePass<DialectLoweringPass>
+    class DialectLoweringPass : public PassWrapper<DialectLoweringPass, OperationPass<ModuleOp>>
     {
     public:
-        void runOnModule() override;
+        void runOnOperation() override;
 
         SmallVector<Value, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
         /// Allocates a linear buffer for a temporary memref that shares its
@@ -374,7 +377,7 @@ namespace
         std::vector<AttrsType> m_attrsTyVec;
     };
 
-    void DialectLoweringPass::runOnModule()
+    void DialectLoweringPass::runOnOperation()
     {
         // Create type converter and initialize conversion patterns.
         NGraphTypeConverter converter;
@@ -388,7 +391,7 @@ namespace
         // Create target that defines legal ops for nGraph dialect to be lowered to.
         ConversionTarget target(getContext());
 
-        target.addLegalDialect<AffineOpsDialect, StandardOpsDialect, LLVM::LLVMDialect>();
+        target.addLegalDialect<AffineDialect, StandardOpsDialect, LLVM::LLVMDialect>();
         target.addLegalOp<ModuleOp, ModuleTerminatorOp>();
         target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
             // FuncOp is legal only if types have been converted to Std types.
@@ -397,7 +400,7 @@ namespace
 
         // Gather functions to be processed. Note that new functions will be added to module as part
         // of the function signature conversion so we have to collect the original ones before hand.
-        SmallVector<FuncOp, 2> origFuncOps(getModule().getOps<FuncOp>());
+        SmallVector<FuncOp, 2> origFuncOps(getOperation().getOps<FuncOp>());
 
         for (auto origFunc : origFuncOps)
         {
@@ -443,7 +446,7 @@ namespace
 
     void DialectLoweringPass::findOutputValues()
     {
-        FuncOp f = getModule().lookupSymbol<mlir::FuncOp>(funcName);
+        FuncOp f = getOperation().lookupSymbol<mlir::FuncOp>(funcName);
         NGRAPH_CHECK(f, "FuncOp '" + funcName.str() + "' not found");
 
         SmallVector<Value, 4> outputList;
@@ -470,7 +473,7 @@ namespace
     SmallVector<Value, 4> DialectLoweringPass::buildOutputDefs(Operation* op,
                                                                PatternRewriter& rewriter)
     {
-        FuncOp f = getModule().lookupSymbol<mlir::FuncOp>(funcName);
+        FuncOp f = getOperation().lookupSymbol<mlir::FuncOp>(funcName);
         NGRAPH_CHECK(f, "FuncOp '" + funcName.str() + "' not found");
 
         SmallVector<Value, 4> newResults;
@@ -599,7 +602,7 @@ namespace
     /// by nGraph op semantics.
     void DialectLoweringPass::insertNoAliasArgAttrs()
     {
-        FuncOp func = getModule().lookupSymbol<mlir::FuncOp>(funcName);
+        FuncOp func = getOperation().lookupSymbol<mlir::FuncOp>(funcName);
         NGRAPH_CHECK(func, "FuncOp '" + funcName.str() + "' not found");
 
         unsigned int argIdx = 0;
@@ -627,7 +630,7 @@ namespace
                                                   ArrayRef<Type> output,
                                                   PatternRewriter& rewriter)
     {
-        auto module = getModule();
+        auto module = getOperation();
         auto callBackFunc = module.lookupSymbol<mlir::FuncOp>(name);
         if (!callBackFunc)
         {
@@ -649,7 +652,7 @@ namespace
                                                           Attribute initVal,
                                                           OpBuilder& rewriter)
     {
-        auto module = getModule();
+        auto module = getOperation();
         auto globalVal = module.lookupSymbol<LLVM::GlobalOp>(name);
         if (!globalVal)
         {
@@ -1069,7 +1072,7 @@ namespace
 
     void DialectLoweringPass::insertInitFunc()
     {
-        auto module = getModule();
+        auto module = getOperation();
         OpBuilder builder(module.getContext());
         OpBuilder::InsertionGuard moduleInsertionGuard(builder);
         builder.setInsertionPointToStart(module.getBody());
@@ -1105,8 +1108,6 @@ namespace
             constants.push_back(constant);
         }
         auto globalType = getLLVMType(AttrsType::CONV3D, llvmDialect);
-        auto gepTy = getLLVMType(AttrsType::CONV3D, llvmDialect).getPointerTo();
-
         int32_t i = 0;
         for (auto attrs : m_attrsVec)
         {
@@ -1154,91 +1155,91 @@ namespace
     }
 
 #define REWRITER(OP)                                                                               \
-    PatternMatchResult OP##Conversion::matchAndRewrite(                                            \
+    LogicalResult OP##Conversion::matchAndRewrite(                                                 \
         Operation* op, ArrayRef<Value> operands, ConversionPatternRewriter& rewriter) const
 
     REWRITER(NGAddOp)
     {
         lowerBinaryElementwise<mlir::NGAddOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGSubOp)
     {
         lowerBinaryElementwise<mlir::NGSubOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGMulOp)
     {
         lowerBinaryElementwise<mlir::NGMulOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGDivOp)
     {
         lowerBinaryElementwise<mlir::NGDivOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGGreaterOp)
     {
         lowerBinaryElementwise<mlir::NGGreaterOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGLessOp)
     {
         lowerBinaryElementwise<mlir::NGLessOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGGreaterEqOp)
     {
         lowerBinaryElementwise<mlir::NGGreaterEqOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGLessEqOp)
     {
         lowerBinaryElementwise<mlir::NGLessEqOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGEqOp)
     {
         lowerBinaryElementwise<mlir::NGEqOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGNotEqOp)
     {
         lowerBinaryElementwise<mlir::NGNotEqOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGMaxOp)
     {
         lowerBinaryElementwise<mlir::NGMaxOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGMinOp)
     {
         lowerBinaryElementwise<mlir::NGMinOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGArgMaxRedOp)
     {
         lowerIndexReduction<mlir::NGArgMaxRedOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGArgMinRedOp)
     {
         lowerIndexReduction<mlir::NGArgMinRedOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     // Relu
@@ -1278,14 +1279,14 @@ namespace
         });
 
         rewriter.replaceOp(op, {result});
-        return matchSuccess();
+        return success();
     }
 
     // Negative
     REWRITER(NGNegOp)
     {
         lowerUnaryElementwise<mlir::NGNegOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGDotOp)
@@ -1355,7 +1356,7 @@ namespace
 
         rewriter.replaceOp(op, {result});
 
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGConcatOp)
@@ -1434,7 +1435,7 @@ namespace
         }
 
         rewriter.replaceOp(op, {result});
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGGatherOp)
@@ -1552,7 +1553,7 @@ namespace
         });
 
         rewriter.replaceOp(op, {result});
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGConvolutionOp)
@@ -1579,7 +1580,7 @@ namespace
                          convolOp.getLoc());
 
         rewriter.replaceOp(op, {result});
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGGroupConvOp)
@@ -1648,13 +1649,13 @@ namespace
                              iv);
         });
         rewriter.replaceOp(op, {result});
-        return matchSuccess();
+        return success();
     }
     REWRITER(NGReturnOp)
     {
         pass.insertDeallocs(rewriter);
         rewriter.replaceOpWithNewOp<ReturnOp>(op);
-        return matchSuccess();
+        return success();
     }
 
     // Use callback: Pooling, MatMul, Gemm, Softmax, ConvBias
@@ -1670,11 +1671,12 @@ namespace
         }
     }
 
-    static LLVM::AddressOfOp
-        getGlobalAddr(int32_t index, PatternRewriter& rewriter, DialectLoweringPass& pass)
+    static LLVM::AddressOfOp getGlobalAddr(int32_t index,
+                                           PatternRewriter& rewriter,
+                                           DialectLoweringPass& pass,
+                                           MLIRContext* context)
     {
-        auto module = pass.getModule();
-        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
         auto globalTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
         StringRef name = "globalAttrs" + std::to_string(index);
         LLVM::GlobalOp globalVal = pass.getGlobalOp(name,
@@ -1689,20 +1691,20 @@ namespace
 
     REWRITER(NGAvgPoolOp)
     {
-        lowerPooling<mlir::NGAvgPoolOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        lowerPooling<mlir::NGAvgPoolOp>(op, operands, rewriter, pass, context);
+        return success();
     }
 
     REWRITER(NGAvgPoolBackpropOp)
     {
-        lowerPooling<mlir::NGAvgPoolBackpropOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        lowerPooling<mlir::NGAvgPoolBackpropOp>(op, operands, rewriter, pass, context);
+        return success();
     }
 
     REWRITER(NGMaxPoolOp)
     {
-        lowerPooling<mlir::NGMaxPoolOp>(op, operands, rewriter, pass);
-        return matchSuccess();
+        lowerPooling<mlir::NGMaxPoolOp>(op, operands, rewriter, pass, context);
+        return success();
     }
 
     REWRITER(NGMaxPoolBackpropOp)
@@ -1766,8 +1768,7 @@ namespace
             index = pass.insertAttrs(attrs, AttrsType::POOL3D);
         }
         // Get callback func
-        auto module = pass.getModule();
-        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
         auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
@@ -1777,7 +1778,7 @@ namespace
             {},
             rewriter);
         // Insert call
-        auto globalPtr = getGlobalAddr(index, rewriter, pass);
+        auto globalPtr = getGlobalAddr(index, rewriter, pass, context);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MAXPOOLBACKPROP), 64);
         SmallVector<mlir::Value, 4> inputs = {src, delta, result};
@@ -1787,7 +1788,7 @@ namespace
             outputs[0], outputs[1], outputs[2], globalPtr, opTypeArg};
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGMatMulOp)
@@ -1840,11 +1841,9 @@ namespace
         attrs.gemmAttrs2d.ldc = attrs.gemmAttrs2d.n;
         attrs.gemmAttrs2d.alpha = 1.0;
         attrs.gemmAttrs2d.beta = 0.0;
-        BroadcastType broadcastHint = BroadcastType::NONE;
         auto index = pass.insertAttrs(attrs, AttrsType::GEMM);
         // Get callback func
-        auto module = pass.getModule();
-        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
         auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
@@ -1854,7 +1853,7 @@ namespace
             {},
             rewriter);
         // Insert call
-        auto globalPtr = getGlobalAddr(index, rewriter, pass);
+        auto globalPtr = getGlobalAddr(index, rewriter, pass, context);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::MATMUL), 64);
         SmallVector<mlir::Value, 4> inputs = {lhs, rhs, result};
@@ -1865,7 +1864,7 @@ namespace
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGGemmOp)
@@ -1961,8 +1960,7 @@ namespace
         attrs.gemmAttrs2d.broadcastHint = broadcastHint;
         auto index = pass.insertAttrs(attrs, AttrsType::GEMM);
         // Get callback func
-        auto module = pass.getModule();
-        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
         auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
@@ -1976,7 +1974,7 @@ namespace
                                              {},
                                              rewriter);
         // Insert call
-        auto globalPtr = getGlobalAddr(index, rewriter, pass);
+        auto globalPtr = getGlobalAddr(index, rewriter, pass, context);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::GEMM), 64);
         SmallVector<mlir::Value, 4> inputs = {lhs, rhs, bias, result};
@@ -1987,7 +1985,7 @@ namespace
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGSoftMaxOp)
@@ -2020,8 +2018,7 @@ namespace
         attrs.intAttr = axes[0].cast<IntegerAttr>().getInt();
         auto index = pass.insertAttrs(attrs, AttrsType::INT);
         // Get callback func
-        auto module = pass.getModule();
-        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
         auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
@@ -2031,7 +2028,7 @@ namespace
                              {},
                              rewriter);
         // Insert call
-        auto globalPtr = getGlobalAddr(index, rewriter, pass);
+        auto globalPtr = getGlobalAddr(index, rewriter, pass, context);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::SOFTMAX), 64);
         SmallVector<mlir::Value, 4> inputs = {lhs, result};
@@ -2041,7 +2038,7 @@ namespace
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 
-        return matchSuccess();
+        return success();
     }
 
     REWRITER(NGConvBiasOp)
@@ -2112,8 +2109,7 @@ namespace
             index = pass.insertAttrs(attrs, AttrsType::CONV3D);
         }
         // Get callback func
-        auto module = pass.getModule();
-        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
         auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
@@ -2127,7 +2123,7 @@ namespace
                                                {},
                                                rewriter);
         // Insert call
-        auto globalPtr = getGlobalAddr(index, rewriter, pass);
+        auto globalPtr = getGlobalAddr(index, rewriter, pass, context);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(OpType::CONVOLUTIONBIAS), 64);
         SmallVector<mlir::Value, 4> inputs = {images, filters, bias, result};
@@ -2138,7 +2134,7 @@ namespace
         rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
         rewriter.replaceOp(op, result);
 
-        return matchSuccess();
+        return success();
     }
 
 #undef REWRITER
@@ -2762,7 +2758,8 @@ namespace
     void lowerPooling(Operation* op,
                       ArrayRef<Value> operands,
                       PatternRewriter& rewriter,
-                      DialectLoweringPass& pass)
+                      DialectLoweringPass& pass,
+                      MLIRContext* context)
     {
         auto pooling = cast<OP>(op);
         auto loc = pooling.getLoc();
@@ -2841,8 +2838,7 @@ namespace
             index = pass.insertAttrs(attrs, AttrsType::POOL3D);
         }
         // Get callback func
-        auto module = pass.getModule();
-        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
+        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
         auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         FuncOp callBackFunc =
@@ -2851,7 +2847,7 @@ namespace
                              {},
                              rewriter);
         // Insert call
-        auto globalPtr = getGlobalAddr(index, rewriter, pass);
+        auto globalPtr = getGlobalAddr(index, rewriter, pass, context);
         auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
             rewriter.getUnknownLoc(), static_cast<int64_t>(ty), 64);
         SmallVector<mlir::Value, 4> inputs = {lhs, result};

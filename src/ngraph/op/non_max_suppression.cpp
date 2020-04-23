@@ -54,7 +54,8 @@ op::v1::NonMaxSuppression::NonMaxSuppression(
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v1::NonMaxSuppression::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::v1::NonMaxSuppression::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v1::NonMaxSuppression>(new_args.at(0),
@@ -77,9 +78,19 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
 {
     const auto boxes_ps = get_input_partial_shape(0);
     const auto scores_ps = get_input_partial_shape(1);
+
+    // the spec doesn't say what exact type should be used for the output of this op
+    // that's why we're setting it to 64-bit integer to provide the maximum range of values support
+    // this will be changed (configurable) in the next version of this op
+    const auto& output_element_type = element::i64;
+
+    // NonMaxSuppression produces triplets
+    // that have the following format: [batch_index, class_index, box_index]
+    PartialShape out_shape = {Dimension::dynamic(), 3};
+
     if (boxes_ps.is_dynamic() || scores_ps.is_dynamic())
     {
-        set_output_type(0, get_input_element_type(0), PartialShape::dynamic(Rank::dynamic()));
+        set_output_type(0, output_element_type, out_shape);
         return;
     }
 
@@ -136,10 +147,6 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
                           "The last dimension of the 'boxes' input must be equal to 4. Got:",
                           boxes_ps[2]);
 
-    // NonMaxSuppression produces triplets
-    // that have the following format: [batch_index, class_index, box_index]
-    PartialShape out_shape = {Dimension::dynamic(), 3};
-
     const auto max_output_boxes_per_class = input_value(2).get_node_shared_ptr();
     if (num_boxes_boxes.is_static() && scores_ps[1].is_static() &&
         max_output_boxes_per_class->is_constant())
@@ -151,7 +158,7 @@ void op::v1::NonMaxSuppression::validate_and_infer_types()
         out_shape[0] = std::min(num_boxes, max_output_boxes_per_class * num_classes);
     }
     set_output_size(1);
-    set_output_type(0, element::i64, out_shape);
+    set_output_type(0, output_element_type, out_shape);
 }
 
 int64_t op::v1::NonMaxSuppression::max_boxes_output_from_input() const

@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -45,44 +45,6 @@ namespace ngraph
 
                 size_t scratchpad_size = 0;
 
-#if MKLDNN_VERSION_MAJOR < 1
-                if (input_desc.data.format == mkldnn_nchw &&
-                    result_desc.data.format == mkldnn_goihw)
-                {
-                    // becomes a copy
-                    input_desc = result_desc;
-                }
-                else if ((input_desc.data.format == mkldnn_nchw ||
-                          input_desc.data.format == mkldnn_nhwc) &&
-                         result_desc.data.format == mkldnn_OIhw4i16o4i_s8s8)
-                {
-                    input_desc.data.format = mkldnn_oihw;
-                }
-                else if (input_desc.data.format == mkldnn_nchw && input_desc.data.ndims == 4 &&
-                         result_desc.data.ndims == 5 && node->get_users().size() == 1)
-                {
-                    Shape weights_shape_groups;
-                    if (auto gconv =
-                            as_type_ptr<ngraph::op::GroupConvolution>(node->get_users()[0]))
-                    {
-                        weights_shape_groups = gconv->get_weights_dimensions();
-                    }
-                    else if (auto gconvb = as_type_ptr<ngraph::op::GroupConvolutionBias>(
-                                 node->get_users()[0]))
-                    {
-                        weights_shape_groups = gconvb->get_weights_dimensions();
-                    }
-                    else
-                    {
-                        throw ngraph_error("Incompatible input/output shape in ConvertLayout op");
-                    }
-                    input_desc = mkldnn::memory::desc(
-                        mkldnn::memory::dims(weights_shape_groups.begin(),
-                                             weights_shape_groups.end()),
-                        mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                        mkldnn::memory::format::goihw);
-                }
-#else
                 bool input_format_is_nchw = mkldnn_utils::mkldnn_md_matches_format_tag(
                     input_desc.data, mkldnn::memory::format_tag::nchw);
                 if (input_format_is_nchw &&
@@ -132,7 +94,7 @@ namespace ngraph
                 }
 
                 scratchpad_size = mkldnn_emitter->query_scratchpad_reorder(input_desc, result_desc);
-#endif
+
                 // ConvertLayout needs 3 primitives: input, result, and reorder.
                 size_t reorder_index = mkldnn_emitter->reserve_primitive_space(3);
                 auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);

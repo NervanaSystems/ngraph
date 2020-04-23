@@ -121,7 +121,7 @@ bool ngraph::op::v0::LRN::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::LRN::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::LRN>(new_args.at(0), new_args.at(1), m_alpha, m_beta, m_bias, m_size);

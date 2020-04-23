@@ -62,20 +62,58 @@ public:
     Oracle(const Output<Node>& program,
            const Output<Node>& data,
            TuringModel turing_model,
-           uint64_t model_version,
-           uint8_t rev,
-           const string& serial_number,
-           bool enable_turbo,
-           const std::vector<uint64_t>& hyper_parameters,
-           const std::vector<int64_t>& ultra_parameters)
+           const element::Type element_type,
+           element::Type_t element_type_t,
+           const string& val_string,
+           bool val_bool,
+           float val_float,
+           double val_double,
+           uint8_t val_uint8_t,
+           uint16_t val_uint16_t,
+           uint32_t val_uint32_t,
+           uint64_t val_uint64_t,
+           int8_t val_int8_t,
+           int16_t val_int16_t,
+           int32_t val_int32_t,
+           int64_t val_int64_t,
+           const std::vector<std::string>& vec_string,
+           const std::vector<float>& vec_float,
+           const std::vector<double>& vec_double,
+           const std::vector<uint8_t>& vec_uint8_t,
+           const std::vector<uint16_t>& vec_uint16_t,
+           const std::vector<uint32_t>& vec_uint32_t,
+           const std::vector<uint64_t>& vec_uint64_t,
+           const std::vector<int8_t>& vec_int8_t,
+           const std::vector<int16_t>& vec_int16_t,
+           const std::vector<int32_t>& vec_int32_t,
+           const std::vector<int64_t>& vec_int64_t)
         : Op({program, data})
         , m_turing_model(turing_model)
-        , m_model_version(model_version)
-        , m_rev(rev)
-        , m_serial_number(serial_number)
-        , m_enable_turbo(enable_turbo)
-        , m_hyper_parameters(hyper_parameters)
-        , m_ultra_parameters(ultra_parameters)
+        , m_element_type(element_type)
+        , m_element_type_t(element_type_t)
+        , m_val_string(val_string)
+        , m_val_bool(val_bool)
+        , m_val_float(val_float)
+        , m_val_double(val_double)
+        , m_val_uint8_t(val_uint8_t)
+        , m_val_uint16_t(val_uint16_t)
+        , m_val_uint32_t(val_uint32_t)
+        , m_val_uint64_t(val_uint64_t)
+        , m_val_int8_t(val_int8_t)
+        , m_val_int16_t(val_int16_t)
+        , m_val_int32_t(val_int32_t)
+        , m_val_int64_t(val_int64_t)
+        , m_vec_string(vec_string)
+        , m_vec_float(vec_float)
+        , m_vec_double(vec_double)
+        , m_vec_uint8_t(vec_uint8_t)
+        , m_vec_uint16_t(vec_uint16_t)
+        , m_vec_uint32_t(vec_uint32_t)
+        , m_vec_uint64_t(vec_uint64_t)
+        , m_vec_int8_t(vec_int8_t)
+        , m_vec_int16_t(vec_int16_t)
+        , m_vec_int32_t(vec_int32_t)
+        , m_vec_int64_t(vec_int64_t)
     {
     }
 
@@ -84,45 +122,122 @@ public:
     Oracle() = default;
 
     TuringModel get_turing_model() const { return m_turing_model; }
-    uint64_t get_model_version() const { return m_model_version; }
-    const string& get_serial_number() const { return m_serial_number; }
-    bool get_enable_turbo() const { return m_enable_turbo; }
-    const vector<uint64_t>& get_hyper_parameters() const { return m_hyper_parameters; }
-    const vector<int64_t>& get_ultra_parameters() const { return m_ultra_parameters; }
-    shared_ptr<Node> copy_with_new_args(const NodeVector& args) const override
+    const element::Type get_element_type() const { return m_element_type; }
+    const element::Type_t get_element_type_t() const { return m_element_type_t; }
+    const string& get_val_string() const { return m_val_string; }
+    bool get_val_bool() const { return m_val_bool; }
+    bool get_val_float() const { return m_val_float; }
+    bool get_val_double() const { return m_val_double; }
+    uint64_t get_val_uint8_t() const { return m_val_uint8_t; }
+    uint64_t get_val_uint16_t() const { return m_val_uint16_t; }
+    uint64_t get_val_uint32_t() const { return m_val_uint32_t; }
+    uint64_t get_val_uint64_t() const { return m_val_uint64_t; }
+    int64_t get_val_int8_t() const { return m_val_int8_t; }
+    int64_t get_val_int16_t() const { return m_val_int16_t; }
+    int64_t get_val_int32_t() const { return m_val_int32_t; }
+    int64_t get_val_int64_t() const { return m_val_int64_t; }
+    const vector<uint8_t>& get_vec_uint8_t() const { return m_vec_uint8_t; }
+    const vector<uint16_t>& get_vec_uint16_t() const { return m_vec_uint16_t; }
+    const vector<uint32_t>& get_vec_uint32_t() const { return m_vec_uint32_t; }
+    const vector<uint64_t>& get_vec_uint64_t() const { return m_vec_uint64_t; }
+    const vector<int8_t>& get_vec_int8_t() const { return m_vec_int8_t; }
+    const vector<int16_t>& get_vec_int16_t() const { return m_vec_int16_t; }
+    const vector<int32_t>& get_vec_int32_t() const { return m_vec_int32_t; }
+    const vector<int64_t>& get_vec_int64_t() const { return m_vec_int64_t; }
+    const vector<string>& get_vec_string() const { return m_vec_string; }
+    const vector<float>& get_vec_float() const { return m_vec_float; }
+    const vector<double>& get_vec_double() const { return m_vec_double; }
+    shared_ptr<Node> clone_with_new_inputs(const OutputVector& args) const override
     {
         return make_shared<Oracle>(args[0],
                                    args[1],
                                    m_turing_model,
-                                   m_model_version,
-                                   m_rev,
-                                   m_serial_number,
-                                   m_enable_turbo,
-                                   m_hyper_parameters,
-                                   m_ultra_parameters);
+                                   m_element_type,
+                                   m_element_type_t,
+                                   m_val_string,
+                                   m_val_bool,
+                                   m_val_float,
+                                   m_val_double,
+                                   m_val_uint8_t,
+                                   m_val_uint16_t,
+                                   m_val_uint32_t,
+                                   m_val_uint64_t,
+                                   m_val_int8_t,
+                                   m_val_int16_t,
+                                   m_val_int32_t,
+                                   m_val_int64_t,
+                                   m_vec_string,
+                                   m_vec_float,
+                                   m_vec_double,
+                                   m_vec_uint8_t,
+                                   m_vec_uint16_t,
+                                   m_vec_uint32_t,
+                                   m_vec_uint64_t,
+                                   m_vec_int8_t,
+                                   m_vec_int16_t,
+                                   m_vec_int32_t,
+                                   m_vec_int64_t);
     }
 
     void validate_and_infer_types() override { set_output_type(0, element::i64, {}); }
     bool visit_attributes(AttributeVisitor& visitor) override
     {
         visitor.on_attribute("turing_model", m_turing_model);
-        visitor.on_attribute("model_version", m_model_version);
-        visitor.on_attribute("rev", m_rev);
-        visitor.on_attribute("serial_number", m_serial_number);
-        visitor.on_attribute("enable_turbo", m_enable_turbo);
-        visitor.on_attribute("hyper_parameters", m_hyper_parameters);
-        visitor.on_attribute("ultra_parameters", m_ultra_parameters);
+        visitor.on_attribute("element_type", m_element_type);
+        visitor.on_attribute("element_type_t", m_element_type_t);
+        visitor.on_attribute("val_string", m_val_string);
+        visitor.on_attribute("val_bool", m_val_bool);
+        visitor.on_attribute("val_float", m_val_float);
+        visitor.on_attribute("val_double", m_val_double);
+        visitor.on_attribute("val_uint8_t", m_val_uint8_t);
+        visitor.on_attribute("val_uint16_t", m_val_uint16_t);
+        visitor.on_attribute("val_uint32_t", m_val_uint32_t);
+        visitor.on_attribute("val_uint64_t", m_val_uint64_t);
+        visitor.on_attribute("val_int8_t", m_val_int8_t);
+        visitor.on_attribute("val_int16_t", m_val_int16_t);
+        visitor.on_attribute("val_int32_t", m_val_int32_t);
+        visitor.on_attribute("val_int64_t", m_val_int64_t);
+        visitor.on_attribute("vec_string", m_vec_string);
+        visitor.on_attribute("vec_float", m_vec_float);
+        visitor.on_attribute("vec_double", m_vec_double);
+        visitor.on_attribute("vec_uint8_t", m_vec_uint8_t);
+        visitor.on_attribute("vec_uint16_t", m_vec_uint16_t);
+        visitor.on_attribute("vec_uint32_t", m_vec_uint32_t);
+        visitor.on_attribute("vec_uint64_t", m_vec_uint64_t);
+        visitor.on_attribute("vec_int8_t", m_vec_int8_t);
+        visitor.on_attribute("vec_int16_t", m_vec_int16_t);
+        visitor.on_attribute("vec_int32_t", m_vec_int32_t);
+        visitor.on_attribute("vec_int64_t", m_vec_int64_t);
         return true;
     }
 
 protected:
     TuringModel m_turing_model;
-    uint64_t m_model_version;
-    int8_t m_rev;
-    string m_serial_number;
-    bool m_enable_turbo;
-    vector<uint64_t> m_hyper_parameters;
-    vector<int64_t> m_ultra_parameters;
+    element::Type m_element_type;
+    element::Type_t m_element_type_t;
+    string m_val_string;
+    bool m_val_bool;
+    float m_val_float;
+    double m_val_double;
+    uint8_t m_val_uint8_t;
+    uint16_t m_val_uint16_t;
+    uint32_t m_val_uint32_t;
+    uint64_t m_val_uint64_t;
+    int8_t m_val_int8_t;
+    int16_t m_val_int16_t;
+    int32_t m_val_int32_t;
+    int64_t m_val_int64_t;
+    vector<string> m_vec_string;
+    vector<float> m_vec_float;
+    vector<double> m_vec_double;
+    vector<uint8_t> m_vec_uint8_t;
+    vector<uint16_t> m_vec_uint16_t;
+    vector<uint32_t> m_vec_uint32_t;
+    vector<uint64_t> m_vec_uint64_t;
+    vector<int8_t> m_vec_int8_t;
+    vector<int16_t> m_vec_int16_t;
+    vector<int32_t> m_vec_int32_t;
+    vector<int64_t> m_vec_int64_t;
 };
 
 constexpr NodeTypeInfo Oracle::type_info;
@@ -138,24 +253,74 @@ public:
     const NodeTypeInfo& get_node_type_info() { return m_node_type_info; }
     string& get_string(const string& name) { return m_strings.at(name); }
     bool get_bool(const string& name) { return m_bools.at(name); }
+    float get_float(const string& name) { return m_doubles.at(name); }
     double get_double(const string& name) { return m_doubles.at(name); }
     int64_t get_signed(const string& name) { return m_signeds.at(name); }
     uint64_t get_unsigned(const string& name) { return m_unsigneds.at(name); }
     vector<float>& get_float_vector(const string& name) { return m_float_vectors.at(name); }
-    vector<int64_t>& get_signed_vector(const string& name) { return m_signed_vectors.at(name); }
+    vector<double>& get_double_vector(const string& name) { return m_double_vectors.at(name); }
+    vector<int8_t>& get_int8_t_vector(const string& name) { return m_int8_t_vectors.at(name); }
+    vector<int16_t>& get_int16_t_vector(const string& name) { return m_int16_t_vectors.at(name); }
+    vector<int32_t>& get_int32_t_vector(const string& name) { return m_int32_t_vectors.at(name); }
+    vector<int64_t>& get_int64_t_vector(const string& name) { return m_int64_t_vectors.at(name); }
+    vector<uint8_t>& get_uint8_t_vector(const string& name) { return m_uint8_t_vectors.at(name); }
+    vector<uint16_t>& get_uint16_t_vector(const string& name)
+    {
+        return m_uint16_t_vectors.at(name);
+    }
+    vector<uint32_t>& get_uint32_t_vector(const string& name)
+    {
+        return m_uint32_t_vectors.at(name);
+    }
+    vector<uint64_t>& get_uint64_t_vector(const string& name)
+    {
+        return m_uint64_t_vectors.at(name);
+    }
+
     vector<string>& get_string_vector(const string& name) { return m_string_vectors.at(name); }
     void set_string(const string& name, const string& value) { m_strings[name] = value; }
     void set_bool(const string& name, bool value) { m_bools[name] = value; }
     void set_double(const string& name, double value) { m_doubles[name] = value; }
     void set_signed(const string& name, int64_t value) { m_signeds[name] = value; }
-    void set_unsigned(const string& name, uint64_t value) { m_unsigneds[name] = value; }
     void set_float_vector(const string& name, const vector<float>& value)
     {
         m_float_vectors[name] = value;
     }
-    void set_signed_vector(const string& name, const vector<int64_t>& value)
+    void set_double_vector(const string& name, const vector<double>& value)
     {
-        m_signed_vectors[name] = value;
+        m_double_vectors[name] = value;
+    }
+    void set_int8_t_vector(const string& name, const vector<int8_t>& value)
+    {
+        m_int8_t_vectors[name] = value;
+    }
+    void set_int16_t_vector(const string& name, const vector<int16_t>& value)
+    {
+        m_int16_t_vectors[name] = value;
+    }
+    void set_int32_t_vector(const string& name, const vector<int32_t>& value)
+    {
+        m_int32_t_vectors[name] = value;
+    }
+    void set_int64_t_vector(const string& name, const vector<int64_t>& value)
+    {
+        m_int64_t_vectors[name] = value;
+    }
+    void set_uint8_t_vector(const string& name, const vector<uint8_t>& value)
+    {
+        m_uint8_t_vectors[name] = value;
+    }
+    void set_uint16_t_vector(const string& name, const vector<uint16_t>& value)
+    {
+        m_uint16_t_vectors[name] = value;
+    }
+    void set_uint32_t_vector(const string& name, const vector<uint32_t>& value)
+    {
+        m_uint32_t_vectors[name] = value;
+    }
+    void set_uint64_t_vector(const string& name, const vector<uint64_t>& value)
+    {
+        m_uint64_t_vectors[name] = value;
     }
     void set_string_vector(const string& name, const vector<string>& value)
     {
@@ -166,7 +331,7 @@ public:
     void on_attribute(const string& name, bool& value) override { set_bool(name, value); }
     void on_adapter(const string& name, ValueAccessor<void>& adapter) override
     {
-        NGRAPH_CHECK(false, "name cannot be marshalled");
+        NGRAPH_CHECK(false, "Attribute \"", name, "\" cannot be marshalled");
     }
     // The remaining adapter methods fall back on the void adapter if not implemented
     void on_adapter(const string& name, ValueAccessor<string>& adapter) override
@@ -181,17 +346,50 @@ public:
     {
         set_double(name, adapter.get());
     }
+    void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
+    {
+        set_string_vector(name, adapter.get());
+    }
     void on_adapter(const string& name, ValueAccessor<vector<float>>& adapter) override
     {
         set_float_vector(name, adapter.get());
     }
+    void on_adapter(const string& name, ValueAccessor<vector<double>>& adapter) override
+    {
+        set_double_vector(name, adapter.get());
+    }
+
+    void on_adapter(const string& name, ValueAccessor<vector<int8_t>>& adapter) override
+    {
+        set_int8_t_vector(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<int16_t>>& adapter) override
+    {
+        set_int16_t_vector(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<int32_t>>& adapter) override
+    {
+        set_int32_t_vector(name, adapter.get());
+    }
     void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
     {
-        set_signed_vector(name, adapter.get());
+        set_int64_t_vector(name, adapter.get());
     }
-    void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
+    void on_adapter(const string& name, ValueAccessor<vector<uint8_t>>& adapter) override
     {
-        set_string_vector(name, adapter.get());
+        set_uint8_t_vector(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<uint16_t>>& adapter) override
+    {
+        set_uint16_t_vector(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<uint32_t>>& adapter) override
+    {
+        set_uint32_t_vector(name, adapter.get());
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<uint64_t>>& adapter) override
+    {
+        set_uint64_t_vector(name, adapter.get());
     }
 
 protected:
@@ -201,8 +399,16 @@ protected:
     map<string, double> m_doubles;
     map<string, int64_t> m_signeds;
     map<string, uint64_t> m_unsigneds;
-    map<string, vector<int64_t>> m_signed_vectors;
+    map<string, vector<int8_t>> m_int8_t_vectors;
+    map<string, vector<int16_t>> m_int16_t_vectors;
+    map<string, vector<int32_t>> m_int32_t_vectors;
+    map<string, vector<int64_t>> m_int64_t_vectors;
+    map<string, vector<uint8_t>> m_uint8_t_vectors;
+    map<string, vector<uint16_t>> m_uint16_t_vectors;
+    map<string, vector<uint32_t>> m_uint32_t_vectors;
+    map<string, vector<uint64_t>> m_uint64_t_vectors;
     map<string, vector<float>> m_float_vectors;
+    map<string, vector<double>> m_double_vectors;
     map<string, vector<std::string>> m_string_vectors;
 };
 
@@ -228,7 +434,7 @@ public:
     void on_attribute(const string& name, bool& value) override { value = m_values.get_bool(name); }
     void on_adapter(const string& name, ValueAccessor<void>& adapter) override
     {
-        NGRAPH_CHECK(false, "name cannot be marshalled");
+        NGRAPH_CHECK(false, "Attribute \"", name, "\" cannot be unmarshalled");
     }
     // The remaining adapter methods fall back on the void adapter if not implemented
     void on_adapter(const string& name, ValueAccessor<string>& adapter) override
@@ -243,9 +449,38 @@ public:
     {
         adapter.set(m_values.get_double(name));
     }
+
+    void on_adapter(const string& name, ValueAccessor<vector<int8_t>>& adapter) override
+    {
+        adapter.set(m_values.get_int8_t_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<int16_t>>& adapter) override
+    {
+        adapter.set(m_values.get_int16_t_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<int32_t>>& adapter) override
+    {
+        adapter.set(m_values.get_int32_t_vector(name));
+    }
     void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
     {
-        adapter.set(m_values.get_signed_vector(name));
+        adapter.set(m_values.get_int64_t_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<uint8_t>>& adapter) override
+    {
+        adapter.set(m_values.get_uint8_t_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<uint16_t>>& adapter) override
+    {
+        adapter.set(m_values.get_uint16_t_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<uint32_t>>& adapter) override
+    {
+        adapter.set(m_values.get_uint32_t_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<uint64_t>>& adapter) override
+    {
+        adapter.set(m_values.get_uint64_t_vector(name));
     }
     void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
     {
@@ -254,6 +489,10 @@ public:
     void on_adapter(const string& name, ValueAccessor<vector<float>>& adapter) override
     {
         adapter.set(m_values.get_float_vector(name));
+    }
+    void on_adapter(const string& name, ValueAccessor<vector<double>>& adapter) override
+    {
+        adapter.set(m_values.get_double_vector(name));
     }
 
 protected:
@@ -268,21 +507,60 @@ TEST(attributes, user_op)
     auto oracle = make_shared<Oracle>(program,
                                       data,
                                       TuringModel::XL1200,
-                                      2,
-                                      4,
+                                      element::f32,
+                                      element::Type_t::i64,
                                       "12AU7",
                                       true,
+                                      1.0f,
+                                      1.0,
+                                      2,
+                                      4,
+                                      8,
+                                      16,
+                                      -1,
+                                      -2,
+                                      -4,
+                                      -8,
+                                      vector<string>{"Hello", "World"},
+                                      vector<float>{1.0f, 2.0f},
+                                      vector<double>{1.0, 2.0},
+                                      vector<uint8_t>{1, 2, 4, 8},
+                                      vector<uint16_t>{1, 2, 4, 8},
+                                      vector<uint32_t>{1, 2, 4, 8},
                                       vector<uint64_t>{1, 2, 4, 8},
-                                      vector<int64_t>{-1, -2, -4, -8});
+                                      vector<int8_t>{1, 2, 4, 8},
+                                      vector<int16_t>{1, 2, 4, 8},
+                                      vector<int32_t>{1, 2, 4, 8},
+                                      vector<int64_t>{1, 2, 4, 8});
     NodeBuilder builder(oracle);
     auto g_oracle = as_type_ptr<Oracle>(builder.create());
 
     EXPECT_EQ(g_oracle->get_turing_model(), oracle->get_turing_model());
-    EXPECT_EQ(g_oracle->get_model_version(), oracle->get_model_version());
-    EXPECT_EQ(g_oracle->get_serial_number(), oracle->get_serial_number());
-    EXPECT_EQ(g_oracle->get_enable_turbo(), oracle->get_enable_turbo());
-    EXPECT_EQ(g_oracle->get_hyper_parameters(), oracle->get_hyper_parameters());
-    EXPECT_EQ(g_oracle->get_ultra_parameters(), oracle->get_ultra_parameters());
+    EXPECT_EQ(g_oracle->get_element_type(), oracle->get_element_type());
+    EXPECT_EQ(g_oracle->get_element_type_t(), oracle->get_element_type_t());
+    EXPECT_EQ(g_oracle->get_val_bool(), oracle->get_val_bool());
+    EXPECT_EQ(g_oracle->get_val_string(), oracle->get_val_string());
+    EXPECT_EQ(g_oracle->get_val_float(), oracle->get_val_float());
+    EXPECT_EQ(g_oracle->get_val_double(), oracle->get_val_double());
+    EXPECT_EQ(g_oracle->get_val_uint8_t(), oracle->get_val_uint8_t());
+    EXPECT_EQ(g_oracle->get_val_uint16_t(), oracle->get_val_uint16_t());
+    EXPECT_EQ(g_oracle->get_val_uint32_t(), oracle->get_val_uint32_t());
+    EXPECT_EQ(g_oracle->get_val_uint64_t(), oracle->get_val_uint64_t());
+    EXPECT_EQ(g_oracle->get_val_int8_t(), oracle->get_val_int8_t());
+    EXPECT_EQ(g_oracle->get_val_int16_t(), oracle->get_val_int16_t());
+    EXPECT_EQ(g_oracle->get_val_int32_t(), oracle->get_val_int32_t());
+    EXPECT_EQ(g_oracle->get_val_int64_t(), oracle->get_val_int64_t());
+    EXPECT_EQ(g_oracle->get_vec_uint8_t(), oracle->get_vec_uint8_t());
+    EXPECT_EQ(g_oracle->get_vec_uint16_t(), oracle->get_vec_uint16_t());
+    EXPECT_EQ(g_oracle->get_vec_uint32_t(), oracle->get_vec_uint32_t());
+    EXPECT_EQ(g_oracle->get_vec_uint64_t(), oracle->get_vec_uint64_t());
+    EXPECT_EQ(g_oracle->get_vec_int8_t(), oracle->get_vec_int8_t());
+    EXPECT_EQ(g_oracle->get_vec_int16_t(), oracle->get_vec_int16_t());
+    EXPECT_EQ(g_oracle->get_vec_int32_t(), oracle->get_vec_int32_t());
+    EXPECT_EQ(g_oracle->get_vec_int64_t(), oracle->get_vec_int64_t());
+    EXPECT_EQ(g_oracle->get_vec_string(), oracle->get_vec_string());
+    EXPECT_EQ(g_oracle->get_vec_float(), oracle->get_vec_float());
+    EXPECT_EQ(g_oracle->get_vec_double(), oracle->get_vec_double());
 }
 
 TEST(attributes, matmul_op)
