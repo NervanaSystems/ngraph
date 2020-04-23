@@ -690,14 +690,13 @@ def sqrt(node, name=None):  # type: (NodeInput, str) -> Node
 
 @unary_op
 def exp(node, name=None):  # type: (NodeInput, str) -> Node
-    """Return node which applies exp to the input node element-wise.
+    """Return node which applies exponential function to the input node element-wise.
 
     :param node: The node providing data for operation.
     :param name: The optional name for new output node.
     :return: The new node performing natural exponential operation.
     """
-    return Exp(node)
-
+    return _get_node_factory().create('Exp', [node])
 
 @unary_op
 def log(node, name=None):  # type: (NodeInput, str) -> Node
