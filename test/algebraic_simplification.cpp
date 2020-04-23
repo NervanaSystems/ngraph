@@ -41,6 +41,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass.hpp"
@@ -606,14 +607,21 @@ TEST(algebraic_simplification, replace_transpose_with_reshape)
             make_shared<op::Constant>(element::i64, Shape{perm_value.size()}, perm_value);
         auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
         auto transpose1 = make_shared<op::v0::Abs>(transpose);
-        auto f = make_shared<Function>(transpose1, ParameterVector{param});
+        auto baseline_f = make_shared<Function>(transpose1, ParameterVector{param});
+        auto optimized_f = clone_function(*baseline_f);
 
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::AlgebraicSimplification>();
-        pass_manager.run_passes(f);
+        pass_manager.register_pass<pass::ConstantFolding>();
+        pass_manager.run_passes(optimized_f);
 
-        ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(f), 0);
-        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(f), 1);
+        ASSERT_EQ(baseline_f->get_results()[0]->get_output_partial_shape(0),
+                  optimized_f->get_results()[0]->get_output_partial_shape(0));
+
+        ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(baseline_f), 0);
+        ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(optimized_f), 0);
+        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(optimized_f), 1);
     };
 
     check_usecase(Shape{1, 3}, vector<int64_t>{1, 0});
