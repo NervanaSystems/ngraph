@@ -54,51 +54,6 @@ namespace ngraph
     constexpr DiscreteTypeInfo AttributeAdapter<TuringModel>::type_info;
 }
 
-class CompoundAttributes : public final op::AttributeStructure
-{
-    CompoundAttributes(bool val_bool,
-                       float val_float,
-                       uint8_t val_uint8_t,
-                       uint64_t val_uint64_t,
-                       int32_t val_int32_t,
-                       std::vector<int16_t> vec_int16_t)
-        : m_val_bool(val_bool)
-        , m_val_float(val_float)
-        , m_val_uint8_t(val_uint8_t)
-        , m_val_uint64_t(val_uint64_t)
-        , m_val_int32_t(val_int32_t)
-        , m_vec_int16_t(vec_int16_t)
-    {
-    }
-
-    virtual void visit_attributes(op::AttributeVisitor& visitor)
-    {
-        visitor.on_attribute("CompoundAttributes:val_bool", m_val_bool);
-        visitor.on_attribute("CompoundAttributes:val_float", m_val_float);
-        visitor.on_attribute("CompoundAttributes:val_uint8_t", m_val_uint8_t);
-        visitor.on_attribute("CompoundAttributes:val_uint64_t", m_val_uint64_t);
-        visitor.on_attribute("CompoundAttributes:val_int32_t", m_val_int32_t);
-        visitor.on_attribute("CompoundAttributes:vec_int16_t", m_vec_int16_t);
-    }
-
-    bool m_val_bool;
-    float m_val_float;
-    uint8_t m_val_uint8_t;
-    uint64_t m_val_uint64_t;
-    int32_t m_val_int32_t;
-    std::vector<int16_t> m_vec_int16_t;
-};
-
-bool operator==(const CompoundAttributes& lhs, const CompoundAttributes& rhs)
-{
-    return lhs.m_val_bool == rhs.m_val_bool &&
-           lhs.m_val_float == rhs.m_val_float &&
-           lhs.m_val_uint8_t == rhs.m_val_uint8_t &&
-           lhs.m_val_uint64_t == rhs.m_val_uint64_t &&
-           lhs.m_val_int32_t == rhs.m_val_int32_t &&
-           lhs.m_vec_int16_t == rhs.m_vec_int16_t;
-}
-
 // Given a Turing machine program and data, return scalar 1 if the program would
 // complete, 1 if it would not.
 class Oracle : public op::Op
@@ -131,8 +86,7 @@ public:
            const std::vector<int8_t>& vec_int8_t,
            const std::vector<int16_t>& vec_int16_t,
            const std::vector<int32_t>& vec_int32_t,
-           const std::vector<int64_t>& vec_int64_t,
-           const CompoundAttributes& compound_attributes)
+           const std::vector<int64_t>& vec_int64_t)
         : Op({program, data})
         , m_turing_model(turing_model)
         , m_element_type(element_type)
@@ -160,7 +114,6 @@ public:
         , m_vec_int16_t(vec_int16_t)
         , m_vec_int32_t(vec_int32_t)
         , m_vec_int64_t(vec_int64_t)
-        , m_compound_attributes(compound_attributes)
     {
     }
 
@@ -194,7 +147,6 @@ public:
     const vector<string>& get_vec_string() const { return m_vec_string; }
     const vector<float>& get_vec_float() const { return m_vec_float; }
     const vector<double>& get_vec_double() const { return m_vec_double; }
-    const CompoundAttributes& get_compound_attributes() const { return m_compound_attributes; }
     shared_ptr<Node> clone_with_new_inputs(const OutputVector& args) const override
     {
         return make_shared<Oracle>(args[0],
@@ -224,8 +176,7 @@ public:
                                    m_vec_int8_t,
                                    m_vec_int16_t,
                                    m_vec_int32_t,
-                                   m_vec_int64_t,
-                                   m_compound_attributes);
+                                   m_vec_int64_t);
     }
 
     void validate_and_infer_types() override { set_output_type(0, element::i64, {}); }
@@ -257,7 +208,6 @@ public:
         visitor.on_attribute("vec_int16_t", m_vec_int16_t);
         visitor.on_attribute("vec_int32_t", m_vec_int32_t);
         visitor.on_attribute("vec_int64_t", m_vec_int64_t);
-        visitor.on_attribute("compound_attributes", m_compound_attributes);
         return true;
     }
 
@@ -288,7 +238,6 @@ protected:
     vector<int16_t> m_vec_int16_t;
     vector<int32_t> m_vec_int32_t;
     vector<int64_t> m_vec_int64_t;
-    CompoundAttributes m_compound_attributes;
 };
 
 constexpr NodeTypeInfo Oracle::type_info;
@@ -555,12 +504,6 @@ TEST(attributes, user_op)
     FactoryRegistry<Node>::get().register_factory<Oracle>();
     auto program = make_shared<op::Parameter>(element::i32, Shape{200});
     auto data = make_shared<op::Parameter>(element::i32, Shape{200});
-    CompoundAttributes compound_attributes(false,
-                                           3.14f,
-                                           2,
-                                           32,
-                                           -32,
-                                           vector<int16_t>{1, -2, 3, -4});
     auto oracle = make_shared<Oracle>(program,
                                       data,
                                       TuringModel::XL1200,
@@ -588,8 +531,7 @@ TEST(attributes, user_op)
                                       vector<int8_t>{1, 2, 4, 8},
                                       vector<int16_t>{1, 2, 4, 8},
                                       vector<int32_t>{1, 2, 4, 8},
-                                      vector<int64_t>{1, 2, 4, 8},
-                                      compound_attributes);
+                                      vector<int64_t>{1, 2, 4, 8});
     NodeBuilder builder(oracle);
     auto g_oracle = as_type_ptr<Oracle>(builder.create());
 
@@ -619,7 +561,6 @@ TEST(attributes, user_op)
     EXPECT_EQ(g_oracle->get_vec_string(), oracle->get_vec_string());
     EXPECT_EQ(g_oracle->get_vec_float(), oracle->get_vec_float());
     EXPECT_EQ(g_oracle->get_vec_double(), oracle->get_vec_double());
-    EXPECT_EQ(g_oracle->get_compound_attributes(), oracle->compound_attributes());
 }
 
 TEST(attributes, matmul_op)
@@ -1385,4 +1326,33 @@ TEST(attributes, logical_xor_op)
     auto g_logical_xor = as_type_ptr<opset1::LogicalXor>(builder.create());
 
     EXPECT_EQ(g_logical_xor->get_autob(), logical_xor->get_autob());
+}
+
+TEST(attributes, interpolate_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Interpolate>();
+    auto img = make_shared<op::Parameter>(element::f32, Shape{1, 3, 32, 32});
+    auto out_shape = make_shared<op::Parameter>(element::i32, Shape{2});
+
+    op::InterpolateAttrs interp_atrs;
+    interp_atrs.axes = AxisSet{1, 2};
+    interp_atrs.mode = "cubic";
+    interp_atrs.align_corners = true;
+    interp_atrs.antialias = true;
+    interp_atrs.pads_begin = std::vector<size_t>{0, 0};
+    interp_atrs.pads_end = std::vector<size_t>{0, 0};
+
+    auto interpolate = make_shared<opset1::Interpolate>(img, out_shape, interp_atrs);
+    NodeBuilder builder(interpolate);
+    auto g_interpolate = as_type_ptr<opset1::Interpolate>(builder.create());
+
+    const auto i_attrs = interpolate->get_attrs();
+    const auto g_i_attrs = g_interpolate->get_attrs();
+
+    EXPECT_EQ(g_i_attrs.axes, i_attrs.axes);
+    EXPECT_EQ(g_i_attrs.mode, i_attrs.mode);
+    EXPECT_EQ(g_i_attrs.align_corners, i_attrs.align_corners);
+    EXPECT_EQ(g_i_attrs.antialias, i_attrs.antialias);
+    EXPECT_EQ(g_i_attrs.pads_begin, i_attrs.pads_begin);
+    EXPECT_EQ(g_i_attrs.pads_end, i_attrs.pads_end);
 }

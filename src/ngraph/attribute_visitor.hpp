@@ -28,11 +28,6 @@ namespace ngraph
     template <typename T>
     class ValueAccessor;
 
-    // namespace op
-    // {
-    //     class AttributeStructure;
-    // }
-
     /// \brief Visits the attributes of a node.
     ///
     /// Attributes are the values set when building a graph which are not
@@ -157,10 +152,6 @@ namespace ngraph
         {
             AttributeAdapter<op::AutoBroadcastType> adapter(value.m_type);
             on_adapter(name, adapter);
-        }
-        void on_attribute(const std::string&, op::AttributeStructure& value)
-        {
-            value.visit_attributes(*this);
         }
     };
 }
