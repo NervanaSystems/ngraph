@@ -27,7 +27,9 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/range.hpp"
 #include "ngraph/op/shape_of.hpp"
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/validation_util.hpp"
+#include "util/test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -113,6 +115,39 @@ TEST(eval, evaluate_dynamic_range_sum)
     EXPECT_EQ(c->get_output_element_type(0), element::f32);
     EXPECT_EQ(c->get_output_partial_shape(0), (PartialShape{3}));
     auto cval = c->get_vector<float>();
+    vector<float> seq{8.0f, 11.0f, 14.0f};
+    ASSERT_EQ(cval, seq);
+}
+
+TEST(eval, interpret_dynamic_range_sum)
+{
+    auto p_start = make_shared<op::Parameter>(element::f32, PartialShape{});
+    auto p_stop = make_shared<op::Parameter>(element::f32, PartialShape{});
+    auto p_step = make_shared<op::Parameter>(element::f32, PartialShape{});
+    auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{});
+    auto range = make_shared<op::v0::Range>(p_start, p_stop, p_step);
+    auto add = make_shared<op::v1::Add>(range, p1);
+    auto fun =
+        make_shared<Function>(OutputVector{add}, ParameterVector{p_start, p_stop, p_step, p1});
+    auto backend = runtime::Backend::create("INTERPRETER");
+    auto p_start_val = backend->create_tensor(element::f32, Shape{});
+    copy_data(p_start_val, vector<float>{1.0f});
+    auto p_stop_val = backend->create_tensor(element::f32, Shape{});
+    copy_data(p_stop_val, vector<float>{10.0f});
+    auto p_step_val = backend->create_tensor(element::f32, Shape{});
+    copy_data(p_step_val, vector<float>{3.0f});
+    auto p1_val = backend->create_tensor(element::f32, Shape{});
+    copy_data(p1_val, vector<float>{7.0f});
+    vector<shared_ptr<runtime::Tensor>> results;
+    // Interpreter provides the tensor
+    results.push_back(nullptr);
+    auto cfun = backend->compile(fun);
+    cfun->call_dynamic({results}, {p_start_val, p_stop_val, p_step_val, p1_val});
+    auto c = results[0];
+    ASSERT_TRUE(c);
+    EXPECT_EQ(c->get_element_type(), element::f32);
+    EXPECT_EQ(c->get_partial_shape(), (PartialShape{3}));
+    auto cval = read_vector<float>(c);
     vector<float> seq{8.0f, 11.0f, 14.0f};
     ASSERT_EQ(cval, seq);
 }

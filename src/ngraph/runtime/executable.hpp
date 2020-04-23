@@ -44,6 +44,16 @@ public:
     virtual bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
 
+    /// \param outputs vector of runtime::Tensor used as outputs. Null elements will be replaced
+    /// with tensors during execution.
+    /// \param inputs vector of runtime::Tensor used as inputs
+    /// \returns true if iteration is successful, false otherwise
+    virtual bool call_dynamic(std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
+    {
+        return call(outputs, inputs);
+    };
+
     /// \brief Executes a single iteration of a Function.
     /// \param outputs vector of runtime::Tensor used as outputs
     /// \param inputs vector of runtime::Tensor used as inputs

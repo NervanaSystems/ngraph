@@ -126,8 +126,10 @@ namespace
     {
     public:
         HostTensorEvaluatorTensor(const element::Type& element_type,
-                                  const PartialShape& partial_shape)
+                                  const PartialShape& partial_shape,
+                                  const std::string& name)
             : HostEvaluatorTensor(element_type, partial_shape, false)
+            , m_name(name)
         {
         }
         HostTensorEvaluatorTensor(shared_ptr<runtime::HostTensor> host_tensor)
@@ -146,14 +148,20 @@ namespace
                 NGRAPH_CHECK(m_partial_shape.is_static(),
                              "Attempt to create a host tensor with a dynamic shape: ",
                              m_partial_shape);
-                m_host_tensor =
-                    make_shared<runtime::HostTensor>(m_element_type, m_partial_shape.get_shape());
+                m_host_tensor = make_shared<runtime::HostTensor>(
+                    m_element_type, m_partial_shape.get_shape(), m_name);
                 set_is_allocated();
             }
             return m_host_tensor->get_data_ptr();
         }
-        shared_ptr<runtime::HostTensor> get_host_tensor() override { return m_host_tensor; }
+        shared_ptr<runtime::HostTensor> get_host_tensor() override
+        {
+            get_data_ptr();
+            return m_host_tensor;
+        }
+
     private:
+        string m_name;
         shared_ptr<runtime::HostTensor> m_host_tensor;
     };
 }
@@ -164,9 +172,8 @@ runtime::HostTensor::HostEvaluatorTensorPtr
     return make_shared<HostTensorEvaluatorTensor>(host_tensor);
 }
 
-runtime::HostTensor::HostEvaluatorTensorPtr
-    runtime::HostTensor::create_evaluator_tensor(const element::Type& element_type,
-                                                 const PartialShape& partial_shape)
+runtime::HostTensor::HostEvaluatorTensorPtr runtime::HostTensor::create_evaluator_tensor(
+    const element::Type& element_type, const PartialShape& partial_shape, const string& name)
 {
-    return make_shared<HostTensorEvaluatorTensor>(element_type, partial_shape);
+    return make_shared<HostTensorEvaluatorTensor>(element_type, partial_shape, name);
 }

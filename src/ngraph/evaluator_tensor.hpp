@@ -85,10 +85,7 @@ namespace ngraph
         /// \param node The node being evaluated, for context
         /// \param element_type The element type
         void set_element_type(Node* node, const element::Type& element_type);
-        /// \brief Set the shape for allocation. Must be compatible with the current partial shape.
-        void set_allocation_shape(Node* context, const Shape& shape);
-        /// \brief Set the actual shape of the tensor. Dimension 0 can be less than the allocation
-        /// shape, all other dimensions must agree with the allocation shape.
+        /// \brief Set the actual shape of the tensor compatibly with the partial shape.
         /// \param node The node being evaluated (for errors)
         /// \param shape The shape being set
         void set_shape(Node* node, const Shape& shape);

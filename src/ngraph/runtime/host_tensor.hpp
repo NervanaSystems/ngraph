@@ -73,18 +73,20 @@ public:
     {
     protected:
         using EvaluatorTensor::EvaluatorTensor;
-        virtual std::shared_ptr<HostTensor> get_host_tensor() = 0;
 
     public:
+        virtual std::shared_ptr<HostTensor> get_host_tensor() = 0;
     };
     using HostEvaluatorTensorPtr = std::shared_ptr<HostEvaluatorTensor>;
+    using HostEvaluatorTensorVector = std::vector<HostEvaluatorTensorPtr>;
     /// \brief Get an evaluator tensor that uses this host tensor for data
     static HostEvaluatorTensorPtr create_evaluator_tensor(std::shared_ptr<HostTensor> host_tensor);
     /// \brief Get an evaluator tensor that creates a host tensor on demand
     /// \param element_type Constraint for element type
     /// \param partial_shape Constraint for partial shape
     static HostEvaluatorTensorPtr create_evaluator_tensor(const element::Type& element_type,
-                                                          const PartialShape& partial_shape);
+                                                          const PartialShape& partial_shape,
+                                                          const std::string& name = "");
 
 private:
     HostTensor(const HostTensor&) = delete;

@@ -20,9 +20,25 @@
 
 using namespace ngraph;
 
+namespace
+{
+    // Hack to let layouts work with dynamic ops.
+    Shape layout_shape(const PartialShape& partial_shape)
+    {
+        if (partial_shape.is_static())
+        {
+            return partial_shape.get_shape();
+        }
+        else
+        {
+            return Shape({0});
+        }
+    }
+}
+
 descriptor::layout::TensorLayout::TensorLayout(const descriptor::Tensor& tensor)
     : m_element_type(tensor.get_element_type())
-    , m_shape(tensor.get_shape())
+    , m_shape(layout_shape(tensor.get_partial_shape()))
 {
 }
 

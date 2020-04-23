@@ -87,52 +87,14 @@ bool ngraph::EvaluatorTensor::get_is_allocated() const
     return m_is_allocated;
 }
 
-void ngraph::EvaluatorTensor::set_allocation_shape(Node* node, const Shape& shape)
-{
-    if (m_is_allocated)
-    {
-        NODE_EVALUATION_CHECK(node,
-                              PartialShape(shape) == m_partial_shape,
-                              "Attempt to change the allocation shape to:",
-                              shape,
-                              " of an allocated tensor with shape: ",
-                              m_partial_shape);
-    }
-    else
-    {
-        NODE_EVALUATION_CHECK(node,
-                              PartialShape(shape).refines(m_partial_shape),
-                              "Allocation shape ",
-                              shape,
-                              " must be compatible with the partial shape: ",
-                              m_partial_shape);
-    }
-    m_partial_shape = shape;
-}
-
 void ngraph::EvaluatorTensor::set_shape(Node* node, const Shape& shape)
 {
-    if (m_is_allocated)
-    {
-        // We can shorten the first dimension
-        NODE_EVALUATION_CHECK(node,
-                              m_partial_shape.rank().get_length() == shape.size(),
-                              "Rank can not be changed. Attempt to set shape to: ",
-                              shape,
-                              " from allocation shape: ",
-                              m_partial_shape);
-        NODE_EVALUATION_CHECK(node,
-                              shape.size() == 0 || shape[0] <= m_partial_shape[0].get_length());
-    }
-    else
-    {
-        NODE_EVALUATION_CHECK(node,
-                              PartialShape(shape).refines(m_partial_shape),
-                              "Allocation shape ",
-                              shape,
-                              " must be compatible with the partial shape: ",
-                              m_partial_shape);
-    }
+    NODE_EVALUATION_CHECK(node,
+                          PartialShape(shape).refines(m_partial_shape),
+                          "Allocation shape ",
+                          shape,
+                          " must be compatible with the partial shape: ",
+                          m_partial_shape);
     m_partial_shape = shape;
 }
 

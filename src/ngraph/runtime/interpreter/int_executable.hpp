@@ -156,6 +156,12 @@ public:
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& inputs) override;
 
+    bool call_dynamic(std::vector<std::shared_ptr<Tensor>>& outputs,
+                      const std::vector<std::shared_ptr<Tensor>>& inputs) override;
+
+    bool call_dynamic(const HostTensor::HostEvaluatorTensorVector& outputs,
+                      const HostTensor::HostEvaluatorTensorVector& inputs);
+
     virtual void save(std::ostream& output_stream) override;
 
     void set_nan_check(bool enable);
