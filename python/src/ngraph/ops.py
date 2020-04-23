@@ -68,6 +68,19 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
     """
     return make_constant_node(value, dtype)
 
+@nameable_op
+def ctc_greedy_decoder(data, sequence_mask, merge_repeated=True, name=None):
+    # type: (Node, Node, bool, str) -> Node
+    """Perform greedy decoding on the logits given in input (best path).
+
+    :param data: Logits on which greedy decoding is performed.
+    :param sequence_mask: The tensor with sequence masks for each sequence in the batch.
+    :param merge_repeated: The flag for merging repeated labels during the CTC calculation.
+    :param name: Optional name for output node.
+    :return: The new node performing an CTCGreedyDecoder operation on input tensor.
+    """
+    return _get_node_factory().create('CTCGreedyDecoder', [data, sequence_mask], {"ctc_merge_repeated": merge_repeated})
+
 
 @nameable_op
 def elu(data, alpha, name=None):  # type: (NodeInput, NumericType, str) -> Node
