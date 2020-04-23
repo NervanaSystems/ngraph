@@ -70,3 +70,14 @@ shared_ptr<Node> op::Interpolate::clone_with_new_inputs(const OutputVector& new_
     check_new_args_count(this, new_args);
     return make_shared<Interpolate>(new_args.at(0), new_args.at(1), m_attrs);
 }
+
+bool op::Interpolate::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("InterpolateAttrs.axes", m_attrs.axes);
+    visitor.on_attribute("InterpolateAttrs.mode", m_attrs.mode);
+    visitor.on_attribute("InterpolateAttrs.align_corners", m_attrs.align_corners);
+    visitor.on_attribute("InterpolateAttrs.antialias", m_attrs.antialias);
+    visitor.on_attribute("InterpolateAttrs.pads_begin", m_attrs.pads_begin);
+    visitor.on_attribute("InterpolateAttrs.pads_end", m_attrs.pads_end);
+    return true;
+}
