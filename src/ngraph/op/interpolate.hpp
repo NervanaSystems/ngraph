@@ -57,6 +57,7 @@ namespace ngraph
 
                 const InterpolateAttrs& get_attrs() const { return m_attrs; }
                 virtual bool visit_attributes(AttributeVisitor& visitor);
+
             private:
                 InterpolateAttrs m_attrs;
             };

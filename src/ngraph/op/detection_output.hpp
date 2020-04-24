@@ -84,6 +84,8 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const DetectionOutputAttrs& get_attrs() const { return m_attrs; }
+                virtual bool visit_attributes(AttributeVisitor& visitor);
+
             private:
                 DetectionOutputAttrs m_attrs;
             };
