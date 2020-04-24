@@ -58,10 +58,7 @@ runtime::HostTensor::HostTensor(const element::Type& element_type,
 {
     m_descriptor->set_tensor_layout(
         std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
-    if (get_partial_shape().is_static() && get_element_type().is_static())
-    {
-        allocate_buffer();
-    }
+    // Defer allocation until ptr is requested
 }
 
 runtime::HostTensor::HostTensor(const std::string& name)
