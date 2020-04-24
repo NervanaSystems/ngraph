@@ -18,6 +18,7 @@
 #include "ngraph/node_output.hpp"
 #include "ngraph/type/element_type.hpp"
 
+#if 0
 ngraph::EvaluatorTensor::~EvaluatorTensor()
 {
 }
@@ -58,3 +59,4 @@ size_t ngraph::EvaluatorTensor::get_size_in_bytes()
 {
     return get_element_type().size() * get_element_count();
 }
+#endif

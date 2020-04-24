@@ -73,13 +73,14 @@ namespace
                           const EvaluatorTensorPtr& out,
                           const op::AutoBroadcastSpec& broadcast_spec)
     {
-        return (ET == arg0->get_element_type()) && (runtime::reference::add(arg0->get_ptr<ET>(),
-                                                                            arg1->get_ptr<ET>(),
-                                                                            out->get_ptr<ET>(),
-                                                                            arg0->get_shape(),
-                                                                            arg1->get_shape(),
-                                                                            broadcast_spec),
-                                                    true);
+        return (ET == arg0->get_element_type()) &&
+               (runtime::reference::add(arg0->get_data_ptr<ET>(),
+                                        arg1->get_data_ptr<ET>(),
+                                        out->get_data_ptr<ET>(),
+                                        arg0->get_shape(),
+                                        arg1->get_shape(),
+                                        broadcast_spec),
+                true);
     }
 
     bool evaluate_add(const EvaluatorTensorPtr& arg0,
