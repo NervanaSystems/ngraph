@@ -94,7 +94,7 @@ public:
 
     public:
     };
-    using HostEvaluatorTensor = HostTensor;
+
     using HostEvaluatorTensorPtr = std::shared_ptr<HostEvaluatorTensor>;
     /// \brief Get an evaluator tensor that uses this host tensor for data
     static HostEvaluatorTensorPtr create_evaluator_tensor(std::shared_ptr<HostTensor> host_tensor);

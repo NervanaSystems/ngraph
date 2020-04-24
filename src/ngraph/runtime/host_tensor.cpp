@@ -227,14 +227,12 @@ namespace
 runtime::HostTensor::HostEvaluatorTensorPtr
     runtime::HostTensor::create_evaluator_tensor(std::shared_ptr<runtime::HostTensor> host_tensor)
 {
-    // return make_shared<HostTensorEvaluatorTensor>(host_tensor);
-    return host_tensor;
+    return make_shared<HostTensorEvaluatorTensor>(host_tensor);
 }
 
 runtime::HostTensor::HostEvaluatorTensorPtr
     runtime::HostTensor::create_evaluator_tensor(const element::Type& element_type,
                                                  const PartialShape& partial_shape)
 {
-    // return make_shared<HostTensorEvaluatorTensor>(element_type, partial_shape);
-    return make_shared<HostTensor>(element_type, partial_shape);
+    return make_shared<HostTensorEvaluatorTensor>(element_type, partial_shape);
 }
