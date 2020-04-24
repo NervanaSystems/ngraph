@@ -81,7 +81,7 @@ TEST(type_prop_layers, interpolate_v3)
     auto op = make_shared<op::v3::Interpolate>(image, output_shape, attrs);
     ASSERT_EQ(op->get_shape(), (Shape{2, 2, 15, 30}));
 
-    EXPECT_TRUE(make_shared<op::Interpolate>(image, dyn_output_shape, attrs)
+    EXPECT_TRUE(make_shared<op::v3::Interpolate>(image, dyn_output_shape, attrs)
                     ->get_output_partial_shape(0)
                     .same_scheme(PartialShape{2, 2, Dimension::dynamic(), Dimension::dynamic()}));
 }

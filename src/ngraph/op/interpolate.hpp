@@ -74,7 +74,7 @@ namespace ngraph
                 std::vector<size_t> pads_end;
             } InterpolateAttrs;
 
-            class NGRAPH_API Interpolate : public op
+            class NGRAPH_API Interpolate : public Op
             {
             public:
                 static constexpr NodeTypeInfo type_info{"Interpolate", 3};

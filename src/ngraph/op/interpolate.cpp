@@ -71,11 +71,13 @@ shared_ptr<Node> op::Interpolate::clone_with_new_inputs(const OutputVector& new_
     return make_shared<Interpolate>(new_args.at(0), new_args.at(1), m_attrs);
 }
 
+// Interpolate v3
+
 constexpr NodeTypeInfo op::v3::Interpolate::type_info;
 
 op::v3::Interpolate::Interpolate(const Output<Node>& image,
                                  const Output<Node>& output_shape,
-                                 const InterpolateAttrs& attrs)
+                                 const op::v3::InterpolateAttrs& attrs)
     : Op({image, output_shape})
     , m_attrs(attrs)
 {
@@ -118,5 +120,5 @@ void op::v3::Interpolate::validate_and_infer_types()
 shared_ptr<Node> op::v3::Interpolate::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Interpolate>(new_args.at(0), new_args.at(1), m_attrs);
+    return make_shared<op::v3::Interpolate>(new_args.at(0), new_args.at(1), m_attrs);
 }
