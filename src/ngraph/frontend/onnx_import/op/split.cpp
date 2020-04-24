@@ -34,24 +34,18 @@ namespace ngraph
                     const auto input = node.get_ng_inputs().at(0);
                     const auto axis = node.get_attribute_value<int64_t>("axis", 0);
 
-                    OutputVector split_outputs;
                     if (node.has_attribute("split"))
                     {
                         const auto splits =
                             node.get_attribute_value<std::vector<std::size_t>>("split");
-                        split_outputs = ngraph::builder::opset1::split(input, splits, axis);
+                        return as_node_vector(ngraph::builder::opset1::split(input, splits, axis));
                     }
                     else
                     {
                         const auto outputs_number = node.get_output_names().size();
-                        split_outputs = ngraph::builder::opset1::split(input, outputs_number, axis);
+                        return as_node_vector(
+                            ngraph::builder::opset1::split(input, outputs_number, axis));
                     }
-                    NodeVector result;
-                    for (auto output : split_outputs)
-                    {
-                        result.push_back(output.get_node_shared_ptr());
-                    }
-                    return result;
                 }
 
             } // namespace set_1
