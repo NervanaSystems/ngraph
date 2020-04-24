@@ -617,75 +617,38 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
 {
     auto transpose = as_type_ptr<op::v1::Transpose>(n);
 
-    PartialShape shape = n->input_value(0).get_partial_shape();
-    if (shape.is_dynamic())
-    {
-        if (shape.rank().is_dynamic())
-        {
-            return false;
-        }
-
-        for (int i = 0; i < shape.rank().get_length(); i++)
-        {
-            if (shape[i].is_dynamic())
-            {
-                shape[i] = 2; // any non 1 number
-            }
-        }
-    }
-
-    auto perm = as_type_ptr<op::Constant>(n->input_value(1).get_node_shared_ptr());
-    if (!perm)
-    {
-        return false;
-    }
-    auto perm_value = perm->get_vector<int64_t>();
     auto data = n->input_value(0).get_node_shared_ptr();
-    auto data_shape = shape.to_shape();
-
-    // Check if input shape contains a Dim of value 1
-    vector<int> indices_of_one; // index of dim 1 in data_shape
-    for (int i = 0; i < data_shape.size(); i++)
-    {
-        if (data_shape[i] == 1)
-        {
-            indices_of_one.push_back(i);
-        }
-    }
-
-    if (indices_of_one.size() == 0)
+    PartialShape shape = n->input_value(0).get_partial_shape();
+    if (shape.rank().is_dynamic())
     {
         return false;
     }
 
-    // Remove indices of 1 from perm_value and check if the other
-    // dimensions haven't interchanged
-    vector<int64_t> perm_value_copy = perm_value;
-
-    for (int i = 0; i < perm_value.size(); i++)
+    auto order = as_type_ptr<op::Constant>(n->input_value(1).get_node_shared_ptr());
+    if (!order)
     {
-        if (count(indices_of_one.begin(), indices_of_one.end(), perm_value[i]))
+        return false;
+    }
+
+    vector<int64_t> order_value = order->get_vector<int64_t>();
+
+    for (auto i = shape.rank().get_length() - 1; i >= 0; i--)
+    {
+        if (shape[order_value[i]].is_static() && shape[order_value[i]] == 1)
         {
-            perm_value_copy.erase(perm_value_copy.begin() +
-                                  (i - (perm_value.size() - perm_value_copy.size())));
+            order_value.erase(order_value.begin() + i);
         }
     }
 
-    // If all the indices are in increasing order,
-    // then the other dims are unchanged and only dim of 1
-    // has changed its position
-    for (int i = 0; i + 1 < perm_value_copy.size(); i++)
+    if (std::is_sorted(order_value.begin(), order_value.end()))
     {
-        if (perm_value_copy[i] > perm_value_copy[i + 1])
-        {
-            return false; // not a valid permutation
-        }
+        auto shape_of = make_shared<op::v3::ShapeOf>(data);
+        auto gather = make_shared<op::Gather>(shape_of, order);
+        auto reshape_op = make_shared<op::v1::Reshape>(data, gather, false);
+        return remove_node_update_name(n, reshape_op);
     }
 
-    auto shape_of = make_shared<op::v3::ShapeOf>(data);
-    auto gather = make_shared<op::Gather>(shape_of, perm);
-    auto reshape_op = make_shared<op::v1::Reshape>(data, gather, false);
-    return remove_node_update_name(n, reshape_op);
+    return false;
 }
 
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
