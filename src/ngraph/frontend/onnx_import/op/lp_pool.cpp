@@ -56,7 +56,7 @@ namespace ngraph
                     ASSERT_VALID_ARGUMENT(node, p_norm >= 0)
                         << "Only positive (including zero) values are supported for 'p' attribute.";
 
-                    NodeVector slices =
+                    OutputVector slices =
                         ngraph::builder::opset1::split(data, channels_count, channel_axis);
 
                     for (auto& slice : slices)
@@ -65,7 +65,7 @@ namespace ngraph
                         const auto reduction_axes =
                             common::get_monotonic_range_along_node_rank(data, 2);
 
-                        slice = ngraph::builder::opset1::lp_norm(
+                        auto slice_op = ngraph::builder::opset1::lp_norm(
                             slice, reduction_axes, static_cast<std::size_t>(p_norm));
 
                         // output shape is all ones except N channel
@@ -75,8 +75,8 @@ namespace ngraph
                         const auto reshape_pattern = default_opset::Constant::create(
                             element::i64, Shape{output_shape.size()}, output_shape);
 
-                        slice =
-                            std::make_shared<default_opset::Reshape>(slice, reshape_pattern, false);
+                        slice_op = std::make_shared<default_opset::Reshape>(
+                            slice_op, reshape_pattern, false);
                     }
 
                     return {std::make_shared<default_opset::Concat>(slices, channel_axis)};

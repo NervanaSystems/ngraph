@@ -42,7 +42,12 @@ namespace ngraph
                                "accepts them. Consider use of element-wise multiplication instead "
                                "to conform with ONNX standard.";
                     }
-                    return factory.make_matmul_op();
+                    NodeVector result;
+                    for (auto output : factory.make_matmul_op())
+                    {
+                        result.push_back(output.get_node_shared_ptr());
+                    }
+                    return result;
                 }
             } // namespace set_1
 
