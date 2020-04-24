@@ -21,12 +21,20 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
         class HostTensor;
+    }
+    namespace op
+    {
+        namespace v0
+        {
+            class Constant;
+        }
     }
 }
 
@@ -42,21 +50,34 @@ public:
                const std::string& name);
     HostTensor(const ngraph::element::Type& element_type, const Shape& shape);
     HostTensor(const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer);
+    HostTensor(const std::shared_ptr<op::v0::Constant>& constant);
     virtual ~HostTensor() override;
 
-    char* get_data_ptr();
-    const char* get_data_ptr() const;
+    void* get_data_ptr();
+    const void* get_data_ptr() const;
 
     template <typename T>
     T* get_data_ptr()
     {
-        return reinterpret_cast<T*>(get_data_ptr());
+        return static_cast<T*>(get_data_ptr());
     }
 
     template <typename T>
     const T* get_data_ptr() const
     {
-        return reinterpret_cast<T*>(get_data_ptr());
+        return static_cast<T*>(get_data_ptr());
+    }
+
+    template <element::Type_t ET>
+    typename element_type_traits<ET>::value_type* get_data_ptr()
+    {
+        return static_cast<typename element_type_traits<ET>::value_type*>(get_data_ptr());
+    }
+
+    template <element::Type_t ET>
+    const typename element_type_traits<ET>::value_type* get_data_ptr() const
+    {
+        return static_cast<typename element_type_traits<ET>::value_type>(get_data_ptr());
     }
 
     /// \brief Write bytes directly into the tensor

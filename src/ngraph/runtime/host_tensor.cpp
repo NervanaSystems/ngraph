@@ -20,6 +20,7 @@
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/evaluator_tensor.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
 
@@ -78,6 +79,13 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
 {
 }
 
+runtime::HostTensor::HostTensor(const std::shared_ptr<op::v0::Constant>& constant)
+    : HostTensor(
+          constant->get_output_element_type(0), constant->get_output_shape(0), constant->get_name())
+{
+    memcpy(get_data_ptr(), constant->get_data_ptr(), get_size_in_bytes());
+}
+
 runtime::HostTensor::~HostTensor()
 {
     if (m_allocated_buffer_pool != nullptr)
@@ -86,12 +94,12 @@ runtime::HostTensor::~HostTensor()
     }
 }
 
-char* runtime::HostTensor::get_data_ptr()
+void* runtime::HostTensor::get_data_ptr()
 {
     return m_aligned_buffer_pool;
 }
 
-const char* runtime::HostTensor::get_data_ptr() const
+const void* runtime::HostTensor::get_data_ptr() const
 {
     return m_aligned_buffer_pool;
 }
@@ -104,7 +112,7 @@ void runtime::HostTensor::write(const void* source, size_t n)
     {
         throw out_of_range("partial tensor write not supported");
     }
-    char* target = get_data_ptr();
+    void* target = get_data_ptr();
     memcpy(target, source, n);
 }
 
@@ -115,7 +123,7 @@ void runtime::HostTensor::read(void* target, size_t n) const
     {
         throw out_of_range("partial tensor read access not supported");
     }
-    const char* source = get_data_ptr();
+    const void* source = get_data_ptr();
     memcpy(target, source, n);
 }
 

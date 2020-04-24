@@ -28,6 +28,7 @@
 #include "ngraph/op/range.hpp"
 #include "ngraph/op/shape_of.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/validation_util.hpp"
 #include "util/test_tools.hpp"
 
@@ -69,18 +70,19 @@ TEST(eval, evaluate_shape_of)
     auto p_arg = op::Constant::create<float>(
         element::f32, Shape{2, 3}, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
     EvaluatorTensorVector inputs;
-    inputs.push_back(op::v0::Constant::create_evaluator_tensor(p_arg));
+    inputs.push_back(runtime::HostTensor::create_evaluator_tensor(p_arg->get_output_element_type(0),
+                                                                  p_arg->get_output_shape(0)));
     EvaluatorTensorVector outputs;
     auto result = fun->get_results()[0];
-    auto result_tensor = op::v0::Constant::create_evaluator_tensor(
+    auto result_tensor = runtime::HostTensor::create_evaluator_tensor(
         result->get_output_element_type(0), result->get_output_shape(0));
     outputs.push_back(result_tensor);
     ASSERT_TRUE(fun->evaluate(outputs, inputs));
-    auto c = result_tensor->get_constant();
+    auto c = result_tensor->get_host_tensor();
     ASSERT_TRUE(c);
-    EXPECT_EQ(c->get_output_element_type(0), element::i64);
-    EXPECT_EQ(c->get_output_partial_shape(0), (PartialShape{2}));
-    auto cshape = c->get_vector<int64_t>();
+    EXPECT_EQ(c->get_element_type(), element::i64);
+    EXPECT_EQ(c->get_partial_shape(), (PartialShape{2}));
+    auto cshape = read_vector<int64_t>(c);
     vector<int64_t> arg_shape{2, 3};
     ASSERT_EQ(cshape, arg_shape);
 }

@@ -89,13 +89,13 @@ namespace
         {
             NGRAPH_CHECK(pass::revalidate_and_ensure_static(shape_of_node->shared_from_this()));
             auto arg_shape = shape_of_input.get_shape();
-            auto result_tensor = op::v0::Constant::create_evaluator_tensor(
+            auto result_tensor = runtime::HostTensor::create_evaluator_tensor(
                 output_type, shape_of_node->get_output_shape(0));
             if (evaluate_shape_of(
                     result_tensor,
-                    op::v0::Constant::create_evaluator_tensor(output_type, partial_shape)))
+                    runtime::HostTensor::create_evaluator_tensor(output_type, partial_shape)))
             {
-                replacement = result_tensor->get_constant();
+                replacement = make_shared<op::Constant>(result_tensor->get_host_tensor());
                 return true;
             }
             return false;
