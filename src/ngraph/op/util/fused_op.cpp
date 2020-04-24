@@ -39,19 +39,31 @@ void op::util::FusedOp::validate_and_infer_types()
         return;
     }
 
-    auto subgraph_outputs = decompose_op();
-    NodeVector subgraph_output_nodes;
-    for (const Output<Node> output : subgraph_outputs)
+    OutputVector subgraph_output_vector = decompose_op();
+
+    // This is a hack just to make minimal changes here and should be removed ASAP
+    NodeVector subgraph_outputs;
+    for (auto output : subgraph_output_vector)
     {
-        subgraph_output_nodes.push_back(output.get_node_shared_ptr());
+        subgraph_outputs.push_back(output.get_node_shared_ptr());
     }
-    auto subgraph = extract_subgraph(subgraph_output_nodes, get_arguments());
+    // End hack
+
+    auto subgraph = extract_subgraph(subgraph_outputs, get_arguments());
     validate_nodes_and_infer_types(subgraph);
 
     size_t i = 0;
-    for (auto output : subgraph_outputs)
+    for (auto output_node : subgraph_outputs)
     {
-        set_output_type(i, output.get_element_type(), output.get_shape());
+        for (size_t j = 0; j < output_node->get_output_size(); j++, i++)
+        {
+            if (i >= get_output_size())
+            {
+                set_output_size(i + 1);
+            }
+            set_output_type(
+                i, output_node->get_output_element_type(j), output_node->get_output_shape(j));
+        }
     }
 
     post_validate_and_infer_types();
