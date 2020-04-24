@@ -425,6 +425,7 @@ namespace ngraph
 
         Node* get_input_node_ptr(size_t index) const;
         std::shared_ptr<Node> get_input_node_shared_ptr(size_t index) const;
+        Output<Node> get_input_source_output(size_t i) const;
 
     protected:
         // Will be replaced with clone_with_new_inputs
