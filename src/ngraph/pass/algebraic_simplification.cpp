@@ -37,6 +37,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/opsets/opset3.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/util.hpp"
 
@@ -314,8 +315,8 @@ static shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
 {
     set<Node::type_info_t> nomath = {op::v0::Broadcast::type_info,
                                      op::v0::Reshape::type_info,
-                                     op::v1::Broadcast::type_info,
-                                     op::v1::Reshape::type_info};
+                                     opset3::Broadcast::type_info,
+                                     opset3::Reshape::type_info};
     ;
     while (nomath.find(op->get_type_info()) != nomath.end())
     {
@@ -354,7 +355,7 @@ static bool is_input_uniform_constant(shared_ptr<Node> op,
 // whole input tensor
 static bool simplify_gather(std::shared_ptr<Node> node)
 {
-    if (auto gather = as_type_ptr<op::v1::Gather>(node))
+    if (auto gather = as_type_ptr<opset3::Gather>(node))
     {
         // check if we are gathering the whole input
         auto data = gather->input_value(0);
@@ -373,7 +374,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
 
         auto axis = gather->get_axis();
 
-        if (axis == op::v1::Gather::AXIS_NOT_SET_VALUE)
+        if (axis == opset3::Gather::AXIS_NOT_SET_VALUE)
         {
             NGRAPH_DEBUG << "axis value not set";
             return false;
@@ -432,14 +433,14 @@ static bool simplify_multiply(shared_ptr<Node> multiply)
         Output<Node> value;
         if (is_input_uniform_constant(multiply, 0, constant, value))
         {
-            replace_node(multiply, constant);
+            remove_node_update_name(multiply, constant);
             rc = true;
         }
         else
         {
             if (is_input_uniform_constant(multiply, 1, constant, value))
             {
-                multiply->output(0).replace(value);
+                remove_node_update_name(multiply, value.get_node_shared_ptr());
                 rc = true;
             }
         }
@@ -462,7 +463,7 @@ static bool simplify_add(shared_ptr<Node> add)
         Output<Node> value;
         if (is_input_uniform_constant(add, 0, constant, value))
         {
-            add->output(0).replace(value);
+            remove_node_update_name(add, value.get_node_shared_ptr());
             rc = true;
         }
     }
@@ -492,8 +493,8 @@ static bool simplify_log(shared_ptr<Node> n)
 // other cases into Concat of shapeof/gather(data) + shapeof(indices)
 static bool simplify_gather_shapeof(shared_ptr<Node> node)
 {
-    auto shapeof = as_type_ptr<op::v0::ShapeOf>(node);
-    auto gather = as_type_ptr<op::v1::Gather>(shapeof->input_value(0).get_node_shared_ptr());
+    auto shapeof = as_type_ptr<opset3::ShapeOf>(node);
+    auto gather = as_type_ptr<opset3::Gather>(shapeof->input_value(0).get_node_shared_ptr());
     if (!gather)
     {
         return false;
@@ -502,7 +503,7 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
     auto indices_rank = gather->get_input_partial_shape(1).rank();
     auto axis = gather->get_axis();
     if (gather_in_rank.is_dynamic() || indices_rank.is_dynamic() ||
-        axis == op::v1::Gather::AXIS_NOT_SET_VALUE)
+        axis == opset3::Gather::AXIS_NOT_SET_VALUE)
     {
         NGRAPH_DEBUG << gather << " cannot simplify gather->shapeof";
         return false;
@@ -510,14 +511,14 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
 
     auto zero_axis = op::Constant::create<int64_t>(element::i64, Shape{}, {0});
     shared_ptr<Node> replace_node;
-    auto new_shapeof = make_shared<op::v0::ShapeOf>(gather->input_value(0).get_node_shared_ptr());
+    auto new_shapeof = make_shared<opset3::ShapeOf>(gather->input_value(0).get_node_shared_ptr());
     if (indices_rank.get_length() == 0)
     {
         std::vector<int64_t> vi(gather_in_rank.get_length());
         std::iota(vi.begin(), vi.end(), 0);
         vi.erase(vi.begin() + axis);
         auto new_indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
-        replace_node = make_shared<op::v1::Gather>(new_shapeof, new_indices, zero_axis);
+        replace_node = make_shared<opset3::Gather>(new_shapeof, new_indices, zero_axis);
     }
     else
     {
@@ -527,11 +528,11 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
             std::vector<int64_t> vi(axis);
             std::iota(vi.begin(), vi.end(), 0);
             auto indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
-            auto gather = make_shared<op::v1::Gather>(new_shapeof, indices, zero_axis);
+            auto gather = make_shared<opset3::Gather>(new_shapeof, indices, zero_axis);
             concat_inputs.push_back(gather);
         }
         auto shapeof_indices =
-            make_shared<op::v0::ShapeOf>(gather->input_value(1).get_node_shared_ptr());
+            make_shared<opset3::ShapeOf>(gather->input_value(1).get_node_shared_ptr());
 
         concat_inputs.push_back(shapeof_indices);
 
@@ -540,10 +541,10 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
             std::vector<int64_t> vi(gather_in_rank.get_length() - (axis + 1));
             std::iota(vi.begin(), vi.end(), axis + 1);
             auto indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
-            auto gather = make_shared<op::v1::Gather>(new_shapeof, indices, zero_axis);
+            auto gather = make_shared<opset3::Gather>(new_shapeof, indices, zero_axis);
             concat_inputs.push_back(gather);
         }
-        replace_node = make_shared<op::v0::Concat>(concat_inputs, 0);
+        replace_node = make_shared<opset3::Concat>(concat_inputs, 0);
     }
     return remove_node_update_name(shapeof, replace_node);
 }
@@ -683,11 +684,11 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_
     return unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>>(
         {{op::v0::Add::type_info, simplify_add},
          {op::v0::Multiply::type_info, simplify_multiply},
-         {op::v1::Gather::type_info, simplify_gather},
-         {op::v1::Add::type_info, simplify_add},
-         {op::v1::Multiply::type_info, simplify_multiply},
+         {opset3::Gather::type_info, simplify_gather},
+         {opset3::Add::type_info, simplify_add},
+         {opset3::Multiply::type_info, simplify_multiply},
          {op::v0::Concat::type_info, simplify_concat},
-         {op::v0::ShapeOf::type_info, simplify_gather_shapeof},
+         {opset3::ShapeOf::type_info, simplify_gather_shapeof},
          {op::v0::Sum::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::v0::Sum, get_sum_constant>}},
          {op::v0::Product::type_info,
