@@ -48,46 +48,48 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
             provenance_tags.insert(tag);
 
             // Transfer the new provenance tags to the newly created ops
-            for (auto output_node : subgraph_outputs)
+            for (auto output : subgraph_outputs)
             {
-                output_node->add_provenance_tags_above(base_input_values, provenance_tags);
+                output.get_node()->add_provenance_tags_above(base_input_values, provenance_tags);
             }
         }
 
         // Run recursively until no more fused ops
-        auto subgraph = extract_subgraph(subgraph_outputs, node->get_arguments());
+        NodeVector subgraph_output_nodes;
+        for (const Output<Node> output : subgraph_outputs)
+        {
+            subgraph_output_nodes.push_back(output.get_node_shared_ptr());
+        }
+        auto subgraph = extract_subgraph(subgraph_output_nodes, node->get_arguments());
         for (auto subgraph_node : subgraph)
         {
             run_on_node(subgraph_node);
         }
 
         size_t i = 0;
-        for (auto output_node : subgraph_outputs)
+        for (auto output : subgraph_outputs)
         {
-            for (size_t j = 0; j < output_node->get_outputs().size(); j++, i++)
+            for (size_t j = 0; j < 1; j++, i++)
             {
-                set<descriptor::Input*> fop_users{begin(node->get_outputs().at(i).get_inputs()),
-                                                  end(node->get_outputs().at(i).get_inputs())};
+                set<Input<Node>> fop_users = node->output(i).get_target_inputs();
                 for (auto fop_user : fop_users)
                 {
-                    if (auto goe = as_type<op::GetOutputElement>(fop_user->get_raw_pointer_node()))
+                    if (auto goe = as_type<op::GetOutputElement>(fop_user.get_node()))
                     {
                         Output<Node> goe_output = goe->get_as_output();
                         if (goe_output.get_index() == i && !goe->get_output_inputs(0).empty())
                         {
                             // Replace GOE users
-                            set<descriptor::Input*> goe_users{
-                                begin(goe->get_outputs().at(0).get_inputs()),
-                                end(goe->get_outputs().at(0).get_inputs())};
+                            set<Input<Node>> goe_users = goe->output(0).get_target_inputs();
                             for (auto goe_user : goe_users)
                             {
-                                goe_user->replace_output(output_node->get_outputs().at(j));
+                                goe_user.replace_source_output(output);
                             }
                         }
                     }
                     else
                     {
-                        fop_user->replace_output(output_node->get_outputs().at(j));
+                        fop_user.replace_source_output(output);
                     }
                 }
             }
