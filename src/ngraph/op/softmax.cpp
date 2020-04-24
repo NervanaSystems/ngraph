@@ -165,7 +165,8 @@ namespace
                                      const AxisSet& axes)
     {
         return (ET == arg->get_element_type()) &&
-               (runtime::reference::softmax(arg->get_ptr<ET>(), out->get_ptr<ET>(), shape, axes),
+               (runtime::reference::softmax(
+                    arg->get_data_ptr<ET>(), out->get_data_ptr<ET>(), shape, axes),
                 true);
     }
 

@@ -67,7 +67,7 @@ namespace
     inline bool try_evaluate_shape_of(const Shape& shape, const EvaluatorTensorPtr& output_value)
     {
         return (ET == output_value->get_element_type()) &&
-               (runtime::reference::shape_of(shape, output_value->get_ptr<ET>()), true);
+               (runtime::reference::shape_of(shape, output_value->get_data_ptr<ET>()), true);
     }
 
     bool evaluate_shape_of(const EvaluatorTensorPtr& output_value,

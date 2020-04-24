@@ -51,6 +51,11 @@ namespace ngraph
 #define NODE_EVALUATION_CHECK(node, ...)                                                           \
     NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), __VA_ARGS__)
 
+    namespace runtime
+    {
+        class HostTensor;
+    }
+
     /// \brief A generic handle to (potential) storage with element type and shape information
     class NGRAPH_API EvaluatorTensor
     {
@@ -106,7 +111,7 @@ namespace ngraph
         /// \brief Get a pointer of the appropriate type. Will allocate if necessary.
         /// \tparam The element type
         template <element::Type_t ET>
-        typename element_type_traits<ET>::value_type* get_ptr()
+        typename element_type_traits<ET>::value_type* get_data_ptr()
         {
             return static_cast<typename element_type_traits<ET>::value_type*>(get_data_ptr());
         }

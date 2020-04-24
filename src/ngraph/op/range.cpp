@@ -250,9 +250,9 @@ bool try_evaluate_range(Node* node,
     using T = typename element_type_traits<ET>::value_type;
     if (ET == start->get_element_type())
     {
-        T start_val = *start->get_ptr<ET>();
-        T stop_val = *stop->get_ptr<ET>();
-        T step_val = *step->get_ptr<ET>();
+        T start_val = *start->get_data_ptr<ET>();
+        T stop_val = *stop->get_data_ptr<ET>();
+        T step_val = *step->get_data_ptr<ET>();
         if (!(check_value(start_val) && check_value(stop_val) && check_value(step_val) &&
               (step_val != static_cast<T>(0))))
         {
@@ -268,7 +268,7 @@ bool try_evaluate_range(Node* node,
         }
         Shape out_shape = Shape({static_cast<size_t>(out_size)});
         out->set_shape(node, out_shape);
-        runtime::reference::range(&start_val, &step_val, out_shape, out->get_ptr<ET>());
+        runtime::reference::range(&start_val, &step_val, out_shape, out->get_data_ptr<ET>());
         return true;
     }
     else
