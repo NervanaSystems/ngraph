@@ -91,6 +91,7 @@
 #include "ngraph/runtime/reference/result.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
+#include "ngraph/runtime/reference/roi_align.hpp"
 #include "ngraph/runtime/reference/round.hpp"
 #include "ngraph/runtime/reference/scatter_add.hpp"
 #include "ngraph/runtime/reference/scatter_nd_add.hpp"
@@ -1483,6 +1484,21 @@ protected:
             {
                 throw ngraph_error("only int32 indices are supported");
             }
+            break;
+        }
+        case OP_TYPEID::ROIAlign_v3:
+        {
+            const op::ROIAlign* roi_align = static_cast<const op::ROIAlign*>(&node);
+
+            reference::roi_align(args[0]->get_data_ptr<const T>(),
+                                 args[1]->get_data_ptr<const T>(),
+                                 args[2]->get_data_ptr<const T>(),
+                                 out[0]->get_data_ptr<const T>(),
+                                 roi_align->get_pooled_h(),
+                                 roi_align->get_pooled_w(),
+                                 roi_align->get_sampling_ratio(),
+                                 roi_align->get_spatial_scale(),
+                                 roi_align->get_mode());
             break;
         }
         case OP_TYPEID::Round:
