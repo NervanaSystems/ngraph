@@ -176,7 +176,7 @@ def squeeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: The new node performing a squeeze operation on input tensor.
     """
-    return Squeeze(data, as_node(axes))
+    return _get_node_factory().create('Squeeze', [data, as_node(axes)])
 
 
 def unsqueeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
@@ -1328,7 +1328,7 @@ def tanh(node, name=None):  # type: (Node, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with tanh operation applied on it.
     """
-    return Tanh(node)
+    return _get_node_factory().create('Tanh', [node])
 
 
 @nameable_op
