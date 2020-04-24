@@ -14,6 +14,12 @@
 # limitations under the License.
 # ******************************************************************************
 
+include(InferenceEngineConfig)
+
+if(NOT ${InferenceEngine_FOUND})
+  message(FATAL_ERROR "Cannot find OpenVINO Inference Engine.")
+endif()
+
 if (NGRAPH_IE_STATIC_LIB_ENABLE)
     set(LIBRARY_TYPE STATIC)
 else()
@@ -31,10 +37,9 @@ set(SRC
 )
 
 add_library(ie_backend ${LIBRARY_TYPE} ${SRC})
-add_dependencies(ie_backend inference_engine)
 target_compile_definitions(ie_backend PRIVATE IE_BACKEND_DLL_EXPORTS)
-target_include_directories(ie_backend PUBLIC ${IE_MAIN_SOURCE_DIR}/include)
-target_link_libraries(ie_backend PUBLIC ngraph inference_engine)
+target_include_directories(ie_backend PUBLIC ${InferenceEngine_INCLUDE_DIRS})
+target_link_libraries(ie_backend PUBLIC ngraph ${InferenceEngine_LIBRARIES})
 
 install(TARGETS ie_backend
     LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
