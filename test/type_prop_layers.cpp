@@ -70,6 +70,22 @@ TEST(type_prop_layers, interpolate)
                     .same_scheme(PartialShape{2, 2, Dimension::dynamic(), Dimension::dynamic()}));
 }
 
+TEST(type_prop_layers, interpolate_v3)
+{
+    auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
+    auto dyn_output_shape = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
+
+    op::v3::InterpolateAttrs attrs;
+    attrs.axes = {2, 3};
+    auto op = make_shared<op::v3::Interpolate>(image, output_shape, attrs);
+    ASSERT_EQ(op->get_shape(), (Shape{2, 2, 15, 30}));
+
+    EXPECT_TRUE(make_shared<op::Interpolate>(image, dyn_output_shape, attrs)
+                    ->get_output_partial_shape(0)
+                    .same_scheme(PartialShape{2, 2, Dimension::dynamic(), Dimension::dynamic()}));
+}
+
 TEST(type_prop_layers, prior_box1)
 {
     op::PriorBoxAttrs attrs;
