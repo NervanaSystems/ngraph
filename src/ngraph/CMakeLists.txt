@@ -145,6 +145,7 @@ set (SRC
     op/binary_convolution.hpp
     op/broadcast.cpp
     op/broadcast_distributed.cpp
+    op/bucketize.cpp
     op/ceiling.cpp
     op/ceiling.hpp
     op/concat.cpp
