@@ -102,21 +102,25 @@ TEST(eval, evaluate_dynamic_range_sum)
     auto p_step_val = op::Constant::create<float>(element::f32, Shape{}, {3.0f});
     auto p1_val = op::Constant::create<float>(element::f32, Shape{}, {7.0f});
     EvaluatorTensorVector inputs;
-    inputs.push_back(op::v0::Constant::create_evaluator_tensor(p_start_val));
-    inputs.push_back(op::v0::Constant::create_evaluator_tensor(p_stop_val));
-    inputs.push_back(op::v0::Constant::create_evaluator_tensor(p_step_val));
-    inputs.push_back(op::v0::Constant::create_evaluator_tensor(p1_val));
+    inputs.push_back(runtime::HostTensor::create_evaluator_tensor(
+        p_start_val->get_output_element_type(0), p_start_val->get_output_shape(0)));
+    inputs.push_back(runtime::HostTensor::create_evaluator_tensor(
+        p_stop_val->get_output_element_type(0), p_stop_val->get_output_shape(0)));
+    inputs.push_back(runtime::HostTensor::create_evaluator_tensor(
+        p_step_val->get_output_element_type(0), p_step_val->get_output_shape(0)));
+    inputs.push_back(runtime::HostTensor::create_evaluator_tensor(
+        p1_val->get_output_element_type(0), p1_val->get_output_shape(0)));
     EvaluatorTensorVector outputs;
     auto result = fun->get_results()[0];
     auto result_tensor =
-        op::v0::Constant::create_evaluator_tensor(element::dynamic, PartialShape::dynamic());
+        runtime::HostTensor::create_evaluator_tensor(element::dynamic, PartialShape::dynamic());
     outputs.push_back(result_tensor);
     ASSERT_TRUE(fun->evaluate(outputs, inputs));
-    auto c = result_tensor->get_constant();
+    auto c = result_tensor->get_host_tensor();
     ASSERT_TRUE(c);
-    EXPECT_EQ(c->get_output_element_type(0), element::f32);
-    EXPECT_EQ(c->get_output_partial_shape(0), (PartialShape{3}));
-    auto cval = c->get_vector<float>();
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(c->get_partial_shape(), (PartialShape{3}));
+    auto cval = read_vector<float>(c);
     vector<float> seq{8.0f, 11.0f, 14.0f};
     ASSERT_EQ(cval, seq);
 }
