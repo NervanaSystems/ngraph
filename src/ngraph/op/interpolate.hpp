@@ -22,18 +22,18 @@ namespace ngraph
 {
     namespace op
     {
-        typedef struct
-        {
-            AxisSet axes;
-            std::string mode;
-            bool align_corners = true;
-            bool antialias = false;
-            std::vector<size_t> pads_begin;
-            std::vector<size_t> pads_end;
-        } InterpolateAttrs;
-
         namespace v0
         {
+            typedef struct
+            {
+                AxisSet axes;
+                std::string mode;
+                bool align_corners = true;
+                bool antialias = false;
+                std::vector<size_t> pads_begin;
+                std::vector<size_t> pads_end;
+            } InterpolateAttrs;
+
             /// \brief Layer which performs bilinear interpolation
             class NGRAPH_API Interpolate : public Op
             {
@@ -43,7 +43,7 @@ namespace ngraph
                 Interpolate() = default;
                 /// \brief Constructs a Interpolate operation
                 ///
-                /// \param image	    Input image
+                /// \param image        Input image
                 /// \param output_shape Output shape of spatial axes
                 /// \param attrs        Interpolation attributes
                 Interpolate(const Output<Node>& image,
@@ -60,6 +60,46 @@ namespace ngraph
                 InterpolateAttrs m_attrs;
             };
         }
+
+        namespace v3
+        {
+            typedef struct
+            {
+                AxisSet axes;
+                std::string mode;
+                std::string coordinate_transformation_mode;
+                bool align_corners = true;
+                bool antialias = false;
+                std::vector<size_t> pads_begin;
+                std::vector<size_t> pads_end;
+            } InterpolateAttrs;
+
+            class NGRAPH_API Interpolate : public op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"Interpolate", 3};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                Interpolate() = default;
+                /// \brief Constructs a Interpolate operation
+                ///
+                /// \param image        Input image
+                /// \param output_shape Output shape of spatial axes
+                /// \param attrs        Interpolation attributes
+                Interpolate(const Output<Node>& image,
+                            const Output<Node>& output_shape,
+                            const InterpolateAttrs& attrs);
+
+                void validate_and_infer_types() override;
+
+                virtual std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+
+                const InterpolateAttrs& get_attrs() const { return m_attrs; }
+            private:
+                InterpolateAttrs m_attrs;
+            };
+        }
+        using v0::InterpolateAttrs;
         using v0::Interpolate;
     }
 }

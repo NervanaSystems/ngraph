@@ -70,3 +70,53 @@ shared_ptr<Node> op::Interpolate::clone_with_new_inputs(const OutputVector& new_
     check_new_args_count(this, new_args);
     return make_shared<Interpolate>(new_args.at(0), new_args.at(1), m_attrs);
 }
+
+constexpr NodeTypeInfo op::v3::Interpolate::type_info;
+
+op::v3::Interpolate::Interpolate(const Output<Node>& image,
+                                 const Output<Node>& output_shape,
+                                 const InterpolateAttrs& attrs)
+    : Op({image, output_shape})
+    , m_attrs(attrs)
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::v3::Interpolate::validate_and_infer_types()
+{
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(1).is_integral_number(),
+                          "output shape must be an integral number.");
+    set_input_is_relevant_to_shape(1);
+
+    PartialShape output_shape = PartialShape(get_input_partial_shape(0));
+    if (output_shape.rank().is_static())
+    {
+        for (auto axis : m_attrs.axes)
+        {
+            NGRAPH_CHECK(axis < output_shape.rank().get_length());
+            output_shape[axis] = Dimension::dynamic();
+        }
+    }
+
+    if (auto const_shape = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
+    {
+        auto out_shape = const_shape->cast_vector<int64_t>();
+        size_t i = 0;
+        for (auto axis : m_attrs.axes)
+        {
+            output_shape[axis] = Dimension(out_shape[i++]);
+        }
+        set_output_type(0, get_input_element_type(0), output_shape);
+    }
+    else
+    {
+        set_output_type(0, get_input_element_type(0), output_shape);
+    }
+}
+
+shared_ptr<Node> op::v3::Interpolate::clone_with_new_inputs(const OutputVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<Interpolate>(new_args.at(0), new_args.at(1), m_attrs);
+}
