@@ -1326,9 +1326,9 @@ def binary_convolution(data,                           # type: Node
     :param data: The node providing data batch tensor.
     :param filter: The node providing filters tensor.
     :param strides: The kernel window movement strides.
-    :param pads_begin: The number of zero padding elements to add on each axis below 0 coordinate.
-    :param pads_end: The number of zero padding elements to add on each axis above max coordinate
-    :param dilations: The data batch dilation strides.
+    :param pads_begin: The number of pixels to add to the beginning along each axis.
+    :param pads_end: The number of pixels to add to the end along each axis.
+    :param dilations: The distance in width and height between elements (weights) in the filter.
     :param mode: Defines how input tensor 0/1 values and weights 0/1 are interpreted.
     :param pad_value: Floating-point value used to fill pad area.
     :param auto_pad: The type of padding. Range of values: explicit, same_upper, same_lower, valid.
