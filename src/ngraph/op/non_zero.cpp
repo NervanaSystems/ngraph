@@ -28,8 +28,23 @@ op::v3::NonZero::NonZero(const Output<Node>& arg)
     constructor_validate_and_infer_types();
 }
 
+op::v3::NonZero::NonZero(const Output<Node>& arg, const std::string& output_type)
+    : Op({arg})
+    , m_output_type(EnumNames<element::Type_t>::as_enum(output_type))
+{
+    constructor_validate_and_infer_types();
+}
+
+op::v3::NonZero::NonZero(const Output<Node>& arg, const element::Type& output_type)
+    : Op({arg})
+    , m_output_type(output_type)
+{
+    constructor_validate_and_infer_types();
+}
+
 bool ngraph::op::v3::NonZero::visit_attributes(AttributeVisitor& visitor)
 {
+    visitor.on_attribute("output_type", m_output_type);
     return true;
 }
 
@@ -42,13 +57,16 @@ void op::v3::NonZero::validate_and_infer_types()
                           input_et.is_integral() || input_et.is_real(),
                           "NonZero input data type needs to be a numeric type. Got: ",
                           input_et);
+    NODE_VALIDATION_CHECK(this,
+                          m_output_type == element::i64 || m_output_type == element::i32,
+                          "Output type must be i32 or i64");
 
-    set_output_type(0, element::i64, PartialShape{input_shape.rank(), Dimension::dynamic()});
+    set_output_type(0, m_output_type, PartialShape{input_shape.rank(), Dimension::dynamic()});
     set_input_is_relevant_to_shape(0);
 }
 
 shared_ptr<Node> op::v3::NonZero::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v3::NonZero>(new_args.at(0));
+    return make_shared<v3::NonZero>(new_args.at(0), m_output_type);
 }
