@@ -81,3 +81,24 @@ shared_ptr<Node> op::DetectionOutput::clone_with_new_inputs(const OutputVector& 
                                             m_attrs);
     }
 }
+
+bool op::DetectionOutput::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("DetectionOutput.num_classes", m_attrs.num_classes);
+    visitor.on_attribute("DetectionOutput.background_label_id", m_attrs.background_label_id);
+    visitor.on_attribute("DetectionOutput.top_k", m_attrs.top_k);
+    visitor.on_attribute("DetectionOutput.variance_encoded_in_target",
+                         m_attrs.variance_encoded_in_target);
+    visitor.on_attribute("DetectionOutput.keep_top_k", m_attrs.keep_top_k);
+    visitor.on_attribute("DetectionOutput.code_type", m_attrs.code_type);
+    visitor.on_attribute("DetectionOutput.share_location", m_attrs.share_location);
+    visitor.on_attribute("DetectionOutput.nms_threshold", m_attrs.nms_threshold);
+    visitor.on_attribute("DetectionOutput.confidence_threshold", m_attrs.confidence_threshold);
+    visitor.on_attribute("DetectionOutput.clip_after_nms", m_attrs.clip_after_nms);
+    visitor.on_attribute("DetectionOutput.clip_before_nms", m_attrs.clip_before_nms);
+    visitor.on_attribute("DetectionOutput.decrease_label_id", m_attrs.decrease_label_id);
+    visitor.on_attribute("DetectionOutput.normalized", m_attrs.normalized);
+    visitor.on_attribute("DetectionOutput.input_height", m_attrs.input_height);
+    visitor.on_attribute("DetectionOutput.input_width", m_attrs.input_width);
+    visitor.on_attribute("DetectionOutput.objectness_score", m_attrs.objectness_score);
+}
