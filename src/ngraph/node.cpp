@@ -1119,8 +1119,8 @@ bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_
     {
         if (auto constant = as_type_ptr<op::v0::Constant>(input.get_node_shared_ptr()))
         {
-            input_tensors.push_back(
-                runtime::HostTensor::create_evaluator_tensor(constant->get_tensor()));
+            auto host_tensor = make_shared<runtime::HostTensor>(constant);
+            input_tensors.push_back(runtime::HostTensor::create_evaluator_tensor(host_tensor));
         }
         else
         {

@@ -48,10 +48,11 @@ string to_cpp_string(T value)
 
 constexpr NodeTypeInfo op::Constant::type_info;
 
-op::Constant::Constant(const shared_ptr<runtime::HostTensor>& tensor)
+op::Constant::Constant(const shared_ptr<runtime::Tensor>& tensor)
     : Constant(tensor->get_element_type(), tensor->get_shape())
 {
-    m_tensor = tensor;
+    tensor->read(get_data_ptr_nc(), tensor->get_size_in_bytes());
+    m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
 }
 
 op::Constant::Constant(const element::Type& type,
@@ -59,7 +60,6 @@ op::Constant::Constant(const element::Type& type,
                        const std::vector<std::string>& values)
     : Constant(type, shape)
 {
-    allocate_buffer();
     NODE_VALIDATION_CHECK(this,
                           values.size() == shape_size(m_shape) || values.size() == 1,
                           "Did not get the expected number of literals for a constant of shape ",
@@ -80,91 +80,91 @@ op::Constant::Constant(const element::Type& type,
         case element::Type_t::boolean:
         {
             bool value = stoi(values[0]) != 0;
-            auto target = m_tensor->get_data_ptr<element::Type_t::boolean>();
+            auto target = get_data_ptr_nc<element::Type_t::boolean>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::bf16:
         {
             bfloat16 value = parse_string<float>(values[0]);
-            auto target = m_tensor->get_data_ptr<element::Type_t::bf16>();
+            auto target = get_data_ptr_nc<element::Type_t::bf16>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::f16:
         {
             float16 value = parse_string<float>(values[0]);
-            auto target = m_tensor->get_data_ptr<element::Type_t::f16>();
+            auto target = get_data_ptr_nc<element::Type_t::f16>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::f32:
         {
             float value = parse_string<float>(values[0]);
-            auto target = m_tensor->get_data_ptr<element::Type_t::f32>();
+            auto target = get_data_ptr_nc<element::Type_t::f32>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::f64:
         {
             double value = parse_string<double>(values[0]);
-            auto target = m_tensor->get_data_ptr<element::Type_t::f64>();
+            auto target = get_data_ptr_nc<element::Type_t::f64>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::i8:
         {
             int8_t value = parse_string<int64_t>(values[0]);
-            auto target = m_tensor->get_data_ptr<element::Type_t::i8>();
+            auto target = get_data_ptr_nc<element::Type_t::i8>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::i16:
         {
             int16_t value = parse_string<int64_t>(values[0]);
-            auto target = m_tensor->get_data_ptr<element::Type_t::i16>();
+            auto target = get_data_ptr_nc<element::Type_t::i16>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::i32:
         {
             int32_t value = parse_string<int64_t>(values[0]);
-            auto target = m_tensor->get_data_ptr<element::Type_t::i32>();
+            auto target = get_data_ptr_nc<element::Type_t::i32>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::i64:
         {
             int64_t value = parse_string<int64_t>(values[0]);
-            auto target = m_tensor->get_data_ptr<element::Type_t::i64>();
+            auto target = get_data_ptr_nc<element::Type_t::i64>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::u8:
         {
             uint8_t value = parse_string<uint64_t>(values[0]);
-            auto target = m_tensor->get_data_ptr<element::Type_t::u8>();
+            auto target = get_data_ptr_nc<element::Type_t::u8>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::u16:
         {
             uint16_t value = parse_string<uint64_t>(values[0]);
-            auto target = m_tensor->get_data_ptr<element::Type_t::u16>();
+            auto target = get_data_ptr_nc<element::Type_t::u16>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::u32:
         {
             uint32_t value = parse_string<uint64_t>(values[0]);
-            auto target = m_tensor->get_data_ptr<element::Type_t::u32>();
+            auto target = get_data_ptr_nc<element::Type_t::u32>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::u64:
         {
             uint64_t value = parse_string<uint64_t>(values[0]);
-            auto target = m_tensor->get_data_ptr<element::Type_t::u64>();
+            auto target = get_data_ptr_nc<element::Type_t::u64>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
@@ -188,14 +188,14 @@ op::Constant::Constant(const element::Type& type,
         case element::Type_t::boolean:
         {
             vector<uint8_t> value = parse_string<uint8_t>(values);
-            auto target = m_tensor->get_data_ptr<element::Type_t::boolean>();
+            auto target = get_data_ptr_nc<element::Type_t::boolean>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::bf16:
         {
             vector<float> value = parse_string<float>(values);
-            auto target = m_tensor->get_data_ptr<element::Type_t::bf16>();
+            auto target = get_data_ptr_nc<element::Type_t::bf16>();
             for (size_t i = 0; i < value.size(); i++)
             {
                 target[i] = value[i];
@@ -205,7 +205,7 @@ op::Constant::Constant(const element::Type& type,
         case element::Type_t::f16:
         {
             vector<float> value = parse_string<float>(values);
-            auto target = m_tensor->get_data_ptr<element::Type_t::f16>();
+            auto target = get_data_ptr_nc<element::Type_t::f16>();
             for (size_t i = 0; i < value.size(); i++)
             {
                 target[i] = value[i];
@@ -215,70 +215,70 @@ op::Constant::Constant(const element::Type& type,
         case element::Type_t::f32:
         {
             vector<float> value = parse_string<float>(values);
-            auto target = m_tensor->get_data_ptr<element::Type_t::f32>();
+            auto target = get_data_ptr_nc<element::Type_t::f32>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::f64:
         {
             vector<double> value = parse_string<double>(values);
-            auto target = m_tensor->get_data_ptr<element::Type_t::f64>();
+            auto target = get_data_ptr_nc<element::Type_t::f64>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::i8:
         {
             vector<int8_t> value = parse_string<int8_t>(values);
-            auto target = m_tensor->get_data_ptr<element::Type_t::i8>();
+            auto target = get_data_ptr_nc<element::Type_t::i8>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::i16:
         {
             vector<int16_t> value = parse_string<int16_t>(values);
-            auto target = m_tensor->get_data_ptr<element::Type_t::i16>();
+            auto target = get_data_ptr_nc<element::Type_t::i16>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::i32:
         {
             vector<int32_t> value = parse_string<int32_t>(values);
-            auto target = m_tensor->get_data_ptr<element::Type_t::i32>();
+            auto target = get_data_ptr_nc<element::Type_t::i32>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::i64:
         {
             vector<int64_t> value = parse_string<int64_t>(values);
-            auto target = m_tensor->get_data_ptr<element::Type_t::i64>();
+            auto target = get_data_ptr_nc<element::Type_t::i64>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::u8:
         {
             vector<uint8_t> value = parse_string<uint8_t>(values);
-            auto target = m_tensor->get_data_ptr<element::Type_t::u8>();
+            auto target = get_data_ptr_nc<element::Type_t::u8>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::u16:
         {
             vector<uint16_t> value = parse_string<uint16_t>(values);
-            auto target = m_tensor->get_data_ptr<element::Type_t::u16>();
+            auto target = get_data_ptr_nc<element::Type_t::u16>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::u32:
         {
             vector<uint32_t> value = parse_string<uint32_t>(values);
-            auto target = m_tensor->get_data_ptr<element::Type_t::u32>();
+            auto target = get_data_ptr_nc<element::Type_t::u32>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::u64:
         {
             vector<uint64_t> value = parse_string<uint64_t>(values);
-            auto target = m_tensor->get_data_ptr<element::Type_t::u64>();
+            auto target = get_data_ptr_nc<element::Type_t::u64>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
@@ -296,21 +296,22 @@ op::Constant::Constant(const element::Type& type, const Shape& shape)
     : m_element_type(type)
     , m_shape(shape)
 {
+    allocate_buffer();
     constructor_validate_and_infer_types();
 }
 
 void* op::Constant::allocate_buffer()
 {
-    m_tensor = make_shared<runtime::HostTensor>(m_element_type, m_shape);
-    return m_tensor->get_data_ptr();
+    m_data = make_shared<runtime::AlignedBuffer>(shape_size(m_shape) * m_element_type.size(),
+                                                 host_alignment());
+    return get_data_ptr_nc();
 }
 
 op::Constant::Constant(const element::Type& type, const Shape& shape, const void* data)
     : Constant(type, shape)
 {
-    allocate_buffer();
     size_t size = ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f);
-    std::memcpy(m_tensor->get_data_ptr(), data, size);
+    std::memcpy(get_data_ptr_nc(), data, size);
     constructor_validate_and_infer_types();
     m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
 }
@@ -318,7 +319,7 @@ op::Constant::Constant(const element::Type& type, const Shape& shape, const void
 op::Constant::Constant(const Constant& other)
     : Constant(other.m_element_type, other.m_shape)
 {
-    m_tensor = other.m_tensor;
+    m_data = other.m_data;
     m_all_elements_bitwise_identical = other.m_all_elements_bitwise_identical;
     constructor_validate_and_infer_types();
 }
@@ -617,7 +618,7 @@ constexpr NodeTypeInfo op::ScalarConstantLike::type_info;
 
 shared_ptr<op::Constant> op::ScalarConstantLike::as_constant() const
 {
-    return std::make_shared<op::Constant>(m_element_type, m_shape, m_tensor->get_data_ptr());
+    return std::make_shared<op::Constant>(m_element_type, m_shape, get_data_ptr());
 }
 
 std::shared_ptr<Node>
@@ -629,7 +630,7 @@ std::shared_ptr<Node>
 void op::ScalarConstantLike::infer_element_type()
 {
     m_element_type = get_input_element_type(0);
-    if (nullptr == m_tensor)
+    if (nullptr == m_data)
     {
         allocate_buffer();
         write_values(std::vector<double>(1, m_value));

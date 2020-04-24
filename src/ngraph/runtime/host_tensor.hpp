@@ -29,6 +29,13 @@ namespace ngraph
     {
         class HostTensor;
     }
+    namespace op
+    {
+        namespace v0
+        {
+            class Constant;
+        }
+    }
 }
 
 class NGRAPH_API ngraph::runtime::HostTensor : public ngraph::runtime::Tensor
@@ -43,6 +50,7 @@ public:
                const std::string& name);
     HostTensor(const ngraph::element::Type& element_type, const Shape& shape);
     HostTensor(const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer);
+    HostTensor(const std::shared_ptr<op::v0::Constant>& constant);
     virtual ~HostTensor() override;
 
     void* get_data_ptr();

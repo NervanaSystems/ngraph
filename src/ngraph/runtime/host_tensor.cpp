@@ -20,6 +20,7 @@
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/evaluator_tensor.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
 
@@ -76,6 +77,13 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
                                 void* memory_pointer)
     : HostTensor(element_type, shape, memory_pointer, "")
 {
+}
+
+runtime::HostTensor::HostTensor(const std::shared_ptr<op::v0::Constant>& constant)
+    : HostTensor(
+          constant->get_output_element_type(0), constant->get_output_shape(0), constant->get_name())
+{
+    memcpy(get_data_ptr(), constant->get_data_ptr(), get_size_in_bytes());
 }
 
 runtime::HostTensor::~HostTensor()

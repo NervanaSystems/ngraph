@@ -42,7 +42,9 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Constant() = default;
 
-                Constant(const std::shared_ptr<runtime::HostTensor>& tensor);
+                /// \brief Initialize a constant from tensor
+                /// \param tensor The tensor with data
+                Constant(const std::shared_ptr<runtime::Tensor>& tensor);
 
                 /// \brief Constructs a tensor constant.
                 ///
@@ -54,7 +56,6 @@ namespace ngraph
                 Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
                     : Constant(type, shape)
                 {
-                    allocate_buffer();
                     NODE_VALIDATION_CHECK(
                         this,
                         values.size() == 1 || values.size() == shape_size(m_shape),
@@ -81,8 +82,6 @@ namespace ngraph
 
                 /// \brief Create unitialized constant
                 Constant(const element::Type& type, const Shape& shape);
-                /// \brief Allocate a buffer and return a pointer to it
-                void* allocate_buffer();
                 /// \brief Constructs a uniform tensor constant.
                 ///
                 /// \param type The element type of the tensor constant.
@@ -94,7 +93,6 @@ namespace ngraph
                 Constant(const element::Type& type, Shape shape, T value)
                     : Constant(type, shape)
                 {
-                    allocate_buffer();
                     auto size = shape_size(m_shape);
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
@@ -105,7 +103,7 @@ namespace ngraph
                     {
                     case element::Type_t::boolean:
                         std::fill_n(
-                            m_tensor->get_data_ptr<element::Type_t::boolean>(),
+                            get_data_ptr_nc<element::Type_t::boolean>(),
                             size,
                             static_cast<
                                 typename element_type_traits<element::Type_t::boolean>::value_type>(
@@ -113,7 +111,7 @@ namespace ngraph
                         break;
                     case element::Type_t::bf16:
                         std::fill_n(
-                            m_tensor->get_data_ptr<element::Type_t::bf16>(),
+                            get_data_ptr_nc<element::Type_t::bf16>(),
                             size,
                             static_cast<
                                 typename element_type_traits<element::Type_t::bf16>::value_type>(
@@ -121,7 +119,7 @@ namespace ngraph
                         break;
                     case element::Type_t::f16:
                         std::fill_n(
-                            m_tensor->get_data_ptr<element::Type_t::f16>(),
+                            get_data_ptr_nc<element::Type_t::f16>(),
                             size,
                             static_cast<
                                 typename element_type_traits<element::Type_t::f16>::value_type>(
@@ -129,7 +127,7 @@ namespace ngraph
                         break;
                     case element::Type_t::f32:
                         std::fill_n(
-                            m_tensor->get_data_ptr<element::Type_t::f32>(),
+                            get_data_ptr_nc<element::Type_t::f32>(),
                             size,
                             static_cast<
                                 typename element_type_traits<element::Type_t::f32>::value_type>(
@@ -137,7 +135,7 @@ namespace ngraph
                         break;
                     case element::Type_t::f64:
                         std::fill_n(
-                            m_tensor->get_data_ptr<element::Type_t::f64>(),
+                            get_data_ptr_nc<element::Type_t::f64>(),
                             size,
                             static_cast<
                                 typename element_type_traits<element::Type_t::f64>::value_type>(
@@ -145,7 +143,7 @@ namespace ngraph
                         break;
                     case element::Type_t::i8:
                         std::fill_n(
-                            m_tensor->get_data_ptr<element::Type_t::i8>(),
+                            get_data_ptr_nc<element::Type_t::i8>(),
                             size,
                             static_cast<
                                 typename element_type_traits<element::Type_t::i8>::value_type>(
@@ -153,7 +151,7 @@ namespace ngraph
                         break;
                     case element::Type_t::i16:
                         std::fill_n(
-                            m_tensor->get_data_ptr<element::Type_t::i16>(),
+                            get_data_ptr_nc<element::Type_t::i16>(),
                             size,
                             static_cast<
                                 typename element_type_traits<element::Type_t::i16>::value_type>(
@@ -161,7 +159,7 @@ namespace ngraph
                         break;
                     case element::Type_t::i32:
                         std::fill_n(
-                            m_tensor->get_data_ptr<element::Type_t::i32>(),
+                            get_data_ptr_nc<element::Type_t::i32>(),
                             size,
                             static_cast<
                                 typename element_type_traits<element::Type_t::i32>::value_type>(
@@ -169,7 +167,7 @@ namespace ngraph
                         break;
                     case element::Type_t::i64:
                         std::fill_n(
-                            m_tensor->get_data_ptr<element::Type_t::i64>(),
+                            get_data_ptr_nc<element::Type_t::i64>(),
                             size,
                             static_cast<
                                 typename element_type_traits<element::Type_t::i64>::value_type>(
@@ -177,7 +175,7 @@ namespace ngraph
                         break;
                     case element::Type_t::u8:
                         std::fill_n(
-                            m_tensor->get_data_ptr<element::Type_t::u8>(),
+                            get_data_ptr_nc<element::Type_t::u8>(),
                             size,
                             static_cast<
                                 typename element_type_traits<element::Type_t::u8>::value_type>(
@@ -185,7 +183,7 @@ namespace ngraph
                         break;
                     case element::Type_t::u16:
                         std::fill_n(
-                            m_tensor->get_data_ptr<element::Type_t::u16>(),
+                            get_data_ptr_nc<element::Type_t::u16>(),
                             size,
                             static_cast<
                                 typename element_type_traits<element::Type_t::u16>::value_type>(
@@ -193,7 +191,7 @@ namespace ngraph
                         break;
                     case element::Type_t::u32:
                         std::fill_n(
-                            m_tensor->get_data_ptr<element::Type_t::u32>(),
+                            get_data_ptr_nc<element::Type_t::u32>(),
                             size,
                             static_cast<
                                 typename element_type_traits<element::Type_t::u32>::value_type>(
@@ -201,7 +199,7 @@ namespace ngraph
                         break;
                     case element::Type_t::u64:
                         std::fill_n(
-                            m_tensor->get_data_ptr<element::Type_t::u64>(),
+                            get_data_ptr_nc<element::Type_t::u64>(),
                             size,
                             static_cast<
                                 typename element_type_traits<element::Type_t::u64>::value_type>(
@@ -311,7 +309,6 @@ namespace ngraph
                 /// \return The initialization literals for the tensor constant.
                 std::vector<std::string> get_value_strings() const;
 
-                std::shared_ptr<runtime::HostTensor> get_tensor() { return m_tensor; }
                 template <typename T>
                 std::vector<T> get_vector() const
                 {
@@ -321,7 +318,7 @@ namespace ngraph
                     }
 
                     std::vector<T> rc;
-                    const T* p = static_cast<const T*>(m_tensor->get_data_ptr());
+                    const T* p = static_cast<const T*>(get_data_ptr());
                     for (size_t i = 0; i < shape_size(m_shape); i++)
                     {
                         rc.push_back(p[i]);
@@ -423,14 +420,18 @@ namespace ngraph
                     return rc;
                 }
 
-                const void* get_data_ptr() const
-                {
-                    return (m_tensor ? m_tensor->get_data_ptr() : nullptr);
-                }
+                const void* get_data_ptr() const { return (m_data ? m_data->get_ptr() : nullptr); }
                 template <typename T>
                 const T* get_data_ptr() const
                 {
-                    return reinterpret_cast<const T*>(get_data_ptr());
+                    return static_cast<const T*>(get_data_ptr());
+                }
+
+                template <element::Type_t ET>
+                const typename element_type_traits<ET>::value_type* get_data_ptr() const
+                {
+                    return static_cast<const typename element_type_traits<ET>::value_type*>(
+                        get_data_ptr());
                 }
 
                 bool is_constant() const override { return true; }
@@ -441,7 +442,17 @@ namespace ngraph
                 std::string convert_value_to_string(size_t index) const;
 
             protected:
-                void* get_data_ptr_nc() { return (m_tensor ? m_tensor->get_data_ptr() : nullptr); }
+                /// \brief Allocate a buffer and return a pointer to it
+                void* allocate_buffer();
+
+                void* get_data_ptr_nc() { return (m_data ? m_data->get_ptr() : nullptr); }
+                template <element::Type_t ET>
+                typename element_type_traits<ET>::value_type* get_data_ptr_nc()
+                {
+                    return static_cast<typename element_type_traits<ET>::value_type*>(
+                        get_data_ptr_nc());
+                }
+
                 Constant(const OutputVector& args)
                     : Op(args)
                     , m_shape({})
@@ -535,7 +546,7 @@ namespace ngraph
                 static constexpr size_t host_alignment() { return 64; }
                 element::Type m_element_type;
                 Shape m_shape{};
-                std::shared_ptr<runtime::HostTensor> m_tensor;
+                std::shared_ptr<runtime::AlignedBuffer> m_data;
                 bool m_all_elements_bitwise_identical;
                 bool are_all_data_elements_bitwise_identical() const;
             };
