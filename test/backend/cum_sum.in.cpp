@@ -80,6 +80,25 @@ NGRAPH_TEST(${BACKEND_NAME}, cum_sum_2dim)
         test::all_close_f((vector<float>{0, 1, 2, 3, 4, 6, 8, 10}), read_vector<float>(result)));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, cum_sum_2dim_default_axis)
+{
+    Shape shape{2, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::CumSum>(A), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{0, 1, 2, 3, 4, 6, 8, 10}), read_vector<float>(result)));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, cum_sum_3d)
 {
     auto test_cumsum_3d = [](const int32_t axis_val) -> void {
