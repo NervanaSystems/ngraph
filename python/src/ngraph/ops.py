@@ -995,8 +995,13 @@ def logical_or(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 @unary_op
 def logical_not(node, name=None):  # type: (Node, str) -> Node
-    """Return node which applies logical negation to the input node elementwise."""
-    return Not(node)
+    """Return node which applies element-wise logical negation to the input node.
+    
+    :param node: The input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing element-wise logical NOT operation with given tensor.
+    """
+    return _get_node_factory().create('LogicalNot', [node])
 
 
 @binary_op
