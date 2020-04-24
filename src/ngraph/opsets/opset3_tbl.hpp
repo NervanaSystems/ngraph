@@ -80,7 +80,7 @@ NGRAPH_OP(Multiply, ngraph::op::v1)
 NGRAPH_OP(MVN, ngraph::op::v0) // Missing in opset1
 
 NGRAPH_OP(Negative, ngraph::op::v0)
-NGRAPH_OP(NonMaxSuppression, ngraph::op::v1)
+NGRAPH_OP(NonMaxSuppression, ngraph::op::v3)
 NGRAPH_OP(NormalizeL2, ngraph::op::v0)
 NGRAPH_OP(NotEqual, ngraph::op::v1)
 NGRAPH_OP(OneHot, ngraph::op::v1)
