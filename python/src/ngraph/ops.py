@@ -977,15 +977,20 @@ def logical_and(left_node, right_node, name=None):  # type: (NodeInput, NodeInpu
 
 
 @binary_op
-def logical_or(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which performs logical or operation on input nodes element-wise.
+def logical_or(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, str) -> Node
+    """Return node which performs logical OR operation on input nodes element-wise.
 
     :param left_node: The first input node providing data.
     :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcating that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: numpy, explicit.
     :param name: The optional new name for output node.
     :return: The node performing logical or operation on input nodes corresponding elements.
     """
-    return Or(left_node, right_node)
+    return _get_node_factory().create('LogicalOr',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast})
 
 
 @unary_op
