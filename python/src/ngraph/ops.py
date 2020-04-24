@@ -996,7 +996,7 @@ def logical_or(left_node, right_node, auto_broadcast='NUMPY', name=None):
 @unary_op
 def logical_not(node, name=None):  # type: (Node, str) -> Node
     """Return node which applies element-wise logical negation to the input node.
-    
+
     :param node: The input node providing data.
     :param name: The optional new name for output node.
     :return: The node performing element-wise logical NOT operation with given tensor.
@@ -1429,6 +1429,47 @@ def convolution_backprop_data(data,                 # type: Node
                                        'dilations': dilations,
                                        'auto_pad': auto_pad.upper(),
                                        'output_padding': output_padding})
+
+
+@nameable_op
+def deformable_convolution(data,                           # type: Node
+                           deformable_values,              # type: Node
+                           filters,                        # type: Node
+                           strides,                        # type: List[int]
+                           pads_begin,                     # type: List[int]
+                           pads_end,                       # type: List[int]
+                           dilations,                      # type: List[int]
+                           auto_pad='EXPLICIT',            # type: str
+                           group=1,                        # type: int
+                           deformable_group=1,             # type: int
+                           name=None,                      # type: str
+                           ):
+    # type: (...) -> Node
+    """Create node performing deformable convolution.
+
+    :param data: The node providing data batch tensor.
+    :param filter: The node providing filters tensor.
+    :param strides: The distance (in pixels) to slide the filter on the feature map over the axes.
+    :param pads_begin: The number of pixels to add to the beginning along each axis.
+    :param pads_end: The number of pixels to add to the end along each axis.
+    :param dilations: The distance in width and height between elements (weights) in the filter.
+    :param auto_pad: The type of padding. Range of values: explicit, same_upper, same_lower, valid.
+    :param group: The number of groups which both output and input should be split into.
+    :param deformable_group: The number of groups which deformable values and output should be split
+                             into along the channel axis.
+    :param name: The optional new name for output node.
+    :return: New node performing deformable convolution operation.
+    """
+    return _get_node_factory().create('DeformableConvolution',
+                                      [data, deformable_values, filters],
+                                      {'strides': strides,
+                                       'pads_begin': pads_begin,
+                                       'pads_end': pads_end,
+                                       'dilations': dilations,
+                                       'auto_pad': auto_pad,
+                                       'group': group,
+                                       'deformable_group': deformable_group,
+                                       })
 
 
 @nameable_op
