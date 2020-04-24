@@ -387,7 +387,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
 
         if (data.get_shape()[axis] == 1)
         {
-            return remove_node_update_name(node, gather->input_value(0).get_node_shared_ptr());
+            return replace_output_update_name(gather->output(0), gather->input_value(0));
         }
 
         // case_2 : if the input tensor is of shape (4, 3, 4)
@@ -410,7 +410,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
             std::iota(ref_indices.begin(), ref_indices.end(), 0);
             if (ref_indices == constant_indices->get_vector<int64_t>())
             {
-                return remove_node_update_name(node, gather->input_value(0).get_node_shared_ptr());
+                return replace_output_update_name(gather->output(0), gather->input_value(0));
             }
         }
     }
@@ -433,14 +433,14 @@ static bool simplify_multiply(shared_ptr<Node> multiply)
         Output<Node> value;
         if (is_input_uniform_constant(multiply, 0, constant, value))
         {
-            remove_node_update_name(multiply, constant);
+            replace_output_update_name(multiply->output(0), constant->output(0));
             rc = true;
         }
         else
         {
             if (is_input_uniform_constant(multiply, 1, constant, value))
             {
-                remove_node_update_name(multiply, value.get_node_shared_ptr());
+                replace_output_update_name(multiply->output(0), value);
                 rc = true;
             }
         }
@@ -463,7 +463,7 @@ static bool simplify_add(shared_ptr<Node> add)
         Output<Node> value;
         if (is_input_uniform_constant(add, 0, constant, value))
         {
-            remove_node_update_name(add, value.get_node_shared_ptr());
+            replace_output_update_name(add->output(0), value);
             rc = true;
         }
     }
@@ -480,7 +480,7 @@ static bool simplify_log(shared_ptr<Node> n)
         {
             auto denom = div->get_input_source_output(1);
             auto diff = make_shared<op::v0::Subtract>(exp->get_input_source_output(0),
-                                                  make_shared<op::v0::Log>(denom));
+                                                      make_shared<op::v0::Log>(denom));
             replace_node(n, diff);
             return true;
         }
@@ -546,7 +546,7 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
         }
         replace_node = make_shared<opset3::Concat>(concat_inputs, 0);
     }
-    return remove_node_update_name(shapeof, replace_node);
+    return replace_output_update_name(shapeof->output(0), replace_node->output(0));
 }
 
 static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)

@@ -369,7 +369,8 @@ TEST(nop_elimination, topk_convert_elimination)
         auto C = make_shared<op::Convert>(B->output(0), B->output(0).get_element_type());
         auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(C), ParameterVector{A});
         auto optimized_f = clone_function(*baseline_f);
-        EXPECT_TRUE((compare_pass_int<pass::NopElimination, float, int64_t>(baseline_f, optimized_f)));
+        EXPECT_TRUE(
+            (compare_pass_int<pass::NopElimination, float, int64_t>(baseline_f, optimized_f)));
 
         ASSERT_EQ(count_ops_of_type<op::Convert>(baseline_f), 1);
         ASSERT_EQ(count_ops_of_type<op::Convert>(optimized_f), 0);
