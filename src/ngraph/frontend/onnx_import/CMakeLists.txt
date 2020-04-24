@@ -16,7 +16,7 @@
 
 set(ONNX_OPSET_VERSION 11 CACHE INTERNAL "Supported version of ONNX operator set")
 
-add_library(onnx_import_interface SHARED
+add_library(onnx_importer SHARED
         core/node.cpp
         core/node.hpp
         core/operator_set.hpp
@@ -25,7 +25,7 @@ add_library(onnx_import_interface SHARED
         onnx_utils.hpp
         onnx_utils.cpp)
 
-add_library(onnx_import STATIC
+add_library(onnx_import_core STATIC
         core/attribute.cpp
         core/attribute.hpp
         core/graph.cpp
@@ -248,40 +248,40 @@ add_library(onnx_import STATIC
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
-set_target_properties(onnx_import PROPERTIES
+set_target_properties(onnx_import_core PROPERTIES
                       CXX_VISIBILITY_PRESET hidden
                       C_VISIBILITY_PRESET hidden
                       VISIBILITY_INLINES_HIDDEN ON
                       POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import
+target_include_directories(onnx_import_core
     SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 
-target_link_libraries(onnx_import_interface PRIVATE ngraph onnx_import onnx_proto)
-target_link_libraries(onnx_import PRIVATE ngraph onnx_proto)
+target_link_libraries(onnx_importer PRIVATE ngraph onnx_import_core onnx_proto)
+target_link_libraries(onnx_import_core PRIVATE ngraph onnx_proto)
 
-target_compile_definitions(onnx_import PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
+target_compile_definitions(onnx_import_core PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
 
-set_target_properties(onnx_import_interface PROPERTIES
+set_target_properties(onnx_importer PROPERTIES
                       CXX_VISIBILITY_PRESET hidden
                       C_VISIBILITY_PRESET hidden
                       VISIBILITY_INLINES_HIDDEN ON
                       POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import_interface SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
+target_include_directories(onnx_importer SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 
-target_compile_definitions(onnx_import_interface PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
+target_compile_definitions(onnx_importer PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
-    target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
+    target_compile_options(onnx_import_core PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
             -Wno-invalid-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
             -Wno-unused-private-field -Wno-shadow -Wno-deprecated PUBLIC -Wno-undefined-func-template)
-    target_compile_options(onnx_import_interface PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
+    target_compile_options(onnx_importer PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
             -Wno-invalid-offsetof -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
             -Wno-unused-private-field -Wno-shadow -Wno-deprecated PUBLIC -Wno-undefined-func-template)
 endif()
 
-target_compile_definitions(onnx_import PRIVATE ngraph_EXPORTS)
-target_compile_definitions(onnx_import_interface PRIVATE ngraph_EXPORTS)
+target_compile_definitions(onnx_import_core PRIVATE ngraph_EXPORTS)
+target_compile_definitions(onnx_importer PRIVATE ngraph_EXPORTS)
 
-install(TARGETS onnx_import_interface DESTINATION ${NGRAPH_INSTALL_LIB})
+install(TARGETS onnx_importer DESTINATION ${NGRAPH_INSTALL_LIB})

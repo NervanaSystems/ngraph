@@ -17,5 +17,5 @@
 set(CMAKE_INSTALL_INCLUDEDIR "test")
 add_executable(run_onnx_model run_onnx_model.cpp)
 add_dependencies(run_onnx_model ngraph)
-target_link_libraries(run_onnx_model ngraph onnx_import_interface libgtest)
+target_link_libraries(run_onnx_model ngraph onnx_importer libgtest)
 install(TARGETS run_onnx_model RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN}) 

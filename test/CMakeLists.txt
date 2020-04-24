@@ -490,7 +490,7 @@ if (MSVC)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    target_link_libraries(unit-test PRIVATE onnx_import_interface)
+    target_link_libraries(unit-test PRIVATE onnx_importer)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
