@@ -62,8 +62,8 @@ namespace ngraph
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
-                bool evaluate(const EvaluatorTensorVector& outputs,
-                              const EvaluatorTensorVector& inputs) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
 
             protected:
                 bool m_pythondiv{true};
@@ -114,8 +114,8 @@ namespace ngraph
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
                 size_t get_version() const override { return 1; }
-                bool evaluate(const EvaluatorTensorVector& outputs,
-                              const EvaluatorTensorVector& inputs) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
 
             protected:
                 bool m_pythondiv{true};

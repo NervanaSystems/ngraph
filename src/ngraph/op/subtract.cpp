@@ -16,6 +16,7 @@
 
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 
 using namespace std;
@@ -63,26 +64,27 @@ shared_ptr<ngraph::Node> ngraph::operator-(const Output<Node> arg0, const Output
 namespace
 {
     template <element::Type_t ET>
-    bool try_evaluate_subtract(const EvaluatorTensorPtr& arg0,
-                               const EvaluatorTensorPtr& arg1,
-                               const EvaluatorTensorPtr& out,
+    bool try_evaluate_subtract(const HostTensorPtr& arg0,
+                               const HostTensorPtr& arg1,
+                               const HostTensorPtr& out,
                                const op::AutoBroadcastSpec& broadcast_spec)
     {
         return (ET == arg0->get_element_type()) &&
-               (runtime::reference::subtract(arg0->get_ptr<ET>(),
-                                             arg1->get_ptr<ET>(),
-                                             out->get_ptr<ET>(),
+               (runtime::reference::subtract(arg0->get_data_ptr<ET>(),
+                                             arg1->get_data_ptr<ET>(),
+                                             out->get_data_ptr<ET>(),
                                              arg0->get_shape(),
                                              arg1->get_shape(),
                                              broadcast_spec),
                 true);
     }
 
-    bool evaluate_subtract(const EvaluatorTensorPtr& arg0,
-                           const EvaluatorTensorPtr& arg1,
-                           const EvaluatorTensorPtr& out,
+    bool evaluate_subtract(const HostTensorPtr& arg0,
+                           const HostTensorPtr& arg1,
+                           const HostTensorPtr& out,
                            const op::AutoBroadcastSpec& broadcast_spec)
     {
+        out->set_broadcast(broadcast_spec, arg0, arg1);
         return try_evaluate_subtract<element::Type_t::i8>(arg0, arg1, out, broadcast_spec) ||
                try_evaluate_subtract<element::Type_t::i16>(arg0, arg1, out, broadcast_spec) ||
                try_evaluate_subtract<element::Type_t::i32>(arg0, arg1, out, broadcast_spec) ||
@@ -96,8 +98,7 @@ namespace
     }
 }
 
-bool op::v0::Subtract::evaluate(const EvaluatorTensorVector& outputs,
-                                const EvaluatorTensorVector& inputs)
+bool op::v0::Subtract::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     return evaluate_subtract(inputs[0], inputs[1], outputs[0], get_autob());
 }
@@ -136,8 +137,7 @@ void op::v1::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const Out
     adjoints.add_delta(y, -delta);
 }
 
-bool op::v1::Subtract::evaluate(const EvaluatorTensorVector& outputs,
-                                const EvaluatorTensorVector& inputs)
+bool op::v1::Subtract::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     return evaluate_subtract(inputs[0], inputs[1], outputs[0], get_autob());
 }

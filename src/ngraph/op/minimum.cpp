@@ -20,6 +20,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/minimum.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -65,25 +66,27 @@ void op::v0::Minimum::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 namespace
 {
     template <element::Type_t ET>
-    bool try_evaluate_minimum(const EvaluatorTensorPtr& arg0,
-                              const EvaluatorTensorPtr& arg1,
-                              const EvaluatorTensorPtr& out,
+    bool try_evaluate_minimum(const HostTensorPtr& arg0,
+                              const HostTensorPtr& arg1,
+                              const HostTensorPtr& out,
                               const op::AutoBroadcastSpec& broadcast_spec)
     {
-        return (ET == arg0->get_element_type()) && (runtime::reference::minimum(arg0->get_ptr<ET>(),
-                                                                                arg1->get_ptr<ET>(),
-                                                                                out->get_ptr<ET>(),
-                                                                                arg0->get_shape(),
-                                                                                arg1->get_shape(),
-                                                                                broadcast_spec),
-                                                    true);
+        return (ET == arg0->get_element_type()) &&
+               (runtime::reference::minimum(arg0->get_data_ptr<ET>(),
+                                            arg1->get_data_ptr<ET>(),
+                                            out->get_data_ptr<ET>(),
+                                            arg0->get_shape(),
+                                            arg1->get_shape(),
+                                            broadcast_spec),
+                true);
     }
 
-    bool evaluate_minimum(const EvaluatorTensorPtr& arg0,
-                          const EvaluatorTensorPtr& arg1,
-                          const EvaluatorTensorPtr& out,
+    bool evaluate_minimum(const HostTensorPtr& arg0,
+                          const HostTensorPtr& arg1,
+                          const HostTensorPtr& out,
                           const op::AutoBroadcastSpec& broadcast_spec)
     {
+        out->set_broadcast(broadcast_spec, arg0, arg1);
         return try_evaluate_minimum<element::Type_t::i8>(arg0, arg1, out, broadcast_spec) ||
                try_evaluate_minimum<element::Type_t::i16>(arg0, arg1, out, broadcast_spec) ||
                try_evaluate_minimum<element::Type_t::i32>(arg0, arg1, out, broadcast_spec) ||
@@ -97,8 +100,7 @@ namespace
     }
 }
 
-bool op::v0::Minimum::evaluate(const EvaluatorTensorVector& outputs,
-                               const EvaluatorTensorVector& inputs)
+bool op::v0::Minimum::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     return evaluate_minimum(inputs[0], inputs[1], outputs[0], get_autob());
 }
@@ -139,8 +141,7 @@ void op::v1::Minimum::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
         y, delta * make_shared<op::Convert>(make_shared<op::v1::Less>(y, x), y.get_element_type()));
 }
 
-bool op::v1::Minimum::evaluate(const EvaluatorTensorVector& outputs,
-                               const EvaluatorTensorVector& inputs)
+bool op::v1::Minimum::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     return evaluate_minimum(inputs[0], inputs[1], outputs[0], get_autob());
 }

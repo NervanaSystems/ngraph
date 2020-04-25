@@ -50,8 +50,8 @@ namespace ngraph
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
 
-                bool evaluate(const EvaluatorTensorVector& outputs,
-                              const EvaluatorTensorVector& inputs) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
             };
 
         } // namespace v0
@@ -84,8 +84,8 @@ namespace ngraph
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
-                bool evaluate(const EvaluatorTensorVector& outputs,
-                              const EvaluatorTensorVector& inputs) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
             };
         } // namespace v1
 

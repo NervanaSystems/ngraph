@@ -1633,8 +1633,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::StopGradient: { throw unsupported_op("Unsupported op 'StopGradient'");
-        }
         case OP_TYPEID::Sum:
         {
             const op::Sum* sum = static_cast<const op::Sum*>(&node);

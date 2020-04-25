@@ -18,6 +18,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/power.hpp"
 
 using namespace std;
@@ -62,25 +63,27 @@ void op::v0::Power::generate_adjoints(autodiff::Adjoints& adjoints, const Output
 namespace
 {
     template <element::Type_t ET>
-    bool try_evaluate_power(const EvaluatorTensorPtr& arg0,
-                            const EvaluatorTensorPtr& arg1,
-                            const EvaluatorTensorPtr& out,
+    bool try_evaluate_power(const HostTensorPtr& arg0,
+                            const HostTensorPtr& arg1,
+                            const HostTensorPtr& out,
                             const op::AutoBroadcastSpec& broadcast_spec)
     {
-        return (ET == arg0->get_element_type()) && (runtime::reference::power(arg0->get_ptr<ET>(),
-                                                                              arg1->get_ptr<ET>(),
-                                                                              out->get_ptr<ET>(),
-                                                                              arg0->get_shape(),
-                                                                              arg1->get_shape(),
-                                                                              broadcast_spec),
-                                                    true);
+        return (ET == arg0->get_element_type()) &&
+               (runtime::reference::power(arg0->get_data_ptr<ET>(),
+                                          arg1->get_data_ptr<ET>(),
+                                          out->get_data_ptr<ET>(),
+                                          arg0->get_shape(),
+                                          arg1->get_shape(),
+                                          broadcast_spec),
+                true);
     }
 
-    bool evaluate_power(const EvaluatorTensorPtr& arg0,
-                        const EvaluatorTensorPtr& arg1,
-                        const EvaluatorTensorPtr& out,
+    bool evaluate_power(const HostTensorPtr& arg0,
+                        const HostTensorPtr& arg1,
+                        const HostTensorPtr& out,
                         const op::AutoBroadcastSpec& broadcast_spec)
     {
+        out->set_broadcast(broadcast_spec, arg0, arg1);
         return try_evaluate_power<element::Type_t::i8>(arg0, arg1, out, broadcast_spec) ||
                try_evaluate_power<element::Type_t::i16>(arg0, arg1, out, broadcast_spec) ||
                try_evaluate_power<element::Type_t::i32>(arg0, arg1, out, broadcast_spec) ||
@@ -94,8 +97,7 @@ namespace
     }
 }
 
-bool op::v0::Power::evaluate(const EvaluatorTensorVector& outputs,
-                             const EvaluatorTensorVector& inputs)
+bool op::v0::Power::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     return evaluate_power(inputs[0], inputs[1], outputs[0], get_autob());
 }
@@ -136,8 +138,7 @@ void op::v1::Power::generate_adjoints(autodiff::Adjoints& adjoints, const Output
     adjoints.add_delta(y, delta * shared_from_this() * log_x);
 }
 
-bool op::v1::Power::evaluate(const EvaluatorTensorVector& outputs,
-                             const EvaluatorTensorVector& inputs)
+bool op::v1::Power::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     return evaluate_power(inputs[0], inputs[1], outputs[0], get_autob());
 }
