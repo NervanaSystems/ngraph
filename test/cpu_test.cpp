@@ -1488,8 +1488,8 @@ TEST(cpu_test, max_pool_with_indices_2d_2channel_2image)
     auto max_pool = make_shared<op::MaxPoolWithIndices>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
     Shape shape_r{2, 2, 4, 3};
-    auto data = make_shared<op::Result>(make_shared<op::GetOutputElement>(max_pool, 0));
-    auto indices = make_shared<op::Result>(make_shared<op::GetOutputElement>(max_pool, 1));
+    auto data = make_shared<op::Result>(max_pool->output(0));
+    auto indices = make_shared<op::Result>(max_pool->output(1));
     auto f = make_shared<Function>(ResultVector{data, indices}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("CPU");
@@ -1560,7 +1560,7 @@ TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto max_pool = make_shared<op::MaxPoolWithIndices>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
-    auto indices = make_shared<op::GetOutputElement>(max_pool, 1);
+    auto indices = max_pool->output(1);
     Shape shape_i{2, 2, 4, 3};
     auto delta = make_shared<op::Parameter>(element::f32, shape_i);
 

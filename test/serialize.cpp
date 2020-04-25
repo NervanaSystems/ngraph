@@ -233,9 +233,7 @@ TEST(serialize, passthrough)
         OutputVector{},
         std::vector<estuple>{estuple{element::f32, PartialShape{2, 3}},
                              estuple{element::i8, PartialShape{4, 5}}});
-    auto f = make_shared<Function>(NodeVector{std::make_shared<op::GetOutputElement>(p, 0),
-                                              std::make_shared<op::GetOutputElement>(p, 1)},
-                                   ParameterVector{});
+    auto f = make_shared<Function>(OutputVector{p->output(0), p->output(1)}, ParameterVector{});
     serialize(tmp_file, f);
 
     auto g = deserialize(tmp_file);
@@ -275,7 +273,7 @@ TEST(serialize, constant_infinity_nan)
     B->set_friendly_name("B");
     C->set_friendly_name("C");
     D->set_friendly_name("D");
-    auto f = make_shared<Function>(NodeVector{A, B, C, D}, ParameterVector{});
+    auto f = make_shared<Function>(OutputVector{A, B, C, D}, ParameterVector{});
 
     string s = serialize(f, 4);
     shared_ptr<Function> g = deserialize(s);

@@ -724,7 +724,7 @@ TEST(cpu_fusion, MLIR_DISABLE_TEST(batchnorm_fprop_relu_b1c2h2w2))
     auto shape_r = Shape{1, 2, 2, 2};
     auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
 
-    auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+    auto output_rt = bn->output(0);
     // Note, op::Splice is used to break Relu(BatchNorm) fusion
     // otherwise we will be comparing two BatchNormRelus
     // Unfortunately, we can't use INTERPRETER for
@@ -733,13 +733,13 @@ TEST(cpu_fusion, MLIR_DISABLE_TEST(batchnorm_fprop_relu_b1c2h2w2))
     auto slice =
         std::make_shared<op::Slice>(output_rt, Coordinate{0, 0, 0, 0}, Coordinate{1, 2, 2, 2});
     auto output_relu = std::make_shared<op::Relu>(slice);
-    auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
-    auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
+    auto mean_rt = bn->output(1);
+    auto variance_rt = bn->output(2);
 
     auto bn_relu = make_shared<op::BatchNormTrainingRelu>(eps, gamma, beta, input);
-    auto output_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 0);
-    auto mean_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 1);
-    auto variance_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 2);
+    auto output_rt_bnr = bn_relu->output(0);
+    auto mean_rt_bnr = bn_relu->output(1);
+    auto variance_rt_bnr = bn_relu->output(2);
 
     auto f = make_shared<Function>(
         NodeVector{output_relu, mean_rt, variance_rt, output_rt_bnr, mean_rt_bnr, variance_rt_bnr},
@@ -800,11 +800,11 @@ static void test_batchnorm_fprop_relu(Shape input_shape)
         double eps = 0.001;
         auto shape_r = input_shape;
         auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
-        auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+        auto output_rt = bn->output(0);
 
         auto output_relu = std::make_shared<op::Relu>(output_rt);
-        auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
-        auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
+        auto mean_rt = bn->output(1);
+        auto variance_rt = bn->output(2);
 
         auto f = make_shared<Function>(NodeVector{output_relu, mean_rt, variance_rt},
                                        ParameterVector{input, gamma, beta});
@@ -1136,7 +1136,7 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
     auto beta = std::make_shared<op::Parameter>(element::f32, bias_shape);
     double eps = 0.001;
 
-    auto goe_bn = std::make_shared<op::GetOutputElement>(conv, 0);
+    auto goe_bn = conv->output(0);
 
     // Adding a goe will stop fusion since the patterns wont expect to see this op
     auto bn = add_goe
@@ -1224,7 +1224,7 @@ shared_ptr<Function> gen_groupconv_batchnorm(const bool add_goe,
     auto mean = std::make_shared<op::Parameter>(element::f32, shape_bn);
     auto var = std::make_shared<op::Parameter>(element::f32, shape_bn);
 
-    auto goe_bn = std::make_shared<op::GetOutputElement>(group_conv, 0);
+    auto goe_bn = group_conv->output(0);
 
     // Adding a goe will stop fusion since the patterns wont expect to see this op
     auto bn =
@@ -2025,8 +2025,8 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
                                          num_of_rnn_fused_layer,
                                          rnn_type);
 
-    auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 1);
-    auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 2);
+    auto rnn_ht_output = rnn_node->output(1);
+    auto rnn_ct_output = rnn_node->output(2);
 
     auto func = make_shared<Function>(
         NodeVector{rnn_ht_output, rnn_ct_output},
@@ -2534,7 +2534,7 @@ TEST(cpu_fusion, MLIR_DISABLE_TEST(fuse_dropout))
 
         auto mult = std::make_shared<op::Multiply>(gen_mask, input);
 
-        auto goe = std::make_shared<op::GetOutputElement>(mult, 0);
+        auto goe = mult->output(0);
 
         auto pdivide = fuse ? std::make_shared<op::Divide>(mult, value)
                             : std::make_shared<op::Divide>(goe, value);
@@ -3806,8 +3806,8 @@ TEST(cpu_fusion, lstm_cell)
         const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
         const auto lstm_cell = make_shared<op::LSTMCell>(X, H_t, C_t, W, R, hidden_size);
-        auto ht = make_shared<op::GetOutputElement>(lstm_cell, 0);
-        auto ct = make_shared<op::GetOutputElement>(lstm_cell, 1);
+        auto ht = lstm_cell->output(0);
+        auto ct = lstm_cell->output(1);
 
         auto lstm_function = make_shared<Function>(NodeVector{ht, ct},
                                                    ParameterVector{

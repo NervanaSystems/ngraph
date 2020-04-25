@@ -89,8 +89,8 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
                                               feature_size,
                                               rnn_direction,
                                               num_of_rnn_fused_layer);
-    auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
-    auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
+    auto rnn_ht_output = rnn_node->output(0);
+    auto rnn_ct_output = rnn_node->output(1);
 
     auto func = make_shared<Function>(NodeVector{rnn_ht_output, rnn_ct_output},
                                       ParameterVector{src_layer, src_iter, params, state_iter});

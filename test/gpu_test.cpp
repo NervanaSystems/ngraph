@@ -176,8 +176,8 @@ TEST(gpu_test, topk_fanout_graph_transform)
     auto A_f32_gpu_1 = make_shared<op::Parameter>(element::f32, out_shape);
     auto A_f32_gpu_2 = make_shared<op::Parameter>(element::f32, out_shape);
     auto B_gpu = make_shared<op::TopK>(A_gpu, 1, element::i32, 2, true);
-    auto C_gpu_0 = make_shared<op::GetOutputElement>(B_gpu, 0);
-    auto C_gpu_1 = make_shared<op::GetOutputElement>(B_gpu, 1);
+    auto C_gpu_0 = B_gpu->output(0);
+    auto C_gpu_1 = B_gpu->output(1);
 
     auto gpu_R_0 = make_shared<op::Add>(A_int32_gpu_1, C_gpu_0);
     auto gpu_R_1 = make_shared<op::Add>(A_int32_gpu_2, C_gpu_0);

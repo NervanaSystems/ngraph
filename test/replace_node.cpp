@@ -133,17 +133,17 @@ TEST(replace_node, replace_nodes_output_order)
                                              op::v1::TopK::SortType::SORT_VALUES,
                                              element::i32);
 
-    auto values = make_shared<op::GetOutputElement>(topk_v1, 0);
-    auto indices = make_shared<op::GetOutputElement>(topk_v1, 1);
+    auto values = topk_v1->output(0);
+    auto indices = topk_v1->output(1);
 
-    ASSERT_EQ(values->get_input_element_type(0), element::f16);
-    ASSERT_EQ(indices->get_input_element_type(0), element::i32);
+    ASSERT_EQ(values.get_element_type(), element::f16);
+    ASSERT_EQ(indices.get_element_type(), element::i32);
 
     std::vector<int64_t> output_order{1, 0};
     replace_node(topk_v1, topk_v0, output_order);
 
-    ASSERT_EQ(values->get_input_element_type(0), element::f16);
-    ASSERT_EQ(indices->get_input_element_type(0), element::i32);
+    ASSERT_EQ(values.get_element_type(), element::f16);
+    ASSERT_EQ(indices.get_element_type(), element::i32);
 }
 
 TEST(replace_node, replace_nodes_output_order_incorrect_size)
@@ -158,8 +158,8 @@ TEST(replace_node, replace_nodes_output_order_incorrect_size)
                                              op::v1::TopK::SortType::SORT_VALUES,
                                              element::i32);
 
-    auto values = make_shared<op::GetOutputElement>(topk_v1, 0);
-    auto indices = make_shared<op::GetOutputElement>(topk_v1, 1);
+    auto values = topk_v1->output(0);
+    auto indices = topk_v1->output(1);
 
     std::vector<int64_t> output_order{2, 1, 0};
     try
