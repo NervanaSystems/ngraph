@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "ngraph/op/convert.hpp"
+#include "ngraph/runtime/reference/convert.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -54,4 +55,39 @@ void op::Convert::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
     auto x = input_value(0);
 
     adjoints.add_delta(x, make_shared<op::Convert>(delta, x.get_element_type()));
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    bool try_evaluate_convert(const EvaluatorTensorPtr& arg,
+                              const EvaluatorTensorPtr& out,
+                              size_t count)
+
+    {
+        return (ET == arg->get_element_type()) &&
+               (runtime::reference::convert(arg->get_ptr<ET>(), out->get_ptr<ET>(), count), true);
+    }
+
+    bool
+        evaluate_convert(const EvaluatorTensorPtr& arg, const EvaluatorTensorPtr& out, size_t count)
+    {
+        return try_evaluate_convert<element::Type_t::i8>(arg, out, count) ||
+               try_evaluate_convert<element::Type_t::i16>(arg, out, count) ||
+               try_evaluate_convert<element::Type_t::i32>(arg, out, count) ||
+               try_evaluate_convert<element::Type_t::i64>(arg, out, count) ||
+               try_evaluate_convert<element::Type_t::u8>(arg, out, count) ||
+               try_evaluate_convert<element::Type_t::u16>(arg, out, count) ||
+               try_evaluate_convert<element::Type_t::u32>(arg, out, count) ||
+               try_evaluate_convert<element::Type_t::u64>(arg, out, count) ||
+               try_evaluate_convert<element::Type_t::f32>(arg, out, count) ||
+               try_evaluate_convert<element::Type_t::f64>(arg, out, count);
+    }
+}
+
+bool op::v0::Convert::evaluate(const EvaluatorTensorVector& output_values,
+                               const EvaluatorTensorVector& input_values)
+{
+    return evaluate_convert(
+        input_values[0], output_values[0], output_values[0]->get_element_count());
 }

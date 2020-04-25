@@ -18,8 +18,6 @@
 
 #include <cstddef>
 
-#include "ngraph/coordinate_transform.hpp"
-#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/runtime/reference/autobroadcast_binop.hpp"
 #include "ngraph/shape_util.hpp"
 

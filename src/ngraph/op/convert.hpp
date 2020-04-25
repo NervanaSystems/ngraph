@@ -53,6 +53,10 @@ namespace ngraph
                     m_destination_type = destination_type;
                 }
 
+                size_t get_version() const override { return 0; }
+                bool evaluate(const EvaluatorTensorVector& outputs,
+                              const EvaluatorTensorVector& inputs) override;
+
             protected:
                 ngraph::element::Type m_destination_type;
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
