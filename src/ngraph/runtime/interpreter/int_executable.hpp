@@ -689,11 +689,6 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::CropAndResize:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
         case OP_TYPEID::Dequantize:
         {
             const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
@@ -741,16 +736,11 @@ protected:
                            dot->get_reduction_axes_count());
             break;
         }
-        case OP_TYPEID::DynSlice:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
         case OP_TYPEID::EmbeddingLookup:
         {
             const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
-            auto type = embed->get_argument(0)->get_element_type();
-            size_t element_count = shape_size(embed->get_argument(0)->get_shape());
+            auto type = embed->input(0).get_element_type();
+            size_t element_count = shape_size(embed->get_input_shape(0));
 
             if (type == element::f32)
             {
@@ -1109,11 +1099,6 @@ protected:
             break;
         }
         case OP_TYPEID::Parameter: break;
-        case OP_TYPEID::Passthrough:
-        {
-            const op::Passthrough* passthrough = static_cast<const op::Passthrough*>(&node);
-            throw unsupported_op{"Unsupported operation language: " + passthrough->language()};
-        }
         case OP_TYPEID::Pad:
         {
             const op::Pad* pad = static_cast<const op::Pad*>(&node);
@@ -1432,11 +1417,6 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::Range:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
         case OP_TYPEID::Relu:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1725,41 +1705,43 @@ protected:
         }
 
         // Fused Ops are not supported in interpreter. They need to be decomposed before execution
-        case OP_TYPEID::Clamp:
-        case OP_TYPEID::MatMul:
-        case OP_TYPEID::Split:
-        case OP_TYPEID::DynBroadcast:
-        case OP_TYPEID::DynPad:
-        case OP_TYPEID::Tile:
-        case OP_TYPEID::DynReplaceSlice:
         case OP_TYPEID::BatchMatMulTranspose:
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::ConvolutionBias:
         case OP_TYPEID::ConvolutionBiasAdd:
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
+        case OP_TYPEID::CropAndResize:
         case OP_TYPEID::CrossEntropy:
         case OP_TYPEID::CrossEntropyBackprop:
         case OP_TYPEID::DepthToSpace:
+        case OP_TYPEID::DynBroadcast:
+        case OP_TYPEID::DynPad:
+        case OP_TYPEID::DynReplaceSlice:
+        case OP_TYPEID::DynSlice:
         case OP_TYPEID::Elu:
         case OP_TYPEID::FakeQuantize:
-        case OP_TYPEID::GroupConvolution:
-        case OP_TYPEID::GroupConvolutionBackpropData:
-        case OP_TYPEID::GroupConvolutionBackpropFilters:
-        case OP_TYPEID::GRN:
-        case OP_TYPEID::GRUCell:
         case OP_TYPEID::Gelu:
         case OP_TYPEID::GeluBackpropFactor:
         case OP_TYPEID::Gemm:
+        case OP_TYPEID::GRN:
+        case OP_TYPEID::GroupConvolution:
+        case OP_TYPEID::GroupConvolutionBackpropData:
+        case OP_TYPEID::GroupConvolutionBackpropFilters:
+        case OP_TYPEID::GRUCell:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::Interpolate:
         case OP_TYPEID::LayerNorm:
         case OP_TYPEID::LayerNormBackprop:
         case OP_TYPEID::LSTMCell:
         case OP_TYPEID::LSTMSequence:
+        case OP_TYPEID::MatMul:
         case OP_TYPEID::MVN:
         case OP_TYPEID::NormalizeL2:
-        case OP_TYPEID::PRelu:
         case OP_TYPEID::PartialSlice:
         case OP_TYPEID::PartialSliceBackprop:
+        case OP_TYPEID::Passthrough:
+        case OP_TYPEID::PRelu:
+        case OP_TYPEID::Range:
         case OP_TYPEID::RNNCell:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ScaleShift:
@@ -1769,13 +1751,15 @@ protected:
         case OP_TYPEID::SoftmaxCrossEntropy:
         case OP_TYPEID::SoftmaxCrossEntropyBackprop:
         case OP_TYPEID::SpaceToDepth:
+        case OP_TYPEID::Split:
         case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::Stack:
-        case OP_TYPEID::Unsqueeze:
-        // Tensor Iterator not yet supported
+        case OP_TYPEID::StopGradient:
         case OP_TYPEID::TensorIterator:
+        case OP_TYPEID::Tile:
         case OP_TYPEID::UnknownOp:
+        case OP_TYPEID::Unsqueeze:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
         case OP_TYPEID::Divide:

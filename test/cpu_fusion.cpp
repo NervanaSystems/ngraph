@@ -710,7 +710,7 @@ TEST(cpu_fusion, batchnorm_multiply_add_relu_no_fusion)
     ASSERT_EQ(bn_relu, 0);
 }
 
-TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
+TEST(cpu_fusion, MLIR_DISABLE_TEST(batchnorm_fprop_relu_b1c2h2w2))
 {
     auto input_shape = Shape{1, 2, 2, 2};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);
