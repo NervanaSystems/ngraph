@@ -30,6 +30,11 @@ namespace ngraph
     template <typename T>
     class Output;
 
+    namespace runtime
+    {
+        class HostTensor;
+    }
+
     /// \brief A generic handle to (potential) storage with element type and shape information
     class NGRAPH_API EvaluatorTensor
     {
@@ -50,7 +55,7 @@ namespace ngraph
         size_t get_size_in_bytes();
 
         template <element::Type_t ET>
-        typename element_type_traits<ET>::value_type* get_ptr()
+        typename element_type_traits<ET>::value_type* get_data_ptr()
         {
             return static_cast<typename element_type_traits<ET>::value_type*>(get_data_ptr());
         }
