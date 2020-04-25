@@ -63,8 +63,6 @@ runtime::HostTensor::HostTensor(const std::string& name)
 {
 }
 
-<<<<<<< HEAD
-=======
 runtime::HostTensor::HostTensor(const Output<Node>& value)
     : HostTensor(value.get_element_type(), value.get_partial_shape(), value.get_node()->get_name())
 {
@@ -101,7 +99,6 @@ void runtime::HostTensor::allocate_buffer()
         }
     }
 }
->>>>>>> cyphers/outtensor
 runtime::HostTensor::HostTensor(const std::shared_ptr<op::v0::Constant>& constant)
     : HostTensor(
           constant->get_output_element_type(0), constant->get_output_shape(0), constant->get_name())
@@ -140,10 +137,6 @@ void runtime::HostTensor::write(const void* source, size_t n)
     {
         throw out_of_range("partial tensor write not supported");
     }
-<<<<<<< HEAD
-    void* target = get_data_ptr();
-=======
->>>>>>> cyphers/outtensor
     memcpy(target, source, n);
 }
 
@@ -155,10 +148,6 @@ void runtime::HostTensor::read(void* target, size_t n) const
     {
         throw out_of_range("partial tensor read access not supported");
     }
-<<<<<<< HEAD
-    const void* source = get_data_ptr();
-=======
->>>>>>> cyphers/outtensor
     memcpy(target, source, n);
 }
 
@@ -233,8 +222,7 @@ namespace
             m_host_tensor = make_shared<runtime::HostTensor>(element_type, partial_shape);
         }
         HostTensorEvaluatorTensor(shared_ptr<runtime::HostTensor> host_tensor)
-            : HostEvaluatorTensor(
-                  host_tensor->get_element_type(), host_tensor->get_partial_shape())
+            : HostEvaluatorTensor(host_tensor->get_element_type(), host_tensor->get_partial_shape())
             , m_host_tensor(host_tensor)
         {
         }

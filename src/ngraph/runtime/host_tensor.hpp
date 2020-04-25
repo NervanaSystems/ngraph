@@ -44,11 +44,6 @@ public:
     HostTensor(const element::Type& element_type,
                const Shape& shape,
                void* memory_pointer,
-<<<<<<< HEAD
-               const std::string& name);
-    HostTensor(const ngraph::element::Type& element_type, const Shape& shape);
-    HostTensor(const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer);
-=======
                const std::string& name = "");
     HostTensor(const element::Type& element_type, const Shape& shape, const std::string& name = "");
     HostTensor(const element::Type& element_type,
@@ -56,7 +51,6 @@ public:
                const std::string& name = "'");
     HostTensor(const std::string& name);
     HostTensor(const Output<Node>&);
->>>>>>> cyphers/outtensor
     HostTensor(const std::shared_ptr<op::v0::Constant>& constant);
     virtual ~HostTensor() override;
 
