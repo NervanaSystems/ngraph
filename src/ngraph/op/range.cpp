@@ -18,6 +18,7 @@
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/range.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/range.hpp"
 #include "ngraph/type/element_type_traits.hpp"
 
@@ -241,11 +242,10 @@ void positive_range(T start_val, T stop_val, T step_val)
 }
 
 template <element::Type_t ET>
-bool try_evaluate_range(Node* node,
-                        const EvaluatorTensorPtr& out,
-                        const EvaluatorTensorPtr& start,
-                        const EvaluatorTensorPtr& stop,
-                        const EvaluatorTensorPtr& step)
+bool try_evaluate_range(const HostTensorPtr& out,
+                        const HostTensorPtr& start,
+                        const HostTensorPtr& stop,
+                        const HostTensorPtr& step)
 {
     using T = typename element_type_traits<ET>::value_type;
     if (ET == start->get_element_type())
@@ -267,7 +267,7 @@ bool try_evaluate_range(Node* node,
             out_size = steps;
         }
         Shape out_shape = Shape({static_cast<size_t>(out_size)});
-        out->set_shape(node, out_shape);
+        out->set_shape(out_shape);
         runtime::reference::range(&start_val, &step_val, out_shape, out->get_data_ptr<ET>());
         return true;
     }
@@ -277,23 +277,22 @@ bool try_evaluate_range(Node* node,
     }
 }
 
-bool op::v0::Range::evaluate(const EvaluatorTensorVector& outputs,
-                             const EvaluatorTensorVector& inputs)
+bool op::v0::Range::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    EvaluatorTensorPtr out = outputs[0];
-    EvaluatorTensorPtr start = inputs[0];
-    EvaluatorTensorPtr stop = inputs[1];
-    EvaluatorTensorPtr step = inputs[2];
-    return try_evaluate_range<element::Type_t::i8>(this, out, start, stop, step) ||
-           try_evaluate_range<element::Type_t::i16>(this, out, start, stop, step) ||
-           try_evaluate_range<element::Type_t::i32>(this, out, start, stop, step) ||
-           try_evaluate_range<element::Type_t::i64>(this, out, start, stop, step) ||
-           try_evaluate_range<element::Type_t::u8>(this, out, start, stop, step) ||
-           try_evaluate_range<element::Type_t::u16>(this, out, start, stop, step) ||
-           try_evaluate_range<element::Type_t::u32>(this, out, start, stop, step) ||
-           try_evaluate_range<element::Type_t::u64>(this, out, start, stop, step) ||
-           try_evaluate_range<element::Type_t::f32>(this, out, start, stop, step) ||
-           try_evaluate_range<element::Type_t::f16>(this, out, start, stop, step) ||
-           try_evaluate_range<element::Type_t::bf16>(this, out, start, stop, step) ||
-           try_evaluate_range<element::Type_t::f64>(this, out, start, stop, step);
+    HostTensorPtr out = outputs[0];
+    HostTensorPtr start = inputs[0];
+    HostTensorPtr stop = inputs[1];
+    HostTensorPtr step = inputs[2];
+    return try_evaluate_range<element::Type_t::i8>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::i16>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::i32>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::i64>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::u8>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::u16>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::u32>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::u64>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::f32>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::f16>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::bf16>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::f64>(out, start, stop, step);
 }

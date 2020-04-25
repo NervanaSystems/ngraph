@@ -69,16 +69,14 @@ TEST(eval, evaluate_shape_of)
     auto fun = make_shared<Function>(OutputVector{so}, ParameterVector{p});
     auto p_arg = op::Constant::create<float>(
         element::f32, Shape{2, 3}, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
-    EvaluatorTensorVector inputs;
-    inputs.push_back(runtime::HostTensor::create_evaluator_tensor(p_arg->get_output_element_type(0),
-                                                                  p_arg->get_output_shape(0)));
-    EvaluatorTensorVector outputs;
+    HostTensorVector inputs;
+    inputs.push_back(make_shared<HostTensor>(p_arg->output(0)));
+    HostTensorVector outputs;
     auto result = fun->get_results()[0];
-    auto result_tensor = runtime::HostTensor::create_evaluator_tensor(
-        result->get_output_element_type(0), result->get_output_shape(0));
+    auto result_tensor = make_shared<HostTensor>(result->output(0));
     outputs.push_back(result_tensor);
     ASSERT_TRUE(fun->evaluate(outputs, inputs));
-    auto c = result_tensor->get_host_tensor();
+    auto c = result_tensor;
     ASSERT_TRUE(c);
     EXPECT_EQ(c->get_element_type(), element::i64);
     EXPECT_EQ(c->get_partial_shape(), (PartialShape{2}));
@@ -101,26 +99,19 @@ TEST(eval, evaluate_dynamic_range_sum)
     auto p_stop_val = op::Constant::create<float>(element::f32, Shape{}, {10.0f});
     auto p_step_val = op::Constant::create<float>(element::f32, Shape{}, {3.0f});
     auto p1_val = op::Constant::create<float>(element::f32, Shape{}, {7.0f});
-    EvaluatorTensorVector inputs;
-    inputs.push_back(runtime::HostTensor::create_evaluator_tensor(
-        p_start_val->get_output_element_type(0), p_start_val->get_output_shape(0)));
-    inputs.push_back(runtime::HostTensor::create_evaluator_tensor(
-        p_stop_val->get_output_element_type(0), p_stop_val->get_output_shape(0)));
-    inputs.push_back(runtime::HostTensor::create_evaluator_tensor(
-        p_step_val->get_output_element_type(0), p_step_val->get_output_shape(0)));
-    inputs.push_back(runtime::HostTensor::create_evaluator_tensor(
-        p1_val->get_output_element_type(0), p1_val->get_output_shape(0)));
-    EvaluatorTensorVector outputs;
+    HostTensorVector inputs;
+    inputs.push_back(make_shared<HostTensor>(p_start_val->output(0)));
+    inputs.push_back(make_shared<HostTensor>(p_stop_val->output(0)));
+    inputs.push_back(make_shared<HostTensor>(p_step_val->output(0)));
+    inputs.push_back(make_shared<HostTensor>(p1_val->output(0)));
+    HostTensorVector outputs;
     auto result = fun->get_results()[0];
-    auto result_tensor =
-        runtime::HostTensor::create_evaluator_tensor(element::dynamic, PartialShape::dynamic());
+    auto result_tensor = make_shared<HostTensor>(result->output(0));
     outputs.push_back(result_tensor);
     ASSERT_TRUE(fun->evaluate(outputs, inputs));
-    auto c = result_tensor->get_host_tensor();
-    ASSERT_TRUE(c);
     EXPECT_EQ(result_tensor->get_element_type(), element::f32);
-    EXPECT_EQ(c->get_partial_shape(), (PartialShape{3}));
-    auto cval = read_vector<float>(c);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{3}));
+    auto cval = read_vector<float>(result_tensor);
     vector<float> seq{8.0f, 11.0f, 14.0f};
     ASSERT_EQ(cval, seq);
 }

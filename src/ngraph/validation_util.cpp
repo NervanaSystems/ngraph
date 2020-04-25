@@ -995,22 +995,21 @@ pair<bool, int64_t> ngraph::maximum_value(const Output<Node>& value)
     return pair<bool, int64_t>(false, 0);
 }
 
-void ngraph::evaluate_nodes(std::map<RawNodeOutput, EvaluatorTensorPtr>& value_map,
-                            std::map<RawNodeOutput, EvaluatorTensorPtr>& output_tensor_map,
+void ngraph::evaluate_nodes(std::map<RawNodeOutput, HostTensorPtr>& value_map,
+                            std::map<RawNodeOutput, HostTensorPtr>& output_tensor_map,
                             const OutputVector& outputs)
 {
-    Evaluator<EvaluatorTensorPtr> evaluator({}, value_map);
+    Evaluator<HostTensorPtr> evaluator({}, value_map);
     evaluator.set_univeral_handler(
         [&output_tensor_map](Node* node,
-                             const EvaluatorTensorVector& input_tensors) -> EvaluatorTensorVector {
-            EvaluatorTensorVector output_tensors;
+                             const HostTensorVector& input_tensors) -> HostTensorVector {
+            HostTensorVector output_tensors;
             for (auto v : node->outputs())
             {
                 auto it = output_tensor_map.find(v);
                 if (it == output_tensor_map.end())
                 {
-                    auto c = runtime::HostTensor::create_evaluator_tensor(v.get_element_type(),
-                                                                          v.get_partial_shape());
+                    auto c = make_shared<HostTensor>(v);
                     output_tensors.push_back(c);
                 }
                 else

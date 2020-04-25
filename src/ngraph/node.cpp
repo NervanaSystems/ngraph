@@ -22,7 +22,6 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
-#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
@@ -1110,8 +1109,7 @@ vector<Output<const Node>> Node::outputs() const
     return result;
 }
 
-bool Node::evaluate(const EvaluatorTensorVector& output_values,
-                    const EvaluatorTensorVector& input_values)
+bool Node::evaluate(const HostTensorVector& output_values, const HostTensorVector& input_values)
 {
     return false;
 }
@@ -1119,35 +1117,32 @@ bool Node::evaluate(const EvaluatorTensorVector& output_values,
 bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_values)
 {
     // If all the inputs are constants, try to evaluate the outputs
-    EvaluatorTensorVector input_tensors;
+    HostTensorVector input_tensors;
     for (auto input : input_values)
     {
         if (auto constant = as_type_ptr<op::v0::Constant>(input.get_node_shared_ptr()))
         {
             auto host_tensor = make_shared<runtime::HostTensor>(constant);
-            input_tensors.push_back(runtime::HostTensor::create_evaluator_tensor(host_tensor));
+            input_tensors.push_back(host_tensor);
         }
         else
         {
             return false;
         }
     }
-    vector<runtime::HostTensor::HostEvaluatorTensorPtr> output_constant_tensors;
-    EvaluatorTensorVector output_tensors;
+    HostTensorVector output_tensors;
     OutputVector output_constants;
     for (auto output : outputs())
     {
-        auto tensor = runtime::HostTensor::create_evaluator_tensor(output.get_element_type(),
-                                                                   output.get_partial_shape());
-        output_constant_tensors.push_back(tensor);
+        auto tensor =
+            make_shared<HostTensor>(output.get_element_type(), output.get_partial_shape());
         output_tensors.push_back(tensor);
     }
     if (evaluate(output_tensors, input_tensors))
     {
-        for (size_t i = 0; i < output_constant_tensors.size(); ++i)
+        for (size_t i = 0; i < output_tensors.size(); ++i)
         {
-            output_values[i] =
-                make_shared<op::Constant>(output_constant_tensors[i]->get_host_tensor());
+            output_values[i] = make_shared<op::Constant>(output_tensors[i]);
         }
         return true;
     }

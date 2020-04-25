@@ -99,76 +99,37 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    HostTensor::HostEvaluatorTensorVector tensor_outputs;
-    for (auto output : outputs)
-    {
-        tensor_outputs.push_back(
-            HostTensor::create_evaluator_tensor(static_pointer_cast<HostTensor>(output)));
-    }
-    HostTensor::HostEvaluatorTensorVector tensor_inputs;
-    for (auto input : inputs)
-    {
-        tensor_inputs.push_back(
-            HostTensor::create_evaluator_tensor(static_pointer_cast<HostTensor>(input)));
-    }
-    return call_dynamic(tensor_outputs, tensor_inputs);
-}
-
-bool runtime::interpreter::INTExecutable::call_dynamic(
-    vector<shared_ptr<runtime::Tensor>>& outputs, const vector<shared_ptr<runtime::Tensor>>& inputs)
-{
-    HostTensor::HostEvaluatorTensorVector tensor_outputs;
-    for (auto output : outputs)
-    {
-        tensor_outputs.push_back(
-            output
-                ? HostTensor::create_evaluator_tensor(static_pointer_cast<HostTensor>(output))
-                : HostTensor::create_evaluator_tensor(element::dynamic, PartialShape::dynamic()));
-    }
-    HostTensor::HostEvaluatorTensorVector tensor_inputs;
-    for (auto input : inputs)
-    {
-        tensor_inputs.push_back(
-            HostTensor::create_evaluator_tensor(static_pointer_cast<HostTensor>(input)));
-    }
-    bool result = call_dynamic(tensor_outputs, tensor_inputs);
-    for (size_t i = 0; i < outputs.size(); ++i)
-    {
-        if (!outputs[i])
-        {
-            outputs[i] = tensor_outputs[i]->get_host_tensor();
-        }
-    }
-    return result;
-}
-
-bool runtime::interpreter::INTExecutable::call_dynamic(
-    const HostTensor::HostEvaluatorTensorVector& outputs,
-    const HostTensor::HostEvaluatorTensorVector& inputs)
-{
     event::Duration d1("call", "Interpreter");
 
     // convert inputs to HostTensor
     vector<shared_ptr<HostTensor>> func_inputs;
     for (auto tensor : inputs)
     {
-        func_inputs.push_back(tensor->get_host_tensor());
+        auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
+        func_inputs.push_back(host_tensor);
     }
     if (m_nan_check_enabled)
     {
         perform_nan_check(func_inputs);
     }
 
+    // convert outputs to HostTensor
+    vector<shared_ptr<HostTensor>> func_outputs;
+    for (auto tensor : outputs)
+    {
+        auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
+        func_outputs.push_back(host_tensor);
+    }
+
     // map function params -> HostTensor
-    unordered_map<descriptor::Tensor*, HostTensor::HostEvaluatorTensorPtr> tensor_map;
+    unordered_map<descriptor::Tensor*, shared_ptr<HostTensor>> tensor_map;
     size_t input_count = 0;
     for (auto param : get_parameters())
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
             descriptor::Tensor* tensor = &param->output(i).get_tensor();
-            tensor_map.insert(
-                {tensor, HostTensor::create_evaluator_tensor(func_inputs[input_count++])});
+            tensor_map.insert({tensor, func_inputs[input_count++]});
         }
     }
 
@@ -181,7 +142,7 @@ bool runtime::interpreter::INTExecutable::call_dynamic(
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
         descriptor::Tensor* tensor = &output->get_output_tensor(0);
-        tensor_map.insert({tensor, outputs[output_count]});
+        tensor_map.insert({tensor, func_outputs[output_count]});
     }
 
     // for each ordered op in the graph
@@ -194,36 +155,30 @@ bool runtime::interpreter::INTExecutable::call_dynamic(
         }
 
         // get op inputs from map
-        vector<EvaluatorTensorPtr> in_tensors;
         vector<shared_ptr<HostTensor>> op_inputs;
         for (auto input : op->inputs())
         {
             descriptor::Tensor* tensor = &input.get_tensor();
-            auto& evaluator_tensor = tensor_map.at(tensor);
-            in_tensors.push_back(evaluator_tensor);
-            op_inputs.push_back(evaluator_tensor->get_host_tensor());
+            op_inputs.push_back(tensor_map.at(tensor));
         }
 
         // get op outputs from map or create
-        vector<EvaluatorTensorPtr> out_tensors;
+        vector<shared_ptr<HostTensor>> op_outputs;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
             descriptor::Tensor* tensor = &op->output(i).get_tensor();
-            HostTensor::HostEvaluatorTensorPtr evaluator_tensor;
+            shared_ptr<HostTensor> host_tensor;
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
-                PartialShape shape = op->get_output_partial_shape(i);
-                element::Type type = op->get_output_element_type(i);
-                string name = op->output(i).get_tensor().get_name();
-                evaluator_tensor = HostTensor::create_evaluator_tensor(type, shape, name);
-                tensor_map.insert({tensor, evaluator_tensor});
+                host_tensor = make_shared<HostTensor>(op->output(i));
+                tensor_map.insert({tensor, host_tensor});
             }
             else
             {
-                evaluator_tensor = it->second;
+                host_tensor = it->second;
             }
-            out_tensors.push_back(evaluator_tensor);
+            op_outputs.push_back(host_tensor);
         }
 
         // get op type
@@ -254,24 +209,8 @@ bool runtime::interpreter::INTExecutable::call_dynamic(
         {
             m_timer_map[op].start();
         }
-        vector<shared_ptr<HostTensor>> op_outputs;
-        if (op->evaluate(out_tensors, in_tensors))
+        if (!op->evaluate(op_outputs, op_inputs))
         {
-            for (auto evaluator_tensor : out_tensors)
-            {
-                op_outputs.push_back(
-                    static_pointer_cast<HostTensor::HostEvaluatorTensor>(evaluator_tensor)
-                        ->get_host_tensor());
-            }
-        }
-        else
-        {
-            for (auto evaluator_tensor : out_tensors)
-            {
-                op_outputs.push_back(
-                    static_pointer_cast<HostTensor::HostEvaluatorTensor>(evaluator_tensor)
-                        ->get_host_tensor());
-            }
             generate_calls(type, *op.get(), op_outputs, op_inputs);
         }
         if (m_performance_counters_enabled)
