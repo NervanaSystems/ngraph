@@ -904,7 +904,7 @@ bool ngraph::remove_node_update_name(const std::shared_ptr<Node>& node,
         {
             node_input->set_friendly_name(node->get_friendly_name());
         }
-        replace_node(node, node_input);
+        node->output(0).replace(node_input);
         return true;
     }
     return false;
