@@ -14,38 +14,4 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include "ngraph/op/util/fused_op.hpp"
-
-namespace ngraph
-{
-    namespace op
-    {
-        namespace v0
-        {
-            /// \brief  Replace values within provided tensor by `updates` according to `indices`.
-            class NGRAPH_API ScatterND : public op::util::FusedOp
-            {
-            public:
-                static constexpr NodeTypeInfo type_info{"ScatterND", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
-                ScatterND() = default;
-                /// \param data The tensor whithn slice-values will be updated
-                /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-                /// \param updates The tensor of replacement-slice-values
-                ScatterND(const Output<Node>& data,
-                          const Output<Node>& indices,
-                          const Output<Node>& updates);
-
-                void pre_validate_and_infer_types() override;
-
-                virtual NodeVector decompose_op() const override;
-
-                virtual std::shared_ptr<Node>
-                    clone_with_new_inputs(const OutputVector& new_args) const override;
-            };
-        }
-        using v0::ScatterND;
-    }
-}
+#include "ngraph/op/scatter_nd.hpp"

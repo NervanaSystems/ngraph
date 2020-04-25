@@ -17,6 +17,8 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
@@ -25,16 +27,16 @@ namespace ngraph
         namespace v3
         {
             /// \brief Add updates to slices from inputs addressed by indices
-            class NGRAPH_API scatterND : public Op
+            class NGRAPH_API ScatterND : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"scatterND", 3};
+                static constexpr NodeTypeInfo type_info{"ScatterND", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                scatterND() = default;
+                ScatterND() = default;
                 /// \param inputs Tensor
                 /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
                 /// \param updates Tensor: Must have same type as inputs
-                scatterND(const Output<Node>& inputs,
+                ScatterND(const Output<Node>& inputs,
                              const Output<Node>& indices,
                              const Output<Node>& updates)
                     : Op({inputs, indices, updates})
@@ -53,6 +55,30 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
-        using v3::scatterND;
+	namespace v0
+        {
+            /// \brief  Replace values within provided tensor by `updates` according to `indices`.
+            class NGRAPH_API ScatterND : public ngraph::op::util::FusedOp
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"ScatterND", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ScatterND() = default;
+                /// \param data The tensor whithn slice-values will be updated
+                /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
+                /// \param updates The tensor of replacement-slice-values
+                ScatterND(const Output<Node>& data,
+                          const Output<Node>& indices,
+                          const Output<Node>& updates);
+
+                void pre_validate_and_infer_types() override;
+
+                virtual NodeVector decompose_op() const override;
+
+                virtual std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+            };
+        }
+        using v0::ScatterND;
     }
 }
