@@ -75,19 +75,31 @@ namespace ngraph
     {
         return s << as_string(type);
     }
+
     template <>
     NGRAPH_API EnumNames<op::AutoBroadcastType>& EnumNames<op::AutoBroadcastType>::get()
     {
-        static auto enum_names = EnumNames<op::AutoBroadcastType>(
-            "op::AutoBroadcastType",
-            {{"NONE", op::AutoBroadcastType::NONE},
-             {"NUMPY", op::AutoBroadcastType::NUMPY},
-             {"PDPD", op::AutoBroadcastType::PDPD},
-             {"BIDIRECTIONAL", op::AutoBroadcastType::BIDIRECTIONAL}});
+        static auto enum_names =
+            EnumNames<op::AutoBroadcastType>("op::AutoBroadcastType",
+                                             {{"NONE", op::AutoBroadcastType::NONE},
+                                              {"NUMPY", op::AutoBroadcastType::NUMPY},
+                                              {"PDPD", op::AutoBroadcastType::PDPD}});
         return enum_names;
     }
-
     constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastType>::type_info;
+
+    template <>
+    NGRAPH_API EnumNames<op::BroadcastType>& EnumNames<op::BroadcastType>::get()
+    {
+        static auto enum_names =
+            EnumNames<op::BroadcastType>("op::BroadcastType",
+                                         {{"NONE", op::BroadcastType::NONE},
+                                          {"NUMPY", op::BroadcastType::NUMPY},
+                                          {"PDPD", op::BroadcastType::PDPD},
+                                          {"BIDIRECTIONAL", op::BroadcastType::BIDIRECTIONAL}});
+        return enum_names;
+    }
+    constexpr DiscreteTypeInfo AttributeAdapter<op::BroadcastType>::type_info;
 
     std::ostream& op::operator<<(std::ostream& s, const op::AutoBroadcastType& type)
     {
@@ -124,14 +136,14 @@ namespace ngraph
     {
         return s << as_string(type);
     }
+
     op::AutoBroadcastType op::AutoBroadcastSpec::type_from_string(const std::string& type) const
     {
         static const std::map<std::string, AutoBroadcastType> allowed_values = {
             {"NONE", AutoBroadcastType::NONE},
             {"NUMPY", AutoBroadcastType::NUMPY},
             {"PDPD", AutoBroadcastType::PDPD},
-            {"EXPLICIT", AutoBroadcastType::EXPLICIT},
-            {"BIDIRECTIONAL", AutoBroadcastType::BIDIRECTIONAL}};
+            {"EXPLICIT", AutoBroadcastType::EXPLICIT}};
 
         NGRAPH_CHECK(allowed_values.count(type) > 0, "Invalid 'type' value passed in.");
 

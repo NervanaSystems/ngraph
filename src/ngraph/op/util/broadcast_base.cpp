@@ -29,17 +29,17 @@ using namespace ngraph;
 op::util::BroadcastBase::BroadcastBase(const Output<Node>& arg,
                                        const Output<Node>& target_shape,
                                        const Output<Node>& axes_mapping,
-                                       const AutoBroadcastSpec& broadcast_spec)
+                                       const BroadcastModeSpec& broadcast_mode)
     : Op({arg, target_shape, axes_mapping})
-    , m_broadcast_spec(broadcast_spec)
+    , m_mode{broadcast_mode}
 {
 }
 
 op::util::BroadcastBase::BroadcastBase(const Output<Node>& arg,
                                        const Output<Node>& target_shape,
-                                       const AutoBroadcastSpec& broadcast_spec)
+                                       const BroadcastModeSpec& broadcast_mode)
     : Op({arg, target_shape, op::v0::Constant::create(element::u8, Shape{}, {0})->output(0)})
-    , m_broadcast_spec(broadcast_spec)
+    , m_mode{broadcast_mode}
 {
 }
 
@@ -58,7 +58,7 @@ void op::util::BroadcastBase::validate_and_infer_types()
                           "Broadcast shape rank must be 1, but has ",
                           broadcast_shape_rank);
 
-    if (m_broadcast_spec.m_type == AutoBroadcastType::NONE)
+    if (m_mode.m_type == BroadcastType::NONE)
     {
         // axes_mapping node should have integer data type. For now we only allow i64
         auto axes_et = get_input_element_type(2);
@@ -106,7 +106,7 @@ void op::util::BroadcastBase::validate_and_infer_types()
         }
     }
 
-    if (m_broadcast_spec.m_type == AutoBroadcastType::NONE)
+    if (m_mode.m_type == BroadcastType::NONE)
     {
         // Validate axes_mapping
         if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static() &&
@@ -161,8 +161,7 @@ void op::util::BroadcastBase::validate_and_infer_types()
             }
         }
     }
-    else if (m_broadcast_spec.m_type == AutoBroadcastType::NUMPY ||
-             m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
+    else if (m_mode.m_type == BroadcastType::NUMPY || m_mode.m_type == BroadcastType::PDPD)
     {
         if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static())
         {
@@ -171,8 +170,8 @@ void op::util::BroadcastBase::validate_and_infer_types()
             if (shape_constant)
             {
                 const auto target_shape = shape_constant->get_shape_val();
-                auto start_axis = (m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
-                                      ? m_broadcast_spec.m_axis
+                auto start_axis = (m_mode.m_type == BroadcastType::PDPD)
+                                      ? m_mode.m_axis
                                       : target_shape.size() - arg_shape.size();
                 NODE_VALIDATION_CHECK(this,
                                       start_axis >= 0,
@@ -207,7 +206,7 @@ std::pair<bool, AxisSet> op::util::BroadcastBase::get_broadcast_axes() const
     AxisSet broadcast_axes;
     bool axes_known = false;
 
-    if (m_broadcast_spec.m_type == AutoBroadcastType::NONE)
+    if (m_mode.m_type == BroadcastType::NONE)
     {
         const auto axes_mapping_constant =
             as_type_ptr<op::v0::Constant>(input_value(2).get_node_shared_ptr());
@@ -227,15 +226,14 @@ std::pair<bool, AxisSet> op::util::BroadcastBase::get_broadcast_axes() const
             axes_known = true;
         }
     }
-    else if (m_broadcast_spec.m_type == AutoBroadcastType::NUMPY ||
-             m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
+    else if (m_mode.m_type == BroadcastType::NUMPY || m_mode.m_type == BroadcastType::PDPD)
     {
         if (get_input_partial_shape(0).is_static() && get_output_partial_shape(0).is_static())
         {
             auto arg_shape = get_input_shape(0);
             auto result_shape = get_output_shape(0);
-            auto start_axis = (m_broadcast_spec.m_type == AutoBroadcastType::PDPD)
-                                  ? m_broadcast_spec.m_axis
+            auto start_axis = (m_mode.m_type == BroadcastType::PDPD)
+                                  ? m_mode.m_axis
                                   : result_shape.size() - arg_shape.size();
             NGRAPH_CHECK(start_axis >= 0);
             for (size_t i = 0; i < result_shape.size(); i++)
@@ -254,12 +252,6 @@ std::pair<bool, AxisSet> op::util::BroadcastBase::get_broadcast_axes() const
     }
 
     return std::make_pair(axes_known, broadcast_axes);
-}
-
-bool op::util::BroadcastBase::visit_attributes(AttributeVisitor& visitor)
-{
-    visitor.on_attribute("broadcast_spec", m_broadcast_spec);
-    return true;
 }
 
 void op::util::BroadcastBase::generate_adjoints(autodiff::Adjoints& adjoints,

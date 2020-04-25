@@ -52,7 +52,7 @@ namespace ngraph
                 Broadcast(const Output<Node>& arg,
                           const Output<Node>& target_shape,
                           const Output<Node>& axes_mapping,
-                          const AutoBroadcastSpec& broadcast_spec = AutoBroadcastSpec());
+                          const BroadcastModeSpec& broadcast_spec = BroadcastType::EXPLICIT);
 
                 /// \brief Constructs a broadcast operation.
                 ///
@@ -62,11 +62,19 @@ namespace ngraph
                 ///                       axes
                 Broadcast(const Output<Node>& arg,
                           const Output<Node>& target_shape,
-                          const AutoBroadcastSpec& broadcast_spec =
-                              AutoBroadcastSpec(AutoBroadcastType::NUMPY));
+                          const BroadcastModeSpec& broadcast_spec = BroadcastType::NUMPY);
+
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
+
+                // \return Broadcast Specification.
+                const BroadcastModeSpec& get_broadcast_spec() const { return m_mode; }
+                void set_broadcast_spec(const BroadcastModeSpec& broadcast_spec)
+                {
+                    m_mode = broadcast_spec;
+                }
 
                 void validate_and_infer_types() override;
 
@@ -115,10 +123,22 @@ namespace ngraph
                           const AutoBroadcastSpec& broadcast_spec =
                               AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
                 std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
+                /// \return Broadcast Specification.
+                const AutoBroadcastSpec& get_broadcast_spec() const { return m_broadcast_spec; }
+                void set_broadcast_spec(const AutoBroadcastSpec& broadcast_spec)
+                {
+                    m_broadcast_spec = broadcast_spec;
+                }
+
                 void validate_and_infer_types() override;
+
+            protected:
+                AutoBroadcastSpec m_broadcast_spec;
             };
         } // namespace v1
 

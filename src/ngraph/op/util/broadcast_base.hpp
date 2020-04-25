@@ -36,41 +36,33 @@ namespace ngraph
                 /// \param target_shape   The shape of the output tensor.
                 /// \param axes_mapping   The axis positions (0-based) in the result that correspond
                 ///                       to input axes.
-                /// \param broadcast_spec Broadcast specification to use for determining broadcast
+                /// \param broadcast_mode Broadcast specification to use for determining broadcast
                 ///                       axes. 'axes_mapping' should not be provided if mode other
                 ///
                 BroadcastBase(const Output<Node>& arg,
                               const Output<Node>& target_shape,
                               const Output<Node>& axes_mapping,
-                              const AutoBroadcastSpec& broadcast_spec = AutoBroadcastSpec());
+                              const BroadcastModeSpec& broadcast_mode = BroadcastType::EXPLICIT);
 
                 /// \brief Constructs a broadcast operation.
                 ///
                 /// \param arg            The input tensor to be broadcast.
                 /// \param target_shape   The shape of the output tensor.
-                /// \param broadcast_spec Broadcast specification to use for determining broadcast
+                /// \param broadcast_mode Broadcast specification to use for determining broadcast
                 ///                       axes
                 BroadcastBase(const Output<Node>& arg,
                               const Output<Node>& target_shape,
-                              const AutoBroadcastSpec& broadcast_spec =
-                                  AutoBroadcastSpec(AutoBroadcastType::NUMPY));
+                              const BroadcastModeSpec& broadcast_mode = BroadcastType::NUMPY);
 
             public:
-                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
-                /// \return Broadcast Specification.
-                const AutoBroadcastSpec& get_broadcast_spec() const { return m_broadcast_spec; }
-                void set_broadcast_spec(const AutoBroadcastSpec& broadcast_spec)
-                {
-                    m_broadcast_spec = broadcast_spec;
-                }
                 /// \return true and the AxisSet if broadcast axes can be fully determined.
                 virtual std::pair<bool, AxisSet> get_broadcast_axes() const;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
-                AutoBroadcastSpec m_broadcast_spec;
+                BroadcastModeSpec m_mode;
             };
         }
     }

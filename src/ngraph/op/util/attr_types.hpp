@@ -167,7 +167,6 @@ namespace ngraph
             EXPLICIT = NONE,
             NUMPY,
             PDPD,
-            BIDIRECTIONAL
         };
 
         NGRAPH_API
@@ -185,6 +184,34 @@ namespace ngraph
         }
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastType>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    namespace op
+    {
+        enum class BroadcastType
+        {
+            NONE,
+            EXPLICIT = NONE,
+            NUMPY,
+            PDPD,
+            BIDIRECTIONAL
+        };
+
+        NGRAPH_API
+        std::ostream& operator<<(std::ostream& s, const BroadcastType& type);
+    }
+    template <>
+    class NGRAPH_API AttributeAdapter<op::BroadcastType>
+        : public EnumAttributeAdapterBase<op::BroadcastType>
+    {
+    public:
+        AttributeAdapter(op::BroadcastType& value)
+            : EnumAttributeAdapterBase<op::BroadcastType>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::BroadcastType>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
 
@@ -297,6 +324,54 @@ namespace ngraph
         }
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastSpec>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    namespace op
+    {
+        /// \brief Implicit broadcast specification
+        struct NGRAPH_API BroadcastModeSpec
+        {
+            BroadcastModeSpec()
+                : m_type(BroadcastType::NUMPY)
+                , m_axis(0)
+            {
+            }
+            BroadcastModeSpec(BroadcastType type)
+                : m_type(type)
+                , m_axis(0)
+            {
+            }
+            BroadcastModeSpec(const char* type)
+                : BroadcastModeSpec(as_enum<BroadcastType>(type))
+            {
+            }
+            BroadcastModeSpec(BroadcastType type, int64_t axis)
+                : m_type(type)
+                , m_axis(axis)
+            {
+            }
+
+            BroadcastType m_type; // Implicit broadcasting algorithm
+            int64_t m_axis;       // Axis to start alignment on
+
+            bool operator==(const BroadcastModeSpec& a) const
+            {
+                return a.m_type == m_type && a.m_axis == m_axis;
+            }
+        };
+    }
+    template <>
+    class NGRAPH_API AttributeAdapter<op::BroadcastModeSpec>
+        : public ValueReference<op::BroadcastModeSpec>, public ValueAccessor<void>
+    {
+    public:
+        AttributeAdapter(op::BroadcastModeSpec& value)
+            : ValueReference<op::BroadcastModeSpec>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::BroadcastModeSpec>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
 }

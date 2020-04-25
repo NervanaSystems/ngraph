@@ -30,7 +30,7 @@ constexpr NodeTypeInfo op::v3::Broadcast::type_info;
 op::v3::Broadcast::Broadcast(const Output<Node>& arg,
                              const Output<Node>& target_shape,
                              const Output<Node>& axes_mapping,
-                             const AutoBroadcastSpec& broadcast_spec)
+                             const BroadcastModeSpec& broadcast_spec)
     : util::BroadcastBase{arg, target_shape, axes_mapping, broadcast_spec}
 {
     NODE_VALIDATION_CHECK(this,
@@ -42,7 +42,7 @@ op::v3::Broadcast::Broadcast(const Output<Node>& arg,
 
 op::v3::Broadcast::Broadcast(const Output<Node>& arg,
                              const Output<Node>& target_shape,
-                             const AutoBroadcastSpec& broadcast_spec)
+                             const BroadcastModeSpec& broadcast_spec)
     : util::BroadcastBase{arg, target_shape, broadcast_spec}
 {
     NODE_VALIDATION_CHECK(this,
@@ -133,13 +133,37 @@ shared_ptr<Node> op::v3::Broadcast::clone_with_new_inputs(const OutputVector& ne
         new_args.at(0), new_args.at(1), new_args.at(2), m_broadcast_spec);
 }
 
+bool op::v3::Broadcast::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("broadcast_spec", m_mode);
+    return true;
+}
+
+namespace
+{
+    using namespace op;
+    BroadcastModeSpec to_broadcast_mode(const AutoBroadcastSpec& bs)
+    {
+        BroadcastModeSpec broadcast_mode;
+        broadcast_mode.m_axis = bs.m_axis;
+        switch (bs.m_type)
+        {
+        case AutoBroadcastType::NONE: broadcast_mode.m_type = BroadcastType::NONE; break;
+        case AutoBroadcastType::NUMPY: broadcast_mode.m_type = BroadcastType::NUMPY; break;
+        case AutoBroadcastType::PDPD: broadcast_mode.m_type = BroadcastType::PDPD; break;
+        }
+        return broadcast_mode;
+    }
+}
+
 constexpr NodeTypeInfo op::v1::Broadcast::type_info;
 
 op::v1::Broadcast::Broadcast(const Output<Node>& arg,
                              const Output<Node>& target_shape,
                              const Output<Node>& axes_mapping,
                              const AutoBroadcastSpec& broadcast_spec)
-    : util::BroadcastBase{arg, target_shape, axes_mapping, broadcast_spec}
+    : util::BroadcastBase{arg, target_shape, axes_mapping, to_broadcast_mode(broadcast_spec)}
+    , m_broadcast_spec{broadcast_spec}
 {
     constructor_validate_and_infer_types();
 }
@@ -147,7 +171,8 @@ op::v1::Broadcast::Broadcast(const Output<Node>& arg,
 op::v1::Broadcast::Broadcast(const Output<Node>& arg,
                              const Output<Node>& target_shape,
                              const AutoBroadcastSpec& broadcast_spec)
-    : util::BroadcastBase{arg, target_shape, broadcast_spec}
+    : util::BroadcastBase{arg, target_shape, to_broadcast_mode(broadcast_spec)}
+    , m_broadcast_spec{broadcast_spec}
 {
     constructor_validate_and_infer_types();
 }
@@ -167,6 +192,12 @@ shared_ptr<Node> op::v1::Broadcast::clone_with_new_inputs(const OutputVector& ne
     check_new_args_count(this, new_args);
     return make_shared<v1::Broadcast>(
         new_args.at(0), new_args.at(1), new_args.at(2), m_broadcast_spec);
+}
+
+bool op::v1::Broadcast::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("broadcast_spec", m_broadcast_spec);
+    return true;
 }
 
 constexpr NodeTypeInfo op::v0::Broadcast::type_info;
