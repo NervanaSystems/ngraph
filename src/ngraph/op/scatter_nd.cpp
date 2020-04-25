@@ -14,12 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/op/scatter_nd.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/shape.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/select.hpp"
-#include "ngraph/op/scatter_nd.hpp"
+#include "ngraph/shape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -147,8 +147,7 @@ constexpr NodeTypeInfo op::v3::ScatterND::type_info;
 shared_ptr<Node> op::v3::ScatterND::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<ScatterND>(
-        new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
+    return make_shared<ScatterND>(new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
 }
 
 void op::v3::ScatterND::validate_and_infer_types()

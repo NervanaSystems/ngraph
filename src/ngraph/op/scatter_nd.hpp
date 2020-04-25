@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "ngraph/op/op.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
@@ -37,8 +37,8 @@ namespace ngraph
                 /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
                 /// \param updates Tensor: Must have same type as inputs
                 ScatterND(const Output<Node>& inputs,
-                             const Output<Node>& indices,
-                             const Output<Node>& updates)
+                          const Output<Node>& indices,
+                          const Output<Node>& updates)
                     : Op({inputs, indices, updates})
                 {
                     constructor_validate_and_infer_types();
@@ -55,7 +55,7 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
-	namespace v0
+        namespace v0
         {
             /// \brief  Replace values within provided tensor by `updates` according to `indices`.
             class NGRAPH_API ScatterND : public ngraph::op::util::FusedOp
