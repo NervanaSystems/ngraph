@@ -89,6 +89,7 @@ namespace
                       const HostTensorPtr& out,
                       const op::AutoBroadcastSpec& broadcast_spec)
     {
+        out->set_broadcast(broadcast_spec, arg0, arg1);
         return try_evaluate_add<element::Type_t::i8>(arg0, arg1, out, broadcast_spec) ||
                try_evaluate_add<element::Type_t::i16>(arg0, arg1, out, broadcast_spec) ||
                try_evaluate_add<element::Type_t::i32>(arg0, arg1, out, broadcast_spec) ||
