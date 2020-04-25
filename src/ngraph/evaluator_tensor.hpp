@@ -117,8 +117,8 @@ namespace ngraph
         }
 
     protected:
-        element::Type m_element_type;
-        PartialShape m_partial_shape;
-        bool m_is_allocated;
+        element::Type m_element_type{element::dynamic};
+        PartialShape m_partial_shape{PartialShape::dynamic()};
+        bool m_is_allocated{false};
     };
 }

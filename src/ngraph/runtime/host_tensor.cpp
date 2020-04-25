@@ -101,6 +101,12 @@ void runtime::HostTensor::allocate_buffer()
         }
     }
 }
+runtime::HostTensor::HostTensor(const std::shared_ptr<op::v0::Constant>& constant)
+    : HostTensor(
+          constant->get_output_element_type(0), constant->get_output_shape(0), constant->get_name())
+{
+    memcpy(get_data_ptr(), constant->get_data_ptr(), get_size_in_bytes());
+}
 
 runtime::HostTensor::~HostTensor()
 {
