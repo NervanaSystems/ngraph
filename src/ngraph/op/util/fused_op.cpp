@@ -40,15 +40,8 @@ void op::util::FusedOp::validate_and_infer_types()
     }
 
     OutputVector subgraph_output_vector = decompose_op();
-
     // This is a hack just to make minimal changes here and should be removed ASAP
-    NodeVector subgraph_outputs;
-    for (auto output : subgraph_output_vector)
-    {
-        subgraph_outputs.push_back(output.get_node_shared_ptr());
-    }
-    // End hack
-
+    NodeVector subgraph_outputs = as_node_vector(subgraph_output_vector);
     auto subgraph = extract_subgraph(subgraph_outputs, get_arguments());
     validate_nodes_and_infer_types(subgraph);
 
