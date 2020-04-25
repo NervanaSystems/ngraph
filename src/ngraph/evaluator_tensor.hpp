@@ -56,18 +56,19 @@ namespace ngraph
         class HostTensor;
     }
 
+    namespace runtime
+    {
+        class HostTensor;
+    }
+
     /// \brief A generic handle to (potential) storage with element type and shape information
     class NGRAPH_API EvaluatorTensor
     {
     protected:
         EvaluatorTensor(const element::Type& element_type,
-                        const PartialShape& partial_shape,
-                        bool is_allocated);
+                        const PartialShape& partial_shape);
         /// \brief Get type/shape from value
-        EvaluatorTensor(const Output<Node>& value, bool is_allocated);
-
-        /// \brief Marks the tensor as allocated
-        void set_is_allocated();
+        EvaluatorTensor(const Output<Node>& value);
 
     public:
         virtual ~EvaluatorTensor();
@@ -84,8 +85,6 @@ namespace ngraph
         size_t get_element_count() const;
         /// \return The number of bytes in the shape
         size_t get_size_in_bytes() const;
-        /// \return True if storage has been allocated
-        bool get_is_allocated() const;
         /// \brief Set the element type. Must be compatible with the current element type.
         /// \param node The node being evaluated, for context
         /// \param element_type The element type
@@ -119,6 +118,5 @@ namespace ngraph
     protected:
         element::Type m_element_type{element::dynamic};
         PartialShape m_partial_shape{PartialShape::dynamic()};
-        bool m_is_allocated{false};
     };
 }

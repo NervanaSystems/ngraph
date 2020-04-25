@@ -216,14 +216,14 @@ namespace
         HostTensorEvaluatorTensor(const element::Type& element_type,
                                   const PartialShape& partial_shape,
                                   const std::string& name)
-            : HostEvaluatorTensor(element_type, partial_shape, false)
+            : HostEvaluatorTensor(element_type, partial_shape)
             , m_name(name)
         {
             m_host_tensor = make_shared<runtime::HostTensor>(element_type, partial_shape);
         }
         HostTensorEvaluatorTensor(shared_ptr<runtime::HostTensor> host_tensor)
             : HostEvaluatorTensor(
-                  host_tensor->get_element_type(), host_tensor->get_partial_shape(), true)
+                  host_tensor->get_element_type(), host_tensor->get_partial_shape())
             , m_host_tensor(host_tensor)
         {
         }

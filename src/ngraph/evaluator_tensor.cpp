@@ -31,16 +31,14 @@ ngraph::EvaluatorTensor::~EvaluatorTensor()
 }
 
 ngraph::EvaluatorTensor::EvaluatorTensor(const element::Type& element_type,
-                                         const PartialShape& partial_shape,
-                                         bool is_allocated)
+                                         const PartialShape& partial_shape)
     : m_element_type(element_type)
     , m_partial_shape(partial_shape)
-    , m_is_allocated(is_allocated)
 {
 }
 
-ngraph::EvaluatorTensor::EvaluatorTensor(const Output<Node>& value, bool is_allocated)
-    : EvaluatorTensor(value.get_element_type(), value.get_partial_shape(), is_allocated)
+ngraph::EvaluatorTensor::EvaluatorTensor(const Output<Node>& value)
+    : EvaluatorTensor(value.get_element_type(), value.get_partial_shape())
 {
 }
 
@@ -75,16 +73,6 @@ void ngraph::EvaluatorTensor::set_element_type(Node* node, const element::Type& 
                           m_element_type.is_dynamic() || m_element_type == element_type,
                           "Can not change a static element type");
     m_element_type = element_type;
-}
-
-void ngraph::EvaluatorTensor::set_is_allocated()
-{
-    m_is_allocated = true;
-}
-
-bool ngraph::EvaluatorTensor::get_is_allocated() const
-{
-    return m_is_allocated;
 }
 
 void ngraph::EvaluatorTensor::set_shape(Node* node, const Shape& shape)
