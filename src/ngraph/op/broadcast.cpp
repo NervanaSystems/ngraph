@@ -34,7 +34,7 @@ op::v3::Broadcast::Broadcast(const Output<Node>& arg,
     : util::BroadcastBase{arg, target_shape, axes_mapping, broadcast_spec}
 {
     NODE_VALIDATION_CHECK(this,
-                          m_broadcast_spec.m_type == AutoBroadcastType::NONE,
+                          m_mode.m_type == BroadcastType::NONE,
                           "axes_mapping input should not be provided for mode other than explicit");
 
     constructor_validate_and_infer_types();
@@ -46,7 +46,7 @@ op::v3::Broadcast::Broadcast(const Output<Node>& arg,
     : util::BroadcastBase{arg, target_shape, broadcast_spec}
 {
     NODE_VALIDATION_CHECK(this,
-                          m_broadcast_spec.m_type != AutoBroadcastType::NONE,
+                          m_mode.m_type != BroadcastType::NONE,
                           "axes_mapping input should be provided if explicit mode is used");
 
     constructor_validate_and_infer_types();
@@ -55,7 +55,7 @@ op::v3::Broadcast::Broadcast(const Output<Node>& arg,
 std::pair<bool, AxisSet> op::v3::Broadcast::get_broadcast_axes() const
 {
     AxisSet broadcast_axes;
-    if (m_broadcast_spec.m_type == AutoBroadcastType::BIDIRECTIONAL)
+    if (m_mode.m_type == BroadcastType::BIDIRECTIONAL)
     {
         if (get_input_partial_shape(0).is_static() && get_output_partial_shape(0).is_static())
         {
@@ -85,7 +85,7 @@ void op::v3::Broadcast::validate_and_infer_types()
     util::BroadcastBase::validate_and_infer_types();
 
     auto result_shape = get_output_partial_shape(0);
-    if (m_broadcast_spec.m_type == AutoBroadcastType::BIDIRECTIONAL)
+    if (m_mode.m_type == BroadcastType::BIDIRECTIONAL)
     {
         if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static())
         {
@@ -129,8 +129,7 @@ void op::v3::Broadcast::validate_and_infer_types()
 shared_ptr<Node> op::v3::Broadcast::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v3::Broadcast>(
-        new_args.at(0), new_args.at(1), new_args.at(2), m_broadcast_spec);
+    return make_shared<v3::Broadcast>(new_args.at(0), new_args.at(1), new_args.at(2), m_mode);
 }
 
 bool op::v3::Broadcast::visit_attributes(AttributeVisitor& visitor)
@@ -179,11 +178,6 @@ op::v1::Broadcast::Broadcast(const Output<Node>& arg,
 
 void op::v1::Broadcast::validate_and_infer_types()
 {
-    NODE_VALIDATION_CHECK(
-        this,
-        m_broadcast_spec.m_type != AutoBroadcastType::BIDIRECTIONAL,
-        "BIDIRECTIONAL mode is not supported for Broadcast:v1, you should use Broadcast:v3");
-
     util::BroadcastBase::validate_and_infer_types();
 }
 

@@ -199,29 +199,8 @@ TEST(type_prop, broadcast_partial_rank_static_dynamic_shape_mismatch_wrong_size)
     }
 }
 
-TEST(type_prop, broadcast_v1_bidirectional_not_supported)
-{
-    const auto param = make_shared<op::Parameter>(element::f32, PartialShape{1, 1});
-    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {1, 1, 1});
-    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
-    try
-    {
-        auto bc = make_shared<op::v1::Broadcast>(param, target_shape, broadcast_spec);
-        FAIL() << "Not supported broadcast mode exception not thrown";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "BIDIRECTIONAL mode is not supported for Broadcast:v1, you should use Broadcast:v3");
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
 // Because v3::Broadcast is backward compatible to v1::Broadcast all v1::Broadcast tests should pass
+// (except pdp tests exception)
 template <typename T>
 class BroadcastTests : public ::testing::Test
 {
@@ -234,17 +213,6 @@ TYPED_TEST_P(BroadcastTests, broadcast_numpy)
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
 
     auto bc = make_shared<TypeParam>(param, target_shape);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
-    ASSERT_EQ(bc->get_shape(), (Shape{2, 3, 6}));
-}
-
-TYPED_TEST_P(BroadcastTests, broadcast_pdpd)
-{
-    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
-    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
-
-    auto bc = make_shared<TypeParam>(
-        param, target_shape, op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1));
     ASSERT_EQ(bc->get_element_type(), element::f32);
     ASSERT_EQ(bc->get_shape(), (Shape{2, 3, 6}));
 }
@@ -274,8 +242,7 @@ TYPED_TEST_P(BroadcastTests, broadcast_target_shape_as_concat_with_constants)
                                             target_shape_constant_4};
     auto target_shape = make_shared<op::Concat>(args, axis);
     auto axes_mapping = op::Constant::create<int64_t>(element::i64, Shape{1}, {1});
-    auto bc = make_shared<TypeParam>(
-        param, target_shape, axes_mapping, ngraph::op::AutoBroadcastSpec::NONE);
+    auto bc = make_shared<TypeParam>(param, target_shape, axes_mapping, "NONE");
     ASSERT_TRUE(bc->get_output_partial_shape(0).rank().is_static());
     ASSERT_TRUE(bc->get_output_partial_shape(0).rank().same_scheme(Rank{4}));
     ASSERT_TRUE(bc->get_output_partial_shape(0).is_static());
@@ -296,8 +263,7 @@ TYPED_TEST_P(BroadcastTests, broadcast_target_shape_as_concat_with_node)
                                             target_shape_constant_4};
     auto target_shape = make_shared<op::Concat>(args, axis);
     auto axes_mapping = op::Constant::create<int64_t>(element::i64, Shape{1}, {1});
-    auto bc = make_shared<TypeParam>(
-        param, target_shape, axes_mapping, ngraph::op::AutoBroadcastSpec::NONE);
+    auto bc = make_shared<TypeParam>(param, target_shape, axes_mapping, "NONE");
     ASSERT_TRUE(bc->get_output_partial_shape(0).rank().is_static());
     ASSERT_TRUE(bc->get_output_partial_shape(0).rank().same_scheme(Rank{4}));
     ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
@@ -497,7 +463,6 @@ TYPED_TEST_P(BroadcastTests, broadcast_axes_et_wrong)
 
 REGISTER_TYPED_TEST_CASE_P(BroadcastTests,
                            broadcast_numpy,
-                           broadcast_pdpd,
                            broadcast_axes_mapping,
                            broadcast_target_shape_as_concat_with_constants,
                            broadcast_target_shape_as_concat_with_node,
@@ -516,6 +481,29 @@ typedef ::testing::Types<op::v1::Broadcast, op::v3::Broadcast> BroadcastTypes;
 // `must specify at least one argument for '...'` (variadic macro)
 INSTANTIATE_TYPED_TEST_CASE_P(type_prop, BroadcastTests, BroadcastTypes, );
 
+// changing AutoBroadcastSpec to BroadcastModeSpec forces runing pdpd tests separately
+TEST(type_prop, broadcast_v1_pdpd)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
+
+    auto bc = make_shared<op::v1::Broadcast>(
+        param, target_shape, op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1));
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{2, 3, 6}));
+}
+
+TEST(type_prop, broadcast_v3_pdpd)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
+
+    auto bc = make_shared<op::v3::Broadcast>(
+        param, target_shape, op::BroadcastModeSpec(op::BroadcastType::PDPD, 1));
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{2, 3, 6}));
+}
+
 TEST(type_prop, broadcast_v3_bidirectional_mode_string)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1});
@@ -523,7 +511,7 @@ TEST(type_prop, broadcast_v3_bidirectional_mode_string)
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, "BIDIRECTIONAL");
 
-    ASSERT_EQ(broadcast_v3->get_broadcast_spec(), op::AutoBroadcastType::BIDIRECTIONAL);
+    ASSERT_EQ(broadcast_v3->get_broadcast_spec(), op::BroadcastType::BIDIRECTIONAL);
     ASSERT_EQ(broadcast_v3->get_version(), 3);
 }
 
@@ -532,7 +520,7 @@ TEST(type_prop, broadcast_v3_shape_unexpected_axes_mapping_input)
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1});
     const auto shape = make_shared<op::Parameter>(element::i16, Shape{2});
     const auto axes_mapping = make_shared<op::Parameter>(element::f32, Shape{3});
-    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+    const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
     try
     {
@@ -556,7 +544,7 @@ TEST(type_prop, broadcast_v3_not_provided_axes_input_for_explicit_mode)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1});
     const auto shape = make_shared<op::Parameter>(element::i16, Shape{2});
-    const auto broadcast_spec = op::AutoBroadcastType::EXPLICIT;
+    const auto broadcast_spec = op::BroadcastType::EXPLICIT;
 
     try
     {
@@ -579,7 +567,7 @@ TEST(type_prop, broadcast_v3_shape)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1});
     const auto shape = op::Constant::create(element::i64, {2}, {1, 4});
-    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+    const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
@@ -592,7 +580,7 @@ TEST(type_prop, broadcast_v3_shape_2)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{3, 1});
     const auto shape = op::Constant::create(element::i64, {3}, {2, 1, 6});
-    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+    const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
@@ -605,7 +593,7 @@ TEST(type_prop, broadcast_v3_shape_3)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 1});
     const auto shape = op::Constant::create(element::i64, {2}, {2, 4});
-    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+    const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
@@ -618,7 +606,7 @@ TEST(type_prop, broadcast_v3_shape_4)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 1});
     const auto shape = op::Constant::create(element::i64, {2}, {3, 1});
-    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+    const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
@@ -631,7 +619,7 @@ TEST(type_prop, broadcast_v3_shape_5)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{16, 1, 1});
     const auto shape = op::Constant::create(element::i64, {4}, {1, 1, 50, 50});
-    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+    const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
@@ -645,7 +633,7 @@ TEST(type_prop, broadcast_v3_shape_6)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 1});
     const auto shape = op::Constant::create(element::i64, {3}, {3, 1, 3});
-    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+    const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
@@ -658,7 +646,7 @@ TEST(type_prop, broadcast_v3_shape_6_type_infer)
 {
     const auto arg = make_shared<op::Parameter>(element::u16, Shape{1, 3, 1});
     const auto shape = op::Constant::create(element::i64, {3}, {3, 1, 3});
-    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+    const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
@@ -671,7 +659,7 @@ TEST(type_prop, broadcast_v3_incorrect_target_shape)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
     const auto shape = op::Constant::create(element::i64, {3}, {8, 6, 4});
-    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+    const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
     try
     {
@@ -694,7 +682,7 @@ TEST(type_prop, broadcast_v3_incorrect_target_shape_2)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2});
     const auto shape = op::Constant::create(element::i64, {2}, {2, 3});
-    const auto broadcast_spec = op::AutoBroadcastType::BIDIRECTIONAL;
+    const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
     try
     {

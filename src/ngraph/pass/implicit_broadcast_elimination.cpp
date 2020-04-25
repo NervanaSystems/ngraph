@@ -60,10 +60,6 @@ NodeVector ngraph::pass::explicit_broadcast(std::shared_ptr<Node>& node)
         {
             rc = as_node_vector(builder::pdpd_broadcast(node->input_values(), autob.m_axis));
         }
-        else if (autob.m_type == op::AutoBroadcastType::BIDIRECTIONAL)
-        {
-            rc = as_node_vector(builder::numpy_broadcast_outputs(node->input_values()));
-        }
         else
         {
             throw ngraph_error("Unsupported implicit broadcast type");

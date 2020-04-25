@@ -926,13 +926,6 @@ std::tuple<element::Type, PartialShape>
                     PartialShape::broadcast_merge_into(pshape, get_input_partial_shape(i), autob),
                     "Argument shapes are inconsistent.");
             }
-            else if (autob.m_type == op::AutoBroadcastType::BIDIRECTIONAL)
-            {
-                NODE_VALIDATION_CHECK(
-                    this,
-                    false,
-                    "BIDIRECTIONAL auto broadcast is not supported for elementwise operations");
-            }
             else
             {
                 NODE_VALIDATION_CHECK(this, false, "Unsupported auto broadcast specification");

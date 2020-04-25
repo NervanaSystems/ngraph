@@ -99,6 +99,12 @@ namespace ngraph
                                           {"BIDIRECTIONAL", op::BroadcastType::BIDIRECTIONAL}});
         return enum_names;
     }
+
+    std::ostream& op::operator<<(std::ostream& s, const op::BroadcastType& type)
+    {
+        return s << as_string(type);
+    }
+
     constexpr DiscreteTypeInfo AttributeAdapter<op::BroadcastType>::type_info;
 
     std::ostream& op::operator<<(std::ostream& s, const op::AutoBroadcastType& type)
