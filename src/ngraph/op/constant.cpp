@@ -17,7 +17,6 @@
 #include <cmath>
 #include <cstdio>
 
-#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/util.hpp"

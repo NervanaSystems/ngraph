@@ -19,7 +19,6 @@
 
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
-#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
@@ -173,15 +172,15 @@ void runtime::HostTensor::set_shape(const Shape& shape)
     m_descriptor->set_partial_shape(shape);
 }
 
-void runtime::HostTensor::set_unary(const EvaluatorTensorPtr& arg)
+void runtime::HostTensor::set_unary(const HostTensorPtr& arg)
 {
     set_element_type(arg->get_element_type());
     set_shape(arg->get_partial_shape().get_shape());
 }
 
 void runtime::HostTensor::set_broadcast(const op::AutoBroadcastSpec& autob,
-                                        const EvaluatorTensorPtr& arg0,
-                                        const EvaluatorTensorPtr& arg1)
+                                        const HostTensorPtr& arg0,
+                                        const HostTensorPtr& arg1)
 {
     element::Type element_type = arg0->get_element_type();
     NGRAPH_CHECK(element::Type::merge(element_type, element_type, arg1->get_element_type()),
@@ -205,43 +204,4 @@ void runtime::HostTensor::set_broadcast(const op::AutoBroadcastSpec& autob,
         NGRAPH_CHECK(false, "Unsupported auto broadcast specification");
     }
     set_shape(pshape.get_shape());
-}
-
-namespace
-{
-    // Wraps an existing HostTensor
-    class HostTensorEvaluatorTensor : public runtime::HostTensor::HostEvaluatorTensor
-    {
-    public:
-        HostTensorEvaluatorTensor(const element::Type& element_type,
-                                  const PartialShape& partial_shape,
-                                  const std::string& name)
-            : HostEvaluatorTensor(element_type, partial_shape)
-            , m_name(name)
-        {
-            m_host_tensor = make_shared<runtime::HostTensor>(element_type, partial_shape);
-        }
-        HostTensorEvaluatorTensor(shared_ptr<runtime::HostTensor> host_tensor)
-            : HostEvaluatorTensor(host_tensor->get_element_type(), host_tensor->get_partial_shape())
-            , m_host_tensor(host_tensor)
-        {
-        }
-        void* get_data_ptr() override { return m_host_tensor->get_data_ptr(); }
-        shared_ptr<runtime::HostTensor> get_host_tensor() override { return m_host_tensor; }
-    private:
-        string m_name;
-        shared_ptr<runtime::HostTensor> m_host_tensor;
-    };
-}
-
-runtime::HostTensor::HostEvaluatorTensorPtr
-    runtime::HostTensor::create_evaluator_tensor(std::shared_ptr<runtime::HostTensor> host_tensor)
-{
-    return make_shared<HostTensorEvaluatorTensor>(host_tensor);
-}
-
-runtime::HostTensor::HostEvaluatorTensorPtr runtime::HostTensor::create_evaluator_tensor(
-    const element::Type& element_type, const PartialShape& partial_shape, const string& name)
-{
-    return make_shared<HostTensorEvaluatorTensor>(element_type, partial_shape, name);
 }
