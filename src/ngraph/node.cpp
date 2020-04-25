@@ -520,6 +520,11 @@ std::shared_ptr<Node> Node::get_input_node_shared_ptr(size_t index) const
     return m_inputs[index].get_output().get_node();
 }
 
+Output<Node> Node::get_input_source_output(size_t i) const
+{
+    return input(i).get_source_output();
+}
+
 NodeVector Node::get_arguments() const
 {
     NodeVector result;

@@ -359,3 +359,22 @@ TEST(nop_elimination, unsqueeze_reshape_elimination)
     check_usecase(Shape{2, 3, 2}, std::vector<int64_t>{2});
     check_usecase(Shape{1, 6, 2}, std::vector<int64_t>{3});
 }
+
+TEST(nop_elimination, topk_convert_elimination)
+{
+    auto check_usecase = []() {
+        auto A = make_shared<op::Parameter>(element::f32, Shape{20, 3, 4});
+        auto A1 = make_shared<op::v0::Abs>(A);
+        auto B = make_shared<op::TopK>(A1, 0, element::i64, 10);
+        auto C = make_shared<op::Convert>(B->output(0), B->output(0).get_element_type());
+        auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(C), ParameterVector{A});
+        auto optimized_f = clone_function(*baseline_f);
+        EXPECT_TRUE(
+            (compare_pass_int<pass::NopElimination, float, int64_t>(baseline_f, optimized_f)));
+
+        ASSERT_EQ(count_ops_of_type<op::Convert>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::Convert>(optimized_f), 0);
+    };
+
+    check_usecase();
+}

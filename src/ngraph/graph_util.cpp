@@ -882,29 +882,29 @@ void ngraph::traverse_functions(std::shared_ptr<Function> p,
     f(p);
 }
 
-bool ngraph::remove_node_update_name(const std::shared_ptr<Node>& node,
-                                     const std::shared_ptr<Node>& node_input)
+bool ngraph::replace_output_update_name(Output<Node> output, const Output<Node>& replacement)
 {
     bool has_result_output = false;
-    for (auto& output : node->output(0).get_target_inputs())
+    for (auto& target_input : output.get_target_inputs())
     {
-        if (as_type<op::Result>(output.get_node()))
+        if (is_type<op::Result>(target_input.get_node()))
         {
+            // ignore trivial elimination
             has_result_output = true;
+            if (is_type<ngraph::op::Parameter>(replacement.get_node()))
+            {
+                return false;
+            }
+            break;
         }
     }
-    // ignore trivial elimination
-    if (has_result_output && as_type_ptr<ngraph::op::Parameter>(node_input))
+    if (!has_result_output || replacement.get_node()->get_users().size() == 1)
     {
-        return false;
-    }
-    if (!has_result_output || node_input->get_users().size() == 1)
-    {
-        if (has_result_output && !std::dynamic_pointer_cast<ngraph::op::Parameter>(node_input))
+        if (has_result_output && !is_type<ngraph::op::Parameter>(replacement.get_node()))
         {
-            node_input->set_friendly_name(node->get_friendly_name());
+            replacement.get_node()->set_friendly_name(output.get_node()->get_friendly_name());
         }
-        node->output(0).replace(node_input);
+        output.replace(replacement);
         return true;
     }
     return false;
