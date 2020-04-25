@@ -14,9 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/bucketize.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/validation_util.hpp"
+#include "bucketize.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -24,9 +22,9 @@ using namespace std;
 constexpr NodeTypeInfo op::v3::Bucketize::type_info;
 
 op::v3::Bucketize::Bucketize(const Output<Node>& data,
-                          const Output<Node>& buckets,
-                          const element::Type output_type,
-                          const bool with_right_bound)
+                             const Output<Node>& buckets,
+                             const element::Type output_type,
+                             const bool with_right_bound)
     : Op({data, buckets})
     , m_output_type(output_type)
     , m_with_right_bound(with_right_bound)
@@ -43,10 +41,9 @@ bool op::v3::Bucketize::visit_attributes(AttributeVisitor& visitor)
 
 void op::v3::Bucketize::validate_and_infer_types()
 {
-
     const PartialShape& data_pshape = get_input_partial_shape(0);
     const PartialShape& buckets_pshape = get_input_partial_shape(1);
-    
+
     NODE_VALIDATION_CHECK(this,
                           m_output_type == element::i64 || m_output_type == element::i32,
                           "Output type must be i32 or i64. Default is i64");
@@ -64,13 +61,10 @@ void op::v3::Bucketize::validate_and_infer_types()
     set_output_type(0, m_output_type, data_pshape);
 }
 
-shared_ptr<Node>
-    op::v3::Bucketize::clone_with_new_inputs(const OutputVector& inputs) const
+shared_ptr<Node> op::v3::Bucketize::clone_with_new_inputs(const OutputVector& inputs) const
 {
     check_new_args_count(this, inputs);
 
-    return make_shared<v3::Bucketize>(inputs.at(0),
-                                      inputs.at(1),
-                                      m_output_type,
-                                      m_with_right_bound);
+    return make_shared<v3::Bucketize>(
+        inputs.at(0), inputs.at(1), m_output_type, m_with_right_bound);
 }

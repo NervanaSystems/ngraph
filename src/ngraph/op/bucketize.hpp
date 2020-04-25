@@ -32,7 +32,6 @@ namespace ngraph
                 Bucketize() = default;
                 /// \brief Constructs a Bucketize node
 
-
                 /// \param data              Input data to bucketize
                 /// \param buckets           1-D of sorted unique boundaries for buckets
                 /// \param output_type       Output tensor type, "i64" or "i32", defaults to i64
@@ -55,8 +54,10 @@ namespace ngraph
                 using Node::set_output_type;
 
                 bool get_with_right_bound() const { return m_with_right_bound; }
-                void set_with_right_bound(bool with_right_bound) { m_with_right_bound = with_right_bound; }
-
+                void set_with_right_bound(bool with_right_bound)
+                {
+                    m_with_right_bound = with_right_bound;
+                }
 
                 // FOR CONSTANT FOLDING INTERNAL USAGE ONLY
                 // Constant folding for cases with static rank but dynamic shape create a subgraph
@@ -73,10 +74,9 @@ namespace ngraph
                                    const OutputVector& input_values) override;*/
 
             private:
-                //bool m_is_foldable = true;
+                // bool m_is_foldable = true;
                 element::Type m_output_type;
                 bool m_with_right_bound;
-
             };
         }
         using v3::Bucketize;

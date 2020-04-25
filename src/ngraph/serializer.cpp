@@ -1120,13 +1120,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::BroadcastLike>(args[0], args[1], initial_axes);
             break;
         }
-        /*case OP_TYPEID::Bucketize_v3:
+        case OP_TYPEID::Bucketize_v3:
         {
             element::Type output_type = read_element_type(node_js.at("output_type"));
             bool with_right_bound = get_or_default<bool>(node_js, "with_right_bound", true);
             node = make_shared<op::v3::Bucketize>(args[0], args[1], output_type, with_right_bound);
             break;
-        }*/
+        }
         case OP_TYPEID::Ceiling:
         {
             node = make_shared<op::Ceiling>(args[0]);
@@ -2901,13 +2901,13 @@ json JSONSerializer::serialize_node(const Node& n)
         node["initial_axes"] = serialize_axis_set(tmp->get_initial_broadcast_axes());
         break;
     }
-    /*case OP_TYPEID::Bucketize_v3:
+    case OP_TYPEID::Bucketize_v3:
     {
         auto tmp = static_cast<const op::v3::Bucketize*>(&n);
-        node["output_type"] = tmp->get_output_type();
+        node["output_type"] = write_element_type(tmp->get_output_type());
         node["with_right_bound"] = tmp->get_with_right_bound();
         break;
-    }*/
+    }
     case OP_TYPEID::Ceiling: { break;
     }
     case OP_TYPEID::Clamp:

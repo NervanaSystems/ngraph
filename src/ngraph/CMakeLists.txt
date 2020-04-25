@@ -146,6 +146,7 @@ set (SRC
     op/broadcast.cpp
     op/broadcast_distributed.cpp
     op/bucketize.cpp
+    op/bucketize.hpp
     op/ceiling.cpp
     op/ceiling.hpp
     op/concat.cpp
