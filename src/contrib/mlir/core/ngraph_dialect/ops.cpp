@@ -172,8 +172,7 @@ static mlir::LogicalResult verifyCmpOp(T op)
 
     // result of same shape as input and has bool type
     if (!resType.isCompatibleShape(opType0) ||
-        !(resType.getElementType().cast<NGIntegerType>().isUnsigned() &&
-          resType.getElementType().cast<NGIntegerType>().getWidth() == 8))
+        !resType.getElementType().cast<mlir::IntegerType>().isUnsignedInteger(8))
     {
         return op.emitOpError("Incompatible result shape or type for comparison op");
     }
@@ -201,8 +200,7 @@ mlir::LogicalResult verifyOp(NGGatherOp op)
         return op.emitOpError("Indices tensor is not of Integer type");
 
     NGIntegerType indicesEltType = ty.cast<NGIntegerType>();
-    if (!(indicesEltType.isSigned() && indicesEltType.getWidth() == 32) &&
-        !(indicesEltType.isSigned() && indicesEltType.getWidth() == 64))
+    if (!indicesEltType.isSignedInteger(32) && !indicesEltType.isSignedInteger(64))
         return op.emitOpError("Indices tensor is not of I32 or I64 type");
 
     mlir::Type r0 = op.res().getType();
