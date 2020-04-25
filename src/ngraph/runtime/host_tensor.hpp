@@ -41,15 +41,22 @@ namespace ngraph
 class NGRAPH_API ngraph::runtime::HostTensor : public ngraph::runtime::Tensor
 {
 public:
-    HostTensor(const ngraph::element::Type& element_type,
-               const Shape& shape,
-               const std::string& name);
-    HostTensor(const ngraph::element::Type& element_type,
+    HostTensor(const element::Type& element_type,
                const Shape& shape,
                void* memory_pointer,
+<<<<<<< HEAD
                const std::string& name);
     HostTensor(const ngraph::element::Type& element_type, const Shape& shape);
     HostTensor(const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer);
+=======
+               const std::string& name = "");
+    HostTensor(const element::Type& element_type, const Shape& shape, const std::string& name = "");
+    HostTensor(const element::Type& element_type,
+               const PartialShape& partial_shape,
+               const std::string& name = "'");
+    HostTensor(const std::string& name);
+    HostTensor(const Output<Node>&);
+>>>>>>> cyphers/outtensor
     HostTensor(const std::shared_ptr<op::v0::Constant>& constant);
     virtual ~HostTensor() override;
 
@@ -90,6 +97,23 @@ public:
     /// \param n Number of bytes to read, must be integral number of elements.
     void read(void* p, size_t n) const override;
 
+    bool get_is_allocated() const;
+    /// \brief Set the element type. Must be compatible with the current element type.
+    /// \param element_type The element type
+    void set_element_type(const element::Type& element_type);
+    /// \brief Set the actual shape of the tensor compatibly with the partial shape.
+    /// \param shape The shape being set
+    void set_shape(const Shape& shape);
+    /// \brief Set the shape of a node from an input
+    /// \param arg The input argument
+    void set_unary(const EvaluatorTensorPtr& arg);
+    /// \brief Set the shape of the tensor using broadcast rules
+    /// \param autob The broadcast mode
+    /// \param arg0 The first argument
+    /// \param arg1 The second argument
+    void set_broadcast(const op::AutoBroadcastSpec& autob,
+                       const EvaluatorTensorPtr& arg0,
+                       const EvaluatorTensorPtr& arg1);
     class NGRAPH_API HostEvaluatorTensor : public EvaluatorTensor
     {
     protected:
@@ -98,21 +122,26 @@ public:
     public:
         virtual std::shared_ptr<HostTensor> get_host_tensor() = 0;
     };
+
     using HostEvaluatorTensorPtr = std::shared_ptr<HostEvaluatorTensor>;
+    using HostEvaluatorTensorVector = std::vector<HostEvaluatorTensorPtr>;
     /// \brief Get an evaluator tensor that uses this host tensor for data
     static HostEvaluatorTensorPtr create_evaluator_tensor(std::shared_ptr<HostTensor> host_tensor);
     /// \brief Get an evaluator tensor that creates a host tensor on demand
     /// \param element_type Constraint for element type
     /// \param partial_shape Constraint for partial shape
     static HostEvaluatorTensorPtr create_evaluator_tensor(const element::Type& element_type,
-                                                          const PartialShape& partial_shape);
+                                                          const PartialShape& partial_shape,
+                                                          const std::string& name = "");
 
 private:
+    void allocate_buffer();
     HostTensor(const HostTensor&) = delete;
     HostTensor(HostTensor&&) = delete;
     HostTensor& operator=(const HostTensor&) = delete;
 
-    char* m_allocated_buffer_pool;
-    char* m_aligned_buffer_pool;
+    void* m_memory_pointer{nullptr};
+    void* m_allocated_buffer_pool{nullptr};
+    void* m_aligned_buffer_pool{nullptr};
     size_t m_buffer_size;
 };
