@@ -117,6 +117,7 @@ set(SRC
     type_prop/batch_to_space.cpp
     type_prop/binary_elementwise.cpp
     type_prop/broadcast.cpp
+    type_prop/bucketize.cpp
     type_prop/clamp.cpp
     type_prop/compat.cpp
     type_prop/concat.cpp
