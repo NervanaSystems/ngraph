@@ -60,3 +60,16 @@ void op::Result::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVec
 
     adjoints.add_delta(input_value(0), delta);
 }
+
+bool op::Result::evaluate(const EvaluatorTensorVector& outputs, const EvaluatorTensorVector& inputs)
+{
+    void* output = outputs[0]->get_data_ptr();
+    void* input = inputs[0]->get_data_ptr();
+    memcpy(output, input, outputs[0]->get_size_in_bytes());
+    return true;
+}
+
+bool op::Result::constant_fold(OutputVector& output_values, const OutputVector& inputs_values)
+{
+    return false;
+}

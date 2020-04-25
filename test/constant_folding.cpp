@@ -538,19 +538,19 @@ TEST(constant_folding, const_convert)
     ASSERT_EQ(values_expected, values_out);
 }
 
-TEST(constant_folding, shape_of)
+TEST(constant_folding, shape_of_v0)
 {
     Shape input_shape{3, 4, 0, 22, 608, 909, 3};
 
     auto param = make_shared<op::Parameter>(element::boolean, input_shape);
-    auto shape_of = make_shared<op::ShapeOf>(param);
+    auto shape_of = make_shared<op::v0::ShapeOf>(param);
     auto f = make_shared<Function>(shape_of, ParameterVector{param});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::ShapeOf>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::ShapeOf>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
@@ -561,19 +561,65 @@ TEST(constant_folding, shape_of)
     ASSERT_EQ((vector<int64_t>{3, 4, 0, 22, 608, 909, 3}), values_out);
 }
 
-TEST(constant_folding, shape_of_dynamic)
+TEST(constant_folding, shape_of_v3)
 {
-    PartialShape input_shape{3, 4, Dimension::dynamic(), 22, 608, 909, 3};
+    Shape input_shape{3, 4, 0, 22, 608, 909, 3};
 
     auto param = make_shared<op::Parameter>(element::boolean, input_shape);
-    auto shape_of = make_shared<op::ShapeOf>(param);
+    auto shape_of = make_shared<op::v3::ShapeOf>(param);
     auto f = make_shared<Function>(shape_of, ParameterVector{param});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::ShapeOf>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v3::ShapeOf>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    ASSERT_EQ(new_const->get_output_element_type(0), element::i64);
+    auto values_out = new_const->get_vector<int64_t>();
+
+    ASSERT_EQ((vector<int64_t>{3, 4, 0, 22, 608, 909, 3}), values_out);
+}
+
+TEST(constant_folding, shape_of_i32_v3)
+{
+    Shape input_shape{3, 4, 0, 22, 608, 909, 3};
+
+    auto param = make_shared<op::Parameter>(element::boolean, input_shape);
+    auto shape_of = make_shared<op::v3::ShapeOf>(param, element::i32);
+    auto f = make_shared<Function>(shape_of, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::ShapeOf>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    ASSERT_EQ(new_const->get_output_element_type(0), element::i32);
+    auto values_out = new_const->get_vector<int32_t>();
+
+    ASSERT_EQ((vector<int32_t>{3, 4, 0, 22, 608, 909, 3}), values_out);
+}
+
+TEST(constant_folding, shape_of_dynamic_v0)
+{
+    PartialShape input_shape{3, 4, Dimension::dynamic(), 22, 608, 909, 3};
+
+    auto param = make_shared<op::Parameter>(element::boolean, input_shape);
+    auto shape_of = make_shared<op::v0::ShapeOf>(param);
+    auto f = make_shared<Function>(shape_of, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v0::ShapeOf>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 8);
@@ -583,13 +629,59 @@ TEST(constant_folding, shape_of_dynamic)
     ASSERT_EQ(result_as_concat->get_output_shape(0), Shape{7});
 }
 
-// We need to be sure that constant folding won't be calculated endlessly.
-TEST(constant_folding, shape_of_dynamic_double_folding)
+TEST(constant_folding, shape_of_dynamic_v3)
 {
     PartialShape input_shape{3, 4, Dimension::dynamic(), 22, 608, 909, 3};
 
     auto param = make_shared<op::Parameter>(element::boolean, input_shape);
-    auto shape_of = make_shared<op::ShapeOf>(param);
+    auto shape_of = make_shared<op::v3::ShapeOf>(param);
+    auto f = make_shared<Function>(shape_of, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::ShapeOf>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 8);
+
+    auto result_as_concat = as_type_ptr<op::Concat>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(result_as_concat);
+    ASSERT_EQ(result_as_concat->get_output_shape(0), Shape{7});
+    ASSERT_EQ(result_as_concat->get_output_element_type(0), element::i64);
+}
+
+TEST(constant_folding, shape_of_dynamic_i32_v3)
+{
+    PartialShape input_shape{3, 4, Dimension::dynamic(), 22, 608, 909, 3};
+
+    auto param = make_shared<op::Parameter>(element::boolean, input_shape);
+    auto shape_of = make_shared<op::v3::ShapeOf>(param, element::i32);
+    auto f = make_shared<Function>(shape_of, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::ShapeOf>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 8);
+
+    auto result_as_concat = as_type_ptr<op::Concat>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(result_as_concat);
+    ASSERT_EQ(result_as_concat->get_output_shape(0), Shape{7});
+    ASSERT_EQ(result_as_concat->get_output_element_type(0), element::i32);
+}
+
+// We need to be sure that constant folding won't be calculated endlessly.
+TEST(constant_folding, shape_of_dynamic_double_folding_v0)
+{
+    PartialShape input_shape{3, 4, Dimension::dynamic(), 22, 608, 909, 3};
+
+    auto param = make_shared<op::Parameter>(element::boolean, input_shape);
+    auto shape_of = make_shared<op::v0::ShapeOf>(param);
     auto f = make_shared<Function>(shape_of, ParameterVector{param});
 
     pass::Manager pass_manager;
@@ -597,7 +689,30 @@ TEST(constant_folding, shape_of_dynamic_double_folding)
     pass_manager.run_passes(f);
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::ShapeOf>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v0::ShapeOf>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 8);
+
+    auto result_as_concat = as_type_ptr<op::Concat>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(result_as_concat);
+    ASSERT_EQ(result_as_concat->get_output_shape(0), Shape{7});
+}
+
+TEST(constant_folding, shape_of_dynamic_double_folding_v3)
+{
+    PartialShape input_shape{3, 4, Dimension::dynamic(), 22, 608, 909, 3};
+
+    auto param = make_shared<op::Parameter>(element::boolean, input_shape);
+    auto shape_of = make_shared<op::v3::ShapeOf>(param);
+    auto f = make_shared<Function>(shape_of, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::ShapeOf>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::v1::Gather>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Concat>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 8);
@@ -609,25 +724,42 @@ TEST(constant_folding, shape_of_dynamic_double_folding)
 
 // Constant folding will not succeed on ShapeOf if the argument rank is dynamic.
 // We want to make sure it fails gracefully, leaving the ShapeOf op in place.
-TEST(constant_folding, shape_of_rank_dynamic)
+TEST(constant_folding, shape_of_rank_dynamic_v0)
 {
     PartialShape input_shape{PartialShape::dynamic()};
 
     auto param = make_shared<op::Parameter>(element::boolean, input_shape);
-    auto shape_of = make_shared<op::ShapeOf>(param);
+    auto shape_of = make_shared<op::v0::ShapeOf>(param);
     auto f = make_shared<Function>(shape_of, ParameterVector{param});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::ShapeOf>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v0::ShapeOf>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 0);
 
-    auto result_as_shape_of = as_type_ptr<op::ShapeOf>(f->get_results().at(0)->get_argument(0));
-    ASSERT_TRUE(result_as_shape_of);
-    ASSERT_TRUE(result_as_shape_of->get_output_partial_shape(0).same_scheme(
-        PartialShape{Dimension::dynamic()}));
+    auto result_shape_of = f->get_results().at(0)->get_input_node_shared_ptr(0);
+    ASSERT_EQ(result_shape_of, shape_of);
+}
+
+TEST(constant_folding, shape_of_rank_dynamic_v3)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+
+    auto param = make_shared<op::Parameter>(element::boolean, input_shape);
+    auto shape_of = make_shared<op::v3::ShapeOf>(param);
+    auto f = make_shared<Function>(shape_of, ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::ShapeOf>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 0);
+
+    auto result_shape_of = f->get_results().at(0)->get_input_node_shared_ptr(0);
+    ASSERT_EQ(result_shape_of, shape_of);
 }
 
 TEST(constant_folding, const_reverse)
@@ -2643,6 +2775,30 @@ TEST(constant_folding, constant_non_zero_1D)
     const auto values_out = new_const->get_vector<int64_t>();
 
     const vector<int64_t> values_expected{1, 3};
+    ASSERT_EQ(values_expected, values_out);
+    ASSERT_EQ((Shape{1, 2}), new_const->get_shape());
+}
+
+TEST(constant_folding, constant_non_zero_int32_output_type)
+{
+    vector<int> values_in{0, 1, 0, 1};
+    auto data = make_shared<op::Constant>(element::i32, Shape{4}, values_in);
+    auto non_zero = make_shared<op::v3::NonZero>(data, element::i32);
+    auto f = make_shared<Function>(non_zero, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    ASSERT_EQ(element::i32, new_const->get_element_type());
+    const auto values_out = new_const->get_vector<int32_t>();
+
+    const vector<int32_t> values_expected{1, 3};
     ASSERT_EQ(values_expected, values_out);
     ASSERT_EQ((Shape{1, 2}), new_const->get_shape());
 }

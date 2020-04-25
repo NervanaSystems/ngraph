@@ -18,6 +18,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/opsets/opset1.hpp"
+#include "ngraph/opsets/opset3.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -62,6 +63,8 @@ public:
     Oracle(const Output<Node>& program,
            const Output<Node>& data,
            TuringModel turing_model,
+           const element::Type element_type,
+           element::Type_t element_type_t,
            const string& val_string,
            bool val_bool,
            float val_float,
@@ -87,6 +90,8 @@ public:
            const std::vector<int64_t>& vec_int64_t)
         : Op({program, data})
         , m_turing_model(turing_model)
+        , m_element_type(element_type)
+        , m_element_type_t(element_type_t)
         , m_val_string(val_string)
         , m_val_bool(val_bool)
         , m_val_float(val_float)
@@ -118,6 +123,8 @@ public:
     Oracle() = default;
 
     TuringModel get_turing_model() const { return m_turing_model; }
+    const element::Type get_element_type() const { return m_element_type; }
+    const element::Type_t get_element_type_t() const { return m_element_type_t; }
     const string& get_val_string() const { return m_val_string; }
     bool get_val_bool() const { return m_val_bool; }
     bool get_val_float() const { return m_val_float; }
@@ -146,6 +153,8 @@ public:
         return make_shared<Oracle>(args[0],
                                    args[1],
                                    m_turing_model,
+                                   m_element_type,
+                                   m_element_type_t,
                                    m_val_string,
                                    m_val_bool,
                                    m_val_float,
@@ -175,6 +184,8 @@ public:
     bool visit_attributes(AttributeVisitor& visitor) override
     {
         visitor.on_attribute("turing_model", m_turing_model);
+        visitor.on_attribute("element_type", m_element_type);
+        visitor.on_attribute("element_type_t", m_element_type_t);
         visitor.on_attribute("val_string", m_val_string);
         visitor.on_attribute("val_bool", m_val_bool);
         visitor.on_attribute("val_float", m_val_float);
@@ -203,6 +214,8 @@ public:
 
 protected:
     TuringModel m_turing_model;
+    element::Type m_element_type;
+    element::Type_t m_element_type_t;
     string m_val_string;
     bool m_val_bool;
     float m_val_float;
@@ -495,6 +508,8 @@ TEST(attributes, user_op)
     auto oracle = make_shared<Oracle>(program,
                                       data,
                                       TuringModel::XL1200,
+                                      element::f32,
+                                      element::Type_t::i64,
                                       "12AU7",
                                       true,
                                       1.0f,
@@ -522,6 +537,8 @@ TEST(attributes, user_op)
     auto g_oracle = as_type_ptr<Oracle>(builder.create());
 
     EXPECT_EQ(g_oracle->get_turing_model(), oracle->get_turing_model());
+    EXPECT_EQ(g_oracle->get_element_type(), oracle->get_element_type());
+    EXPECT_EQ(g_oracle->get_element_type_t(), oracle->get_element_type_t());
     EXPECT_EQ(g_oracle->get_val_bool(), oracle->get_val_bool());
     EXPECT_EQ(g_oracle->get_val_string(), oracle->get_val_string());
     EXPECT_EQ(g_oracle->get_val_float(), oracle->get_val_float());
@@ -634,6 +651,41 @@ TEST(attributes, non_max_suppression_op_default_attributes)
 
     EXPECT_EQ(g_nms->get_box_encoding(), nms->get_box_encoding());
     EXPECT_EQ(g_nms->get_sort_result_descending(), nms->get_sort_result_descending());
+}
+
+TEST(attributes, non_max_suppression_v3_op_custom_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::NonMaxSuppression>();
+    auto boxes = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
+    auto scores = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1});
+
+    auto box_encoding = opset3::NonMaxSuppression::BoxEncodingType::CENTER;
+    bool sort_result_descending = false;
+    element::Type output_type = element::i32;
+
+    auto nms = make_shared<opset3::NonMaxSuppression>(
+        boxes, scores, box_encoding, sort_result_descending, output_type);
+    NodeBuilder builder(nms);
+    auto g_nms = as_type_ptr<opset3::NonMaxSuppression>(builder.create());
+
+    EXPECT_EQ(g_nms->get_box_encoding(), nms->get_box_encoding());
+    EXPECT_EQ(g_nms->get_sort_result_descending(), nms->get_sort_result_descending());
+    EXPECT_EQ(g_nms->get_output_type(), nms->get_output_type());
+}
+
+TEST(attributes, non_max_suppression_v3_op_default_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::NonMaxSuppression>();
+    auto boxes = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
+    auto scores = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1});
+
+    auto nms = make_shared<opset3::NonMaxSuppression>(boxes, scores);
+    NodeBuilder builder(nms);
+    auto g_nms = as_type_ptr<opset3::NonMaxSuppression>(builder.create());
+
+    EXPECT_EQ(g_nms->get_box_encoding(), nms->get_box_encoding());
+    EXPECT_EQ(g_nms->get_sort_result_descending(), nms->get_sort_result_descending());
+    EXPECT_EQ(g_nms->get_output_type(), nms->get_output_type());
 }
 
 TEST(attributes, normalize_l2_op)

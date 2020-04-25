@@ -37,6 +37,7 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/node_input.hpp"
 #include "ngraph/node_output.hpp"
 #include "ngraph/op/util/attr_types.hpp"
@@ -186,9 +187,11 @@ namespace ngraph
         virtual const op::AutoBroadcastSpec& get_autob() const;
         /// \returns true if the node can decompose
         virtual bool supports_decompose() const { return false; }
-        /// \brief Can replace a node with a constant during constant folding.
-        /// \returns vector of outputs to replace node outputs. Empty outputs will not be replaced.
-        virtual OutputVector constant_fold() { return {}; }
+        /// \brief Evaluates the op on input_values putting results in output_values
+        /// \returns true if successful
+        virtual bool evaluate(const EvaluatorTensorVector& output_values,
+                              const EvaluatorTensorVector& input_values);
+        virtual bool constant_fold(OutputVector& output_values, const OutputVector& inputs_values);
         /// \brief Decomposes the FusedOp into a sub-graph consisting of core ngraph ops
         ///
         /// \return A vector of nodes comprising the sub-graph. The order of output
@@ -422,6 +425,7 @@ namespace ngraph
 
         Node* get_input_node_ptr(size_t index) const;
         std::shared_ptr<Node> get_input_node_shared_ptr(size_t index) const;
+        Output<Node> get_input_source_output(size_t i) const;
 
     protected:
         // Will be replaced with clone_with_new_inputs
