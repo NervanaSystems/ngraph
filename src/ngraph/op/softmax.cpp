@@ -159,8 +159,8 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 namespace
 {
     template <element::Type_t ET>
-    inline bool try_evaluate_softmax(const EvaluatorTensorPtr& arg,
-                                     const EvaluatorTensorPtr& out,
+    inline bool try_evaluate_softmax(const HostTensorPtr& arg,
+                                     const HostTensorPtr& out,
                                      const Shape& shape,
                                      const AxisSet& axes)
     {
@@ -170,9 +170,7 @@ namespace
                 true);
     }
 
-    bool evaluate_softmax(const EvaluatorTensorPtr& arg,
-                          const EvaluatorTensorPtr& out,
-                          const AxisSet& axes)
+    bool evaluate_softmax(const HostTensorPtr& arg, const HostTensorPtr& out, const AxisSet& axes)
     {
         auto shape = out->get_shape();
         return try_evaluate_softmax<element::Type_t::f32>(arg, out, shape, axes) ||
@@ -180,8 +178,7 @@ namespace
     }
 }
 
-bool op::v0::Softmax::evaluate(const EvaluatorTensorVector& outputs,
-                               const EvaluatorTensorVector& inputs)
+bool op::v0::Softmax::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     return evaluate_softmax(inputs[0], outputs[0], get_axes());
 }
@@ -225,8 +222,7 @@ shared_ptr<Node> op::v1::Softmax::clone_with_new_inputs(const OutputVector& new_
     return make_shared<op::v1::Softmax>(new_args.at(0), m_axis);
 }
 
-bool op::v1::Softmax::evaluate(const EvaluatorTensorVector& outputs,
-                               const EvaluatorTensorVector& inputs)
+bool op::v1::Softmax::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     return evaluate_softmax(inputs[0], outputs[0], AxisSet{m_axis});
 }

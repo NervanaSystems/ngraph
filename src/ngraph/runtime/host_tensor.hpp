@@ -100,33 +100,14 @@ public:
     void set_shape(const Shape& shape);
     /// \brief Set the shape of a node from an input
     /// \param arg The input argument
-    void set_unary(const EvaluatorTensorPtr& arg);
+    void set_unary(const HostTensorPtr& arg);
     /// \brief Set the shape of the tensor using broadcast rules
     /// \param autob The broadcast mode
     /// \param arg0 The first argument
     /// \param arg1 The second argument
     void set_broadcast(const op::AutoBroadcastSpec& autob,
-                       const EvaluatorTensorPtr& arg0,
-                       const EvaluatorTensorPtr& arg1);
-    class NGRAPH_API HostEvaluatorTensor : public EvaluatorTensor
-    {
-    protected:
-        using EvaluatorTensor::EvaluatorTensor;
-
-    public:
-        virtual std::shared_ptr<HostTensor> get_host_tensor() = 0;
-    };
-
-    using HostEvaluatorTensorPtr = std::shared_ptr<HostEvaluatorTensor>;
-    using HostEvaluatorTensorVector = std::vector<HostEvaluatorTensorPtr>;
-    /// \brief Get an evaluator tensor that uses this host tensor for data
-    static HostEvaluatorTensorPtr create_evaluator_tensor(std::shared_ptr<HostTensor> host_tensor);
-    /// \brief Get an evaluator tensor that creates a host tensor on demand
-    /// \param element_type Constraint for element type
-    /// \param partial_shape Constraint for partial shape
-    static HostEvaluatorTensorPtr create_evaluator_tensor(const element::Type& element_type,
-                                                          const PartialShape& partial_shape,
-                                                          const std::string& name = "");
+                       const HostTensorPtr& arg0,
+                       const HostTensorPtr& arg1);
 
 private:
     void allocate_buffer();

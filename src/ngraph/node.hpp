@@ -37,7 +37,6 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/node_input.hpp"
 #include "ngraph/node_output.hpp"
 #include "ngraph/op/util/attr_types.hpp"
@@ -60,6 +59,14 @@ namespace ngraph
     class Node;
 
     class Function;
+
+    namespace runtime
+    {
+        class HostTensor;
+    }
+    using HostTensor = runtime::HostTensor;
+    using HostTensorPtr = std::shared_ptr<HostTensor>;
+    using HostTensorVector = std::vector<HostTensorPtr>;
 
     // Intermal, controls whether GetOutputElement nodes are elided
     // Defaults to being elided. Transformer should set to false if
@@ -189,8 +196,8 @@ namespace ngraph
         virtual bool supports_decompose() const { return false; }
         /// \brief Evaluates the op on input_values putting results in output_values
         /// \returns true if successful
-        virtual bool evaluate(const EvaluatorTensorVector& output_values,
-                              const EvaluatorTensorVector& input_values);
+        virtual bool evaluate(const HostTensorVector& output_values,
+                              const HostTensorVector& input_values);
         virtual bool constant_fold(OutputVector& output_values, const OutputVector& inputs_values);
         /// \brief Decomposes the FusedOp into a sub-graph consisting of core ngraph ops
         ///

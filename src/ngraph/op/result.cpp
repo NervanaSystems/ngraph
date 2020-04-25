@@ -20,6 +20,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -61,7 +62,7 @@ void op::Result::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVec
     adjoints.add_delta(input_value(0), delta);
 }
 
-bool op::Result::evaluate(const EvaluatorTensorVector& outputs, const EvaluatorTensorVector& inputs)
+bool op::Result::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     void* output = outputs[0]->get_data_ptr();
     void* input = inputs[0]->get_data_ptr();
