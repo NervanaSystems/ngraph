@@ -67,22 +67,15 @@ TEST(eval, evaluate_shape_of)
     auto p = make_shared<op::Parameter>(element::f32, PartialShape{-1, -1});
     auto so = make_shared<op::v0::ShapeOf>(p);
     auto fun = make_shared<Function>(OutputVector{so}, ParameterVector{p});
-    auto p_arg = op::Constant::create<float>(
-        element::f32, Shape{2, 3}, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
-    HostTensorVector inputs;
-    inputs.push_back(make_shared<HostTensor>(p_arg->output(0)));
-    HostTensorVector outputs;
-    auto result = fun->get_results()[0];
-    auto result_tensor = make_shared<HostTensor>(result->output(0));
-    outputs.push_back(result_tensor);
-    ASSERT_TRUE(fun->evaluate(outputs, inputs));
-    auto c = result_tensor;
-    ASSERT_TRUE(c);
-    EXPECT_EQ(c->get_element_type(), element::i64);
-    EXPECT_EQ(c->get_partial_shape(), (PartialShape{2}));
-    auto cshape = read_vector<int64_t>(c);
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate({result},
+                              {make_host_tensor<element::Type_t::f32>(
+                                  Shape{2, 3}, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::i64);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2}));
+    auto result_shape = read_vector<int64_t>(result);
     vector<int64_t> arg_shape{2, 3};
-    ASSERT_EQ(cshape, arg_shape);
+    ASSERT_EQ(result_shape, arg_shape);
 }
 
 TEST(eval, evaluate_dynamic_range_sum)
@@ -95,20 +88,12 @@ TEST(eval, evaluate_dynamic_range_sum)
     auto add = make_shared<op::v1::Add>(range, p1);
     auto fun =
         make_shared<Function>(OutputVector{add}, ParameterVector{p_start, p_stop, p_step, p1});
-    auto p_start_val = op::Constant::create<float>(element::f32, Shape{}, {1.0f});
-    auto p_stop_val = op::Constant::create<float>(element::f32, Shape{}, {10.0f});
-    auto p_step_val = op::Constant::create<float>(element::f32, Shape{}, {3.0f});
-    auto p1_val = op::Constant::create<float>(element::f32, Shape{}, {7.0f});
-    HostTensorVector inputs;
-    inputs.push_back(make_shared<HostTensor>(p_start_val->output(0)));
-    inputs.push_back(make_shared<HostTensor>(p_stop_val->output(0)));
-    inputs.push_back(make_shared<HostTensor>(p_step_val->output(0)));
-    inputs.push_back(make_shared<HostTensor>(p1_val->output(0)));
-    HostTensorVector outputs;
-    auto result = fun->get_results()[0];
-    auto result_tensor = make_shared<HostTensor>(result->output(0));
-    outputs.push_back(result_tensor);
-    ASSERT_TRUE(fun->evaluate(outputs, inputs));
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate({result_tensor},
+                              {make_host_tensor<element::Type_t::f32>({}, {1.0f}),
+                               make_host_tensor<element::Type_t::f32>({}, {10.0f}),
+                               make_host_tensor<element::Type_t::f32>({}, {3.0f}),
+                               make_host_tensor<element::Type_t::f32>({}, {7.0f})}));
     EXPECT_EQ(result_tensor->get_element_type(), element::f32);
     EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{3}));
     auto cval = read_vector<float>(result_tensor);
@@ -135,16 +120,12 @@ TEST(eval, interpret_dynamic_range_sum)
     copy_data(p_step_val, vector<float>{3.0f});
     auto p1_val = backend->create_tensor(element::f32, Shape{});
     copy_data(p1_val, vector<float>{7.0f});
-    vector<shared_ptr<runtime::Tensor>> results;
-    // Interpreter provides the tensor
-    results.push_back(nullptr);
+    auto result = make_shared<HostTensor>();
     auto cfun = backend->compile(fun);
-    cfun->call_dynamic({results}, {p_start_val, p_stop_val, p_step_val, p1_val});
-    auto c = results[0];
-    ASSERT_TRUE(c);
-    EXPECT_EQ(c->get_element_type(), element::f32);
-    EXPECT_EQ(c->get_partial_shape(), (PartialShape{3}));
-    auto cval = read_vector<float>(c);
+    cfun->call({result}, {p_start_val, p_stop_val, p_step_val, p1_val});
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{3}));
+    auto result_val = read_vector<float>(result);
     vector<float> seq{8.0f, 11.0f, 14.0f};
-    ASSERT_EQ(cval, seq);
+    ASSERT_EQ(result_val, seq);
 }
