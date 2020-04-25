@@ -20,6 +20,7 @@
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/evaluator_tensor.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
 
@@ -35,8 +36,6 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
     : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name))
     , m_memory_pointer(memory_pointer)
 {
-    m_descriptor->set_tensor_layout(
-        std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
     if (get_partial_shape().is_static() && get_element_type().is_static())
     {
         allocate_buffer();
@@ -56,13 +55,16 @@ runtime::HostTensor::HostTensor(const element::Type& element_type,
     : runtime::Tensor(
           std::make_shared<ngraph::descriptor::Tensor>(element_type, partial_shape, name))
 {
-    m_descriptor->set_tensor_layout(
-        std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
     // Defer allocation until ptr is requested
 }
 
 runtime::HostTensor::HostTensor(const std::string& name)
     : HostTensor(element::dynamic, PartialShape::dynamic())
+{
+}
+
+runtime::HostTensor::HostTensor(const Output<Node>& value)
+    : HostTensor(value.get_element_type(), value.get_partial_shape(), value.get_node()->get_name())
 {
 }
 
@@ -74,6 +76,8 @@ void runtime::HostTensor::allocate_buffer()
     NGRAPH_CHECK(get_element_type().is_static(),
                  "Attempt to allocate buffer for tensor with dynamic type: ",
                  get_element_type());
+    m_descriptor->set_tensor_layout(
+        std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
     m_buffer_size = m_descriptor->get_tensor_layout()->get_size() * get_element_type().size();
     if (m_memory_pointer != nullptr)
     {
@@ -94,6 +98,12 @@ void runtime::HostTensor::allocate_buffer()
             m_aligned_buffer_pool = (allocated_buffer_pool + alignment - mod);
         }
     }
+}
+runtime::HostTensor::HostTensor(const std::shared_ptr<op::v0::Constant>& constant)
+    : HostTensor(
+          constant->get_output_element_type(0), constant->get_output_shape(0), constant->get_name())
+{
+    memcpy(get_data_ptr(), constant->get_data_ptr(), get_size_in_bytes());
 }
 
 runtime::HostTensor::~HostTensor()
@@ -204,19 +214,23 @@ namespace
     {
     public:
         HostTensorEvaluatorTensor(const element::Type& element_type,
-                                  const PartialShape& partial_shape)
+                                  const PartialShape& partial_shape,
+                                  const std::string& name)
             : HostEvaluatorTensor(element_type, partial_shape)
+            , m_name(name)
         {
             m_host_tensor = make_shared<runtime::HostTensor>(element_type, partial_shape);
         }
         HostTensorEvaluatorTensor(shared_ptr<runtime::HostTensor> host_tensor)
-            : HostEvaluatorTensor(host_tensor->get_element_type(), host_tensor->get_partial_shape())
+            : HostEvaluatorTensor(
+                  host_tensor->get_element_type(), host_tensor->get_partial_shape())
             , m_host_tensor(host_tensor)
         {
         }
         void* get_data_ptr() override { return m_host_tensor->get_data_ptr(); }
         shared_ptr<runtime::HostTensor> get_host_tensor() override { return m_host_tensor; }
     private:
+        string m_name;
         shared_ptr<runtime::HostTensor> m_host_tensor;
     };
 }
@@ -227,9 +241,8 @@ runtime::HostTensor::HostEvaluatorTensorPtr
     return make_shared<HostTensorEvaluatorTensor>(host_tensor);
 }
 
-runtime::HostTensor::HostEvaluatorTensorPtr
-    runtime::HostTensor::create_evaluator_tensor(const element::Type& element_type,
-                                                 const PartialShape& partial_shape)
+runtime::HostTensor::HostEvaluatorTensorPtr runtime::HostTensor::create_evaluator_tensor(
+    const element::Type& element_type, const PartialShape& partial_shape, const string& name)
 {
-    return make_shared<HostTensorEvaluatorTensor>(element_type, partial_shape);
+    return make_shared<HostTensorEvaluatorTensor>(element_type, partial_shape, name);
 }

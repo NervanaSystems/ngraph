@@ -21,12 +21,20 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
         class HostTensor;
+    }
+    namespace op
+    {
+        namespace v0
+        {
+            class Constant;
+        }
     }
 }
 
@@ -42,6 +50,8 @@ public:
                const PartialShape& partial_shape,
                const std::string& name = "'");
     HostTensor(const std::string& name);
+    HostTensor(const Output<Node>&);
+    HostTensor(const std::shared_ptr<op::v0::Constant>& constant);
     virtual ~HostTensor() override;
 
     void* get_data_ptr();
@@ -50,13 +60,25 @@ public:
     template <typename T>
     T* get_data_ptr()
     {
-        return reinterpret_cast<T*>(get_data_ptr());
+        return static_cast<T*>(get_data_ptr());
     }
 
     template <typename T>
     const T* get_data_ptr() const
     {
-        return reinterpret_cast<T*>(get_data_ptr());
+        return static_cast<T*>(get_data_ptr());
+    }
+
+    template <element::Type_t ET>
+    typename element_type_traits<ET>::value_type* get_data_ptr()
+    {
+        return static_cast<typename element_type_traits<ET>::value_type*>(get_data_ptr());
+    }
+
+    template <element::Type_t ET>
+    const typename element_type_traits<ET>::value_type* get_data_ptr() const
+    {
+        return static_cast<typename element_type_traits<ET>::value_type>(get_data_ptr());
     }
 
     /// \brief Write bytes directly into the tensor
@@ -90,19 +112,21 @@ public:
     {
     protected:
         using EvaluatorTensor::EvaluatorTensor;
-        virtual std::shared_ptr<HostTensor> get_host_tensor() = 0;
 
     public:
+        virtual std::shared_ptr<HostTensor> get_host_tensor() = 0;
     };
 
     using HostEvaluatorTensorPtr = std::shared_ptr<HostEvaluatorTensor>;
+    using HostEvaluatorTensorVector = std::vector<HostEvaluatorTensorPtr>;
     /// \brief Get an evaluator tensor that uses this host tensor for data
     static HostEvaluatorTensorPtr create_evaluator_tensor(std::shared_ptr<HostTensor> host_tensor);
     /// \brief Get an evaluator tensor that creates a host tensor on demand
     /// \param element_type Constraint for element type
     /// \param partial_shape Constraint for partial shape
     static HostEvaluatorTensorPtr create_evaluator_tensor(const element::Type& element_type,
-                                                          const PartialShape& partial_shape);
+                                                          const PartialShape& partial_shape,
+                                                          const std::string& name = "");
 
 private:
     void allocate_buffer();
