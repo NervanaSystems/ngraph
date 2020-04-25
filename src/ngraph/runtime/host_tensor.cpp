@@ -36,8 +36,6 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
     : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name))
     , m_memory_pointer(memory_pointer)
 {
-    m_descriptor->set_tensor_layout(
-        std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
     if (get_partial_shape().is_static() && get_element_type().is_static())
     {
         allocate_buffer();
@@ -57,8 +55,6 @@ runtime::HostTensor::HostTensor(const element::Type& element_type,
     : runtime::Tensor(
           std::make_shared<ngraph::descriptor::Tensor>(element_type, partial_shape, name))
 {
-    m_descriptor->set_tensor_layout(
-        std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
     // Defer allocation until ptr is requested
 }
 
@@ -80,6 +76,8 @@ void runtime::HostTensor::allocate_buffer()
     NGRAPH_CHECK(get_element_type().is_static(),
                  "Attempt to allocate buffer for tensor with dynamic type: ",
                  get_element_type());
+    m_descriptor->set_tensor_layout(
+        std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
     m_buffer_size = m_descriptor->get_tensor_layout()->get_size() * get_element_type().size();
     if (m_memory_pointer != nullptr)
     {
