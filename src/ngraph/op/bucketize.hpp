@@ -24,6 +24,7 @@ namespace ngraph
     {
         namespace v3
         {
+            /// \brief Operation that bucketizes the input based on boundaries
             class NGRAPH_API Bucketize : public Op
             {
             public:

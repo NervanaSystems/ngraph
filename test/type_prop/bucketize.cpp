@@ -91,3 +91,23 @@ TEST(type_prop, bucketize_fail_output_type)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, bucketize_fail_buckets_dim)
+{
+    auto data = make_shared<op::Parameter>(element::f64, PartialShape{4, Dimension::dynamic()});
+    auto buckets = make_shared<op::Parameter>(element::f32, Shape{5, 5});
+    try
+    {
+        auto bucketize = make_shared<op::v3::Bucketize>(data, buckets);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid output type not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("buckets input must be a 1D tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "buckets dimension check failed for unexpected reason";
+    }
+}
