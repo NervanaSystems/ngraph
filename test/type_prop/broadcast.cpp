@@ -200,7 +200,6 @@ TEST(type_prop, broadcast_partial_rank_static_dynamic_shape_mismatch_wrong_size)
 }
 
 // Because v3::Broadcast is backward compatible to v1::Broadcast all v1::Broadcast tests should pass
-// (except pdp tests exception)
 template <typename T>
 class BroadcastTests : public ::testing::Test
 {
