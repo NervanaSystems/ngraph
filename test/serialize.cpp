@@ -852,3 +852,24 @@ TEST(serialize, deformable_psroi_pooling)
     EXPECT_EQ(def_psroi_pool_out->get_trans_std(), trans_std);
     EXPECT_EQ(def_psroi_pool_out->get_part_size(), part_size);
 }
+
+TEST(serialize, opset3_bucketize)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto buckets = make_shared<op::Parameter>(element::f32, Shape{5});
+    element::Type output_type = element::i32;
+    bool with_right_bound = false;
+    auto bucketize = make_shared<op::v3::Bucketize>(data, buckets, output_type, with_right_bound);
+
+    auto result = make_shared<op::Result>(bucketize);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, buckets});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_bucketize = g_result->get_input_node_shared_ptr(0);
+    auto bucketize_out = as_type_ptr<op::v3::Bucketize>(g_bucketize);
+    ASSERT_TRUE(bucketize_out);
+    EXPECT_EQ(bucketize_out->get_output_type(), output_type);
+    EXPECT_EQ(bucketize_out->get_with_right_bound(), with_right_bound);
+}
