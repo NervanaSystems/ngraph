@@ -1697,6 +1697,12 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::Squeeze:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::copy<T>(
+                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+        }
         case OP_TYPEID::Subtract:
         {
             auto subtract = static_cast<const op::Subtract*>(&node);
@@ -1765,6 +1771,12 @@ protected:
             }
             break;
         }
+        case OP_TYPEID::Unsqueeze:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::copy<T>(
+                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+        }
         case OP_TYPEID::Xor:
         {
             auto logical_xor = static_cast<const op::Or*>(&node);
@@ -1826,13 +1838,11 @@ protected:
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::Split:
         case OP_TYPEID::SquaredDifference:
-        case OP_TYPEID::Squeeze:
         case OP_TYPEID::Stack:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TensorIterator:
         case OP_TYPEID::Tile:
         case OP_TYPEID::UnknownOp:
-        case OP_TYPEID::Unsqueeze:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
         case OP_TYPEID::Result:
