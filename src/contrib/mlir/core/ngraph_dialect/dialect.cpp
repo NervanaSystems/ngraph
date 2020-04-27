@@ -30,7 +30,6 @@ NGraphOpsDialect::NGraphOpsDialect(mlir::MLIRContext* ctx)
     : mlir::Dialect(getDialectNamespace(), ctx)
 {
     addTypes<NGTensorType>();
-    addTypes<NGIntegerType>();
     addTypes<NGBoolType>();
 
     addOperations<
@@ -98,18 +97,15 @@ mlir::Type NGraphOpsDialect::parseEltType(mlir::DialectAsmParser& parser) const
             parser.emitError(loc, "Unexpected nGraph integer type: " + origTypeStr);
         }
 
-        switch (width)
+        auto signedness = isSigned ? NGIntegerType::SignednessSemantics::Signed
+                                   : NGIntegerType::SignednessSemantics::Unsigned;
+
+        if (width != 8 || width != 16 || width != 32 || width != 64)
         {
-        case 8:
-            return isSigned ? NGIntegerType::getInt8(context) : NGIntegerType::getUInt8(context);
-        case 16:
-            return isSigned ? NGIntegerType::getInt16(context) : NGIntegerType::getUInt16(context);
-        case 32:
-            return isSigned ? NGIntegerType::getInt32(context) : NGIntegerType::getUInt32(context);
-        case 64:
-            return isSigned ? NGIntegerType::getInt64(context) : NGIntegerType::getUInt64(context);
-        default: parser.emitError(loc, "Unexpected width for nGraph integer type: " + origTypeStr);
+            parser.emitError(loc, "Unexpected width for nGraph integer type: " + origTypeStr);
         }
+
+        return NGIntegerType::get(width, signedness, context);
     }
 
     // nGraph reuses standard dialect floating point element types.
