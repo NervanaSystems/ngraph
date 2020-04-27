@@ -2175,3 +2175,45 @@ def scatter_update(data, indices, updates, axis):
     """
     return _get_node_factory().create('ScatterUpdate', [data, as_node(indices),
                                                         as_node(updates), as_node(axis)])
+
+
+@nameable_op
+def scatter_update(data, indices, updates, axis):
+    # type: (Node, NodeInput, NodeInput, NodeInput) -> Node
+    """Return a node which produces a ScatterUpdate operation.
+
+    ScatterUpdate sets new values to slices from data addressed by indices.
+
+    :param data:    The input tensor to be updated.
+    :param indices: The tensor with indexes which will be updated.
+    :param updates: The tensor with update values.
+    :param axis:    The axis at which elements will be updated.
+    :return: ScatterUpdate node
+    """
+    return _get_node_factory().create('ScatterUpdate', [data, as_node(indices),
+                                                        as_node(updates), as_node(axis)])
+
+
+@nameable_op
+def scatter_elements_update(data, indices, updates, axis):
+    # type: (Node, NodeInput, NodeInput, NodeInput) -> Node
+    """Return a node which produces a ScatterElementsUpdate operation.
+
+    ScatterElementsUpdate creates a copy of the first input tensor with updated elements
+    specified with second and third input tensors.
+
+
+    For each entry in `updates`, the target index in `data` is obtained by combining
+    the corresponding entry in `indices` with the index of the entry itself: the
+    index-value for dimension equal to `axis` is obtained from the value of the
+    corresponding entry in `indices` and the index-value for dimension not equal
+    to `axis` is obtained from the index of the entry itself.
+
+    :param data:    The input tensor to be updated.
+    :param indices: The tensor with indexes which will be updated.
+    :param updates: The tensor with update values.
+    :param axis:    The axis for scatter.
+    :return: ScatterUpdate node
+    """
+    return _get_node_factory().create('ScatterElementsUpdate', [data, as_node(indices),
+                                                                as_node(updates), as_node(axis)])
