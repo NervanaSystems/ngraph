@@ -57,6 +57,7 @@ namespace ngraph
             class NGRAPH_API Gather : public Op
             {
             public:
+                static const int64_t AXIS_NOT_SET_VALUE = std::numeric_limits<int64_t>::max();
                 static constexpr NodeTypeInfo type_info{"Gather", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Gather() = default;

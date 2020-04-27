@@ -41,8 +41,23 @@ namespace ngraph
                 NonZero() = default;
                 /// \brief Constructs a NonZero operation.
                 ///
+                /// \note The output type is int64.
+                ///
                 /// \param arg Node that produces the input tensor.
                 NonZero(const Output<Node>& arg);
+                /// \brief Constructs a NonZero operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                /// \param output_type produce indices. Currently, only 'int64' or 'int32'
+                /// are
+                ///                           supported
+                NonZero(const Output<Node>& arg, const std::string& output_type);
+                /// \brief Constructs a NonZero operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                /// \param output_type produce indices. Currently, only int64 or int32 are
+                ///                           supported
+                NonZero(const Output<Node>& arg, const element::Type& output_type);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
@@ -50,8 +65,16 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
+                element::Type get_output_type() const { return m_output_type; }
+                void set_output_type(element::Type output_type) { m_output_type = output_type; }
+                // Overload collision with method on Node
+                using Node::set_output_type;
+
                 bool evaluate(const EvaluatorTensorVector& outputs,
                               const EvaluatorTensorVector& inputs) override;
+
+            protected:
+                element::Type m_output_type = element::i64;
             };
         }
         using v3::NonZero;
