@@ -1919,3 +1919,20 @@ def result(data):  # type: (Node) -> Node
     :return: Result node
     """
     return _get_node_factory().create('Result', [data])
+
+
+@nameable_op
+def scatter_update(data, indices, updates, axis):
+    # type: (Node, NodeInput, NodeInput, NodeInput) -> Node
+    """Return a node which produces a ScatterUpdate operation.
+
+    ScatterUpdate sets new values to slices from data addressed by indices.
+
+    :param data:    The input tensor to be updated.
+    :param indices: The tensor with indexes which will be updated.
+    :param updates: The tensor with update values.
+    :param axis:    The axis at which elements will be updated.
+    :return: ScatterUpdate node
+    """
+    return _get_node_factory().create('ScatterUpdate', [data, as_node(indices),
+                                                        as_node(updates), as_node(axis)])
