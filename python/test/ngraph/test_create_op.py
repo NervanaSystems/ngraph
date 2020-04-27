@@ -88,3 +88,19 @@ def test_deformable_convolution(dtype):
     assert node.get_type_name() == 'DeformableConvolution'
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == expected_shape
+
+
+@pytest.mark.parametrize('dtype', np_types)
+def test_floor_mod(dtype):
+    input0_shape = [8, 1, 6, 1]
+    input1_shape = [7, 1, 5]
+    expected_shape = [8, 7, 6, 5]
+
+    parameter_input0 = ng.parameter(input0_shape, name='Input0', dtype=dtype)
+    parameter_input1 = ng.parameter(input1_shape, name='Input1', dtype=dtype)
+
+    node = ng.floor_mod(parameter_input0, parameter_input1)
+
+    assert node.get_type_name() == 'FloorMod'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == expected_shape
