@@ -238,18 +238,7 @@ TEST(nop_elimination, squeeze_unsqueeze_elimination)
     auto check_usecase = [&](const Shape& shape, const std::vector<int64_t>& axes_val) {
         auto baseline_f = generate_func(shape, axes_val);
         auto optimized_f = generate_func(shape, axes_val);
-        pass::Manager pass_manager;
-        pass_manager.register_pass<pass::Validate>();
-        pass_manager.register_pass<pass::NopElimination>();
-        pass_manager.run_passes(optimized_f);
-
-        ASSERT_EQ(baseline_f->get_results()[0]->get_shape(),
-                  optimized_f->get_results()[0]->get_shape());
-
-        vector<vector<float>> args{vector<float>{5.5, 6.4, 7.9, 3.4, 2.3, 1.1}};
-        auto baseline_results = execute(baseline_f, args, "INTERPRETER");
-        auto optimized_results = execute(optimized_f, args, "INTERPRETER");
-        EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+        EXPECT_TRUE((compare_pass_int<pass::NopElimination, float>(baseline_f, optimized_f)));
 
         ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(baseline_f), 1);
         ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(baseline_f), 1);
@@ -277,18 +266,7 @@ TEST(nop_elimination, unsqueeze_squeeze_elimination)
     auto check_usecase = [&](const Shape& shape, const std::vector<int64_t>& axes_val) {
         auto baseline_f = generate_func(shape, axes_val);
         auto optimized_f = generate_func(shape, axes_val);
-        pass::Manager pass_manager;
-        pass_manager.register_pass<pass::Validate>();
-        pass_manager.register_pass<pass::NopElimination>();
-        pass_manager.run_passes(optimized_f);
-
-        ASSERT_EQ(baseline_f->get_results()[0]->get_shape(),
-                  optimized_f->get_results()[0]->get_shape());
-
-        vector<vector<float>> args{vector<float>{5.5, 6.4, 7.9, 3.4, 2.3, 1.1}};
-        auto baseline_results = execute(baseline_f, args, "INTERPRETER");
-        auto optimized_results = execute(optimized_f, args, "INTERPRETER");
-        EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+        EXPECT_TRUE((compare_pass_int<pass::NopElimination, float>(baseline_f, optimized_f)));
 
         ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(baseline_f), 1);
         ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(baseline_f), 1);
@@ -300,4 +278,103 @@ TEST(nop_elimination, unsqueeze_squeeze_elimination)
     check_usecase(Shape{3, 2}, std::vector<int64_t>{0, 3});
     check_usecase(Shape{3, 2}, std::vector<int64_t>{0, 2, 4});
     check_usecase(Shape{3, 2}, std::vector<int64_t>{-1, -4});
+}
+
+TEST(nop_elimination, reshape_reshape_elimination)
+{
+    auto check_usecase = [](const Shape& shape, const std::vector<int64_t>& pat_val, bool zero) {
+        auto pat = op::Constant::create<int64_t>(element::i64, Shape{pat_val.size()}, pat_val);
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto A1 = make_shared<op::v0::Abs>(A);
+
+        auto B = make_shared<op::v1::Reshape>(A1, pat, zero);
+        auto pat2 =
+            op::Constant::create<int64_t>(element::i64, Shape{2}, std::vector<int64_t>{0, -1});
+        auto B1 = make_shared<op::v1::Reshape>(B, pat2, true);
+        auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
+        auto optimized_f = clone_function(*baseline_f);
+        EXPECT_TRUE((compare_pass_int<pass::NopElimination, float>(baseline_f, optimized_f)));
+
+        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(baseline_f), 2);
+        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(optimized_f), 1);
+    };
+
+    check_usecase(Shape{1, 2, 3, 2, 1}, std::vector<int64_t>{2, 3, 2}, false);
+    check_usecase(Shape{12}, std::vector<int64_t>{2, 3, 2}, false);
+    check_usecase(Shape{3, 2, 1, 2}, std::vector<int64_t>{0, 2, 2}, true);
+    check_usecase(Shape{2, 3, 2}, ::vector<int64_t>{2, -1, 2}, false);
+    check_usecase(Shape{2, 3, 2, 1}, ::vector<int64_t>{2, 3, 2}, false);
+}
+
+TEST(nop_elimination, squeeze_reshape_elimination)
+{
+    auto check_usecase = [](const Shape& shape, const std::vector<int64_t>& indices_val) {
+        auto indices =
+            op::Constant::create<int64_t>(element::i64, Shape{indices_val.size()}, indices_val);
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto A1 = make_shared<op::v0::Abs>(A);
+
+        auto B = make_shared<op::v0::Squeeze>(A1, indices);
+        auto pat2 = op::Constant::create<int64_t>(element::i64, Shape{1}, std::vector<int64_t>{-1});
+        auto B1 = make_shared<op::v1::Reshape>(B, pat2, false);
+        auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
+        auto optimized_f = clone_function(*baseline_f);
+        EXPECT_TRUE((compare_pass_int<pass::NopElimination, float>(baseline_f, optimized_f)));
+
+        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(optimized_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(optimized_f), 0);
+    };
+
+    check_usecase(Shape{1, 2, 3, 2, 1}, std::vector<int64_t>{0, 4});
+    check_usecase(Shape{1, 1}, std::vector<int64_t>{0, 1});
+    check_usecase(Shape{2, 3, 1, 2}, std::vector<int64_t>{2});
+    check_usecase(Shape{1, 6, 2, 1}, std::vector<int64_t>{3});
+}
+
+TEST(nop_elimination, unsqueeze_reshape_elimination)
+{
+    auto check_usecase = [](const Shape& shape, const std::vector<int64_t>& indices_val) {
+        auto indices =
+            op::Constant::create<int64_t>(element::i64, Shape{indices_val.size()}, indices_val);
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto A1 = make_shared<op::v0::Abs>(A);
+
+        auto B = make_shared<op::v0::Unsqueeze>(A1, indices);
+        auto pat2 = op::Constant::create<int64_t>(element::i64, Shape{1}, std::vector<int64_t>{-1});
+        auto B1 = make_shared<op::v1::Reshape>(B, pat2, false);
+        auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
+        auto optimized_f = clone_function(*baseline_f);
+        EXPECT_TRUE((compare_pass_int<pass::NopElimination, float>(baseline_f, optimized_f)));
+
+        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(optimized_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(optimized_f), 0);
+    };
+
+    check_usecase(Shape{2, 3, 2}, std::vector<int64_t>{0, 4});
+    check_usecase(Shape{}, std::vector<int64_t>{0, 1});
+    check_usecase(Shape{2, 3, 2}, std::vector<int64_t>{2});
+    check_usecase(Shape{1, 6, 2}, std::vector<int64_t>{3});
+}
+
+TEST(nop_elimination, topk_convert_elimination)
+{
+    auto check_usecase = []() {
+        auto A = make_shared<op::Parameter>(element::f32, Shape{20, 3, 4});
+        auto A1 = make_shared<op::v0::Abs>(A);
+        auto B = make_shared<op::TopK>(A1, 0, element::i64, 10);
+        auto C = make_shared<op::Convert>(B->output(0), B->output(0).get_element_type());
+        auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(C), ParameterVector{A});
+        auto optimized_f = clone_function(*baseline_f);
+        EXPECT_TRUE(
+            (compare_pass_int<pass::NopElimination, float, int64_t>(baseline_f, optimized_f)));
+
+        ASSERT_EQ(count_ops_of_type<op::Convert>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::Convert>(optimized_f), 0);
+    };
+
+    check_usecase();
 }
