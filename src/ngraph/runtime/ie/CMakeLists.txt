@@ -14,12 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-include(InferenceEngineConfig)
-
-if(NOT ${InferenceEngine_FOUND})
-  message(FATAL_ERROR "Cannot find OpenVINO Inference Engine.")
-endif()
-
 if (NGRAPH_IE_STATIC_LIB_ENABLE)
     set(LIBRARY_TYPE STATIC)
 else()
@@ -36,6 +30,7 @@ set(SRC
     ie_executable.hpp
 )
 
+find_package(InferenceEngine REQUIRED)
 add_library(ie_backend ${LIBRARY_TYPE} ${SRC})
 target_compile_definitions(ie_backend PRIVATE IE_BACKEND_DLL_EXPORTS)
 target_include_directories(ie_backend PUBLIC ${InferenceEngine_INCLUDE_DIRS})
