@@ -404,4 +404,4 @@ REGISTER_TYPED_TEST_CASE_P(topk_type_prop,
                            topk_v1_partial_ouptut);
 
 typedef ::testing::Types<op::v1::TopK, op::v3::TopK> TopKTypes;
-INSTANTIATE_TYPED_TEST_CASE_P(type_prop, topk_type_prop, TopKTypes);
+INSTANTIATE_TYPED_TEST_CASE_P(type_prop, topk_type_prop, TopKTypes, );
