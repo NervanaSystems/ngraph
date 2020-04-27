@@ -87,24 +87,29 @@ namespace
                       const EvaluatorTensorPtr& out,
                       const op::AutoBroadcastSpec& broadcast_spec)
     {
-// Use a macro here so that it is guaranteed that the case argument and the templated
-// function call match in type
-#define CASE(a)                                                                                    \
-    case a: rc = evaluate<a>(arg0, arg1, out, broadcast_spec); break;
-
         bool rc = true;
         switch (arg0->get_element_type())
         {
-            CASE(element::Type_t::i8);
-            CASE(element::Type_t::i16);
-            CASE(element::Type_t::i32);
-            CASE(element::Type_t::i64);
-            CASE(element::Type_t::u8);
-            CASE(element::Type_t::u16);
-            CASE(element::Type_t::u32);
-            CASE(element::Type_t::u64);
-            CASE(element::Type_t::f32);
-            CASE(element::Type_t::f64);
+            TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(i32)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(i64)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u8)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u16)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u32)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u64)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(f32)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(f64)(arg0, arg1, out, broadcast_spec);
+            break;
         default: rc = false; break;
         }
         return rc;

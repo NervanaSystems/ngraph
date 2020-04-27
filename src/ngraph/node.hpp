@@ -111,6 +111,24 @@ namespace ngraph
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
+/// \brief Used in evaluator switch statement so that the case type and evaluate call
+/// are guaranteed to have the types match.
+///
+/// Use this in an evaluate_*() function like this
+///    switch (arg0->get_element_type())
+///    {
+///        TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec); break;
+///        TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec); break;
+///
+/// Each TYPE_CASE statement expands like this:
+///   case element::Type_t::a: rc = evaluate<element::Type_t::a>(arg0, arg1, out, broadcast_spec)
+///
+/// \note Don't forget to put a break after each statement or it will fall through and generate
+/// a runtime error.
+
+#define TYPE_CASE(a)                                                                               \
+    case element::Type_t::a: rc = evaluate<element::Type_t::a>
+
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
