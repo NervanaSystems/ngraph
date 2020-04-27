@@ -1770,7 +1770,7 @@ namespace ngraph
                     static_cast<const ngraph::op::EmbeddingLookup*>(node);
                 auto index_type_name = embed->get_argument(0)->get_element_type().c_type_string();
                 auto type_name = embed->get_element_type().c_type_string();
-                auto element_count = shape_size(embed->get_argument(0)->get_shape());
+                auto element_count = shape_size(embed->get_input_shape(0));
 
                 writer << "reference::embedding<" << type_name << "," << index_type_name << ">(";
                 writer << "            " << args[0].get_name() << ",\n";
