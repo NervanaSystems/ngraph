@@ -49,7 +49,7 @@ namespace ngraph
 
         bool is_castable(const DiscreteTypeInfo& target_type) const
         {
-            return *this == target_type || (target_type.parent && parent->is_castable(target_type));
+            return *this == target_type || (parent && parent->is_castable(target_type));
         }
 
         // For use as a key
