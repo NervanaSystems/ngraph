@@ -316,7 +316,6 @@ static shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
     set<Node::type_info_t> nomath = {op::v0::Broadcast::type_info,
                                      op::v0::Reshape::type_info,
                                      op::v1::Broadcast::type_info,
-                                     op::v1::Broadcast::type_info,
                                      opset3::Broadcast::type_info,
                                      opset3::Reshape::type_info};
     ;
