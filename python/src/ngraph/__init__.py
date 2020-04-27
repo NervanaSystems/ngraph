@@ -58,6 +58,7 @@ from ngraph.ops import exp
 from ngraph.ops import fake_quantize
 from ngraph.ops import floor
 from ngraph.ops import floor_mod
+from ngraph.ops import gather
 from ngraph.ops import gelu
 from ngraph.ops import gemm
 from ngraph.ops import get_output_element
