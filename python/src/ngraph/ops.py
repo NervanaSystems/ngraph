@@ -455,6 +455,26 @@ def space_to_depth(data, mode, block_size, name=None):  # type: (Node, str, int,
 
 
 @nameable_op
+def space_to_batch(data, block_shape, pads_begin, pads_end, name=None):
+    # type: (Node, NodeInput, NodeInput, NodeInput, str) -> Node
+    """Perform SpaceToBatch operation on the input tensor.
+
+    SpaceToBatch permutes data tensor blocks of spatial data into batch dimension.
+    The operator returns a copy of the input tensor where values from spatial blocks dimensions
+    are moved in the batch dimension
+
+    :param data: Node producing the data tensor.
+    :param block_shape: The sizes of the block of values to be moved.
+    :param pads_begin: Specifies the padding for the beginning along each axis of `data`.
+    :param pads_end: Specifies the padding for the ending along each axis of `data`.
+    :param name: Optional output node name.
+    :return: The new node performing a SpaceToBatch operation.
+    """
+    return _get_node_factory().create('SpaceToBatch', [data, as_node(block_shape),
+                                                       as_node(pads_begin), as_node(pads_end)])
+
+
+@nameable_op
 def mvn(data, axes, normalize_variance, eps, name=None):
     # type: (Node, Set[int], bool, float, str) -> Node
     r"""Perform Mean Variance Normalization operation on data from input node.
