@@ -160,7 +160,7 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
         auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
         auto new_reshape =
             make_shared<opset3::Reshape>(input->input_value(0).get_node_shared_ptr(), pat, false);
-        return remove_node_update_name(node, new_reshape);
+        return replace_output_update_name(node->output(0), new_reshape->output(0));
     }
     return false;
 }
@@ -189,7 +189,7 @@ static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
         auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
         auto new_reshape =
             make_shared<opset3::Reshape>(input->input_value(0).get_node_shared_ptr(), pat, false);
-        return remove_node_update_name(node, new_reshape);
+        return replace_output_update_name(node->output(0), new_reshape->output(0));
     }
     return false;
 }
