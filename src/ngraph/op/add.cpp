@@ -69,14 +69,14 @@ shared_ptr<Node> ngraph::operator+(const Output<Node>& arg0, const Output<Node>&
 namespace
 {
     template <element::Type_t ET>
-    bool evaluate(const EvaluatorTensorPtr& arg0,
-                  const EvaluatorTensorPtr& arg1,
-                  const EvaluatorTensorPtr& out,
+    bool evaluate(const HostTensorPtr& arg0,
+                  const HostTensorPtr& arg1,
+                  const HostTensorPtr& out,
                   const op::AutoBroadcastSpec& broadcast_spec)
     {
-        runtime::reference::add(arg0->get_ptr<ET>(),
-                                arg1->get_ptr<ET>(),
-                                out->get_ptr<ET>(),
+        runtime::reference::add(arg0->get_data_ptr<ET>(),
+                                arg1->get_data_ptr<ET>(),
+                                out->get_data_ptr<ET>(),
                                 arg0->get_shape(),
                                 arg1->get_shape(),
                                 broadcast_spec);
