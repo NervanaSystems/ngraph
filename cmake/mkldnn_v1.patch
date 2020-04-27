@@ -1,5 +1,5 @@
 diff --git a/cmake/OpenMP.cmake b/cmake/OpenMP.cmake
-index 0bc6ea57a..4fa0a22d1 100644
+index 26dea5cc8..c2cda06e7 100644
 --- a/cmake/OpenMP.cmake
 +++ b/cmake/OpenMP.cmake
 @@ -28,7 +28,7 @@ if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -9,12 +9,12 @@ index 0bc6ea57a..4fa0a22d1 100644
 -    set(_omp_severity "FATAL_ERROR")
 +    set(_omp_severity "WARNING")
  endif()
-
+ 
  macro(forbid_link_compiler_omp_rt)
 @@ -45,6 +45,42 @@ macro(forbid_link_compiler_omp_rt)
      endif()
  endmacro()
-
+ 
 +macro(use_intel_omp_rt)
 +    # fast return
 +    if (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
@@ -51,10 +51,10 @@ index 0bc6ea57a..4fa0a22d1 100644
 +    endif()
 +endmacro()
 +
- if(WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-     add_definitions(/Qpar)
-     add_definitions(/openmp)
-@@ -79,6 +115,7 @@ if (DNNL_CPU_THREADING_RUNTIME MATCHES "OMP")
+ macro(set_openmp_values_for_old_cmake)
+     #newer version for findOpenMP (>= v. 3.9)
+     if(CMAKE_VERSION VERSION_LESS "3.9" AND OPENMP_FOUND)
+@@ -97,6 +133,7 @@ if(DNNL_CPU_THREADING_RUNTIME MATCHES "OMP")
          # Override CPU threading to sequential if allowed to proceed
          set(DNNL_CPU_THREADING_RUNTIME "SEQ")
      endif()
@@ -63,13 +63,13 @@ index 0bc6ea57a..4fa0a22d1 100644
      # Compilation happens with OpenMP to enable `#pragma omp simd`
      # but during linkage OpenMP dependency should be avoided
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 4c774a11b..56fb4e294 100644
+index 88e318923..afb27c391 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -78,8 +78,10 @@ endif()
+@@ -87,8 +87,10 @@ get_property(LIB_DEPS GLOBAL PROPERTY DNNL_LIB_DEPS)
  add_library(${LIB_NAME} ${DNNL_LIBRARY_TYPE}
-     ${VERSION_RESOURCE_FILE} ${HEADERS} ${${LIB_NAME}_SUB_OBJS})
-
+     ${VERSION_RESOURCE_FILE} ${HEADERS} ${LIB_DEPS})
+ 
 -set_property(TARGET ${LIB_NAME} PROPERTY VERSION "${DNNL_VERSION_MAJOR}.${DNNL_VERSION_MINOR}")
 -set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "${DNNL_VERSION_MAJOR}")
 +if(MKLDNN_LIB_VERSIONING_ENABLE)
@@ -77,5 +77,5 @@ index 4c774a11b..56fb4e294 100644
 +    set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "${DNNL_VERSION_MAJOR}")
 +endif()
  set_property(TARGET ${LIB_NAME} PROPERTY PUBLIC_HEADER ${HEADERS})
-
+ 
  target_include_directories(${LIB_NAME} PUBLIC

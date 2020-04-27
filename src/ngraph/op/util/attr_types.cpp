@@ -27,7 +27,7 @@ const op::AutoBroadcastSpec op::AutoBroadcastSpec::NONE{AutoBroadcastType::NONE,
 namespace ngraph
 {
     template <>
-    EnumNames<op::PadMode>& EnumNames<op::PadMode>::get()
+    NGRAPH_API EnumNames<op::PadMode>& EnumNames<op::PadMode>::get()
     {
         static auto enum_names = EnumNames<op::PadMode>("op::PadMode",
                                                         {{"CONSTANT", op::PadMode::CONSTANT},
@@ -43,9 +43,8 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-
     template <>
-    EnumNames<op::PadType>& EnumNames<op::PadType>::get()
+    NGRAPH_API EnumNames<op::PadType>& EnumNames<op::PadType>::get()
     {
         static auto enum_names = EnumNames<op::PadType>("op::PadType",
                                                         {{"EXPLICIT", op::PadType::EXPLICIT},
@@ -61,9 +60,8 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-
     template <>
-    EnumNames<op::RoundingType>& EnumNames<op::RoundingType>::get()
+    NGRAPH_API EnumNames<op::RoundingType>& EnumNames<op::RoundingType>::get()
     {
         static auto enum_names = EnumNames<op::RoundingType>(
             "op::RoundingType",
@@ -77,9 +75,8 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-
     template <>
-    EnumNames<op::AutoBroadcastType>& EnumNames<op::AutoBroadcastType>::get()
+    NGRAPH_API EnumNames<op::AutoBroadcastType>& EnumNames<op::AutoBroadcastType>::get()
     {
         static auto enum_names =
             EnumNames<op::AutoBroadcastType>("op::AutoBroadcastType",
@@ -95,9 +92,8 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-
     template <>
-    EnumNames<op::EpsMode>& EnumNames<op::EpsMode>::get()
+    NGRAPH_API EnumNames<op::EpsMode>& EnumNames<op::EpsMode>::get()
     {
         static auto enum_names = EnumNames<op::EpsMode>(
             "op::EpsMode", {{"ADD", op::EpsMode::ADD}, {"MAX", op::EpsMode::MAX}});
@@ -110,9 +106,8 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-
     template <>
-    EnumNames<op::TopKSortType>& EnumNames<op::TopKSortType>::get()
+    NGRAPH_API EnumNames<op::TopKSortType>& EnumNames<op::TopKSortType>::get()
     {
         static auto enum_names =
             EnumNames<op::TopKSortType>("op::TopKSortType",
@@ -128,7 +123,6 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-
     op::AutoBroadcastType op::AutoBroadcastSpec::type_from_string(const std::string& type) const
     {
         static const std::map<std::string, AutoBroadcastType> allowed_values = {

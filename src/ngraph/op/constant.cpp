@@ -17,6 +17,7 @@
 #include <cmath>
 #include <cstdio>
 
+#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/util.hpp"
@@ -52,8 +53,8 @@ op::Constant::Constant(const element::Type& type,
                        const std::vector<std::string>& values)
     : m_element_type(type)
     , m_shape(shape)
-    , m_data(
-          new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(), host_alignment()))
+    , m_data(new runtime::AlignedBuffer(ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
+                                        host_alignment()))
 {
     NODE_VALIDATION_CHECK(this,
                           values.size() == shape_size(m_shape) || values.size() == 1,
@@ -287,13 +288,29 @@ op::Constant::Constant(const element::Type& type,
     }
 }
 
+op::Constant::Constant(const element::Type& type, const Shape& shape)
+    : m_element_type(type)
+    , m_shape(shape)
+    , m_data(nullptr)
+{
+    constructor_validate_and_infer_types();
+}
+
+void* op::Constant::allocate_buffer()
+{
+    m_data = make_shared<runtime::AlignedBuffer>(shape_size(m_shape) * m_element_type.size(),
+                                                 host_alignment());
+
+    return m_data->get_ptr();
+}
+
 op::Constant::Constant(const element::Type& type, const Shape& shape, const void* data)
     : m_element_type(type)
     , m_shape(shape)
-    , m_data(
-          new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(), host_alignment()))
+    , m_data(new runtime::AlignedBuffer(ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f),
+                                        host_alignment()))
 {
-    size_t size = shape_size(m_shape) * m_element_type.size();
+    size_t size = ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f);
     std::memcpy(m_data->get_ptr(), data, size);
     constructor_validate_and_infer_types();
     m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
@@ -522,7 +539,7 @@ AxisSet op::Constant::get_axis_set_val() const
     return output_axis_set;
 }
 
-shared_ptr<Node> op::Constant::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Constant::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Constant>(*this);
@@ -598,6 +615,59 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
     return rc;
 }
 
+namespace
+{
+    class ConstantEvaluatorTensorImp : public op::Constant::ConstantEvaluatorTensor
+    {
+    public:
+        ConstantEvaluatorTensorImp(const element::Type element_type,
+                                   const PartialShape& partial_shape)
+            : ConstantEvaluatorTensor(element_type, partial_shape)
+        {
+        }
+        ConstantEvaluatorTensorImp(const std::shared_ptr<op::v0::Constant>& constant,
+                                   void* data_ptr)
+            : ConstantEvaluatorTensor(constant->output(0))
+            , m_constant(constant)
+            , m_data_ptr(data_ptr)
+        {
+        }
+        void* get_data_ptr() override
+        {
+            if (!m_constant)
+            {
+                NGRAPH_CHECK(m_element_type.is_static(),
+                             "Attempt to create a constant with a dynamic element type: ",
+                             m_element_type);
+                NGRAPH_CHECK(m_partial_shape.is_static(),
+                             "Attempt to create a constant with a dynamic shape: ",
+                             m_partial_shape);
+                m_constant =
+                    make_shared<op::v0::Constant>(m_element_type, m_partial_shape.get_shape());
+                m_data_ptr = m_constant->allocate_buffer();
+            }
+            return m_data_ptr;
+        }
+        shared_ptr<op::v0::Constant> get_constant() override { return m_constant; }
+    private:
+        std::shared_ptr<op::v0::Constant> m_constant;
+        void* m_data_ptr;
+    };
+}
+
+op::Constant::ConstantEvaluatorTensorPtr
+    op::Constant::create_evaluator_tensor(const shared_ptr<op::v0::Constant>& constant)
+{
+    return make_shared<ConstantEvaluatorTensorImp>(constant, constant->get_data_ptr_nc());
+}
+
+op::Constant::ConstantEvaluatorTensorPtr
+    op::Constant::create_evaluator_tensor(const element::Type element_type,
+                                          const PartialShape& partial_shape)
+{
+    return make_shared<ConstantEvaluatorTensorImp>(element_type, partial_shape);
+}
+
 constexpr NodeTypeInfo op::ScalarConstantLike::type_info;
 
 shared_ptr<op::Constant> op::ScalarConstantLike::as_constant() const
@@ -605,7 +675,8 @@ shared_ptr<op::Constant> op::ScalarConstantLike::as_constant() const
     return std::make_shared<op::Constant>(m_element_type, m_shape, m_data->get_ptr());
 }
 
-std::shared_ptr<Node> op::ScalarConstantLike::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node>
+    op::ScalarConstantLike::clone_with_new_inputs(const OutputVector& new_args) const
 {
     return std::make_shared<ScalarConstantLike>(new_args.at(0), m_value);
 }

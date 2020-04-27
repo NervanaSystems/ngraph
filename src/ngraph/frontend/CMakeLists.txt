@@ -17,14 +17,3 @@
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     add_subdirectory(onnx_import)
 endif()
-
-option(NGRAPH_ATEN_ENABLE "Enable build for PyTorch ATen support" OFF)
-#NORMALIZE_BOOL(NGRAPH_ATEN_ENABLE)
-message(STATUS "NGRAPH_ATEN_ENABLE:                   ${NGRAPH_ATEN_ENABLE}")
-
-if (NGRAPH_ATEN_ENABLE)
-    option(NGRAPH_ATEN_TEST_ENABLE "Enable PaddlePaddle Fluid operator tests" OFF)
-    #NORMALIZE_BOOL(NGRAPH_ATEN_TEST_ENABLE)
-    message(STATUS "NGRAPH_ATEN_TEST_ENABLE:              ${NGRAPH_ATEN_TEST_ENABLE}")
-    add_subdirectory(ATen)
-endif()

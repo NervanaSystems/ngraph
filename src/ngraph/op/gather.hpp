@@ -44,7 +44,7 @@ namespace ngraph
                 size_t get_axis() const { return m_axis; }
                 void set_axis(size_t axis) { m_axis = axis; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 size_t m_axis;
@@ -57,6 +57,7 @@ namespace ngraph
             class NGRAPH_API Gather : public Op
             {
             public:
+                static const int64_t AXIS_NOT_SET_VALUE = std::numeric_limits<int64_t>::max();
                 static constexpr NodeTypeInfo type_info{"Gather", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Gather() = default;
@@ -67,6 +68,7 @@ namespace ngraph
                        const Output<Node>& indices,
                        const Output<Node>& axis);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 int64_t get_axis() const;
 
                 void validate_and_infer_types() override;
@@ -75,7 +77,7 @@ namespace ngraph
                                        const OutputVector& deltas) override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
 

@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <memory>
+#include <numeric>
 #include <set>
 
 #include "algebraic_simplification.hpp"
@@ -27,38 +28,29 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/shape_of.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/opsets/opset3.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-bool is_uniform_constant(const Input<Node>& input)
-{
-    bool rc = false;
-    auto node = input.get_source_output().get_node();
-    if (node->get_type_info() == op::Constant::type_info)
-    {
-        auto constant = as_type<op::Constant>(node);
-        rc = constant->get_all_data_elements_bitwise_identical();
-    }
-    return rc;
-}
-
-extern template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
 template <typename T>
 static shared_ptr<pattern::Matcher>
     create_binary_matcher(shared_ptr<pattern::op::Label> label,
                           shared_ptr<pattern::op::Label> const_label)
 {
-    auto bcst = make_shared<pattern::op::Skip>(const_label, pattern::has_class<op::Broadcast>());
+    auto bcst =
+        make_shared<pattern::op::Skip>(const_label, pattern::has_class<op::v0::Broadcast>());
     auto bcst_label = make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
     auto matcher = make_shared<pattern::Matcher>(make_shared<T>(label, bcst_label));
     return matcher;
@@ -78,37 +70,44 @@ static shared_ptr<pattern::Matcher>
 static bool simplify_concat(shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_concat for " << n->get_name();
+    if (n->get_output_partial_shape(0).is_dynamic())
+    {
+        NGRAPH_DEBUG << n << " has dynamic shape";
+        return false;
+    }
 
-    shared_ptr<Node> branch_tip;
+    Output<Node> branch_tip;
 
     auto ltip = make_shared<pattern::op::Label>(element::i32, Shape{2, 1});
 
-    auto pslice = make_shared<op::Slice>(ltip, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
+    auto pslice =
+        make_shared<op::v0::Slice>(ltip, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
 
     auto lslice = make_shared<pattern::op::Label>(pslice, nullptr, NodeVector{pslice});
 
-    auto skip_reshape = make_shared<pattern::op::Skip>(lslice, pattern::has_class<op::Reshape>());
+    auto skip_reshape =
+        make_shared<pattern::op::Skip>(lslice, pattern::has_class<op::v0::Reshape>());
 
     auto matcher = make_shared<pattern::Matcher>(skip_reshape);
 
     Coordinate prev_lower_bounds;
     Shape prev_slice_shape;
 
-    for (auto carg : n->get_arguments())
+    for (auto carg : n->input_values())
     {
         if (!matcher->match(carg))
         {
-            NGRAPH_DEBUG << carg->get_name() << " doesn't match";
+            NGRAPH_DEBUG << carg << " doesn't match";
             return false;
         }
 
-        auto slice = static_pointer_cast<op::Slice>(matcher->get_pattern_map()[lslice]);
-        if (branch_tip)
+        auto& pattern_value_map = matcher->get_pattern_value_map();
+        auto slice = as_type_ptr<op::v0::Slice>(pattern_value_map[lslice].get_node_shared_ptr());
+        if (branch_tip != Output<Node>())
         {
-            if (branch_tip != matcher->get_pattern_map()[ltip])
+            if (branch_tip != pattern_value_map[ltip])
             {
-                NGRAPH_DEBUG << branch_tip->get_name() << " doesn't match "
-                             << matcher->get_pattern_map()[ltip]->get_name();
+                NGRAPH_DEBUG << branch_tip << " doesn't match " << pattern_value_map[ltip];
                 return false;
             }
 
@@ -117,7 +116,7 @@ static bool simplify_concat(shared_ptr<Node> n)
             auto cur_lower_bounds = slice->get_lower_bounds();
             if (cur_lower_bounds < prev_lower_bounds)
             {
-                NGRAPH_DEBUG << slice->get_name() << " is in the wrong order";
+                NGRAPH_DEBUG << slice << " is in the wrong order";
                 return false;
             }
             prev_lower_bounds.assign(cur_lower_bounds.begin(), cur_lower_bounds.end());
@@ -125,57 +124,56 @@ static bool simplify_concat(shared_ptr<Node> n)
             // slice shapes need to match
             if (slice->get_shape() != prev_slice_shape)
             {
-                NGRAPH_DEBUG << slice->get_name()
-                             << " doesn't match the shape of the previous slice";
+                NGRAPH_DEBUG << slice << " doesn't match the shape of the previous slice";
                 return false;
             }
         }
         else
         {
-            branch_tip = matcher->get_pattern_map()[ltip];
+            branch_tip = pattern_value_map[ltip];
             prev_lower_bounds.assign(slice->get_lower_bounds().begin(),
                                      slice->get_lower_bounds().end());
             prev_slice_shape.assign(slice->get_shape().begin(), slice->get_shape().end());
-            NGRAPH_DEBUG << "setting branch_tip to " << branch_tip->get_name();
+            NGRAPH_DEBUG << "setting branch_tip to " << branch_tip;
         }
 
         if (slice->get_users(true).size() > 1)
         {
-            NGRAPH_DEBUG << slice->get_name() << " has more than one user";
+            NGRAPH_DEBUG << slice << " has more than one user";
             return false;
         }
 
         if (shape_size(slice->get_strides()) != 1)
         {
-            NGRAPH_DEBUG << slice->get_name() << " is strided";
+            NGRAPH_DEBUG << slice << " is strided";
             return false;
         }
 
         // check that no other node uses slices and reshapes
-        if (auto rcarg = as_type_ptr<op::Reshape>(carg))
+        if (auto rcarg = as_type_ptr<op::v0::Reshape>(carg.get_node_shared_ptr()))
         {
-            auto default_shape = get_default_order(rcarg->get_argument(0)->get_shape());
+            auto default_shape = get_default_order(rcarg->input_value(0).get_shape());
             if (default_shape != rcarg->get_input_order())
             {
-                NGRAPH_DEBUG << carg->get_name() << " reshape also does transposes";
+                NGRAPH_DEBUG << carg << " reshape also does transposes";
                 return false;
             }
 
             if (rcarg->get_users(true).size() > 1)
             {
-                NGRAPH_DEBUG << rcarg->get_name() << " has more than one user";
+                NGRAPH_DEBUG << rcarg << " has more than one user";
                 return false;
             }
         }
     }
 
-    auto concat = static_pointer_cast<op::Concat>(n);
+    auto concat = static_pointer_cast<op::v0::Concat>(n);
     auto concat_axis = concat->get_concatenation_axis();
 
-    auto slice_shape = branch_tip->get_users(true).at(0)->get_shape();
+    auto slice_shape = branch_tip.get_node_shared_ptr()->get_users(true).at(0)->get_shape();
     size_t slice_axis = numeric_limits<size_t>::max();
 
-    auto btip_shape = branch_tip->get_shape();
+    auto btip_shape = branch_tip.get_shape();
 
     // slices should cover all elements
     if (shape_size(btip_shape) != shape_size(n->get_shape()))
@@ -210,7 +208,8 @@ static bool simplify_concat(shared_ptr<Node> n)
         if (concat_axis == slice_axis)
         {
             // logical reshape only
-            replacement = make_shared<op::Reshape>(branch_tip, default_order, concat->get_shape());
+            replacement =
+                make_shared<op::v0::Reshape>(branch_tip, default_order, concat->get_shape());
         }
         else
         {
@@ -223,7 +222,7 @@ static bool simplify_concat(shared_ptr<Node> n)
                 auto ax = order[slice_axis];
                 order[slice_axis] = order[concat_axis];
                 order[concat_axis] = ax;
-                replacement = make_shared<op::Reshape>(branch_tip, order, transposed_shape);
+                replacement = make_shared<op::v0::Reshape>(branch_tip, order, transposed_shape);
             }
             else if (btip_shape.size() < transposed_shape.size())
             {
@@ -234,14 +233,14 @@ static bool simplify_concat(shared_ptr<Node> n)
                 order[concat_axis] = ax;
                 auto output_shape = apply_permutation(transposed_shape, order);
                 auto logical_reshape =
-                    make_shared<op::Reshape>(branch_tip, default_order, output_shape);
+                    make_shared<op::v0::Reshape>(branch_tip, default_order, output_shape);
                 // transpose to final concatenated shape
-                replacement = make_shared<op::Reshape>(logical_reshape, order, transposed_shape);
+                replacement =
+                    make_shared<op::v0::Reshape>(logical_reshape, order, transposed_shape);
             }
         }
     }
-
-    replace_node(n, replacement);
+    n->output(0).replace(replacement);
     return true;
 }
 
@@ -314,10 +313,14 @@ static bool is_uniform_constant(const op::Constant* constant, int value)
 
 static shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
 {
-    set<Node::type_info_t> nomath = {op::Broadcast::type_info, op::Reshape::type_info};
+    set<Node::type_info_t> nomath = {op::v0::Broadcast::type_info,
+                                     op::v0::Reshape::type_info,
+                                     opset3::Broadcast::type_info,
+                                     opset3::Reshape::type_info};
+    ;
     while (nomath.find(op->get_type_info()) != nomath.end())
     {
-        op = op->input(0).get_source_output().get_node_shared_ptr();
+        op = op->get_input_node_shared_ptr(0);
     }
     return as_type_ptr<op::Constant>(op);
 }
@@ -325,27 +328,93 @@ static shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
 static bool is_input_uniform_constant(shared_ptr<Node> op,
                                       int constant_value,
                                       shared_ptr<Node>& constant,
-                                      shared_ptr<Node>& value)
+                                      Output<Node>& value)
 {
     bool rc = false;
-    auto c = get_constant(op->input(0).get_source_output().get_node_shared_ptr());
+    auto c = get_constant(op->get_input_node_shared_ptr(0));
     if (is_uniform_constant(c.get(), constant_value))
     {
-        constant = op->input(0).get_source_output().get_node_shared_ptr();
-        value = op->input(1).get_source_output().get_node_shared_ptr();
+        constant = op->get_input_node_shared_ptr(0);
+        value = op->input_value(1);
         rc = true;
     }
     else
     {
-        c = get_constant(op->input(1).get_source_output().get_node_shared_ptr());
+        c = get_constant(op->get_input_node_shared_ptr(1));
         if (is_uniform_constant(c.get(), constant_value))
         {
-            constant = op->input(1).get_source_output().get_node_shared_ptr();
-            value = op->input(0).get_source_output().get_node_shared_ptr();
+            constant = op->get_input_node_shared_ptr(1);
+            value = op->input_value(0);
             rc = true;
         }
     }
     return rc;
+}
+
+//`simplify_gather`, optimizes gather if Gather is gathering the
+// whole input tensor
+static bool simplify_gather(std::shared_ptr<Node> node)
+{
+    if (auto gather = as_type_ptr<opset3::Gather>(node))
+    {
+        // check if we are gathering the whole input
+        auto data = gather->input_value(0);
+        auto indices = gather->input_value(1);
+
+        // we need to know data and indices shape to infer if gather is Nop
+        if (data.get_partial_shape().is_dynamic() || indices.get_partial_shape().is_dynamic())
+        {
+            return false;
+        }
+        // if rank of data and gather output dont match, we will skip
+        if (data.get_shape().size() != node->get_shape().size())
+        {
+            return false;
+        }
+
+        auto axis = gather->get_axis();
+
+        if (axis == opset3::Gather::AXIS_NOT_SET_VALUE)
+        {
+            NGRAPH_DEBUG << "axis value not set";
+            return false;
+        }
+
+        // case_1 : if the input tensor is of shape (4, 1, 4)
+        // and axis = 1, then the gather would be simply
+        // gathering the whole input tensor, so we can optimize this
+        // op has Nop
+
+        if (data.get_shape()[axis] == 1)
+        {
+            return replace_output_update_name(gather->output(0), gather->input_value(0));
+        }
+
+        // case_2 : if the input tensor is of shape (4, 3, 4)
+        // we need to check the contents of indices, if indices
+        // is 1D tensor of value {0, 1, 2}, we can optimize this
+        // op has Nop
+
+        // check if the indices is constant
+        auto constant_indices =
+            as_type_ptr<op::Constant>(gather->input_value(1).get_node_shared_ptr());
+        if (!constant_indices)
+        {
+            return false;
+        }
+        else
+        {
+            // if ref_inidices == indices, we are capturing the
+            // entire input tensor
+            std::vector<int64_t> ref_indices(data.get_shape()[axis], 0);
+            std::iota(ref_indices.begin(), ref_indices.end(), 0);
+            if (ref_indices == constant_indices->get_vector<int64_t>())
+            {
+                return replace_output_update_name(gather->output(0), gather->input_value(0));
+            }
+        }
+    }
+    return false;
 }
 
 //`simplify_multiply` optimizes the following 4 *base* cases
@@ -355,24 +424,23 @@ static bool is_input_uniform_constant(shared_ptr<Node> op,
 // a * broadcast(0) -> broadcast(0)
 // a * 1 -> a
 // a * broadcast(1) -> a
-static bool simplify_multiply(shared_ptr<Node> n)
+static bool simplify_multiply(shared_ptr<Node> multiply)
 {
     bool rc = false;
-    auto multiply = as_type_ptr<op::Multiply>(n);
     if (multiply)
     {
         shared_ptr<Node> constant;
-        shared_ptr<Node> value;
+        Output<Node> value;
         if (is_input_uniform_constant(multiply, 0, constant, value))
         {
-            replace_node(multiply, constant);
+            replace_output_update_name(multiply->output(0), constant->output(0));
             rc = true;
         }
         else
         {
             if (is_input_uniform_constant(multiply, 1, constant, value))
             {
-                replace_node(multiply, value);
+                replace_output_update_name(multiply->output(0), value);
                 rc = true;
             }
         }
@@ -386,17 +454,16 @@ static bool simplify_multiply(shared_ptr<Node> n)
 //
 // a + 0 -> a
 // a + broadcast(0) -> a
-static bool simplify_add(shared_ptr<Node> n)
+static bool simplify_add(shared_ptr<Node> add)
 {
     bool rc = false;
-    auto add = as_type_ptr<op::Add>(n);
     if (add)
     {
         shared_ptr<Node> constant;
-        shared_ptr<Node> value;
+        Output<Node> value;
         if (is_input_uniform_constant(add, 0, constant, value))
         {
-            replace_node(add, value);
+            replace_output_update_name(add->output(0), value);
             rc = true;
         }
     }
@@ -407,19 +474,79 @@ static bool simplify_add(shared_ptr<Node> n)
 //`simplify_log` optimizes `log(exp(x)/y)` into `x - log(y)`
 static bool simplify_log(shared_ptr<Node> n)
 {
-    if (auto div = as_type_ptr<op::Divide>(n->input_value(0).get_node_shared_ptr()))
+    if (auto div = as_type_ptr<op::v0::Divide>(n->input_value(0).get_node_shared_ptr()))
     {
-        if (auto exp = as_type_ptr<op::Exp>(div->input_value(0).get_node_shared_ptr()))
+        if (auto exp = as_type_ptr<op::v0::Exp>(div->input_value(0).get_node_shared_ptr()))
         {
-            auto denom = div->get_argument(1);
-            auto diff =
-                make_shared<op::Subtract>(exp->get_argument(0), make_shared<op::Log>(denom));
+            auto denom = div->get_input_source_output(1);
+            auto diff = make_shared<op::v0::Subtract>(exp->get_input_source_output(0),
+                                                      make_shared<op::v0::Log>(denom));
             replace_node(n, diff);
             return true;
         }
     }
 
     return false;
+}
+
+// optimizes `gather->shapeof` into `shapeof->gather` for 0D indices
+// other cases into Concat of shapeof/gather(data) + shapeof(indices)
+static bool simplify_gather_shapeof(shared_ptr<Node> node)
+{
+    auto shapeof = as_type_ptr<opset3::ShapeOf>(node);
+    auto gather = as_type_ptr<opset3::Gather>(shapeof->input_value(0).get_node_shared_ptr());
+    if (!gather)
+    {
+        return false;
+    }
+    auto gather_in_rank = gather->get_input_partial_shape(0).rank();
+    auto indices_rank = gather->get_input_partial_shape(1).rank();
+    auto axis = gather->get_axis();
+    if (gather_in_rank.is_dynamic() || indices_rank.is_dynamic() ||
+        axis == opset3::Gather::AXIS_NOT_SET_VALUE)
+    {
+        NGRAPH_DEBUG << gather << " cannot simplify gather->shapeof";
+        return false;
+    }
+
+    auto zero_axis = op::Constant::create<int64_t>(element::i64, Shape{}, {0});
+    shared_ptr<Node> replace_node;
+    auto new_shapeof = make_shared<opset3::ShapeOf>(gather->input_value(0).get_node_shared_ptr());
+    if (indices_rank.get_length() == 0)
+    {
+        std::vector<int64_t> vi(gather_in_rank.get_length());
+        std::iota(vi.begin(), vi.end(), 0);
+        vi.erase(vi.begin() + axis);
+        auto new_indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+        replace_node = make_shared<opset3::Gather>(new_shapeof, new_indices, zero_axis);
+    }
+    else
+    {
+        NodeVector concat_inputs;
+        if (axis > 0)
+        {
+            std::vector<int64_t> vi(axis);
+            std::iota(vi.begin(), vi.end(), 0);
+            auto indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+            auto gather = make_shared<opset3::Gather>(new_shapeof, indices, zero_axis);
+            concat_inputs.push_back(gather);
+        }
+        auto shapeof_indices =
+            make_shared<opset3::ShapeOf>(gather->input_value(1).get_node_shared_ptr());
+
+        concat_inputs.push_back(shapeof_indices);
+
+        if (gather_in_rank.get_length() - 1 > axis)
+        {
+            std::vector<int64_t> vi(gather_in_rank.get_length() - (axis + 1));
+            std::iota(vi.begin(), vi.end(), axis + 1);
+            auto indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+            auto gather = make_shared<opset3::Gather>(new_shapeof, indices, zero_axis);
+            concat_inputs.push_back(gather);
+        }
+        replace_node = make_shared<opset3::Concat>(concat_inputs, 0);
+    }
+    return replace_output_update_name(shapeof->output(0), replace_node->output(0));
 }
 
 static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)
@@ -506,9 +633,14 @@ template <typename T, shared_ptr<Node> (*F)(shared_ptr<op::Constant> cnst, size_
 static bool simplify_reduction(shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_reduction for " << n->get_name();
+    if (n->get_output_partial_shape(0).is_dynamic())
+    {
+        NGRAPH_DEBUG << n << " has dynamic shape";
+        return false;
+    }
     auto reduction = static_pointer_cast<T>(n);
 
-    auto broadcast = as_type_ptr<op::Broadcast>(n->input_value(0).get_node_shared_ptr());
+    auto broadcast = as_type_ptr<op::v0::Broadcast>(n->input_value(0).get_node_shared_ptr());
     if (!broadcast)
     {
         NGRAPH_DEBUG << n->get_name() << " isn't Broadcast";
@@ -539,7 +671,8 @@ static bool simplify_reduction(shared_ptr<Node> n)
         {
             axes.insert(i);
         }
-        reduction_cnst = make_shared<op::Broadcast>(reduction_cnst, reduction->get_shape(), axes);
+        reduction_cnst =
+            make_shared<op::v0::Broadcast>(reduction_cnst, reduction->get_shape(), axes);
     }
 
     replace_node(n, reduction_cnst);
@@ -549,14 +682,18 @@ static bool simplify_reduction(shared_ptr<Node> n)
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
 {
     return unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>>(
-        {{op::Add::type_info, simplify_add},
-         {op::Multiply::type_info, simplify_multiply},
-         {op::Concat::type_info, simplify_concat},
-         {op::Sum::type_info,
-          function<bool(shared_ptr<Node>)>{simplify_reduction<op::Sum, get_sum_constant>}},
-         {op::Product::type_info,
-          function<bool(shared_ptr<Node>)>{simplify_reduction<op::Product, get_prod_constant>}},
-         {op::Log::type_info, simplify_log}});
+        {{op::v0::Add::type_info, simplify_add},
+         {op::v0::Multiply::type_info, simplify_multiply},
+         {opset3::Gather::type_info, simplify_gather},
+         {opset3::Add::type_info, simplify_add},
+         {opset3::Multiply::type_info, simplify_multiply},
+         {op::v0::Concat::type_info, simplify_concat},
+         {opset3::ShapeOf::type_info, simplify_gather_shapeof},
+         {op::v0::Sum::type_info,
+          function<bool(shared_ptr<Node>)>{simplify_reduction<op::v0::Sum, get_sum_constant>}},
+         {op::v0::Product::type_info,
+          function<bool(shared_ptr<Node>)>{simplify_reduction<op::v0::Product, get_prod_constant>}},
+         {op::v0::Log::type_info, simplify_log}});
 }
 
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> ops_to_simplifiers =
@@ -575,7 +712,7 @@ bool pass::AlgebraicSimplification::run_on_function(shared_ptr<Function> f)
         auto eh = ops_to_simplifiers.find(n->get_type_info());
         if (eh != ops_to_simplifiers.end())
         {
-            replaced |= eh->second(n);
+            replaced = eh->second(n) || replaced;
         }
     }
     return replaced;
