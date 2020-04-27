@@ -164,6 +164,7 @@ static mlir::LogicalResult verifyCmpOp(T op)
         return result;
     }
 
+    // JUST TESTING CI ON MLIR-MASTER
     mlir::Type t0 = op.getOperation()->getOperand(0).getType();
     mlir::NGTensorType opType0 = t0.cast<NGTensorType>();
 
