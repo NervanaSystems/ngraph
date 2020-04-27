@@ -156,6 +156,10 @@ private:
         {
             return ngraph::get_opset2();
         }
+        else if (opset_name_ == "opset3")
+        {
+            return ngraph::get_opset3();
+        }
         else
         {
             throw ngraph::ngraph_error("Unsupported opset version requested.");

@@ -105,6 +105,7 @@ from ngraph.ops import result
 from ngraph.ops import reverse
 from ngraph.ops import rnn_cell
 from ngraph.ops import scale_shift
+from ngraph.ops import scatter_update
 from ngraph.ops import select
 from ngraph.ops import shape_of
 from ngraph.ops import shuffle_channels
