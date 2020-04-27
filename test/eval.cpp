@@ -31,9 +31,35 @@
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/validation_util.hpp"
 #include "util/test_tools.hpp"
+#include "util/type_prop.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+TEST(eval, bad_get_data_ptr)
+{
+    HostTensor c(element::f32, Shape{});
+    *c.get_data_ptr<float>() = 1.0;
+    EXPECT_EQ(*c.get_data_ptr<element::Type_t::f32>(), 1.0);
+    try
+    {
+        c.get_data_ptr<element::Type_t::f64>();
+        FAIL() << "Bad type not detected.";
+    }
+    catch (const CheckFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("get_data_ptr"));
+    }
+    try
+    {
+        c.get_data_ptr<element::Type_t::i32>();
+        FAIL() << "Bad type not detected.";
+    }
+    catch (const CheckFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("get_data_ptr"));
+    }
+}
 
 TEST(eval, max_eval_parameter)
 {
