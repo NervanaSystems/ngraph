@@ -25,7 +25,11 @@ namespace ngraph
     {
         namespace reference
         {
-            // Return the number of non-zero entries in the given arg
+            /// \brief Return number of non-zero entries in the input argument.
+            ///
+            /// \param arg Input tensor
+            /// \param arg_shape Input tensor shape
+            /// Output number of non-zero entries in arg
             template <typename T>
             size_t non_zero_get_count(const T* arg, const Shape& arg_shape)
             {
@@ -56,12 +60,13 @@ namespace ngraph
                 return non_zero_count;
             }
 
-            // Find indices of non-zero entries in input arg and write the indices
-            // to out. Total number of items written in out is also returned via
-            // out_count.
-            // Assume caller allocates enough out buffer space
+            /// \brief Return indices of non-zeror entries in input argument.
+            ///
+            /// \param arg Input tensor
+            /// \param arg_shape Input tensor shape
+            /// \param out Output containing indices of non-zeror entries in arg
             template <typename T, typename U>
-            void non_zero(const T* arg, U* out, const Shape& arg_shape, size_t* out_count)
+            void non_zero(const T* arg, U* out, const Shape& arg_shape)
             {
                 T zero = 0;
                 size_t arg_rank = arg_shape.size();
@@ -72,21 +77,15 @@ namespace ngraph
                 // Input arg only contains 0s
                 if (non_zero_count == 0)
                 {
-                    *out_count = 0;
                     return;
                 }
 
                 // Input arg is non-zero scalar
                 if (arg_rank == 0)
                 {
-                    *out_count = 1;
                     out[0] = static_cast<U>(0);
                     return;
                 }
-
-                // Calculate total number of items for output
-                // output shape {arg_rank, non_zero_count} if arg_rank && non_zero_count > 0
-                *out_count = arg_rank * non_zero_count;
 
                 // Dimension size for the arg_shape. This is used to map one-dimentional
                 // arg array indices to corresponding arg_rank-dimentional shape indices.

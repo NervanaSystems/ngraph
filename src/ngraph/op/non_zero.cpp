@@ -16,6 +16,7 @@
 
 #include "ngraph/op/non_zero.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/reference/non_zero.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -51,4 +52,68 @@ shared_ptr<Node> op::v3::NonZero::clone_with_new_inputs(const OutputVector& new_
 {
     check_new_args_count(this, new_args);
     return make_shared<v3::NonZero>(new_args.at(0));
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    bool try_evaluate_nonzero(Node* node,
+                              const EvaluatorTensorPtr& input,
+                              const EvaluatorTensorPtr& output)
+    {
+        if (ET != input->get_element_type() || output->get_element_type() != element::i64 ||
+            output->get_element_type() != element::i32)
+        {
+            return false;
+        }
+
+        // input shape should have been resolved to static shape, otherwise, this call assert
+        Shape input_shape = input->get_shape();
+        size_t input_rank = input_shape.size();
+
+        size_t non_zero_count =
+            runtime::reference::non_zero_get_count(input->get_ptr<ET>(), input_shape);
+
+        // ??? At this point, we know the output size should be,
+        // i.e., shape {rank(input_shape), non_zero_count} or {1} or {0}
+        // BUT what to do with this info?
+        // 1) How to set the output tensor size? OR what is the current size of output?
+        // 2) What to do with the case of 0 non-zero items?
+        // Below is the guess on what to do with Scott's PR 4610
+        Shape out_shape;
+        if (non_zero_count == 0)
+        {
+            out_shape = Shape{0};
+        }
+        else if (input_rank == 0)
+        {
+            out_shape = Shape{1, 1};
+        }
+        else
+        {
+            out_shape = Shape{input_rank, non_zero_count};
+        }
+
+        //    output->set_shape(node, out_shape);
+        runtime::reference::non_zero(
+            input->get_ptr<ET>(), output->get_ptr<element::Type_t::i64>(), out_shape);
+
+        return true;
+    }
+}
+
+bool op::v3::NonZero::evaluate(const EvaluatorTensorVector& outputs,
+                               const EvaluatorTensorVector& inputs)
+{
+    return try_evaluate_nonzero<element::Type_t::i8>(this, inputs[0], outputs[0]) ||
+           try_evaluate_nonzero<element::Type_t::i16>(this, inputs[0], outputs[0]) ||
+           try_evaluate_nonzero<element::Type_t::i32>(this, inputs[0], outputs[0]) ||
+           try_evaluate_nonzero<element::Type_t::i64>(this, inputs[0], outputs[0]) ||
+           try_evaluate_nonzero<element::Type_t::u8>(this, inputs[0], outputs[0]) ||
+           try_evaluate_nonzero<element::Type_t::u16>(this, inputs[0], outputs[0]) ||
+           try_evaluate_nonzero<element::Type_t::u32>(this, inputs[0], outputs[0]) ||
+           try_evaluate_nonzero<element::Type_t::u64>(this, inputs[0], outputs[0]) ||
+           try_evaluate_nonzero<element::Type_t::bf16>(this, inputs[0], outputs[0]) ||
+           try_evaluate_nonzero<element::Type_t::f32>(this, inputs[0], outputs[0]) ||
+           try_evaluate_nonzero<element::Type_t::f64>(this, inputs[0], outputs[0]);
 }

@@ -81,7 +81,6 @@
 #include "ngraph/runtime/reference/minimum.hpp"
 #include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
-#include "ngraph/runtime/reference/non_zero.hpp"
 #include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/not_equal.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
@@ -1112,17 +1111,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::NonZero_v3:
-        {
-            // WIP - still need to figure out how is the out[0] tensor size is
-            // determined.
-            size_t output_count = 0;
-            reference::non_zero<T, int64_t>(args[0]->get_data_ptr<const T>(),
-                                            out[0]->get_data_ptr<int64_t>(),
-                                            node.get_input_shape(0),
-                                            &output_count);
-            break;
-        }
         case OP_TYPEID::LogicalNot_v1:
         case OP_TYPEID::Not:
         {
@@ -1847,6 +1835,7 @@ protected:
         case OP_TYPEID::Unsqueeze:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
+        case OP_TYPEID::NonZero_v3:
         case OP_TYPEID::Result:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShapeOf_v3:

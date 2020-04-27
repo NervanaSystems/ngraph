@@ -49,6 +49,9 @@ namespace ngraph
 
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
+
+                bool evaluate(const EvaluatorTensorVector& outputs,
+                              const EvaluatorTensorVector& inputs) override;
             };
         }
         using v3::NonZero;
