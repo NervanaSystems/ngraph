@@ -35,6 +35,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/opsets/opset3.hpp"
 #include "ngraph/util.hpp"
 #include "nop_elimination.hpp"
 
@@ -72,17 +73,17 @@ static bool eliminate_sum(const std::shared_ptr<Node>& node)
 static bool eliminate_convert(const std::shared_ptr<Node>& node)
 {
     bool is_out_type_agnostic = false;
-    static const std::set<NodeTypeInfo> type_agnostic{TI(op::v3::NonZero)};
+    static const std::set<NodeTypeInfo> type_agnostic{TI(opset3::NonZero)};
     if (node->output(0).get_target_inputs().size() == 1)
     {
         auto& out = *node->output(0).get_target_inputs().begin();
         is_out_type_agnostic = type_agnostic.count(out.get_node()->get_type_info()) == 1;
     }
-    auto convert = as_type_ptr<op::v0::Convert>(node);
+    auto convert = as_type_ptr<opset3::Convert>(node);
     auto input = convert->input_value(0);
     if (convert->get_convert_element_type() == input.get_element_type() || is_out_type_agnostic)
     {
-        if (is_out_type_agnostic && is_type<op::v0::Convert>(input.get_node()))
+        if (is_out_type_agnostic && is_type<opset3::Convert>(input.get_node()))
         {
             input = input.get_node()->input_value(0);
         }
@@ -118,15 +119,15 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
         return replace_output_update_name(node->output(0), input);
     }
     // eliminate redundant reshape, squeeze, or unsqueeze
-    if (is_type<op::v0::Squeeze>(input.get_node()) ||
-        is_type<op::v0::Unsqueeze>(input.get_node()) || is_type<op::v1::Reshape>(input.get_node()))
+    if (is_type<opset3::Squeeze>(input.get_node()) ||
+        is_type<opset3::Unsqueeze>(input.get_node()) || is_type<opset3::Reshape>(input.get_node()))
     {
         auto shape = node->get_output_shape(0);
         std::vector<int64_t> vi;
         vi.assign(shape.begin(), shape.end());
         auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
         auto new_reshape =
-            make_shared<op::v1::Reshape>(input.get_node()->input_value(0), pat, false);
+            make_shared<opset3::Reshape>(input.get_node()->input_value(0), pat, false);
         return replace_output_update_name(node->output(0), new_reshape->output(0));
     }
 
@@ -135,10 +136,11 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
 
 static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
 {
-    auto unsqueeze = as_type_ptr<op::v0::Unsqueeze>(node);
+    auto unsqueeze = as_type_ptr<opset3::Unsqueeze>(node);
     auto input = unsqueeze->input_value(0).get_node_shared_ptr();
+    auto squeeze = as_type_ptr<opset3::Squeeze>(input);
     // eliminate redundant squeeze->unsqueeze
-    if (auto squeeze = as_type_ptr<op::v0::Squeeze>(input))
+    if (auto squeeze = as_type_ptr<opset3::Squeeze>(input))
     {
         if (!ngraph::compare_constants(squeeze->input_value(1).get_node_shared_ptr(),
                                        unsqueeze->input_value(1).get_node_shared_ptr()))
@@ -148,15 +150,27 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
         }
         return replace_output_update_name(unsqueeze->output(0), squeeze->input_value(0));
     }
+
+    // eliminate redundant unsqueeze
+    if (as_type_ptr<opset3::Reshape>(input) && !node->get_output_partial_shape(0).is_dynamic())
+    {
+        auto shape = node->get_shape();
+        std::vector<int64_t> vi;
+        vi.assign(shape.begin(), shape.end());
+        auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+        auto new_reshape =
+            make_shared<opset3::Reshape>(input->input_value(0).get_node_shared_ptr(), pat, false);
+        return remove_node_update_name(node, new_reshape);
+    }
     return false;
 }
 
 static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
 {
-    auto squeeze = as_type_ptr<op::v0::Squeeze>(node);
+    auto squeeze = as_type_ptr<opset3::Squeeze>(node);
     auto input = squeeze->input_value(0).get_node_shared_ptr();
     // eliminate redundant unsqueeze->squeeze
-    if (auto unsqueeze = as_type_ptr<op::v0::Unsqueeze>(input))
+    if (auto unsqueeze = as_type_ptr<opset3::Unsqueeze>(input))
     {
         if (!ngraph::compare_constants(unsqueeze->input_value(1).get_node_shared_ptr(),
                                        squeeze->input_value(1).get_node_shared_ptr()))
@@ -165,6 +179,17 @@ static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
             return false;
         }
         return replace_output_update_name(squeeze->output(0), unsqueeze->input_value(0));
+    }
+    // eliminate redundant squeeze
+    if (as_type_ptr<opset3::Reshape>(input) && !node->get_output_partial_shape(0).is_dynamic())
+    {
+        auto shape = node->get_shape();
+        std::vector<int64_t> vi;
+        vi.assign(shape.begin(), shape.end());
+        auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+        auto new_reshape =
+            make_shared<opset3::Reshape>(input->input_value(0).get_node_shared_ptr(), pat, false);
+        return remove_node_update_name(node, new_reshape);
     }
     return false;
 }
@@ -177,15 +202,15 @@ static bool eliminate_stop_gradient(const std::shared_ptr<Node>& node)
 
 static const std::unordered_map<NodeTypeInfo, std::function<bool(const std::shared_ptr<Node>&)>>
     dispatcher{{TI(op::v0::Pad), &eliminate_nop},
-               {TI(op::v1::Pad), &eliminate_nop},
+               {TI(opset3::Pad), &eliminate_nop},
                {TI(op::v0::Sum), &eliminate_sum},
-               {TI(op::v0::Convert), &eliminate_convert},
+               {TI(opset3::Convert), &eliminate_convert},
                {TI(op::v0::Slice), &eliminate_nop},
                {TI(op::v0::StopGradient), &eliminate_stop_gradient},
-               {TI(op::v1::Reshape), &eliminate_reshape_v1},
-               {TI(op::v0::Concat), &eliminate_concat},
-               {TI(op::v0::Squeeze), &eliminate_squeeze},
-               {TI(op::v0::Unsqueeze), &eliminate_unsqueeze},
+               {TI(opset3::Reshape), &eliminate_reshape_v1},
+               {TI(opset3::Concat), &eliminate_concat},
+               {TI(opset3::Squeeze), &eliminate_squeeze},
+               {TI(opset3::Unsqueeze), &eliminate_unsqueeze},
                {TI(op::v0::Broadcast), &eliminate_nop}};
 
 bool pass::NopElimination::run_on_function(std::shared_ptr<Function> function)
