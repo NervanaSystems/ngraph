@@ -18,10 +18,10 @@
 import numpy as np
 
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
-    Shape, Strides
+    Shape, Strides, util
 
 from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
-    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
+    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Convert, \
     Cos, Cosh, DepthToSpace, Dequantize, Divide, Dot, Elu, \
     FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
     HardSigmoid, Less, LessEq, Log, LRN, Minimum, \
@@ -38,7 +38,7 @@ from ngraph.utils.decorators import nameable_op, binary_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    NodeInput, ScalarData, as_node
+    NodeInput, ScalarData, as_node, get_ndarray, get_element_type_str
 from ngraph.utils.types import get_element_type
 
 from ngraph.utils.node_factory import NodeFactory
@@ -58,7 +58,7 @@ def parameter(shape, dtype=np.float32, name=None):
 
 
 @nameable_op
-def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, str) -> Constant
+def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, str) -> Node
     """Create a Constant node from provided value.
 
     :param value: One of: array of values or scalar to initialize node with.
@@ -66,7 +66,17 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
     :param name: Optional name for output node.
     :return: The Constant node initialized with provided data.
     """
-    return make_constant_node(value, dtype)
+    ndarray = get_ndarray(value)
+    dtype = ndarray.dtype if dtype is not None else dtype
+    element_type_str = get_element_type_str(dtype)
+    ndarray = np.ascontiguousarray(ndarray)
+
+    _get_node_factory().create('Constant',
+                               [],
+                               {'element_type': element_type_str,
+                                'shape': ndarray.shape,
+                                # this passess void*
+                                'value': util.numpy_to_c(ndarray)})
 
 
 @nameable_op
