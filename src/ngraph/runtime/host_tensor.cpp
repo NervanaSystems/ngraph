@@ -63,7 +63,7 @@ runtime::HostTensor::HostTensor(const std::string& name)
 }
 
 runtime::HostTensor::HostTensor(const Output<Node>& value)
-    : HostTensor(value.get_element_type(), value.get_partial_shape(), value.get_node()->get_name())
+    : HostTensor(value.get_element_type(), value.get_partial_shape(), value.get_tensor().get_name())
 {
 }
 

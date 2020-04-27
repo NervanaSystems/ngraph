@@ -430,6 +430,8 @@ namespace ngraph
                 template <element::Type_t ET>
                 const typename element_type_traits<ET>::value_type* get_data_ptr() const
                 {
+                    NGRAPH_CHECK(ET == get_element_type(),
+                                 "get_data_ptr() called for incorrect element type.");
                     return static_cast<const typename element_type_traits<ET>::value_type*>(
                         get_data_ptr());
                 }
@@ -449,6 +451,8 @@ namespace ngraph
                 template <element::Type_t ET>
                 typename element_type_traits<ET>::value_type* get_data_ptr_nc()
                 {
+                    NGRAPH_CHECK(ET == get_element_type(),
+                                 "get_data_ptr_nc() called for incorrect element type.");
                     return static_cast<typename element_type_traits<ET>::value_type*>(
                         get_data_ptr_nc());
                 }
