@@ -128,9 +128,9 @@ def test_depth_to_space():
 def test_space_to_batch():
     runtime = get_runtime()
 
-    data_value = np.array([[[[0,  1,  2],
-                             [3,  4,  5]],
-                            [[6,  7,  8],
+    data_value = np.array([[[[0, 1, 2],
+                             [3, 4, 5]],
+                            [[6, 7, 8],
                              [9, 10, 11]]]], dtype=np.float32)
     data_shape = data_value.shape
 
@@ -144,8 +144,8 @@ def test_space_to_batch():
     computation = runtime.computation(model, parameter_data)
 
     result = computation(data_value)
-    expected = np.array([[[[0,  0]]], [[[0,  0]]], [[[0,  2]]], [[[1,  0]]], [[[3,  5]]], [[[4,  0]]],
-                         [[[0,  0]]], [[[0,  0]]], [[[6,  8]]], [[[7,  0]]], [[[9, 11]]], [[[10,  0]]]],
+    expected = np.array([[[[0, 0]]], [[[0, 0]]], [[[0, 2]]], [[[1, 0]]], [[[3, 5]]], [[[4, 0]]],
+                         [[[0, 0]]], [[[0, 0]]], [[[6, 8]]], [[[7, 0]]], [[[9, 11]]], [[[10, 0]]]],
                         dtype=np.float32)
     assert np.allclose(result, expected)
 
