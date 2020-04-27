@@ -49,12 +49,11 @@ void op::v3::Bucketize::validate_and_infer_types()
                           "Output type must be i32 or i64. Default is i64");
 
     NODE_VALIDATION_CHECK(
-        this, buckets_pshape.rank().compatible(1), "The buckets input must be a 1D tensor.");
+        this, buckets_pshape.rank().compatible(1), "buckets input must be a 1D tensor");
 
     if (data_pshape.is_dynamic())
     {
         set_input_is_relevant_to_shape(0);
-        set_input_is_relevant_to_shape(1);
     }
 
     set_output_size(1);
