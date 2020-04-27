@@ -619,7 +619,7 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
     // make sure shapes are always materialized before results
     for (auto r : results)
     {
-        NGRAPH_CHECK(r->get_shape() == r->get_argument(0)->get_shape() &&
+        NGRAPH_CHECK(r->get_shape() == r->get_input_shape(0) &&
                          r->get_element_type() == r->get_argument(0)->get_element_type(),
                      " op::Result = ",
                      *r,

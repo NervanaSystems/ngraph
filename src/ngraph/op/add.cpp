@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/add.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 
 using namespace std;
@@ -82,12 +83,13 @@ namespace
         return true;
     }
 
-    bool evaluate_add(const EvaluatorTensorPtr& arg0,
-                      const EvaluatorTensorPtr& arg1,
-                      const EvaluatorTensorPtr& out,
+    bool evaluate_add(const HostTensorPtr& arg0,
+                      const HostTensorPtr& arg1,
+                      const HostTensorPtr& out,
                       const op::AutoBroadcastSpec& broadcast_spec)
     {
         bool rc = true;
+        out->set_broadcast(broadcast_spec, arg0, arg1);
         switch (arg0->get_element_type())
         {
             TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec);
@@ -116,8 +118,7 @@ namespace
     }
 }
 
-bool op::v0::Add::evaluate(const EvaluatorTensorVector& outputs,
-                           const EvaluatorTensorVector& inputs)
+bool op::v0::Add::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     return evaluate_add(inputs[0], inputs[1], outputs[0], get_autob());
 }
@@ -162,8 +163,7 @@ void op::v1::Add::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
     adjoints.add_delta(y, delta);
 }
 
-bool op::v1::Add::evaluate(const EvaluatorTensorVector& outputs,
-                           const EvaluatorTensorVector& inputs)
+bool op::v1::Add::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     return evaluate_add(inputs[0], inputs[1], outputs[0], get_autob());
 }
