@@ -25,7 +25,6 @@ np_types = [np.float32, np.float64, np.int8, np.int16, np.int32, np.int64,
 
 
 @pytest.mark.parametrize('dtype', np_types)
-@pytest.mark.skip_on_gpu
 def test_binary_convolution(dtype):
 
     strides = np.array([1, 1])
@@ -51,7 +50,6 @@ def test_binary_convolution(dtype):
 
 
 @pytest.mark.parametrize('dtype', np_types)
-@pytest.mark.skip_on_gpu
 def test_ctc_greedy_decoder(dtype):
     input0_shape = [20, 8, 128]
     input1_shape = [20, 8]
