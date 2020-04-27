@@ -382,7 +382,7 @@ TYPED_TEST_P(topk_type_prop, topk_negative_axis_dynamic_rank)
     }
 }
 
-TEST(topk_type_prop, topk_v1_partial_ouptut)
+TYPED_TEST_P(topk_type_prop, topk_v1_partial_ouptut)
 {
     auto data_shape = PartialShape{2, 10};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
