@@ -38,7 +38,7 @@ from ngraph.utils.decorators import nameable_op, binary_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    NodeInput, ScalarData, as_node
+    NodeInput, ScalarData, as_node, as_nodes
 from ngraph.utils.types import get_element_type
 
 from ngraph.utils.node_factory import NodeFactory
@@ -209,6 +209,20 @@ def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
     :return: The new node performing a GRN operation on tensor's channels.
     """
     return GRN(data, bias)
+
+
+@nameable_op
+def gather(data, indices, axis, name=None):  # type: (NodeInput, NodeInput, NodeInput, str) -> Node
+    """Return Gather node which takes slices from axis of data according to indices.
+
+    :param data: The tensor from which slices are gathered.
+    :param indices: Tensor with indexes to gather.
+    :param axis: The dimension index to gather data from.
+    :param name: Optional name for output node.
+    :return: The new node performing a Gather operation on the data input tensor.
+    """
+    node_inputs = as_nodes(data, indices, axis)
+    return _get_node_factory().create('Gather', node_inputs)
 
 
 @nameable_op
