@@ -1009,7 +1009,7 @@ void ngraph::evaluate_nodes(std::map<RawNodeOutput, HostTensorPtr>& value_map,
                 auto it = output_tensor_map.find(v);
                 if (it == output_tensor_map.end())
                 {
-                    auto c = make_shared<HostTensor>(v.get_element_type(), v.get_shape());
+                    auto c = make_shared<HostTensor>(v);
                     output_tensors.push_back(c);
                 }
                 else

@@ -1814,7 +1814,6 @@ protected:
         case OP_TYPEID::PartialSliceBackprop:
         case OP_TYPEID::Passthrough:
         case OP_TYPEID::PRelu:
-        case OP_TYPEID::Range:
         case OP_TYPEID::RNNCell:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ScaleShift:
@@ -1835,6 +1834,7 @@ protected:
         case OP_TYPEID::Unsqueeze:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
+        case OP_TYPEID::Range:
         case OP_TYPEID::Result:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShapeOf_v3:

@@ -76,8 +76,6 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     pass_manager.register_pass<pass::Opset0Downgrade>();
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
     pass_manager.register_pass<pass::FusedOpDecomposition>();
-    pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
-    pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(m_function);
     for (auto node : m_function->get_ordered_ops())
     {
@@ -173,10 +171,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
-                const Shape& shape = op->get_output_shape(i);
-                const element::Type& type = op->get_output_element_type(i);
-                string name = op->output(i).get_tensor().get_name();
-                host_tensor = make_shared<runtime::HostTensor>(type, shape, name);
+                host_tensor = make_shared<HostTensor>(op->output(i));
                 tensor_map.insert({tensor, host_tensor});
             }
             else

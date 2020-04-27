@@ -48,10 +48,10 @@ public:
     HostTensor(const element::Type& element_type, const Shape& shape, const std::string& name = "");
     HostTensor(const element::Type& element_type,
                const PartialShape& partial_shape,
-               const std::string& name = "'");
-    HostTensor(const std::string& name);
-    HostTensor(const Output<Node>&);
-    HostTensor(const std::shared_ptr<op::v0::Constant>& constant);
+               const std::string& name = "");
+    HostTensor(const std::string& name = "");
+    explicit HostTensor(const Output<Node>&);
+    explicit HostTensor(const std::shared_ptr<op::v0::Constant>& constant);
     virtual ~HostTensor() override;
 
     void* get_data_ptr();
