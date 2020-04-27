@@ -845,6 +845,22 @@ def divide(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 
 @binary_op
+def floor_mod(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, str) -> Node
+    """Return node performing element-wise FloorMod (division reminder) with two given tensors.
+
+    :param left_node: The first input node for FloorMod operation.
+    :param right_node: The second input node for FloorMod operation.
+    :param auto_broadcast: Specifies rules used for auto-broadcasting of input tensors.
+    :param name: Optional name for output node.
+    :return: The node performing element-wise FloorMod operation.
+    """
+    return _get_node_factory().create('FloorMod',
+                                      [as_node(left_node), as_node(right_node)],
+                                      {'auto_broadcast': auto_broadcast})
+
+
+@binary_op
 def multiply(left_node, right_node, auto_broadcast='NUMPY', name=None):
     # type: (NodeInput, NodeInput, str, str) -> Node
     """Return node which applies f(x) = A*B to the input nodes elementwise."""
