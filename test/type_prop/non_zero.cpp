@@ -24,7 +24,7 @@ using namespace ngraph;
 TEST(type_prop, non_zero)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{3, 3, 224, 224});
-    auto non_zero = make_shared<op::NonZero>(data);
+    auto non_zero = make_shared<op::v3::NonZero>(data);
     EXPECT_EQ(non_zero->get_element_type(), element::i64);
     EXPECT_TRUE(
         non_zero->get_output_partial_shape(0).same_scheme(PartialShape{4, Dimension::dynamic()}));
@@ -33,8 +33,49 @@ TEST(type_prop, non_zero)
 TEST(type_prop, non_zero_dynamic)
 {
     auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto non_zero = make_shared<op::NonZero>(data);
+    auto non_zero = make_shared<op::v3::NonZero>(data);
     EXPECT_EQ(non_zero->get_element_type(), element::i64);
     EXPECT_TRUE(non_zero->get_output_partial_shape(0).same_scheme(
         PartialShape{Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(type_prop, non_zero_output_type)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto non_zero = make_shared<op::v3::NonZero>(data, element::i32);
+
+    ASSERT_EQ(non_zero->get_output_element_type(0), element::i32);
+    EXPECT_TRUE(
+        non_zero->get_output_partial_shape(0).same_scheme(PartialShape{4, Dimension::dynamic()}));
+}
+
+TEST(type_prop, non_zero_string_output_type)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto non_zero = make_shared<op::v3::NonZero>(data, "i32");
+
+    ASSERT_EQ(non_zero->get_output_element_type(0), element::i32);
+    EXPECT_TRUE(
+        non_zero->get_output_partial_shape(0).same_scheme(PartialShape{4, Dimension::dynamic()}));
+}
+
+TEST(type_prop, non_zero_fail_index_element_type)
+{
+    // Deduce type
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    try
+    {
+        auto non_zero = make_shared<op::v3::NonZero>(data, element::i16);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid output type not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Output type must be i32 or i64"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }
