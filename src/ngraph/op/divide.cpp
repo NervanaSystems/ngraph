@@ -83,21 +83,20 @@ shared_ptr<Node> ngraph::operator/(const Output<Node>& arg0, const Output<Node>&
 namespace
 {
     template <element::Type_t ET>
-    bool try_evaluate_divide(const HostTensorPtr& arg0,
-                             const HostTensorPtr& arg1,
-                             const HostTensorPtr& out,
-                             const op::AutoBroadcastSpec& broadcast_spec,
-                             bool pythondiv)
+    bool evaluate(const HostTensorPtr& arg0,
+                  const HostTensorPtr& arg1,
+                  const HostTensorPtr& out,
+                  const op::AutoBroadcastSpec& broadcast_spec,
+                  bool pythondiv)
     {
-        return (ET == arg0->get_element_type()) &&
-               (runtime::reference::divide(arg0->get_data_ptr<ET>(),
-                                           arg1->get_data_ptr<ET>(),
-                                           out->get_data_ptr<ET>(),
-                                           arg0->get_shape(),
-                                           arg1->get_shape(),
-                                           broadcast_spec,
-                                           pythondiv),
-                true);
+        runtime::reference::divide(arg0->get_data_ptr<ET>(),
+                                   arg1->get_data_ptr<ET>(),
+                                   out->get_data_ptr<ET>(),
+                                   arg0->get_shape(),
+                                   arg1->get_shape(),
+                                   broadcast_spec,
+                                   pythondiv);
+        return true;
     }
 
     bool evaluate_divide(const HostTensorPtr& arg0,
@@ -106,27 +105,33 @@ namespace
                          const op::AutoBroadcastSpec& broadcast_spec,
                          bool pythondiv)
     {
+        bool rc = true;
         out->set_broadcast(broadcast_spec, arg0, arg1);
-        return try_evaluate_divide<element::Type_t::i8>(
-                   arg0, arg1, out, broadcast_spec, pythondiv) ||
-               try_evaluate_divide<element::Type_t::i16>(
-                   arg0, arg1, out, broadcast_spec, pythondiv) ||
-               try_evaluate_divide<element::Type_t::i32>(
-                   arg0, arg1, out, broadcast_spec, pythondiv) ||
-               try_evaluate_divide<element::Type_t::i64>(
-                   arg0, arg1, out, broadcast_spec, pythondiv) ||
-               try_evaluate_divide<element::Type_t::u8>(
-                   arg0, arg1, out, broadcast_spec, pythondiv) ||
-               try_evaluate_divide<element::Type_t::u16>(
-                   arg0, arg1, out, broadcast_spec, pythondiv) ||
-               try_evaluate_divide<element::Type_t::u32>(
-                   arg0, arg1, out, broadcast_spec, pythondiv) ||
-               try_evaluate_divide<element::Type_t::u64>(
-                   arg0, arg1, out, broadcast_spec, pythondiv) ||
-               try_evaluate_divide<element::Type_t::f32>(
-                   arg0, arg1, out, broadcast_spec, pythondiv) ||
-               try_evaluate_divide<element::Type_t::f64>(
-                   arg0, arg1, out, broadcast_spec, pythondiv);
+        switch (arg0->get_element_type())
+        {
+            TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec, pythondiv);
+            break;
+            TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec, pythondiv);
+            break;
+            TYPE_CASE(i32)(arg0, arg1, out, broadcast_spec, pythondiv);
+            break;
+            TYPE_CASE(i64)(arg0, arg1, out, broadcast_spec, pythondiv);
+            break;
+            TYPE_CASE(u8)(arg0, arg1, out, broadcast_spec, pythondiv);
+            break;
+            TYPE_CASE(u16)(arg0, arg1, out, broadcast_spec, pythondiv);
+            break;
+            TYPE_CASE(u32)(arg0, arg1, out, broadcast_spec, pythondiv);
+            break;
+            TYPE_CASE(u64)(arg0, arg1, out, broadcast_spec, pythondiv);
+            break;
+            TYPE_CASE(f32)(arg0, arg1, out, broadcast_spec, pythondiv);
+            break;
+            TYPE_CASE(f64)(arg0, arg1, out, broadcast_spec, pythondiv);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
     }
 }
 
