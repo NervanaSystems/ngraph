@@ -689,6 +689,17 @@ def sqrt(node, name=None):  # type: (NodeInput, str) -> Node
 
 
 @unary_op
+def erf(node, name=None):  # type: (NodeInput, str) -> Node
+    """Return node which calculates Gauss error function element-wise with given tensor.
+
+    :param node: The node providing data for operation.
+    :param name: The optional name for new output node.
+    :return: The new node performing element-wise Erf operation.
+    """
+    return _get_node_factory().create('Erf', [as_node(node)])
+
+
+@unary_op
 def exp(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies exponential function to the input node element-wise.
 

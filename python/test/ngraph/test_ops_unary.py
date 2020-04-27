@@ -126,3 +126,13 @@ def test_softmax():
                 [0.08576079, 0.23312201, 0.63369132]]
 
     assert np.allclose(result, expected)
+
+
+@pytest.mark.skip_on_gpu
+def test_erf():
+    input_tensor = np.array([-1.0, 0.0, 1.0, 2.5, 3.14, 4.0], dtype=np.float32)
+
+    result = run_op_node([input_tensor], ng.erf)
+    expected = [-0.842701, 0.0, 0.842701, 0.999593, 0.999991, 1.0]
+
+    assert np.allclose(result, expected)
