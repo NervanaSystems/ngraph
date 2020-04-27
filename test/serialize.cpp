@@ -870,6 +870,10 @@ TEST(serialize, opset3_bucketize)
     auto g_bucketize = g_result->get_input_node_shared_ptr(0);
     auto bucketize_out = as_type_ptr<op::v3::Bucketize>(g_bucketize);
     ASSERT_TRUE(bucketize_out);
+
+    EXPECT_EQ(bucketize_out->description(), "Bucketize");
+    EXPECT_EQ(bucketize_out->get_version(), 3);
+
     EXPECT_EQ(bucketize_out->get_output_type(), output_type);
     EXPECT_EQ(bucketize_out->get_with_right_bound(), with_right_bound);
 }

@@ -60,22 +60,7 @@ namespace ngraph
                     m_with_right_bound = with_right_bound;
                 }
 
-                // FOR CONSTANT FOLDING INTERNAL USAGE ONLY
-                // Constant folding for cases with static rank but dynamic shape create a subgraph
-                // which contains a Shape of.
-                // In this case we need to prevent constant folding from endless creation of these
-                // subgraphs.
-                // These methods should be removed if better solution will be designed.
-                // TBD
-                /*void set_is_foldable(bool is_foldable) { m_is_foldable = is_foldable; }
-                bool get_is_foldable() const { return m_is_foldable; }
-                bool evaluate(const EvaluatorTensorVector& output_values,
-                              const EvaluatorTensorVector& input_values) override;
-                bool constant_fold(OutputVector& output_values,
-                                   const OutputVector& input_values) override;*/
-
             private:
-                // bool m_is_foldable = true;
                 element::Type m_output_type;
                 bool m_with_right_bound;
             };
