@@ -833,14 +833,12 @@ def divide(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
     :param left_node: The node providing dividend data.
     :param right_node: The node providing divisor data.
-    :param right_node: Specifies rules used for auto-broadcasting of input tensors.
+    :param auto_broadcast: Specifies rules used for auto-broadcasting of input tensors.
     :param name: Optional name for output node.
-    :param auto_broadcast: The type of broadcasting specifies rules used for
-                           auto-broadcasting of input tensors.
     :return: The node performing element-wise division.
     """
     return _get_node_factory().create('Divide',
-                                      [left_node, right_node],
+                                      [as_node(left_node), as_node(right_node)],
                                       {'auto_broadcast': auto_broadcast})
 
 
