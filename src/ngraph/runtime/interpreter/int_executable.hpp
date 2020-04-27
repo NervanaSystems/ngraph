@@ -1702,6 +1702,7 @@ protected:
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::copy<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
         }
         case OP_TYPEID::Subtract:
         {
@@ -1776,6 +1777,7 @@ protected:
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::copy<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
         }
         case OP_TYPEID::Xor:
         {
