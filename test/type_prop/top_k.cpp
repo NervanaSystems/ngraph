@@ -342,12 +342,12 @@ TEST(type_prop, topk_rank_static_dynamic_k_known_ok)
 
 // Since v3::TopK is backward compatible with v1::TopK all of these tests should pass
 template <typename T>
-class type_prop : public ::testing::Test
+class topk_type_prop : public ::testing::Test
 {
 };
-TYPED_TEST_CASE_P(type_prop);
+TYPED_TEST_CASE_P(topk_type_prop);
 
-TYPED_TEST_P(type_prop, topk_negative_axis_support)
+TYPED_TEST_P(topk_type_prop, topk_negative_axis_support)
 {
     const auto data_shape = Shape{1, 2, 3, 4};
     const auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -360,7 +360,7 @@ TYPED_TEST_P(type_prop, topk_negative_axis_support)
     ASSERT_EQ(topk->get_axis(), data_shape.at(1));
 }
 
-TYPED_TEST_P(type_prop, topk_negative_axis_dynamic_rank)
+TYPED_TEST_P(topk_type_prop, topk_negative_axis_dynamic_rank)
 {
     const auto data_shape = PartialShape::dynamic();
     const auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -382,7 +382,7 @@ TYPED_TEST_P(type_prop, topk_negative_axis_dynamic_rank)
     }
 }
 
-TEST(type_prop, topk_v1_partial_ouptut)
+TEST(topk_type_prop, topk_v1_partial_ouptut)
 {
     auto data_shape = PartialShape{2, 10};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -398,7 +398,10 @@ TEST(type_prop, topk_v1_partial_ouptut)
     }
 }
 
-REGISTER_TYPED_TEST_CASE_P(type_prop, topk_negative_axis_support, topk_negative_axis_dynamic_rank, topk_v1_partial_ouptut);
+REGISTER_TYPED_TEST_CASE_P(topk_type_prop,
+                           topk_negative_axis_support,
+                           topk_negative_axis_dynamic_rank,
+                           topk_v1_partial_ouptut);
 
 typedef ::testing::Types<op::v1::TopK, op::v3::TopK> TopKTypes;
-INSTANTIATE_TYPED_TEST_CASE_P(, type_prop, TopKTypes);
+INSTANTIATE_TYPED_TEST_CASE_P(type_prop, topk_type_prop, TopKTypes);
