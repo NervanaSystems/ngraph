@@ -16,8 +16,8 @@
 
 #include "ngraph/validation_util.hpp"
 #include "ngraph/evaluator.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/minimum.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type_traits.hpp"
 #include "ngraph/util.hpp"
@@ -985,11 +985,49 @@ pair<bool, int64_t> ngraph::maximum_value(const Output<Node>& value)
 {
     static Evaluator<MaxValue>::op_handler_map handlers = {
         {op::Minimum::type_info, exec_minimum}, {op::Constant::type_info, exec_constant}};
-    Evaluator<MaxValue> evaluator(handlers);
+    Evaluator<MaxValue>::value_map value_map;
+    Evaluator<MaxValue> evaluator(handlers, value_map);
     auto val = evaluator.evaluate(value);
     if (val.m_element_type == element::Type_t::i64)
     {
         return pair<bool, int64_t>(true, val.m_int64_t);
     }
     return pair<bool, int64_t>(false, 0);
+}
+
+void ngraph::evaluate_nodes(std::map<RawNodeOutput, HostTensorPtr>& value_map,
+                            std::map<RawNodeOutput, HostTensorPtr>& output_tensor_map,
+                            const OutputVector& outputs)
+{
+    Evaluator<HostTensorPtr> evaluator({}, value_map);
+    evaluator.set_univeral_handler(
+        [&output_tensor_map](Node* node,
+                             const HostTensorVector& input_tensors) -> HostTensorVector {
+            HostTensorVector output_tensors;
+            for (auto v : node->outputs())
+            {
+                auto it = output_tensor_map.find(v);
+                if (it == output_tensor_map.end())
+                {
+                    auto c = make_shared<HostTensor>(v);
+                    output_tensors.push_back(c);
+                }
+                else
+                {
+                    output_tensors.push_back(it->second);
+                }
+            }
+            if (node->evaluate(output_tensors, input_tensors))
+            {
+                return output_tensors;
+            }
+            else
+            {
+                return {};
+            }
+        });
+    for (auto value : outputs)
+    {
+        evaluator.evaluate(value);
+    }
 }

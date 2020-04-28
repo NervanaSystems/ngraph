@@ -65,15 +65,15 @@ namespace ngraph
                 ///
                 /// \note       Default value is vector of size spatial dims filled with ones.
                 ///
-                /// \param      node         Node from which attribute is read
-                /// \param      attr_name    Attribute name (such as `strides`, `dilations`)
+                /// \param[in]  node         Node from which attribute is read
+                /// \param[in]  attr_name    Attribute name (such as `strides`, `dilations`)
                 /// \param[in]  kernel_rank  The optional kernel rank.
                 ///
                 /// \return     Read vector attribute if available or default value
                 ///
                 std::vector<std::size_t> get_attribute_value(const Node& node,
                                                              const std::string& attr_name,
-                                                             const std::size_t kernel_rank = 0)
+                                                             const std::size_t kernel_rank = 0UL)
                 {
                     if (node.has_attribute(attr_name))
                     {
@@ -90,19 +90,9 @@ namespace ngraph
                 }
             } // namespace detail
 
-            Strides get_strides(const Node& node)
-            {
-                return detail::get_attribute_value(node, "strides");
-            }
-
             Strides get_strides(const Node& node, const std::size_t kernel_rank)
             {
                 return detail::get_attribute_value(node, "strides", kernel_rank);
-            }
-
-            Strides get_dilations(const Node& node)
-            {
-                return detail::get_attribute_value(node, "dilations");
             }
 
             Strides get_dilations(const Node& node, const std::size_t kernel_rank)

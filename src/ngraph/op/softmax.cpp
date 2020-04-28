@@ -25,6 +25,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/runtime/reference/softmax.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -155,6 +156,33 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
     adjoints.add_delta(x, adjoint);
 }
 
+namespace
+{
+    template <element::Type_t ET>
+    inline bool try_evaluate_softmax(const HostTensorPtr& arg,
+                                     const HostTensorPtr& out,
+                                     const Shape& shape,
+                                     const AxisSet& axes)
+    {
+        return (ET == arg->get_element_type()) &&
+               (runtime::reference::softmax(
+                    arg->get_data_ptr<ET>(), out->get_data_ptr<ET>(), shape, axes),
+                true);
+    }
+
+    bool evaluate_softmax(const HostTensorPtr& arg, const HostTensorPtr& out, const AxisSet& axes)
+    {
+        auto shape = out->get_shape();
+        return try_evaluate_softmax<element::Type_t::f32>(arg, out, shape, axes) ||
+               try_evaluate_softmax<element::Type_t::f64>(arg, out, shape, axes);
+    }
+}
+
+bool op::v0::Softmax::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_softmax(inputs[0], outputs[0], get_axes());
+}
+
 // *** SOFTMAX OP SET V1 ***
 constexpr NodeTypeInfo op::v1::Softmax::type_info;
 
@@ -194,12 +222,18 @@ shared_ptr<Node> op::v1::Softmax::clone_with_new_inputs(const OutputVector& new_
     return make_shared<op::v1::Softmax>(new_args.at(0), m_axis);
 }
 
+bool op::v1::Softmax::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_softmax(inputs[0], outputs[0], AxisSet{m_axis});
+}
+
 void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                         const OutputVector& /* deltas */)
 {
     throw ngraph_error("op::v1::Softmax::generate_adjoints function is not implemented yet");
 
-    /* This might work, but as of this writing we have no way to test it, so we are being careful
+    /* This might work, but as of this writing we have no way to test it, so we are being
+    careful
     auto delta = deltas.at(0);
 
     auto z = delta * shared_from_this();

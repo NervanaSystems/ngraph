@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/lambda.hpp"
+#include "validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -73,4 +74,23 @@ int64_t Lambda::get_result_index(const Output<Node>& value) const
         }
     }
     return -1;
+}
+
+bool Lambda::evaluate(const HostTensorVector& output_tensors, const HostTensorVector& input_tensors)
+{
+    std::map<RawNodeOutput, HostTensorPtr> value_map;
+    for (size_t i = 0; i < m_parameters.size(); ++i)
+    {
+        value_map[m_parameters.at(i)->output(0)] = input_tensors.at(i);
+    }
+    OutputVector outputs;
+    std::map<RawNodeOutput, HostTensorPtr> output_tensor_map;
+    for (size_t i = 0; i < m_results.size(); ++i)
+    {
+        auto result = m_results.at(i)->output(0);
+        output_tensor_map[result] = output_tensors.at(i);
+        outputs.push_back(result);
+    }
+    evaluate_nodes(value_map, output_tensor_map, outputs);
+    return true;
 }

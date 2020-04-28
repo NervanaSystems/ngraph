@@ -55,14 +55,14 @@ namespace ngraph
                                                  const std::vector<std::int64_t>& output_shape,
                                                  const std::vector<std::int64_t>& output_padding)
                     {
-                        if (!output_shape.empty())
+                        if (output_shape.empty())
                         {
                             return std::make_shared<default_opset::GroupConvolutionBackpropData>(
                                 data,
                                 filters,
-                                default_opset::Constant::create(
-                                    element::i64, Shape{output_shape.size()}, output_shape),
                                 strides,
+                                pads_begin,
+                                pads_end,
                                 dilations,
                                 auto_pad_type,
                                 CoordinateDiff(std::begin(output_padding),
@@ -73,9 +73,9 @@ namespace ngraph
                             return std::make_shared<default_opset::GroupConvolutionBackpropData>(
                                 data,
                                 filters,
+                                default_opset::Constant::create(
+                                    element::i64, Shape{output_shape.size()}, output_shape),
                                 strides,
-                                pads_begin,
-                                pads_end,
                                 dilations,
                                 auto_pad_type,
                                 CoordinateDiff(std::begin(output_padding),
@@ -94,13 +94,11 @@ namespace ngraph
                                            const std::vector<std::int64_t>& output_shape,
                                            const std::vector<std::int64_t>& output_padding)
                     {
-                        if (!output_shape.empty())
+                        if (output_shape.empty())
                         {
                             return std::make_shared<default_opset::ConvolutionBackpropData>(
                                 data,
                                 filters,
-                                default_opset::Constant::create(
-                                    element::i64, Shape{output_shape.size()}, output_shape),
                                 strides,
                                 pads_begin,
                                 pads_end,
@@ -114,6 +112,8 @@ namespace ngraph
                             return std::make_shared<default_opset::ConvolutionBackpropData>(
                                 data,
                                 filters,
+                                default_opset::Constant::create(
+                                    element::i64, Shape{output_shape.size()}, output_shape),
                                 strides,
                                 pads_begin,
                                 pads_end,
@@ -147,26 +147,33 @@ namespace ngraph
                                 std::make_shared<default_opset::ShapeOf>(filters_shape);
                             const auto one_node =
                                 default_opset::Constant::create(element::i64, Shape{1}, {1});
-                            const auto remaining_shape_length =
-                                std::make_shared<default_opset::Subtract>(filters_rank, one_node);
-                            const auto split_part_lengths = std::make_shared<default_opset::Concat>(
-                                OutputVector{one_node, remaining_shape_length}, 0);
-                            const auto split_parts = std::make_shared<default_opset::VariadicSplit>(
-                                filters_shape,
-                                default_opset::Constant::create(element::i64, Shape{}, {0}),
-                                split_part_lengths);
+                            const auto zero_node =
+                                default_opset::Constant::create(element::i64, Shape{1}, {0});
+
+                            std::shared_ptr<ngraph::Node> in_c_dim =
+                                std::make_shared<default_opset::StridedSlice>(
+                                    filters_shape,
+                                    zero_node,                // begin
+                                    one_node,                 // end
+                                    std::vector<int64_t>{0},  // begin mask
+                                    std::vector<int64_t>{0}); // end mask
+
+                            const auto remaining_dims =
+                                std::make_shared<default_opset::StridedSlice>(
+                                    filters_shape,
+                                    one_node,                 // begin
+                                    filters_rank,             // end
+                                    std::vector<int64_t>{0},  // begin mask
+                                    std::vector<int64_t>{0}); // end mask
 
                             // Apply shape layout transformation:
-                            auto first_dim = split_parts->get_output_as_single_output_node(0);
-                            const auto remaining_dims =
-                                split_parts->get_output_as_single_output_node(1);
                             const auto groups_node =
                                 default_opset::Constant::create(element::i64, Shape{1}, {groups});
-                            first_dim =
-                                std::make_shared<default_opset::Divide>(first_dim, groups_node);
+                            in_c_dim =
+                                std::make_shared<default_opset::Divide>(in_c_dim, groups_node);
 
                             const auto new_filters_shape = std::make_shared<default_opset::Concat>(
-                                OutputVector{first_dim, groups_node, remaining_dims}, 0);
+                                OutputVector{groups_node, in_c_dim, remaining_dims}, 0);
                             return std::make_shared<default_opset::Reshape>(
                                        filters, new_filters_shape, false)
                                 ->add_provenance_group_members_above({filters});
@@ -203,20 +210,15 @@ namespace ngraph
                             const auto remaining_shape_length =
                                 std::make_shared<default_opset::Subtract>(conv_rank, two_node);
                             const auto remaining_bias_shape_ones =
-                                std::make_shared<default_opset::Broadcast>(
-                                    one_node,
-                                    remaining_shape_length); // To skalar czy [1]?
+                                std::make_shared<default_opset::Broadcast>(one_node,
+                                                                           remaining_shape_length);
 
-                            // Split conv shape into (N), (C), (H, W, ...) in order to get C dim
-                            const auto split_part_lengths = std::make_shared<default_opset::Concat>(
-                                OutputVector{one_node, one_node, remaining_shape_length}, 0);
-                            const auto conv_split_parts =
-                                std::make_shared<default_opset::VariadicSplit>(
-                                    conv_shape,
-                                    default_opset::Constant::create(element::i64, Shape{}, {0}),
-                                    split_part_lengths);
-                            const auto C_dim =
-                                conv_split_parts->get_output_as_single_output_node(1);
+                            const auto C_dim = std::make_shared<default_opset::StridedSlice>(
+                                conv_shape,
+                                one_node,                 // begin
+                                two_node,                 // end
+                                std::vector<int64_t>{0},  // begin mask
+                                std::vector<int64_t>{0}); // end mask
 
                             // Construct new bias shape: [1, C, 1, 1, ... ]
                             bias_shape_node = std::make_shared<default_opset::Concat>(
@@ -252,27 +254,28 @@ namespace ngraph
                     // Get attirbutes or infer them from input data rank it it's static.
                     if (data_pshape.rank().is_static())
                     {
-                        strides = convpool::get_strides(node);
-                        dilations = convpool::get_dilations(node);
-                        paddings = convpool::get_pads(node);
                         num_spatial_dims = data_pshape.rank().get_length() - 2;
+                    }
+                    else if (filters_pshape.rank().is_static())
+                    {
+                        num_spatial_dims = filters_pshape.rank().get_length() - 2;
                     }
                     // Otherwise read "kernel_shape" attribute
                     else
                     {
                         CHECK_VALID_NODE(node,
                                          node.has_attribute("kernel_shape"),
-                                         "\"kernel_shape\" attribute is required if input data rank"
-                                         " is dynamic.");
+                                         "\"kernel_shape\" attribute is required if data and "
+                                         "filter inputs' ranks are dynamic.");
                         std::vector<std::size_t> kernel_shape =
                             node.get_attribute_value<std::vector<std::size_t>>("kernel_shape");
 
-                        strides = convpool::get_strides(node, kernel_shape.size());
-                        dilations = convpool::get_dilations(node, kernel_shape.size());
-                        paddings = convpool::get_pads(node, kernel_shape.size());
                         num_spatial_dims = kernel_shape.size();
                     }
 
+                    strides = convpool::get_strides(node, num_spatial_dims);
+                    dilations = convpool::get_dilations(node, num_spatial_dims);
+                    paddings = convpool::get_pads(node, num_spatial_dims);
                     CoordinateDiff pads_begin = paddings.first;
                     CoordinateDiff pads_end = paddings.second;
 

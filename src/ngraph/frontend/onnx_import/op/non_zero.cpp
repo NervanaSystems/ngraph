@@ -30,7 +30,7 @@ namespace ngraph
                 NodeVector non_zero(const Node& node)
                 {
                     const auto data = node.get_ng_inputs().at(0);
-                    return {std::make_shared<ngraph::opset3::NonZero>(data)};
+                    return {std::make_shared<ngraph::opset3::NonZero>(data, element::i64)};
                 }
 
             } // namespace set_1

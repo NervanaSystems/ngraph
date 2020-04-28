@@ -519,7 +519,6 @@ set (SRC
     pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
-    pass/constant_folding_range.cpp
     pass/constant_folding_reshape.cpp
     pass/constant_folding_reverse.cpp
     pass/constant_folding_select.cpp
@@ -726,7 +725,7 @@ add_subdirectory(runtime)
 target_compile_definitions(ngraph
     PRIVATE
         SHARED_LIB_PREFIX="${CMAKE_SHARED_LIBRARY_PREFIX}"
-        SHARED_LIB_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+        SHARED_LIB_SUFFIX="${IE_BUILD_POSTFIX}${CMAKE_SHARED_LIBRARY_SUFFIX}"
 )
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph PROPERTIES

@@ -46,19 +46,26 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
 void descriptor::Tensor::set_tensor_type(const element::Type& element_type,
                                          const PartialShape& pshape)
 {
-    NGRAPH_CHECK(pshape.all_non_negative(),
-                 "set_tensor_type called on a PartialShape containing negative dimensions: ",
-                 pshape);
-    if (pshape.is_static())
+    set_element_type(element_type);
+    set_partial_shape(pshape);
+}
+
+void descriptor::Tensor::set_element_type(const element::Type& element_type)
+{
+    m_element_type = element_type;
+}
+
+void descriptor::Tensor::set_partial_shape(const PartialShape& partial_shape)
+{
+    m_partial_shape = partial_shape;
+    if (m_partial_shape.is_static())
     {
-        m_shape = pshape.to_shape();
+        m_shape = m_partial_shape.to_shape();
     }
     else
     {
         m_shape = Shape{};
     }
-    m_partial_shape = pshape;
-    m_element_type = element_type;
 }
 
 const Shape& descriptor::Tensor::get_shape() const

@@ -36,40 +36,22 @@ namespace ngraph
             ///
             /// \brief      Get number of pixels to stride operation by in each direction.
             ///
-            /// \param      node  The Node ptr representing Conv or Pool operation.
-            ///
-            /// \return     The kernel Shape object representing its dimensions (height, width,
-            ///             depth).
-            Strides get_strides(const Node& node);
-
-            ///
-            /// \brief      Get number of pixels to stride operation by in each direction.
-            ///
-            /// \param      node         The Node ptr representing Conv or Pool operation.
+            /// \param[in]  node         The Node ptr representing Conv or Pool operation.
             /// \param[in]  kernel_rank  The operator's kernel rank.
             ///
             /// \return     The kernel Shape object representing its dimensions (height, width,
             ///             depth).
-            Strides get_strides(const Node& node, const std::size_t kernel_rank);
+            Strides get_strides(const Node& node, const std::size_t kernel_rank = 0UL);
 
             ///
             /// \brief      Get number of pixels for filter dilation in each direction.
             ///
-            /// \param      node  The Node ptr representing ONNX operation.
-            ///
-            /// \return     The Strides object containing number of pixels for filter dilation
-            ///             (height, width, depth).
-            Strides get_dilations(const Node& node);
-
-            ///
-            /// \brief      Get number of pixels for filter dilation in each direction.
-            ///
-            /// \param      node         The Node ptr representing ONNX operation.
+            /// \param[in]  node         The Node ptr representing ONNX operation.
             /// \param[in]  kernel_rank  The operator'skernel rank.
             ///
             /// \return     The Strides object containing number of pixels for filter dilation
             ///             (height, width, depth).
-            Strides get_dilations(const Node& node, const std::size_t kernel_rank);
+            Strides get_dilations(const Node& node, const std::size_t kernel_rank = 0UL);
 
             /// \brief Get padding values for the operation described by an ONNX node.
             /// \details Values are taken from the `pads` attribute.
