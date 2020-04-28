@@ -17,7 +17,8 @@ import numpy as np
 import pytest
 
 import ngraph as ng
-
+from ngraph.impl import Type
+from test.ngraph.util import run_op_node, get_runtime
 
 np_types = [np.float32, np.int32]
 
@@ -158,3 +159,14 @@ def test_gather_tree(dtype):
     assert node.get_type_name() == 'GatherTree'
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == expected_shape
+
+
+def test_roi_pooling():
+    inputs = ng.parameter([2, 3, 4, 5], dtype=np.float32)
+    coords = ng.parameter([150, 5], dtype=np.float32)
+    node = ng.roi_pooling(inputs, coords, [6, 6], 0.0625, "Max")
+
+    assert node.get_type_name() == 'ROIPooling'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == [150, 3, 6, 6]
+    assert node.get_output_element_type(0) == Type.f32
