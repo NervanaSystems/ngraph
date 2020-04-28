@@ -151,7 +151,7 @@ namespace ngraph
         return s << as_string(type);
     }
 
-  std::ostream& op::operator<<(std::ostream& s, const op::TopKMode& type)
+    std::ostream& op::operator<<(std::ostream& s, const op::TopKMode& type)
     {
         return s << as_string(type);
     }
