@@ -30,20 +30,11 @@ static shared_ptr<op::Constant>
 {
     const auto input_shape = data->get_shape();
     size_t input_rank = input_shape.size();
-    const auto* input_values = data->get_data_ptr<T>();
+    const T* input_values = data->get_data_ptr<T>();
     Shape out_shape;
 
     size_t non_zero_count = runtime::reference::non_zero_get_count<T>(input_values, input_shape);
     size_t out_elem_count = (input_rank == 0) ? non_zero_count : (input_rank * non_zero_count);
-
-    U* data_ptr = nullptr;
-    if (out_elem_count > 0)
-    {
-        runtime::AlignedBuffer buffer(out_elem_count * sizeof(U));
-        data_ptr = buffer.get_ptr<U>();
-    }
-
-    runtime::reference::non_zero<T, U>(input_values, data_ptr, input_shape);
 
     if (out_elem_count == 0)
     {
@@ -58,7 +49,10 @@ static shared_ptr<op::Constant>
         out_shape = Shape{input_rank, non_zero_count};
     }
 
-    return make_shared<op::Constant>(index_element_type, out_shape, data_ptr);
+    std::vector<U> output_vec(out_elem_count);
+    runtime::reference::non_zero<T, U>(input_values, output_vec.data(), input_shape);
+
+    return make_shared<op::Constant>(index_element_type, out_shape, output_vec);
 }
 
 template <typename T>
