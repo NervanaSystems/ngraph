@@ -60,11 +60,11 @@ namespace ngraph
                                   const PriorBoxClusteredAttrs& attrs);
 
                 void validate_and_infer_types() override;
-
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
-
                 const PriorBoxClusteredAttrs& get_attrs() const { return m_attrs; }
+                virtual bool visit_attributes(AttributeVisitor& visitor) override;
+
             private:
                 PriorBoxClusteredAttrs m_attrs;
             };

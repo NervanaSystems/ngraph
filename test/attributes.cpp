@@ -1375,8 +1375,8 @@ TEST(attributes, interpolate_op)
     interp_atrs.mode = "cubic";
     interp_atrs.align_corners = true;
     interp_atrs.antialias = true;
-    interp_atrs.pads_begin = std::vector<size_t>{0, 0};
-    interp_atrs.pads_end = std::vector<size_t>{0, 0};
+    interp_atrs.pads_begin = vector<size_t>{0, 0};
+    interp_atrs.pads_end = vector<size_t>{0, 0};
 
     auto interpolate = make_shared<opset1::Interpolate>(img, out_shape, interp_atrs);
     NodeBuilder builder(interpolate);
@@ -1408,7 +1408,7 @@ TEST(attributes, detection_output_op)
     attrs.top_k = 1;
     attrs.variance_encoded_in_target = false;
     attrs.keep_top_k = {1};
-    attrs.code_type = std::string{"caffe.PriorBoxParameter.CORNER"};
+    attrs.code_type = string{"caffe.PriorBoxParameter.CORNER"};
     attrs.share_location = true;
     attrs.nms_threshold = 0.64f;
     attrs.confidence_threshold = 1e-4f;
@@ -1444,4 +1444,122 @@ TEST(attributes, detection_output_op)
     EXPECT_EQ(g_do_attrs.input_height, do_attrs.input_height);
     EXPECT_EQ(g_do_attrs.input_width, do_attrs.input_width);
     EXPECT_EQ(g_do_attrs.objectness_score, do_attrs.objectness_score);
+}
+
+TEST(attributes, prior_box_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::PriorBox>();
+    const auto layer_shape = make_shared<op::Parameter>(element::i64, Shape{128, 128});
+    const auto image_shape = make_shared<op::Parameter>(element::i64, Shape{32, 32});
+
+    op::PriorBoxAttrs attrs;
+    attrs.min_size = vector<float>{16.f, 32.f};
+    attrs.max_size = vector<float>{256.f, 512.f};
+    attrs.aspect_ratio = vector<float>{0.66f, 1.56f};
+    attrs.density = vector<float>{0.55f};
+    attrs.fixed_ratio = vector<float>{0.88f};
+    attrs.fixed_size = vector<float>{1.25f};
+    attrs.clip = true;
+    attrs.flip = false;
+    attrs.step = 1.0f;
+    attrs.offset = 0.0f;
+    attrs.variance = vector<float>{2.22f, 3.14f};
+    attrs.scale_all_sizes = true;
+
+    auto prior_box = make_shared<opset1::PriorBox>(layer_shape, image_shape, attrs);
+    NodeBuilder builder(prior_box);
+    auto g_prior_box = as_type_ptr<opset1::PriorBox>(builder.create());
+
+    const auto prior_box_attrs = prior_box->get_attrs();
+    const auto g_prior_box_attrs = g_prior_box->get_attrs();
+
+    EXPECT_EQ(g_prior_box_attrs.min_size, prior_box_attrs.min_size);
+    EXPECT_EQ(g_prior_box_attrs.max_size, prior_box_attrs.max_size);
+    EXPECT_EQ(g_prior_box_attrs.aspect_ratio, prior_box_attrs.aspect_ratio);
+    EXPECT_EQ(g_prior_box_attrs.density, prior_box_attrs.density);
+    EXPECT_EQ(g_prior_box_attrs.fixed_ratio, prior_box_attrs.fixed_ratio);
+    EXPECT_EQ(g_prior_box_attrs.fixed_size, prior_box_attrs.fixed_size);
+    EXPECT_EQ(g_prior_box_attrs.clip, prior_box_attrs.clip);
+    EXPECT_EQ(g_prior_box_attrs.flip, prior_box_attrs.flip);
+    EXPECT_EQ(g_prior_box_attrs.step, prior_box_attrs.step);
+    EXPECT_EQ(g_prior_box_attrs.offset, prior_box_attrs.offset);
+    EXPECT_EQ(g_prior_box_attrs.variance, prior_box_attrs.variance);
+    EXPECT_EQ(g_prior_box_attrs.scale_all_sizes, prior_box_attrs.scale_all_sizes);
+}
+
+TEST(attributes, prior_box_clustered_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::PriorBoxClustered>();
+    const auto layer_shape = make_shared<op::Parameter>(element::i64, Shape{128, 128});
+    const auto image_shape = make_shared<op::Parameter>(element::i64, Shape{32, 32});
+
+    op::PriorBoxClusteredAttrs attrs;
+    attrs.widths = vector<float>{128.f, 512.f, 4096.f};
+    attrs.heights = vector<float>{128.f, 512.f, 4096.f};
+    attrs.clip = true;
+    attrs.step_widths = 0.33f;
+    attrs.step_heights = 1.55f;
+    attrs.offset = 0.77f;
+    attrs.variances = vector<float>{0.33f, 1.44f};
+
+    auto prior_box_clust = make_shared<opset1::PriorBoxClustered>(layer_shape, image_shape, attrs);
+    NodeBuilder builder(prior_box_clust);
+    auto g_prior_box_clust = as_type_ptr<opset1::PriorBoxClustered>(builder.create());
+
+    const auto prior_box_clust_attrs = prior_box_clust->get_attrs();
+    const auto g_prior_box_clust_attrs = g_prior_box_clust->get_attrs();
+
+    EXPECT_EQ(g_prior_box_clust_attrs.widths, prior_box_clust_attrs.widths);
+    EXPECT_EQ(g_prior_box_clust_attrs.heights, prior_box_clust_attrs.heights);
+    EXPECT_EQ(g_prior_box_clust_attrs.clip, prior_box_clust_attrs.clip);
+    EXPECT_EQ(g_prior_box_clust_attrs.step_widths, prior_box_clust_attrs.step_widths);
+    EXPECT_EQ(g_prior_box_clust_attrs.step_heights, prior_box_clust_attrs.step_heights);
+    EXPECT_EQ(g_prior_box_clust_attrs.offset, prior_box_clust_attrs.offset);
+    EXPECT_EQ(g_prior_box_clust_attrs.variances, prior_box_clust_attrs.variances);
+}
+
+TEST(attributes, proposal_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Proposal>();
+    const auto class_probs = make_shared<op::Parameter>(element::i64, Shape{1024, 3, 128, 128});
+    const auto class_logits = make_shared<op::Parameter>(element::i64, Shape{1024, 3, 128, 128});
+    const auto image_shape = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    op::ProposalAttrs attrs;
+    attrs.base_size = 224;
+    attrs.pre_nms_topn = 100;
+    attrs.post_nms_topn = 110;
+    attrs.nms_thresh = 0.12f;
+    attrs.feat_stride = 2;
+    attrs.min_size = 10;
+    attrs.ratio = vector<float>{1.44f, 0.66f};
+    attrs.scale = vector<float>{2.25f, 1.83f};
+    attrs.clip_before_nms = true;
+    attrs.clip_after_nms = true;
+    attrs.normalize = false;
+    attrs.box_size_scale = 2.f;
+    attrs.box_coordinate_scale = 4.55f;
+    attrs.framework = string{"nGraph"};
+
+    auto proposal = make_shared<opset1::Proposal>(class_probs, class_logits, image_shape, attrs);
+    NodeBuilder builder(proposal);
+    auto g_proposal = as_type_ptr<opset1::Proposal>(builder.create());
+
+    const auto proposal_attrs = proposal->get_attrs();
+    const auto g_proposal_attrs = g_proposal->get_attrs();
+
+    EXPECT_EQ(g_proposal_attrs.base_size, proposal_attrs.base_size);
+    EXPECT_EQ(g_proposal_attrs.pre_nms_topn, proposal_attrs.pre_nms_topn);
+    EXPECT_EQ(g_proposal_attrs.post_nms_topn, proposal_attrs.post_nms_topn);
+    EXPECT_EQ(g_proposal_attrs.nms_thresh, proposal_attrs.nms_thresh);
+    EXPECT_EQ(g_proposal_attrs.feat_stride, proposal_attrs.feat_stride);
+    EXPECT_EQ(g_proposal_attrs.min_size, proposal_attrs.min_size);
+    EXPECT_EQ(g_proposal_attrs.ratio, proposal_attrs.ratio);
+    EXPECT_EQ(g_proposal_attrs.scale, proposal_attrs.scale);
+    EXPECT_EQ(g_proposal_attrs.clip_before_nms, proposal_attrs.clip_before_nms);
+    EXPECT_EQ(g_proposal_attrs.clip_after_nms, proposal_attrs.clip_after_nms);
+    EXPECT_EQ(g_proposal_attrs.normalize, proposal_attrs.normalize);
+    EXPECT_EQ(g_proposal_attrs.box_size_scale, proposal_attrs.box_size_scale);
+    EXPECT_EQ(g_proposal_attrs.box_coordinate_scale, proposal_attrs.box_coordinate_scale);
+    EXPECT_EQ(g_proposal_attrs.framework, proposal_attrs.framework);
 }
