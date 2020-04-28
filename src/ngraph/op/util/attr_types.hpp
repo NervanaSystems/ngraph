@@ -172,6 +172,31 @@ namespace ngraph
         NGRAPH_API
         std::ostream& operator<<(std::ostream& s, const AutoBroadcastType& type);
     }
+    namespace op
+    {
+        /// \brief BroadcastType specifies rules used for mapping of input tensor axes to output
+        /// shape axes.
+        /// EXPLICIT      - Mapping of the input data shape to output shape
+        ///                 based on axes_mapping input.
+        /// NUMPY         - Numpy broadcasting rules, aligned with ONNX Broadcasting.
+        ///                 (https://github.com/onnx/onnx/blob/master/docs/Broadcasting.md)
+        /// PDPD          - PaddlePaddle-style implicit broadcasting.
+        ///                 For more informaction see AutoBroadcastType documentation.
+        /// BIDIRECTIONAL - The broadcast rule is similar to
+        ///                 numpy.array(input) * numpy.ones(target_shape).
+        ///                 Dimensions are right alignment.
+        enum class BroadcastType
+        {
+            NONE,
+            EXPLICIT = NONE,
+            NUMPY,
+            PDPD,
+            BIDIRECTIONAL
+        };
+
+        NGRAPH_API
+        std::ostream& operator<<(std::ostream& s, const BroadcastType& type);
+    }
 
     template <>
     class NGRAPH_API AttributeAdapter<op::AutoBroadcastType>
@@ -187,20 +212,6 @@ namespace ngraph
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
 
-    namespace op
-    {
-        enum class BroadcastType
-        {
-            NONE,
-            EXPLICIT = NONE,
-            NUMPY,
-            PDPD,
-            BIDIRECTIONAL
-        };
-
-        NGRAPH_API
-        std::ostream& operator<<(std::ostream& s, const BroadcastType& type);
-    }
     template <>
     class NGRAPH_API AttributeAdapter<op::BroadcastType>
         : public EnumAttributeAdapterBase<op::BroadcastType>
