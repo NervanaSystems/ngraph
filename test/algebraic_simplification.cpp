@@ -40,6 +40,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass.hpp"
@@ -852,6 +853,123 @@ TEST(algebraic_simplification, pass_property)
     ASSERT_FALSE(pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }
 
+TEST(algebraic_simplification, replace_transpose_with_reshape)
+{
+    auto check_usecase = [](const Shape& shape, const std::vector<int64_t>& perm_value) {
+        auto param = make_shared<op::Parameter>(element::f32, shape);
+        auto constant_perm =
+            make_shared<op::Constant>(element::i64, Shape{perm_value.size()}, perm_value);
+        auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
+        auto transpose1 = make_shared<op::v0::Abs>(transpose);
+        auto baseline_f = make_shared<Function>(transpose1, ParameterVector{param});
+        auto optimized_f = clone_function(*baseline_f);
+
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::AlgebraicSimplification>();
+        pass_manager.register_pass<pass::ConstantFolding>();
+        pass_manager.run_passes(optimized_f);
+
+        ASSERT_EQ(baseline_f->get_results()[0]->get_output_partial_shape(0),
+                  optimized_f->get_results()[0]->get_output_partial_shape(0));
+
+        ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(baseline_f), 0);
+        ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(optimized_f), 0);
+        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(optimized_f), 1);
+    };
+
+    check_usecase(Shape{1, 3}, vector<int64_t>{1, 0});
+    check_usecase(Shape{2, 3, 1}, vector<int64_t>{2, 0, 1});
+    check_usecase(Shape{10, 20, 1, 1}, vector<int64_t>{0, 2, 3, 1});
+    check_usecase(Shape{10, 1, 1, 20}, vector<int64_t>{0, 3, 1, 2});
+    check_usecase(Shape{10, 20, 1, 2}, vector<int64_t>{0, 2, 1, 3});
+    check_usecase(Shape{10, 1, 1, 1, 20}, vector<int64_t>{0, 4, 1, 2, 3});
+    check_usecase(Shape{10, 20, 1, 1, 1}, vector<int64_t>{0, 2, 3, 4, 1});
+    check_usecase(Shape{10, 1, 1, 1, 1}, vector<int64_t>{1, 4, 2, 3, 0});
+    check_usecase(Shape{10, 1, 1, 1, 1}, vector<int64_t>{4, 2, 0, 1, 3});
+    check_usecase(Shape{1, 1, 1, 1, 1}, vector<int64_t>{4, 2, 0, 1, 3});
+}
+
+TEST(algebraic_simplification, replace_transpose_with_reshape_fail)
+{
+    auto check_usecase = [](const Shape& shape, const std::vector<int64_t>& perm_value) {
+        auto param = make_shared<op::Parameter>(element::f32, shape);
+        auto constant_perm =
+            make_shared<op::Constant>(element::i64, Shape{perm_value.size()}, perm_value);
+        auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
+        auto transpose1 = make_shared<op::v0::Abs>(transpose);
+        auto f = make_shared<Function>(transpose1, ParameterVector{param});
+
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::AlgebraicSimplification>();
+        pass_manager.run_passes(f);
+
+        ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(f), 0);
+    };
+
+    check_usecase(Shape{10, 20, 1, 2}, vector<int64_t>{0, 2, 3, 1});
+    check_usecase(Shape{10, 20, 1, 2}, vector<int64_t>{0, 3, 1, 2});
+    check_usecase(Shape{10, 20}, vector<int64_t>{1, 0});
+}
+
+TEST(algebraic_simplification, replace_transpose_with_reshape_4d_1_dyn_dim)
+{
+    auto shape_in = PartialShape{Dimension::dynamic(), 20, 1, 1};
+    auto param = make_shared<op::Parameter>(element::f32, shape_in);
+    auto constant_perm =
+        make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 2, 3, 1});
+    auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
+    auto transpose1 = make_shared<op::v0::Abs>(transpose);
+    auto baseline_f = make_shared<Function>(transpose1, ParameterVector{param});
+    auto optimized_f = clone_function(*baseline_f);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(optimized_f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(optimized_f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(optimized_f), 1);
+}
+
+TEST(algebraic_simplification, replace_transpose_with_reshape_5d_2_dyn_dim)
+{
+    auto shape_in = PartialShape{Dimension::dynamic(), Dimension::dynamic(), 20, 1, 1};
+    auto param = make_shared<op::Parameter>(element::f32, shape_in);
+    auto constant_perm =
+        make_shared<op::Constant>(element::i64, Shape{5}, vector<int64_t>{0, 1, 3, 2, 4});
+    auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
+    auto transpose1 = make_shared<op::v0::Abs>(transpose);
+    auto baseline_f = make_shared<Function>(transpose1, ParameterVector{param});
+    auto optimized_f = clone_function(*baseline_f);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(optimized_f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(optimized_f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(optimized_f), 1);
+}
+
+TEST(algebraic_simplification, replace_transpose_with_reshape_5d_2_dyn_dim_fail)
+{
+    auto shape_in = PartialShape{Dimension::dynamic(), Dimension::dynamic(), 20, 1, 1};
+    auto param = make_shared<op::Parameter>(element::f32, shape_in);
+    auto constant_perm =
+        make_shared<op::Constant>(element::i64, Shape{5}, vector<int64_t>{0, 2, 1, 4, 3});
+    auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
+    auto transpose1 = make_shared<op::v0::Abs>(transpose);
+    auto baseline_f = make_shared<Function>(transpose1, ParameterVector{param});
+    auto optimized_f = clone_function(*baseline_f);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.run_passes(optimized_f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(optimized_f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(optimized_f), 0);
+}
+
 // the following gather test will be used to test when
 // gather is Nop and will be removed during `simplify_gather`
 // algebraic_simplification pass
@@ -928,8 +1046,6 @@ TEST(algebraic_simplification, gather_3d_axis_2_nop)
 TEST(algebraic_simplification, gather_3d_indices_constant_axis_1)
 {
     Shape params_shape{3, 2, 1};
-    Shape indices_shape{2};
-    Shape out_shape{3, 2, 1};
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = op::Constant::create<int64_t>(element::i64, Shape{2}, {0, 1});
     auto axes = op::Constant::create(element::i64, Shape{}, {1});
@@ -1033,4 +1149,28 @@ TEST(algebraic_simplification, dyn_gather_shapeof)
                                    PartialShape{Dimension::dynamic(), Dimension::dynamic()}),
         0,
         false);
+}
+
+TEST(algebraic_simplification, gather_2d_indices_constant_axis_0_shape)
+{
+    Shape params_shape{1, 16};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = op::Constant::create<int64_t>(element::i64, Shape{2}, {0, 0});
+    auto axes = op::Constant::create(element::i64, Shape{}, {0});
+    auto G = make_shared<op::v1::Gather>(P, I, axes);
+    auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P});
+    auto optimized_f = clone_function(*baseline_f);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    pass_manager.run_passes(optimized_f);
+    auto ps = baseline_f->get_results()[0]->get_output_partial_shape(0);
+    auto ps_r = optimized_f->get_results()[0]->get_output_partial_shape(0);
+    EXPECT_TRUE(ps.rank().is_static() && ps_r.rank().is_static());
+    ASSERT_EQ(ps.get_shape(), ps_r.get_shape());
+
+    // the pass should not eliminate gather
+    auto gather_ops = get_ops_of_type<op::v1::Gather>(optimized_f);
+    EXPECT_EQ(gather_ops.size(), 1);
 }
