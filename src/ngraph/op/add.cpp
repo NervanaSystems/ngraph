@@ -69,19 +69,18 @@ shared_ptr<Node> ngraph::operator+(const Output<Node>& arg0, const Output<Node>&
 namespace
 {
     template <element::Type_t ET>
-    bool try_evaluate_add(const HostTensorPtr& arg0,
-                          const HostTensorPtr& arg1,
-                          const HostTensorPtr& out,
-                          const op::AutoBroadcastSpec& broadcast_spec)
+    bool evaluate(const HostTensorPtr& arg0,
+                  const HostTensorPtr& arg1,
+                  const HostTensorPtr& out,
+                  const op::AutoBroadcastSpec& broadcast_spec)
     {
-        return (ET == arg0->get_element_type()) &&
-               (runtime::reference::add(arg0->get_data_ptr<ET>(),
-                                        arg1->get_data_ptr<ET>(),
-                                        out->get_data_ptr<ET>(),
-                                        arg0->get_shape(),
-                                        arg1->get_shape(),
-                                        broadcast_spec),
-                true);
+        runtime::reference::add(arg0->get_data_ptr<ET>(),
+                                arg1->get_data_ptr<ET>(),
+                                out->get_data_ptr<ET>(),
+                                arg0->get_shape(),
+                                arg1->get_shape(),
+                                broadcast_spec);
+        return true;
     }
 
     bool evaluate_add(const HostTensorPtr& arg0,
@@ -89,17 +88,33 @@ namespace
                       const HostTensorPtr& out,
                       const op::AutoBroadcastSpec& broadcast_spec)
     {
+        bool rc = true;
         out->set_broadcast(broadcast_spec, arg0, arg1);
-        return try_evaluate_add<element::Type_t::i8>(arg0, arg1, out, broadcast_spec) ||
-               try_evaluate_add<element::Type_t::i16>(arg0, arg1, out, broadcast_spec) ||
-               try_evaluate_add<element::Type_t::i32>(arg0, arg1, out, broadcast_spec) ||
-               try_evaluate_add<element::Type_t::i64>(arg0, arg1, out, broadcast_spec) ||
-               try_evaluate_add<element::Type_t::u8>(arg0, arg1, out, broadcast_spec) ||
-               try_evaluate_add<element::Type_t::u16>(arg0, arg1, out, broadcast_spec) ||
-               try_evaluate_add<element::Type_t::u32>(arg0, arg1, out, broadcast_spec) ||
-               try_evaluate_add<element::Type_t::u64>(arg0, arg1, out, broadcast_spec) ||
-               try_evaluate_add<element::Type_t::f32>(arg0, arg1, out, broadcast_spec) ||
-               try_evaluate_add<element::Type_t::f64>(arg0, arg1, out, broadcast_spec);
+        switch (arg0->get_element_type())
+        {
+            TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(i32)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(i64)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u8)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u16)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u32)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u64)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(f32)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(f64)(arg0, arg1, out, broadcast_spec);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
     }
 }
 
