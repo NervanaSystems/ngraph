@@ -25,7 +25,6 @@ np_types = [np.float32, np.float64, np.int8, np.int16, np.int32, np.int64,
 
 @pytest.mark.parametrize('dtype', np_types)
 def test_binary_convolution(dtype):
-
     strides = np.array([1, 1])
     pads_begin = np.array([0, 0])
     pads_end = np.array([0, 0])
@@ -66,7 +65,6 @@ def test_ctc_greedy_decoder(dtype):
 
 @pytest.mark.parametrize('dtype', np_types)
 def test_deformable_convolution(dtype):
-
     strides = np.array([1, 1])
     pads_begin = np.array([0, 0])
     pads_end = np.array([0, 0])
@@ -85,6 +83,44 @@ def test_deformable_convolution(dtype):
                                      strides, pads_begin, pads_end, dilations)
 
     assert node.get_type_name() == 'DeformableConvolution'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == expected_shape
+
+
+@pytest.mark.parametrize('dtype', np_types)
+def test_deformable_psroi_pooling(dtype):
+    output_dim = 8
+    spatial_scale = 0.0625
+    group_size = 7
+    mode = 'bilinear_deformable'
+    spatial_bins_x = 4
+    spatial_bins_y = 4
+    trans_std = 0.1
+    part_size = 7
+
+    input0_shape = [1, 392, 38, 63]
+    input1_shape = [300, 5]
+    input2_shape = [300, 2, 7, 7]
+    expected_shape = [300, 8, 7, 7]
+
+    parameter_input0 = ng.parameter(input0_shape, name='Input0', dtype=dtype)
+    parameter_input1 = ng.parameter(input1_shape, name='Input1', dtype=dtype)
+    parameter_input2 = ng.parameter(input2_shape, name='Input2', dtype=dtype)
+
+    node = ng.deformable_psroi_pooling(
+        parameter_input0,
+        parameter_input1,
+        output_dim,
+        spatial_scale,
+        group_size,
+        mode,
+        spatial_bins_x,
+        spatial_bins_y,
+        trans_std,
+        part_size,
+        offsets=parameter_input2)
+
+    assert node.get_type_name() == 'DeformablePSROIPooling'
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == expected_shape
 
