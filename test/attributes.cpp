@@ -1363,3 +1363,32 @@ TEST(attributes, logical_xor_op)
 
     EXPECT_EQ(g_logical_xor->get_autob(), logical_xor->get_autob());
 }
+
+TEST(attributes, interpolate_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Interpolate>();
+    auto img = make_shared<op::Parameter>(element::f32, Shape{1, 3, 32, 32});
+    auto out_shape = make_shared<op::Parameter>(element::i32, Shape{2});
+
+    op::InterpolateAttrs interp_atrs;
+    interp_atrs.axes = AxisSet{1, 2};
+    interp_atrs.mode = "cubic";
+    interp_atrs.align_corners = true;
+    interp_atrs.antialias = true;
+    interp_atrs.pads_begin = std::vector<size_t>{0, 0};
+    interp_atrs.pads_end = std::vector<size_t>{0, 0};
+
+    auto interpolate = make_shared<opset1::Interpolate>(img, out_shape, interp_atrs);
+    NodeBuilder builder(interpolate);
+    auto g_interpolate = as_type_ptr<opset1::Interpolate>(builder.create());
+
+    const auto i_attrs = interpolate->get_attrs();
+    const auto g_i_attrs = g_interpolate->get_attrs();
+
+    EXPECT_EQ(g_i_attrs.axes, i_attrs.axes);
+    EXPECT_EQ(g_i_attrs.mode, i_attrs.mode);
+    EXPECT_EQ(g_i_attrs.align_corners, i_attrs.align_corners);
+    EXPECT_EQ(g_i_attrs.antialias, i_attrs.antialias);
+    EXPECT_EQ(g_i_attrs.pads_begin, i_attrs.pads_begin);
+    EXPECT_EQ(g_i_attrs.pads_end, i_attrs.pads_end);
+}
