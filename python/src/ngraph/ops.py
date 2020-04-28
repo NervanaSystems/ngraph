@@ -745,7 +745,7 @@ def erf(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: The optional name for new output node.
     :return: The new node performing element-wise Erf operation.
     """
-    return _get_node_factory().create('Erf', [as_node(node)])
+    return _get_node_factory().create('Erf', [node])
 
 
 @unary_op
@@ -887,7 +887,7 @@ def divide(left_node, right_node, auto_broadcast='NUMPY', name=None):
     :return: The node performing element-wise division.
     """
     return _get_node_factory().create('Divide',
-                                      [as_node(left_node), as_node(right_node)],
+                                      [left_node, right_node],
                                       {'auto_broadcast': auto_broadcast})
 
 
@@ -903,7 +903,7 @@ def floor_mod(left_node, right_node, auto_broadcast='NUMPY', name=None):
     :return: The node performing element-wise FloorMod operation.
     """
     return _get_node_factory().create('FloorMod',
-                                      [as_node(left_node), as_node(right_node)],
+                                      [left_node, right_node],
                                       {'auto_broadcast': auto_broadcast})
 
 
