@@ -888,7 +888,7 @@ def divide(left_node, right_node, auto_broadcast='NUMPY', name=None):
     """
     return _get_node_factory().create('Divide',
                                       [left_node, right_node],
-                                      {'auto_broadcast': auto_broadcast})
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @binary_op
@@ -904,7 +904,7 @@ def floor_mod(left_node, right_node, auto_broadcast='NUMPY', name=None):
     """
     return _get_node_factory().create('FloorMod',
                                       [left_node, right_node],
-                                      {'auto_broadcast': auto_broadcast})
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @binary_op
@@ -1064,7 +1064,7 @@ def logical_or(left_node, right_node, auto_broadcast='NUMPY', name=None):
     """
     return _get_node_factory().create('LogicalOr',
                                       [left_node, right_node],
-                                      {'auto_broadcast': auto_broadcast})
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @unary_op
