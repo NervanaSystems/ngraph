@@ -1146,8 +1146,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_v1_invalid_strings)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const auto k = op::Constant::create(element::i64, Shape{}, {1});
-    EXPECT_THROW(op::v1::TopK(data, k, 0, "invalid_mode", "max"), ngraph::NodeValidationFailure);
-    EXPECT_THROW(op::v1::TopK(data, k, 0, "index", "invalid_sort"), ngraph::NodeValidationFailure);
+    EXPECT_THROW(op::v1::TopK(data, k, 0, "max", "invalid_mode"), ngraph::CheckFailure);
+    EXPECT_THROW(op::v1::TopK(data, k, 0, "invalid_sort", "index"), ngraph::CheckFailure);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_v1_invalid_k)
@@ -1156,14 +1156,14 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_v1_invalid_k)
 
     // K must be a scalar
     const auto k_non_scalar = op::Constant::create(element::i64, Shape{2}, {1, 2});
-    EXPECT_THROW(op::v1::TopK(data, k_non_scalar, 0, "index", "max"),
+    EXPECT_THROW(op::v1::TopK(data, k_non_scalar, 0, "max", "index"),
                  ngraph::NodeValidationFailure);
 
     // K can only be i8, i32 or i64
     const auto k_float = op::Constant::create(element::f32, Shape{}, {1.0f});
-    EXPECT_THROW(op::v1::TopK(data, k_float, 0, "index", "max"), ngraph::NodeValidationFailure);
+    EXPECT_THROW(op::v1::TopK(data, k_float, 0, "max", "index"), ngraph::NodeValidationFailure);
 
     // the value of K must be positive
     const auto k_negative = op::Constant::create(element::i8, Shape{}, {-1});
-    EXPECT_THROW(op::v1::TopK(data, k_negative, 0, "index", "max"), ngraph::NodeValidationFailure);
+    EXPECT_THROW(op::v1::TopK(data, k_negative, 0, "max", "index"), ngraph::NodeValidationFailure);
 }
