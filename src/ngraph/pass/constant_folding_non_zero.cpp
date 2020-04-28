@@ -51,15 +51,19 @@ static shared_ptr<op::Constant>
 
 #if 1
     U* data_ptr = nullptr;
-    size_t out_data_byte_size = (index_element_type == element::i64)
-                                    ? (out_elem_count * sizeof(int64_t))
-                                    : (out_elem_count * sizeof(int32_t));
+    std::vector<U> output_vec;
+    output_vec.reserve(out_elem_count);
+
+    //    size_t out_data_byte_size = (index_element_type == element::i64)
+    //                                    ? (out_elem_count * sizeof(int64_t))
+    //                                    : (out_elem_count * sizeof(int32_t));
 
     if (out_elem_count > 0)
     {
-        runtime::AlignedBuffer buffer(out_data_byte_size);
-        data_ptr = buffer.get_ptr<U>();
+        //        runtime::AlignedBuffer buffer(out_data_byte_size);
+        //        data_ptr = buffer.get_ptr<U>();
         // data_ptr = reinterpret_cast<U*>(malloc(out_data_byte_size));
+        data_ptr = output_vec.data();
     }
 
     runtime::reference::non_zero<T, U>(input_values, data_ptr, input_shape);
