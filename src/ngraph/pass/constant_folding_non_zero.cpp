@@ -51,8 +51,8 @@ static shared_ptr<op::Constant>
 
 #if 1
     U* data_ptr = nullptr;
-    std::vector<U> output_vec;
-    output_vec.reserve(out_elem_count);
+    std::vector<U> output_vec(out_elem_count);
+    // output_vec.reserve(out_elem_count);
 
     //    size_t out_data_byte_size = (index_element_type == element::i64)
     //                                    ? (out_elem_count * sizeof(int64_t))
@@ -67,7 +67,8 @@ static shared_ptr<op::Constant>
     }
 
     runtime::reference::non_zero<T, U>(input_values, data_ptr, input_shape);
-    return make_shared<op::Constant>(index_element_type, out_shape, data_ptr);
+    // return make_shared<op::Constant>(index_element_type, out_shape, data_ptr);
+    return make_shared<op::Constant>(index_element_type, out_shape, output_vec);
 #else
     if (index_element_type == element::i64)
     {
