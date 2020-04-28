@@ -1787,7 +1787,7 @@ def prelu(data, slope, name=None):  # type: (Node, Node, str) -> Node
     :param name: Optional output node name.
     :return: The new node performing a PRelu operation on tensor's channels.
     """
-    return PRelu(data, slope)
+    return _get_node_factory().create('PRelu', [data, slope])
 
 
 @nameable_op
