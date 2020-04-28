@@ -928,8 +928,6 @@ TEST(algebraic_simplification, gather_3d_axis_2_nop)
 TEST(algebraic_simplification, gather_3d_indices_constant_axis_1)
 {
     Shape params_shape{3, 2, 1};
-    Shape indices_shape{2};
-    Shape out_shape{3, 2, 1};
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = op::Constant::create<int64_t>(element::i64, Shape{2}, {0, 1});
     auto axes = op::Constant::create(element::i64, Shape{}, {1});
@@ -1033,4 +1031,28 @@ TEST(algebraic_simplification, dyn_gather_shapeof)
                                    PartialShape{Dimension::dynamic(), Dimension::dynamic()}),
         0,
         false);
+}
+
+TEST(algebraic_simplification, gather_2d_indices_constant_axis_0_shape)
+{
+    Shape params_shape{1, 16};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = op::Constant::create<int64_t>(element::i64, Shape{2}, {0, 0});
+    auto axes = op::Constant::create(element::i64, Shape{}, {0});
+    auto G = make_shared<op::v1::Gather>(P, I, axes);
+    auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(G), ParameterVector{P});
+    auto optimized_f = clone_function(*baseline_f);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+
+    pass_manager.run_passes(optimized_f);
+    auto ps = baseline_f->get_results()[0]->get_output_partial_shape(0);
+    auto ps_r = optimized_f->get_results()[0]->get_output_partial_shape(0);
+    EXPECT_TRUE(ps.rank().is_static() && ps_r.rank().is_static());
+    ASSERT_EQ(ps.get_shape(), ps_r.get_shape());
+
+    // the pass should not eliminate gather
+    auto gather_ops = get_ops_of_type<op::v1::Gather>(optimized_f);
+    EXPECT_EQ(gather_ops.size(), 1);
 }

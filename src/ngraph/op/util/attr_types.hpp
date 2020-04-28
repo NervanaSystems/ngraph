@@ -247,6 +247,31 @@ namespace ngraph
 
     namespace op
     {
+        enum class TopKMode
+        {
+            MAX,
+            MIN,
+        };
+
+        NGRAPH_API
+        std::ostream& operator<<(std::ostream& s, const TopKMode& type);
+    }
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::TopKMode> : public EnumAttributeAdapterBase<op::TopKMode>
+    {
+    public:
+        AttributeAdapter(op::TopKMode& value)
+            : EnumAttributeAdapterBase<op::TopKMode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::TopKMode>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    namespace op
+    {
         /// \brief Implicit broadcast specification
         struct NGRAPH_API AutoBroadcastSpec
         {
