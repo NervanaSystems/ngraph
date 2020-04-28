@@ -103,3 +103,23 @@ def test_floor_mod(dtype):
     assert node.get_type_name() == 'FloorMod'
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == expected_shape
+
+
+@pytest.mark.parametrize('dtype', np_types)
+def test_gather_tree(dtype):
+    input0_shape = [100, 1, 10]
+    input1_shape = [100, 1, 10]
+    input2_shape = [1]
+    input3_shape = []
+    expected_shape = [100, 1, 10]
+
+    parameter_input0 = ng.parameter(input0_shape, name='Input0', dtype=dtype)
+    parameter_input1 = ng.parameter(input1_shape, name='Input1', dtype=dtype)
+    parameter_input2 = ng.parameter(input2_shape, name='Input2', dtype=dtype)
+    parameter_input3 = ng.parameter(input3_shape, name='Input3', dtype=dtype)
+
+    node = ng.gather_tree(parameter_input0, parameter_input1, parameter_input2, parameter_input3)
+
+    assert node.get_type_name() == 'GatherTree'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == expected_shape
