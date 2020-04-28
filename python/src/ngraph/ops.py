@@ -2236,3 +2236,19 @@ def roi_pooling(input, coords, output_size, spatial_scale, method, name=None):
                                       {'output_size': Shape(output_size),
                                        'spatial_scale': spatial_scale,
                                        'method': method})
+
+
+@nameable_op
+def reverse_sequence(input, seq_lengths, batch_axis, seq_axis, name=None):
+    # type: (Node, NodeInput, NumericData, NumericData, str) -> Node
+    """Return a node which produces a ReverseSequence operation.
+
+    :param input: tensor with input data to reverse
+    :param seq_lengths: 1D tensor of integers with sequence lengths in the input tensor.
+    :param batch_axis: index of the batch dimension.
+    :param seq_axis: index of the sequence dimension.
+    :return: ReverseSequence node
+    """
+    return _get_node_factory().create('ReverseSequence', [input, as_node(seq_lengths)],
+                                      {'batch_axis': batch_axis,
+                                       'seq_axis': seq_axis})
