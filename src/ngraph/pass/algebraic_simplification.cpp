@@ -386,7 +386,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
         // gathering the whole input tensor, so we can optimize this
         // op has Nop
 
-        if (data.get_shape()[axis] == 1)
+        if (data.get_shape()[axis] == 1 && data.get_shape() == node->get_shape())
         {
             return replace_output_update_name(gather->output(0), gather->input_value(0));
         }
