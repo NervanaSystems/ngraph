@@ -520,13 +520,6 @@ protected:
                                  concat->get_concatenation_axis());
             break;
         }
-        case OP_TYPEID::Constant:
-        {
-            const op::Constant* c = static_cast<const op::Constant*>(&node);
-            size_t element_count = shape_size(node.get_output_shape(0));
-            reference::constant<T>(c->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), element_count);
-            break;
-        }
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
@@ -1759,6 +1752,7 @@ protected:
         case OP_TYPEID::Unsqueeze:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
+        case OP_TYPEID::Constant:
         case OP_TYPEID::Divide:
         case OP_TYPEID::Maximum:
         case OP_TYPEID::Minimum:

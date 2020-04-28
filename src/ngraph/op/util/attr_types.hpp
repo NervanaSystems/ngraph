@@ -298,4 +298,46 @@ namespace ngraph
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastSpec>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
+
+    class NGRAPH_API DataHandle
+    {
+    public:
+        DataHandle(void* data_ptr, size_t size_in_bytes)
+            : m_data_ptr(data_ptr)
+            , m_size_in_bytes(size_in_bytes)
+        {
+        }
+        ~DataHandle() {}
+        void* get_data_ptr() const { return m_data_ptr; }
+        size_t get_size_in_bytes() const { return m_size_in_bytes; }
+    protected:
+        void* m_data_ptr;
+        size_t m_size_in_bytes;
+    };
+
+    template <>
+    class ValueAccessor<DataHandle> : public ValueAccessor<void>
+    {
+    public:
+        ValueAccessor(DataHandle& value)
+            : m_value(value)
+        {
+        }
+        void* get_data_ptr() { return m_value.get_data_ptr(); }
+        size_t get_size_in_bytes() { return m_value.get_size_in_bytes(); }
+        DataHandle& m_value;
+    };
+
+    template <>
+    class NGRAPH_API AttributeAdapter<DataHandle> : public ValueAccessor<DataHandle>
+    {
+    public:
+        AttributeAdapter(DataHandle& value)
+            : ValueAccessor<DataHandle>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<DataHandle>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

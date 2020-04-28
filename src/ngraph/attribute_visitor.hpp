@@ -140,6 +140,10 @@ namespace ngraph
         {
             on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
         }
+        virtual void on_adapter(const std::string& name, ValueAccessor<DataHandle>& adapter)
+        {
+            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
+        }
         // Use an adapter for non-primitive types
         template <typename T>
         // typename std::enable_if<std::is_class<T>::value, void>::type

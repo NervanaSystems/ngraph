@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/opsets/opset1.hpp"
 #include "ngraph/opsets/opset3.hpp"
 
@@ -279,6 +280,7 @@ public:
     }
 
     vector<string>& get_string_vector(const string& name) { return m_string_vectors.at(name); }
+    HostTensorPtr get_host_tensor(const string& name) { return m_host_tensors.at(name); }
     void set_string(const string& name, const string& value) { m_strings[name] = value; }
     void set_bool(const string& name, bool value) { m_bools[name] = value; }
     void set_double(const string& name, double value) { m_doubles[name] = value; }
@@ -326,6 +328,10 @@ public:
     void set_string_vector(const string& name, const vector<string>& value)
     {
         m_string_vectors[name] = value;
+    }
+    void set_host_tensor(const string& name, const HostTensorPtr& value)
+    {
+        m_host_tensors[name] = value;
     }
 
     void on_attribute(const string& name, string& value) override { set_string(name, value); };
@@ -392,6 +398,13 @@ public:
     {
         set_uint64_t_vector(name, adapter.get());
     }
+    void on_adapter(const std::string& name, ValueAccessor<DataHandle>& adapter) override
+    {
+        HostTensorPtr data =
+            make_shared<HostTensor>(element::u8, Shape{adapter.get_size_in_bytes()});
+        data->write(adapter.get_data_ptr(), adapter.get_size_in_bytes());
+        set_host_tensor(name, data);
+    }
 
 protected:
     NodeTypeInfo m_node_type_info;
@@ -411,6 +424,7 @@ protected:
     map<string, vector<float>> m_float_vectors;
     map<string, vector<double>> m_double_vectors;
     map<string, vector<std::string>> m_string_vectors;
+    map<string, HostTensorPtr> m_host_tensors;
 };
 
 class NodeBuilder : public AttributeVisitor
@@ -421,6 +435,7 @@ public:
     {
     }
 
+    // Does not validate, since inputs aren't set
     shared_ptr<Node> create()
     {
         shared_ptr<Node> node(FactoryRegistry<Node>::get().create(m_values.get_node_type_info()));
@@ -494,6 +509,11 @@ public:
     void on_adapter(const string& name, ValueAccessor<vector<double>>& adapter) override
     {
         adapter.set(m_values.get_double_vector(name));
+    }
+    void on_adapter(const std::string& name, ValueAccessor<DataHandle>& adapter) override
+    {
+        HostTensorPtr data = m_values.get_host_tensor(name);
+        data->read(adapter.get_data_ptr(), adapter.get_size_in_bytes());
     }
 
 protected:
@@ -1362,4 +1382,18 @@ TEST(attributes, logical_xor_op)
     auto g_logical_xor = as_type_ptr<opset1::LogicalXor>(builder.create());
 
     EXPECT_EQ(g_logical_xor->get_autob(), logical_xor->get_autob());
+}
+
+TEST(attributes, constant_op)
+{
+    vector<float> data{5.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.0f};
+    auto k = make_shared<op::v0::Constant>(element::f32, Shape{2, 3}, data);
+    NodeBuilder builder(k);
+    auto g_k = as_type_ptr<op::v0::Constant>(builder.create());
+    g_k->validate_and_infer_types();
+    ASSERT_TRUE(g_k);
+    EXPECT_EQ(k->get_element_type(), g_k->get_element_type());
+    EXPECT_EQ(k->get_shape(), g_k->get_shape());
+    vector<float> g_data = g_k->get_vector<float>();
+    EXPECT_EQ(data, g_data);
 }

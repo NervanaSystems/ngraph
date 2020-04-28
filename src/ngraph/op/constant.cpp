@@ -19,6 +19,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -611,6 +612,27 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
 #pragma GCC diagnostic pop
 #endif
     return rc;
+}
+
+bool op::v0::Constant::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("element_type", m_element_type);
+    visitor.on_attribute("shape", m_shape);
+    if (m_data == nullptr)
+    {
+        // Filling in a fresh constant
+        allocate_buffer();
+    }
+    DataHandle handle(get_data_ptr_nc(), shape_size(m_shape) * m_element_type.size());
+    visitor.on_attribute("value", handle);
+    return true;
+}
+
+bool op::v0::Constant::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    auto output = outputs[0];
+    output->write(get_data_ptr(), output->get_size_in_bytes());
+    return true;
 }
 
 constexpr NodeTypeInfo op::ScalarConstantLike::type_info;
