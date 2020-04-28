@@ -28,7 +28,7 @@ namespace ngraph
             template <typename T>
             inline void roi_align(T* in,
                                   T* boxes,
-                                  T* boxes_indices,
+                                  T* batch_indices,
                                   T* out,
                                   const int pooled_h,
                                   const int pooled_w,
