@@ -1248,7 +1248,7 @@ def clamp(data, min_value, max_value, name=None):
     :param name: Optional output node name.
     :return: The new node performing a clamp operation on its input data element-wise.
     """
-    return Clamp(as_node(data), min_value, max_value)
+    return _get_node_factory().create('Clamp', [as_node(data)], {'min':min_value, 'max':max_value})
 
 
 # matmul ops
