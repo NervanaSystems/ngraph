@@ -30,7 +30,7 @@ static shared_ptr<op::Constant>
 {
     const auto input_shape = data->get_shape();
     size_t input_rank = input_shape.size();
-    const auto* input_values = data->get_data_ptr<T>();
+    const T* input_values = data->get_data_ptr<T>();
     Shape out_shape;
 
     size_t non_zero_count = runtime::reference::non_zero_get_count<T>(input_values, input_shape);
