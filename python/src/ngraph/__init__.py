@@ -90,6 +90,7 @@ from ngraph.ops import pad
 from ngraph.ops import parameter
 from ngraph.ops import power
 from ngraph.ops import prelu
+from ngraph.ops import psroi_pooling
 from ngraph.ops import quantize
 from ngraph.ops import quantized_convolution
 from ngraph.ops import quantized_dot
