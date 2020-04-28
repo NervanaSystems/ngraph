@@ -111,15 +111,27 @@ namespace ngraph
     {
         static auto enum_names =
             EnumNames<op::TopKSortType>("op::TopKSortType",
-                                        {{"NONE", op::TopKSortType::NONE},
-                                         {"SORT_INDICES", op::TopKSortType::SORT_INDICES},
-                                         {"SORT_VALUES", op::TopKSortType::SORT_VALUES}});
+                                        {{"none", op::TopKSortType::NONE},
+                                         {"index", op::TopKSortType::SORT_INDICES},
+                                         {"value", op::TopKSortType::SORT_VALUES}});
+        return enum_names;
+    }
+    template <>
+    NGRAPH_API EnumNames<op::TopKMode>& EnumNames<op::TopKMode>::get()
+    {
+        static auto enum_names = EnumNames<op::TopKMode>(
+            "op::TopKMode", {{"min", op::TopKMode::MIN}, {"max", op::TopKMode::MAX}});
         return enum_names;
     }
 
     constexpr DiscreteTypeInfo AttributeAdapter<op::TopKSortType>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<op::TopKMode>::type_info;
 
     std::ostream& op::operator<<(std::ostream& s, const op::TopKSortType& type)
+    {
+        return s << as_string(type);
+    }
+    std::ostream& op::operator<<(std::ostream& s, const op::TopKMode& type)
     {
         return s << as_string(type);
     }
