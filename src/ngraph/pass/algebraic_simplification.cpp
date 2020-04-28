@@ -28,6 +28,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -680,6 +681,44 @@ static bool simplify_reduction(shared_ptr<Node> n)
     return true;
 }
 
+static bool replace_transpose_with_reshape(shared_ptr<Node> n)
+{
+    auto transpose = as_type_ptr<opset3::Transpose>(n);
+
+    auto data = n->input_value(0).get_node_shared_ptr();
+    PartialShape shape = n->input_value(0).get_partial_shape();
+    if (shape.rank().is_dynamic())
+    {
+        return false;
+    }
+
+    auto order = as_type_ptr<op::Constant>(n->input_value(1).get_node_shared_ptr());
+    if (!order)
+    {
+        return false;
+    }
+
+    vector<int64_t> order_value = order->get_vector<int64_t>();
+
+    for (auto i = shape.rank().get_length() - 1; i >= 0; i--)
+    {
+        if (shape[order_value[i]].is_static() && shape[order_value[i]] == 1)
+        {
+            order_value.erase(order_value.begin() + i);
+        }
+    }
+
+    if (std::is_sorted(order_value.begin(), order_value.end()))
+    {
+        auto shape_of = make_shared<op::v3::ShapeOf>(data);
+        auto gather = make_shared<op::Gather>(shape_of, order);
+        auto reshape_op = make_shared<op::v1::Reshape>(data, gather, false);
+        return replace_output_update_name(n->output(0), reshape_op->output(0));
+    }
+
+    return false;
+}
+
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
 {
     return unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>>(
@@ -694,7 +733,8 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::v0::Sum, get_sum_constant>}},
          {op::v0::Product::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::v0::Product, get_prod_constant>}},
-         {op::v0::Log::type_info, simplify_log}});
+         {op::v0::Log::type_info, simplify_log},
+         {opset3::Transpose::type_info, replace_transpose_with_reshape}});
 }
 
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> ops_to_simplifiers =
