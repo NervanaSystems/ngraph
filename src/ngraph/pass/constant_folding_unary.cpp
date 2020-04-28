@@ -123,6 +123,13 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         }
         else if (is_type<op::Sqrt>(unary))
         {
+            if (std::any_of(constant->get_data_ptr<T>(),
+                            constant->get_data_ptr<T>() + shape_size(out_shape),
+                            [](T i) { return i < T(0); }))
+            {
+                throw ngraph_error("Square root of negative value");
+            }
+
             runtime::reference::sqrt<T>(
                 constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
         }
