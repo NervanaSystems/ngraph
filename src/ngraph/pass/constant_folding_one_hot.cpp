@@ -36,8 +36,8 @@ shared_ptr<op::Constant> fold_constant_one_hot_ref(const shared_ptr<op::Constant
                                                            indices->get_shape(),
                                                            output_shape,
                                                            axis,
-                                                           on_value->get_vector<OUTPUT_TYPE>()[0],
-                                                           off_value->get_vector<OUTPUT_TYPE>()[0]);
+                                                           on_value->get_data_ptr<OUTPUT_TYPE>()[0],
+                                                           off_value->get_data_ptr<OUTPUT_TYPE>()[0]);
 
     return make_shared<op::Constant>(on_value->get_element_type(), output_shape, out_vec);
 }

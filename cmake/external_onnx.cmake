@@ -53,7 +53,7 @@ if(NOT ext_onnx_POPULATED)
     if(CMAKE_CROSSCOMPILING)
         set(ONNX_CUSTOM_PROTOC_EXECUTABLE ${SYSTEM_PROTOC})
     endif()
-    add_subdirectory(${ext_onnx_SOURCE_DIR} ${ext_onnx_BINARY_DIR})
+    add_subdirectory(${ext_onnx_SOURCE_DIR} ${ext_onnx_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 target_include_directories(onnx PRIVATE "${Protobuf_INCLUDE_DIR}")
