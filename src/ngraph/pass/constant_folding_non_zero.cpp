@@ -36,11 +36,15 @@ static shared_ptr<op::Constant>
     size_t non_zero_count = runtime::reference::non_zero_get_count<T>(input_values, input_shape);
     size_t out_elem_count = (input_rank == 0) ? non_zero_count : (input_rank * non_zero_count);
 
-#if 0
+#if 1
     U* data_ptr = nullptr;
+    size_t out_data_byte_size = (index_element_type == element::i64)
+                                    ? (out_elem_count * sizeof(int64_t))
+                                    : (out_elem_count * sizeof(int32_t));
+
     if (out_elem_count > 0)
     {
-        runtime::AlignedBuffer buffer(out_elem_count * sizeof(U));
+        runtime::AlignedBuffer buffer(out_data_byte_size);
         data_ptr = buffer.get_ptr<U>();
     }
 
@@ -60,6 +64,7 @@ static shared_ptr<op::Constant>
         out_shape = Shape{input_rank, non_zero_count};
     }
 
+#if 0
     if (index_element_type == element::i64)
     {
         runtime::AlignedBuffer buffer(out_elem_count * sizeof(int64_t));
@@ -74,7 +79,9 @@ static shared_ptr<op::Constant>
         runtime::reference::non_zero<T, int32_t>(input_values, data_ptr, input_shape);
         return make_shared<op::Constant>(index_element_type, out_shape, data_ptr);
     }
-    // return make_shared<op::Constant>(index_element_type, out_shape, data_ptr);
+#else
+    return make_shared<op::Constant>(index_element_type, out_shape, data_ptr);
+#endif
 }
 
 template <typename T>
