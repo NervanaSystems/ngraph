@@ -101,4 +101,5 @@ bool op::DetectionOutput::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("DetectionOutput.input_height", m_attrs.input_height);
     visitor.on_attribute("DetectionOutput.input_width", m_attrs.input_width);
     visitor.on_attribute("DetectionOutput.objectness_score", m_attrs.objectness_score);
+    return true;
 }
