@@ -73,6 +73,11 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
     {
         return fold_constant_non_zero_execute<T, int32_t>(data, index_element_type);
     }
+    else
+    {
+        NGRAPH_CHECK(false, "Only i32 or i64 type is accepted for NonZero output");
+        return nullptr;
+    }
 }
 
 void pass::ConstantFolding::construct_constant_non_zero()

@@ -60,11 +60,11 @@ namespace ngraph
                 return non_zero_count;
             }
 
-            /// \brief Return indices of non-zeror entries in input argument.
+            /// \brief Return indices of non-zero entries in input argument.
             ///
             /// \param arg Input tensor
             /// \param arg_shape Input tensor shape
-            /// \param out Output containing indices of non-zeror entries in arg
+            /// \param out Output containing indices of non-zero entries in arg
             template <typename T, typename U>
             void non_zero(const T* arg, U* out, const Shape& arg_shape)
             {
