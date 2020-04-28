@@ -47,6 +47,7 @@ from ngraph.ops import cos
 from ngraph.ops import cosh
 from ngraph.ops import ctc_greedy_decoder
 from ngraph.ops import deformable_convolution
+from ngraph.ops import deformable_psroi_pooling
 from ngraph.ops import depth_to_space
 from ngraph.ops import dequantize
 from ngraph.ops import divide

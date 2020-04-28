@@ -1546,6 +1546,57 @@ def deformable_convolution(data,                           # type: Node
 
 
 @nameable_op
+def deformable_psroi_pooling(feature_maps,                   # type: NodeInput
+                             coords,                         # type: NodeInput
+                             output_dim,                     # type: int
+                             spatial_scale,                  # type: float
+                             group_size=1,                   # type: int
+                             mode='bilinear_deformable',     # type: str
+                             spatial_bins_x=1,               # type: int
+                             spatial_bins_y=1,               # type: int
+                             trans_std=1.0,                  # type: float
+                             part_size=1,                    # type: int
+                             offsets=None,                   # type: NodeInput
+                             name=None,                      # type: str
+                             ):
+    # type: (...) -> Node
+    """Return node performing DeformablePSROIPooling operation.
+
+    DeformablePSROIPooling computes position-sensitive pooling
+    on regions of interest specified by input.
+
+    :param feature_maps: 4D tensor with feature maps.
+    :param coords: 2D tensor describing box consisting of tuples: [batch_id, x_1, y_1, x_2, y_2].
+    :param output_dim: A pooled output channel number.
+    :param spatial_scale: A multiplicative spatial scale factor to translate ROI.
+    :param group_size: The number of groups to encode position-sensitive score.
+    :param mode: Specifies mode for pooling. Range of values: ['bilinear_deformable'].
+    :param spatial_bins_x: Specifies numbers of bins to divide the input feature maps over width.
+    :param spatial_bins_y: Specifies numbers of bins to divide the input feature maps over height.
+    :param trans_std: The value that all transformation (offset) values are multiplied with.
+    :param part_size: The number of parts the output tensor spatial dimensions are divided into.
+    :param offsets: Optional node. 4D input blob with transformation values (offsets).
+    :param name: The optional new name for output node.
+    :return: New node performing DeformablePSROIPooling operation.
+    """
+    node_inputs = as_nodes(feature_maps, coords)
+    if offsets is not None:
+        node_inputs.append(as_node(offsets))
+
+    return _get_node_factory().create('DeformablePSROIPooling',
+                                      node_inputs,
+                                      {'output_dim': output_dim,
+                                       'spatial_scale': spatial_scale,
+                                       'group_size': group_size,
+                                       'mode': mode,
+                                       'spatial_bins_x': spatial_bins_x,
+                                       'spatial_bins_y': spatial_bins_y,
+                                       'trans_std': trans_std,
+                                       'part_size': part_size,
+                                       })
+
+
+@nameable_op
 def avg_pool(data_batch,            # type: Node
              strides,               # type: List[int]
              pads_begin,            # type: TensorShape
