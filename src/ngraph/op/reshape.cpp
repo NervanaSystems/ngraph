@@ -20,6 +20,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/runtime/reference/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -145,6 +146,11 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
     }
 
     adjoints.add_delta(input_value(0), reshape);
+}
+
+bool op::v0::Reshape::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+	return false;
 }
 
 constexpr NodeTypeInfo op::v1::Reshape::type_info;
@@ -297,4 +303,9 @@ void op::v1::Reshape::generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                         const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for Reshape");
+}
+
+bool op::v1::Reshape::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+	return false;
 }
