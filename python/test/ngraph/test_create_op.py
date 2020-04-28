@@ -17,7 +17,6 @@ import numpy as np
 import pytest
 
 import ngraph as ng
-from test.ngraph.util import run_op_node, get_runtime
 
 
 np_types = [np.float32, np.float64, np.int8, np.int16, np.int32, np.int64,
