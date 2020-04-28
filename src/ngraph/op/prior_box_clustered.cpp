@@ -89,3 +89,15 @@ shared_ptr<Node> op::PriorBoxClustered::clone_with_new_inputs(const OutputVector
     check_new_args_count(this, new_args);
     return make_shared<PriorBoxClustered>(new_args.at(0), new_args.at(1), m_attrs);
 }
+
+bool op::PriorBoxClustered::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("PriorBoxClusteredAttrs.widths", m_attrs.widths);
+    visitor.on_attribute("PriorBoxClusteredAttrs.heights", m_attrs.heights);
+    visitor.on_attribute("PriorBoxClusteredAttrs.clip", m_attrs.clip);
+    visitor.on_attribute("PriorBoxClusteredAttrs.step_widths", m_attrs.step_widths);
+    visitor.on_attribute("PriorBoxClusteredAttrs.step_heights", m_attrs.step_heights);
+    visitor.on_attribute("PriorBoxClusteredAttrs.offset", m_attrs.offset);
+    visitor.on_attribute("PriorBoxClusteredAttrs.variances", m_attrs.variances);
+    return true;
+}

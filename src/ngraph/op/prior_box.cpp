@@ -128,3 +128,20 @@ std::vector<float> op::PriorBox::normalized_aspect_ratio(const std::vector<float
     unique_ratios.insert(1);
     return std::vector<float>(unique_ratios.begin(), unique_ratios.end());
 }
+
+bool op::PriorBox::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("PriorBoxAttrs.min_size", m_attrs.min_size);
+    visitor.on_attribute("PriorBoxAttrs.max_size", m_attrs.max_size);
+    visitor.on_attribute("PriorBoxAttrs.aspect_ratio", m_attrs.aspect_ratio);
+    visitor.on_attribute("PriorBoxAttrs.density", m_attrs.density);
+    visitor.on_attribute("PriorBoxAttrs.fixed_ratio", m_attrs.fixed_ratio);
+    visitor.on_attribute("PriorBoxAttrs.fixed_size", m_attrs.fixed_size);
+    visitor.on_attribute("PriorBoxAttrs.clip", m_attrs.clip);
+    visitor.on_attribute("PriorBoxAttrs.flip", m_attrs.flip);
+    visitor.on_attribute("PriorBoxAttrs.step", m_attrs.step);
+    visitor.on_attribute("PriorBoxAttrs.offset", m_attrs.offset);
+    visitor.on_attribute("PriorBoxAttrs.variance", m_attrs.variance);
+    visitor.on_attribute("PriorBoxAttrs.scale_all_sizes", m_attrs.scale_all_sizes);
+    return true;
+}

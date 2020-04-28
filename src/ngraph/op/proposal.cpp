@@ -89,3 +89,22 @@ shared_ptr<Node> op::Proposal::clone_with_new_inputs(const OutputVector& new_arg
     check_new_args_count(this, new_args);
     return make_shared<Proposal>(new_args.at(0), new_args.at(1), new_args.at(2), m_attrs);
 }
+
+bool op::Proposal::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("ProposalAttrs.base_size", m_attrs.base_size);
+    visitor.on_attribute("ProposalAttrs.pre_nms_topn", m_attrs.pre_nms_topn);
+    visitor.on_attribute("ProposalAttrs.post_nms_topn", m_attrs.post_nms_topn);
+    visitor.on_attribute("ProposalAttrs.nms_thresh", m_attrs.nms_thresh);
+    visitor.on_attribute("ProposalAttrs.feat_stride", m_attrs.feat_stride);
+    visitor.on_attribute("ProposalAttrs.min_size", m_attrs.min_size);
+    visitor.on_attribute("ProposalAttrs.ratio", m_attrs.ratio);
+    visitor.on_attribute("ProposalAttrs.scale", m_attrs.scale);
+    visitor.on_attribute("ProposalAttrs.clip_before_nms", m_attrs.clip_before_nms);
+    visitor.on_attribute("ProposalAttrs.clip_after_nms", m_attrs.clip_after_nms);
+    visitor.on_attribute("ProposalAttrs.normalize", m_attrs.normalize);
+    visitor.on_attribute("ProposalAttrs.box_size_scale", m_attrs.box_size_scale);
+    visitor.on_attribute("ProposalAttrs.box_coordinate_scale", m_attrs.box_coordinate_scale);
+    visitor.on_attribute("ProposalAttrs.framework", m_attrs.framework);
+    return true;
+}
