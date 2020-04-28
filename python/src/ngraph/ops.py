@@ -226,6 +226,40 @@ def gather(data, indices, axis, name=None):  # type: (NodeInput, NodeInput, Node
 
 
 @nameable_op
+def gather_tree(step_ids, parent_idx, max_seq_len, end_token, name=None):
+    # type: (NodeInput, NodeInput, NodeInput, NodeInput, str) -> Node
+    """Perform GatherTree operation.
+
+    The GatherTree node generates the complete beams from the indices per each step
+    and the parent beam indices.
+    GatherTree uses the following logic:
+
+    .. code-block:: python
+
+        for batch in range(BATCH_SIZE):
+            for beam in range(BEAM_WIDTH):
+                max_sequence_in_beam = min(MAX_TIME, max_seq_len[batch])
+
+                parent = parent_idx[max_sequence_in_beam - 1, batch, beam]
+
+                for level in reversed(range(max_sequence_in_beam - 1)):
+                    final_idx[level, batch, beam] = step_idx[level, batch, parent]
+
+                    parent = parent_idx[level, batch, parent]
+
+
+    :param step_ids: The tensor with indices from per each step.
+    :param parent_idx: The tensor with with parent beam indices.
+    :param max_seq_len: The tensor with maximum lengths for each sequence in the batch.
+    :param end_token: The scalar tensor with value of the end marker in a sequence.
+    :param name: Optional name for output node.
+    :return: The new node performing a GatherTree operation.
+    """
+    node_inputs = as_nodes(step_ids, parent_idx, max_seq_len, end_token)
+    return _get_node_factory().create('GatherTree', node_inputs)
+
+
+@nameable_op
 def group_convolution(data,                 # type: Node
                       filters,              # type: Node
                       strides,              # type: List[int]
