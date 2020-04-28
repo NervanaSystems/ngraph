@@ -53,8 +53,8 @@ namespace ngraph
                 // These metods should be removed if better solution will be designed.
                 void set_is_foldable(bool is_foldable) { m_is_foldable = is_foldable; }
                 bool get_is_foldable() const { return m_is_foldable; }
-                bool evaluate(const EvaluatorTensorVector& output_values,
-                              const EvaluatorTensorVector& input_values) override;
+                bool evaluate(const HostTensorVector& output_values,
+                              const HostTensorVector& input_values) override;
                 bool constant_fold(OutputVector& output_values,
                                    const OutputVector& input_values) override;
 
@@ -90,8 +90,8 @@ namespace ngraph
                 // These metods should be removed if better solution will be designed.
                 void set_is_foldable(bool is_foldable) { m_is_foldable = is_foldable; }
                 bool get_is_foldable() const { return m_is_foldable; }
-                bool evaluate(const EvaluatorTensorVector& output_values,
-                              const EvaluatorTensorVector& input_values) override;
+                bool evaluate(const HostTensorVector& output_values,
+                              const HostTensorVector& input_values) override;
                 bool constant_fold(OutputVector& output_values,
                                    const OutputVector& input_values) override;
 
