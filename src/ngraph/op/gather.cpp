@@ -99,6 +99,7 @@ void op::v0::Gather::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 }
 
 constexpr NodeTypeInfo op::v1::Gather::type_info;
+const int64_t op::v1::Gather::AXIS_NOT_SET_VALUE;
 
 op::v1::Gather::Gather(const Output<Node>& params,
                        const Output<Node>& indices,
