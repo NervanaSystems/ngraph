@@ -176,6 +176,11 @@ namespace ngraph
     {
         /// \brief BroadcastType specifies rules used for mapping of input tensor axes to output
         /// shape axes.
+        ///
+        /// \note  Broadcasting rules are different for Broadcast op and for element-wise ops.
+        ///        AutoBroadcastType::NUMPY is equivalent of BroadcastType::BIDIRECTIONAL
+        ///        according to spec.
+        ///
         /// EXPLICIT      - Mapping of the input data shape to output shape
         ///                 based on axes_mapping input.
         /// NUMPY         - Numpy broadcasting rules, aligned with ONNX Broadcasting.
