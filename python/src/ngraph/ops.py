@@ -1615,33 +1615,30 @@ def softmax(data, axis):  # type: (Node, int) -> Node
 
 
 @nameable_op
-def pad(data_batch,          # type: Node
-        value,               # type: Node
-        padding_below=None,  # type: TensorShape
-        padding_above=None,  # type: TensorShape
-        padding_in=None,     # type: TensorShape
+def pad(arg,                 # type: Node
+        pads_begin,          # type: NodeInput
+        pads_end,            # type: NodeInput
+        pad_mode,            # type: str
+        arg_pad_value=None,  # type: Optional[NodeInput]
         name=None,           # type: str
         ):
     # type: (...) -> Node
-    """Return padding node.
+    """Return a generic padding operation.
 
-    :param data_batch: The input node providing data.
-    :param value: The node producing the scalar value to be inserted for padding.
-    :param padding_below: The padding-below widths.
-    :param padding_above: The padding-above widths.
-    :param padding_in: The interior-padding widths.
-    :param name: The optional new name for output node.
-    :return: Return node that represents a padding of input nodes data.
+    :param arg: The node producing input tensor to be padded.
+    :param pads_begin: number of padding elements to be added before position 0
+                       on each axis of arg.
+    :param pads_end: number of padding elements to be added after the last element.
+    :param pad_mode: "constant", "edge", "reflect" or "symmetric"
+    :param arg_pad_value: value used for padding if pad_mode is "constant"
+    :return: Pad operation node.
     """
-    dim_count = len(data_batch.shape)
-    if padding_above is None:
-        padding_above = [0] * dim_count
-    if padding_below is None:
-        padding_below = [0] * dim_count
-    if padding_in is None:
-        padding_in = [0] * dim_count
+    input_nodes = [arg, as_node(pads_begin), as_node(pads_end)]
+    if arg_pad_value:
+        input_nodes.append(as_node(arg_pad_value))
 
-    return Pad(data_batch, value, Shape(padding_below), Shape(padding_above), Shape(padding_in))
+    pad_mode = pad_mode.upper()
+    return _get_node_factory().create('Pad', input_nodes, {'pad_mode': pad_mode})
 
 
 @nameable_op
