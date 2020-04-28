@@ -57,9 +57,9 @@ static shared_ptr<op::Constant>
 
     if (out_elem_count > 0)
     {
-        // runtime::AlignedBuffer buffer(out_data_byte_size);
-        // data_ptr = buffer.get_ptr<U>();
-        data_ptr = reinterpret_cast<U*>(malloc(out_data_byte_size));
+        runtime::AlignedBuffer buffer(out_data_byte_size);
+        data_ptr = buffer.get_ptr<U>();
+        // data_ptr = reinterpret_cast<U*>(malloc(out_data_byte_size));
     }
 
     runtime::reference::non_zero<T, U>(input_values, data_ptr, input_shape);
