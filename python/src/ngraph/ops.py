@@ -71,7 +71,7 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
 
 @nameable_op
 def ctc_greedy_decoder(data, sequence_mask, merge_repeated=True, name=None):
-    # type: (Node, Node, bool, str) -> Node
+    # type: (NodeInput, NodeInput, bool, str) -> Node
     """Perform greedy decoding on the logits given in input (best path).
 
     :param data: Logits on which greedy decoding is performed.
@@ -80,7 +80,8 @@ def ctc_greedy_decoder(data, sequence_mask, merge_repeated=True, name=None):
     :param name: Optional name for output node.
     :return: The new node performing an CTCGreedyDecoder operation on input tensor.
     """
-    return _get_node_factory().create('CTCGreedyDecoder', [data, sequence_mask], {
+    node_inputs = as_nodes(data, sequence_mask)
+    return _get_node_factory().create('CTCGreedyDecoder', node_inputs, {
         'ctc_merge_repeated': merge_repeated})
 
 
