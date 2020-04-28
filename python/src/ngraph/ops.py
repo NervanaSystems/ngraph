@@ -30,7 +30,6 @@ from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
     Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
     Sqrt, SquaredDifference, Squeeze, Subtract, Tan, Tanh
 
-
 from typing import Callable, Iterable, List, Set, Union
 
 from ngraph.utils.broadcasting import get_broadcast_axes
@@ -1997,6 +1996,41 @@ def roi_pooling(input, coords, output_size, spatial_scale, method, name=None):
                                       {'output_size': Shape(output_size),
                                        'spatial_scale': spatial_scale,
                                        'method': method})
+
+
+@nameable_op
+def psroi_pooling(input,  # type: Node
+                  coords,  # type: NodeInput
+                  output_dim,  # type: int
+                  group_size,  # type: int
+                  spatial_scale,  # type: float
+                  spatial_bins_x,  # type: int
+                  spatial_bins_y,  # type: int
+                  mode,  # type: str
+                  name=None  # type: str
+                  ):  # type: (...) -> Node
+    """Return a node which produces a PSROIPooling operation.
+
+    :param input: Input feature map {N, C, ...}
+    :param coords: Coordinates of bounding boxes
+    :param output_dim: Output channel number
+    :param group_size: Number of groups to encode position-sensitive scores
+    :param spatial_scale: Ratio of input feature map over input image size
+    :param spatial_bins_x: Numbers of bins to divide the input feature maps over
+    :param spatial_bins_y: Numbers of bins to divide the input feature maps over
+    :param mode: Mode of pooling - "avg" or "bilinear"
+    :return: PSROIPooling node
+    """
+    mode = mode.lower()
+    return _get_node_factory().create('PSROIPooling', [input, as_node(coords)],
+                                      {
+                                          'output_dim': output_dim,
+                                          'group_size': group_size,
+                                          'spatial_scale': spatial_scale,
+                                          'spatial_bins_x': spatial_bins_x,
+                                          'spatial_bins_y': spatial_bins_y,
+                                          'mode': mode
+                                      })
 
 
 @nameable_op
