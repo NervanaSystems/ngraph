@@ -33,10 +33,6 @@ op::v3::Broadcast::Broadcast(const Output<Node>& arg,
                              const BroadcastModeSpec& broadcast_spec)
     : util::BroadcastBase{arg, target_shape, axes_mapping, broadcast_spec}
 {
-    NODE_VALIDATION_CHECK(this,
-                          m_mode.m_type == BroadcastType::NONE,
-                          "axes_mapping input should not be provided for mode other than explicit");
-
     constructor_validate_and_infer_types();
 }
 
@@ -45,10 +41,6 @@ op::v3::Broadcast::Broadcast(const Output<Node>& arg,
                              const BroadcastModeSpec& broadcast_spec)
     : util::BroadcastBase{arg, target_shape, broadcast_spec}
 {
-    NODE_VALIDATION_CHECK(this,
-                          m_mode.m_type != BroadcastType::NONE,
-                          "axes_mapping input should be provided if explicit mode is used");
-
     constructor_validate_and_infer_types();
 }
 
@@ -82,6 +74,20 @@ std::pair<bool, AxisSet> op::v3::Broadcast::get_broadcast_axes() const
 
 void op::v3::Broadcast::validate_and_infer_types()
 {
+    if (m_mode.m_type == BroadcastType::NONE)
+    {
+        NODE_VALIDATION_CHECK(this,
+                              get_input_size() == 3,
+                              "axes_mapping input should be provided if explicit mode is used");
+    }
+    else
+    {
+        NODE_VALIDATION_CHECK(
+            this,
+            get_input_size() == 2,
+            "axes_mapping input should not be provided for mode other than explicit");
+    }
+
     util::BroadcastBase::validate_and_infer_types();
 
     auto result_shape = get_output_partial_shape(0);
@@ -123,13 +129,30 @@ void op::v3::Broadcast::validate_and_infer_types()
             }
         }
     }
+    set_input_is_relevant_to_shape(0); // arg - Result element type
+    set_input_is_relevant_to_shape(1); // target_shape - Result shape
+    if (get_input_size() == 3)
+    {
+        set_input_is_relevant_to_shape(2); // axes_mapping - Broadcast type
+    }
     set_output_type(0, get_input_element_type(0), result_shape);
 }
 
 shared_ptr<Node> op::v3::Broadcast::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v3::Broadcast>(new_args.at(0), new_args.at(1), new_args.at(2), m_mode);
+    if (new_args.size() == 2)
+    {
+        return make_shared<v3::Broadcast>(new_args.at(0), new_args.at(1), m_mode);
+    }
+    else if (new_args.size() == 3)
+    {
+        return make_shared<v3::Broadcast>(new_args.at(0), new_args.at(1), new_args.at(2), m_mode);
+    }
+    else
+    {
+        throw ngraph_error("Not supported number of Broadcast:v3 args");
+    }
 }
 
 bool op::v3::Broadcast::visit_attributes(AttributeVisitor& visitor)
@@ -170,7 +193,10 @@ op::v1::Broadcast::Broadcast(const Output<Node>& arg,
 op::v1::Broadcast::Broadcast(const Output<Node>& arg,
                              const Output<Node>& target_shape,
                              const AutoBroadcastSpec& broadcast_spec)
-    : util::BroadcastBase{arg, target_shape, to_broadcast_mode(broadcast_spec)}
+    : util::BroadcastBase{arg,
+                          target_shape,
+                          op::v0::Constant::create(element::u8, Shape{}, {0})->output(0),
+                          to_broadcast_mode(broadcast_spec)}
     , m_broadcast_spec{broadcast_spec}
 {
     constructor_validate_and_infer_types();
@@ -179,6 +205,10 @@ op::v1::Broadcast::Broadcast(const Output<Node>& arg,
 void op::v1::Broadcast::validate_and_infer_types()
 {
     util::BroadcastBase::validate_and_infer_types();
+
+    set_input_is_relevant_to_shape(0); // arg - Result element type
+    set_input_is_relevant_to_shape(1); // target_shape - Result shape
+    set_input_is_relevant_to_shape(2); // axes_mapping - Broadcast type
 }
 
 shared_ptr<Node> op::v1::Broadcast::clone_with_new_inputs(const OutputVector& new_args) const

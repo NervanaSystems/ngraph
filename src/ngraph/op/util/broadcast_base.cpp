@@ -38,7 +38,7 @@ op::util::BroadcastBase::BroadcastBase(const Output<Node>& arg,
 op::util::BroadcastBase::BroadcastBase(const Output<Node>& arg,
                                        const Output<Node>& target_shape,
                                        const BroadcastModeSpec& broadcast_mode)
-    : Op({arg, target_shape, op::v0::Constant::create(element::u8, Shape{}, {0})->output(0)})
+    : Op({arg, target_shape})
     , m_mode{broadcast_mode}
 {
 }
@@ -194,10 +194,6 @@ void op::util::BroadcastBase::validate_and_infer_types()
             }
         }
     }
-
-    set_input_is_relevant_to_shape(0); // arg - Result element type
-    set_input_is_relevant_to_shape(1); // target_shape - Result shape
-    set_input_is_relevant_to_shape(2); // axes_mapping - Broadcast type
     set_output_type(0, get_input_element_type(0), result_shape);
 }
 
