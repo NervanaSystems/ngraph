@@ -51,6 +51,7 @@ namespace ngraph
                 const Shape& get_output_size() const { return m_output_size; }
                 float get_spatial_scale() const { return m_spatial_scale; }
                 const std::string& get_method() const { return m_method; }
+                bool visit_attributes(AttributeVisitor& visitor) override;
             private:
                 Shape m_output_size;
                 float m_spatial_scale;
