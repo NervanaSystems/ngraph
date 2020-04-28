@@ -33,7 +33,6 @@ set(SRC
 find_package(InferenceEngine REQUIRED)
 add_library(ie_backend ${LIBRARY_TYPE} ${SRC})
 target_compile_definitions(ie_backend PRIVATE IE_BACKEND_DLL_EXPORTS)
-target_include_directories(ie_backend PUBLIC ${InferenceEngine_INCLUDE_DIRS})
 target_link_libraries(ie_backend PUBLIC ngraph ${InferenceEngine_LIBRARIES})
 
 install(TARGETS ie_backend
