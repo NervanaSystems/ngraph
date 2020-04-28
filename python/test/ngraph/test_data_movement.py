@@ -48,3 +48,44 @@ def test_reverse_sequence():
         ],
     ).reshape([1, 2, 3, 4, 2])
     assert np.allclose(result, expected)
+
+
+def test_pad_edge():
+    input_data = np.arange(1, 13).reshape([3, 4])
+    pads_begin = np.array([0, 1], dtype=np.int32)
+    pads_end = np.array([2, 3], dtype=np.int32)
+
+    input_param = ng.parameter(input_data.shape, name='input', dtype=np.int32)
+    model = ng.pad(input_param, pads_begin, pads_end, 'edge')
+
+    runtime = get_runtime()
+    computation = runtime.computation(model, input_param)
+    result = computation(input_data)
+
+    expected = np.array([[1, 1, 2, 3, 4, 4, 4, 4],
+                         [5, 5, 6, 7, 8, 8, 8, 8],
+                         [9, 9, 10, 11, 12, 12, 12, 12, ],
+                         [9, 9, 10, 11, 12, 12, 12, 12, ],
+                         [9, 9, 10, 11, 12, 12, 12, 12, ]])
+    assert np.allclose(result, expected)
+
+
+def test_pad_constant():
+    input_data = np.arange(1, 13).reshape([3, 4])
+    pads_begin = np.array([0, 1], dtype=np.int32)
+    pads_end = np.array([2, 3], dtype=np.int32)
+
+    input_param = ng.parameter(input_data.shape, name='input', dtype=np.int64)
+    model = ng.pad(input_param, pads_begin, pads_end, 'constant',
+                   arg_pad_value=np.array(100, dtype=np.int64))
+
+    runtime = get_runtime()
+    computation = runtime.computation(model, input_param)
+    result = computation(input_data)
+
+    expected = np.array([[100, 1, 2, 3, 4, 100, 100, 100, ],
+                         [100, 5, 6, 7, 8, 100, 100, 100, ],
+                         [100, 9, 10, 11, 12, 100, 100, 100, ],
+                         [100, 100, 100, 100, 100, 100, 100, 100, ],
+                         [100, 100, 100, 100, 100, 100, 100, 100, ]])
+    assert np.allclose(result, expected)
