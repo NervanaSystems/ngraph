@@ -20,6 +20,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -98,4 +99,50 @@ shared_ptr<Node> op::Unsqueeze::clone_with_new_inputs(const OutputVector& new_ar
         throw ngraph_error("Incorrect number of new arguments");
     }
     return make_shared<Unsqueeze>(new_args.at(0), new_args.at(1));
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out)
+    {
+        runtime::reference::copy(
+            arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), shape_size(out->get_shape()));
+        return true;
+    }
+
+    bool evaluate_unsqueeze(const HostTensorPtr& arg0, const HostTensorPtr& out)
+    {
+        bool rc = true;
+        switch (arg0->get_element_type())
+        {
+            TYPE_CASE(i8)(arg0, out);
+            break;
+            TYPE_CASE(i16)(arg0, out);
+            break;
+            TYPE_CASE(i32)(arg0, out);
+            break;
+            TYPE_CASE(i64)(arg0, out);
+            break;
+            TYPE_CASE(u8)(arg0, out);
+            break;
+            TYPE_CASE(u16)(arg0, out);
+            break;
+            TYPE_CASE(u32)(arg0, out);
+            break;
+            TYPE_CASE(u64)(arg0, out);
+            break;
+            TYPE_CASE(f32)(arg0, out);
+            break;
+            TYPE_CASE(f64)(arg0, out);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::v0::Unsqueeze::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_unsqueeze(inputs[0], outputs[0]);
 }

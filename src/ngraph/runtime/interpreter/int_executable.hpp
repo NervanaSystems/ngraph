@@ -1633,13 +1633,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::Squeeze:
-        {
-            size_t element_count = shape_size(node.get_output_shape(0));
-            reference::copy<T>(
-                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
-            break;
-        }
         case OP_TYPEID::Sum:
         {
             const op::Sum* sum = static_cast<const op::Sum*>(&node);
@@ -1695,13 +1688,6 @@ protected:
             {
                 throw ngraph_error("Unexpected type");
             }
-            break;
-        }
-        case OP_TYPEID::Unsqueeze:
-        {
-            size_t element_count = shape_size(node.get_output_shape(0));
-            reference::copy<T>(
-                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Xor:
@@ -1781,7 +1767,9 @@ protected:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShapeOf_v3:
         case OP_TYPEID::Softmax:
-        case OP_TYPEID::Subtract: NGRAPH_CHECK(false, "Op not handled by evaluator method:", node);
+        case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Subtract:
+        case OP_TYPEID::Unsqueeze: NGRAPH_CHECK(false, "Op not handled by evaluator method:", node);
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
