@@ -1581,7 +1581,7 @@ def concat(nodes, axis, name=None):  # type: (List[Node], int, str) -> Node
     :param name: The optional new name for output node.
     :return: Return new node that is a concatenation of input nodes.
     """
-    return Concat(nodes, axis)
+    return _get_node_factory().create('Concat', nodes, {'axis': axis})
 
 
 @nameable_op
