@@ -2213,7 +2213,26 @@ def scatter_elements_update(data, indices, updates, axis):
     :param indices: The tensor with indexes which will be updated.
     :param updates: The tensor with update values.
     :param axis:    The axis for scatter.
-    :return: ScatterUpdate node
+    :return: ScatterElementsUpdate node
     """
     return _get_node_factory().create('ScatterElementsUpdate', [data, as_node(indices),
                                                                 as_node(updates), as_node(axis)])
+
+
+@nameable_op
+def roi_pooling(input, coords, output_size, spatial_scale, method, name=None):
+    # type: (Node, NodeInput, TensorShape, NumericData, str, str) -> Node
+    """Return a node which produces an ROIPooling operation.
+
+    :param input:          Input feature map {N, C, ...}
+    :param coords:         Coordinates of bounding boxes
+    :param output_size:    Height/Width of ROI output features (shape)
+    :param spatial_scale:  Ratio of input feature map over input image size (float)
+    :param method:         Method of pooling - string: "max" or "bilinear"
+    :return:               ROIPooling node
+    """
+    method = method.lower()
+    return _get_node_factory().create('ROIPooling', [input, as_node(coords)],
+                                      {'output_size': Shape(output_size),
+                                       'spatial_scale': spatial_scale,
+                                       'method': method})
