@@ -93,7 +93,7 @@ bool is_dynamic_op(const std::shared_ptr<Node>& op)
            is_type<op::v1::ConvolutionBackpropData>(op) ||
            is_type<op::v1::ConvolutionBackpropFilters>(op) ||
            is_type<op::v1::AvgPoolBackprop>(op) || is_type<op::v1::Broadcast>(op) ||
-           is_type<op::v1::GenerateMask>(op);
+           is_type<op::v3::Broadcast>(op) || is_type<op::v1::GenerateMask>(op);
 }
 
 // Helper for a vile hack in DynamicExecutable::call. See body of that function for details.
