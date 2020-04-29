@@ -20,10 +20,69 @@
 #include "ngraph/function.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/runtime/opt_kernel/reshape.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+namespace
+{
+    template <element::Type_t ET>
+    bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out, op::Reshape* reshape)
+    {
+        auto data_ptr = out->get_data_ptr<ET>();
+        runtime::opt_kernel::reshape<uint64_t>(arg0->get_data_ptr<ET>(),
+                                         data_ptr,
+                                         arg0->get_shape(),
+                                         reshape->get_input_order(),
+                                         out->get_shape());
+		return true;
+    }
+
+    bool evaluate_reshape(const HostTensorPtr& arg0, const HostTensorPtr& out, op::Reshape* reshape)
+    {
+        bool rc = true;
+        switch (arg0->get_element_type())
+        {
+            /*TYPE_CASE(undefined)
+            NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant reshape folding");
+            break;
+            TYPE_CASE(dynamic)
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant reshape folding");
+            break;
+            TYPE_CASE(u1)
+            NGRAPH_CHECK(false, "Encountered 'u1' element type in constant reshape folding");
+            break;
+            TYPE_CASE(bf16)(arg0, out, reshape);
+            break;
+            TYPE_CASE(f16)(arg0, out, reshape);
+            break;
+            TYPE_CASE(f32)(arg0, out, reshape);
+            break;
+            TYPE_CASE(f64)(arg0, out, reshape);
+            break;
+            TYPE_CASE(i8)(arg0, out, reshape);
+            break;
+            TYPE_CASE(i16)(arg0, out, reshape);
+            break;
+            TYPE_CASE(i32)(arg0, out, reshape);
+            break;
+            TYPE_CASE(i64)(arg0, out, reshape);
+            break;
+            TYPE_CASE(u8)(arg0, out, reshape);
+            break;
+            TYPE_CASE(u16)(arg0, out, reshape);
+            break;
+            TYPE_CASE(u32)(arg0, out, reshape);
+            break;*/
+            TYPE_CASE(u64)(arg0, out, reshape);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
 
 constexpr NodeTypeInfo op::Reshape::type_info;
 
@@ -150,7 +209,7 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
 
 bool op::v0::Reshape::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-	return false;
+    return false;
 }
 
 constexpr NodeTypeInfo op::v1::Reshape::type_info;
@@ -307,5 +366,5 @@ void op::v1::Reshape::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 
 bool op::v1::Reshape::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-	return false;
+    return false;
 }
