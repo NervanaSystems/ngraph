@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pass/constant_folding.hpp"
 #include "gtest/gtest.h"
+
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "util/all_close_f.hpp"
 #include "util/test_tools.hpp"
