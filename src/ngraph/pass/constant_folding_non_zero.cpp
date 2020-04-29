@@ -49,10 +49,16 @@ static shared_ptr<op::Constant>
         out_shape = Shape{input_rank, non_zero_count};
     }
 
-    std::vector<U> output_vec(out_elem_count);
-    runtime::reference::non_zero<T, U>(input_values, output_vec.data(), input_shape);
+    size_t out_data_byte_size = (index_element_type == element::i64)
+                                    ? (out_elem_count * sizeof(int64_t))
+                                    : (out_elem_count * sizeof(int32_t));
 
-    return make_shared<op::Constant>(index_element_type, out_shape, output_vec);
+    runtime::AlignedBuffer buffer(out_data_byte_size);
+    U* out_data_ptr = buffer.get_ptr<U>();
+
+    runtime::reference::non_zero<T, U>(input_values, out_data_ptr, input_shape);
+
+    return make_shared<op::Constant>(index_element_type, out_shape, out_data_ptr);
 }
 
 template <typename T>
