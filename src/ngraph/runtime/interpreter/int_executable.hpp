@@ -52,7 +52,6 @@
 #include "ngraph/runtime/reference/constant.hpp"
 #include "ngraph/runtime/reference/convert.hpp"
 #include "ngraph/runtime/reference/convolution.hpp"
-#include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/cos.hpp"
 #include "ngraph/runtime/reference/cosh.hpp"
 #include "ngraph/runtime/reference/cum_sum.hpp"
