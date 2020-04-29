@@ -144,6 +144,7 @@ namespace
             NGRAPH_CHECK(axis >= 0 && axis < out_rank, "Axis is out of bounds: ", axis);
             out_shape.insert(out_shape.begin() + axis, 1);
         }
+        out->set_shape(out_shape);
 
         bool rc = true;
         switch (element_type)
