@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <set>
@@ -143,8 +144,43 @@ namespace
         return true;
     }
 
-    bool evaluate_squeeze(const HostTensorPtr& arg0, const HostTensorPtr& out)
+    bool evaluate_squeeze(const HostTensorPtr& arg0,
+                          const HostTensorPtr& arg1,
+                          const HostTensorPtr& out)
     {
+        auto element_type = arg0->get_element_type();
+        out->set_element_type(element_type);
+
+        auto data_shape = arg0->get_shape();
+        uint64_t data_rank = data_shape.size();
+        auto axes_shape = arg1->get_shape();
+        NGRAPH_CHECK(axes_shape.size() == 1, "Axes to remove must be a vector.");
+        NGRAPH_CHECK(arg1->get_element_type() == element::i64,
+                     "Axis must be of type i64. Invalid type: ",
+                     arg1->get_element_type());
+
+        auto out_shape = data_shape;
+        // Empty axes vector
+        if (axes_shape[0] == 0)
+        {
+            out_shape.erase(std::remove(out_shape.begin(), out_shape.end(), 1), out_shape.end());
+        }
+        else
+        {
+            // Get axes
+            const int64_t* axes_buf = arg1->get_data_ptr<int64_t>();
+            vector<int64_t> axes(axes_buf, axes_buf + shape_size(axes_shape));
+            std::sort(axes.begin(), axes.end(), greater<int64_t>());
+            for (int64_t i : axes)
+            {
+                int64_t axis = i < 0 ? data_rank + i : i;
+                NGRAPH_CHECK(axis >= 0 && axis < data_rank, "Axis is out of bounds: ", axis);
+                NGRAPH_CHECK(out_shape[axis] == 1, "Only axis of size 1 can be removed.");
+                out_shape.erase(out_shape.begin() + axis);
+            }
+        }
+        out->set_shape(out_shape);
+
         bool rc = true;
         switch (arg0->get_element_type())
         {
@@ -176,5 +212,5 @@ namespace
 
 bool op::v0::Squeeze::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    return evaluate_squeeze(inputs[0], outputs[0]);
+    return evaluate_squeeze(inputs[0], inputs[1], outputs[0]);
 }
