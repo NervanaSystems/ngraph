@@ -73,7 +73,7 @@ static bool eliminate_sum(const std::shared_ptr<Node>& node)
 static bool eliminate_convert(const std::shared_ptr<Node>& node)
 {
     bool is_out_type_agnostic = false;
-    static const std::set<NodeTypeInfo> type_agnostic{TI(opset3::NonZero)};
+    static const std::set<NodeTypeInfo> type_agnostic{TI(opset3::NonZero), TI(opset3::ReduceMin)};
     if (node->output(0).get_target_inputs().size() == 1)
     {
         auto& out = *node->output(0).get_target_inputs().begin();
