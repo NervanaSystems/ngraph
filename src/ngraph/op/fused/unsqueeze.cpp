@@ -63,7 +63,7 @@ void op::Unsqueeze::pre_validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), PartialShape{output_shape});
 }
 
-std::vector<uint64_t> op::Unsqueeze::get_axes()
+std::vector<size_t> op::Unsqueeze::get_axes()
 {
     const auto data_rank = input_value(0).get_partial_shape().rank();
     const auto axes_constant = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr());

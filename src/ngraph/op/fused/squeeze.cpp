@@ -90,9 +90,9 @@ bool ngraph::op::v0::Squeeze::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-std::vector<uint64_t> ngraph::op::v0::Squeeze::get_axes()
+std::vector<size_t> ngraph::op::v0::Squeeze::get_axes()
 {
-    vector<uint64_t> axes;
+    vector<size_t> axes;
     auto axes_constant = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr());
     auto data_rank = input_value(0).get_partial_shape().rank();
     auto data_rank_val = input_value(0).get_partial_shape().rank().get_length();
