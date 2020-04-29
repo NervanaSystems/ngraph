@@ -152,7 +152,7 @@ namespace
         out->set_element_type(element_type);
 
         auto data_shape = arg0->get_shape();
-        uint64_t data_rank = data_shape.size();
+        int64_t data_rank = static_cast<int64_t>(data_shape.size());
         auto axes_shape = arg1->get_shape();
         NGRAPH_CHECK(axes_shape.size() == 1, "Axes to remove must be a vector.");
         NGRAPH_CHECK(arg1->get_element_type() == element::i64,
@@ -188,7 +188,7 @@ namespace
         out->set_shape(out_shape);
 
         bool rc = true;
-        switch (arg0->get_element_type())
+        switch (element_type)
         {
             TYPE_CASE(i8)(arg0, out);
             break;

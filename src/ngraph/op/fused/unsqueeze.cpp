@@ -111,10 +111,42 @@ namespace
         return true;
     }
 
-    bool evaluate_unsqueeze(const HostTensorPtr& arg0, const HostTensorPtr& out)
+    bool evaluate_unsqueeze(const HostTensorPtr& arg0,
+                            const HostTensorPtr& arg1,
+                            const HostTensorPtr& out)
     {
+        auto element_type = arg0->get_element_type();
+        out->set_element_type(element_type);
+
+        auto data_shape = arg0->get_shape();
+        int64_t data_rank = static_cast<int64_t>(data_shape.size());
+        auto axes_shape = arg1->get_shape();
+        NGRAPH_CHECK(axes_shape.size() == 1, "Axes to add must be a vector.");
+        NGRAPH_CHECK(axes_shape[0] > 0, "Axes cannot be empty.");
+        NGRAPH_CHECK(arg1->get_element_type() == element::i64,
+                     "Axis must be of type i64. Invalid type: ",
+                     arg1->get_element_type());
+
+        auto out_shape = data_shape;
+        int64_t out_rank = data_rank + static_cast<int64_t>(shape_size(axes_shape));
+        // Get axes
+        const int64_t* axes_buf = arg1->get_data_ptr<int64_t>();
+        vector<int64_t> axes(axes_buf, axes_buf + shape_size(axes_shape));
+        // Normalize axes
+        std::transform(axes.begin(), axes.end(), axes.begin(), [out_rank](int64_t i) -> int64_t {
+            return i < 0 ? out_rank + i : i;
+        });
+        // Sort in increasing order
+        std::set<int64_t, less<int64_t>> axes_set(axes.begin(), axes.end());
+        NGRAPH_CHECK(axes.size() == axes_set.size(), "Axes has duplicate axis.");
+        for (int64_t axis : axes_set)
+        {
+            NGRAPH_CHECK(axis >= 0 && axis < out_rank, "Axis is out of bounds: ", axis);
+            out_shape.insert(out_shape.begin() + axis, 1);
+        }
+
         bool rc = true;
-        switch (arg0->get_element_type())
+        switch (element_type)
         {
             TYPE_CASE(i8)(arg0, out);
             break;
@@ -144,5 +176,5 @@ namespace
 
 bool op::v0::Unsqueeze::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    return evaluate_unsqueeze(inputs[0], outputs[0]);
+    return evaluate_unsqueeze(inputs[0], inputs[1], outputs[0]);
 }
