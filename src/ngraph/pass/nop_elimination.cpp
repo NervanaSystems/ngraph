@@ -93,12 +93,15 @@ static bool eliminate_convert(const std::shared_ptr<Node>& node)
         if (is_type<opset3::Convert>(convert_2) && convert_2->get_users().size() == 1 &&
             destination_type == convert_2->get_input_element_type(0))
         {
-            // replace ReplaceMin as convert's output
-            if (replace_output_update_name(convert->output(0), input_op))
+            if (destination_type == element::i64 && convert_2->get_element_type() == element::i32)
             {
-                input_op = convert_2->input_value(0);
-                // replace input to convert_2 as convert_2's output
-                return replace_output_update_name(convert_2->output(0), input_op);
+                // replace ReplaceMin as convert's output
+                if (replace_output_update_name(convert->output(0), input_op))
+                {
+                    input_op = convert_2->input_value(0);
+                    // replace input to convert_2 as convert_2's output
+                    return replace_output_update_name(convert_2->output(0), input_op);
+                }
             }
         }
     }
