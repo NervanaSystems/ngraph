@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Concat::type_info;
+const NodeTypeInfo op::Concat::type_info{"Concat", 0};
 
 op::Concat::Concat(const OutputVector& args, int64_t axis)
     : Op(args)

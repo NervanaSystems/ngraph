@@ -30,7 +30,7 @@ namespace ngraph
             class NGRAPH_API Concat : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"Concat", 0};
+                static const NodeTypeInfo type_info;
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a concatenation operation.
                 Concat() = default;
