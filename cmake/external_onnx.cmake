@@ -40,7 +40,7 @@ add_definitions(-DONNX_NAMESPACE=${NGRAPH_ONNX_NAMESPACE})
 set(CMAKE_CXX_FLAGS ${CMAKE_ORIGINAL_CXX_FLAGS})
 
 if(WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244 /wd4251")
 endif()
 
 FetchContent_Declare(
