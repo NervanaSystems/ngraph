@@ -37,6 +37,7 @@ namespace ngraph
                 Unsqueeze() = default;
                 Unsqueeze(const Output<Node>& data, const Output<Node>& axes);
 
+                std::vector<uint64_t> get_axes();
                 virtual void pre_validate_and_infer_types() override;
                 virtual NodeVector decompose_op() const override;
 

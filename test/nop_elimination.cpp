@@ -273,16 +273,16 @@ TEST(nop_elimination, squeeze_unsqueeze_overlap_elimination)
     check_usecase(PartialShape{1, 2, 1, 1, 4}, {2, 3}, {2, 3}, 0, 0);
 
     // squeeze axes overlap fully
-    check_usecase(PartialShape{2, 1, 1, 4}, {1, 2}, {1, 2, 3}, 1, 1);
-    check_usecase(PartialShape{2, 1, 1, Dimension::dynamic()}, {1, 2}, {1, 2, 3}, 1, 1);
-    check_usecase(PartialShape{1, 2, 1, 1, 4}, {2, 3}, {2, 3, 5}, 1, 1);
-    check_usecase(PartialShape{1}, {0}, {0, 1, 2, 3}, 1, 1);
+    check_usecase(PartialShape{2, 1, 1, 4}, {1, 2}, {1, 2, 3}, 0, 1);
+    check_usecase(PartialShape{2, 1, 1, Dimension::dynamic()}, {1, 2}, {1, 2, 3}, 0, 1);
+    check_usecase(PartialShape{1, 2, 1, 1, 4}, {2, 3}, {2, 3, 5}, 0, 1);
+    check_usecase(PartialShape{1}, {0}, {0, 1, 2, 3}, 0, 1);
 
     // unsqueeze axes overlap fully
-    check_usecase(PartialShape{1, 2, 1, 1, 1, 4}, {2, 3, 4}, {2}, 1, 1);
-    check_usecase(PartialShape{1, 2, 1, 1, 1, 4}, {2, 3}, {2}, 1, 1);
-    check_usecase(PartialShape{1, 2, 1, 1, 1, Dimension::dynamic()}, {2, 3}, {2}, 1, 1);
-    check_usecase(PartialShape{1, 1, 1}, {0, 1}, {1}, 1, 1);
+    check_usecase(PartialShape{1, 2, 1, 1, 1, 4}, {2, 3, 4}, {2}, 1, 0);
+    check_usecase(PartialShape{1, 2, 1, 1, 1, 4}, {2, 3}, {2}, 1, 0);
+    check_usecase(PartialShape{1, 2, 1, 1, 1, Dimension::dynamic()}, {2, 3}, {2}, 1, 0);
+    check_usecase(PartialShape{1, 1, 1}, {0, 1}, {1}, 1, 0);
 
     // squeeze->unsqueeze axes overlap
     check_usecase(PartialShape{2, 1, 1, 4}, {1, 2}, {0}, 1, 1);

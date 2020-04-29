@@ -134,21 +134,83 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
     return false;
 }
 
+static std::shared_ptr<op::Constant> get_axes_remaining(const std::vector<uint64_t> from,
+                                                        const std::vector<uint64_t> to)
+{
+    std::set<uint64_t> i1(from.begin(), from.end());
+    std::set<uint64_t> i2(to.begin(), to.end());
+    std::vector<int64_t> axes;
+    std::set_difference(i1.begin(), i1.end(), i2.begin(), i2.end(), std::back_inserter(axes));
+    if (axes.size() != 0)
+    {
+        return nullptr;
+    }
+    else
+    {
+        axes.clear();
+        std::set_difference(i2.begin(), i2.end(), i1.begin(), i1.end(), std::back_inserter(axes));
+        return op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
+    }
+}
+
+static bool is_equal_axes(const std::vector<uint64_t> from, const std::vector<uint64_t> to)
+{
+    std::set<uint64_t> i1(from.begin(), from.end());
+    std::set<uint64_t> i2(to.begin(), to.end());
+    std::vector<int64_t> axes;
+    std::set_symmetric_difference(
+        i1.begin(), i1.end(), i2.begin(), i2.end(), std::back_inserter(axes));
+    return (axes.size() == 0);
+}
+
 static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
 {
+    auto data_rank = node->input_value(0).get_partial_shape().rank();
     auto unsqueeze = as_type_ptr<opset3::Unsqueeze>(node);
     auto input = unsqueeze->input_value(0).get_node_shared_ptr();
     auto squeeze = as_type_ptr<opset3::Squeeze>(input);
     // eliminate redundant squeeze->unsqueeze
-    if (auto squeeze = as_type_ptr<opset3::Squeeze>(input))
+    if (squeeze && !data_rank.is_dynamic())
     {
-        if (!ngraph::compare_constants(squeeze->input_value(1).get_node_shared_ptr(),
-                                       unsqueeze->input_value(1).get_node_shared_ptr()))
+        auto sq_axes = as_type_ptr<op::v0::Constant>(squeeze->input_value(1).get_node_shared_ptr());
+        auto unsq_axes =
+            as_type_ptr<op::v0::Constant>(unsqueeze->input_value(1).get_node_shared_ptr());
+        if (!sq_axes || !unsq_axes)
         {
-            NGRAPH_DEBUG << "squeeze->unsqueeze axes do not match";
+            NGRAPH_DEBUG << "squeeze->unsqueeze axes are not constants";
             return false;
         }
-        return replace_output_update_name(unsqueeze->output(0), squeeze->input_value(0));
+
+        auto sq_axes_val = squeeze->get_axes();
+        auto unsq_axes_val = unsqueeze->get_axes();
+        if (is_equal_axes(sq_axes_val, unsq_axes_val))
+        {
+            return replace_output_update_name(unsqueeze->output(0), squeeze->input_value(0));
+        }
+
+        auto sq_axes_const = get_axes_remaining(unsq_axes_val, sq_axes_val);
+        if (sq_axes_const)
+        {
+            auto new_sq = make_shared<opset3::Squeeze>(
+                squeeze->input_value(0).get_node_shared_ptr(), sq_axes_const);
+            if (unsqueeze->get_output_partial_shape(0).same_scheme(
+                    new_sq->get_output_partial_shape(0)))
+            {
+                return replace_output_update_name(unsqueeze->output(0), new_sq->output(0));
+            }
+        }
+        auto unsq_axes_const = get_axes_remaining(sq_axes_val, unsq_axes_val);
+        if (unsq_axes_const)
+        {
+            auto new_unsq = make_shared<opset3::Unsqueeze>(
+                squeeze->input_value(0).get_node_shared_ptr(), unsq_axes_const);
+            if (unsqueeze->get_output_partial_shape(0).same_scheme(
+                    new_unsq->get_output_partial_shape(0)))
+            {
+                return replace_output_update_name(unsqueeze->output(0), new_unsq->output(0));
+            }
+        }
+        return false;
     }
 
     // eliminate redundant unsqueeze

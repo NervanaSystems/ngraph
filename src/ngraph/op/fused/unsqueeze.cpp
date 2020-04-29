@@ -47,14 +47,7 @@ void op::Unsqueeze::pre_validate_and_infer_types()
         return;
     }
 
-    uint64_t data_rank_value = data_partial_shape.rank().get_length();
-
-    // Get value of axes from Constant
-    const auto axes_constant = as_type_ptr<op::v0::Constant>(axes_node);
-    const auto axes_values = axes_constant->cast_vector<int64_t>();
-    const auto expanded_rank = data_rank_value + axes_values.size();
-    auto axes = normalize_axes(this->description(), axes_values, expanded_rank);
-
+    auto axes = get_axes();
     NODE_VALIDATION_CHECK(this, !axes.empty(), "'axes' input is mandatory.");
     NODE_VALIDATION_CHECK(this,
                           axes.size() == set<int64_t>(begin(axes), end(axes)).size(),
@@ -65,12 +58,30 @@ void op::Unsqueeze::pre_validate_and_infer_types()
     vector<Dimension> output_shape{data_partial_shape};
     for (auto axis : axes)
     {
-        NODE_VALIDATION_CHECK(
-            this, axis <= expanded_rank, "provided 'axes' value ", axis, " is not valid.");
-
         output_shape.insert(next(begin(output_shape), axis), 1);
     }
     set_output_type(0, get_input_element_type(0), PartialShape{output_shape});
+}
+
+std::vector<uint64_t> op::Unsqueeze::get_axes()
+{
+    const auto data_rank = input_value(0).get_partial_shape().rank();
+    const auto axes_constant = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr());
+    if (data_rank.is_dynamic() || !axes_constant)
+    {
+        throw ngraph_error("get_axes requires constant axes");
+    }
+    // Get value of axes from Constant
+    auto data_rank_value = data_rank.get_length();
+    const auto axes_values = axes_constant->cast_vector<int64_t>();
+    const auto expanded_rank = data_rank_value + axes_values.size();
+    auto axes = normalize_axes(this->description(), axes_values, expanded_rank);
+    for (auto axis : axes)
+    {
+        NODE_VALIDATION_CHECK(
+            this, axis <= expanded_rank, "provided 'axes' value ", axis, " is not valid.");
+    }
+    return axes;
 }
 
 NodeVector op::Unsqueeze::decompose_op() const

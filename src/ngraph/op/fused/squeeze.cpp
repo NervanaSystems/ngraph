@@ -56,42 +56,22 @@ void op::Squeeze::pre_validate_and_infer_types()
     uint64_t data_rank = data_partial_shape.rank().get_length();
 
     // Get value of axes from Constant
-    auto axes =
-        normalize_axes(this->description(), axes_constant->cast_vector<int64_t>(), data_rank);
+    auto axes = get_axes();
 
     // Prepare set of unique axes marked to be removed from input data.
     vector<uint64_t> axes_to_squeeze(data_rank);
-    if (axes_is_empty_constant)
+    set<size_t, greater<size_t>> unique_axes(begin(axes), end(axes));
+    for (uint64_t axis : unique_axes)
     {
-        auto data_shape = data.get_shape();
-        // Default behaviour is to remove all single dimension axes.
-        for (uint64_t idx = 0; idx < data_rank; ++idx)
+        if (!data_has_dynamic_shape)
         {
-            if (data_shape.at(idx) == 1)
-            {
-                axes_to_squeeze.at(idx) = 1;
-            }
-            else
-            {
-                axes_to_squeeze.at(idx) = 0;
-            }
+            auto data_shape = data.get_shape();
+            NODE_VALIDATION_CHECK(
+                this,
+                (data_shape.at(axis) == 1),
+                "provided axis value is invalid. Only axes of size 1 may be removed.");
         }
-    }
-    else
-    {
-        set<size_t, greater<size_t>> unique_axes(begin(axes), end(axes));
-        for (uint64_t axis : unique_axes)
-        {
-            if (!data_has_dynamic_shape)
-            {
-                auto data_shape = data.get_shape();
-                NODE_VALIDATION_CHECK(
-                    this,
-                    (data_shape.at(axis) == 1),
-                    "provided axis value is invalid. Only axes of size 1 may be removed.");
-            }
-            axes_to_squeeze.at(axis) = 1;
-        }
+        axes_to_squeeze.at(axis) = 1;
     }
 
     vector<Dimension> output_data_shape;
@@ -108,6 +88,35 @@ void op::Squeeze::pre_validate_and_infer_types()
 bool ngraph::op::v0::Squeeze::visit_attributes(AttributeVisitor& visitor)
 {
     return true;
+}
+
+std::vector<uint64_t> ngraph::op::v0::Squeeze::get_axes()
+{
+    vector<uint64_t> axes;
+    auto axes_constant = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr());
+    auto data_rank = input_value(0).get_partial_shape().rank();
+    auto data_rank_val = input_value(0).get_partial_shape().rank().get_length();
+    if (data_rank.is_dynamic() || !axes_constant)
+    {
+        throw ngraph_error("get_axes requires constant axes");
+    }
+    if (axes_constant->cast_vector<int64_t>().empty())
+    {
+        auto data_shape = input_value(0).get_shape();
+        for (uint64_t idx = 0; idx < data_rank_val; ++idx)
+        {
+            if (data_shape.at(idx) == 1)
+            {
+                axes.emplace_back(idx);
+            }
+        }
+    }
+    else
+    {
+        axes =
+            normalize_axes(this->description(), axes_constant->cast_vector<int64_t>(), data_rank);
+    }
+    return axes;
 }
 
 NodeVector op::Squeeze::decompose_op() const
