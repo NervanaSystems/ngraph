@@ -2889,7 +2889,7 @@ TEST(constant_folding, constant_non_zero_2D_all_zeros)
 
     const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(new_const->get_shape(), Shape{0});
+    ASSERT_EQ(shape_size(new_const->get_shape()), 0);
 }
 
 TEST(constant_folding, constant_non_zero_3D)
