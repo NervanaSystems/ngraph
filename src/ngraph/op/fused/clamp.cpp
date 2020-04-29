@@ -54,7 +54,8 @@ namespace
 
 bool op::v0::Clamp::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    return evaluate_clamp(inputs[0], outputs[0], get_min(), get_max(), shape_size(get_output_shape(0)));
+    return evaluate_clamp(
+        inputs[0], outputs[0], get_min(), get_max(), shape_size(get_output_shape(0)));
 }
 
 op::Clamp::Clamp(const Output<Node>& data, const double min, const double max)
