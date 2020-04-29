@@ -224,32 +224,72 @@ TEST(nop_elimination, concat_elimination_single_input_dynamic)
     ASSERT_EQ(count_ops_of_type<op::v0::Concat>(f), 0);
 }
 
-TEST(nop_elimination, squeeze_unsqueeze_elimination)
+TEST(nop_elimination, squeeze_unsqueeze_overlap_elimination)
 {
-    auto generate_func = [](const Shape& shape, const std::vector<int64_t>& axes_val) {
-        auto axes = op::Constant::create<int64_t>(element::i64, Shape{axes_val.size()}, axes_val);
+    auto check_usecase = [](const PartialShape& shape,
+                            const std::vector<int64_t>& sq_axes_val,
+                            const std::vector<int64_t>& unsq_axes_val,
+                            size_t sq,
+                            size_t unsq,
+                            bool exec = true) {
+        static size_t id = 0;
+        auto casename = string("usecase #") + to_string(++id);
+        auto sq_axes =
+            op::Constant::create<int64_t>(element::i64, Shape{sq_axes_val.size()}, sq_axes_val);
+        auto unsq_axes =
+            op::Constant::create<int64_t>(element::i64, Shape{unsq_axes_val.size()}, unsq_axes_val);
         auto A = make_shared<op::Parameter>(element::f32, shape);
         auto A1 = make_shared<op::v0::Abs>(A);
-        auto B = make_shared<op::v0::Squeeze>(A1, axes);
-        auto B1 = make_shared<op::v0::Unsqueeze>(B, axes);
-        return make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
+        auto B = make_shared<op::v0::Squeeze>(A1, sq_axes);
+        auto B1 = make_shared<op::v0::Unsqueeze>(B, unsq_axes);
+        auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
+        auto optimized_f = clone_function(*baseline_f);
+
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::Validate>();
+        pass_manager.register_pass<pass::NopElimination>();
+        pass_manager.run_passes(optimized_f);
+        auto ps = baseline_f->get_results()[0]->get_output_partial_shape(0);
+        auto ps_r = optimized_f->get_results()[0]->get_output_partial_shape(0);
+        EXPECT_TRUE(ps.rank().is_static() && ps_r.rank().is_static()) << casename;
+        ASSERT_EQ(ps.rank().get_length(), ps_r.rank().get_length()) << casename;
+        ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(baseline_f), 1) << casename;
+        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(baseline_f), 1) << casename;
+        ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(optimized_f), sq) << casename;
+        ;
+        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(optimized_f), unsq) << casename;
     };
 
-    auto check_usecase = [&](const Shape& shape, const std::vector<int64_t>& axes_val) {
-        auto baseline_f = generate_func(shape, axes_val);
-        auto optimized_f = generate_func(shape, axes_val);
-        EXPECT_TRUE((compare_pass_int<pass::NopElimination, float>(baseline_f, optimized_f)));
+    // axes match - cancel both squeeze and unsqueeze
+    check_usecase(PartialShape{1, 6}, {0}, {0}, 0, 0);
+    check_usecase(PartialShape{1, 3, 2, 1}, {-1, -4}, {-1, -4}, 0, 0);
+    check_usecase(PartialShape{1, 3, 1, 2, 1}, {0, 2, 4}, {0, 2, 4}, 0, 0);
+    check_usecase(PartialShape{1, Dimension::dynamic(), 1, Dimension::dynamic(), 1},
+                  {0, 2, 4},
+                  {0, 2, 4},
+                  0,
+                  0);
+    check_usecase(PartialShape{1, Dimension::dynamic(), 1, 2, 1}, {0, 2, 4}, {0, 2, 4}, 0, 0);
+    check_usecase(PartialShape{1, 2, 1, 1, 4}, {2, 3}, {2, 3}, 0, 0);
 
-        ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(baseline_f), 1);
-        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(baseline_f), 1);
-        ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(optimized_f), 0);
-        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(optimized_f), 0);
-    };
+    // squeeze axes overlap fully
+    check_usecase(PartialShape{2, 1, 1, 4}, {1, 2}, {1, 2, 3}, 1, 1);
+    check_usecase(PartialShape{2, 1, 1, Dimension::dynamic()}, {1, 2}, {1, 2, 3}, 1, 1);
+    check_usecase(PartialShape{1, 2, 1, 1, 4}, {2, 3}, {2, 3, 5}, 1, 1);
+    check_usecase(PartialShape{1}, {0}, {0, 1, 2, 3}, 1, 1);
 
-    check_usecase(Shape{1, 6}, std::vector<int64_t>{0});
-    check_usecase(Shape{1, 3, 2, 1}, std::vector<int64_t>{0, 3});
-    check_usecase(Shape{1, 3, 1, 2, 1}, std::vector<int64_t>{0, 2, 4});
-    check_usecase(Shape{1, 3, 2, 1}, std::vector<int64_t>{-1, -4});
+    // unsqueeze axes overlap fully
+    check_usecase(PartialShape{1, 2, 1, 1, 1, 4}, {2, 3, 4}, {2}, 1, 1);
+    check_usecase(PartialShape{1, 2, 1, 1, 1, 4}, {2, 3}, {2}, 1, 1);
+    check_usecase(PartialShape{1, 2, 1, 1, 1, Dimension::dynamic()}, {2, 3}, {2}, 1, 1);
+    check_usecase(PartialShape{1, 1, 1}, {0, 1}, {1}, 1, 1);
+
+    // squeeze->unsqueeze axes overlap
+    check_usecase(PartialShape{2, 1, 1, 4}, {1, 2}, {0}, 1, 1);
+    check_usecase(PartialShape{2, 1, 1, 3, 4}, {1, 2}, {2}, 1, 1);
+    check_usecase(PartialShape{2, 1, 1, 3, Dimension::dynamic()}, {1, 2}, {2}, 1, 1);
+    check_usecase(PartialShape{2, 1, 3, 1, 4}, {1, 3}, {3}, 1, 1);
+    check_usecase(PartialShape{1, 2, 1, 3, 1, 1, 4}, {4, 5}, {1, 5}, 1, 1);
 }
 
 TEST(nop_elimination, unsqueeze_squeeze_elimination)
@@ -278,6 +318,67 @@ TEST(nop_elimination, unsqueeze_squeeze_elimination)
     check_usecase(Shape{3, 2}, std::vector<int64_t>{0, 3});
     check_usecase(Shape{3, 2}, std::vector<int64_t>{0, 2, 4});
     check_usecase(Shape{3, 2}, std::vector<int64_t>{-1, -4});
+}
+
+TEST(nop_elimination, reshape_unsqueeze_elimination)
+{
+    auto check_usecase = [](const Shape& shape,
+                            const std::vector<int64_t>& pat_val,
+                            bool zero,
+                            const std::vector<int64_t>& axes_val) {
+        auto axes = op::Constant::create<int64_t>(element::i64, Shape{axes_val.size()}, axes_val);
+        auto pat = op::Constant::create<int64_t>(element::i64, Shape{pat_val.size()}, pat_val);
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto A1 = make_shared<op::v0::Abs>(A);
+
+        auto B = make_shared<op::v1::Reshape>(A1, pat, zero);
+        auto pat2 =
+            op::Constant::create<int64_t>(element::i64, Shape{2}, std::vector<int64_t>{0, -1});
+        auto B1 = make_shared<op::v0::Unsqueeze>(B, axes);
+        auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
+        auto optimized_f = clone_function(*baseline_f);
+        EXPECT_TRUE((compare_pass_int<pass::NopElimination, float>(baseline_f, optimized_f)));
+
+        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(optimized_f), 0);
+    };
+
+    check_usecase(Shape{1, 2, 3, 2, 1}, {2, 3, 2}, false, {2, 4});
+    check_usecase(Shape{12}, {2, 3, 2}, false, {3});
+    check_usecase(Shape{3, 2, 1, 2}, {0, 2, 2}, true, {1, 4});
+    check_usecase(Shape{2, 3, 2}, {2, -1, 2}, false, {2});
+    check_usecase(Shape{2, 3, 2, 1}, {2, 3, 2}, false, {0});
+}
+TEST(nop_elimination, reshape_squeeze_elimination)
+{
+    auto check_usecase = [](const Shape& shape,
+                            const std::vector<int64_t>& pat_val,
+                            bool zero,
+                            const std::vector<int64_t>& axes_val) {
+        auto axes = op::Constant::create<int64_t>(element::i64, Shape{axes_val.size()}, axes_val);
+        auto pat = op::Constant::create<int64_t>(element::i64, Shape{pat_val.size()}, pat_val);
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto A1 = make_shared<op::v0::Abs>(A);
+
+        auto B = make_shared<op::v1::Reshape>(A1, pat, zero);
+        auto pat2 =
+            op::Constant::create<int64_t>(element::i64, Shape{2}, std::vector<int64_t>{0, -1});
+        auto B1 = make_shared<op::v0::Squeeze>(B, axes);
+        auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
+        auto optimized_f = clone_function(*baseline_f);
+        EXPECT_TRUE((compare_pass_int<pass::NopElimination, float>(baseline_f, optimized_f)));
+
+        ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(baseline_f), 1);
+        ASSERT_EQ(count_ops_of_type<op::v0::Squeeze>(optimized_f), 0);
+    };
+
+    check_usecase(Shape{1, 2, 3, 2, 1}, {2, 3, 1, 2, 1}, false, {2, 4});
+    check_usecase(Shape{12}, {2, 3, 2, 1}, false, {3});
+    check_usecase(Shape{3, 2, 1, 2}, {0, 1, 2, 2, 1}, true, {1, 4});
+    check_usecase(Shape{2, 3, 2}, {2, -1, 1, 2}, false, {2});
+    check_usecase(Shape{2, 3, 2, 1}, {1, 2, 3, 2}, false, {0});
 }
 
 TEST(nop_elimination, reshape_reshape_elimination)
