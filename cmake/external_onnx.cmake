@@ -37,6 +37,10 @@ add_definitions(-DONNX_BUILD_SHARED_LIBS=ON)
 
 set(CMAKE_CXX_FLAGS ${CMAKE_ORIGINAL_CXX_FLAGS})
 
+if(WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244")
+endif()
+
 FetchContent_Declare(
     ext_onnx
     GIT_REPOSITORY ${ONNX_GIT_REPO_URL}
