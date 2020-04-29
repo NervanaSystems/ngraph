@@ -1704,7 +1704,6 @@ protected:
 
         // Fused Ops are not supported in interpreter. They need to be decomposed before execution
         case OP_TYPEID::BatchMatMulTranspose:
-        case OP_TYPEID::Clamp:
         case OP_TYPEID::ConvolutionBias:
         case OP_TYPEID::ConvolutionBiasAdd:
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
@@ -1759,6 +1758,7 @@ protected:
         case OP_TYPEID::Unsqueeze:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::Divide:
         case OP_TYPEID::Maximum:
         case OP_TYPEID::Minimum:

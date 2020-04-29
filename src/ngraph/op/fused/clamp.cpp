@@ -18,11 +18,44 @@
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
+#include "ngraph/runtime/reference/clamp.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 constexpr NodeTypeInfo op::Clamp::type_info;
+
+namespace
+{
+    template <element::Type_t ET>
+    bool evaluate(
+        const HostTensorPtr& arg, const HostTensorPtr& out, double min, double max, size_t count)
+    {
+        runtime::reference::clamp(
+            arg->get_data_ptr<ET>(), out->get_data_ptr<ET>(), min, max, count);
+        return true;
+    }
+
+    bool evaluate_clamp(
+        const HostTensorPtr& arg, const HostTensorPtr& out, double min, double max, size_t count)
+    {
+        bool rc = true;
+        switch (arg->get_element_type())
+        {
+            TYPE_CASE(f32)(arg, out, min, max, count);
+            break;
+            TYPE_CASE(f64)(arg, out, min, max, count);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::v0::Clamp::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_clamp(inputs[0], outputs[0], get_min(), get_max(), shape_size(get_output_shape(0)));
+}
 
 op::Clamp::Clamp(const Output<Node>& data, const double min, const double max)
     : FusedOp({data})
@@ -34,6 +67,11 @@ op::Clamp::Clamp(const Output<Node>& data, const double min, const double max)
 
 void op::Clamp::pre_validate_and_infer_types()
 {
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(0) == element::f64 ||
+                              get_input_element_type(0) == element::f32,
+                          "Clamp input must be a floating point input, either f64 or f32");
+
     NODE_VALIDATION_CHECK(
         this, m_min < m_max, "The 'min' parameter needs to be less than 'max' for Clamp");
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));

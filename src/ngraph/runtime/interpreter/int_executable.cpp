@@ -63,6 +63,15 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
+    auto is_supported = [](const Node& node) {
+        if (typeid(ngraph::op::v0::Clamp) == typeid(node))
+        {
+            return true;
+        }
+
+        return false;
+    };
+
 #ifdef INTERPRETER_FORCE_SERIALIZE
     // To verify that the serializer works correctly let's just run this graph round-trip
     string ser = serialize(function);
@@ -72,10 +81,10 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
 #endif
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
-    pass_manager.register_pass<pass::FusedOpDecomposition>();
+    pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
     pass_manager.register_pass<pass::Opset0Downgrade>();
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
-    pass_manager.register_pass<pass::FusedOpDecomposition>();
+    pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
     pass_manager.run_passes(m_function);
     for (auto node : m_function->get_ordered_ops())
     {
