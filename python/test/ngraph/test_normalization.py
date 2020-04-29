@@ -19,15 +19,16 @@ import numpy as np
 import pytest
 import ngraph as ng
 from test.ngraph.util import get_runtime
+import test
 
 
 @pytest.mark.skip_on_gpu
 def test_lrn():
     input_image_shape = (2, 3, 2, 1)
     input_image = np.arange(int(np.prod(input_image_shape))).reshape(input_image_shape).astype('f')
-
+    axes = np.array([1], dtype=np.int64)
     runtime = get_runtime()
-    model = ng.lrn(ng.constant(input_image), alpha=1.0, beta=2.0, bias=1.0, size=3)
+    model = ng.lrn(ng.constant(input_image), ng.constant(axes), alpha=1.0, beta=2.0, bias=1.0, size=3)
     computation = runtime.computation(model)
     result = computation()
     assert np.allclose(result,
@@ -45,7 +46,7 @@ def test_lrn():
                                    [0.00235574]]]], dtype=np.float32))
 
     # Test LRN default parameter values
-    model = ng.lrn(ng.constant(input_image))
+    model = ng.lrn(ng.constant(input_image), ng.constant(axes))
     computation = runtime.computation(model)
     result = computation()
     assert np.allclose(result,
@@ -61,3 +62,26 @@ def test_lrn():
                                    [1.2577883]],
                                   [[1.5617375],
                                    [1.5372968]]]], dtype=np.float32))
+
+def test_lrn():
+
+    alpha = 0.0002
+    beta = 0.5
+    bias = 2.0
+    nsize = 3
+    axis = [1]
+    x = np.array([[[[ 0.31403765, -0.16793324,  1.388258,   -0.6902954 ],
+           [-0.3994045,  -0.7833511,  -0.30992958,  0.3557573 ],
+           [-0.4682631,   1.1741459,  -2.414789,   -0.42783254]],
+          [[-0.82199496, -0.03900861, -0.43670088, -0.53810567],
+           [-0.10769883,  0.75242394, -0.2507971,   1.0447186 ],
+           [-1.4777364,   0.19993274,  0.925649,   -2.282516  ]]]], dtype=np.float32)
+    excepted = np.array([[[[ 0.22205527, -0.11874668,  0.98161197, -0.4881063 ],
+                  [-0.2824208,  -0.553902,   -0.21915273,  0.2515533 ],
+                  [-0.33109877,  0.8302269,  -1.7073234,  -0.3024961 ]],
+                 [[-0.5812307,  -0.02758324, -0.30878326, -0.38049328],
+                  [-0.07615435,  0.53203356, -0.17733987,  0.7387126 ],
+                  [-1.0448756,   0.14137045,  0.6544598,  -1.6138376 ]]]], dtype=np.float32)
+    result = test.ngraph.util.run_op_node([x, axis], ng.ops.lrn, alpha, beta, bias, nsize)
+
+    assert np.allclose(result, result)

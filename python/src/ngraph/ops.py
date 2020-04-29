@@ -751,7 +751,7 @@ def relu(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: The optional ouptut node name.
     :return: The new node performing relu operation on its input element-wise.
     """
-    return Relu(node)
+    return _get_node_factory().create('Relu', [node])
 
 
 @unary_op
@@ -1696,6 +1696,7 @@ def batch_norm(eps,             # type: float
 
 @nameable_op
 def lrn(data,       # type: Node
+        axes,       # type: Node
         alpha=1,    # type: float
         beta=0.5,   # type: float
         bias=1,     # type: float
@@ -1713,7 +1714,7 @@ def lrn(data,       # type: Node
     :param name: An optional name of the output node.
     :return: The new node which performs LRN.
     """
-    return LRN(data, alpha, beta, bias, size)
+    return _get_node_factory().create('LRN', [data, axes], {'alpha': alpha, 'beta': beta, 'bias': bias, 'size':size})
 
 
 @nameable_op
