@@ -80,7 +80,6 @@ public:
         construct_constant_dyn_broadcast();
         construct_constant_pad();
         construct_constant_unary();
-        construct_constant_binary();
         construct_constant_quantize();
         construct_constant_dequantize();
         construct_constant_convert();
@@ -111,7 +110,6 @@ private:
     void construct_constant_dyn_broadcast();
     void construct_constant_pad();
     void construct_constant_unary();
-    void construct_constant_binary();
     void construct_constant_quantize();
     void construct_constant_dequantize();
     void construct_constant_convert();
