@@ -1248,7 +1248,8 @@ def clamp(data, min_value, max_value, name=None):
     :param name: Optional output node name.
     :return: The new node performing a clamp operation on its input data element-wise.
     """
-    return _get_node_factory().create('Clamp', [as_node(data)], {'min':min_value, 'max':max_value})
+    return _get_node_factory().create('Clamp', [as_node(data)],
+                                      {'min': min_value, 'max': max_value})
 
 
 # matmul ops
@@ -1714,7 +1715,8 @@ def lrn(data,       # type: Node
     :param name: An optional name of the output node.
     :return: The new node which performs LRN.
     """
-    return _get_node_factory().create('LRN', [data, axes], {'alpha': alpha, 'beta': beta, 'bias': bias, 'size':size})
+    attributes = {'alpha': alpha, 'beta': beta, 'bias': bias, 'size': size}
+    return _get_node_factory().create('LRN', [data, axes], attributes)
 
 
 @nameable_op
@@ -1743,6 +1745,58 @@ def argmin(data,    # type: Node
     :return: The new node which performs ArgMin
     """
     return ArgMin(data, axis, get_element_type(np.int32))
+
+
+@nameable_op
+def non_max_suppression(boxes,                              # type: Node
+                        scores,                             # type: Node
+                        max_output_boxes_per_class=None,    # type: Node
+                        iou_threshold=None,                 # type: Node
+                        score_threshold=None,               # type: Node
+                        box_encoding='corner',              # type: str
+                        sort_result_descending=True,        # type: bool
+                        ):
+    # type: (...) -> Node
+    """Return a node which performs NonMaxSuppression.
+
+    :param boxes: Tensor with box coordinates.
+    :param scores: Tensor with box scores.
+    :param max_output_boxes_per_class: Tensor Specifying maximum number of boxes
+                                        to be selected per class.
+    :param iou_threshold: Tensor specifying intersection over union threshold
+    :param score_threshold: Tensor specifying minimum score to consider box for the processing.
+    :param box_encoding: Format of boxes data encoding.
+    :param sort_result_descending: Flag that specifies whenever it is necessary to sort selected
+                                   boxes across batches or not.
+    :return: The new node which performs NonMaxSuppression
+    """
+    if max_output_boxes_per_class is None:
+        max_output_boxes_per_class = make_constant_node(0, np.int64)
+    if iou_threshold is None:
+        iou_threshold = make_constant_node(0, np.float32)
+    if score_threshold is None:
+        score_threshold = make_constant_node(0, np.float32)
+
+    inputs = [boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold]
+    attributes = {'box_encoding': box_encoding,
+                  'sort_result_descending': sort_result_descending}
+
+    return _get_node_factory().create('NonMaxSuppression', inputs, attributes)
+
+
+@nameable_op
+def non_zero(data,                # type: Node
+             output_type='i64',   # type: str
+             ):
+    # type: (...) -> Node
+    """Return a node which performs NonZero.
+
+    :param data: Input data.
+    :param output_type: Output tensor type.
+
+    :return: The new node which performs NonZero
+    """
+    return _get_node_factory().create('NonZero', [data], {'output_type': output_type})
 
 
 @nameable_op
