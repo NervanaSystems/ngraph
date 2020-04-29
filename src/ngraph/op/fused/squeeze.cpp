@@ -154,14 +154,14 @@ namespace
         auto data_shape = arg0->get_shape();
         int64_t data_rank = static_cast<int64_t>(data_shape.size());
         auto axes_shape = arg1->get_shape();
-        NGRAPH_CHECK(axes_shape.size() == 1, "Axes to remove must be a vector.");
+        NGRAPH_CHECK(axes_shape.size() <= 1, "Axes to remove must be a vector or empty.");
         NGRAPH_CHECK(arg1->get_element_type() == element::i64,
                      "Axis must be of type i64. Invalid type: ",
                      arg1->get_element_type());
 
         auto out_shape = data_shape;
         // Empty axes vector
-        if (axes_shape[0] == 0)
+        if (axes_shape.size() == 0 || axes_shape[0] == 0)
         {
             out_shape.erase(std::remove(out_shape.begin(), out_shape.end(), 1), out_shape.end());
         }
