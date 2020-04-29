@@ -69,25 +69,55 @@ static bool eliminate_sum(const std::shared_ptr<Node>& node)
     }
     return false;
 }
-
+/*************************
+ * Eliminates 3 types of spines with converts:
+ *
+ * 1. [ op1--> convert2(type A->B)--> ReduceMin--> convert1(type B->A)--> op2 ] to
+ *                    [ op1--> ReduceMin--> op2 ]
+ * 2. [ op3--> convert1-->  NonZero--> op4 ] to
+ *                    [ op3--> NonZero--> op4 ]
+ * 3. [ op5--> convert1--> convert2--> op6 ] to
+ *                    [op5--> convert2--> op6 ]
+ *
+ **************************/
 static bool eliminate_convert(const std::shared_ptr<Node>& node)
 {
-    bool is_out_type_agnostic = false;
-    static const std::set<NodeTypeInfo> type_agnostic{TI(opset3::NonZero), TI(opset3::ReduceMin)};
-    if (node->output(0).get_target_inputs().size() == 1)
-    {
-        auto& out = *node->output(0).get_target_inputs().begin();
-        is_out_type_agnostic = type_agnostic.count(out.get_node()->get_type_info()) == 1;
-    }
     auto convert = as_type_ptr<opset3::Convert>(node);
-    auto input = convert->input_value(0);
-    if (convert->get_convert_element_type() == input.get_element_type() || is_out_type_agnostic)
+    auto destination_type = convert->get_destination_type();
+    auto input_op = convert->input_value(0);
+
+    // case 1
+    if (is_type<opset3::ReduceMin>(input_op.get_node()))
     {
-        if (is_out_type_agnostic && is_type<opset3::Convert>(input.get_node()))
+        auto convert_2 = input_op.get_node()->input_value(0).get_node();
+        if (is_type<opset3::Convert>(convert_2) && convert_2->get_users().size() == 1 &&
+            destination_type == convert_2->get_input_element_type(0))
         {
-            input = input.get_node()->input_value(0);
+            // replace ReplaceMin as convert's output
+            if (replace_output_update_name(convert->output(0), input_op))
+            {
+                cout << " removed converts " << endl;
+                input_op = convert_2->input_value(0);
+                // replace input to convert_2 as convert_2's output
+                return replace_output_update_name(convert_2->output(0), input_op);
+            }
         }
-        return replace_output_update_name(node->output(0), input);
+    }
+    bool is_out_type_agnostic = false;
+    static const std::set<NodeTypeInfo> type_agnostic{TI(opset3::NonZero)};
+    // case 2 & 3
+    if (convert->get_users().size() == 1)
+    {
+        is_out_type_agnostic = type_agnostic.count(convert->get_users()[0]->get_type_info()) == 1;
+    }
+
+    if (destination_type == input_op.get_element_type() || is_out_type_agnostic)
+    {
+        if (is_out_type_agnostic && is_type<opset3::Convert>(input_op.get_node()))
+        {
+            input_op = input_op.get_node()->input_value(0);
+        }
+        return replace_output_update_name(convert->output(0), input_op);
     }
     return false;
 }
