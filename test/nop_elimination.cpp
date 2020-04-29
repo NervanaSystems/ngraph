@@ -110,6 +110,48 @@ TEST(nop_elimination, convert_type_ReduceMin)
     pass_manager.run_passes(func);
 
     ASSERT_EQ(count_ops_of_type<op::v0::Convert>(func), 0);
+
+    func = make_shared<Function>(make_shared<op::v3::NonZero>(convert_2), ParameterVector{param});
+
+    pass::Manager pass_manager_2;
+    pass_manager_2.register_pass<pass::Validate>();
+    pass_manager_2.register_pass<pass::NopElimination>();
+    pass_manager_2.run_passes(func);
+
+    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(func), 0);
+}
+
+TEST(nop_elimination, convert_type_ReduceMin_negative)
+{
+    auto param = make_shared<op::Parameter>(element::boolean, Shape{3, 2, 4});
+    auto shape_of = make_shared<op::v0::ShapeOf>(param);
+    auto concat = make_shared<op::v0::Concat>(NodeVector{shape_of}, 0);
+    auto convert_1 = make_shared<op::v0::Convert>(concat, element::f32);
+    Shape axes_shape{1};
+    vector<int32_t> values_axes{0};
+    auto constant_axes = op::Constant::create(element::i64, axes_shape, values_axes);
+    auto reduce_min = make_shared<op::v1::ReduceMin>(convert_1, constant_axes);
+    auto convert_2 = make_shared<op::v0::Convert>(reduce_min, element::i32);
+    auto func =
+        make_shared<Function>(make_shared<op::v3::NonZero>(convert_2), ParameterVector{param});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Validate>();
+    pass_manager.register_pass<pass::NopElimination>();
+    pass_manager.run_passes(func);
+
+    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(func), 1);
+
+    auto convert_2nd_output = make_shared<op::v1::ReduceMin>(convert_1, constant_axes);
+    func =
+        make_shared<Function>(NodeVector{make_shared<op::v0::Abs>(convert_2), convert_2nd_output},
+                              ParameterVector{param});
+    pass::Manager pass_manager_2;
+    pass_manager_2.register_pass<pass::Validate>();
+    pass_manager_2.register_pass<pass::NopElimination>();
+    pass_manager_2.run_passes(func);
+
+    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(func), 2);
 }
 
 TEST(nop_elimination, eliminate_slice)

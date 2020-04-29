@@ -96,7 +96,6 @@ static bool eliminate_convert(const std::shared_ptr<Node>& node)
             // replace ReplaceMin as convert's output
             if (replace_output_update_name(convert->output(0), input_op))
             {
-                cout << " removed converts " << endl;
                 input_op = convert_2->input_value(0);
                 // replace input to convert_2 as convert_2's output
                 return replace_output_update_name(convert_2->output(0), input_op);
