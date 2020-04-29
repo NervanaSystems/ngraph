@@ -99,7 +99,9 @@ namespace ngraph
         protected:
             std::shared_ptr<op::Parameter> get_ng_parameter() const
             {
-                return std::make_shared<op::Parameter>(get_element_type(), get_shape());
+                auto parameter = std::make_shared<op::Parameter>(get_element_type(), get_shape());
+                parameter->set_friendly_name(get_name());
+                return parameter;
             }
 
             std::shared_ptr<op::Constant> get_ng_constant(const Tensor& tensor) const

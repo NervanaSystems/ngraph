@@ -53,6 +53,9 @@ namespace ngraph
 
         // Parameters for the Reverse
         AxisSet reverse_axes;
+
+        bool operator==(const SlicePlan& other) const;
+        bool operator!=(const SlicePlan& other) const;
     };
 
     SlicePlan NGRAPH_API make_slice_plan(const Shape& input_shape,

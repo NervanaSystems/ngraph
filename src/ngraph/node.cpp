@@ -24,6 +24,7 @@
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -38,20 +39,6 @@ atomic<size_t> Node::m_next_instance_id(0);
 Node::Node(size_t output_size)
     : Node()
 {
-    set_output_size(output_size);
-}
-
-Node::Node(const std::string& node_type, const NodeVector& arguments, size_t output_size)
-    : m_node_type(node_type)
-{
-    set_arguments(arguments);
-    set_output_size(output_size);
-}
-
-Node::Node(const NodeVector& arguments, size_t output_size)
-    : Node()
-{
-    set_arguments(arguments);
     set_output_size(output_size);
 }
 
@@ -532,6 +519,11 @@ std::shared_ptr<Node> Node::get_input_node_shared_ptr(size_t index) const
     return m_inputs[index].get_output().get_node();
 }
 
+Output<Node> Node::get_input_source_output(size_t i) const
+{
+    return input(i).get_source_output();
+}
+
 NodeVector Node::get_arguments() const
 {
     NodeVector result;
@@ -738,6 +730,18 @@ const std::vector<descriptor::Input*>& Node::get_output_inputs(size_t i) const
     NGRAPH_CHECK(
         i < m_outputs.size(), "index '", i, "' out of range in get_output_inputs(size_t i)");
     return m_outputs[i].get_inputs();
+}
+
+std::set<Input<Node>> Node::get_output_target_inputs(size_t i) const
+{
+    std::set<Input<Node>> result;
+
+    for (auto& input : m_outputs.at(i).get_inputs())
+    {
+        result.emplace(input->get_raw_pointer_node(), input->get_index());
+    }
+
+    return result;
 }
 
 descriptor::Tensor& Node::get_output_tensor(size_t i) const
@@ -1103,4 +1107,44 @@ vector<Output<const Node>> Node::outputs() const
     }
 
     return result;
+}
+
+bool Node::evaluate(const HostTensorVector& output_values, const HostTensorVector& input_values)
+{
+    return false;
+}
+
+bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_values)
+{
+    // If all the inputs are constants, try to evaluate the outputs
+    HostTensorVector input_tensors;
+    for (auto input : input_values)
+    {
+        if (auto constant = as_type_ptr<op::v0::Constant>(input.get_node_shared_ptr()))
+        {
+            auto host_tensor = make_shared<runtime::HostTensor>(constant);
+            input_tensors.push_back(host_tensor);
+        }
+        else
+        {
+            return false;
+        }
+    }
+    HostTensorVector output_tensors;
+    OutputVector output_constants;
+    for (auto output : outputs())
+    {
+        auto tensor =
+            make_shared<HostTensor>(output.get_element_type(), output.get_partial_shape());
+        output_tensors.push_back(tensor);
+    }
+    if (evaluate(output_tensors, input_tensors))
+    {
+        for (size_t i = 0; i < output_tensors.size(); ++i)
+        {
+            output_values[i] = make_shared<op::Constant>(output_tensors[i]);
+        }
+        return true;
+    }
+    return false;
 }

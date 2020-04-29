@@ -33,7 +33,6 @@
 #include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
-#include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/all.hpp"
 #include "ngraph/runtime/reference/allreduce.hpp"
 #include "ngraph/runtime/reference/and.hpp"
@@ -58,7 +57,6 @@
 #include "ngraph/runtime/reference/cosh.hpp"
 #include "ngraph/runtime/reference/cum_sum.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
-#include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/runtime/reference/embedding_lookup.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
@@ -76,17 +74,13 @@
 #include "ngraph/runtime/reference/lrn.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
-#include "ngraph/runtime/reference/maximum.hpp"
 #include "ngraph/runtime/reference/min.hpp"
-#include "ngraph/runtime/reference/minimum.hpp"
-#include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
 #include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/not_equal.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
 #include "ngraph/runtime/reference/or.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
-#include "ngraph/runtime/reference/power.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
 #include "ngraph/runtime/reference/random_uniform.hpp"
@@ -102,7 +96,6 @@
 #include "ngraph/runtime/reference/scatter_nd_add.hpp"
 #include "ngraph/runtime/reference/select.hpp"
 #include "ngraph/runtime/reference/send.hpp"
-#include "ngraph/runtime/reference/shape_of.hpp"
 #include "ngraph/runtime/reference/sigmoid.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
 #include "ngraph/runtime/reference/sin.hpp"
@@ -110,7 +103,6 @@
 #include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/runtime/reference/softmax.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
-#include "ngraph/runtime/reference/subtract.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
@@ -224,17 +216,6 @@ protected:
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::acos<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
-            break;
-        }
-        case OP_TYPEID::Add:
-        {
-            const op::Add* add = static_cast<const op::Add*>(&node);
-            reference::add<T>(args[0]->get_data_ptr<const T>(),
-                              args[1]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_input_shape(1),
-                              add->get_autob());
             break;
         }
         case OP_TYPEID::All:
@@ -708,11 +689,6 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::CropAndResize:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
         case OP_TYPEID::Dequantize:
         {
             const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
@@ -747,18 +723,6 @@ protected:
 
             break;
         }
-        case OP_TYPEID::Divide:
-        {
-            const op::Divide* divop = static_cast<const op::Divide*>(&node);
-            reference::divide<T>(args[0]->get_data_ptr<const T>(),
-                                 args[1]->get_data_ptr<const T>(),
-                                 out[0]->get_data_ptr<T>(),
-                                 node.get_input_shape(0),
-                                 node.get_input_shape(1),
-                                 divop->get_autob(),
-                                 divop->is_pythondiv());
-            break;
-        }
         case OP_TYPEID::Dot:
         {
             const op::Dot* dot = static_cast<const op::Dot*>(&node);
@@ -772,16 +736,11 @@ protected:
                            dot->get_reduction_axes_count());
             break;
         }
-        case OP_TYPEID::DynSlice:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
         case OP_TYPEID::EmbeddingLookup:
         {
             const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
-            auto type = embed->get_argument(0)->get_element_type();
-            size_t element_count = shape_size(embed->get_argument(0)->get_shape());
+            auto type = embed->input(0).get_element_type();
+            size_t element_count = shape_size(embed->get_input_shape(0));
 
             if (type == element::f32)
             {
@@ -1052,17 +1011,6 @@ protected:
                               max->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::Maximum:
-        {
-            auto maximum = static_cast<const op::Maximum*>(&node);
-            reference::maximum<T>(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  maximum->get_autob());
-            break;
-        }
         case OP_TYPEID::MaxPool:
         {
             const op::MaxPool* max_pool = static_cast<const op::MaxPool*>(&node);
@@ -1101,28 +1049,6 @@ protected:
                               node.get_input_shape(0),
                               node.get_output_shape(0),
                               min->get_reduction_axes());
-            break;
-        }
-        case OP_TYPEID::Minimum:
-        {
-            auto minimum = static_cast<const op::Minimum*>(&node);
-            reference::minimum<T>(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  minimum->get_autob());
-            break;
-        }
-        case OP_TYPEID::Multiply:
-        {
-            auto multiply = static_cast<const op::Multiply*>(&node);
-            reference::multiply<T>(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   multiply->get_autob());
             break;
         }
         case OP_TYPEID::Negative:
@@ -1173,11 +1099,6 @@ protected:
             break;
         }
         case OP_TYPEID::Parameter: break;
-        case OP_TYPEID::Passthrough:
-        {
-            const op::Passthrough* passthrough = static_cast<const op::Passthrough*>(&node);
-            throw unsupported_op{"Unsupported operation language: " + passthrough->language()};
-        }
         case OP_TYPEID::Pad:
         {
             const op::Pad* pad = static_cast<const op::Pad*>(&node);
@@ -1190,17 +1111,6 @@ protected:
                            pad->get_padding_below(),
                            pad->get_padding_above(),
                            pad->get_pad_mode());
-            break;
-        }
-        case OP_TYPEID::Power:
-        {
-            auto power = static_cast<const op::Power*>(&node);
-            reference::power<T>(args[0]->get_data_ptr<const T>(),
-                                args[1]->get_data_ptr<const T>(),
-                                out[0]->get_data_ptr<T>(),
-                                node.get_input_shape(0),
-                                node.get_input_shape(1),
-                                power->get_autob());
             break;
         }
         case OP_TYPEID::Product:
@@ -1507,11 +1417,6 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::Range:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
-            break;
-        }
         case OP_TYPEID::Relu:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1549,14 +1454,6 @@ protected:
                                node.get_input_shape(0),
                                reshape->get_input_order(),
                                node.get_output_shape(0));
-            break;
-        }
-        case OP_TYPEID::Result:
-        {
-            const op::Result* res = static_cast<const op::Result*>(&node);
-            reference::result(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              shape_size(res->get_shape()));
             break;
         }
         case OP_TYPEID::Reverse:
@@ -1680,11 +1577,6 @@ protected:
             memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
             break;
         }
-        case OP_TYPEID::ShapeOf:
-        {
-            reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint64_t>());
-            break;
-        }
         case OP_TYPEID::Sigmoid:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1734,33 +1626,11 @@ protected:
                                 node.get_output_shape(0));
             break;
         }
-        case OP_TYPEID::Softmax:
-        {
-            const op::Softmax* softmax = static_cast<const op::Softmax*>(&node);
-            reference::softmax<T>(args[0]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_output_shape(0),
-                                  softmax->get_axes());
-            break;
-        }
         case OP_TYPEID::Sqrt:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::sqrt<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
-            break;
-        }
-        case OP_TYPEID::StopGradient: { throw unsupported_op("Unsupported op 'StopGradient'");
-        }
-        case OP_TYPEID::Subtract:
-        {
-            auto subtract = static_cast<const op::Subtract*>(&node);
-            reference::subtract<T>(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   subtract->get_autob());
             break;
         }
         case OP_TYPEID::Sum:
@@ -1833,41 +1703,42 @@ protected:
         }
 
         // Fused Ops are not supported in interpreter. They need to be decomposed before execution
-        case OP_TYPEID::Clamp:
-        case OP_TYPEID::MatMul:
-        case OP_TYPEID::Split:
-        case OP_TYPEID::DynBroadcast:
-        case OP_TYPEID::DynPad:
-        case OP_TYPEID::Tile:
-        case OP_TYPEID::DynReplaceSlice:
         case OP_TYPEID::BatchMatMulTranspose:
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::ConvolutionBias:
         case OP_TYPEID::ConvolutionBiasAdd:
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
+        case OP_TYPEID::CropAndResize:
         case OP_TYPEID::CrossEntropy:
         case OP_TYPEID::CrossEntropyBackprop:
         case OP_TYPEID::DepthToSpace:
+        case OP_TYPEID::DynBroadcast:
+        case OP_TYPEID::DynPad:
+        case OP_TYPEID::DynReplaceSlice:
+        case OP_TYPEID::DynSlice:
         case OP_TYPEID::Elu:
         case OP_TYPEID::FakeQuantize:
-        case OP_TYPEID::GroupConvolution:
-        case OP_TYPEID::GroupConvolutionBackpropData:
-        case OP_TYPEID::GroupConvolutionBackpropFilters:
-        case OP_TYPEID::GRN:
-        case OP_TYPEID::GRUCell:
         case OP_TYPEID::Gelu:
         case OP_TYPEID::GeluBackpropFactor:
         case OP_TYPEID::Gemm:
+        case OP_TYPEID::GRN:
+        case OP_TYPEID::GroupConvolution:
+        case OP_TYPEID::GroupConvolutionBackpropData:
+        case OP_TYPEID::GroupConvolutionBackpropFilters:
+        case OP_TYPEID::GRUCell:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::Interpolate:
         case OP_TYPEID::LayerNorm:
         case OP_TYPEID::LayerNormBackprop:
         case OP_TYPEID::LSTMCell:
         case OP_TYPEID::LSTMSequence:
+        case OP_TYPEID::MatMul:
         case OP_TYPEID::MVN:
         case OP_TYPEID::NormalizeL2:
-        case OP_TYPEID::PRelu:
         case OP_TYPEID::PartialSlice:
         case OP_TYPEID::PartialSliceBackprop:
+        case OP_TYPEID::Passthrough:
+        case OP_TYPEID::PRelu:
         case OP_TYPEID::RNNCell:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ScaleShift:
@@ -1877,14 +1748,28 @@ protected:
         case OP_TYPEID::SoftmaxCrossEntropy:
         case OP_TYPEID::SoftmaxCrossEntropyBackprop:
         case OP_TYPEID::SpaceToDepth:
+        case OP_TYPEID::Split:
         case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::Stack:
-        case OP_TYPEID::Unsqueeze:
-        // Tensor Iterator not yet supported
+        case OP_TYPEID::StopGradient:
         case OP_TYPEID::TensorIterator:
+        case OP_TYPEID::Tile:
         case OP_TYPEID::UnknownOp:
+        case OP_TYPEID::Unsqueeze:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
+        case OP_TYPEID::Add:
+        case OP_TYPEID::Divide:
+        case OP_TYPEID::Maximum:
+        case OP_TYPEID::Minimum:
+        case OP_TYPEID::Multiply:
+        case OP_TYPEID::Power:
+        case OP_TYPEID::Range:
+        case OP_TYPEID::Result:
+        case OP_TYPEID::ShapeOf:
+        case OP_TYPEID::ShapeOf_v3:
+        case OP_TYPEID::Softmax:
+        case OP_TYPEID::Subtract: NGRAPH_CHECK(false, "Op not handled by evaluator method:", node);
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif

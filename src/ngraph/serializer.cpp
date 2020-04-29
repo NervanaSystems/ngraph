@@ -19,8 +19,10 @@
 #include <queue>
 #include <stack>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/env_util.hpp"
+#include "ngraph/factory.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -34,6 +36,11 @@ using namespace ngraph;
 using namespace std;
 using json = nlohmann::json;
 using const_data_callback_t = shared_ptr<Node>(const string&, const element::Type&, const Shape&);
+
+static json write_element_type(const ngraph::element::Type& n);
+static element::Type read_element_type(json j);
+static json write_partial_shape(const PartialShape& s);
+static PartialShape read_partial_shape(json j);
 
 static bool s_serialize_output_shapes_enabled = getenv_bool("NGRAPH_SERIALIZER_OUTPUT_SHAPES");
 
@@ -98,6 +105,60 @@ T get_or_default(json j, const std::string& key, const T& default_value)
     return has_key(j, key) ? j.at(key).get<T>() : default_value;
 }
 
+class JSONAttributeSerializer : public AttributeVisitor
+{
+public:
+    JSONAttributeSerializer(json& j)
+        : m_json(j)
+    {
+    }
+
+    void on_attribute(const std::string& name, std::string& value) override
+    {
+        m_json[name] = value;
+    }
+    void on_attribute(const std::string& name, bool& value) override { m_json[name] = value; }
+    void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override
+    {
+        if (auto a = as_type<AttributeAdapter<element::Type>>(&adapter))
+        {
+            m_json[name] = write_element_type(static_cast<element::Type&>(*a));
+        }
+        else if (auto a = as_type<AttributeAdapter<PartialShape>>(&adapter))
+        {
+            m_json[name] = write_partial_shape(static_cast<PartialShape&>(*a));
+        }
+    }
+    void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter) override
+    {
+        m_json[name] = adapter.get();
+    }
+    void on_adapter(const std::string& name, ValueAccessor<int64_t>& adapter) override
+    {
+        m_json[name] = adapter.get();
+    }
+    void on_adapter(const std::string& name, ValueAccessor<double>& adapter) override
+    {
+        m_json[name] = adapter.get();
+    }
+    void on_adapter(const std::string& name, ValueAccessor<std::vector<int64_t>>& adapter) override
+    {
+        m_json[name] = adapter.get();
+    }
+    void on_adapter(const std::string& name, ValueAccessor<std::vector<float>>& adapter) override
+    {
+        m_json[name] = adapter.get();
+    }
+    void on_adapter(const std::string& name,
+                    ValueAccessor<std::vector<std::string>>& adapter) override
+    {
+        m_json[name] = adapter.get();
+    }
+
+protected:
+    json& m_json;
+};
+
 class JSONSerializer
 {
 public:
@@ -128,6 +189,91 @@ protected:
     bool m_serialize_output_shapes{false};
     bool m_binary_constant_data{false};
     json m_json_nodes;
+};
+
+class JSONAttributeDeserializer : public AttributeVisitor
+{
+public:
+    JSONAttributeDeserializer(json& j)
+        : m_json(j)
+    {
+    }
+    void on_attribute(const std::string& name, std::string& value) override
+    {
+        if (has_key(m_json, name))
+        {
+            value = m_json.at(name).get<std::string>();
+        }
+    }
+    void on_attribute(const std::string& name, bool& value) override
+    {
+        if (has_key(m_json, name))
+        {
+            value = m_json.at(name).get<bool>();
+        }
+    }
+    void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            if (auto a = as_type<AttributeAdapter<element::Type>>(&adapter))
+            {
+                static_cast<element::Type&>(*a) =
+                    read_element_type(m_json.at(name).get<std::string>());
+            }
+            else if (auto a = as_type<AttributeAdapter<PartialShape>>(&adapter))
+            {
+                static_cast<PartialShape&>(*a) = read_partial_shape(m_json.at(name));
+            }
+        }
+    }
+    void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<std::string>());
+        }
+    }
+    void on_adapter(const std::string& name, ValueAccessor<int64_t>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<int64_t>());
+        }
+    }
+    void on_adapter(const std::string& name, ValueAccessor<double>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<double>());
+        }
+    }
+
+    void on_adapter(const std::string& name, ValueAccessor<std::vector<int64_t>>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<std::vector<int64_t>>());
+        }
+    }
+    void on_adapter(const std::string& name, ValueAccessor<std::vector<float>>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<std::vector<float>>());
+        }
+    }
+    void on_adapter(const std::string& name,
+                    ValueAccessor<std::vector<std::string>>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<std::vector<std::string>>());
+        }
+    }
+
+protected:
+    json& m_json;
 };
 
 class JSONDeserializer
@@ -179,7 +325,7 @@ static Dimension read_dimension(json j)
     }
     else
     {
-        return Dimension(static_cast<size_t>(j));
+        return Dimension(static_cast<int64_t>(j));
     }
 }
 
@@ -252,13 +398,6 @@ static op::PadMode read_pad_mode(json node_js)
 {
     return has_key(node_js, "pad_mode") ? static_cast<op::PadMode>(node_js.at("pad_mode"))
                                         : op::PadMode::CONSTANT;
-}
-
-static op::RoundingType read_rounding_type(json node_js)
-{
-    return has_key(node_js, "rounding_type")
-               ? static_cast<op::RoundingType>(node_js.at("rounding_type"))
-               : op::RoundingType::FLOOR;
 }
 
 static json write_element_type(const ngraph::element::Type& n)
@@ -762,30 +901,57 @@ struct OutputVectorHelper
 
 shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 {
+    auto& factory_registry = FactoryRegistry<Node>::get();
     shared_ptr<Node> node;
     try
     {
         string node_op = node_js.at("op").get<string>();
         size_t op_version = get_value<size_t>(node_js, "op_version");
-        NodeTypeInfo type_info{node_op.c_str(), op_version};
-        string type_info_name;
-        if (has_key(node_js, "type_info"))
-        {
-            json jtype_info = node_js["type_info"];
-            type_info_name = jtype_info.at("name").get<string>();
-            type_info.name = type_info_name.c_str();
-            type_info.version = jtype_info.at("version").get<uint64_t>();
-        }
+        Node::type_info_t type_info{node_op.c_str(), op_version};
         string node_name = node_js.at("name").get<string>();
         string friendly_name = get_value<string>(node_js, "friendly_name");
         vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
         OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
+        if (has_key(node_js, "attribute_visitor"))
+        {
+            if (factory_registry.has_factory(type_info))
+            {
+                node = shared_ptr<Node>(factory_registry.create(type_info));
+                JSONAttributeDeserializer visitor(node_js);
+                node->set_arguments(static_cast<OutputVector>(args));
+                node->visit_attributes(visitor);
+                for (auto& control_dep : control_deps_inputs)
+                {
+                    node->add_control_dependency(deserialize_node_reference(control_dep));
+                }
+
+                if (!friendly_name.empty())
+                {
+                    node->set_friendly_name(friendly_name);
+                }
+                else
+                {
+                    node->set_friendly_name(node_name);
+                }
+                if (ngraph::get_provenance_enabled())
+                {
+                    std::vector<json> prov_js = node_js.at("provenance_tags");
+                    for (auto prov_tag : prov_js)
+                    {
+                        node->add_provenance_tag(prov_tag);
+                    }
+                }
+                node->constructor_validate_and_infer_types();
+                m_node_map[node_name] = node;
+                return node;
+            }
+        }
 
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
+// #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
 
@@ -805,14 +971,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             node = make_shared<op::v0::Add>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-            break;
-        }
-        case OP_TYPEID::Add_v1:
-        {
-            node = make_shared<op::v1::Add>(
-                args[0],
-                args[1],
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
             break;
         }
         case OP_TYPEID::All:
@@ -889,26 +1047,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                 ceil_mode);
             break;
         }
-        case OP_TYPEID::AvgPool_v1:
-        {
-            auto kernel = node_js.at("kernel").get<vector<size_t>>();
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
-            auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
-            auto exclude_pad = node_js.at("exclude_pad").get<bool>();
-            op::PadType pad_type = read_pad_type(node_js);
-            op::RoundingType rounding_type = read_rounding_type(node_js);
-            node = make_shared<op::v1::AvgPool>(args[0],
-                                                strides,
-                                                pads_begin,
-                                                pads_end,
-                                                kernel,
-                                                exclude_pad,
-                                                rounding_type,
-                                                pad_type);
-
-            break;
-        }
         case OP_TYPEID::AvgPoolBackprop:
         {
             auto forward_arg_shape = node_js.at("forward_arg_shape").get<vector<size_t>>();
@@ -926,19 +1064,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                         padding_below,
                                                         padding_above,
                                                         include_padding_in_avg_computation);
-            break;
-        }
-
-        case OP_TYPEID::AvgPoolBackprop_v1:
-        {
-            auto kernel = node_js.at("kernel").get<vector<size_t>>();
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
-            auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
-            auto exclude_pad = get_or_default<bool>(node_js, "exclude_pad", true);
-            node = make_shared<op::v1::AvgPoolBackprop>(
-                args[0], args[1], strides, pads_begin, pads_end, kernel, exclude_pad);
-
             break;
         }
         case OP_TYPEID::BatchMatMul:
@@ -977,43 +1102,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[2], args[0], args[1], args[3], args[4], args[5], epsilon);
             break;
         }
-        case OP_TYPEID::BatchToSpace_v1:
-        {
-            node = make_shared<op::v1::BatchToSpace>(args[0], args[1], args[2], args[3]);
-            break;
-        }
-        case OP_TYPEID::BinaryConvolution_v1:
-        {
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            auto dilations = node_js.at("dilations").get<vector<size_t>>();
-            auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
-            auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
-            auto mode = node_js.at("mode").get<op::v1::BinaryConvolution::BinaryConvolutionMode>();
-            auto pad_value = node_js.at("pad_value").get<float>();
-            op::PadType auto_pad = read_pad_type(node_js);
-
-            node = make_shared<op::v1::BinaryConvolution>(args[0],
-                                                          args[1],
-                                                          strides,
-                                                          pads_begin,
-                                                          pads_end,
-                                                          dilations,
-                                                          mode,
-                                                          pad_value,
-                                                          auto_pad);
-            break;
-        }
         case OP_TYPEID::Broadcast:
         {
             auto shape = node_js.at("shape").get<vector<size_t>>();
             auto axes = deserialize_axis_set(node_js.at("axes"));
             node = make_shared<op::v0::Broadcast>(args[0], shape, axes);
-            break;
-        }
-        case OP_TYPEID::Broadcast_v1:
-        {
-            node = make_shared<op::v1::Broadcast>(
-                args[0], args[1], args[2], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::BroadcastDistributed:
@@ -1059,11 +1152,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             auto target_type = read_element_type(node_js.at("target_type"));
             node = make_shared<op::Convert>(args[0], target_type);
-            break;
-        }
-        case OP_TYPEID::ConvertLike_v1:
-        {
-            node = make_shared<op::v1::ConvertLike>(args[0], args[1]);
             break;
         }
         case OP_TYPEID::Convolution:
@@ -1112,21 +1200,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
-
-        case OP_TYPEID::Convolution_v1:
-        {
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            auto dilations = node_js.at("dilations").get<vector<size_t>>();
-            auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
-            auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
-
-            op::PadType auto_pad = read_pad_type(node_js);
-
-            node = make_shared<op::v1::Convolution>(
-                args[0], args[1], strides, pads_begin, pads_end, dilations, auto_pad);
-
-            break;
-        }
         case OP_TYPEID::ConvolutionBackpropData:
         {
             auto data_batch_shape = node_js.at("data_batch_shape").get<vector<size_t>>();
@@ -1150,83 +1223,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                                 data_dilation_strides_forward);
             break;
         }
-        case OP_TYPEID::ConvolutionBackpropData_v1:
-        {
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            auto dilations = node_js.at("dilations").get<vector<size_t>>();
-            auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
-            auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
-            auto output_padding = node_js.at("output_padding").get<vector<std::ptrdiff_t>>();
-            if (args.size() == 3)
-            {
-                node = make_shared<op::v1::ConvolutionBackpropData>(args[0],
-                                                                    args[1],
-                                                                    args[2],
-                                                                    strides,
-                                                                    pads_begin,
-                                                                    pads_end,
-                                                                    dilations,
-                                                                    read_pad_type(node_js),
-                                                                    output_padding);
-            }
-            else
-            {
-                node = make_shared<op::v1::ConvolutionBackpropData>(args[0],
-                                                                    args[1],
-                                                                    strides,
-                                                                    pads_begin,
-                                                                    pads_end,
-                                                                    dilations,
-                                                                    read_pad_type(node_js),
-                                                                    output_padding);
-            }
-            break;
-        }
-        case OP_TYPEID::GroupConvolution_v1:
-        {
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            auto dilations = node_js.at("dilations").get<vector<size_t>>();
-            auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
-            auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
-
-            op::PadType auto_pad = read_pad_type(node_js);
-
-            node = make_shared<op::v1::GroupConvolution>(
-                args[0], args[1], strides, pads_begin, pads_end, dilations, auto_pad);
-            break;
-        }
-        case OP_TYPEID::GroupConvolutionBackpropData_v1:
-        {
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            auto dilations = node_js.at("dilations").get<vector<size_t>>();
-            auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
-            auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
-            auto output_padding = node_js.at("output_padding").get<vector<std::ptrdiff_t>>();
-            if (args.size() == 3)
-            {
-                node = make_shared<op::v1::GroupConvolutionBackpropData>(args[0],
-                                                                         args[1],
-                                                                         args[2],
-                                                                         strides,
-                                                                         pads_begin,
-                                                                         pads_end,
-                                                                         dilations,
-                                                                         read_pad_type(node_js),
-                                                                         output_padding);
-            }
-            else
-            {
-                node = make_shared<op::v1::GroupConvolutionBackpropData>(args[0],
-                                                                         args[1],
-                                                                         strides,
-                                                                         pads_begin,
-                                                                         pads_end,
-                                                                         dilations,
-                                                                         read_pad_type(node_js),
-                                                                         output_padding);
-            }
-            break;
-        }
         case OP_TYPEID::ConvolutionBackpropFilters:
         {
             auto filters_shape = node_js.at("filters_shape").get<vector<size_t>>();
@@ -1248,18 +1244,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                                    padding_below_forward,
                                                                    padding_above_forward,
                                                                    data_dilation_strides_forward);
-            break;
-        }
-        case OP_TYPEID::ConvolutionBackpropFilters_v1:
-        {
-            auto filters_shape = node_js.at("filters_shape").get<vector<size_t>>();
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            auto dilations = node_js.at("dilations").get<vector<size_t>>();
-            auto pads_begin = node_js.at("pads_begin").get<vector<std::ptrdiff_t>>();
-            auto pads_end = node_js.at("pads_end").get<vector<std::ptrdiff_t>>();
-            node = make_shared<op::v1::ConvolutionBackpropFilters>(
-                args[0], args[1], args[2], strides, dilations, pads_begin, pads_end);
-
             break;
         }
         case OP_TYPEID::ConvolutionBias:
@@ -1397,46 +1381,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                               deformable_group);
             break;
         }
-        case OP_TYPEID::DeformablePSROIPooling_v1:
-        {
-            const auto output_dim = node_js.at("output_dim").get<int64_t>();
-            const auto spatial_scale = node_js.at("spatial_scale").get<float>();
-            const auto group_size = node_js.at("group_size").get<int64_t>();
-            const auto mode = node_js.at("mode").get<std::string>();
-            const auto spatial_bins_x = node_js.at("spatial_bins_x").get<int64_t>();
-            const auto spatial_bins_y = node_js.at("spatial_bins_y").get<int64_t>();
-            const auto trans_std = node_js.at("trans_std").get<float>();
-            const auto part_size = node_js.at("part_size").get<int64_t>();
-
-            if (args.size() == 2)
-            {
-                node = make_shared<op::v1::DeformablePSROIPooling>(args[0],
-                                                                   args[1],
-                                                                   output_dim,
-                                                                   spatial_scale,
-                                                                   group_size,
-                                                                   mode,
-                                                                   spatial_bins_x,
-                                                                   spatial_bins_y,
-                                                                   trans_std,
-                                                                   part_size);
-            }
-            else
-            {
-                node = make_shared<op::v1::DeformablePSROIPooling>(args[0],
-                                                                   args[1],
-                                                                   args[2],
-                                                                   output_dim,
-                                                                   spatial_scale,
-                                                                   group_size,
-                                                                   mode,
-                                                                   spatial_bins_x,
-                                                                   spatial_bins_y,
-                                                                   trans_std,
-                                                                   part_size);
-            }
-            break;
-        }
         case OP_TYPEID::DepthToSpace:
         {
             auto mode = node_js.at("mode").get<op::DepthToSpace::DepthToSpaceMode>();
@@ -1458,16 +1402,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             bool pythondiv = get_or_default(node_js, "pythondiv", true);
             node = make_shared<op::v0::Divide>(
                 args[0], args[1], pythondiv, read_auto_broadcast(node_js, "auto_broadcast"));
-            break;
-        }
-        case OP_TYPEID::Divide_v1:
-        {
-            bool pythondiv = get_or_default(node_js, "pythondiv", true);
-            node = make_shared<op::v1::Divide>(
-                args[0],
-                args[1],
-                pythondiv,
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
             break;
         }
         case OP_TYPEID::Dot:
@@ -1513,12 +1447,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                     ellipsis_mask);
             break;
         }
-        case OP_TYPEID::Reshape_v1:
-        {
-            const bool special_zero = node_js.at("special_zero").get<bool>();
-            node = make_shared<op::v1::Reshape>(args[0], args[1], special_zero);
-            break;
-        }
         case OP_TYPEID::DynSlice:
         {
             auto lower_bounds_mask = node_js.at("lower_bounds_mask").get<set<size_t>>();
@@ -1554,14 +1482,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
-        case OP_TYPEID::Equal_v1:
-        {
-            node = make_shared<op::v1::Equal>(
-                args[0],
-                args[1],
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
-            break;
-        }
         case OP_TYPEID::Erf:
         {
             node = make_shared<op::Erf>(args[0]);
@@ -1584,31 +1504,15 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Floor>(args[0]);
             break;
         }
-        case OP_TYPEID::FloorMod_v1:
-        {
-            node = make_shared<op::v1::FloorMod>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-            break;
-        }
         case OP_TYPEID::Gather:
         {
             auto axis = node_js.at("axis").get<size_t>();
             node = make_shared<op::v0::Gather>(args[0], args[1], axis);
             break;
         }
-        case OP_TYPEID::Gather_v1:
-        {
-            node = make_shared<op::v1::Gather>(args[0], args[1], args[2]);
-            break;
-        }
         case OP_TYPEID::GatherND:
         {
             node = make_shared<op::GatherND>(args[0], args[1]);
-            break;
-        }
-        case OP_TYPEID::GatherTree_v1:
-        {
-            node = make_shared<op::v1::GatherTree>(args[0], args[1], args[2], args[3]);
             break;
         }
         case OP_TYPEID::Gelu:
@@ -1644,18 +1548,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
             break;
         }
-        case OP_TYPEID::GenerateMask_v1:
-        {
-            auto type = read_element_type(node_js.at("type"));
-            auto seed = node_js.at("seed").get<unsigned int>();
-            auto probability = node_js.at("probability").get<double>();
-            bool use_seed = get_or_default<bool>(node_js, "use_seed", false);
-
-            node = make_shared<op::v1::GenerateMask>(
-                args[0], args[1], type, seed, probability, use_seed);
-
-            break;
-        }
         case OP_TYPEID::GetOutputElement:
         {
             node = make_shared<op::GetOutputElement>(
@@ -1669,26 +1561,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
-        case OP_TYPEID::Greater_v1:
-        {
-            node = make_shared<op::v1::Greater>(
-                args[0],
-                args[1],
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
-            break;
-        }
         case OP_TYPEID::GreaterEq:
         {
             node = make_shared<op::v0::GreaterEq>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-            break;
-        }
-        case OP_TYPEID::GreaterEqual_v1:
-        {
-            node = make_shared<op::v1::GreaterEqual>(
-                args[0],
-                args[1],
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
             break;
         }
         case OP_TYPEID::GRN:
@@ -1870,54 +1746,15 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
-        case OP_TYPEID::Less_v1:
-        {
-            node = make_shared<op::v1::Less>(
-                args[0],
-                args[1],
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
-            break;
-        }
         case OP_TYPEID::LessEq:
         {
             node = make_shared<op::v0::LessEq>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
-        case OP_TYPEID::LessEqual_v1:
-        {
-            node = make_shared<op::v1::LessEqual>(
-                args[0],
-                args[1],
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
-            break;
-        }
         case OP_TYPEID::Log:
         {
             node = make_shared<op::Log>(args[0]);
-            break;
-        }
-        case OP_TYPEID::LogicalAnd_v1:
-        {
-            node = make_shared<op::v1::LogicalAnd>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-            break;
-        }
-        case OP_TYPEID::LogicalNot_v1:
-        {
-            node = make_shared<op::v1::LogicalNot>(args[0]);
-            break;
-        }
-        case OP_TYPEID::LogicalOr_v1:
-        {
-            node = make_shared<op::v1::LogicalOr>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-            break;
-        }
-        case OP_TYPEID::LogicalXor_v1:
-        {
-            node = make_shared<op::v1::LogicalXor>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::LRN:
@@ -2053,11 +1890,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Max>(args[0], reduction_axes);
             break;
         }
-        case OP_TYPEID::ReduceMax_v1:
-        {
-            node = make_shared<op::v1::ReduceMax>(args[0], args[1]);
-            break;
-        }
         case OP_TYPEID::MaxPool:
         {
             auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
@@ -2096,19 +1928,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
             break;
         }
-
-        case OP_TYPEID::MaxPool_v1:
-        {
-            auto kernel = node_js.at("kernel").get<vector<size_t>>();
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
-            auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
-            auto rounding_type = read_rounding_type(node_js);
-            op::PadType pad_type = read_pad_type(node_js);
-            node = make_shared<op::v1::MaxPool>(
-                args[0], strides, pads_begin, pads_end, kernel, rounding_type, pad_type);
-            break;
-        }
         case OP_TYPEID::MaxPoolBackprop:
         {
             auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
@@ -2137,38 +1956,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
-
-        case OP_TYPEID::MaxPoolBackprop_v1:
-        {
-            auto kernel = node_js.at("kernel").get<vector<size_t>>();
-            auto strides = node_js.at("strides").get<vector<size_t>>();
-            auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
-            auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
-            if (args.size() == 3)
-            {
-                node = make_shared<op::v1::MaxPoolBackprop>(
-                    args[0], args[1], args[2], kernel, strides, pads_begin, pads_end);
-            }
-            else
-            {
-                node = make_shared<op::v1::MaxPoolBackprop>(
-                    args[0], args[1], kernel, strides, pads_begin, pads_end);
-            }
-
-            break;
-        }
         case OP_TYPEID::Maximum:
         {
             node = make_shared<op::v0::Maximum>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-            break;
-        }
-        case OP_TYPEID::Maximum_v1:
-        {
-            node = make_shared<op::v1::Maximum>(
-                args[0],
-                args[1],
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
             break;
         }
         case OP_TYPEID::Min:
@@ -2177,43 +1968,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Min>(args[0], reduction_axes);
             break;
         }
-        case OP_TYPEID::ReduceMin_v1:
-        {
-            node = make_shared<op::v1::ReduceMin>(args[0], args[1]);
-            break;
-        }
         case OP_TYPEID::Minimum:
         {
             node = make_shared<op::v0::Minimum>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
-
-        case OP_TYPEID::Minimum_v1:
-        {
-            node = make_shared<op::v1::Minimum>(
-                args[0],
-                args[1],
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
-            break;
-        }
-        case OP_TYPEID::Mod_v1:
-        {
-            node = make_shared<op::v1::Mod>(
-                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-        }
         case OP_TYPEID::Multiply:
         {
             node = make_shared<op::v0::Multiply>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-            break;
-        }
-        case OP_TYPEID::Multiply_v1:
-        {
-            node = make_shared<op::v1::Multiply>(
-                args[0],
-                args[1],
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
             break;
         }
         case OP_TYPEID::MVN:
@@ -2236,21 +2000,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Negative>(args[0]);
             break;
         }
-        case OP_TYPEID::NonMaxSuppression_v1:
-        {
-            const auto box_encoding =
-                node_js.at("box_encoding").get<op::v1::NonMaxSuppression::BoxEncodingType>();
-            const auto sort_result_descending = node_js.at("sort_result_descending").get<bool>();
-
-            node = make_shared<op::v1::NonMaxSuppression>(
-                args[0], args[1], args[2], args[3], args[4], box_encoding, sort_result_descending);
-
-            break;
-        }
         case OP_TYPEID::NonZero_v3:
         {
-            node = make_shared<op::v3::NonZero>(args[0]);
-
+            auto target_type = read_element_type(node_js.at("index_element_type"));
+            node = make_shared<op::v3::NonZero>(args[0], target_type);
             break;
         }
         case OP_TYPEID::NormalizeL2:
@@ -2264,14 +2017,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             node = make_shared<op::v0::NotEqual>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-            break;
-        }
-        case OP_TYPEID::NotEqual_v1:
-        {
-            node = make_shared<op::v1::NotEqual>(
-                args[0],
-                args[1],
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
             break;
         }
         case OP_TYPEID::Not:
@@ -2320,20 +2065,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node =
                 make_shared<op::v0::Pad>(args[0], args[1], padding_below, padding_above, pad_mode);
 
-            break;
-        }
-
-        case OP_TYPEID::Pad_v1:
-        {
-            auto pad_mode = read_pad_mode(node_js);
-            if (args.size() == 4)
-            {
-                node = make_shared<op::v1::Pad>(args[0], args[1], args[2], args[3], pad_mode);
-            }
-            else
-            {
-                node = make_shared<op::v1::Pad>(args[0], args[1], args[2], pad_mode);
-            }
             break;
         }
         case OP_TYPEID::Parameter:
@@ -2387,14 +2118,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
-        case OP_TYPEID::Power_v1:
-        {
-            node = make_shared<op::v1::Power>(
-                args[0],
-                args[1],
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
-            break;
-        }
         case OP_TYPEID::PRelu:
         {
             node = make_shared<op::PRelu>(args[0], args[1]);
@@ -2412,12 +2135,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             {
                 node = make_shared<op::v0::Product>(args[0], reduction_axes);
             }
-            break;
-        }
-        case OP_TYPEID::ReduceProd_v1:
-        {
-            auto keep_dims = node_js.at("keep_dims").get<bool>();
-            node = make_shared<op::v1::ReduceProd>(args[0], args[1], keep_dims);
             break;
         }
         case OP_TYPEID::PSROIPooling: { break;
@@ -2522,25 +2239,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Range>(args[0], args[1], args[2]);
             break;
         }
-        case OP_TYPEID::ReduceMean_v1:
-        {
-            auto keep_dims = node_js.at("keep_dims").get<bool>();
-            node = make_shared<op::v1::ReduceMean>(args[0], args[1], keep_dims);
-
-            break;
-        }
-        case OP_TYPEID::ReduceLogicalAnd_v1:
-        {
-            const auto keep_dims = node_js.at("keep_dims").get<bool>();
-            node = make_shared<op::v1::ReduceLogicalAnd>(args[0], args[1], keep_dims);
-            break;
-        }
-        case OP_TYPEID::ReduceLogicalOr_v1:
-        {
-            const auto keep_dims = node_js.at("keep_dims").get<bool>();
-            node = make_shared<op::v1::ReduceLogicalOr>(args[0], args[1], keep_dims);
-            break;
-        }
         case OP_TYPEID::Relu:
         {
             node = make_shared<op::Relu>(args[0]);
@@ -2578,12 +2276,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             const auto reversed_axes = deserialize_axis_set(node_js.at("reversed_axes"));
             node = make_shared<op::Reverse>(args[0], reversed_axes);
-            break;
-        }
-        case OP_TYPEID::Reverse_v1:
-        {
-            const auto mode = node_js.at("mode").get<op::v1::Reverse::Mode>();
-            node = make_shared<op::v1::Reverse>(args[0], args[1], mode);
             break;
         }
         case OP_TYPEID::ReverseSequence:
@@ -2629,19 +2321,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
-        case OP_TYPEID::ROIAlign_v3:
-        {
-            const auto pooled_h = node_js.at("pooled_h").get<size_t>();
-            const auto pooled_w = node_js.at("pooled_w").get<size_t>();
-            const auto sampling_ratio = node_js.at("sampling_ratio").get<size_t>();
-            const auto spatial_scale = node_js.at("spatial_scale").get<float>();
-            const auto mode = node_js.at("mode").get<op::ROIAlign::PoolingMode>();
-
-            node = make_shared<op::ROIAlign>(
-                args[0], args[1], args[2], pooled_h, pooled_w, sampling_ratio, spatial_scale, mode);
-
-            break;
-        }
         case OP_TYPEID::ROIPooling: { break;
         }
         case OP_TYPEID::RegionYolo: { break;
@@ -2682,15 +2361,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Select:
         {
             node = make_shared<op::Select>(args[0], args[1], args[2]);
-            break;
-        }
-        case OP_TYPEID::Select_v1:
-        {
-            node = make_shared<op::v1::Select>(
-                args[0],
-                args[1],
-                args[2],
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
             break;
         }
         case OP_TYPEID::Stack:
@@ -2755,26 +2425,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
             break;
         }
-
-        case OP_TYPEID::StridedSlice_v1:
-        {
-            auto begin_mask = node_js.at("begin_mask").get<vector<int64_t>>();
-            auto end_mask = node_js.at("end_mask").get<vector<int64_t>>();
-            auto new_axis_mask = node_js.at("new_axis_mask").get<vector<int64_t>>();
-            auto shrink_axis_mask = node_js.at("shrink_axis_mask").get<vector<int64_t>>();
-            auto ellipsis_mask = node_js.at("ellipsis_mask").get<vector<int64_t>>();
-            node = make_shared<op::v1::StridedSlice>(args[0],
-                                                     args[1],
-                                                     args[2],
-                                                     args[3],
-                                                     begin_mask,
-                                                     end_mask,
-                                                     new_axis_mask,
-                                                     shrink_axis_mask,
-                                                     ellipsis_mask);
-
-            break;
-        }
         case OP_TYPEID::Softmax:
         {
             if (has_key(node_js, "softmax_axes"))
@@ -2787,13 +2437,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 node = make_shared<op::Softmax>(args[0], args[1]);
             }
 
-            break;
-        }
-
-        case OP_TYPEID::Softmax_v1:
-        {
-            size_t softmax_axis = node_js.at("softmax_axis");
-            node = make_shared<op::v1::Softmax>(args[0], softmax_axis);
             break;
         }
         case OP_TYPEID::SoftmaxCrossEntropy:
@@ -2811,11 +2454,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], args[2], soft_label, ignore_index);
             break;
         }
-        case OP_TYPEID::SpaceToBatch_v1:
-        {
-            node = make_shared<op::v1::SpaceToBatch>(args[0], args[1], args[2], args[3]);
-            break;
-        }
         case OP_TYPEID::SpaceToDepth:
         {
             auto block_size = node_js.at("block_size").get<size_t>();
@@ -2827,12 +2465,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             const auto splits = node_js.at("splits").get<vector<size_t>>();
             node = make_shared<op::Split>(args[0], args[1], splits);
-            break;
-        }
-        case OP_TYPEID::Split_v1:
-        {
-            const auto num_splits = node_js.at("num_splits").get<size_t>();
-            node = make_shared<op::Split>(args[0], args[1], num_splits);
             break;
         }
         case OP_TYPEID::Sqrt:
@@ -2855,20 +2487,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             node = make_shared<op::Subtract>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
-            break;
-        }
-        case OP_TYPEID::Subtract_v1:
-        {
-            node = make_shared<op::v1::Subtract>(
-                args[0],
-                args[1],
-                read_auto_broadcast(node_js, "auto_broadcast", op::AutoBroadcastType::NUMPY));
-            break;
-        }
-        case OP_TYPEID::ReduceSum_v1:
-        {
-            auto keep_dims = node_js.at("keep_dims").get<bool>();
-            node = make_shared<op::v1::ReduceSum>(args[0], args[1], keep_dims);
             break;
         }
         case OP_TYPEID::Sum:
@@ -2972,23 +2590,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             break;
         }
-
-        case OP_TYPEID::TopK_v1:
-        {
-            const auto axis = node_js.at("axis").get<size_t>();
-            const auto mode = node_js.at("mode").get<op::v1::TopK::Mode>();
-            const auto sort_type = node_js.at("sort_type").get<op::v1::TopK::SortType>();
-            const auto index_element_type = read_element_type(node_js.at("index_element_type"));
-            auto topk = make_shared<op::v1::TopK>(args[0], args[1], axis, mode, sort_type);
-            topk->set_index_element_type(index_element_type);
-            node = move(topk);
-            break;
-        }
-        case OP_TYPEID::Transpose_v1:
-        {
-            node = make_shared<op::v1::Transpose>(args[0], args[1]);
-            break;
-        }
         case OP_TYPEID::StopGradient:
         {
             node = make_shared<op::StopGradient>(args[0]);
@@ -2999,18 +2600,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Unsqueeze>(args[0], args[1]);
             break;
         }
-        case OP_TYPEID::VariadicSplit_v1:
-        {
-            node = make_shared<op::v1::VariadicSplit>(args[0], args[1], args[2]);
-            break;
-        }
         case OP_TYPEID::Xor:
         {
             node = make_shared<op::v0::Xor>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
-        case OP_TYPEID::UnknownOp:
+        default:
         {
             stringstream ss;
             ss << "unsupported op " << type_info.name << ":" << type_info.version;
@@ -3095,7 +2691,7 @@ json JSONSerializer::serialize_output_vector(const OutputVector& output_vector)
 json JSONSerializer::serialize_node(const Node& n)
 {
     const NodeTypeInfo& type_info = n.get_type_info();
-    json jtype_info;
+    json jtype_info = json::object();
     jtype_info["name"] = type_info.name;
     jtype_info["version"] = type_info.version;
     json node;
@@ -3158,11 +2754,10 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         node["provenance_tags"] = provenance_tags;
     }
-
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
+// #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
     switch (get_typeid(type_info))
@@ -3175,16 +2770,6 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
         tmp = static_cast<const op::v0::Add*>(&n);
-        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
-    case OP_TYPEID::Add_v1:
-    {
-        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        tmp = static_cast<const op::v1::Add*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3256,18 +2841,6 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::AvgPool_v1:
-    {
-        auto tmp = static_cast<const op::v1::AvgPool*>(&n);
-        node["kernel"] = tmp->get_kernel();
-        node["strides"] = tmp->get_strides();
-        node["pads_begin"] = tmp->get_pads_begin();
-        node["pads_end"] = tmp->get_pads_end();
-        node["exclude_pad"] = tmp->get_exclude_pad();
-        node["auto_pad"] = tmp->get_auto_pad();
-        node["rounding_type"] = tmp->get_rounding_type();
-        break;
-    }
     case OP_TYPEID::AvgPoolBackprop:
     {
         auto tmp = static_cast<const op::v0::AvgPoolBackprop*>(&n);
@@ -3277,17 +2850,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
-        break;
-    }
-    case OP_TYPEID::AvgPoolBackprop_v1:
-    {
-        auto tmp = static_cast<const op::v1::AvgPoolBackprop*>(&n);
-        node["forward_arg_shape"] = tmp->get_forward_arg_shape();
-        node["kernel"] = tmp->get_kernel();
-        node["strides"] = tmp->get_strides();
-        node["pads_begin"] = tmp->get_pads_begin();
-        node["pads_end"] = tmp->get_pads_end();
-        node["exclude_pad"] = tmp->get_exclude_pad();
         break;
     }
     case OP_TYPEID::BatchMatMul: { break;
@@ -3317,34 +2879,11 @@ json JSONSerializer::serialize_node(const Node& n)
         node["eps"] = tmp->get_eps_value();
         break;
     }
-    case OP_TYPEID::BatchToSpace_v1: { break;
-    }
-    case OP_TYPEID::BinaryConvolution_v1:
-    {
-        auto tmp = static_cast<const op::v1::BinaryConvolution*>(&n);
-        node["strides"] = tmp->get_strides();
-        node["dilations"] = tmp->get_dilations();
-        node["pads_begin"] = tmp->get_pads_begin();
-        node["pads_end"] = tmp->get_pads_end();
-        node["mode"] = tmp->get_mode();
-        node["pad_value"] = tmp->get_pad_value();
-        node["auto_pad"] = tmp->get_auto_pad();
-        break;
-    }
     case OP_TYPEID::Broadcast:
     {
         auto tmp = dynamic_cast<const op::v0::Broadcast*>(&n);
         node["axes"] = serialize_axis_set(tmp->get_broadcast_axes());
         node["shape"] = tmp->get_broadcast_shape();
-        break;
-    }
-    case OP_TYPEID::Broadcast_v1:
-    {
-        auto tmp = dynamic_cast<const op::v1::Broadcast*>(&n);
-        if (tmp->get_broadcast_spec().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_broadcast_spec());
-        }
         break;
     }
     case OP_TYPEID::BroadcastDistributed: { break;
@@ -3393,8 +2932,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["target_type"] = write_element_type(tmp->get_convert_element_type());
         break;
     }
-    case OP_TYPEID::ConvertLike_v1: { break;
-    }
     case OP_TYPEID::Convolution:
     {
         auto tmp = static_cast<const op::v0::Convolution*>(&n);
@@ -3404,16 +2941,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
         node["pad_type"] = tmp->get_pad_type();
-        break;
-    }
-    case OP_TYPEID::Convolution_v1:
-    {
-        auto tmp = static_cast<const op::v1::Convolution*>(&n);
-        node["strides"] = tmp->get_strides();
-        node["dilations"] = tmp->get_dilations();
-        node["pads_begin"] = tmp->get_pads_begin();
-        node["pads_end"] = tmp->get_pads_end();
-        node["auto_pad"] = tmp->get_auto_pad();
         break;
     }
     case OP_TYPEID::ConvolutionBackpropData:
@@ -3427,38 +2954,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
         break;
     }
-    case OP_TYPEID::ConvolutionBackpropData_v1:
-    {
-        auto tmp = static_cast<const op::v1::ConvolutionBackpropData*>(&n);
-        node["strides"] = tmp->get_strides();
-        node["dilations"] = tmp->get_dilations();
-        node["pads_begin"] = tmp->get_pads_begin();
-        node["pads_end"] = tmp->get_pads_end();
-        node["auto_pad"] = tmp->get_auto_pad();
-        node["output_padding"] = tmp->get_output_padding();
-        break;
-    }
-    case OP_TYPEID::GroupConvolution_v1:
-    {
-        auto tmp = static_cast<const op::v1::GroupConvolution*>(&n);
-        node["strides"] = tmp->get_strides();
-        node["dilations"] = tmp->get_dilations();
-        node["pads_begin"] = tmp->get_pads_begin();
-        node["pads_end"] = tmp->get_pads_end();
-        node["auto_pad"] = tmp->get_auto_pad();
-        break;
-    }
-    case OP_TYPEID::GroupConvolutionBackpropData_v1:
-    {
-        auto tmp = static_cast<const op::v1::GroupConvolutionBackpropData*>(&n);
-        node["strides"] = tmp->get_strides();
-        node["dilations"] = tmp->get_dilations();
-        node["pads_begin"] = tmp->get_pads_begin();
-        node["pads_end"] = tmp->get_pads_end();
-        node["auto_pad"] = tmp->get_auto_pad();
-        node["output_padding"] = tmp->get_output_padding();
-        break;
-    }
     case OP_TYPEID::ConvolutionBackpropFilters:
     {
         auto tmp = static_cast<const op::v0::ConvolutionBackpropFilters*>(&n);
@@ -3468,16 +2963,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_below_forward"] = tmp->get_padding_below_forward();
         node["padding_above_forward"] = tmp->get_padding_above_forward();
         node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
-        break;
-    }
-    case OP_TYPEID::ConvolutionBackpropFilters_v1:
-    {
-        auto tmp = static_cast<const op::v1::ConvolutionBackpropFilters*>(&n);
-        node["filters_shape"] = tmp->get_filters_shape();
-        node["strides"] = tmp->get_strides();
-        node["dilations"] = tmp->get_dilations();
-        node["pads_begin"] = tmp->get_pads_begin();
-        node["pads_end"] = tmp->get_pads_end();
         break;
     }
     case OP_TYPEID::ConvolutionBias:
@@ -3566,31 +3051,6 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Round: { break;
     }
-    case OP_TYPEID::DeformableConvolution_v1:
-    {
-        const auto tmp = static_cast<const op::v1::DeformableConvolution*>(&n);
-        node["strides"] = tmp->get_strides();
-        node["dilations"] = tmp->get_dilations();
-        node["pads_begin"] = tmp->get_pads_begin();
-        node["pads_end"] = tmp->get_pads_end();
-        node["auto_pad"] = tmp->get_auto_pad();
-        node["group"] = tmp->get_group();
-        node["deformable_group"] = tmp->get_deformable_group();
-        break;
-    }
-    case OP_TYPEID::DeformablePSROIPooling_v1:
-    {
-        auto tmp = static_cast<const op::v1::DeformablePSROIPooling*>(&n);
-        node["output_dim"] = tmp->get_output_dim();
-        node["group_size"] = tmp->get_group_size();
-        node["spatial_scale"] = tmp->get_spatial_scale();
-        node["mode"] = tmp->get_mode();
-        node["spatial_bins_x"] = tmp->get_spatial_bins_x();
-        node["spatial_bins_y"] = tmp->get_spatial_bins_y();
-        node["trans_std"] = tmp->get_trans_std();
-        node["part_size"] = tmp->get_part_size();
-        break;
-    }
     case OP_TYPEID::Dequantize:
     {
         auto tmp = static_cast<const op::Dequantize*>(&n);
@@ -3618,18 +3078,6 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::Divide_v1:
-    {
-        const op::util::BinaryElementwiseArithmetic* bea_node = nullptr;
-        auto tmp = static_cast<const op::v1::Divide*>(&n);
-        bea_node = tmp;
-        node["pythondiv"] = tmp->is_pythondiv();
-        if (bea_node != nullptr && bea_node->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(bea_node->get_autob());
-        }
-        break;
-    }
     case OP_TYPEID::Dot:
     {
         auto tmp = static_cast<const op::Dot*>(&n);
@@ -3648,12 +3096,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["new_axis"] = tmp->get_new_axis();
         node["shrink_axis"] = tmp->get_shrink_axis();
         node["ellipsis_mask"] = tmp->get_ellipsis_mask();
-        break;
-    }
-    case OP_TYPEID::Reshape_v1:
-    {
-        auto tmp = static_cast<const op::v1::Reshape*>(&n);
-        node["special_zero"] = tmp->get_special_zero();
         break;
     }
     case OP_TYPEID::DynSlice:
@@ -3684,16 +3126,6 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::Equal_v1:
-    {
-        const op::util::BinaryElementwiseComparison* tmp = nullptr;
-        tmp = static_cast<const op::v1::Equal*>(&n);
-        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
     case OP_TYPEID::Erf: { break;
     }
     case OP_TYPEID::Exp: { break;
@@ -3706,26 +3138,13 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Floor: { break;
     }
-    case OP_TYPEID::FloorMod_v1:
-    {
-        auto tmp = static_cast<const op::v1::FloorMod*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
     case OP_TYPEID::Gather:
     {
         auto tmp = static_cast<const op::v0::Gather*>(&n);
         node["axis"] = tmp->get_axis();
         break;
     }
-    case OP_TYPEID::Gather_v1: { break;
-    }
     case OP_TYPEID::GatherND: { break;
-    }
-    case OP_TYPEID::GatherTree_v1: { break;
     }
     case OP_TYPEID::GetOutputElement:
     {
@@ -3756,15 +3175,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["output_shape"] = tmp->get_mask_shape();
         break;
     }
-    case OP_TYPEID::GenerateMask_v1:
-    {
-        auto tmp = static_cast<const op::GenerateMask*>(&n);
-        node["type"] = write_element_type(tmp->get_element_type());
-        node["use_seed"] = tmp->get_use_seed();
-        node["seed"] = tmp->get_seed();
-        node["probability"] = tmp->get_probability();
-        break;
-    }
     case OP_TYPEID::Greater:
     {
         const op::util::BinaryElementwiseComparison* tmp = nullptr;
@@ -3775,30 +3185,10 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::Greater_v1:
-    {
-        const op::util::BinaryElementwiseComparison* tmp = nullptr;
-        tmp = static_cast<const op::v1::Greater*>(&n);
-        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
     case OP_TYPEID::GreaterEq:
     {
         const op::util::BinaryElementwiseComparison* tmp = nullptr;
         tmp = static_cast<const op::v0::GreaterEq*>(&n);
-        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
-    case OP_TYPEID::GreaterEqual_v1:
-    {
-        const op::util::BinaryElementwiseComparison* tmp = nullptr;
-        tmp = static_cast<const op::v1::GreaterEqual*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3889,16 +3279,6 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::Less_v1:
-    {
-        const op::util::BinaryElementwiseComparison* tmp = nullptr;
-        tmp = static_cast<const op::v1::Less*>(&n);
-        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
     case OP_TYPEID::LessEq:
     {
         auto tmp = static_cast<const op::v0::LessEq*>(&n);
@@ -3908,45 +3288,7 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::LessEqual_v1:
-    {
-        auto tmp = static_cast<const op::v1::LessEqual*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
     case OP_TYPEID::Log: { break;
-    }
-    case OP_TYPEID::LogicalAnd_v1:
-    {
-        auto tmp = static_cast<const op::v1::LogicalAnd*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
-    case OP_TYPEID::LogicalNot_v1: { break;
-    }
-    case OP_TYPEID::LogicalOr_v1:
-    {
-        auto tmp = static_cast<const op::v1::LogicalOr*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
-    case OP_TYPEID::LogicalXor_v1:
-    {
-        auto tmp = static_cast<const op::v1::LogicalXor*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
     }
     case OP_TYPEID::LRN:
     {
@@ -4005,17 +3347,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["pad_type"] = tmp->get_pad_type();
         break;
     }
-    case OP_TYPEID::MaxPool_v1:
-    {
-        auto tmp = static_cast<const op::v1::MaxPool*>(&n);
-        node["kernel"] = tmp->get_kernel();
-        node["strides"] = tmp->get_strides();
-        node["pads_begin"] = tmp->get_pads_begin();
-        node["pads_end"] = tmp->get_pads_end();
-        node["auto_pad"] = tmp->get_auto_pad();
-        node["rounding_type"] = tmp->get_rounding_type();
-        break;
-    }
     case OP_TYPEID::MaxPoolBackprop:
     {
         auto tmp = static_cast<const op::v0::MaxPoolBackprop*>(&n);
@@ -4023,15 +3354,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
-        break;
-    }
-    case OP_TYPEID::MaxPoolBackprop_v1:
-    {
-        auto tmp = static_cast<const op::v1::MaxPoolBackprop*>(&n);
-        node["kernel"] = tmp->get_kernel();
-        node["strides"] = tmp->get_strides();
-        node["pads_begin"] = tmp->get_pads_begin();
-        node["pads_end"] = tmp->get_pads_end();
         break;
     }
     case OP_TYPEID::Maximum:
@@ -4044,24 +3366,11 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::Maximum_v1:
-    {
-        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        tmp = static_cast<const op::v1::Maximum*>(&n);
-        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
     case OP_TYPEID::Min:
     {
         auto tmp = static_cast<const op::Min*>(&n);
         node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         break;
-    }
-    case OP_TYPEID::ReduceMin_v1:
-    case OP_TYPEID::ReduceMax_v1: { break;
     }
     case OP_TYPEID::Minimum:
     {
@@ -4073,36 +3382,10 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::Minimum_v1:
-    {
-        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        tmp = static_cast<const op::v1::Minimum*>(&n);
-        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
-    case OP_TYPEID::Mod_v1:
-    {
-        auto tmp = static_cast<const op::v1::Mod*>(&n);
-        node["auto_broadcast"] = write_auto_broadcast(tmp->get_auto_broadcast());
-        break;
-    }
     case OP_TYPEID::Multiply:
     {
         const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
         tmp = static_cast<const op::v0::Multiply*>(&n);
-        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
-    case OP_TYPEID::Multiply_v1:
-    {
-        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        tmp = static_cast<const op::v1::Multiply*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -4119,15 +3402,6 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Negative: { break;
     }
-    case OP_TYPEID::NonMaxSuppression_v1:
-    {
-        const auto tmp = static_cast<const op::v1::NonMaxSuppression*>(&n);
-        node["box_encoding"] = tmp->get_box_encoding();
-        node["sort_result_descending"] = tmp->get_sort_result_descending();
-        break;
-    }
-    case OP_TYPEID::NonZero_v3: { break;
-    }
     case OP_TYPEID::NormalizeL2:
     {
         auto tmp = static_cast<const op::NormalizeL2*>(&n);
@@ -4139,16 +3413,6 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         const op::util::BinaryElementwiseComparison* tmp = nullptr;
         tmp = static_cast<const op::v0::NotEqual*>(&n);
-        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
-    case OP_TYPEID::NotEqual_v1:
-    {
-        const op::util::BinaryElementwiseComparison* tmp = nullptr;
-        tmp = static_cast<const op::v1::NotEqual*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -4186,12 +3450,6 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = static_cast<const op::v0::Pad*>(&n);
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
-        node["pad_mode"] = tmp->get_pad_mode();
-        break;
-    }
-    case OP_TYPEID::Pad_v1:
-    {
-        auto tmp = static_cast<const op::v1::Pad*>(&n);
         node["pad_mode"] = tmp->get_pad_mode();
         break;
     }
@@ -4245,26 +3503,10 @@ json JSONSerializer::serialize_node(const Node& n)
         node["reduction_axes"] = tmp->get_reduction_axes();
         break;
     }
-    case OP_TYPEID::ReduceProd_v1:
-    {
-        auto tmp = static_cast<const op::v1::ReduceProd*>(&n);
-        node["keep_dims"] = tmp->get_keep_dims();
-        break;
-    }
     case OP_TYPEID::Power:
     {
         const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
         tmp = static_cast<const op::v0::Power*>(&n);
-        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
-    case OP_TYPEID::Power_v1:
-    {
-        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        tmp = static_cast<const op::v1::Power*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -4327,24 +3569,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["source_id"] = tmp->get_src_id();
         break;
     }
-    case OP_TYPEID::ReduceLogicalAnd_v1:
-    {
-        const auto tmp = static_cast<const op::v1::ReduceLogicalAnd*>(&n);
-        node["keep_dims"] = tmp->get_keep_dims();
-        break;
-    }
-    case OP_TYPEID::ReduceLogicalOr_v1:
-    {
-        const auto tmp = static_cast<const op::v1::ReduceLogicalOr*>(&n);
-        node["keep_dims"] = tmp->get_keep_dims();
-        break;
-    }
-    case OP_TYPEID::ReduceMean_v1:
-    {
-        auto tmp = static_cast<const op::v1::ReduceMean*>(&n);
-        node["keep_dims"] = tmp->get_keep_dims();
-        break;
-    }
     case OP_TYPEID::Relu: { break;
     }
     case OP_TYPEID::ReluBackprop: { break;
@@ -4376,12 +3600,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["reversed_axes"] = serialize_axis_set(tmp->get_reversed_axes());
         break;
     }
-    case OP_TYPEID::Reverse_v1:
-    {
-        const auto tmp = static_cast<const op::v1::Reverse*>(&n);
-        node["mode"] = tmp->get_mode();
-        break;
-    }
     case OP_TYPEID::ReverseSequence:
     {
         auto tmp = static_cast<const op::ReverseSequence*>(&n);
@@ -4397,16 +3615,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["activations"] = tmp->get_activations();
         node["activations_alpha"] = tmp->get_activations_alpha();
         node["activations_beta"] = tmp->get_activations_beta();
-        break;
-    }
-    case OP_TYPEID::ROIAlign_v3:
-    {
-        auto tmp = static_cast<const op::ROIAlign*>(&n);
-        node["pooled_h"] = tmp->get_pooled_h();
-        node["pooled_w"] = tmp->get_pooled_w();
-        node["sampling_ratio"] = tmp->get_sampling_ratio();
-        node["spatial_scale"] = tmp->get_spatial_scale();
-        node["mode"] = tmp->get_mode();
         break;
     }
     case OP_TYPEID::ScalarConstantLike:
@@ -4426,12 +3634,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::ScatterNDAdd: { break;
     }
     case OP_TYPEID::Select: { break;
-    }
-    case OP_TYPEID::Select_v1:
-    {
-        auto tmp = static_cast<const op::v1::Select*>(&n);
-        node["auto_broadcast"] = write_auto_broadcast(tmp->get_auto_broadcast());
-        break;
     }
     case OP_TYPEID::Selu: { break;
     }
@@ -4468,18 +3670,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["strides"] = tmp->get_strides();
         break;
     }
-    case OP_TYPEID::StridedSlice_v1:
-    {
-        auto tmp = static_cast<const op::v1::StridedSlice*>(&n);
-        node["begin_mask"] = tmp->get_begin_mask();
-        node["end_mask"] = tmp->get_end_mask();
-        node["new_axis_mask"] = tmp->get_new_axis_mask();
-        node["shrink_axis_mask"] = tmp->get_shrink_axis_mask();
-        node["ellipsis_mask"] = tmp->get_ellipsis_mask();
-        break;
-    }
-    case OP_TYPEID::SpaceToBatch_v1: { break;
-    }
     case OP_TYPEID::SpaceToDepth:
     {
         auto tmp = static_cast<const op::SpaceToDepth*>(&n);
@@ -4492,12 +3682,6 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         const auto tmp = static_cast<const op::Split*>(&n);
         node["splits"] = tmp->get_splits();
-        break;
-    }
-    case OP_TYPEID::Split_v1:
-    {
-        const auto tmp = static_cast<const op::v1::Split*>(&n);
-        node["num_splits"] = tmp->get_num_splits();
         break;
     }
     case OP_TYPEID::Sqrt: { break;
@@ -4524,15 +3708,6 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::Subtract_v1:
-    {
-        auto tmp = static_cast<const op::v1::Subtract*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
     case OP_TYPEID::Sum:
     {
         auto tmp = static_cast<const op::Sum*>(&n);
@@ -4545,20 +3720,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["axis"] = tmp->get_axis();
         break;
     }
-    case OP_TYPEID::ReduceSum_v1:
-    {
-        auto tmp = static_cast<const op::v1::ReduceSum*>(&n);
-        node["keep_dims"] = tmp->get_keep_dims();
-        break;
-    }
     case OP_TYPEID::Softmax: { break;
-    }
-
-    case OP_TYPEID::Softmax_v1:
-    {
-        auto tmp = static_cast<const op::v1::Softmax*>(&n);
-        node["softmax_axis"] = tmp->get_axis();
-        break;
     }
     case OP_TYPEID::SoftmaxCrossEntropy:
     {
@@ -4640,18 +3802,6 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-
-    case OP_TYPEID::TopK_v1:
-    {
-        const auto tmp = static_cast<const op::v1::TopK*>(&n);
-        node["axis"] = tmp->get_provided_axis();
-        node["mode"] = tmp->get_mode();
-        node["sort_type"] = tmp->get_sort_type();
-        node["index_element_type"] = write_element_type(tmp->get_index_element_type());
-        break;
-    }
-    case OP_TYPEID::Transpose_v1: { break;
-    }
     case OP_TYPEID::Unsqueeze: { break;
     }
     case OP_TYPEID::Xor:
@@ -4663,9 +3813,21 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::VariadicSplit_v1: { break;
-    }
     case OP_TYPEID::UnknownOp: { break;
+    }
+    default:
+    {
+        auto& factory_registry = FactoryRegistry<Node>::get();
+        if (factory_registry.has_factory(type_info))
+        {
+            node["attribute_visitor"] = true;
+            JSONAttributeSerializer visitor(node);
+            if (!const_cast<Node&>(n).visit_attributes(visitor))
+            {
+                NGRAPH_ERR << "Cannot serialize: " << node;
+            }
+            return node;
+        }
     }
     }
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))

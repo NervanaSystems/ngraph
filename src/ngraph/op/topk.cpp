@@ -208,7 +208,7 @@ void op::v0::TopK::validate_and_infer_types()
     set_output_type(1, input_element_type, output_shape);
 }
 
-shared_ptr<Node> op::v0::TopK::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::TopK::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<TopK>(new_args.at(0),
@@ -237,8 +237,8 @@ op::v1::TopK::TopK(const Output<Node>& data,
     : Op{{data, k}}
     , m_axis{axis}
     , m_normalized_axis{0}
-    , m_mode{mode_from_string(mode)}
-    , m_sort{sort_type_from_string(sort)}
+    , m_mode{as_enum<Mode>(mode)}
+    , m_sort{as_enum<SortType>(sort)}
     , m_index_element_type{index_element_type}
 {
     constructor_validate_and_infer_types();
@@ -298,6 +298,18 @@ void op::v1::TopK::validate_and_infer_types()
         if (k != 0)
         {
             output_shape[m_normalized_axis] = k;
+        }
+        else
+        {
+            auto max_k = maximum_value(input_value(1));
+            if (max_k.first)
+            {
+                output_shape[m_normalized_axis] &= Dimension(0, max_k.second);
+            }
+            else
+            {
+                output_shape[m_normalized_axis] = -1;
+            }
         }
     }
 
@@ -388,7 +400,7 @@ void op::v1::TopK::generate_adjoints(autodiff::Adjoints& /*adjoints*/,
     throw ngraph_error("Forward-propagation-only operation");
 }
 
-shared_ptr<Node> op::v1::TopK::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::TopK::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     auto new_v1_topk =
@@ -397,28 +409,6 @@ shared_ptr<Node> op::v1::TopK::copy_with_new_args(const NodeVector& new_args) co
     new_v1_topk->set_index_element_type(m_index_element_type);
 
     return std::move(new_v1_topk);
-}
-
-op::v1::TopK::Mode op::v1::TopK::mode_from_string(const std::string& mode) const
-{
-    static const std::map<std::string, Mode> allowed_values = {{"max", Mode::MAX},
-                                                               {"min", Mode::MIN}};
-
-    NODE_VALIDATION_CHECK(this, allowed_values.count(mode) > 0, "Invalid 'mode' value passed in.");
-
-    return allowed_values.at(mode);
-}
-
-op::v1::TopK::SortType op::v1::TopK::sort_type_from_string(const std::string& sort) const
-{
-    static const std::map<std::string, SortType> allowed_values = {
-        {"none", SortType::NONE},
-        {"index", SortType::SORT_INDICES},
-        {"value", SortType::SORT_VALUES}};
-
-    NODE_VALIDATION_CHECK(this, allowed_values.count(sort) > 0, "Invalid 'sort' value passed in.");
-
-    return allowed_values.at(sort);
 }
 
 size_t op::v1::TopK::get_k() const
@@ -443,21 +433,75 @@ void op::v1::TopK::set_k(size_t k)
         op::Constant::create(element::i64, Shape{}, {k})->output(0));
 }
 
-namespace ngraph
+// v3 version starts
+constexpr NodeTypeInfo op::v3::TopK::type_info;
+
+op::v3::TopK::TopK(const Output<Node>& data,
+                   const Output<Node>& k,
+                   const int64_t axis,
+                   const std::string& mode,
+                   const std::string& sort,
+                   const element::Type& index_element_type)
+    : op::v1::TopK{data, k, axis, mode, sort, index_element_type}
 {
-    template <>
-    EnumNames<op::v1::TopK::Mode>& EnumNames<op::v1::TopK::Mode>::get()
-    {
-        static auto enum_names = EnumNames<op::v1::TopK::Mode>(
-            "op::v1::TopK::Mode",
-            {{"max", op::v1::TopK::Mode::MAX}, {"min", op::v1::TopK::Mode::MIN}});
-        return enum_names;
-    }
+    constructor_validate_and_infer_types();
+}
 
-    constexpr DiscreteTypeInfo AttributeAdapter<op::v1::TopK::Mode>::type_info;
+op::v3::TopK::TopK(const Output<Node>& data,
+                   const Output<Node>& k,
+                   const int64_t axis,
+                   const Mode mode,
+                   const SortType sort,
+                   const element::Type& index_element_type)
+    : op::v1::TopK{data, k, axis, mode, sort, index_element_type}
+{
+    constructor_validate_and_infer_types();
+}
 
-    std::ostream& operator<<(std::ostream& s, const op::v1::TopK::Mode& type)
+bool ngraph::op::v3::TopK::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    visitor.on_attribute("mode", m_mode);
+    visitor.on_attribute("sort", m_sort);
+    visitor.on_attribute("index_element_type", m_index_element_type);
+    return true;
+}
+
+void op::v3::TopK::validate_and_infer_types()
+{
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(1).is_integral_number(),
+                          "K input has to be an integer type, which does match the provided one:",
+                          get_input_element_type(1));
+    op::v1::TopK::validate_and_infer_types();
+}
+
+size_t op::v3::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
+                                               const element::Type& k_element_type) const
+{
+    const auto k_constant = as_type_ptr<op::Constant>(node);
+
+    size_t k = 0;
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
+    switch (static_cast<element::Type_t>(k_element_type))
     {
-        return s << as_string(type);
+    case element::Type_t::i8: k = validate_and_get_k<int8_t>(k_constant); break;
+    case element::Type_t::i16: k = validate_and_get_k<int16_t>(k_constant); break;
+    case element::Type_t::i32: k = validate_and_get_k<int32_t>(k_constant); break;
+    case element::Type_t::i64: k = validate_and_get_k<int64_t>(k_constant); break;
+    case element::Type_t::u8: k = validate_and_get_k<uint8_t>(k_constant); break;
+    case element::Type_t::u16: k = validate_and_get_k<uint16_t>(k_constant); break;
+    case element::Type_t::u32: k = validate_and_get_k<uint32_t>(k_constant); break;
+    case element::Type_t::u64: k = validate_and_get_k<uint64_t>(k_constant); break;
+    default: break;
     }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+    return k;
 }

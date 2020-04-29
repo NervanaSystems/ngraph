@@ -19,6 +19,7 @@
 
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
 
@@ -32,49 +33,76 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
                                 void* memory_pointer,
                                 const string& name)
     : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name))
-    , m_allocated_buffer_pool(nullptr)
-    , m_aligned_buffer_pool(nullptr)
-
+    , m_memory_pointer(memory_pointer)
 {
-    m_descriptor->set_tensor_layout(
-        std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
-
-    m_buffer_size = m_descriptor->get_tensor_layout()->get_size() * element_type.size();
-
-    if (memory_pointer != nullptr)
+    if (get_partial_shape().is_static() && get_element_type().is_static())
     {
-        m_aligned_buffer_pool = static_cast<char*>(memory_pointer);
-    }
-    else if (m_buffer_size > 0)
-    {
-        size_t allocation_size = m_buffer_size + alignment;
-        m_allocated_buffer_pool = static_cast<char*>(ngraph_malloc(allocation_size));
-        m_aligned_buffer_pool = m_allocated_buffer_pool;
-        size_t mod = size_t(m_aligned_buffer_pool) % alignment;
-        if (mod != 0)
-        {
-            m_aligned_buffer_pool += (alignment - mod);
-        }
+        allocate_buffer();
     }
 }
 
-runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
+runtime::HostTensor::HostTensor(const element::Type& element_type,
                                 const Shape& shape,
-                                const string& name)
+                                const std::string& name)
     : HostTensor(element_type, shape, nullptr, name)
 {
 }
 
-runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type, const Shape& shape)
-    : HostTensor(element_type, shape, nullptr, "")
+runtime::HostTensor::HostTensor(const element::Type& element_type,
+                                const PartialShape& partial_shape,
+                                const std::string& name)
+    : runtime::Tensor(
+          std::make_shared<ngraph::descriptor::Tensor>(element_type, partial_shape, name))
+{
+    // Defer allocation until ptr is requested
+}
+
+runtime::HostTensor::HostTensor(const std::string& name)
+    : HostTensor(element::dynamic, PartialShape::dynamic())
 {
 }
 
-runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
-                                const Shape& shape,
-                                void* memory_pointer)
-    : HostTensor(element_type, shape, memory_pointer, "")
+runtime::HostTensor::HostTensor(const Output<Node>& value)
+    : HostTensor(value.get_element_type(), value.get_partial_shape(), value.get_tensor().get_name())
 {
+}
+
+void runtime::HostTensor::allocate_buffer()
+{
+    NGRAPH_CHECK(get_partial_shape().is_static(),
+                 "Attempt to allocate buffer for tensor with partial shape: ",
+                 get_partial_shape());
+    NGRAPH_CHECK(get_element_type().is_static(),
+                 "Attempt to allocate buffer for tensor with dynamic type: ",
+                 get_element_type());
+    m_descriptor->set_tensor_layout(
+        std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
+    m_buffer_size = m_descriptor->get_tensor_layout()->get_size() * get_element_type().size();
+    if (m_memory_pointer != nullptr)
+    {
+        m_aligned_buffer_pool = m_memory_pointer;
+    }
+    else
+    {
+        size_t allocation_size = m_buffer_size + alignment;
+        uint8_t* allocated_buffer_pool = static_cast<uint8_t*>(ngraph_malloc(allocation_size));
+        m_allocated_buffer_pool = allocated_buffer_pool;
+        size_t mod = size_t(allocated_buffer_pool) % alignment;
+        if (mod == 0)
+        {
+            m_aligned_buffer_pool = allocated_buffer_pool;
+        }
+        else
+        {
+            m_aligned_buffer_pool = (allocated_buffer_pool + alignment - mod);
+        }
+    }
+}
+runtime::HostTensor::HostTensor(const std::shared_ptr<op::v0::Constant>& constant)
+    : HostTensor(
+          constant->get_output_element_type(0), constant->get_output_shape(0), constant->get_name())
+{
+    memcpy(get_data_ptr(), constant->get_data_ptr(), get_size_in_bytes());
 }
 
 runtime::HostTensor::~HostTensor()
@@ -85,35 +113,95 @@ runtime::HostTensor::~HostTensor()
     }
 }
 
-char* runtime::HostTensor::get_data_ptr()
+void* runtime::HostTensor::get_data_ptr()
 {
+    if (!m_aligned_buffer_pool)
+    {
+        allocate_buffer();
+    }
     return m_aligned_buffer_pool;
 }
 
-const char* runtime::HostTensor::get_data_ptr() const
+const void* runtime::HostTensor::get_data_ptr() const
 {
+    NGRAPH_CHECK(m_aligned_buffer_pool, "Buffer not initialized");
     return m_aligned_buffer_pool;
 }
 
 void runtime::HostTensor::write(const void* source, size_t n)
 {
     event::Duration d1("write", "HostTensor");
-
+    void* target = get_data_ptr();
     if (n != m_buffer_size)
     {
         throw out_of_range("partial tensor write not supported");
     }
-    char* target = get_data_ptr();
     memcpy(target, source, n);
 }
 
 void runtime::HostTensor::read(void* target, size_t n) const
 {
     event::Duration d1("read", "HostTensor");
+    const void* source = get_data_ptr();
     if (n != m_buffer_size)
     {
         throw out_of_range("partial tensor read access not supported");
     }
-    const char* source = get_data_ptr();
     memcpy(target, source, n);
+}
+
+bool runtime::HostTensor::get_is_allocated() const
+{
+    return m_aligned_buffer_pool != nullptr;
+}
+
+void runtime::HostTensor::set_element_type(const element::Type& element_type)
+{
+    NGRAPH_CHECK(get_element_type().is_dynamic() || get_element_type() == element_type,
+                 "Can not change a static element type");
+    m_descriptor->set_element_type(element_type);
+}
+
+void runtime::HostTensor::set_shape(const Shape& shape)
+{
+    NGRAPH_CHECK(PartialShape(shape).refines(get_partial_shape()),
+                 "Allocation shape ",
+                 shape,
+                 " must be compatible with the partial shape: ",
+                 get_partial_shape());
+    m_descriptor->set_partial_shape(shape);
+}
+
+void runtime::HostTensor::set_unary(const HostTensorPtr& arg)
+{
+    set_element_type(arg->get_element_type());
+    set_shape(arg->get_partial_shape().get_shape());
+}
+
+void runtime::HostTensor::set_broadcast(const op::AutoBroadcastSpec& autob,
+                                        const HostTensorPtr& arg0,
+                                        const HostTensorPtr& arg1)
+{
+    element::Type element_type = arg0->get_element_type();
+    NGRAPH_CHECK(element::Type::merge(element_type, element_type, arg1->get_element_type()),
+                 "Argument element types are inconsistent.");
+    set_element_type(element_type);
+
+    PartialShape pshape = arg0->get_partial_shape();
+    if (autob.m_type == op::AutoBroadcastType::NONE)
+    {
+        NGRAPH_CHECK(PartialShape::merge_into(pshape, arg1->get_partial_shape()),
+                     "Argument shapes are inconsistent.");
+    }
+    else if (autob.m_type == op::AutoBroadcastType::NUMPY ||
+             autob.m_type == op::AutoBroadcastType::PDPD)
+    {
+        NGRAPH_CHECK(PartialShape::broadcast_merge_into(pshape, arg1->get_partial_shape(), autob),
+                     "Argument shapes are inconsistent.");
+    }
+    else
+    {
+        NGRAPH_CHECK(false, "Unsupported auto broadcast specification");
+    }
+    set_shape(pshape.get_shape());
 }

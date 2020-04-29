@@ -89,7 +89,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 size_t get_k() const;
                 void set_k(size_t k);
@@ -119,12 +119,7 @@ namespace ngraph
             {
             public:
                 using SortType = TopKSortType;
-
-                enum class Mode
-                {
-                    MAX,
-                    MIN
-                };
+                using Mode = TopKMode;
 
                 static constexpr NodeTypeInfo type_info{"TopK", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
@@ -160,7 +155,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual size_t get_version() const override { return 1; }
                 /// \brief Returns axis value after normalization
@@ -179,7 +174,6 @@ namespace ngraph
                 {
                     m_index_element_type = index_element_type;
                 }
-
                 /// \brief Returns the value of K, if available
                 ///
                 /// \note If the second input to this op is a constant, the value is retrieved
@@ -192,39 +186,65 @@ namespace ngraph
                 uint64_t m_normalized_axis;
                 Mode m_mode;
                 SortType m_sort;
-                element::Type m_index_element_type;
+                element::Type m_index_element_type{element::i32};
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
 
-                size_t read_k_from_constant_node(const std::shared_ptr<Node>& node,
-                                                 const element::Type& k_element_type) const;
-
-                Mode mode_from_string(const std::string& mode) const;
-                SortType sort_type_from_string(const std::string& sort) const;
+                virtual size_t read_k_from_constant_node(const std::shared_ptr<Node>& node,
+                                                         const element::Type& k_element_type) const;
 
                 template <typename T>
                 size_t validate_and_get_k(const std::shared_ptr<op::Constant>& k_constant) const;
             };
         } // namespace v1
 
+        namespace v3
+        {
+            /// \brief Computes indices and values of the k maximum/minimum values
+            ///        for each slice along specified axis.
+            class NGRAPH_API TopK : public v1::TopK
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"TopK", 3};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                /// \brief Constructs a TopK operation
+                TopK() = default;
+                /// \brief Constructs a TopK operation with two outputs: values and indices.
+                ///        By default the indices output is described by i32 data type.
+                ///
+                /// \param data The input tensor
+                /// \param k Specifies how many maximum/minimum elements should be computed
+                ///          (note: scalar input tensor)
+                /// \param axis The axis along which to compute top k indices
+                /// \param mode Specifies which operation (min or max) is used to select
+                ///             the biggest element of two.
+                /// \param sort Specifies order of output elements and/or indices
+                ///             Accepted values: none, index, value
+                /// \param index_element_type Specyfies type of produced indices
+                TopK(const Output<Node>& data,
+                     const Output<Node>& k,
+                     const int64_t axis,
+                     const std::string& mode,
+                     const std::string& sort,
+                     const element::Type& index_element_type = element::i32);
+
+                TopK(const Output<Node>& data,
+                     const Output<Node>& k,
+                     const int64_t axis,
+                     const Mode mode,
+                     const SortType sort,
+                     const element::Type& index_element_type = element::i32);
+                bool visit_attributes(AttributeVisitor& visitor) override;
+                void validate_and_infer_types() override;
+
+            protected:
+                virtual size_t
+                    read_k_from_constant_node(const std::shared_ptr<Node>& node,
+                                              const element::Type& k_element_type) const override;
+            };
+        } // namespace v3
+
         using v0::TopK;
     } // op
-
-    NGRAPH_API
-    std::ostream& operator<<(std::ostream& s, const op::v1::TopK::Mode& type);
-
-    template <>
-    class NGRAPH_API AttributeAdapter<op::v1::TopK::Mode>
-        : public EnumAttributeAdapterBase<op::v1::TopK::Mode>
-    {
-    public:
-        AttributeAdapter(op::v1::TopK::Mode& value)
-            : EnumAttributeAdapterBase<op::v1::TopK::Mode>(value)
-        {
-        }
-
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::v1::TopK::Mode>", 1};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-    };
 } // ngraph

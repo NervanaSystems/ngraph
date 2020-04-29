@@ -60,6 +60,14 @@ namespace ngraph
 
     class Function;
 
+    namespace runtime
+    {
+        class HostTensor;
+    }
+    using HostTensor = runtime::HostTensor;
+    using HostTensorPtr = std::shared_ptr<HostTensor>;
+    using HostTensorVector = std::vector<HostTensorPtr>;
+
     // Intermal, controls whether GetOutputElement nodes are elided
     // Defaults to being elided. Transformer should set to false if
     // it has passes that depend on GetOutputElement.
@@ -110,6 +118,24 @@ namespace ngraph
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
+/// \brief Used in evaluator switch statement so that the case type and evaluate call
+/// are guaranteed to have the types match.
+///
+/// Use this in an evaluate_*() function like this
+///    switch (arg0->get_element_type())
+///    {
+///        TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec); break;
+///        TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec); break;
+///
+/// Each TYPE_CASE statement expands like this:
+///   case element::Type_t::a: rc = evaluate<element::Type_t::a>(arg0, arg1, out, broadcast_spec)
+///
+/// \note Don't forget to put a break after each statement or it will fall through and generate
+/// a runtime error.
+
+#define TYPE_CASE(a)                                                                               \
+    case element::Type_t::a: rc = evaluate<element::Type_t::a>
+
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
@@ -130,6 +156,10 @@ namespace ngraph
         friend class Output;
 
     public:
+        /// \brief Verifies that attributes and inputs are consistent and computes output shapes
+        /// and element types. Must be implemented by concrete child classes so that it
+        /// can be run any number of times.
+        ///
         /// Throws if the node is invalid.
         virtual void validate_and_infer_types();
 
@@ -157,20 +187,13 @@ namespace ngraph
         /// \param output_size Number of outputs for this node
         Node(const OutputVector& arguments, size_t output_size = 1);
 
-        /// \brief Construct a node with arguments. Will be deprecated.
-        Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
-
-        /// \brief Constructor for Node subclasses that have metaclasses. Will be deprecated.
-        /// \param arguments The 0th output of node i will connect to input i
-        /// \param output_size Number of outputs for this node
-        Node(const NodeVector& arguments, size_t output_size = 1);
-
         // For back-compatibility
-        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
-        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+            NGRAPH_DEPRECATED("use OutputVector version instead")
         {
-            generate_adjoints(adjoints, as_node_vector(deltas));
+            generate_adjoints(adjoints, as_output_vector(deltas));
         }
+        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas) {}
         /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows
         /// on deep networks.
         void safe_delete(NodeVector& nodes, bool recurse);
@@ -189,6 +212,11 @@ namespace ngraph
         virtual const op::AutoBroadcastSpec& get_autob() const;
         /// \returns true if the node can decompose
         virtual bool supports_decompose() const { return false; }
+        /// \brief Evaluates the op on input_values putting results in output_values
+        /// \returns true if successful
+        virtual bool evaluate(const HostTensorVector& output_values,
+                              const HostTensorVector& input_values);
+        virtual bool constant_fold(OutputVector& output_values, const OutputVector& inputs_values);
         /// \brief Decomposes the FusedOp into a sub-graph consisting of core ngraph ops
         ///
         /// \return A vector of nodes comprising the sub-graph. The order of output
@@ -331,11 +359,10 @@ namespace ngraph
         size_t get_output_size() const;
 
         /// Returns the element type for output i
-        // TODO: deprecate in favor of node->output(i).get_element_type()
         const element::Type& get_output_element_type(size_t i) const;
 
         /// Checks that there is exactly one output and returns its element type
-        // TODO: deprecate in favor of node->output(0).get_element_type() with a suitable check in
+        // TODO: deprecate in favor of node->get_output_element_type(0) with a suitable check in
         // the calling code, or updates to the calling code if it is making an invalid assumption
         // of only one output.
         const element::Type& get_element_type() const;
@@ -376,7 +403,7 @@ namespace ngraph
 
         /// Checks that there is exactly one output and returns its tensor.
         descriptor::Tensor& get_output_tensor() const NGRAPH_DEPRECATED(
-            "use node->output(0).get_tensor() instead; insert a check that the node has only one "
+            "use node->get_output_tensor(0) instead; insert a check that the node has only one "
             "output, or update calling code not to assume only one output");
 
         /// Returns the tensor of output i
@@ -393,6 +420,8 @@ namespace ngraph
         /// Returns the set of inputs using output i
         const std::vector<descriptor::Input*>& get_output_inputs(size_t i) const
             NGRAPH_DEPRECATED("use node->output(i).get_target_inputs() instead");
+
+        std::set<Input<Node>> get_output_target_inputs(size_t i) const;
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
@@ -415,13 +444,13 @@ namespace ngraph
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
-        // Will be deprecated
-        virtual NodeVector get_arguments() const;
-        // Will be deprecated
-        std::shared_ptr<Node> get_argument(size_t index) const;
+        virtual NodeVector get_arguments() const NGRAPH_DEPRECATED("Use input_values().");
+        std::shared_ptr<Node> get_argument(size_t index) const
+            NGRAPH_DEPRECATED("use input_value(i).");
 
         Node* get_input_node_ptr(size_t index) const;
         std::shared_ptr<Node> get_input_node_shared_ptr(size_t index) const;
+        Output<Node> get_input_source_output(size_t i) const;
 
     protected:
         // Will be replaced with clone_with_new_inputs
@@ -576,6 +605,11 @@ namespace ngraph
         RawNodeOutput(const Output<Node>& value)
             : node(value.get_node())
             , index(value.get_index())
+        {
+        }
+        RawNodeOutput(Node* node, size_t index)
+            : node(node)
+            , index(index)
         {
         }
         RawNodeOutput(const RawNodeOutput&) = default;

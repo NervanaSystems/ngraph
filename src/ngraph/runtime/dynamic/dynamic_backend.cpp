@@ -23,9 +23,9 @@
 #include "ngraph/op/experimental/dyn_replace_slice.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/range.hpp"
-#include "ngraph/op/experimental/transpose.hpp"
+#include "ngraph/op/range.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/transpose.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -93,7 +93,7 @@ bool is_dynamic_op(const std::shared_ptr<Node>& op)
            is_type<op::v1::ConvolutionBackpropData>(op) ||
            is_type<op::v1::ConvolutionBackpropFilters>(op) ||
            is_type<op::v1::AvgPoolBackprop>(op) || is_type<op::v1::Broadcast>(op) ||
-           is_type<op::v1::GenerateMask>(op);
+           is_type<op::v3::Broadcast>(op) || is_type<op::v1::GenerateMask>(op);
 }
 
 // Helper for a vile hack in DynamicExecutable::call. See body of that function for details.

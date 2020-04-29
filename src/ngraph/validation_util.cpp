@@ -15,6 +15,11 @@
 //*****************************************************************************
 
 #include "ngraph/validation_util.hpp"
+#include "ngraph/evaluator.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -869,29 +874,6 @@ int64_t ngraph::normalize_axis(const std::string& node_description,
     return int64_t(axis);
 }
 
-void ngraph::opset1::infer_conv_backprop_output_spatial_shape(const Shape& input_data_shape,
-                                                              const Shape& filters_shape,
-                                                              const Strides& strides,
-                                                              const Strides& dilations,
-                                                              const CoordinateDiff& pads_begin,
-                                                              const CoordinateDiff& pads_end,
-                                                              const CoordinateDiff& output_padding,
-                                                              Shape& output_spatial_shape)
-{
-    size_t num_spatial_dims = input_data_shape.size();
-    NGRAPH_CHECK(filters_shape.size() == num_spatial_dims && strides.size() == num_spatial_dims &&
-                 dilations.size() == num_spatial_dims && pads_begin.size() == num_spatial_dims &&
-                 pads_end.size() == num_spatial_dims && output_padding.size() == num_spatial_dims);
-
-    for (size_t i = 0; i < num_spatial_dims; ++i)
-    {
-        size_t val = strides[i] * (input_data_shape[i] - 1) +
-                     dilations[i] * (filters_shape[i] - 1) + 1 - pads_begin[i] - pads_end[i] +
-                     output_padding[i];
-        output_spatial_shape.push_back(val);
-    }
-}
-
 void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_shape,
                                                       const Shape& filters_shape,
                                                       const Shape& output_shape,
@@ -918,7 +900,7 @@ void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_sh
         int total_padding = strides[i] * (input_data_shape[i] - 1) +
                             dilations[i] * (filters_shape[i] - 1) + 1 - output_shape[i] +
                             output_padding[i];
-        if (auto_pad_type == op::PadType::SAME_UPPER)
+        if (auto_pad_type != op::PadType::SAME_UPPER)
         {
             pads_begin[i] = total_padding / 2;
             pads_end[i] = total_padding - pads_begin[i];
@@ -928,5 +910,124 @@ void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_sh
             pads_end[i] = total_padding / 2;
             pads_begin[i] = total_padding - pads_end[i];
         }
+    }
+}
+
+namespace
+{
+    /// \brief Scalar variant describes value of an Output
+    struct MaxValue
+    {
+        /// \brief No information known about the output
+        MaxValue()
+            : m_element_type(element::Type_t::undefined)
+        {
+        }
+        /// \brief int64_t assoiated with the output
+        MaxValue(int64_t value)
+            : m_element_type(element::Type_t::i64)
+            , m_int64_t(value)
+        {
+        }
+        element::Type_t m_element_type;
+        element_type_traits<element::Type_t::i64>::value_type m_int64_t;
+    };
+
+    vector<MaxValue> exec_constant(Node* node, vector<MaxValue>& inputs)
+    {
+        auto op = as_type<op::Constant>(node);
+        auto shape = op->get_output_partial_shape(0);
+        if (shape.rank().is_static() && shape.rank().get_length() == 0)
+        {
+            auto et = op->get_output_element_type(0);
+            if (et == element::i64)
+            {
+                vector<int64_t> elts = op->get_vector<int64_t>();
+                return {MaxValue(elts[0])};
+            }
+        }
+        return {MaxValue()};
+    }
+
+    vector<MaxValue> exec_minimum(Node* node, vector<MaxValue>& inputs)
+    {
+        auto op = as_type<op::Minimum>(node);
+        auto shape = op->get_output_partial_shape(0);
+        if (shape.rank().is_static() && shape.rank().get_length() == 0)
+        {
+            auto et = op->get_output_element_type(0);
+            if (et == element::i64)
+            {
+                int64_t min_value = numeric_limits<int64_t>::max();
+                {
+                    auto v1 = inputs.at(0);
+                    if (v1.m_element_type == et)
+                    {
+                        min_value = min(min_value, v1.m_int64_t);
+                    }
+                }
+                {
+                    auto v2 = inputs.at(1);
+                    if (v2.m_element_type == et)
+                    {
+                        min_value = min(min_value, v2.m_int64_t);
+                    }
+                }
+                return {min_value == numeric_limits<int64_t>::max() ? MaxValue()
+                                                                    : MaxValue(min_value)};
+            }
+        }
+        return {MaxValue()};
+    }
+}
+
+pair<bool, int64_t> ngraph::maximum_value(const Output<Node>& value)
+{
+    static Evaluator<MaxValue>::op_handler_map handlers = {
+        {op::Minimum::type_info, exec_minimum}, {op::Constant::type_info, exec_constant}};
+    Evaluator<MaxValue>::value_map value_map;
+    Evaluator<MaxValue> evaluator(handlers, value_map);
+    auto val = evaluator.evaluate(value);
+    if (val.m_element_type == element::Type_t::i64)
+    {
+        return pair<bool, int64_t>(true, val.m_int64_t);
+    }
+    return pair<bool, int64_t>(false, 0);
+}
+
+void ngraph::evaluate_nodes(std::map<RawNodeOutput, HostTensorPtr>& value_map,
+                            std::map<RawNodeOutput, HostTensorPtr>& output_tensor_map,
+                            const OutputVector& outputs)
+{
+    Evaluator<HostTensorPtr> evaluator({}, value_map);
+    evaluator.set_univeral_handler(
+        [&output_tensor_map](Node* node,
+                             const HostTensorVector& input_tensors) -> HostTensorVector {
+            HostTensorVector output_tensors;
+            for (auto v : node->outputs())
+            {
+                auto it = output_tensor_map.find(v);
+                if (it == output_tensor_map.end())
+                {
+                    auto c = make_shared<HostTensor>(v);
+                    output_tensors.push_back(c);
+                }
+                else
+                {
+                    output_tensors.push_back(it->second);
+                }
+            }
+            if (node->evaluate(output_tensors, input_tensors))
+            {
+                return output_tensors;
+            }
+            else
+            {
+                return {};
+            }
+        });
+    for (auto value : outputs)
+    {
+        evaluator.evaluate(value);
     }
 }
