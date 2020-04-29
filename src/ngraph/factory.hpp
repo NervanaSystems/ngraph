@@ -24,8 +24,6 @@
 
 namespace ngraph
 {
-    NGRAPH_API std::mutex& get_registry_mutex();
-
     /// \brief Registry of factories that can construct objects derived from BASE_TYPE
     template <typename BASE_TYPE>
     class FactoryRegistry
@@ -95,6 +93,12 @@ namespace ngraph
         static FactoryRegistry<BASE_TYPE>& get();
 
     protected:
+        static std::mutex& get_registry_mutex()
+        {
+            static std::mutex registry_mutex;
+            return registry_mutex;
+        }
+
         FactoryMap m_factory_map;
     };
 }
