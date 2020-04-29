@@ -725,8 +725,6 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_
         {{op::v0::Add::type_info, simplify_add},
          {op::v0::Multiply::type_info, simplify_multiply},
          {opset3::Gather::type_info, simplify_gather},
-         {opset3::Add::type_info, simplify_add},
-         {opset3::Multiply::type_info, simplify_multiply},
          {op::v0::Concat::type_info, simplify_concat},
          {opset3::ShapeOf::type_info, simplify_gather_shapeof},
          {op::v0::Sum::type_info,
