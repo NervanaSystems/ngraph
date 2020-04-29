@@ -155,9 +155,6 @@ namespace
         int64_t data_rank = static_cast<int64_t>(data_shape.size());
         auto axes_shape = arg1->get_shape();
         NGRAPH_CHECK(axes_shape.size() <= 1, "Axes to remove must be a vector or empty.");
-        NGRAPH_CHECK(arg1->get_element_type() == element::i64,
-                     "Axis must be of type i64. Invalid type: ",
-                     arg1->get_element_type());
 
         auto out_shape = data_shape;
         // Empty axes vector
@@ -168,8 +165,7 @@ namespace
         else
         {
             // Get axes
-            const int64_t* axes_buf = arg1->get_data_ptr<int64_t>();
-            vector<int64_t> axes(axes_buf, axes_buf + shape_size(axes_shape));
+            vector<int64_t> axes = read_index_vector(arg1);
             // Normalize axes
             std::transform(axes.begin(),
                            axes.end(),

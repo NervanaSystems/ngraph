@@ -401,5 +401,7 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
 
 std::vector<float> NGRAPH_API read_float_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
 
+std::vector<int64_t> NGRAPH_API read_index_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
+
 NGRAPH_API
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

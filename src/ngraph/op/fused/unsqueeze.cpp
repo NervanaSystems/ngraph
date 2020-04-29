@@ -123,15 +123,11 @@ namespace
         auto axes_shape = arg1->get_shape();
         NGRAPH_CHECK(axes_shape.size() == 1, "Axes to add must be a vector.");
         NGRAPH_CHECK(axes_shape[0] > 0, "Axes cannot be empty.");
-        NGRAPH_CHECK(arg1->get_element_type() == element::i64,
-                     "Axis must be of type i64. Invalid type: ",
-                     arg1->get_element_type());
 
         auto out_shape = data_shape;
         int64_t out_rank = data_rank + static_cast<int64_t>(shape_size(axes_shape));
         // Get axes
-        const int64_t* axes_buf = arg1->get_data_ptr<int64_t>();
-        vector<int64_t> axes(axes_buf, axes_buf + shape_size(axes_shape));
+        vector<int64_t> axes = read_index_vector(arg1);
         // Normalize axes
         std::transform(axes.begin(), axes.end(), axes.begin(), [out_rank](int64_t i) -> int64_t {
             return i < 0 ? out_rank + i : i;
