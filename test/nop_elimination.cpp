@@ -89,7 +89,10 @@ TEST(nop_elimination, convert_type_agnostic)
     pass_manager.run_passes(f);
 
     ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 0);
+}
 
+TEST(nop_elimination, convert_type_ReduceMin)
+{
     auto param = make_shared<op::Parameter>(element::boolean, Shape{3, 2, 4});
     auto shape_of = make_shared<op::v0::ShapeOf>(param);
     auto concat = make_shared<op::v0::Concat>(NodeVector{shape_of}, 0);
@@ -101,10 +104,10 @@ TEST(nop_elimination, convert_type_agnostic)
     auto convert_2 = make_shared<op::v0::Convert>(reduce_min, element::i64);
     auto func = make_shared<Function>(make_shared<op::v0::Abs>(convert_2), ParameterVector{param});
 
-    pass::Manager pass_manager_2;
-    pass_manager_2.register_pass<pass::Validate>();
-    pass_manager_2.register_pass<pass::NopElimination>();
-    pass_manager_2.run_passes(func);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Validate>();
+    pass_manager.register_pass<pass::NopElimination>();
+    pass_manager.run_passes(func);
 
     ASSERT_EQ(count_ops_of_type<op::v0::Convert>(func), 0);
 }
