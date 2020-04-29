@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 
 #include "ngraph/ngraph.hpp"
+#include "util/type_prop.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -1363,4 +1364,28 @@ TEST(constant, construct_uniform)
     EXPECT_TRUE((test_uniform_ctor<uint64_t, uint16_t>()));
     EXPECT_TRUE((test_uniform_ctor<uint64_t, uint32_t>()));
     EXPECT_TRUE((test_uniform_ctor<uint64_t, uint64_t>()));
+}
+
+TEST(constant, bad_get_data_ptr)
+{
+    op::Constant c(element::f32, Shape{}, vector<float>{1.0});
+    EXPECT_EQ(*c.get_data_ptr<element::Type_t::f32>(), 1.0);
+    try
+    {
+        c.get_data_ptr<element::Type_t::f64>();
+        FAIL() << "Bad type not detected.";
+    }
+    catch (const CheckFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("get_data_ptr"));
+    }
+    try
+    {
+        c.get_data_ptr<element::Type_t::i32>();
+        FAIL() << "Bad type not detected.";
+    }
+    catch (const CheckFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("get_data_ptr"));
+    }
 }

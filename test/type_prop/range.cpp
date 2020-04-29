@@ -116,7 +116,7 @@ TEST(type_prop, range_some_const_zero_stride_fails)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "'step' cannot be zero.");
+        EXPECT_HAS_SUBSTRING(error.what(), "'step' cannot be zero");
     }
     catch (...)
     {

@@ -37,7 +37,6 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/node_input.hpp"
 #include "ngraph/node_output.hpp"
 #include "ngraph/op/util/attr_types.hpp"
@@ -60,6 +59,14 @@ namespace ngraph
     class Node;
 
     class Function;
+
+    namespace runtime
+    {
+        class HostTensor;
+    }
+    using HostTensor = runtime::HostTensor;
+    using HostTensorPtr = std::shared_ptr<HostTensor>;
+    using HostTensorVector = std::vector<HostTensorPtr>;
 
     // Intermal, controls whether GetOutputElement nodes are elided
     // Defaults to being elided. Transformer should set to false if
@@ -110,6 +117,24 @@ namespace ngraph
 
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
+
+/// \brief Used in evaluator switch statement so that the case type and evaluate call
+/// are guaranteed to have the types match.
+///
+/// Use this in an evaluate_*() function like this
+///    switch (arg0->get_element_type())
+///    {
+///        TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec); break;
+///        TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec); break;
+///
+/// Each TYPE_CASE statement expands like this:
+///   case element::Type_t::a: rc = evaluate<element::Type_t::a>(arg0, arg1, out, broadcast_spec)
+///
+/// \note Don't forget to put a break after each statement or it will fall through and generate
+/// a runtime error.
+
+#define TYPE_CASE(a)                                                                               \
+    case element::Type_t::a: rc = evaluate<element::Type_t::a>
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
@@ -189,8 +214,8 @@ namespace ngraph
         virtual bool supports_decompose() const { return false; }
         /// \brief Evaluates the op on input_values putting results in output_values
         /// \returns true if successful
-        virtual bool evaluate(const EvaluatorTensorVector& output_values,
-                              const EvaluatorTensorVector& input_values);
+        virtual bool evaluate(const HostTensorVector& output_values,
+                              const HostTensorVector& input_values);
         virtual bool constant_fold(OutputVector& output_values, const OutputVector& inputs_values);
         /// \brief Decomposes the FusedOp into a sub-graph consisting of core ngraph ops
         ///
@@ -425,6 +450,7 @@ namespace ngraph
 
         Node* get_input_node_ptr(size_t index) const;
         std::shared_ptr<Node> get_input_node_shared_ptr(size_t index) const;
+        Output<Node> get_input_source_output(size_t i) const;
 
     protected:
         // Will be replaced with clone_with_new_inputs
