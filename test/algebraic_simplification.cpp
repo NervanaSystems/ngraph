@@ -1066,23 +1066,31 @@ TEST(algebraic_simplification, gather_3d_indices_constant_axis_1)
 
 TEST(algebraic_simplification, gather_shapeof)
 {
-    auto check_usecase = [](const Shape& shape,
+    auto check_usecase = [](const PartialShape& pshape,
                             bool is_scalar_index,
                             const std::vector<int64_t>& indices_val,
                             int64_t axis_val) {
+        static size_t id = 0;
+        auto casename = string("usecase #") + to_string(++id);
         auto indices = is_scalar_index
                            ? op::Constant::create<int64_t>(element::i64, Shape{}, indices_val)
                            : op::Constant::create<int64_t>(
                                  element::i64, Shape{indices_val.size()}, indices_val);
         auto axis = op::Constant::create<int64_t>(element::i64, Shape{}, {axis_val});
-        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto A = make_shared<op::Parameter>(element::f32, pshape);
         auto A1 = make_shared<op::v0::Abs>(A);
         auto B = make_shared<op::v1::Gather>(A1, indices, axis);
         auto B1 = make_shared<op::v3::ShapeOf>(B);
         auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
         auto optimized_f = clone_function(*baseline_f);
-        EXPECT_TRUE((compare_pass_int<pass::AlgebraicSimplification, float, int64_t>(baseline_f,
-                                                                                     optimized_f)));
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::Validate>();
+        pass_manager.register_pass<pass::AlgebraicSimplification>();
+        pass_manager.run_passes(optimized_f);
+        auto ps = baseline_f->get_results()[0]->get_output_partial_shape(0);
+        auto ps_r = optimized_f->get_results()[0]->get_output_partial_shape(0);
+        EXPECT_TRUE(ps.rank().is_static() && ps_r.rank().is_static()) << casename;
+        ASSERT_EQ(ps.rank().get_length(), ps_r.rank().get_length()) << casename;
 
         ASSERT_EQ(count_ops_of_type<op::v3::ShapeOf>(baseline_f), 1);
         ASSERT_EQ(count_ops_of_type<op::v1::Gather>(baseline_f), 1);
@@ -1097,7 +1105,7 @@ TEST(algebraic_simplification, gather_shapeof)
         }
     };
 
-    check_usecase(Shape{2, 3, 2, 1}, true, std::vector<int64_t>{0}, 0);
+    check_usecase(PartialShape{Dimension::dynamic(), 4}, true, std::vector<int64_t>{0}, 1);
     check_usecase(Shape{2, 3, 2, 1}, true, std::vector<int64_t>{0}, 3);
     check_usecase(Shape{3, 4}, true, std::vector<int64_t>{3}, 1);
     check_usecase(Shape{12}, true, std::vector<int64_t>{0}, 0);
