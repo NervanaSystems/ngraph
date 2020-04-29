@@ -14,19 +14,16 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/scatter_nd.hpp"
+#include "ngraph/op/fused/scatter_nd.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-static int INPUTS = 0;
-static int INDICES = 1;
-static int UPDATES = 2;
 
 constexpr NodeTypeInfo op::v0::ScatterND::type_info;
 
@@ -110,7 +107,7 @@ void op::v0::ScatterND::pre_validate_and_infer_types()
     set_output_type(0, data_et, data_ps);
 }
 
-NodeVector op::v0::ScatterND::decompose_op() const
+NodeVector op::ScatterND::decompose_op() const
 {
     const auto data = input_value(0);
     const auto indices = input_value(1);
@@ -128,7 +125,7 @@ NodeVector op::v0::ScatterND::decompose_op() const
     const auto true_values = op::Constant::create(element::i64, updates_shape, {1});
     const auto false_values = op::Constant::create(element::i64, data_shape, {0});
 
-    const auto mask = std::make_shared<op::v0::ScatterND>(false_values, indices, true_values);
+    const auto mask = std::make_shared<op::v0::ScatterNDAdd>(false_values, indices, true_values);
 
     const auto mask_bool = std::make_shared<op::v0::Convert>(mask, element::boolean);
 
@@ -139,74 +136,5 @@ NodeVector op::v0::ScatterND::decompose_op() const
 
     const auto intermediate = std::make_shared<op::v0::Select>(mask_bool, zeros, data);
 
-    return {std::make_shared<op::v0::ScatterND>(intermediate, indices, updates)};
-}
-
-constexpr NodeTypeInfo op::v3::ScatterND::type_info;
-
-shared_ptr<Node> op::v3::ScatterND::clone_with_new_inputs(const OutputVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<ScatterND>(new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
-}
-
-void op::v3::ScatterND::validate_and_infer_types()
-{
-    element::Type inputs_et = get_input_element_type(INPUTS);
-    element::Type indices_et = get_input_element_type(INDICES);
-    element::Type updates_et = get_input_element_type(UPDATES);
-
-    const PartialShape& inputs_shape = get_input_partial_shape(INPUTS);
-    const PartialShape& indices_shape = get_input_partial_shape(INDICES);
-    const PartialShape& updates_shape = get_input_partial_shape(UPDATES);
-
-    NODE_VALIDATION_CHECK(this,
-                          indices_et == element::i32 || indices_et == element::i64,
-                          "Indices element type must be i64 or i32");
-
-    NODE_VALIDATION_CHECK(
-        this, updates_et == inputs_et, "Updates element type must be the same as inputs");
-
-    NODE_VALIDATION_CHECK(this,
-                          indices_shape.rank().is_dynamic() ||
-                              indices_shape.rank().get_length() >= 1,
-                          "Indices rank is expected to be at least 1");
-
-    NODE_VALIDATION_CHECK(this,
-                          inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
-                              indices_shape[indices_shape.rank().get_length() - 1].get_length() <=
-                                  inputs_shape.rank().get_length(),
-                          "Last dimension of indices can be at most the rank of inputs");
-
-    NODE_VALIDATION_CHECK(
-        this,
-        inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
-            updates_shape.rank().is_dynamic() ||
-            updates_shape.rank().get_length() ==
-                indices_shape.rank().get_length() + inputs_shape.rank().get_length() -
-                    indices_shape[indices_shape.rank().get_length() - 1].get_length() - 1,
-        "Rank of updates must be rank of inputs + rank of indices - last dimension of indices - 1");
-
-    bool compatible = true;
-    if (inputs_shape.is_static() && indices_shape.is_static() && updates_shape.is_static())
-    {
-        size_t indices_rank = indices_shape.rank().get_length();
-        size_t updates_rank = updates_shape.rank().get_length();
-        for (size_t i = 0; i < indices_rank - 1; i++)
-        {
-            compatible = compatible && updates_shape[i].same_scheme(indices_shape[i]);
-        }
-        size_t j = indices_shape[indices_rank - 1].get_length();
-        for (size_t i = indices_rank - 1; i < updates_rank; i++, j++)
-        {
-            compatible = compatible && updates_shape[i].same_scheme(inputs_shape[j]);
-        }
-    }
-
-    NODE_VALIDATION_CHECK(
-        this,
-        compatible,
-        "Updates shape must be indices_shape[:-1] + inputs_shape[indices.shape[-1]:]");
-
-    set_output_type(0, inputs_et, inputs_shape);
+    return {std::make_shared<op::v0::ScatterNDAdd>(intermediate, indices, updates)};
 }

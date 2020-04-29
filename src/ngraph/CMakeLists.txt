@@ -346,8 +346,8 @@ set (SRC
     op/scatter_elements_update.hpp
     op/scatter_nd_add.cpp
     op/scatter_nd_add.hpp
-    op/scatter_nd.cpp
-    op/scatter_nd.hpp
+    op/scatter_nd_update.cpp
+    op/scatter_nd_update.hpp
     op/scatter_update.cpp
     op/scatter_update.hpp
     op/select.cpp
@@ -445,6 +445,7 @@ set (SRC
     op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/scatter_nd.cpp
     op/fused/scatter_nd.hpp
     op/fused/stack.cpp
     op/fused/stack.hpp
