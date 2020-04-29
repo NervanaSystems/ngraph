@@ -68,6 +68,20 @@ namespace
         return replacement_node;
     }
 
+    shared_ptr<Node> op_cast(shared_ptr<op::v3::TopK> node)
+    {
+        const auto data = node->input_value(0);
+        const auto k = node->input_value(1);
+        const auto replacement_node = make_shared<op::v1::TopK>(data,
+                                                                k,
+                                                                node->get_axis(),
+                                                                node->get_mode(),
+                                                                node->get_sort_type(),
+                                                                node->get_index_element_type());
+        replace_node(node, replacement_node);
+        return replacement_node;
+    }
+
     using DispatchMap = map<NodeTypeInfo, std::function<bool(shared_ptr<Node> node)>>;
 
     template <typename T>
@@ -79,7 +93,7 @@ namespace
             if (ngraph::get_provenance_enabled())
             {
                 const std::string provenance_tag =
-                    "<Opset3_Downgrade (v3 " + std::string(node->get_type_name()) + ")>";
+                    "<Opset1_Downgrade (v3 " + std::string(node->get_type_name()) + ")>";
                 downgraded_node->add_provenance_tags_above(node->input_values(), {provenance_tag});
             }
             return true;
@@ -91,7 +105,7 @@ namespace
     {
         static DispatchMap dispatch_map{
 #define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, op_cast_thunk<NAMESPACE::NAME>},
-            NGRAPH_OP(Broadcast, op::v3)
+            NGRAPH_OP(Broadcast, op::v3) NGRAPH_OP(TopK, op::v3)
 #undef NGRAPH_OP
         };
         return dispatch_map;

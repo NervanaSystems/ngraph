@@ -253,9 +253,11 @@ bool runtime::dynamic::DynamicExecutable::call(
         }
 
         pass::Manager passes;
+        // Opset1Downgrade should be moved below DynElimination
+        // when ConstantFolding for v3 ops will be ready
+        passes.register_pass<pass::Opset1Downgrade>();
         passes.register_pass<pass::ConstantFolding>();
         passes.register_pass<pass::DynElimination>();
-        passes.register_pass<pass::Opset1Downgrade>();
         passes.register_pass<pass::Opset0Downgrade>(); // Converts dynamic v1 variants to v0 ops
         passes.set_per_pass_validation(false);
 

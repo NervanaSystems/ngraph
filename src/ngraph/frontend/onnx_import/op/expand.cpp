@@ -21,7 +21,6 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "opsets/opset3.hpp" // todo remove
 
 namespace ngraph
 {
@@ -36,7 +35,7 @@ namespace ngraph
                     const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
                     const std::shared_ptr<ngraph::Node> shape{node.get_ng_inputs().at(1)};
 
-                    return {std::make_shared<opset3::Broadcast>(
+                    return {std::make_shared<default_opset::Broadcast>(
                         data, shape, ngraph::op::BroadcastType::BIDIRECTIONAL)};
                 }
 
