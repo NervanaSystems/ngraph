@@ -170,10 +170,16 @@ namespace
             // Get axes
             const int64_t* axes_buf = arg1->get_data_ptr<int64_t>();
             vector<int64_t> axes(axes_buf, axes_buf + shape_size(axes_shape));
-            std::sort(axes.begin(), axes.end(), greater<int64_t>());
-            for (int64_t i : axes)
+            // Normalize axes
+            std::transform(axes.begin(),
+                           axes.end(),
+                           axes.begin(),
+                           [data_rank](int64_t i) -> int64_t { return i < 0 ? data_rank + i : i; });
+            // Sort in decreasing order
+            std::set<int64_t, greater<int64_t>> axes_set(axes.begin(), axes.end());
+            NGRAPH_CHECK(axes.size() == axes_set.size(), "Axes has duplicate axis.");
+            for (int64_t axis : axes_set)
             {
-                int64_t axis = i < 0 ? data_rank + i : i;
                 NGRAPH_CHECK(axis >= 0 && axis < data_rank, "Axis is out of bounds: ", axis);
                 NGRAPH_CHECK(out_shape[axis] == 1, "Only axis of size 1 can be removed.");
                 out_shape.erase(out_shape.begin() + axis);
