@@ -431,19 +431,24 @@ static bool simplify_multiply(shared_ptr<Node> multiply)
     bool rc = false;
     if (multiply)
     {
-        shared_ptr<Node> constant;
-        Output<Node> value;
-        if (is_input_uniform_constant(multiply, 0, constant, value))
+        auto s0 = multiply->get_input_partial_shape(0);
+        auto s1 = multiply->get_input_partial_shape(1);
+        if (s0.is_static() && s1.is_static() && s0.get_shape() == s1.get_shape())
         {
-            replace_output_update_name(multiply->output(0), constant->output(0));
-            rc = true;
-        }
-        else
-        {
-            if (is_input_uniform_constant(multiply, 1, constant, value))
+            shared_ptr<Node> constant;
+            Output<Node> value;
+            if (is_input_uniform_constant(multiply, 0, constant, value))
             {
-                replace_output_update_name(multiply->output(0), value);
+                replace_output_update_name(multiply->output(0), constant->output(0));
                 rc = true;
+            }
+            else
+            {
+                if (is_input_uniform_constant(multiply, 1, constant, value))
+                {
+                    replace_output_update_name(multiply->output(0), value);
+                    rc = true;
+                }
             }
         }
     }
@@ -461,12 +466,17 @@ static bool simplify_add(shared_ptr<Node> add)
     bool rc = false;
     if (add)
     {
-        shared_ptr<Node> constant;
-        Output<Node> value;
-        if (is_input_uniform_constant(add, 0, constant, value))
+        auto s0 = add->get_input_partial_shape(0);
+        auto s1 = add->get_input_partial_shape(1);
+        if (s0.is_static() && s1.is_static() && s0.get_shape() == s1.get_shape())
         {
-            replace_output_update_name(add->output(0), value);
-            rc = true;
+            shared_ptr<Node> constant;
+            Output<Node> value;
+            if (is_input_uniform_constant(add, 0, constant, value))
+            {
+                replace_output_update_name(add->output(0), value);
+                rc = true;
+            }
         }
     }
 
