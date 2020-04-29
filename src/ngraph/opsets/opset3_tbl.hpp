@@ -1,3 +1,4 @@
+
 //*****************************************************************************
 // Copyright 2017-2020 Intel Corporation
 //
@@ -160,3 +161,5 @@ NGRAPH_OP(ROIAlign, ngraph::op::v3)
 NGRAPH_OP(ScatterElementsUpdate, ngraph::op::v3)
 NGRAPH_OP(ScatterUpdate, ngraph::op::v3)
 NGRAPH_OP(ShapeOf, ngraph::op::v3)
+NGRAPH_OP(Assign, ngraph::op::v3)
+NGRAPH_OP(ReadValue, ngraph::op::v3)

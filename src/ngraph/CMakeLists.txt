@@ -131,6 +131,8 @@ set (SRC
     op/argmax.hpp
     op/argmin.cpp
     op/argmin.hpp
+    op/assign.cpp
+    op/assign.hpp
     op/asin.cpp
     op/asin.hpp
     op/atan.cpp
@@ -298,6 +300,8 @@ set (SRC
     op/proposal.cpp
     op/psroi_pooling.hpp
     op/psroi_pooling.cpp
+    op/read_value.hpp
+    op/read_value.cpp
     op/reduce_logical_and.cpp
     op/reduce_logical_and.hpp
     op/reduce_logical_or.cpp
@@ -378,6 +382,7 @@ set (SRC
     op/subtract.hpp
     op/sum.cpp
     op/sum.hpp
+    op/variable.hpp
     op/variadic_split.cpp
     op/variadic_split.hpp
     op/tan.cpp
