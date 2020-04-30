@@ -40,3 +40,32 @@ def test_interpolate(dtype):
     assert node.get_type_name() == 'Interpolate'
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == expected_shape
+
+
+@pytest.mark.parametrize('int_dtype, fp_dtype', [
+    (np.int8, np.float32),
+    (np.int16, np.float32),
+    (np.int32, np.float32),
+    (np.int64, np.float32),
+    (np.uint8, np.float32),
+    (np.uint16, np.float32),
+    (np.uint32, np.float32),
+    (np.uint64, np.float32),
+    (np.int32, np.float16),
+    (np.int32, np.float64),
+])
+def test_prior_box(int_dtype, fp_dtype):
+    image_shape = [300, 300]
+    attributes = {
+        'offset': fp_dtype(0),
+        'min_size': np.array([2, 3], dtype=fp_dtype),
+        'aspect_ratio': np.array([1.5, 2.0, 2.5], dtype=fp_dtype),
+    }
+
+    layer_shape = ng.constant(np.array([32, 32], dtype=int_dtype), int_dtype)
+
+    node = ng.prior_box(layer_shape, image_shape, attributes)
+
+    assert node.get_type_name() == 'PriorBox'
+    assert node.get_output_size() == 1
+    assert node.get_output_shape(0) == [2, 20480]
