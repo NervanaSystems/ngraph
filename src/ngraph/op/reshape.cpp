@@ -32,12 +32,13 @@ namespace
     bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out, op::Reshape* reshape)
     {
         auto data_ptr = out->get_data_ptr<ET>();
-        runtime::opt_kernel::reshape<uint64_t>(arg0->get_data_ptr<ET>(),
-                                         data_ptr,
-                                         arg0->get_shape(),
-                                         reshape->get_input_order(),
-                                         out->get_shape());
-		return true;
+        runtime::opt_kernel::reshape<typename element_type_traits<ET>::value_type>(
+            arg0->get_data_ptr<ET>(),
+            data_ptr,
+            arg0->get_shape(),
+            reshape->get_input_order(),
+            out->get_shape());
+        return true;
     }
 
     bool evaluate_reshape(const HostTensorPtr& arg0, const HostTensorPtr& out, op::Reshape* reshape)
@@ -45,13 +46,13 @@ namespace
         bool rc = true;
         switch (arg0->get_element_type())
         {
-            /*TYPE_CASE(undefined)
+        case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant reshape folding");
             break;
-            TYPE_CASE(dynamic)
+        case element::Type_t::dynamic:
             NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant reshape folding");
             break;
-            TYPE_CASE(u1)
+        case element::Type_t::u1:
             NGRAPH_CHECK(false, "Encountered 'u1' element type in constant reshape folding");
             break;
             TYPE_CASE(bf16)(arg0, out, reshape);
@@ -75,7 +76,7 @@ namespace
             TYPE_CASE(u16)(arg0, out, reshape);
             break;
             TYPE_CASE(u32)(arg0, out, reshape);
-            break;*/
+            break;
             TYPE_CASE(u64)(arg0, out, reshape);
             break;
         default: rc = false; break;
@@ -209,7 +210,7 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
 
 bool op::v0::Reshape::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    return false;
+    return evaluate_reshape(inputs[0], outputs[0], this);
 }
 
 constexpr NodeTypeInfo op::v1::Reshape::type_info;
@@ -362,9 +363,4 @@ void op::v1::Reshape::generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                         const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for Reshape");
-}
-
-bool op::v1::Reshape::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
-{
-    return false;
 }
