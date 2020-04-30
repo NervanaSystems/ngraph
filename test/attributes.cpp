@@ -398,11 +398,10 @@ public:
     {
         set_uint64_t_vector(name, adapter.get());
     }
-    void on_adapter(const std::string& name, ValueAccessor<DataHandle>& adapter) override
+    void on_attribute(const std::string& name, void* constant_data, size_t size) override
     {
-        HostTensorPtr data =
-            make_shared<HostTensor>(element::u8, Shape{adapter.get_size_in_bytes()});
-        data->write(adapter.get_data_ptr(), adapter.get_size_in_bytes());
+        HostTensorPtr data = make_shared<HostTensor>(element::u8, Shape{size});
+        data->write(constant_data, size);
         set_host_tensor(name, data);
     }
 
@@ -510,10 +509,10 @@ public:
     {
         adapter.set(m_values.get_double_vector(name));
     }
-    void on_adapter(const std::string& name, ValueAccessor<DataHandle>& adapter) override
+    void on_attribute(const std::string& name, void* constant_data, size_t size) override
     {
         HostTensorPtr data = m_values.get_host_tensor(name);
-        data->read(adapter.get_data_ptr(), adapter.get_size_in_bytes());
+        data->read(constant_data, size);
     }
 
 protected:

@@ -170,7 +170,4 @@ namespace ngraph
     }
 
     NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
-
-    /// DataHandle
-    constexpr DiscreteTypeInfo AttributeAdapter<DataHandle>::type_info;
 }
