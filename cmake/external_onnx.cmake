@@ -38,7 +38,7 @@ add_definitions(-DONNX_BUILD_SHARED_LIBS=ON)
 set(CMAKE_CXX_FLAGS ${CMAKE_ORIGINAL_CXX_FLAGS})
 
 if(WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244 /wd4251")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244 /wd4251 /wd4275")
 endif()
 
 FetchContent_Declare(
