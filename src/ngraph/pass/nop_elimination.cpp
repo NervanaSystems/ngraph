@@ -134,55 +134,115 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
     return false;
 }
 
+static std::vector<int64_t> get_unsqueeze_axes(const PartialShape& data_shape,
+                                               const PartialShape& out_shape)
+{
+    std::vector<int64_t> axes;
+    size_t i = 0;
+    for (auto o = 0; o < out_shape.rank().get_length(); o++)
+    {
+        if (i < data_shape.rank().get_length() && data_shape[i].same_scheme(out_shape[o]))
+        {
+            i += 1;
+            continue;
+        }
+        if (out_shape[o].is_static() && out_shape[o] == 1)
+        {
+            axes.push_back(o);
+        }
+    }
+    return axes;
+}
+
+static std::vector<int64_t> get_squeeze_axes(const PartialShape& data_shape,
+                                             const PartialShape& out_shape)
+{
+    std::vector<int64_t> axes;
+    size_t o = 0;
+    for (auto i = 0; i < data_shape.rank().get_length(); i++)
+    {
+        if (o < out_shape.rank().get_length() && data_shape[i].same_scheme(out_shape[o]))
+        {
+            o += 1;
+            continue;
+        }
+        if (data_shape[i].is_static() && data_shape[i] == 1)
+        {
+            axes.push_back(i);
+        }
+    }
+    return axes;
+}
+
 static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
 {
     auto unsqueeze = as_type_ptr<opset3::Unsqueeze>(node);
     auto input = unsqueeze->input_value(0).get_node_shared_ptr();
+    auto data_shape = input->input_value(0).get_partial_shape();
+    auto out_shape = node->get_output_partial_shape(0);
     auto squeeze = as_type_ptr<opset3::Squeeze>(input);
-    // eliminate redundant squeeze->unsqueeze
-    if (squeeze)
-    {
-        if (!ngraph::compare_constants(squeeze->input_value(1).get_node_shared_ptr(),
-                                       unsqueeze->input_value(1).get_node_shared_ptr()))
-        {
-            NGRAPH_DEBUG << "squeeze->unsqueeze axes do not match";
-            return false;
-        }
-        return replace_output_update_name(unsqueeze->output(0), squeeze->input_value(0));
-    }
-    // eliminate redundant unsqueeze->unsqueeze
-    auto unsqueeze_i = as_type_ptr<opset3::Unsqueeze>(input);
-    if (unsqueeze_i)
-    {
-        auto data_shape = unsqueeze_i->input_value(0).get_partial_shape();
-        auto out_shape = node->get_output_partial_shape(0);
-        if (data_shape.rank().is_dynamic() || out_shape.rank().is_dynamic())
-        {
-            return false;
-        }
-        std::vector<int64_t> axes;
-        size_t i = 0;
-        for (auto o = 0; o < out_shape.rank().get_length(); o++)
-        {
-            if (i < data_shape.rank().get_length() && data_shape[i].same_scheme(out_shape[o]))
-            {
-                i += 1;
-                continue;
-            }
-            if (out_shape[o].is_static() && out_shape[o] == 1)
-            {
-                axes.push_back(o);
-            }
-        }
+    auto replace_unsqueeze_only = [&](const vector<int64_t>& axes) {
         auto axes_const = op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
-        auto new_unsq = make_shared<opset3::Unsqueeze>(
-            unsqueeze_i->input_value(0).get_node_shared_ptr(), axes_const);
+        auto new_unsq =
+            make_shared<opset3::Unsqueeze>(input->input_value(0).get_node_shared_ptr(), axes_const);
         if (unsqueeze->get_output_partial_shape(0).same_scheme(
                 new_unsq->get_output_partial_shape(0)))
         {
             return replace_output_update_name(unsqueeze->output(0), new_unsq->output(0));
         }
         return false;
+    };
+    // eliminate redundant squeeze->unsqueeze
+    if (squeeze)
+    {
+        if (ngraph::compare_constants(squeeze->input_value(1).get_node_shared_ptr(),
+                                      unsqueeze->input_value(1).get_node_shared_ptr()))
+        {
+            return replace_output_update_name(unsqueeze->output(0), squeeze->input_value(0));
+        }
+        if (data_shape.rank().is_dynamic() || out_shape.rank().is_dynamic())
+        {
+            return false;
+        }
+        if (out_shape.rank().get_length() > data_shape.rank().get_length())
+        {
+            // check if single unsqueeze can handle this
+            auto axes = get_unsqueeze_axes(data_shape, out_shape);
+            if (axes.size() + data_shape.rank().get_length() == out_shape.rank().get_length())
+            {
+                return replace_unsqueeze_only(axes);
+            }
+        }
+        if (out_shape.rank().get_length() < data_shape.rank().get_length())
+        {
+            // check if single squeeze can handle this
+            auto axes = get_squeeze_axes(data_shape, out_shape);
+            if (data_shape.rank().get_length() - axes.size() == out_shape.rank().get_length())
+            {
+                auto axes_const =
+                    op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
+                auto new_sq = make_shared<opset3::Squeeze>(
+                    input->input_value(0).get_node_shared_ptr(), axes_const);
+                if (unsqueeze->get_output_partial_shape(0).same_scheme(
+                        new_sq->get_output_partial_shape(0)))
+                {
+                    return replace_output_update_name(unsqueeze->output(0), new_sq->output(0));
+                }
+                return false;
+            }
+        }
+        return false;
+    }
+    // eliminate redundant unsqueeze->unsqueeze
+    auto unsqueeze_i = as_type_ptr<opset3::Unsqueeze>(input);
+    if (unsqueeze_i)
+    {
+        if (data_shape.rank().is_dynamic() || out_shape.rank().is_dynamic())
+        {
+            return false;
+        }
+        auto axes = get_unsqueeze_axes(data_shape, out_shape);
+        return replace_unsqueeze_only(axes);
     }
 
     // eliminate redundant reshape->unsqueeze
@@ -203,49 +263,69 @@ static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
 {
     auto squeeze = as_type_ptr<opset3::Squeeze>(node);
     auto input = squeeze->input_value(0).get_node_shared_ptr();
-    // eliminate redundant unsqueeze->squeeze
-    if (auto unsqueeze = as_type_ptr<opset3::Unsqueeze>(input))
-    {
-        if (!ngraph::compare_constants(unsqueeze->input_value(1).get_node_shared_ptr(),
-                                       squeeze->input_value(1).get_node_shared_ptr()))
-        {
-            NGRAPH_DEBUG << "unsqueeze->squeeze axes do not match";
-            return false;
-        }
-        return replace_output_update_name(squeeze->output(0), unsqueeze->input_value(0));
-    }
-    // eliminate redundant squeeze->squeeze
-    auto squeeze_i = as_type_ptr<opset3::Squeeze>(input);
-    if (squeeze_i)
-    {
-        auto data_shape = squeeze_i->input_value(0).get_partial_shape();
-        auto out_shape = node->get_output_partial_shape(0);
-        if (data_shape.rank().is_dynamic() || out_shape.rank().is_dynamic())
-        {
-            return false;
-        }
-        std::vector<int64_t> axes;
-        size_t o = 0;
-        for (auto i = 0; i < data_shape.rank().get_length(); i++)
-        {
-            if (o < out_shape.rank().get_length() && data_shape[i].same_scheme(out_shape[o]))
-            {
-                o += 1;
-                continue;
-            }
-            if (data_shape[i].is_static() && data_shape[i] == 1)
-            {
-                axes.push_back(i);
-            }
-        }
+    auto data_shape = input->input_value(0).get_partial_shape();
+    auto out_shape = node->get_output_partial_shape(0);
+    auto unsqueeze = as_type_ptr<opset3::Unsqueeze>(input);
+    auto replace_squeeze_only = [&](const vector<int64_t>& axes) {
         auto axes_const = op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
-        auto new_sq = make_shared<opset3::Squeeze>(squeeze_i->input_value(0).get_node_shared_ptr(),
-                                                   axes_const);
+        auto new_sq =
+            make_shared<opset3::Squeeze>(input->input_value(0).get_node_shared_ptr(), axes_const);
         if (squeeze->get_output_partial_shape(0).same_scheme(new_sq->get_output_partial_shape(0)))
         {
             return replace_output_update_name(squeeze->output(0), new_sq->output(0));
         }
         return false;
+    };
+    // eliminate redundant unsqueeze->squeeze
+    if (unsqueeze)
+    {
+        if (ngraph::compare_constants(unsqueeze->input_value(1).get_node_shared_ptr(),
+                                      squeeze->input_value(1).get_node_shared_ptr()))
+        {
+            return replace_output_update_name(squeeze->output(0), unsqueeze->input_value(0));
+        }
+        if (data_shape.rank().is_dynamic() || out_shape.rank().is_dynamic())
+        {
+            return false;
+        }
+        if (out_shape.rank().get_length() < data_shape.rank().get_length())
+        {
+            // check if single squeeze can handle this
+            auto axes = get_squeeze_axes(data_shape, out_shape);
+            if (data_shape.rank().get_length() == out_shape.rank().get_length() + axes.size())
+            {
+                return replace_squeeze_only(axes);
+            }
+        }
+        if (out_shape.rank().get_length() > data_shape.rank().get_length())
+        {
+            // check if single unsqueeze can handle this
+            auto axes = get_unsqueeze_axes(data_shape, out_shape);
+            if (data_shape.rank().get_length() + axes.size() == out_shape.rank().get_length())
+            {
+                auto axes_const =
+                    op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
+                auto new_unsq = make_shared<opset3::Unsqueeze>(
+                    input->input_value(0).get_node_shared_ptr(), axes_const);
+                if (squeeze->get_output_partial_shape(0).same_scheme(
+                        new_unsq->get_output_partial_shape(0)))
+                {
+                    return replace_output_update_name(squeeze->output(0), new_unsq->output(0));
+                }
+            }
+        }
+        return false;
+    }
+    // eliminate redundant squeeze->squeeze
+    auto squeeze_i = as_type_ptr<opset3::Squeeze>(input);
+    if (squeeze_i)
+    {
+        if (data_shape.rank().is_dynamic() || out_shape.rank().is_dynamic())
+        {
+            return false;
+        }
+        auto axes = get_squeeze_axes(data_shape, out_shape);
+        return replace_squeeze_only(axes);
     }
 
     // eliminate redundant squeeze
