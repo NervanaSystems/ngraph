@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/op/interpolate.hpp"
-
 #include "ngraph/op/constant.hpp"
 
 using namespace std;
@@ -29,7 +28,19 @@ op::Interpolate::Interpolate(const Output<Node>& image,
     : Op({image, output_shape})
     , m_attrs(attrs)
 {
+    m_attrs.mode = as_string<InterpolateMode>(as_enum<InterpolateMode>(attrs.mode));
     constructor_validate_and_infer_types();
+}
+
+bool op::Interpolate::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("attrs.axes", m_attrs.axes);
+    visitor.on_attribute("attrs.mode", m_attrs.mode);
+    visitor.on_attribute("attrs.align_corners", m_attrs.align_corners);
+    visitor.on_attribute("attrs.antialias", m_attrs.antialias);
+    visitor.on_attribute("attrs.pads_begin", m_attrs.pads_begin);
+    visitor.on_attribute("attrs.pads_end", m_attrs.pads_end);
+    return true;
 }
 
 void op::Interpolate::validate_and_infer_types()
@@ -71,6 +82,28 @@ shared_ptr<Node> op::Interpolate::clone_with_new_inputs(const OutputVector& new_
     return make_shared<Interpolate>(new_args.at(0), new_args.at(1), m_attrs);
 }
 
+namespace ngraph
+{
+    template <>
+    EnumNames<op::Interpolate::InterpolateMode>& EnumNames<op::Interpolate::InterpolateMode>::get()
+    {
+        static auto enum_names = EnumNames<op::Interpolate::InterpolateMode>(
+            "op::Interpolate::InterpolateMode",
+            {{"nearest", op::Interpolate::InterpolateMode::NEAREST},
+             {"linear", op::Interpolate::InterpolateMode::LINEAR},
+             {"cubic", op::Interpolate::InterpolateMode::CUBIC},
+             {"area", op::Interpolate::InterpolateMode::AREA}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::Interpolate::InterpolateMode>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::Interpolate::InterpolateMode& type)
+    {
+        return s << as_string(type);
+    }
+}
+
 // Interpolate v3
 
 constexpr NodeTypeInfo op::v3::Interpolate::type_info;
@@ -81,7 +114,23 @@ op::v3::Interpolate::Interpolate(const Output<Node>& image,
     : Op({image, output_shape})
     , m_attrs(attrs)
 {
+    m_attrs.mode = as_string<InterpolateMode>(as_enum<InterpolateMode>(attrs.mode));
+    m_attrs.coordinate_transformation_mode = as_string<CoordinateTransformMode>(
+        as_enum<CoordinateTransformMode>(attrs.coordinate_transformation_mode));
     constructor_validate_and_infer_types();
+}
+
+bool op::v3::Interpolate::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("attrs.axes", m_attrs.axes);
+    visitor.on_attribute("attrs.mode", m_attrs.mode);
+    visitor.on_attribute("attrs.coordinate_transformation_mode",
+                         m_attrs.coordinate_transformation_mode);
+    visitor.on_attribute("attrs.align_corners", m_attrs.align_corners);
+    visitor.on_attribute("attrs.antialias", m_attrs.antialias);
+    visitor.on_attribute("attrs.pads_begin", m_attrs.pads_begin);
+    visitor.on_attribute("attrs.pads_end", m_attrs.pads_end);
+    return true;
 }
 
 void op::v3::Interpolate::validate_and_infer_types()
@@ -121,4 +170,51 @@ shared_ptr<Node> op::v3::Interpolate::clone_with_new_inputs(const OutputVector& 
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v3::Interpolate>(new_args.at(0), new_args.at(1), m_attrs);
+}
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::v3::Interpolate::InterpolateMode>&
+        EnumNames<op::v3::Interpolate::InterpolateMode>::get()
+    {
+        static auto enum_names = EnumNames<op::v3::Interpolate::InterpolateMode>(
+            "op::v3::Interpolate::InterpolateMode",
+            {{"nearest", op::v3::Interpolate::InterpolateMode::NEAREST},
+             {"linear", op::v3::Interpolate::InterpolateMode::LINEAR},
+             {"cubic", op::v3::Interpolate::InterpolateMode::CUBIC},
+             {"area", op::v3::Interpolate::InterpolateMode::AREA}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v3::Interpolate::InterpolateMode>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::v3::Interpolate::InterpolateMode& type)
+    {
+        return s << as_string(type);
+    }
+
+    template <>
+    EnumNames<op::v3::Interpolate::CoordinateTransformMode>&
+        EnumNames<op::v3::Interpolate::CoordinateTransformMode>::get()
+    {
+        static auto enum_names = EnumNames<op::v3::Interpolate::CoordinateTransformMode>(
+            "op::v3::Interpolate::CoordinateTransformMode",
+            {{"half_pixel", op::v3::Interpolate::CoordinateTransformMode::HALF_PIXEL},
+             {"pytorch_half_pixel",
+              op::v3::Interpolate::CoordinateTransformMode::PYTORCH_HALF_PIXEL},
+             {"asymmetric", op::v3::Interpolate::CoordinateTransformMode::ASYMMETRIC},
+             {"tf_half_pixel_for_nn",
+              op::v3::Interpolate::CoordinateTransformMode::TF_HALF_PIXEL_FOR_NN}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo
+        AttributeAdapter<op::v3::Interpolate::CoordinateTransformMode>::type_info;
+
+    std::ostream& operator<<(std::ostream& s,
+                             const op::v3::Interpolate::CoordinateTransformMode& type)
+    {
+        return s << as_string(type);
+    }
 }

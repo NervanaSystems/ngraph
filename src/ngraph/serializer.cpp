@@ -1693,34 +1693,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::HardSigmoid>(args[0], args[1], args[2]);
             break;
         }
-        case OP_TYPEID::Interpolate:
-        {
-            op::v0::InterpolateAttrs attrs;
-            auto t_attrs = node_js.at("attrs");
-            attrs.axes = t_attrs.at("axes");
-            attrs.mode = t_attrs.at("mode").get<std::string>();
-            attrs.align_corners = t_attrs.at("align_corners").get<bool>();
-            attrs.antialias = t_attrs.at("antialias").get<bool>();
-            attrs.pads_begin = t_attrs.at("pads_begin").get<std::vector<size_t>>();
-            attrs.pads_end = t_attrs.at("pads_end").get<std::vector<size_t>>();
-            node = make_shared<op::v0::Interpolate>(args[0], args[1], attrs);
-            break;
-        }
-        case OP_TYPEID::Interpolate_v3:
-        {
-            op::v3::InterpolateAttrs attrs;
-            auto t_attrs = node_js.at("attrs");
-            attrs.axes = t_attrs.at("axes");
-            attrs.mode = t_attrs.at("mode").get<std::string>();
-            attrs.coordinate_transformation_mode =
-                t_attrs.at("coordinate_transformation_mode").get<std::string>();
-            attrs.align_corners = t_attrs.at("align_corners").get<bool>();
-            attrs.antialias = t_attrs.at("antialias").get<bool>();
-            attrs.pads_begin = t_attrs.at("pads_begin").get<std::vector<size_t>>();
-            attrs.pads_end = t_attrs.at("pads_end").get<std::vector<size_t>>();
-            node = make_shared<op::v3::Interpolate>(args[0], args[1], attrs);
-            break;
-        }
         case OP_TYPEID::LayerNorm:
         {
             auto keep_stats = node_js.at("keep_stats").get<bool>();
@@ -3274,30 +3246,6 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::HardSigmoid: { break;
-    }
-    case OP_TYPEID::Interpolate:
-    {
-        auto tmp = static_cast<const op::v0::Interpolate*>(&n);
-        node["attrs"]["axes"] = tmp->get_attrs().axes;
-        node["attrs"]["mode"] = tmp->get_attrs().mode;
-        node["attrs"]["align_corners"] = tmp->get_attrs().align_corners;
-        node["attrs"]["antialias"] = tmp->get_attrs().antialias;
-        node["attrs"]["pads_begin"] = tmp->get_attrs().pads_begin;
-        node["attrs"]["pads_end"] = tmp->get_attrs().pads_end;
-        break;
-    }
-    case OP_TYPEID::Interpolate_v3:
-    {
-        auto tmp = static_cast<const op::v3::Interpolate*>(&n);
-        node["attrs"]["axes"] = tmp->get_attrs().axes;
-        node["attrs"]["mode"] = tmp->get_attrs().mode;
-        node["attrs"]["coordinate_transformation_mode"] =
-            tmp->get_attrs().coordinate_transformation_mode;
-        node["attrs"]["align_corners"] = tmp->get_attrs().align_corners;
-        node["attrs"]["antialias"] = tmp->get_attrs().antialias;
-        node["attrs"]["pads_begin"] = tmp->get_attrs().pads_begin;
-        node["attrs"]["pads_end"] = tmp->get_attrs().pads_end;
-        break;
     }
     case OP_TYPEID::LayerNorm:
     {

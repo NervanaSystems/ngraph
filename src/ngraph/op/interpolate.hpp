@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
 {
@@ -24,7 +25,7 @@ namespace ngraph
     {
         namespace v0
         {
-            typedef struct
+            struct InterpolateAttrs
             {
                 AxisSet axes;
                 std::string mode;
@@ -32,12 +33,20 @@ namespace ngraph
                 bool antialias = false;
                 std::vector<size_t> pads_begin;
                 std::vector<size_t> pads_end;
-            } InterpolateAttrs;
+            };
 
             /// \brief Layer which performs bilinear interpolation
             class NGRAPH_API Interpolate : public Op
             {
             public:
+                enum class InterpolateMode
+                {
+                    NEAREST,
+                    LINEAR,
+                    CUBIC,
+                    AREA
+                };
+
                 static constexpr NodeTypeInfo type_info{"Interpolate", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Interpolate() = default;
@@ -49,6 +58,7 @@ namespace ngraph
                 Interpolate(const Output<Node>& image,
                             const Output<Node>& output_shape,
                             const InterpolateAttrs& attrs);
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 void validate_and_infer_types() override;
 
@@ -63,20 +73,36 @@ namespace ngraph
 
         namespace v3
         {
-            typedef struct
+            struct InterpolateAttrs
             {
                 AxisSet axes;
                 std::string mode;
-                std::string coordinate_transformation_mode;
+                std::string coordinate_transformation_mode = "half_pixel";
                 bool align_corners = true;
                 bool antialias = false;
                 std::vector<size_t> pads_begin;
                 std::vector<size_t> pads_end;
-            } InterpolateAttrs;
+            };
 
             class NGRAPH_API Interpolate : public Op
             {
             public:
+                enum class InterpolateMode
+                {
+                    NEAREST,
+                    LINEAR,
+                    CUBIC,
+                    AREA
+                };
+
+                enum class CoordinateTransformMode
+                {
+                    HALF_PIXEL,
+                    PYTORCH_HALF_PIXEL,
+                    ASYMMETRIC,
+                    TF_HALF_PIXEL_FOR_NN
+                };
+
                 static constexpr NodeTypeInfo type_info{"Interpolate", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Interpolate() = default;
@@ -88,6 +114,7 @@ namespace ngraph
                 Interpolate(const Output<Node>& image,
                             const Output<Node>& output_shape,
                             const InterpolateAttrs& attrs);
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 void validate_and_infer_types() override;
 
@@ -102,4 +129,59 @@ namespace ngraph
         using v0::InterpolateAttrs;
         using v0::Interpolate;
     }
+
+    NGRAPH_API
+    std::ostream& operator<<(std::ostream& s, const op::v0::Interpolate::InterpolateMode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v0::Interpolate::InterpolateMode>
+        : public EnumAttributeAdapterBase<op::v0::Interpolate::InterpolateMode>
+    {
+    public:
+        AttributeAdapter(op::v0::Interpolate::InterpolateMode& value)
+            : EnumAttributeAdapterBase<op::v0::Interpolate::InterpolateMode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v0::Interpolate::InterpolateMode>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    NGRAPH_API
+    std::ostream& operator<<(std::ostream& s, const op::v3::Interpolate::InterpolateMode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v3::Interpolate::InterpolateMode>
+        : public EnumAttributeAdapterBase<op::v3::Interpolate::InterpolateMode>
+    {
+    public:
+        AttributeAdapter(op::v3::Interpolate::InterpolateMode& value)
+            : EnumAttributeAdapterBase<op::v3::Interpolate::InterpolateMode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v3::Interpolate::InterpolateMode>", 3};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    NGRAPH_API
+    std::ostream& operator<<(std::ostream& s,
+                             const op::v3::Interpolate::CoordinateTransformMode& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v3::Interpolate::CoordinateTransformMode>
+        : public EnumAttributeAdapterBase<op::v3::Interpolate::CoordinateTransformMode>
+    {
+    public:
+        AttributeAdapter(op::v3::Interpolate::CoordinateTransformMode& value)
+            : EnumAttributeAdapterBase<op::v3::Interpolate::CoordinateTransformMode>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v3::Interpolate::CoordinateTransformMode>", 3};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }
