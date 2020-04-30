@@ -98,3 +98,36 @@ def test_prior_box_clustered(int_dtype, fp_dtype):
     assert node.get_type_name() == 'PriorBoxClustered'
     assert node.get_output_size() == 1
     assert node.get_output_shape(0) == [2, 4332]
+
+
+@pytest.mark.parametrize('int_dtype, fp_dtype', [
+    (np.int8, np.float32),
+    (np.int16, np.float32),
+    (np.int32, np.float32),
+    (np.int64, np.float32),
+    (np.uint8, np.float32),
+    (np.uint16, np.float32),
+    (np.uint32, np.float32),
+    (np.uint64, np.float32),
+    (np.int32, np.float16),
+    (np.int32, np.float64),
+])
+def test_detection_output(int_dtype, fp_dtype):
+    attributes = {
+        'num_classes': int_dtype(85),
+        'keep_top_k': np.array([200], dtype=int_dtype),
+        'nms_threshold': fp_dtype(0.645),
+    }
+
+    box_logits = ng.parameter([4, 1, 5, 5], fp_dtype, 'box_logits')
+    class_preds = ng.parameter([2, 1, 4, 5], fp_dtype, 'class_preds')
+    proposals = ng.parameter([2, 1, 4, 5], fp_dtype, 'proposals')
+    aux_class_preds = ng.parameter([2, 1, 4, 5], fp_dtype, 'aux_class_preds')
+    aux_box_preds = ng.parameter([2, 1, 4, 5], fp_dtype, 'aux_box_preds')
+
+    node = ng.detection_output(box_logits, class_preds, proposals, attributes, aux_class_preds,
+                               aux_box_preds)
+
+    assert node.get_type_name() == 'DetectionOutput'
+    assert node.get_output_size() == 1
+    assert node.get_output_shape(0) == [1, 1, 800, 7]

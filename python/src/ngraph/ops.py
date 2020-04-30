@@ -2096,7 +2096,7 @@ def prior_box(layer_shape, image_shape, attrs, name=None):
 @nameable_op
 def prior_box_clustered(output_size, image_size, attrs, name=None):
     # type: (Node, NodeInput, dict, str) -> Node
-    """Generate prior boxes of specified sizes and aspect ratios across all dimensions.
+    """Generate prior boxes of specified sizes normalized to the input image size.
 
     :param  output_size:    1D tensor with two integer elements [height, width]. Specifies the
                             spatial size of generated grid with boxes.
@@ -2175,3 +2175,166 @@ def prior_box_clustered(output_size, image_size, attrs, name=None):
 
     return _get_node_factory().create(
         'PriorBoxClustered', [output_size, as_node(image_size)], attrs)
+
+
+@nameable_op
+def detection_output(box_logits,            # type: Node
+                     class_preds,           # type: Node
+                     proposals,             # type: Node
+                     attrs,                 # type: dict
+                     aux_class_preds=None,  # type: NodeInput
+                     aux_box_preds=None,    # type: NodeInput
+                     name=None,             # type: str
+                     ):
+    # type: (...) -> Node
+    """Generate the detection output using information on location and confidence predictions.
+
+    :param  box_logits:         The 2D input tensor with box logits.
+    :param  class_preds:        The 2D input tensor with class predictions.
+    :param  proposals:          The 3D input tensor with proposals.
+    :param  attrs:              The dictionary containing key, value pairs for attributes.
+    :param  aux_class_preds:    The 2D input tensor with additional class predictions information.
+    :param  aux_box_preds:      The 2D input tensor with additional box predictions information.
+    :param  name:               Optional name for the output node.
+
+     Available attributes are:
+
+    * num_classes       The number of classes to be predicted.
+                        Range of values: positive integer number
+                        Default value: None
+                        Required: yes
+
+    * background_label_id   The background label id.
+                            Range of values: integer value
+                            Default value: 0
+                            Required: no
+
+    * top_k                 Maximum number of results to be kept per batch after NMS step.
+                            Range of values: integer value
+                            Default value: -1
+                            Required: no
+
+    * variance_encoded_in_target    The flag that denotes if variance is encoded in target.
+                                    Range of values: {False, True}
+                                    Default value: False
+                                    Required: no
+
+    * keep_top_k            Maximum number of bounding boxes per batch to be kept after NMS step.
+                            Range of values: integer values
+                            Default value: None
+                            Required: yes
+
+    * code_type             The type of coding method for bounding boxes.
+                            Range of values: {'caffe.PriorBoxParameter.CENTER_SIZE',
+                                             'caffe.PriorBoxParameter.CORNER'}
+                            Default value: 'caffe.PriorBoxParameter.CORNER'
+                            Required: no
+
+    * share_location        The flag that denotes if bounding boxes are shared among different
+                            classes.
+                            Range of values: {True, False}
+                            Default value: True
+                            Required: no
+
+    * nms_threshold         The threshold to be used in the NMS stage.
+                            Range of values: floating point value
+                            Default value: None
+                            Required: yes
+
+    * confidence_threshold  Specifies the minimum confidence threshold for detection boxes to be
+                            considered.
+                            Range of values: floating point value
+                            Default value: 0
+                            Required: no
+
+    * clip_after_nms        The flag that denotes whether to perform clip bounding boxes after
+                            non-maximum suppression or not.
+                            Range of values: {True, False}
+                            Default value: False
+                            Required: no
+
+    * clip_before_nms       The flag that denotes whether to perform clip bounding boxes before
+                            non-maximum suppression or not.
+                            Range of values: {True, False}
+                            Default value: False
+                            Required: no
+
+    * decrease_label_id     The flag that denotes how to perform NMS.
+                            Range of values: False - perform NMS like in Caffe*.
+                                             True  - perform NMS like in MxNet*.
+
+                            Default value: False
+                            Required: no
+
+    * normalized            The flag that denotes whether input tensors with boxes are normalized.
+                            Range of values: {True, False}
+                            Default value: False
+                            Required: no
+
+    * input_height          The input image height.
+                            Range of values: positive integer number
+                            Default value: 1
+                            Required: no
+
+    * input_width           The input image width.
+                            Range of values: positive integer number
+                            Default value: 1
+                            Required: no
+
+    * objectness_score      The threshold to sort out confidence predictions.
+                            Range of values: non-negative float number
+                            Default value: 0
+                            Required: no
+
+    Example of attribute dictionary:
+    .. code-block:: python
+
+        # just required ones
+        attrs = {
+            'num_classes': 85,
+            'keep_top_k': [1, 2, 3],
+            'nms_threshold': 0.645,
+        }
+
+        attrs = {
+            'num_classes': 85,
+            'keep_top_k': [1, 2, 3],
+            'nms_threshold': 0.645,
+            'normalized': True,
+            'clip_before_nms': True,
+            'input_height': [32],
+            'input_width': [32],
+        }
+
+    Optional attributes which are absent from dictionary will be set with corresponding default.
+
+    :return: Node representing DetectionOutput operation.
+    """
+    requirements = [
+        ('num_classes', True, np.integer, is_positive_value),
+        ('background_label_id', False, np.integer, None),
+        ('top_k', False, np.integer, None),
+        ('variance_encoded_in_target', False, np.bool_, None),
+        ('keep_top_k', True, np.integer, None),
+        ('code_type', False, np.str_, None),
+        ('share_location', False, np.bool_, None),
+        ('nms_threshold', True, np.floating, None),
+        ('confidence_threshold', False, np.floating, None),
+        ('clip_after_nms', False, np.bool_, None),
+        ('clip_before_nms', False, np.bool_, None),
+        ('decrease_label_id', False, np.bool_, None),
+        ('normalized', False, np.bool_, None),
+        ('input_height', False, np.integer, is_positive_value),
+        ('input_width', False, np.integer, is_positive_value),
+        ('objectness_score', False, np.floating, is_non_negative_value),
+    ]
+
+    check_valid_attributes('DetectionOutput', attrs, requirements)
+
+    inputs = [box_logits, class_preds, proposals]
+    if aux_class_preds is not None:
+        inputs.append(aux_class_preds)
+    if aux_box_preds is not None:
+        inputs.append(aux_box_preds)
+
+    return _get_node_factory().create('DetectionOutput', inputs, attrs)

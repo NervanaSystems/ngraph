@@ -46,6 +46,7 @@ from ngraph.ops import cos
 from ngraph.ops import cosh
 from ngraph.ops import depth_to_space
 from ngraph.ops import dequantize
+from ngraph.ops import detection_output
 from ngraph.ops import divide
 from ngraph.ops import dot
 from ngraph.ops import elu
