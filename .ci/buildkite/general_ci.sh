@@ -15,12 +15,8 @@
 #  limitations under the License.
 # ==============================================================================
 
-which cmake
-echo $PATH
-export $PATH=/usr/local/bin:$PATH
-echo $PATH
-mkdir build
+amkdir build
 cd build
-cmake .. -DNGRAPH_CPU_ENABLE=0
+/usr/local/bin/cmake .. -DNGRAPH_CPU_ENABLE=0
 make -j64
 test/unit-test
