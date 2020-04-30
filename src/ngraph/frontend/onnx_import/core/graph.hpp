@@ -33,7 +33,7 @@ namespace ngraph
         class Graph
         {
         public:
-            Graph(const onnx::GraphProto& proto, Model& model);
+            Graph(const ONNX_NAMESPACE::GraphProto& proto, Model& model);
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
             const std::vector<ValueInfo>& get_outputs() const { return m_outputs; }
@@ -58,7 +58,7 @@ namespace ngraph
             void add_provenance_tags(const Node& onnx_node, const NodeVector& ng_node_vector) const;
 
         private:
-            const onnx::GraphProto* m_graph_proto;
+            const ONNX_NAMESPACE::GraphProto* m_graph_proto;
             std::vector<Node> m_nodes;
             std::vector<ValueInfo> m_inputs;
             std::vector<ValueInfo> m_outputs;

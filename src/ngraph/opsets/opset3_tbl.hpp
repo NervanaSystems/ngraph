@@ -155,7 +155,9 @@ NGRAPH_OP(BatchToSpace, ngraph::op::v1)
 NGRAPH_OP(SpaceToBatch, ngraph::op::v1)
 
 // New operations added in opset3
+NGRAPH_OP(GRUCell, ngraph::op::v3)
 NGRAPH_OP(NonZero, ngraph::op::v3)
+NGRAPH_OP(RNNCell, ngraph::op::v0)
 NGRAPH_OP(ROIAlign, ngraph::op::v3)
 NGRAPH_OP(ScatterElementsUpdate, ngraph::op::v3)
 NGRAPH_OP(ScatterUpdate, ngraph::op::v3)

@@ -18,10 +18,32 @@ import pytest
 import json
 
 import ngraph as ng
+from ngraph.impl import Function
 from ngraph.exceptions import UserInputError
 
 import test
 from test.ngraph.util import get_runtime, run_op_node
+
+
+def test_ngraph_function_api():
+    shape = [2, 2]
+    parameter_a = ng.parameter(shape, dtype=np.float32, name='A')
+    parameter_b = ng.parameter(shape, dtype=np.float32, name='B')
+    parameter_c = ng.parameter(shape, dtype=np.float32, name='C')
+    model = (parameter_a + parameter_b) * parameter_c
+    function = Function(model, [parameter_a, parameter_b, parameter_c], 'TestFunction')
+
+    ordered_ops = function.get_ordered_ops()
+    op_types = [op.get_type_name() for op in ordered_ops]
+    assert op_types == ['Parameter', 'Parameter', 'Parameter', 'Add', 'Multiply', 'Result']
+    assert len(function.get_ops()) == 6
+    assert function.get_output_size() == 1
+    assert function.get_output_op(0).get_type_name() == 'Result'
+    assert function.get_output_element_type(0) == parameter_a.get_element_type()
+    assert list(function.get_output_shape(0)) == [2, 2]
+    assert len(function.get_parameters()) == 3
+    assert len(function.get_results()) == 1
+    assert function.get_name() == 'TestFunction'
 
 
 @pytest.mark.parametrize('dtype', [np.float32, np.float64,
