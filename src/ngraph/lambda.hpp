@@ -36,6 +36,11 @@ namespace ngraph
         const ResultVector& get_results() const { return m_results; };
         /// Index for value or result referencing it, or -1
         int64_t get_result_index(const Output<Node>& value) const;
+        /// \brief Evaluate the lambda on inputs, putting results in outputs.
+        /// \param outputs Tensors for the outputs to compute. One for each result
+        /// \param inputs Tensors for the inputs. One for each inputs.
+        bool evaluate(const HostTensorVector& output_tensors,
+                      const HostTensorVector& input_tensors);
 
     protected:
         Lambda(const ResultVector& results, const ParameterVector& parameters);
