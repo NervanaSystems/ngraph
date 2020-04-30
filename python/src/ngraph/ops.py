@@ -1023,7 +1023,7 @@ def broadcast(data, target_shape, axes_mapping=None, broadcast_spec='NUMPY', nam
     """
     inputs = [data, target_shape]
     if broadcast_spec == 'EXPLICIT':
-         inputs.append(axes_mapping)
+        inputs.append(axes_mapping)
     return _get_node_factory().create('Broadcast',
                                       inputs,
                                       {'broadcast_spec': broadcast_spec})
@@ -1758,7 +1758,7 @@ def non_max_suppression(boxes,                              # type: Node
                         score_threshold=None,               # type: Node
                         box_encoding='corner',              # type: str
                         sort_result_descending=True,        # type: bool
-                        output_type= 'i64',                 # type: str
+                        output_type='i64',                  # type: str
                         ):
     # type: (...) -> Node
     """Return a node which performs NonMaxSuppression.
@@ -1844,7 +1844,7 @@ def roi_align(data,             # type: Node
 
     :param data: Input data.
     :param rois: RoIs (Regions of Interest) to pool over.
-    :param batch_indices: Tensor with each element denoting the index of 
+    :param batch_indices: Tensor with each element denoting the index of
                           the corresponding image in the batch.
     :param pooled_h: Height of the ROI output feature map.
     :param pooled_w: Width of the ROI output feature map.
