@@ -495,8 +495,7 @@ static bool simplify_log(shared_ptr<Node> n)
 // other cases into Concat of shapeof/gather(data) + shapeof(indices)
 static bool simplify_gather_shapeof(shared_ptr<Node> node)
 {
-    auto shapeof = as_type_ptr<opset3::ShapeOf>(node);
-    auto gather = as_type_ptr<opset3::Gather>(shapeof->input_value(0).get_node_shared_ptr());
+    auto gather = as_type_ptr<opset3::Gather>(node->input_value(0).get_node_shared_ptr());
     if (!gather)
     {
         return false;
@@ -548,7 +547,7 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
         }
         replace_node = make_shared<opset3::Concat>(concat_inputs, 0);
     }
-    return replace_output_update_name(shapeof->output(0), replace_node->output(0));
+    return replace_output_update_name(node->output(0), replace_node->output(0));
 }
 
 static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)
@@ -726,6 +725,7 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_
          {op::v0::Multiply::type_info, simplify_multiply},
          {opset3::Gather::type_info, simplify_gather},
          {op::v0::Concat::type_info, simplify_concat},
+         {opset2::ShapeOf::type_info, simplify_gather_shapeof},
          {opset3::ShapeOf::type_info, simplify_gather_shapeof},
          {op::v0::Sum::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::v0::Sum, get_sum_constant>}},
