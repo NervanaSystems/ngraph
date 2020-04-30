@@ -1911,7 +1911,7 @@ def interpolate(image, output_shape, attrs, name=None):
     :param  image:         The node providing input tensor with data for interpolation.
     :param  output_shape:  1D tensor describing output shape for spatial axes.
     :param  attrs:         The dictionary containing key, value pairs for attributes.
-    :param  name:          Optional name for the outptu node.
+    :param  name:          Optional name for the output node.
 
     Available attributes are:
 
@@ -1990,7 +1990,7 @@ def prior_box(layer_shape, image_shape, attrs, name=None):
     :param  layer_shape:  Shape of layer for which prior boxes are computed.
     :param  image_shape:  Shape of image to which prior boxes are scaled.
     :param  attrs:        The dictionary containing key, value pairs for attributes.
-    :param  name:         Optional name for the outptu node.
+    :param  name:         Optional name for the output node.
 
     Available attributes are:
 
@@ -2094,3 +2094,87 @@ def prior_box(layer_shape, image_shape, attrs, name=None):
     check_valid_attributes('PriorBox', attrs, requirements)
 
     return _get_node_factory().create('PriorBox', [layer_shape, as_node(image_shape)], attrs)
+
+
+@nameable_op
+def prior_box_clustered(output_size, image_size, attrs, name=None):
+    # type: (Node, NodeInput, dict, str) -> Node
+    """Generate prior boxes of specified sizes and aspect ratios across all dimensions.
+
+    :param  output_size:    1D tensor with two integer elements [height, width]. Specifies the
+                            spatial size of generated grid with boxes.
+    :param  image_size:     1D tensor with two integer elements [image_height, image_width] that
+                            specifies shape of the image for which boxes are generated.
+    :param  attrs:          The dictionary containing key, value pairs for attributes.
+    :param  name:           Optional name for the output node.
+
+     Available attributes are:
+
+    * widths        Specifies desired boxes widths in pixels.
+                    Range of values: floating point positive numbers.
+                    Default value: 1.0
+                    Required: no
+
+    * heights       Specifies desired boxes heights in pixels.
+                    Range of values: floating point positive numbers.
+                    Default value: 1.0
+                    Required: no
+
+    * clip          The flag that denotes if each value in the output tensor should be clipped
+                    within [0,1].
+                    Range of values: {True, False}
+                    Default value: True
+                    Required: no
+
+    * step_widths   The distance between box centers.
+                    Range of values: floating point positive number
+                    Default value: 0.0
+                    Required: no
+
+    * step_heights  The distance between box centers.
+                    Range of values: floating point positive number
+                    Default value: 0.0
+                    Required: no
+
+    * offset        The shift of box respectively to the top left corner.
+                    Range of values: floating point positive number
+                    Default value: None
+                    Required: yes
+
+    * variance      Denotes a variance of adjusting bounding boxes.
+                    Range of values: floating point positive numbers
+                    Default value: []
+                    Required: no
+
+    Example of attribute dictionary:
+    .. code-block:: python
+
+        # just required ones
+        attrs = {
+            'offset': 85,
+        }
+
+        attrs = {
+            'offset': 85,
+            'clip': False,
+            'step_widths': [1.5, 2.0, 2.5]
+        }
+
+    Optional attributes which are absent from dictionary will be set with corresponding default.
+
+    :return: Node representing PriorBoxClustered operation.
+    """
+    requirements = [
+        ('widths', False, np.floating, is_positive_value),
+        ('heights', False, np.floating, is_positive_value),
+        ('clip', False, np.bool_, None),
+        ('step_widths', False, np.floating, is_positive_value),
+        ('step_heights', False, np.floating, is_positive_value),
+        ('offset', True, np.floating, is_positive_value),
+        ('variance', False, np.floating, is_positive_value),
+    ]
+
+    check_valid_attributes('PriorBoxClustered', attrs, requirements)
+
+    return _get_node_factory().create(
+        'PriorBoxClustered', [output_size, as_node(image_size)], attrs)

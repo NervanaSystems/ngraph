@@ -55,7 +55,7 @@ def test_interpolate(dtype):
     (np.int32, np.float64),
 ])
 def test_prior_box(int_dtype, fp_dtype):
-    image_shape = [300, 300]
+    image_shape = np.array([300, 300], dtype=int_dtype)
     attributes = {
         'offset': fp_dtype(0),
         'min_size': np.array([2, 3], dtype=fp_dtype),
@@ -69,3 +69,32 @@ def test_prior_box(int_dtype, fp_dtype):
     assert node.get_type_name() == 'PriorBox'
     assert node.get_output_size() == 1
     assert node.get_output_shape(0) == [2, 20480]
+
+
+@pytest.mark.parametrize('int_dtype, fp_dtype', [
+    (np.int8, np.float32),
+    (np.int16, np.float32),
+    (np.int32, np.float32),
+    (np.int64, np.float32),
+    (np.uint8, np.float32),
+    (np.uint16, np.float32),
+    (np.uint32, np.float32),
+    (np.uint64, np.float32),
+    (np.int32, np.float16),
+    (np.int32, np.float64),
+])
+def test_prior_box_clustered(int_dtype, fp_dtype):
+    image_size = np.array([300, 300], dtype=int_dtype)
+    attributes = {
+        'offset': fp_dtype(0.5),
+        'widths': np.array([4.0, 2.0, 3.2], dtype=fp_dtype),
+        'heights': np.array([1.0, 2.0, 1.0], dtype=fp_dtype),
+    }
+
+    output_size = ng.constant(np.array([19, 19], dtype=int_dtype), int_dtype)
+
+    node = ng.prior_box_clustered(output_size, image_size, attributes)
+
+    assert node.get_type_name() == 'PriorBoxClustered'
+    assert node.get_output_size() == 1
+    assert node.get_output_shape(0) == [2, 4332]
