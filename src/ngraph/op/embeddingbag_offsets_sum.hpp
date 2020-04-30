@@ -57,6 +57,15 @@ namespace ngraph
                                        const Output<Node>& per_sample_weights,
                                        const Output<Node>& default_index);
 
+                EmbeddingBagOffsetsSum(const Output<Node>& emb_table,
+                                       const Output<Node>& indices,
+                                       const Output<Node>& offsets,
+                                       const Output<Node>& per_sample_weights);
+
+                EmbeddingBagOffsetsSum(const Output<Node>& emb_table,
+                                       const Output<Node>& indices,
+                                       const Output<Node>& offsets);
+
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>

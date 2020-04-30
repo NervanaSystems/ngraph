@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/embeddingbag_offsets_sum.hpp"
+#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -27,6 +28,23 @@ op::v3::EmbeddingBagOffsetsSum::EmbeddingBagOffsetsSum(const Output<Node>& emb_t
                                                        const Output<Node>& per_sample_weights,
                                                        const Output<Node>& default_index)
     : Op({emb_table, indices, offsets, per_sample_weights, default_index})
+{
+    constructor_validate_and_infer_types();
+}
+
+op::v3::EmbeddingBagOffsetsSum::EmbeddingBagOffsetsSum(const Output<Node>& emb_table,
+                                                       const Output<Node>& indices,
+                                                       const Output<Node>& offsets,
+                                                       const Output<Node>& per_sample_weights)
+    : Op({emb_table, indices, offsets, per_sample_weights})
+{
+    constructor_validate_and_infer_types();
+}
+
+op::v3::EmbeddingBagOffsetsSum::EmbeddingBagOffsetsSum(const Output<Node>& emb_table,
+                                                       const Output<Node>& indices,
+                                                       const Output<Node>& offsets)
+    : Op({emb_table, indices, offsets})
 {
     constructor_validate_and_infer_types();
 }
@@ -52,20 +70,6 @@ void op::v3::EmbeddingBagOffsetsSum::validate_and_infer_types()
                               get_input_element_type(INDICES) == element::i32,
                           "INDICES type must be i32 or i64");
 
-    NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(DEFAULT_INDEX) == element::i64 ||
-                              get_input_element_type(DEFAULT_INDEX) == element::i32,
-                          "DEFAULT_INDEX type must be i32 or i64");
-
-    NODE_VALIDATION_CHECK(
-        this,
-        get_input_element_type(EMB_TABLE).compatible(get_input_element_type(PER_SAMPLE_WEIGHTS)),
-        "Per sample weight element type (",
-        get_input_element_type(PER_SAMPLE_WEIGHTS),
-        ") must match embedding table element type (",
-        get_input_element_type(EMB_TABLE),
-        ")");
-
     NODE_VALIDATION_CHECK(
         this,
         get_input_element_type(INDICES).compatible(get_input_element_type(OFFSETS)),
@@ -74,19 +78,6 @@ void op::v3::EmbeddingBagOffsetsSum::validate_and_infer_types()
         ") must match indices element type (",
         get_input_element_type(INDICES),
         ")");
-
-    NODE_VALIDATION_CHECK(
-        this,
-        get_input_element_type(INDICES).compatible(get_input_element_type(DEFAULT_INDEX)),
-        "Default_index element type (",
-        get_input_element_type(DEFAULT_INDEX),
-        ") must match indices element type (",
-        get_input_element_type(INDICES),
-        ")");
-
-    NODE_VALIDATION_CHECK(this,
-                          get_input_partial_shape(DEFAULT_INDEX).compatible(PartialShape{}),
-                          "DEFAULT_INDEX must be a scalar");
 
     NODE_VALIDATION_CHECK(this,
                           get_input_partial_shape(INDICES).is_dynamic() ||
@@ -98,15 +89,49 @@ void op::v3::EmbeddingBagOffsetsSum::validate_and_infer_types()
                               get_input_partial_shape(OFFSETS).to_shape().size() == 1,
                           "OFFSETS must be 1D");
 
-    NODE_VALIDATION_CHECK(this,
-                          get_input_partial_shape(PER_SAMPLE_WEIGHTS).is_dynamic() ||
-                              get_input_partial_shape(PER_SAMPLE_WEIGHTS).to_shape().size() == 1,
-                          "PER_SAMPLE_WEIGHTS must be 1D");
+    if (get_input_size() >= 4)
+    {
+        NODE_VALIDATION_CHECK(this,
+                              get_input_element_type(EMB_TABLE).compatible(
+                                  get_input_element_type(PER_SAMPLE_WEIGHTS)),
+                              "Per sample weight element type (",
+                              get_input_element_type(PER_SAMPLE_WEIGHTS),
+                              ") must match embedding table element type (",
+                              get_input_element_type(EMB_TABLE),
+                              ")");
 
-    NODE_VALIDATION_CHECK(
-        this,
-        get_input_partial_shape(INDICES).compatible(get_input_partial_shape(PER_SAMPLE_WEIGHTS)),
-        "INDICES and PER_SAMPLE_WEIGHTS shape must be same");
+        NODE_VALIDATION_CHECK(this,
+                              get_input_partial_shape(PER_SAMPLE_WEIGHTS).is_dynamic() ||
+                                  get_input_partial_shape(PER_SAMPLE_WEIGHTS).to_shape().size() ==
+                                      1,
+                              "PER_SAMPLE_WEIGHTS must be 1D");
+
+        NODE_VALIDATION_CHECK(this,
+                              get_input_partial_shape(INDICES).compatible(
+                                  get_input_partial_shape(PER_SAMPLE_WEIGHTS)),
+                              "INDICES and PER_SAMPLE_WEIGHTS shape must be same");
+    }
+
+    if (get_input_size() == 5)
+    {
+        NODE_VALIDATION_CHECK(this,
+                              get_input_element_type(DEFAULT_INDEX) == element::i64 ||
+                                  get_input_element_type(DEFAULT_INDEX) == element::i32,
+                              "DEFAULT_INDEX type must be i32 or i64");
+
+        NODE_VALIDATION_CHECK(
+            this,
+            get_input_element_type(INDICES).compatible(get_input_element_type(DEFAULT_INDEX)),
+            "Default_index element type (",
+            get_input_element_type(DEFAULT_INDEX),
+            ") must match indices element type (",
+            get_input_element_type(INDICES),
+            ")");
+
+        NODE_VALIDATION_CHECK(this,
+                              get_input_partial_shape(DEFAULT_INDEX).compatible(PartialShape{}),
+                              "DEFAULT_INDEX must be a scalar");
+    }
 
     element::Type result_et = get_input_element_type(EMB_TABLE);
 
