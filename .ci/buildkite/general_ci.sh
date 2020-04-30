@@ -16,7 +16,9 @@
 # ==============================================================================
 
 which cmake
-echo $PATH$
+echo $PATH
+export $PATH=/usr/local/bin:$PATH
+echo $PATH
 mkdir build
 cd build
 cmake .. -DNGRAPH_CPU_ENABLE=0
