@@ -15,6 +15,10 @@
 # ******************************************************************************
 
 add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
+set(NGRAPH_ONNX_NAMESPACE ngraph_onnx)
+
+set(ONNX_LIBRARIES onnx onnx_proto)
+
 
 if(NOT NGRAPH_UNIT_TEST_ENABLE)
     message(STATUS "unit tests disabled")
@@ -499,6 +503,7 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
             onnx/onnx_import.in.cpp
             onnx/onnx_import_convpool.in.cpp
             onnx/onnx_import_dyn_shapes.in.cpp
+            onnx/onnx_import_library.in.cpp
             onnx/onnx_import_provenance.in.cpp
             onnx/onnx_import_reshape.in.cpp
             onnx/onnx_import_rnn.in.cpp
@@ -542,6 +547,12 @@ endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_include_directories(unit-test
+        SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
+    target_link_libraries(unit-test PRIVATE ${Protobuf_LIBRARIES} ${ONNX_LIBRARIES})
+endif()
 
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)

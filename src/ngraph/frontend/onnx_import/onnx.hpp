@@ -25,11 +25,6 @@
 #include "ngraph/function.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 
-namespace onnx
-{
-    class ModelProto;
-}
-
 /// \brief              Top level nGraph namespace.
 namespace ngraph
 {
@@ -60,17 +55,6 @@ namespace ngraph
         bool is_operator_supported(const std::string& op_name,
                                    std::int64_t version,
                                    const std::string& domain = "ai.onnx");
-
-        /// \brief      Imports an in-memory ONNX model and converts it to an nGraph Function.
-        ///
-        /// \note       If the ONNX model contains unsupported ops, the function throws
-        ///             an ngraph_error exception.
-        ///
-        /// \param[in]  model_proto    The in-memory ONNX model reference
-        ///
-        /// \return     An nGraph function that represents a single output from the created graph.
-        NGRAPH_API
-        std::shared_ptr<Function> import_onnx_model(const onnx::ModelProto& model_proto);
 
         /// \brief      Imports and converts an serialized ONNX model from the input stream
         ///             to an nGraph Function representation.
