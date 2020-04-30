@@ -53,7 +53,6 @@ bool ngraph::op::v3::NonZero::visit_attributes(AttributeVisitor& visitor)
 
 void op::v3::NonZero::validate_and_infer_types()
 {
-    const PartialShape& input_shape = get_input_partial_shape(0);
     const auto input_et = get_input_element_type(0);
 
     NODE_VALIDATION_CHECK(this,
@@ -112,13 +111,8 @@ namespace
     }
 
     template <element::Type_t INPUT_ET>
-    bool evaluate_nonzero(const HostTensorPtr& input, const HostTensorPtr& output)
+    bool evaluate(const HostTensorPtr& input, const HostTensorPtr& output)
     {
-        if (INPUT_ET != input->get_element_type() || (output->get_element_type() != element::i64 &&
-                                                      output->get_element_type() != element::i32))
-        {
-            return false;
-        }
         if (output->get_element_type() == element::i64)
         {
             return evaluate_nonzero_execute<INPUT_ET, element::Type_t::i64>(input, output);
@@ -128,19 +122,50 @@ namespace
             return evaluate_nonzero_execute<INPUT_ET, element::Type_t::i32>(input, output);
         }
     }
+
+    bool evaluate_nonzero(const HostTensorPtr& input, const HostTensorPtr& output)
+    {
+        bool rc = true;
+
+        switch (input->get_element_type())
+        {
+            TYPE_CASE(i8)(input, output);
+            break;
+            TYPE_CASE(i16)(input, output);
+            break;
+            TYPE_CASE(i32)(input, output);
+            break;
+            TYPE_CASE(i64)(input, output);
+            break;
+            TYPE_CASE(u8)(input, output);
+            break;
+            TYPE_CASE(u16)(input, output);
+            break;
+            TYPE_CASE(u32)(input, output);
+            break;
+            TYPE_CASE(u64)(input, output);
+            break;
+            TYPE_CASE(bf16)(input, output);
+            break;
+            TYPE_CASE(f32)(input, output);
+            break;
+            TYPE_CASE(f64)(input, output);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
 }
 
 bool op::v3::NonZero::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    return evaluate_nonzero<element::Type_t::i8>(inputs[0], outputs[0]) ||
-           evaluate_nonzero<element::Type_t::i16>(inputs[0], outputs[0]) ||
-           evaluate_nonzero<element::Type_t::i32>(inputs[0], outputs[0]) ||
-           evaluate_nonzero<element::Type_t::i64>(inputs[0], outputs[0]) ||
-           evaluate_nonzero<element::Type_t::u8>(inputs[0], outputs[0]) ||
-           evaluate_nonzero<element::Type_t::u16>(inputs[0], outputs[0]) ||
-           evaluate_nonzero<element::Type_t::u32>(inputs[0], outputs[0]) ||
-           evaluate_nonzero<element::Type_t::u64>(inputs[0], outputs[0]) ||
-           evaluate_nonzero<element::Type_t::bf16>(inputs[0], outputs[0]) ||
-           evaluate_nonzero<element::Type_t::f32>(inputs[0], outputs[0]) ||
-           evaluate_nonzero<element::Type_t::f64>(inputs[0], outputs[0]);
+    if (outputs[0]->get_element_type() != element::i64 &&
+        outputs[0]->get_element_type() != element::i32)
+    {
+        return false;
+    }
+    else
+    {
+        return evaluate_nonzero(inputs[0], outputs[0]);
+    }
 }
