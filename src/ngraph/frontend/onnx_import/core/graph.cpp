@@ -30,7 +30,8 @@ namespace ngraph
         namespace detail
         {
             static std::string to_string(
-                const std::map<std::string, std::reference_wrapper<const onnx::NodeProto>>& map)
+                const std::map<std::string,
+                               std::reference_wrapper<const ONNX_NAMESPACE::NodeProto>>& map)
             {
                 std::string result;
                 for (auto it = std::begin(map); it != std::end(map); ++it)
@@ -40,7 +41,7 @@ namespace ngraph
                 return result;
             }
 
-            static std::string get_node_domain(const onnx::NodeProto& node_proto)
+            static std::string get_node_domain(const ONNX_NAMESPACE::NodeProto& node_proto)
             {
                 return (node_proto.domain().empty() ? "" : node_proto.domain());
             }
@@ -55,7 +56,7 @@ namespace ngraph
             ///
             /// \return     The unique identificator.
             ///
-            static std::string get_op_domain_and_name(const onnx::NodeProto& node_proto)
+            static std::string get_op_domain_and_name(const ONNX_NAMESPACE::NodeProto& node_proto)
             {
                 std::string domain = get_node_domain(node_proto);
                 return (domain.empty() ? "" : domain + ".") + node_proto.op_type();
@@ -93,7 +94,7 @@ namespace ngraph
             }
         } // namespace detail
 
-        Graph::Graph(const onnx::GraphProto& graph_proto, Model& model)
+        Graph::Graph(const ONNX_NAMESPACE::GraphProto& graph_proto, Model& model)
             : m_graph_proto{&graph_proto}
             , m_model{&model}
         {
@@ -136,7 +137,8 @@ namespace ngraph
             }
 
             // Verify that ONNX graph contains only nodes of available operator types
-            std::map<std::string, std::reference_wrapper<const onnx::NodeProto>> unknown_operators;
+            std::map<std::string, std::reference_wrapper<const ONNX_NAMESPACE::NodeProto>>
+                unknown_operators;
             for (const auto& node_proto : m_graph_proto->node())
             {
                 if (!m_model->is_operator_available(node_proto))
