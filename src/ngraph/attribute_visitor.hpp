@@ -59,6 +59,13 @@ namespace ngraph
         virtual void on_attribute(const std::string& name, std::string& value) = 0;
         /// \brief Called when an attribute that is a boolean is visited
         virtual void on_attribute(const std::string& name, bool& value) = 0;
+        /// \brief Visit a sub-structure
+        template <typename T>
+        void on_structure_attribute(const std::string& name, T& value)
+        {
+            AttributeAdapter<T> adapter(value);
+            adapter.visit_attributes(*this, name);
+        }
 
         /// \brief handles all specialized on_adapter methods implemented by the visitor.
         ///
