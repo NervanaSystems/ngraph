@@ -78,18 +78,19 @@ void op::v3::ScatterNDUpdate::validate_and_infer_types()
         for (size_t i = 0; i < indices_rank - 1; i++)
         {
             compatible = compatible && updates_shape[i].same_scheme(indices_shape[i]);
+            NODE_VALIDATION_CHECK(
+                this, compatible, "updates_shape[0:indices_rank-1] shape must be indices_shape[:-1]");
         }
         size_t j = indices_shape[indices_rank - 1].get_length();
         for (size_t i = indices_rank - 1; i < updates_rank; i++, j++)
         {
             compatible = compatible && updates_shape[i].same_scheme(inputs_shape[j]);
+            NODE_VALIDATION_CHECK(
+                this,
+                compatible,
+                "updates_shape[indices_rank-1:] shape must be input_shape[indices_shape[-1]:]");
         }
     }
-
-    NODE_VALIDATION_CHECK(
-        this,
-        compatible,
-        "Updates shape must be indices_shape[:-1] + inputs_shape[indices.shape[-1]:]");
 
     set_output_type(0, inputs_et, inputs_shape);
 }
