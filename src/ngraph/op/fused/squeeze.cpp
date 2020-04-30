@@ -173,7 +173,6 @@ namespace
                            [data_rank](int64_t i) -> int64_t { return i < 0 ? data_rank + i : i; });
             // Sort in decreasing order
             std::set<int64_t, greater<int64_t>> axes_set(axes.begin(), axes.end());
-            NGRAPH_CHECK(axes.size() == axes_set.size(), "Axes has duplicate axis.");
             for (int64_t axis : axes_set)
             {
                 NGRAPH_CHECK(axis >= 0 && axis < data_rank, "Axis is out of bounds: ", axis);
