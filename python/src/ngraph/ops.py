@@ -1014,15 +1014,18 @@ def broadcast(data, target_shape, axes_mapping=None, broadcast_spec='NUMPY', nam
 
     :param data: The node with input tensor data.
     :param target_shape: The node with a new shape we want to broadcast tensor to.
-    :param broadcast_axes: The node with a axis positions (0-based) in the result
+    :param axes_mapping: The node with a axis positions (0-based) in the result
                            that are being broadcast.
     :param broadcast_spec: The type of broadcating that specifies mapping of input tensor axes
                            to output shape axes. Range of values: NUMPY, EXPLICIT, BIDIRECTIONAL.
     :param name: Optional new name for output node.
     :return: New node with broadcast shape.
     """
+    inputs = [data, target_shape]
+    if broadcast_spec == 'EXPLICIT':
+         inputs.append(axes_mapping)
     return _get_node_factory().create('Broadcast',
-                                      [data, target_shape, axes_mapping],
+                                      inputs,
                                       {'broadcast_spec': broadcast_spec})
 
 
