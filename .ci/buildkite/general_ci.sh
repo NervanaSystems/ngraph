@@ -15,6 +15,7 @@
 #  limitations under the License.
 # ==============================================================================
 
+which cmake
 mkdir build
 cd build
 cmake .. -DNGRAPH_CPU_ENABLE=0
