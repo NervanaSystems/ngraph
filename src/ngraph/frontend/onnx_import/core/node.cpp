@@ -31,7 +31,7 @@ namespace ngraph
         public:
             Impl() = delete;
 
-            Impl(const onnx::NodeProto& node_proto, const Graph& graph)
+            Impl(const ONNX_NAMESPACE::NodeProto& node_proto, const Graph& graph)
                 : m_node_proto{&node_proto}
                 , m_graph{&graph}
                 , m_attributes{std::begin(node_proto.attribute()), std::end(node_proto.attribute())}
@@ -60,18 +60,18 @@ namespace ngraph
             template <typename T>
             T get_attribute_value(const std::string& name) const;
 
-            const onnx::NodeProto& node_proto() const;
+            const ONNX_NAMESPACE::NodeProto& node_proto() const;
             const Graph& graph() const;
 
         private:
-            const onnx::NodeProto* m_node_proto;
+            const ONNX_NAMESPACE::NodeProto* m_node_proto;
             const Graph* m_graph;
             std::vector<Attribute> m_attributes;
             std::vector<std::reference_wrapper<const std::string>> m_output_names;
             mutable std::string m_description;
         };
 
-        const onnx::NodeProto& Node::Impl::node_proto() const { return *m_node_proto; }
+        const ONNX_NAMESPACE::NodeProto& Node::Impl::node_proto() const { return *m_node_proto; }
         const Graph& Node::Impl::graph() const { return *m_graph; }
         const std::vector<Attribute>& Node::Impl::attributes() const { return m_attributes; }
         const std::string& Node::Impl::domain() const { return m_node_proto->domain(); }
@@ -167,7 +167,7 @@ namespace ngraph
             return m_description;
         }
 
-        Node::Node(const onnx::NodeProto& node_proto, const Graph& graph)
+        Node::Node(const ONNX_NAMESPACE::NodeProto& node_proto, const Graph& graph)
             : m_pimpl{new Impl{node_proto, graph}, [](Impl* impl) { delete impl; }}
         {
         }
