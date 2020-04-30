@@ -177,6 +177,8 @@ set (SRC
     op/divide.hpp
     op/dot.cpp
     op/dot.hpp
+    op/embeddingbag_offsets_sum.cpp
+    op/embeddingbag_offsets_sum.hpp
     op/embedding_lookup.cpp
     op/embedding_lookup.hpp
     op/equal.cpp
