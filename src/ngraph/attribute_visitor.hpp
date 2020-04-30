@@ -33,13 +33,35 @@ namespace ngraph
     /// Attributes are the values set when building a graph which are not
     /// computed as the graph executes. Values computed from the graph topology and attributes
     /// during compilation are not attributes.
+    ///
+    /// Attributes can have a wide variety of types. In order for a visitor to handle a wide
+    /// range of types, some defined in other modules. on_attribute for string and bool attributes 
+    // must be implemented directly by a visitor. For other attribute types, an attribute visitor uses an 
+    /// AttributeAdapter<T> class to convert a T& to a ValueAccessor<T>& derived from 
+    /// ValueAccessor<void>. If the attribute visitor overrides one of the optional on_adapter
+    /// methods, that method will be called; otherwise the default implementation for
+    /// on_adapter will call the on_adapter method for ValueAccessor<void>&.
+    ///
+    /// Why are there optional on_adapter methods? This allows new on_adapter methods to be added
+    /// without requiring AttributeVisitors to be immediately updated.
+    ///
+    /// Why aren't all the methods on_attribute? Either there was some template issue related to the
+    /// generic on_attribute, or it was related to preventing API changes. similarly the string and bool
+    /// on_attributes are related to API stability.
     class NGRAPH_API AttributeVisitor
     {
     public:
         virtual ~AttributeVisitor() {}
         // Must implement these methods
+        /// \brief Called when an attribute that is a string is visited
         virtual void on_attribute(const std::string& name, std::string& value) = 0;
+        /// \brief Called when an attribute that is a boolean is visited
         virtual void on_attribute(const std::string& name, bool& value) = 0;
+
+        /// \brief handles all specialized on_adapter methods implemented by the visitor.
+        ///
+        /// The adapter implements get_type_info(), which can be used to determine the adapter directly
+        /// or via is_type and as_type on any platform
         virtual void on_adapter(const std::string& name, ValueAccessor<void>& adapter) = 0;
         // The remaining adapter methods fall back on the void adapter if not implemented
         virtual void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter)
@@ -140,9 +162,9 @@ namespace ngraph
         {
             on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
         }
-        // Use an adapter for non-primitive types
+        /// The generic visitor. There must be a definition of AttributeAdapter<T> that can convert 
+        /// to a ValueAccessor<U> for one of the on_adpater methods.
         template <typename T>
-        // typename std::enable_if<std::is_class<T>::value, void>::type
         void on_attribute(const std::string& name, T& value)
         {
             AttributeAdapter<T> adapter(value);
