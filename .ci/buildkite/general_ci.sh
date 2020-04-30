@@ -15,6 +15,7 @@
 #  limitations under the License.
 # ==============================================================================
 
+#comment
 mkdir build
 cd build
 /usr/local/bin/cmake .. -DNGRAPH_CPU_ENABLE=0
