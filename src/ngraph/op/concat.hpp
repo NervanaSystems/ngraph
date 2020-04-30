@@ -32,6 +32,7 @@ namespace ngraph
             public:
                 static const NodeTypeInfo type_info;
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+                static const NodeTypeInfo& get_type_info_static();
                 /// \brief Constructs a concatenation operation.
                 Concat() = default;
                 /// \brief Constructs a concatenation operation.

@@ -25,6 +25,8 @@ using namespace ngraph;
 
 const NodeTypeInfo op::Concat::type_info{"Concat", 0};
 
+const NodeTypeInfo& op::Concat::get_type_info_static() { return type_info; }
+
 op::Concat::Concat(const OutputVector& args, int64_t axis)
     : Op(args)
     , m_axis(axis)
