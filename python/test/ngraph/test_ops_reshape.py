@@ -97,12 +97,26 @@ def test_constant_from_integer_array(val_type, range_start, range_end):
 
 
 @pytest.mark.skip_on_gpu
-def test_broadcast_v1():
+def test_broadcast_numpy():
     input_tensor = np.array([1.0, 2.0, 3.0], np.float32)
     input_shape = np.array([3, 3], np.int64)
     input_axes = np.array([1], np.int64)
     result = run_op_node([input_tensor, input_shape, input_axes], ng.broadcast)
 
+    a_arr = np.array([[0], [0], [0]], dtype=np.float32)
+    b_arr = np.array([[1, 2, 3]], dtype=np.float32)
+    expected = np.add(a_arr, b_arr)
+
+    assert np.allclose(result, expected)
+
+@pytest.mark.skip_on_gpu
+def test_broadcast_bidirectional():
+    input_tensor = np.array([1.0, 2.0, 3.0], np.float32)
+    input_shape = np.array([3, 3], np.int64)
+    input_axes = np.array([1], np.int64)
+    result = run_op_node([input_tensor, input_shape, input_axes], ng.broadcast, 'BIDIRECTIONAL')
+
+    print(result)
     a_arr = np.array([[0], [0], [0]], dtype=np.float32)
     b_arr = np.array([[1, 2, 3]], dtype=np.float32)
     expected = np.add(a_arr, b_arr)
