@@ -15,7 +15,7 @@
 #  limitations under the License.
 # ==============================================================================
 
-amkdir build
+mkdir build
 cd build
 /usr/local/bin/cmake .. -DNGRAPH_CPU_ENABLE=0
 make -j64
