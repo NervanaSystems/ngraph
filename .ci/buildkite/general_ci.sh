@@ -16,6 +16,7 @@
 # ==============================================================================
 
 which cmake
+echo $PATH$
 mkdir build
 cd build
 cmake .. -DNGRAPH_CPU_ENABLE=0
