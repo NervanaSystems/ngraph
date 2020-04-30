@@ -36,6 +36,8 @@ void regclass_pyngraph_Function(py::module m)
                           const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
                           const std::string&>());
     function.def("get_output_size", &ngraph::Function::get_output_size);
+    function.def("get_ops", &ngraph::Function::get_ops);
+    function.def("get_ordered_ops", &ngraph::Function::get_ordered_ops);
     function.def("get_output_op", &ngraph::Function::get_output_op);
     function.def("get_output_element_type", &ngraph::Function::get_output_element_type);
     function.def("get_output_shape", &ngraph::Function::get_output_shape);

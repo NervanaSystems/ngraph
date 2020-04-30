@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        Model::Model(const onnx::ModelProto& model_proto)
+        Model::Model(const ONNX_NAMESPACE::ModelProto& model_proto)
             : m_model_proto{&model_proto}
         {
             // Walk through the elements of opset_import field and register operator sets
@@ -61,7 +61,7 @@ namespace ngraph
             return op->second;
         }
 
-        bool Model::is_operator_available(const onnx::NodeProto& node_proto) const
+        bool Model::is_operator_available(const ONNX_NAMESPACE::NodeProto& node_proto) const
         {
             const auto dm = m_opset.find(node_proto.domain());
             if (dm == std::end(m_opset))
