@@ -1965,12 +1965,9 @@ def interpolate(image, output_shape, attrs, name=None):
 
     :return: Node representing interpolation operation.
     """
-    def _is_valid_mode(x):  # type: (str) -> bool
-        return x in ['nearest', 'linear', 'cubic', 'area']
-
     requirements = [
         ('axes', True, np.integer, is_non_negative_value),
-        ('mode', True, np.str_, _is_valid_mode),
+        ('mode', True, np.str_, None),
         ('align_corners', False, np.bool_, None),
         ('antialias', False, np.bool_, None),
         ('pads_begin', False, np.integer, is_non_negative_value),
