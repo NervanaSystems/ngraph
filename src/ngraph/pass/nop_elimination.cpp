@@ -134,6 +134,33 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
     return false;
 }
 
+static bool replace_squeeze_unsqueeze(const std::shared_ptr<Node>& node)
+{
+    auto out_shape = node->get_output_partial_shape(0);
+    if (!out_shape.is_dynamic() && shape_size(out_shape.get_shape()) != 0)
+    {
+        shared_ptr<Node> reshape;
+        auto input = node->input_value(0).get_node_shared_ptr();
+        auto shape = node->get_shape();
+        std::vector<int64_t> vi;
+        vi.assign(shape.begin(), shape.end());
+        auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+
+        if (as_type_ptr<opset3::Reshape>(input) || as_type_ptr<opset3::Squeeze>(input) ||
+            as_type_ptr<opset3::Unsqueeze>(input))
+        {
+            reshape = make_shared<opset3::Reshape>(
+                input->input_value(0).get_node_shared_ptr(), pat, false);
+        }
+        else
+        {
+            reshape = make_shared<opset3::Reshape>(input, pat, false);
+        }
+        return replace_output_update_name(node->output(0), reshape->output(0));
+    }
+    return false;
+}
+
 static std::vector<int64_t> get_unsqueeze_axes(const PartialShape& data_shape,
                                                const PartialShape& out_shape)
 {
@@ -176,10 +203,16 @@ static std::vector<int64_t> get_squeeze_axes(const PartialShape& data_shape,
 
 static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
 {
+    auto out_shape = node->get_output_partial_shape(0);
+    // try to replace all squeeze/unsqueeze with reshape if outshape is static
+    if (!out_shape.is_dynamic() && shape_size(out_shape.get_shape()) != 0)
+    {
+        return replace_squeeze_unsqueeze(node);
+    }
+
     auto unsqueeze = as_type_ptr<opset3::Unsqueeze>(node);
     auto input = unsqueeze->input_value(0).get_node_shared_ptr();
     auto data_shape = input->input_value(0).get_partial_shape();
-    auto out_shape = node->get_output_partial_shape(0);
     auto squeeze = as_type_ptr<opset3::Squeeze>(input);
     auto replace_unsqueeze_only = [&](const vector<int64_t>& axes) {
         auto axes_const = op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
@@ -245,26 +278,21 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
         return replace_unsqueeze_only(axes);
     }
 
-    // eliminate redundant reshape->unsqueeze
-    if (as_type_ptr<opset3::Reshape>(input) && !node->get_output_partial_shape(0).is_dynamic())
-    {
-        auto shape = node->get_shape();
-        std::vector<int64_t> vi;
-        vi.assign(shape.begin(), shape.end());
-        auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
-        auto new_reshape =
-            make_shared<opset3::Reshape>(input->input_value(0).get_node_shared_ptr(), pat, false);
-        return replace_output_update_name(node->output(0), new_reshape->output(0));
-    }
     return false;
 }
 
 static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
 {
+    auto out_shape = node->get_output_partial_shape(0);
+    // try to replace all squeeze/unsqueeze with reshape if outshape is static
+    if (!out_shape.is_dynamic() && shape_size(out_shape.get_shape()) != 0)
+    {
+        return replace_squeeze_unsqueeze(node);
+    }
+
     auto squeeze = as_type_ptr<opset3::Squeeze>(node);
     auto input = squeeze->input_value(0).get_node_shared_ptr();
     auto data_shape = input->input_value(0).get_partial_shape();
-    auto out_shape = node->get_output_partial_shape(0);
     auto unsqueeze = as_type_ptr<opset3::Unsqueeze>(input);
     auto replace_squeeze_only = [&](const vector<int64_t>& axes) {
         auto axes_const = op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
@@ -326,18 +354,6 @@ static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
         }
         auto axes = get_squeeze_axes(data_shape, out_shape);
         return replace_squeeze_only(axes);
-    }
-
-    // eliminate redundant squeeze
-    if (as_type_ptr<opset3::Reshape>(input) && !node->get_output_partial_shape(0).is_dynamic())
-    {
-        auto shape = node->get_shape();
-        std::vector<int64_t> vi;
-        vi.assign(shape.begin(), shape.end());
-        auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
-        auto new_reshape =
-            make_shared<opset3::Reshape>(input->input_value(0).get_node_shared_ptr(), pat, false);
-        return replace_output_update_name(node->output(0), new_reshape->output(0));
     }
     return false;
 }

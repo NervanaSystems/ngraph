@@ -396,6 +396,46 @@ TEST(nop_elimination, squeeze_squeeze_overlap_elimination)
     check_usecase(PartialShape{1, 3, 2, 1, 1}, {-1, -5}, {2}, 1);
     check_usecase(PartialShape{1, Dimension::dynamic(), 1, 2, 1}, {0}, {1, 3}, 1);
 }
+
+TEST(nop_elimination, unsqueeze_unsqueeze_overlap_elimination)
+{
+    auto check_usecase = [](const PartialShape& shape,
+                            const std::vector<int64_t>& unsq_axes_val_1,
+                            const std::vector<int64_t>& unsq_axes_val_2,
+                            size_t unsq) {
+        static size_t id = 0;
+        auto casename = string("usecase #") + to_string(++id);
+        auto unsq_axes_1 =
+            op::Constant::create<int64_t>(element::i64, Shape{unsq_axes_val_1.size()}, unsq_axes_val_1);
+        auto unsq_axes_2 =
+            op::Constant::create<int64_t>(element::i64, Shape{unsq_axes_val_2.size()}, unsq_axes_val_2);
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto A1 = make_shared<op::v0::Abs>(A);
+        auto B = make_shared<op::v0::Unsqueeze>(A1, unsq_axes_1);
+        auto B1 = make_shared<op::v0::Unsqueeze>(B, unsq_axes_2);
+        auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
+        auto optimized_f = clone_function(*baseline_f);
+
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::Validate>();
+        pass_manager.register_pass<pass::NopElimination>();
+        pass_manager.run_passes(optimized_f);
+        auto ps = baseline_f->get_results()[0]->get_output_partial_shape(0);
+        auto ps_r = optimized_f->get_results()[0]->get_output_partial_shape(0);
+        EXPECT_TRUE(ps.rank().is_static() && ps_r.rank().is_static()) << casename;
+        ASSERT_EQ(ps.rank().get_length(), ps_r.rank().get_length()) << casename;
+        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(baseline_f), 2) << casename;
+        ASSERT_EQ(count_ops_of_type<op::v0::Unsqueeze>(optimized_f), unsq) << casename;
+        ;
+    };
+
+    check_usecase(PartialShape{Dimension::dynamic(), 1, 1}, {0}, {1, 2}, 1);
+    check_usecase(
+        PartialShape{1, Dimension::dynamic(), 1, Dimension::dynamic(), 1}, {2, 1}, {2, 4}, 1);
+    check_usecase(PartialShape{3, Dimension::dynamic(), 1}, {-1, -3}, {2}, 1);
+    check_usecase(PartialShape{Dimension::dynamic(), 1, 2, 1}, {0}, {1, 3}, 1);
+}
+
 TEST(nop_elimination, unsqueeze_squeeze_elimination)
 {
     auto generate_func = [](const Shape& shape, const std::vector<int64_t>& axes_val) {
