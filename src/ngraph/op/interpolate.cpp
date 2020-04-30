@@ -68,12 +68,8 @@ void op::Interpolate::validate_and_infer_types()
         {
             output_shape[axis] = Dimension(out_shape[i++]);
         }
-        set_output_type(0, get_input_element_type(0), output_shape);
     }
-    else
-    {
-        set_output_type(0, get_input_element_type(0), output_shape);
-    }
+    set_output_type(0, get_input_element_type(0), output_shape);
 }
 
 shared_ptr<Node> op::Interpolate::clone_with_new_inputs(const OutputVector& new_args) const
@@ -158,12 +154,8 @@ void op::v3::Interpolate::validate_and_infer_types()
         {
             output_shape[axis] = Dimension(out_shape[i++]);
         }
-        set_output_type(0, get_input_element_type(0), output_shape);
     }
-    else
-    {
-        set_output_type(0, get_input_element_type(0), output_shape);
-    }
+    set_output_type(0, get_input_element_type(0), output_shape);
 }
 
 shared_ptr<Node> op::v3::Interpolate::clone_with_new_inputs(const OutputVector& new_args) const
