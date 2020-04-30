@@ -52,7 +52,6 @@
 #include "ngraph/runtime/reference/constant.hpp"
 #include "ngraph/runtime/reference/convert.hpp"
 #include "ngraph/runtime/reference/convolution.hpp"
-#include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/cos.hpp"
 #include "ngraph/runtime/reference/cosh.hpp"
 #include "ngraph/runtime/reference/cum_sum.hpp"
@@ -1750,13 +1749,11 @@ protected:
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::Split:
         case OP_TYPEID::SquaredDifference:
-        case OP_TYPEID::Squeeze:
         case OP_TYPEID::Stack:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TensorIterator:
         case OP_TYPEID::Tile:
         case OP_TYPEID::UnknownOp:
-        case OP_TYPEID::Unsqueeze:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
         case OP_TYPEID::Divide:
@@ -1769,7 +1766,9 @@ protected:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShapeOf_v3:
         case OP_TYPEID::Softmax:
-        case OP_TYPEID::Subtract: NGRAPH_CHECK(false, "Op not handled by evaluator method:", node);
+        case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Subtract:
+        case OP_TYPEID::Unsqueeze: NGRAPH_CHECK(false, "Op not handled by evaluator method:", node);
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
