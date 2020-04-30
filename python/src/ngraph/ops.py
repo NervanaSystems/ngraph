@@ -1008,22 +1008,22 @@ Node.__ge__ = greater_eq
 
 # Custom ops
 @nameable_op
-def broadcast(node, new_shape, broadcast_axes=None, auto_broadcast='numpy', name=None):
+def broadcast(data, target_shape, axes_mapping=None, broadcast_spec='NUMPY', name=None):
     # type: (Node, Node, Node, str, str) -> Node
     """Create a node which broadcasts the input node's values along specified axes to a desired shape.
 
-    :param node: The node with input tensor data.
-    :param new_shape: The node with a new shape we want to broadcast tensor to.
+    :param data: The node with input tensor data.
+    :param target_shape: The node with a new shape we want to broadcast tensor to.
     :param broadcast_axes: The node with a axis positions (0-based) in the result
                            that are being broadcast.
-    :param auto_broadcast: The type of broadcating that specifies mapping of input tensor axes
-                           to output shape axes. Range of values: numpy, explicit.
+    :param broadcast_spec: The type of broadcating that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: NUMPY, EXPLICIT, BIDIRECTIONAL.
     :param name: Optional new name for output node.
     :return: New node with broadcast shape.
     """
     return _get_node_factory().create('Broadcast',
-                                      [node, new_shape, broadcast_axes],
-                                      {'auto_broadcast': auto_broadcast})
+                                      [data, target_shape, axes_mapping],
+                                      {'broadcast_spec': broadcast_spec})
 
 
 @nameable_op
@@ -1755,6 +1755,7 @@ def non_max_suppression(boxes,                              # type: Node
                         score_threshold=None,               # type: Node
                         box_encoding='corner',              # type: str
                         sort_result_descending=True,        # type: bool
+                        output_type= 'i64',                 # type: str
                         ):
     # type: (...) -> Node
     """Return a node which performs NonMaxSuppression.
@@ -1768,6 +1769,7 @@ def non_max_suppression(boxes,                              # type: Node
     :param box_encoding: Format of boxes data encoding.
     :param sort_result_descending: Flag that specifies whenever it is necessary to sort selected
                                    boxes across batches or not.
+    :param output_type: Output element type.
     :return: The new node which performs NonMaxSuppression
     """
     if max_output_boxes_per_class is None:
@@ -1779,7 +1781,8 @@ def non_max_suppression(boxes,                              # type: Node
 
     inputs = [boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold]
     attributes = {'box_encoding': box_encoding,
-                  'sort_result_descending': sort_result_descending}
+                  'sort_result_descending': sort_result_descending,
+                  'output_type': output_type}
 
     return _get_node_factory().create('NonMaxSuppression', inputs, attributes)
 
@@ -1800,11 +1803,12 @@ def non_zero(data,                # type: Node
 
 
 @nameable_op
-def topk(data,   # type: Node
-         k,      # type: Node
-         axis,   # type: int
-         mode,   # type: str
-         sort,   # type: str
+def topk(data,                      # type: Node
+         k,                         # type: Node
+         axis,                      # type: int
+         mode,                      # type: str
+         sort,                      # type: str
+         index_element_type='i32',  # type: str
          ):
     # type: (...) -> Node
     """Return a node which performs TopK.
@@ -1814,10 +1818,45 @@ def topk(data,   # type: Node
     :param axis: TopK Axis.
     :param mode: Compute TopK largest ('max') or smallest ('min')
     :param sort: Order of output elements (sort by: 'none', 'index' or 'value')
+    :param index_element_type: Type of output tensor with indices.
     :return: The new node which performs TopK (both indices and values)
     """
     return _get_node_factory().create('TopK', [data, k],
-                                      {'axis': axis, 'mode': mode, 'sort': sort})
+                                      {'axis': axis, 'mode': mode, 'sort': sort,
+                                       'index_element_type': index_element_type})
+
+
+@nameable_op
+def roi_align(data,             # type: Node
+              rois,             # type: Node
+              batch_indices,    # type: Node
+              pooled_h,         # type: int
+              pooled_w,         # type: int
+              sampling_ratio,   # type: int
+              spatial_scale,    # type: float
+              mode,             # type: str
+              ):
+    # type: (...) -> Node
+    """Return a node which performs ROIAlign.
+
+    :param data: Input data.
+    :param rois: RoIs (Regions of Interest) to pool over.
+    :param batch_indices: Tensor with each element denoting the index of 
+                          the corresponding image in the batch.
+    :param pooled_h: Height of the ROI output feature map.
+    :param pooled_w: Width of the ROI output feature map.
+    :param sampling_ratio: Number of bins over height and width to use to calculate
+                           each output feature map element.
+    :param spatial_scale: Multiplicative spatial scale factor to translate ROI coordinates.
+    :param mode: Method to perform pooling to produce output feature map elements.
+
+    :return: The new node which performs ROIAlign
+    """
+    inputs = [data, rois, batch_indices]
+    attributes = {'pooled_h': pooled_h, 'pooled_w': pooled_w,
+                  'sampling_ratio': sampling_ratio,
+                  'spatial_scale': spatial_scale, 'mode': mode}
+    return _get_node_factory().create('ROIAlign', inputs, attributes)
 
 
 @nameable_op
@@ -1937,13 +1976,14 @@ def sigmoid(data):  # type: (Node) -> Node
 
 
 @nameable_op
-def shape_of(data):  # type: (Node) -> Node
+def shape_of(data, output_type='i64'):  # type: (Node, str) -> Node
     """Return a node which produces a tensor containing the shape of its input data.
 
-    :param data: The tensor containing the input data
+    :param data: The tensor containing the input data.
+    :para output_type: Output element type.
     :return: ShapeOf node
     """
-    return _get_node_factory().create('ShapeOf', [data])
+    return _get_node_factory().create('ShapeOf', [data], {'output_type': output_type})
 
 
 @nameable_op

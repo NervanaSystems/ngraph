@@ -98,6 +98,7 @@ from ngraph.ops import reshape
 from ngraph.ops import result
 from ngraph.ops import reverse
 from ngraph.ops import rnn_cell
+from ngraph.ops import roi_align
 from ngraph.ops import scale_shift
 from ngraph.ops import select
 from ngraph.ops import shape_of
