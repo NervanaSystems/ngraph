@@ -32,20 +32,21 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Assign() = default;
 
-                Assign(const Output<Node>& new_value,
-                       std::string variable_id);
+                Assign(const Output<Node>& new_value, std::string variable_id);
 
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                clone_with_new_inputs(const OutputVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
+
             private:
                 std::string m_variable_id;
                 std::shared_ptr<ngraph::v3::Variable> m_variable;
 
-                void dfs(const std::shared_ptr<Node>& node, const std::shared_ptr<ngraph::v3::Variable>& variable);
+                void dfs(const std::shared_ptr<Node>& node,
+                         const std::shared_ptr<ngraph::v3::Variable>& variable);
             };
         }
         using v3::Assign;

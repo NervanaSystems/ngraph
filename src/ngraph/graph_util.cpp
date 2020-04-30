@@ -58,6 +58,10 @@ void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_pt
         nodes.push_back(param);
     }
 
+    for (auto assign : p->get_assign_nodes())
+    {
+        nodes.push_back(assign);
+    }
     traverse_nodes(nodes, f);
 }
 
@@ -431,8 +435,15 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
         cloned_params.push_back(as_type_ptr<op::Parameter>(node_map.at(param.get())));
     }
 
+    NodeVector cloned_assign;
+    for (auto assign : func.get_assign_nodes())
+    {
+        cloned_assign.push_back(node_map.at(assign.get()));
+    }
     // create and return cloned function
-    return std::make_shared<ngraph::Function>(cloned_results, cloned_params);
+    auto function = std::make_shared<ngraph::Function>(cloned_results, cloned_params);
+    function->set_assign_nodes(cloned_assign);
+    return function;
 }
 
 bool ngraph::is_equal_to_const_value(std::string const_value, const Output<Node>& reduce_constant)

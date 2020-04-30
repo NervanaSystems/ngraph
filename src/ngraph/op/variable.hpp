@@ -30,19 +30,17 @@ namespace ngraph
             Variable() = default;
 
             Variable(const PartialShape& data_shape,
-                    const element::Type& data_type,
-                      std::string variable_id)
-                      :
-                      m_data_shape(data_shape),
-                      m_data_type(data_type),
-                      m_variable_id(std::move(variable_id))
+                     const element::Type& data_type,
+                     std::string variable_id)
+                : m_data_shape(data_shape)
+                , m_data_type(data_type)
+                , m_variable_id(std::move(variable_id))
             {
             }
 
             PartialShape get_shape() { return m_data_shape; }
             element::Type get_type() { return m_data_type; }
             std::string get_id() { return m_variable_id; }
-
             void update(const PartialShape& data_shape,
                         const element::Type& data_type,
                         std::string variable_id)

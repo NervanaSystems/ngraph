@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <ops.hpp>
 #include "ngraph/op/assign.hpp"
+#include <ops.hpp>
 #include "ngraph/op/read_value.hpp"
 
 using namespace std;
@@ -23,24 +23,24 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v3::Assign::type_info;
 
-void op::v3::Assign::dfs(const std::shared_ptr<Node>& node, const std::shared_ptr<ngraph::v3::Variable>& variable)
+void op::v3::Assign::dfs(const std::shared_ptr<Node>& node,
+                         const std::shared_ptr<ngraph::v3::Variable>& variable)
 {
-    for (auto &input : node->inputs())
+    for (auto& input : node->inputs())
     {
         auto input_value_node = input.get_source_output().get_node_shared_ptr();
-        if(auto read_value = as_type_ptr<op::v3::ReadValue>(input_value_node))
+        if (auto read_value = as_type_ptr<op::v3::ReadValue>(input_value_node))
         {
-            if(read_value->get_variable_id() == m_variable_id)
+            if (read_value->get_variable_id() == m_variable_id)
                 m_variable = read_value->get_variable();
         }
         dfs(input_value_node, variable);
     }
 }
 
-op::v3::Assign::Assign(const Output<Node>& new_value,
-                   std::string variable_id)
-        : Op({new_value}),
-        m_variable_id(variable_id)
+op::v3::Assign::Assign(const Output<Node>& new_value, std::string variable_id)
+    : Op({new_value})
+    , m_variable_id(variable_id)
 {
     constructor_validate_and_infer_types();
 }
@@ -50,7 +50,7 @@ void op::v3::Assign::validate_and_infer_types()
     auto value = input_value(0);
     auto arg_t = get_input_element_type(0);
     auto output_shape = get_input_partial_shape(0);
-    if(!m_variable)
+    if (!m_variable)
     {
         auto node = value.get_node_shared_ptr();
         dfs(node, m_variable);
@@ -71,10 +71,8 @@ shared_ptr<Node> op::v3::Assign::clone_with_new_inputs(const OutputVector& new_a
     return make_shared<Assign>(new_args.at(0), m_variable_id);
 }
 
-bool op::v3::Assign::visit_attributes(AttributeVisitor &visitor)
+bool op::v3::Assign::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("variable_id", m_variable_id);
     return true;
 }
-
-

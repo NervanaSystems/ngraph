@@ -32,18 +32,17 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ReadValue() = default;
 
-                ReadValue(const Output<Node>& new_value,
-                          std::string variable_id);
+                ReadValue(const Output<Node>& new_value, std::string variable_id);
 
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                clone_with_new_inputs(const OutputVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
                 std::string get_variable_id() { return m_variable_id; }
-                std::shared_ptr<::ngraph::v3::Variable> get_variable() { return m_variable;}
+                std::shared_ptr<::ngraph::v3::Variable> get_variable() { return m_variable; }
             private:
                 std::string m_variable_id;
                 std::shared_ptr<::ngraph::v3::Variable> m_variable;

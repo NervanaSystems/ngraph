@@ -22,10 +22,9 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::ReadValue::type_info;
 
-op::ReadValue::ReadValue(const Output<Node>& new_value,
-                         std::string variable_id)
-        : Op({new_value}),
-        m_variable_id(variable_id)
+op::ReadValue::ReadValue(const Output<Node>& new_value, std::string variable_id)
+    : Op({new_value})
+    , m_variable_id(variable_id)
 {
     constructor_validate_and_infer_types();
 }
@@ -35,7 +34,7 @@ void op::ReadValue::validate_and_infer_types()
     auto arg_t = get_input_element_type(0);
     auto output_shape = get_input_partial_shape(0);
 
-    //NODE_VALIDATION_CHECK(this, m_variable == nullptr, "TODO: error message");
+    // NODE_VALIDATION_CHECK(this, m_variable == nullptr, "TODO: error message");
     m_variable = std::make_shared<::v3::Variable>(output_shape, arg_t, m_variable_id);
     set_output_type(0, arg_t, output_shape);
 }
@@ -46,9 +45,8 @@ shared_ptr<Node> op::ReadValue::clone_with_new_inputs(const OutputVector& new_ar
     return make_shared<ReadValue>(new_args.at(0), m_variable_id);
 }
 
-bool op::v3::ReadValue::visit_attributes(AttributeVisitor &visitor)
+bool op::v3::ReadValue::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("variable_id", m_variable_id);
     return true;
 }
-

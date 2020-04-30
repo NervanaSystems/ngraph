@@ -130,6 +130,8 @@ namespace ngraph
             const std::vector<std::shared_ptr<Node>>& root_nodes)>;
         void set_topological_sort(topological_sort_t);
 
+        void set_assign_nodes(const NodeVector& nodes) { m_assign_nodes = nodes; }
+        NodeVector get_assign_nodes() const { return m_assign_nodes; }
     protected:
         size_t m_temporary_pool_size;
 
@@ -144,5 +146,7 @@ namespace ngraph
         const std::string m_unique_name;
         size_t m_placement{0};
         topological_sort_t m_topological_sorter;
+
+        NodeVector m_assign_nodes;
     };
 }
