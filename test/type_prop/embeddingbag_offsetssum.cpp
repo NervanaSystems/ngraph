@@ -422,8 +422,9 @@ TEST(type_prop, ebos_fail_per_sample_weights_element_type_4_args_api)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Per sample weight element type (i64) must "
-                                                       "match embedding table element type (f32)"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Per sample weight element type (i64) must "
+                                         "match embedding table element type (f32)"));
     }
     catch (...)
     {
