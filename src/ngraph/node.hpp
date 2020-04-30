@@ -269,7 +269,7 @@ namespace ngraph
         // TODO(amprocte): should be protected
         void set_input_is_relevant_to_value(size_t i, bool relevant = true);
 
-protected:
+public:
 
         // TODO(amprocte): should this be protected?
         void set_output_type(size_t i,
