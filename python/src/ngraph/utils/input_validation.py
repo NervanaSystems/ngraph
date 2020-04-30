@@ -18,7 +18,7 @@
 
 import logging
 import numpy as np
-from typing import Any, Callable, Iterable, Optional, Type
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 from ngraph.exceptions import UserInputError
 
@@ -36,31 +36,34 @@ def assert_list_of_ints(value_list, message):  # type: (Iterable[int], str) -> N
         raise UserInputError(message, value_list)
 
 
-def _check_value(attr_key, value, val_type, cond=None):
-    # type: (str, Any, Type, Optional[Callable[[Any], bool]]) -> bool
+def _check_value(op_name, attr_key, value, val_type, cond=None):
+    # type: (str, str, Any, Type, Optional[Callable[[Any], bool]]) -> bool
     """Check whether provided value satisfies specified criteria.
 
-    :param      attr_key:        The attribute name.
-    :param      value:           The value to check.
-    :param      val_type:        Required value type.
-    :param      cond:            The optional function running additional checks.
+    :param      op_name:        The operator name which attributes are checked.
+    :param      attr_key:       The attribute name.
+    :param      value:          The value to check.
+    :param      val_type:       Required value type.
+    :param      cond:           The optional function running additional checks.
 
     :raises     UserInputError:
     :return:    True if attribute satisfies all criterias. Otherwise False.
     """
     if not np.issubdtype(type(value), val_type):
-        raise UserInputError(
-            'Attribute \"{}\" value must by of type {}.'.format(attr_key, val_type))
+        raise UserInputError('{} operator attribute \"{}\" value must by of type {}.'
+                             .format(op_name, attr_key, val_type))
     if cond is not None and not cond(value):
         raise UserInputError(
-            'Attribute \"{}\" value does not satisfy provided condition.'.format(attr_key))
+            '{} operator attribute \"{}\" value does not satisfy provided condition.'
+            .format(op_name, attr_key))
     return True
 
 
-def check_valid_attribute(attr_dict, attr_key, val_type, cond=None, required=False):
-    # type: (dict, str, Type, Optional[Callable[[Any], bool]], Optional[bool]) -> bool
+def check_valid_attribute(op_name, attr_dict, attr_key, val_type, cond=None, required=False):
+    # type: (str, dict, str, Type, Optional[Callable[[Any], bool]], Optional[bool]) -> bool
     """Check whether specified attribute satisfies given criteria.
 
+    :param  op_name:    The operator name which attributes are checked.
     :param attr_dict:   Dictionary containing key-value attributes to check.
     :param attr_key:    Key value for validated attribute.
     :param val_type:    Value type for validated attribute.
@@ -75,8 +78,8 @@ def check_valid_attribute(attr_dict, attr_key, val_type, cond=None, required=Fal
     result = True
 
     if required and attr_key not in attr_dict:
-        raise UserInputError('Provided dictionary is missing required attribute \"{}\"'.format(
-            attr_key))
+        raise UserInputError('Provided dictionary is missing {} operator required attribute \"{}\"'
+                             .format(op_name, attr_key))
 
     if attr_key not in attr_dict:
         return result
@@ -84,9 +87,51 @@ def check_valid_attribute(attr_dict, attr_key, val_type, cond=None, required=Fal
     attr_value = attr_dict[attr_key]
 
     if np.isscalar(attr_value):
-        result = result and _check_value(attr_key, attr_value, val_type, cond)
+        result = result and _check_value(op_name, attr_key, attr_value, val_type, cond)
     else:
         for v in attr_value:
-            result = result and _check_value(attr_key, v, val_type, cond)
+            result = result and _check_value(op_name, attr_key, v, val_type, cond)
 
     return result
+
+
+def check_valid_attributes(op_name,        # type: str
+                           attributes,     # type: Dict[str, Any]
+                           requirements,   # type: List[Tuple[str, bool, Type, Optional[Callable]]]
+                           ):
+    # type: (...) -> None
+    """Perform attributes validation according to specified type, value criteria.
+
+    :param  op_name:        The operator name which attributes are checked.
+    :param  attributes:     The dictionary with user provided attributes to check.
+    :param  requirements:   The list of tuples describing attributes' requirements. The tuple should
+                            contain following values:
+                            (op_name: str,
+                             is_required: bool,
+                             value_type: Type,
+                             value_condition: Callable)
+
+    :raises     UserInputError:
+    """
+    for attr, required, val_type, cond in requirements:
+        check_valid_attribute(op_name, attributes, attr, val_type, cond, required)
+
+
+def is_positive_value(x):  # type: (Any) -> bool
+    """Determine whether the specified x is positive value.
+
+    :param      x:    The value to check.
+
+    :returns:   True if the specified x is positive value, False otherwise.
+    """
+    return x > 0
+
+
+def is_non_negative_value(x):  # type: (Any) -> bool
+    """Determine whether the specified x is non-negative value.
+
+    :param      x:    The value to check.
+
+    :returns:   True if the specified x is non-negative value, False otherwise.
+    """
+    return x >= 0

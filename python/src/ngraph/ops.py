@@ -37,7 +37,8 @@ from typing import Any, List, Set, Union
 
 from ngraph.utils.broadcasting import get_broadcast_axes
 from ngraph.utils.decorators import nameable_op, binary_op, unary_op
-from ngraph.utils.input_validation import assert_list_of_ints, check_valid_attribute
+from ngraph.utils.input_validation import assert_list_of_ints, check_valid_attributes, \
+    is_positive_value, is_non_negative_value
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
     NodeInput, ScalarData, as_node
@@ -1910,6 +1911,7 @@ def interpolate(image, output_shape, attrs, name=None):
     :param  image:         The node providing input tensor with data for interpolation.
     :param  output_shape:  1D tensor describing output shape for spatial axes.
     :param  attrs:         The dictionary containing key, value pairs for attributes.
+    :param  name:          Optional name for the outptu node.
 
     Available attributes are:
 
@@ -1963,27 +1965,20 @@ def interpolate(image, output_shape, attrs, name=None):
 
     :return: Node representing interpolation operation.
     """
-    def is_positive_value(x):  # type: (Any) -> bool
-        return x >= 0
-
-    def is_valid_mode(x):  # type: (str) -> bool
+    def _is_valid_mode(x):  # type: (str) -> bool
         return x in ['nearest', 'linear', 'cubic', 'area']
 
-    required_attribute_keys = ['axes', 'mode']
-    required_attribute_types = [np.integer, np.str_]
-    required_attribute_cond = [is_positive_value, is_valid_mode]
-    optional_attribute_keys = ['align_corners', 'antialias', 'pads_begin', 'pads_end']
-    optional_attribute_types = [np.bool_, np.bool_, np.integer, np.integer]
-    optional_attribute_cond = [None, None, is_positive_value, is_positive_value]
+    requirements = [
+        ('axes', True, np.integer, is_non_negative_value),
+        ('mode', True, np.str_, _is_valid_mode),
+        ('align_corners', False, np.bool_, None),
+        ('antialias', False, np.bool_, None),
+        ('pads_begin', False, np.integer, is_non_negative_value),
+        ('pads_end', False, np.integer, is_non_negative_value),
+    ]
 
-    # Validate required attributes
-    for attr, val_type, cond in zip(required_attribute_keys, required_attribute_types,
-                                    required_attribute_cond):
-        check_valid_attribute(attrs, attr, val_type, cond, True)
-
-    # Validate optional attributes
-    for attr, val_type, cond in zip(optional_attribute_keys, optional_attribute_types,
-                                    optional_attribute_cond):
-        check_valid_attribute(attrs, attr, val_type, cond)
+    check_valid_attributes('Interpolate', attrs, requirements)
 
     return _get_node_factory().create('Interpolate', [image, as_node(output_shape)], attrs)
+
+
