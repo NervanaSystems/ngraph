@@ -28,7 +28,6 @@ op::Interpolate::Interpolate(const Output<Node>& image,
     : Op({image, output_shape})
     , m_attrs(attrs)
 {
-    m_attrs.mode = as_string<InterpolateMode>(as_enum<InterpolateMode>(attrs.mode));
     constructor_validate_and_infer_types();
 }
 
@@ -45,6 +44,8 @@ bool op::Interpolate::visit_attributes(AttributeVisitor& visitor)
 
 void op::Interpolate::validate_and_infer_types()
 {
+    // Check if string attribute is valid by converting to and back from valid enum type
+    m_attrs.mode = as_string<InterpolateMode>(as_enum<InterpolateMode>(m_attrs.mode));
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(1).is_integral_number(),
                           "output shape must be an integral number.");
@@ -110,9 +111,6 @@ op::v3::Interpolate::Interpolate(const Output<Node>& image,
     : Op({image, output_shape})
     , m_attrs(attrs)
 {
-    m_attrs.mode = as_string<InterpolateMode>(as_enum<InterpolateMode>(attrs.mode));
-    m_attrs.coordinate_transformation_mode = as_string<CoordinateTransformMode>(
-        as_enum<CoordinateTransformMode>(attrs.coordinate_transformation_mode));
     constructor_validate_and_infer_types();
 }
 
@@ -131,6 +129,10 @@ bool op::v3::Interpolate::visit_attributes(AttributeVisitor& visitor)
 
 void op::v3::Interpolate::validate_and_infer_types()
 {
+    // Check if string attribute is valid by converting to and back from valid enum type
+    m_attrs.mode = as_string<InterpolateMode>(as_enum<InterpolateMode>(m_attrs.mode));
+    m_attrs.coordinate_transformation_mode = as_string<CoordinateTransformMode>(
+        as_enum<CoordinateTransformMode>(m_attrs.coordinate_transformation_mode));
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(1).is_integral_number(),
                           "output shape must be an integral number.");
