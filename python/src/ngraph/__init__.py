@@ -102,6 +102,7 @@ from ngraph.ops import pad
 from ngraph.ops import parameter
 from ngraph.ops import power
 from ngraph.ops import prelu
+from ngraph.ops import prior_box
 from ngraph.ops import psroi_pooling
 from ngraph.ops import reduce_logical_and
 from ngraph.ops import reduce_logical_or
