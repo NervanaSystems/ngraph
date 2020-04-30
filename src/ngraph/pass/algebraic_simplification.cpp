@@ -38,6 +38,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/opsets/opset2.hpp"
 #include "ngraph/opsets/opset3.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/util.hpp"
