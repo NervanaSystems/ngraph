@@ -86,6 +86,7 @@ from ngraph.ops import power
 from ngraph.ops import prelu
 from ngraph.ops import prior_box
 from ngraph.ops import prior_box_clustered
+from ngraph.ops import proposal
 from ngraph.ops import quantize
 from ngraph.ops import quantized_convolution
 from ngraph.ops import quantized_dot

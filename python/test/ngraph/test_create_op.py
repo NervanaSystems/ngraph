@@ -131,3 +131,34 @@ def test_detection_output(int_dtype, fp_dtype):
     assert node.get_type_name() == 'DetectionOutput'
     assert node.get_output_size() == 1
     assert node.get_output_shape(0) == [1, 1, 800, 7]
+
+
+@pytest.mark.parametrize('int_dtype, fp_dtype', [
+    (np.uint8, np.float32),
+    (np.uint16, np.float32),
+    (np.uint32, np.float32),
+    (np.uint64, np.float32),
+    (np.uint32, np.float16),
+    (np.uint32, np.float64),
+])
+def test_proposal(int_dtype, fp_dtype):
+    attributes = {
+        'base_size': int_dtype(1),
+        'pre_nms_topn': int_dtype(20),
+        'post_nms_topn': int_dtype(200),
+        'nms_thresh': fp_dtype(0.34),
+        'feat_stride': int_dtype(16),
+        'min_size': int_dtype(32),
+        'ratio': np.array([0.1, 1.5, 2.0, 2.5], dtype=fp_dtype),
+        'scale': np.array([2, 3, 3, 4], dtype=fp_dtype),
+    }
+    batch_size = 7
+
+    class_probs = ng.parameter([batch_size, 12, 34, 62], fp_dtype, 'class_probs')
+    class_logits = ng.parameter([batch_size, 24, 34, 62], fp_dtype, 'class_logits')
+    image_shape = ng.parameter([3], fp_dtype, 'image_shape')
+    node = ng.proposal(class_probs, class_logits, image_shape, attributes)
+
+    assert node.get_type_name() == 'Proposal'
+    assert node.get_output_size() == 1
+    assert node.get_output_shape(0) == [batch_size * attributes['post_nms_topn'], 5]
