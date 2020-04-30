@@ -17,12 +17,12 @@
 #include <algorithm>
 #include <vector>
 
-#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/shape_of.hpp"
 #include "ngraph/pass/constant_folding.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/shape_of.hpp"
 #include "ngraph/type/element_type_traits.hpp"
 
@@ -64,18 +64,38 @@ shared_ptr<Node> op::v3::ShapeOf::clone_with_new_inputs(const OutputVector& new_
 namespace
 {
     template <element::Type_t ET>
-    inline bool try_evaluate_shape_of(const Shape& shape, const EvaluatorTensorPtr& output_value)
+    inline bool evaluate(const Shape& shape, const HostTensorPtr& output_value)
     {
-        return (ET == output_value->get_element_type()) &&
-               (runtime::reference::shape_of(shape, output_value->get_ptr<ET>()), true);
+        runtime::reference::shape_of(shape, output_value->get_data_ptr<ET>());
+        return true;
     }
 
-    bool evaluate_shape_of(const EvaluatorTensorPtr& output_value,
-                           const EvaluatorTensorPtr& input_value)
+    bool evaluate_shape_of(const HostTensorPtr& output_value, const HostTensorPtr& input_value)
     {
+        bool rc = true;
         Shape shape = input_value->get_shape();
-        return try_evaluate_shape_of<element::Type_t::i32>(shape, output_value) ||
-               try_evaluate_shape_of<element::Type_t::i64>(shape, output_value);
+        output_value->set_shape(Shape{shape.size()});
+        switch (output_value->get_element_type())
+        {
+            TYPE_CASE(i8)(shape, output_value);
+            break;
+            TYPE_CASE(i16)(shape, output_value);
+            break;
+            TYPE_CASE(i32)(shape, output_value);
+            break;
+            TYPE_CASE(i64)(shape, output_value);
+            break;
+            TYPE_CASE(u8)(shape, output_value);
+            break;
+            TYPE_CASE(u16)(shape, output_value);
+            break;
+            TYPE_CASE(u32)(shape, output_value);
+            break;
+            TYPE_CASE(u64)(shape, output_value);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
     }
 
     bool constant_fold_shape_of(Node* shape_of_node,
@@ -89,13 +109,12 @@ namespace
         {
             NGRAPH_CHECK(pass::revalidate_and_ensure_static(shape_of_node->shared_from_this()));
             auto arg_shape = shape_of_input.get_shape();
-            auto result_tensor = op::v0::Constant::create_evaluator_tensor(
-                output_type, shape_of_node->get_output_shape(0));
-            if (evaluate_shape_of(
-                    result_tensor,
-                    op::v0::Constant::create_evaluator_tensor(output_type, partial_shape)))
+            auto result_tensor =
+                make_shared<HostTensor>(output_type, shape_of_node->get_output_shape(0));
+            if (evaluate_shape_of(result_tensor,
+                                  make_shared<HostTensor>(output_type, partial_shape)))
             {
-                replacement = result_tensor->get_constant();
+                replacement = make_shared<op::Constant>(result_tensor);
                 return true;
             }
             return false;
@@ -144,8 +163,8 @@ namespace
     }
 }
 
-bool op::v3::ShapeOf::evaluate(const EvaluatorTensorVector& output_values,
-                               const EvaluatorTensorVector& input_values)
+bool op::v3::ShapeOf::evaluate(const HostTensorVector& output_values,
+                               const HostTensorVector& input_values)
 {
     return evaluate_shape_of(output_values[0], input_values[0]);
 }
@@ -183,8 +202,8 @@ shared_ptr<Node> op::v0::ShapeOf::clone_with_new_inputs(const OutputVector& new_
     return new_shape_of;
 }
 
-bool op::v0::ShapeOf::evaluate(const EvaluatorTensorVector& output_values,
-                               const EvaluatorTensorVector& input_values)
+bool op::v0::ShapeOf::evaluate(const HostTensorVector& output_values,
+                               const HostTensorVector& input_values)
 {
     return evaluate_shape_of(output_values[0], input_values[0]);
 }
