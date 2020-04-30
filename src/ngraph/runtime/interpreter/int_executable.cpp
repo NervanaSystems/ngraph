@@ -70,12 +70,22 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
 #else
     m_function = clone_function(*function);
 #endif
+    auto is_supported = [](const Node& node) {
+        bool retval = false;
+        switch (INTExecutable::get_typeid(node))
+        {
+        case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Unsqueeze: retval = true; break;
+        default: break;
+        }
+        return retval;
+    };
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
-    pass_manager.register_pass<pass::FusedOpDecomposition>();
+    pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
     pass_manager.register_pass<pass::Opset0Downgrade>();
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
-    pass_manager.register_pass<pass::FusedOpDecomposition>();
+    pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
     pass_manager.run_passes(m_function);
     for (auto node : m_function->get_ordered_ops())
     {

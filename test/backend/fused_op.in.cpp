@@ -1352,7 +1352,7 @@ NGRAPH_TEST(${BACKEND_NAME}, unsqueeze)
 {
     auto data_node = make_shared<op::Parameter>(element::f32, Shape{4, 2});
     auto axes_node =
-        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{1, 2});
+        make_shared<ngraph::op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
     auto squeeze = make_shared<op::Unsqueeze>(data_node, axes_node);
 
     auto function = make_shared<Function>(NodeVector{squeeze}, ParameterVector{data_node});
@@ -1469,7 +1469,7 @@ NGRAPH_TEST(${BACKEND_NAME}, squeeze)
 {
     const auto data_node = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
     const auto axes_node =
-        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{0, 2});
+        make_shared<ngraph::op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 2});
     const auto squeeze = make_shared<op::Squeeze>(data_node, axes_node);
 
     const auto function = make_shared<Function>(NodeVector{squeeze}, ParameterVector{data_node});
@@ -1485,7 +1485,7 @@ NGRAPH_TEST(${BACKEND_NAME}, squeeze_default_axes)
 {
     const auto data_node = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
     const auto axes_node =
-        make_shared<ngraph::op::Constant>(element::u64, Shape{0}, vector<int64_t>{});
+        make_shared<ngraph::op::Constant>(element::i64, Shape{0}, vector<int64_t>{});
     const auto squeeze = make_shared<op::Squeeze>(data_node, axes_node);
 
     const auto function = make_shared<Function>(NodeVector{squeeze}, ParameterVector{data_node});
