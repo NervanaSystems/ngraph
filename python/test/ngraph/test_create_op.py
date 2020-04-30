@@ -22,6 +22,8 @@ from _pyngraph import PartialShape
 import test
 
 np_types = [np.float32, np.int32]
+integral_np_types = [np.int8, np.int16, np.int32, np.int64,
+                     np.uint8, np.uint16, np.uint32, np.uint64]
 
 
 @pytest.mark.parametrize('dtype', np_types)
@@ -652,3 +654,22 @@ def test_embedding_bag_packed_sum():
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == [3, 2]
     assert node.get_output_element_type(0) == Type.f32
+
+
+@pytest.mark.parametrize('dtype', integral_np_types)
+def test_interpolate(dtype):
+    image_shape = [1, 3, 1024, 1024]
+    output_shape = [64, 64]
+    attributes = {
+        'axes': [2, 3],
+        'mode': 'cubic',
+    }
+
+    image_node = ng.parameter(image_shape, dtype, name='Image')
+
+    node = ng.interpolate(image_node, output_shape, attributes)
+    expected_shape = [1, 3, 1024, 1024]
+
+    assert node.get_type_name() == 'Interpolate'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == expected_shape

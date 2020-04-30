@@ -2629,3 +2629,90 @@ def reorg_yolo(input, stride, name=None):  # type: (Node, List[int], str) -> Nod
     :return: ReorgYolo node
     """
     return _get_node_factory().create('ReorgYolo', [input], {'stride': stride})
+
+
+@nameable_op
+def interpolate(image, output_shape, attrs, name=None):
+    # type: (Node, NodeInput, dict, str) -> Node
+    """Perform interpolation of independent slices in input tensor.
+
+    :param  image:         The node providing input tensor with data for interpolation.
+    :param  output_shape:  1D tensor describing output shape for spatial axes.
+    :param  attrs:         The dictionary containing key, value pairs for attributes.
+
+    Available attributes are:
+
+    * axes              Specify spatial dimension indices where interpolation is applied.
+                        Type: List of non-negative integer numbers.
+                        Required: yes.
+
+    * mode              Specifies type of interpolation.
+                        Range of values: one of {nearest, linear, cubic, area}
+                        Type: string
+                        Required: yes
+
+    * align_corners     A flag that specifies whether to align corners or not. True means the
+                        alignment is applied, False means the alignment isn't applied.
+                        Range of values: True or False. Default: True.
+                        Required: no
+
+    * antialias         A flag that specifies whether to perform anti-aliasing.
+                        Range of values: False - do not perform anti-aliasing
+                                         True - perform anti-aliasing
+                        Default value: False
+                        Required: no
+
+    * pads_begin        Specify the number of pixels to add to the beginning of the image being
+                        interpolated. A scalar that specifies padding for each spatial dimension.
+                        Range of values: list of non-negative integer numbers. Default value: 0
+                        Required: no
+
+    * pads_end          Specify the number of pixels to add to the beginning of the image being
+                        interpolated. A scalar that specifies padding for each spatial dimension.
+                        Range of values: list of non-negative integer numbers. Default value: 0
+                        Required: no
+
+    Example of attribute dictionary:
+    .. code-block:: python
+
+        # just required ones
+        attrs = {
+            'axes': [2, 3],
+            'mode': 'cubic',
+        }
+
+        attrs = {
+            'axes': [2, 3],
+            'mode': 'cubic',
+            'antialias': True,
+            'pads_begin': [2, 2, 2],
+        }
+
+    Optional attributes which are absent from dictionary will be set with corresponding default.
+
+    :return: Node representing interpolation operation.
+    """
+    def is_positive_value(x):  # type: (Any) -> bool
+        return x >= 0
+
+    def is_valid_mode(x):  # type: (str) -> bool
+        return x in ['nearest', 'linear', 'cubic', 'area']
+
+    required_attribute_keys = ['axes', 'mode']
+    required_attribute_types = [np.integer, np.str_]
+    required_attribute_cond = [is_positive_value, is_valid_mode]
+    optional_attribute_keys = ['align_corners', 'antialias', 'pads_begin', 'pads_end']
+    optional_attribute_types = [np.bool_, np.bool_, np.integer, np.integer]
+    optional_attribute_cond = [None, None, is_positive_value, is_positive_value]
+
+    # Validate required attributes
+    for attr, val_type, cond in zip(required_attribute_keys, required_attribute_types,
+                                    required_attribute_cond):
+        check_valid_attribute(attrs, attr, val_type, cond, True)
+
+    # Validate optional attributes
+    for attr, val_type, cond in zip(optional_attribute_keys, optional_attribute_types,
+                                    optional_attribute_cond):
+        check_valid_attribute(attrs, attr, val_type, cond)
+
+    return _get_node_factory().create('Interpolate', [image, as_node(output_shape)], attrs)
