@@ -411,7 +411,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
             // entire input tensor
             std::vector<int64_t> ref_indices(data.get_shape()[axis], 0);
             std::iota(ref_indices.begin(), ref_indices.end(), 0);
-            if (ref_indices == constant_indices->get_vector<int64_t>())
+            if (ref_indices == constant_indices->cast_vector<int64_t>())
             {
                 return replace_output_update_name(gather->output(0), gather->input_value(0));
             }
@@ -698,7 +698,7 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
         return false;
     }
 
-    vector<int64_t> order_value = order->get_vector<int64_t>();
+    vector<int64_t> order_value = order->cast_vector<int64_t>();
 
     for (auto i = shape.rank().get_length() - 1; i >= 0; i--)
     {
