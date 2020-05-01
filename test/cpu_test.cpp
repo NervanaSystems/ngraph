@@ -967,21 +967,8 @@ TEST(cpu_test, rotated_pooling)
 constexpr int three_quarters_of_available_bits = (MAX_FLOAT_BITS * 3) / 4;
 constexpr int tolerance = FLOAT_MANTISSA_BITS - three_quarters_of_available_bits;
 
-bool static is_codegen_mode()
-{
-    static bool codegen_mode = getenv_bool("NGRAPH_CODEGEN");
-    return codegen_mode;
-}
-
 TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
 {
-    if (is_codegen_mode())
-    {
-        // TODO change to skip when there is a new release of gtest
-        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
-        return;
-    }
-
     set_environment("NGRAPH_CPU_CONCURRENCY", "2", 1);
 
     Shape shape_a{2, 1, 3, 5};

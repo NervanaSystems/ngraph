@@ -1173,8 +1173,6 @@ using namespace ngraph::runtime;
     {
         release_function();
     }
-
-    NGRAPH_INFO;
 }
 
 #endif // !defined(NGRAPH_DEX_ONLY)
