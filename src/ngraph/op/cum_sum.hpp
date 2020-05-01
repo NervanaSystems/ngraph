@@ -88,9 +88,17 @@ namespace ngraph
                        const bool exclusive = false,
                        const bool reverse = false);
 
+                /// \brief Constructs a cumulative summation operation with axis = 0
+                ///
+                /// \param arg The tensor to be summed
+                CumSum(const Output<Node>& arg,
+                       const bool exclusive = false,
+                       const bool reverse = false);
+
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 /// \return The default value for CumSum.
