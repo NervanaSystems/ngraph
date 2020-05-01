@@ -21,7 +21,6 @@
 using namespace std;
 using namespace ngraph;
 
-
 TEST(type_prop, extractimagepatches_i32)
 {
     auto data = make_shared<op::Parameter>(element::i32, Shape{64, 3, 10, 10});
@@ -35,9 +34,8 @@ TEST(type_prop, extractimagepatches_i32)
     auto extractimagepatches = make_shared<op::v3::ExtractImagePatches>(data, eip_attributes);
 
     EXPECT_EQ(extractimagepatches->get_element_type(), element::i32);
-    EXPECT_EQ(extractimagepatches->get_output_shape(0), (Shape{64,27,2,2}) );
+    EXPECT_EQ(extractimagepatches->get_output_shape(0), (Shape{64, 27, 2, 2}));
 }
-
 
 TEST(type_prop, extractimagepatches_i64)
 {
@@ -52,7 +50,7 @@ TEST(type_prop, extractimagepatches_i64)
     auto extractimagepatches = make_shared<op::v3::ExtractImagePatches>(data, eip_attributes);
 
     EXPECT_EQ(extractimagepatches->get_element_type(), element::i64);
-    EXPECT_EQ(extractimagepatches->get_output_shape(0), (Shape{64,27,2,2}) );
+    EXPECT_EQ(extractimagepatches->get_output_shape(0), (Shape{64, 27, 2, 2}));
 }
 
 TEST(type_prop, extractimagepatches_rates_change)
@@ -68,7 +66,7 @@ TEST(type_prop, extractimagepatches_rates_change)
     auto extractimagepatches = make_shared<op::v3::ExtractImagePatches>(data, eip_attributes);
 
     EXPECT_EQ(extractimagepatches->get_element_type(), element::i32);
-    EXPECT_EQ(extractimagepatches->get_output_shape(0), (Shape{64,27,2,2}) );
+    EXPECT_EQ(extractimagepatches->get_output_shape(0), (Shape{64, 27, 2, 2}));
 }
 
 TEST(type_prop, extractimagepatches_input_shape_change)
@@ -84,5 +82,5 @@ TEST(type_prop, extractimagepatches_input_shape_change)
     auto extractimagepatches = make_shared<op::v3::ExtractImagePatches>(data, eip_attributes);
 
     EXPECT_EQ(extractimagepatches->get_element_type(), element::i32);
-    EXPECT_EQ(extractimagepatches->get_output_shape(0), (Shape{64,27,1,1}) );
+    EXPECT_EQ(extractimagepatches->get_output_shape(0), (Shape{64, 27, 1, 1}));
 }
