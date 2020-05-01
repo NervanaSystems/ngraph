@@ -437,6 +437,25 @@ namespace ngraph
         void set(const std::vector<int64_t>& value) override;
     };
 
+#ifdef __APPLE__
+    // size_t is not uint64_t on OSX
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<size_t>>
+        : public ValueReference<std::vector<size_t>>, public ValueAccessor<std::vector<int64_t>>
+    {
+    public:
+        AttributeAdapter(std::vector<size_t>& value)
+            : ValueReference<std::vector<size_t>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<size_t>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+        const std::vector<int64_t>& get() override;
+        void set(const std::vector<int64_t>& value) override;
+    };
+#endif
+
     /// \brief Access a vector<float>
     template <>
     class NGRAPH_API AttributeAdapter<std::vector<float>>
