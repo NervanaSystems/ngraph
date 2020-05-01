@@ -185,6 +185,14 @@ void runtime::HostTensor::set_broadcast(const op::AutoBroadcastSpec& autob,
     element::Type element_type = arg0->get_element_type();
     NGRAPH_CHECK(element::Type::merge(element_type, element_type, arg1->get_element_type()),
                  "Argument element types are inconsistent.");
+    set_broadcast(autob, arg0, arg1, element_type);
+}
+
+void runtime::HostTensor::set_broadcast(const op::AutoBroadcastSpec& autob,
+                                        const HostTensorPtr& arg0,
+                                        const HostTensorPtr& arg1,
+                                        const element::Type& element_type)
+{
     set_element_type(element_type);
 
     PartialShape pshape = arg0->get_partial_shape();
