@@ -3068,3 +3068,40 @@ TEST(constant_folding, constant_scatter_elements_update_one_elem)
     expected.at(9) = 2;
     range_test_check(result_node->cast_vector<int32_t>(), expected);
 }
+
+void test_constant_folding_reshape_v1(Shape& shape_in,
+                                      vector<float>& values_in,
+                                      Shape shape_shape,
+                                      vector<int32_t> values_shape)
+{
+    auto constant_in = make_shared<op::Constant>(element::f32, shape_in, values_in);
+    auto constant_shape = make_shared<op::Constant>(element::i64, shape_shape, values_shape);
+    auto dyn_reshape = make_shared<op::v1::Reshape>(constant_in, constant_shape, false);
+    auto f = make_shared<Function>(dyn_reshape, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<float>();
+
+    ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
+}
+TEST(constant_folding, constant_dyn_reshape_v1_2d)
+{
+    Shape shape_in{2, 5};
+    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+    Shape shape_shape{4};
+    vector<int32_t> values_shape{1, 1, 1, 10};
+
+    test_constant_folding_reshape_v1(shape_in, values_in, {4}, {1, 1, 1, 10});
+    test_constant_folding_reshape_v1(shape_in, values_in, {4}, {1, 1, 2, 5});
+    test_constant_folding_reshape_v1(shape_in, values_in, {3}, {1, 2, 5});
+    test_constant_folding_reshape_v1(shape_in, values_in, {3}, {5, 2, 1});
+}
