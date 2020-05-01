@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/embeddingbag_packed_sum.hpp"
+#include "ngraph/op/embeddingbag_packedsum.hpp"
 #include "ngraph/op/constant.hpp"
 
 using namespace std;
