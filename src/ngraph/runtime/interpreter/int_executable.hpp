@@ -1628,7 +1628,6 @@ protected:
         case OP_TYPEID::Softmax:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::Subtract:
-        case OP_TYPEID::Subtract:
         case OP_TYPEID::Unsqueeze:
         case OP_TYPEID::Xor:
             // These ops are handled by op evaluators so nothing to do
