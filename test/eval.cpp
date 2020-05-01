@@ -156,21 +156,3 @@ TEST(eval, interpret_dynamic_range_sum)
     vector<float> seq{8.0f, 11.0f, 14.0f};
     ASSERT_EQ(result_val, seq);
 }
-
-TEST(eval, interpret_dynamic_non_zero)
-{
-    auto input = make_shared<op::Parameter>(element::f32, PartialShape{});
-    auto non_zero = make_shared<op::v3::NonZero>(input, element::i64);
-    auto fun = make_shared<Function>(OutputVector{non_zero}, ParameterVector{input});
-    auto backend = runtime::Backend::create("INTERPRETER");
-    auto input_val = backend->create_tensor(element::f32, Shape{});
-    copy_data(input_val, vector<float>{1.0f});
-    auto result = make_shared<HostTensor>();
-    auto cfun = backend->compile(fun);
-    cfun->call({result}, {input_val});
-    EXPECT_EQ(result->get_element_type(), element::i64);
-    EXPECT_EQ(result->get_partial_shape(), (PartialShape{1, 1}));
-    auto result_val = read_vector<int64_t>(result);
-    vector<int64_t> seq{0};
-    ASSERT_EQ(result_val, seq);
-}
