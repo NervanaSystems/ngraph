@@ -15,9 +15,24 @@
 #  limitations under the License.
 # ==============================================================================
 
-#comment
 mkdir build
+
 cd build
-/usr/local/bin/cmake .. -DNGRAPH_CPU_ENABLE=0
+if [ ${?} -ne 0 ]; then
+    exit 1
+fi
+
+/usr/local/bin/cmake .. -DNGRAPH_CPU_ENABLE=1 -DNGRAPH_INTERPRETER_ENABLE=1 -DNGRAPH_GENERIC_CPU_ENABLE=0
+if [ ${?} -ne 0 ]; then
+    exit 1
+fi
+
 make -j64
-test/unit-test
+if [ ${?} -ne 0 ]; then
+    exit 1
+fi
+
+NGRAPH_CODEGEN=1 test/unit-test --gtest_filter=-INTERPRETER*
+if [ ${?} -ne 0 ]; then
+    exit 1
+fi
