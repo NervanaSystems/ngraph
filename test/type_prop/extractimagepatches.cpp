@@ -21,34 +21,68 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(type_prop, extractimagepatches)
+
+TEST(type_prop, extractimagepatches_i32)
 {
     auto data = make_shared<op::Parameter>(element::i32, Shape{64, 3, 10, 10});
     auto sizes = Shape{3, 3};
     auto strides = Strides{5, 5};
     auto rates = Shape{1, 1};
     auto padding = string("valid");
-    auto padtype_padding = PadType::VALID;
+    auto padtype_padding = op::PadType::VALID;
     auto eip_attributes =
-        op::v3::ExtractImagePatches::ExtractImagePatchesAttrs(sizes, strides, rates, padding);
-    auto exractimagepatches = make_shared<op::v3::ExtractImagePatches>(data, eip_attributes);
+        op::v3::ExtractImagePatches::CreateExtractImagePatchesAttrs(sizes, strides, rates, padding);
+    auto extractimagepatches = make_shared<op::v3::ExtractImagePatches>(data, eip_attributes);
 
     EXPECT_EQ(extractimagepatches->get_element_type(), element::i32);
-    EXPECT_TRUE(extractimagepatches->get_output_shape(0).same_scheme(PartialShape{64, 27, 2, 2}));
+    EXPECT_EQ(extractimagepatches->get_output_shape(0), (Shape{64,27,2,2}) );
 }
 
-TEST(type_prop, extractimagepatches_output_type)
+
+TEST(type_prop, extractimagepatches_i64)
 {
     auto data = make_shared<op::Parameter>(element::i64, Shape{64, 3, 10, 10});
     auto sizes = Shape{3, 3};
     auto strides = Strides{5, 5};
     auto rates = Shape{1, 1};
     auto padding = string("valid");
-    auto padtype_padding = PadType::VALID;
+    auto padtype_padding = op::PadType::VALID;
     auto eip_attributes =
-        op::v3::ExtractImagePatches::ExtractImagePatchesAttrs(sizes, strides, rates, padding);
-    auto exractimagepatches = make_shared<op::v3::ExtractImagePatches>(data, eip_attributes);
+        op::v3::ExtractImagePatches::CreateExtractImagePatchesAttrs(sizes, strides, rates, padding);
+    auto extractimagepatches = make_shared<op::v3::ExtractImagePatches>(data, eip_attributes);
 
     EXPECT_EQ(extractimagepatches->get_element_type(), element::i64);
-    EXPECT_TRUE(extractimagepatches->get_output_shape(0).same_scheme(PartialShape{64, 27, 2, 2}));
+    EXPECT_EQ(extractimagepatches->get_output_shape(0), (Shape{64,27,2,2}) );
+}
+
+TEST(type_prop, extractimagepatches_rates_change)
+{
+    auto data = make_shared<op::Parameter>(element::i32, Shape{64, 3, 10, 10});
+    auto sizes = Shape{3, 3};
+    auto strides = Strides{5, 5};
+    auto rates = Shape{2, 2};
+    auto padding = string("valid");
+    auto padtype_padding = op::PadType::VALID;
+    auto eip_attributes =
+        op::v3::ExtractImagePatches::CreateExtractImagePatchesAttrs(sizes, strides, rates, padding);
+    auto extractimagepatches = make_shared<op::v3::ExtractImagePatches>(data, eip_attributes);
+
+    EXPECT_EQ(extractimagepatches->get_element_type(), element::i32);
+    EXPECT_EQ(extractimagepatches->get_output_shape(0), (Shape{64,27,2,2}) );
+}
+
+TEST(type_prop, extractimagepatches_input_shape_change)
+{
+    auto data = make_shared<op::Parameter>(element::i32, Shape{64, 3, 9, 9});
+    auto sizes = Shape{3, 3};
+    auto strides = Strides{5, 5};
+    auto rates = Shape{2, 2};
+    auto padding = string("valid");
+    auto padtype_padding = op::PadType::VALID;
+    auto eip_attributes =
+        op::v3::ExtractImagePatches::CreateExtractImagePatchesAttrs(sizes, strides, rates, padding);
+    auto extractimagepatches = make_shared<op::v3::ExtractImagePatches>(data, eip_attributes);
+
+    EXPECT_EQ(extractimagepatches->get_element_type(), element::i32);
+    EXPECT_EQ(extractimagepatches->get_output_shape(0), (Shape{64,27,1,1}) );
 }

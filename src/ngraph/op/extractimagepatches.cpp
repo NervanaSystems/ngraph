@@ -60,7 +60,6 @@ void op::v3::ExtractImagePatches::validate_and_infer_types()
         "Attribute padding should be in either valid or same_lower or same_upper.");
 
     set_input_is_relevant_to_shape(0);
-    set_input_is_relevant_to_shape(1); // output shape also depends on attribute
 
     size_t out_rows((input_shape[2] - 1) / m_attrs.patch_movement_strides[0]);
     size_t out_cols((input_shape[3] - 1) / m_attrs.patch_movement_strides[1]);
@@ -77,7 +76,7 @@ void op::v3::ExtractImagePatches::validate_and_infer_types()
     }
     Shape output_shape;
     output_shape.push_back(input_shape[0]);
-    output_shape.push_back(input_shape[1] * m_attrs.patch_sizes[0] +
+    output_shape.push_back(input_shape[1] * m_attrs.patch_sizes[0] *
                            m_attrs.patch_sizes[1]); // size[1]*size[2]*depth
     output_shape.push_back(out_rows);
     output_shape.push_back(out_cols);
