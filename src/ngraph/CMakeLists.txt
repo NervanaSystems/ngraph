@@ -223,6 +223,8 @@ set (SRC
     op/experimental/random_uniform.hpp
     op/experimental/random_uniform.cpp
     op/experimental/transpose.hpp
+    op/extractimagepatches.cpp
+    op/extractimagepatches.hpp
     op/strided_slice.hpp
     op/floor.cpp
     op/floor.hpp

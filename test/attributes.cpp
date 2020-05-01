@@ -1363,3 +1363,27 @@ TEST(attributes, logical_xor_op)
 
     EXPECT_EQ(g_logical_xor->get_autob(), logical_xor->get_autob());
 }
+
+TEST(attributes, extractimagepatches_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ExtractImagePatches>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{64, 3, 10, 10});
+
+    auto sizes = Shape{3,3};
+    auto strides = Strides{5,5};
+    auto rates = Shape{1,1};
+    auto padding = string("valid"); 
+    auto padtype_padding = PadType::VALID;
+    
+    auto eip_attributes = op::v3::ExtractImagePatches::ExtractImagePatchesAttrs(sizes,strides,rates,padding);
+
+    auto exractimagepatches = make_shared<opset3::ExtractImagePatches>(
+        data, eip_attributes);
+    NodeBuilder builder(extractimagepatches);
+    auto g_extractimagepatches = as_type_ptr<opset3::ExtractImagePatches>(builder.create());
+
+    EXPECT_EQ(g_extractimagepatches->get_attrs().patch_sizes, sizes);
+    EXPECT_EQ(g_extractimagepatches->get_attrs().patch_movement_strides, strides);
+    EXPECT_EQ(g_extractimagepatches->get_attrs().patch_selection_rates, rates);
+    EXPECT_EQ(g_extractimagepatches->get_attrs().padding, padtype_padding);
+}
