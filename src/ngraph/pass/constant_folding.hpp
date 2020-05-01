@@ -97,8 +97,6 @@ public:
         construct_constant_dyn_reshape();
         construct_constant_transpose();
         construct_constant_select();
-        construct_constant_squeeze();
-        construct_constant_unsqueeze();
         construct_constant_one_hot();
         construct_constant_tile();
         construct_constant_non_zero();
@@ -128,8 +126,6 @@ private:
     void construct_constant_dyn_reshape();
     void construct_constant_transpose();
     void construct_constant_select();
-    void construct_constant_squeeze();
-    void construct_constant_unsqueeze();
     void construct_constant_split();
     void construct_constant_variadic_split();
     void construct_constant_one_hot();
