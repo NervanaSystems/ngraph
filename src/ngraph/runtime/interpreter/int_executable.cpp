@@ -63,15 +63,6 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
-    auto is_supported = [](const Node& node) {
-        if (typeid(ngraph::op::v0::Clamp) == typeid(node))
-        {
-            return true;
-        }
-
-        return false;
-    };
-
 #ifdef INTERPRETER_FORCE_SERIALIZE
     // To verify that the serializer works correctly let's just run this graph round-trip
     string ser = serialize(function);
@@ -83,6 +74,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
         bool retval = false;
         switch (INTExecutable::get_typeid(node))
         {
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::Unsqueeze: retval = true; break;
         default: break;
