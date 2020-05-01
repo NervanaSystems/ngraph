@@ -240,9 +240,8 @@ using namespace ngraph;
     }
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
-    const shared_ptr<ngraph::Function>& function, bool release_function)
+    const shared_ptr<ngraph::Function>& function)
     : m_function(function)
-    , m_release_function(release_function)
     , m_emit_timing(false)
 #if defined(NGRAPH_TBB_ENABLE)
     , m_use_tbb(getenv_bool("NGRAPH_CPU_USE_TBB"))
@@ -1170,7 +1169,7 @@ using namespace ngraph::runtime;
     }
 
     m_is_compiled = true;
-    if (m_release_function && !m_emit_timing)
+    if (!m_emit_timing)
     {
         release_function();
     }
@@ -1894,10 +1893,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                         }
                     });
 
-                if (m_release_function)
-                {
-                    release_function();
-                }
+                release_function();
             }
             // Execute the flow graph
             (static_cast<tbb::flow::continue_node<tbb::flow::continue_msg>*>(&(*(ctx->G->begin()))))
@@ -2021,9 +2017,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     m_is_built = true;
 
 #if defined(NGRAPH_TBB_ENABLE)
-    if (m_release_function && !m_use_tbb)
-#else
-    if (m_release_function)
+    if (!m_use_tbb)
 #endif
     {
         release_function();
@@ -2140,10 +2134,7 @@ const vector<runtime::PerformanceCounter>& runtime::cpu::CPU_ExternalFunction::g
                 }
             }
         }
-        if (m_release_function)
-        {
-            release_function();
-        }
+        release_function();
     }
 #endif
     return m_perf_counters;

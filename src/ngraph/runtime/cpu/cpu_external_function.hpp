@@ -116,8 +116,7 @@ namespace ngraph
                 friend class CPU_Executable;
 
             public:
-                CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     bool release_function = true);
+                CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function);
                 ~CPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
                     make_call_frame(ngraph::pass::PassConfig& pass_config, Allocator* allocator);
@@ -239,7 +238,6 @@ namespace ngraph
                     get_tensor_set(descriptor::Tensor* output_tensor);
 
                 std::shared_ptr<ngraph::Function> m_function;
-                bool m_release_function;
                 bool m_emit_timing;
 
 #if defined(NGRAPH_TBB_ENABLE)
