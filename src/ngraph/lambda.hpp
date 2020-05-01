@@ -39,8 +39,8 @@ namespace ngraph
         /// \brief Evaluate the lambda on inputs, putting results in outputs.
         /// \param outputs Tensors for the outputs to compute. One for each result
         /// \param inputs Tensors for the inputs. One for each inputs.
-        bool evaluate(const EvaluatorTensorVector& output_tensors,
-                      const EvaluatorTensorVector& input_tensors);
+        bool evaluate(const HostTensorVector& output_tensors,
+                      const HostTensorVector& input_tensors);
 
     protected:
         Lambda(const ResultVector& results, const ParameterVector& parameters);

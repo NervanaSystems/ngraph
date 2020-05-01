@@ -18,37 +18,19 @@
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/range.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/range.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Range::type_info;
+constexpr NodeTypeInfo op::v0::Range::type_info;
 
-op::Range::Range(const Output<Node>& start, const Output<Node>& stop, const Output<Node>& step)
+op::v0::Range::Range(const Output<Node>& start, const Output<Node>& stop, const Output<Node>& step)
     : Op({start, stop, step})
 {
     constructor_validate_and_infer_types();
-}
-
-template <typename T>
-static typename std::enable_if<std::is_integral<T>::value, void>::type
-    check_start(const op::Range* /* node */, T /* start */)
-{
-    // Nothing to check for integral types.
-}
-
-template <typename T>
-static typename std::enable_if<std::is_integral<T>::value, void>::type
-    check_stop(const op::Range* /* node */, T /* stop */)
-{
-    // Nothing to check for integral types.
-}
-
-template <typename T>
-static typename std::enable_if<std::is_integral<T>::value, void>::type
-    check_step(const op::Range* node, T step)
-{
-    NODE_VALIDATION_CHECK(node, step != 0, "'step' cannot be zero.");
 }
 
 //
@@ -64,42 +46,41 @@ static typename std::enable_if<std::is_integral<T>::value, void>::type
 //     == on floats.
 //
 template <typename T>
-static
-    typename std::enable_if<std::is_floating_point<T>::value || std::is_same<T, float16>::value ||
-                                std::is_same<T, bfloat16>::value,
-                            void>::type
-    check_start(const op::Range* node, T start)
+static typename std::enable_if<std::is_integral<T>::value, bool>::type check_value(T value)
 {
-    T start_minus_start = start - start;
-    NODE_VALIDATION_CHECK(node,
-                          start == start && start_minus_start == start_minus_start,
-                          "'start' cannot be nan or infinite.");
+    // Nothing to check for integral types.
+    return true;
 }
 
 template <typename T>
 static
     typename std::enable_if<std::is_floating_point<T>::value || std::is_same<T, float16>::value ||
                                 std::is_same<T, bfloat16>::value,
-                            void>::type
-    check_stop(const op::Range* node, T stop)
+                            bool>::type
+    check_value(T value)
 {
-    T stop_minus_stop = stop - stop;
-    NODE_VALIDATION_CHECK(node,
-                          stop == stop && stop_minus_stop == stop_minus_stop,
-                          "'stop' cannot be nan or infinite.");
+    T value_minus_value = value - value;
+    return value == value && value_minus_value == value_minus_value;
 }
 
 template <typename T>
-static
-    typename std::enable_if<std::is_floating_point<T>::value || std::is_same<T, float16>::value ||
-                                std::is_same<T, bfloat16>::value,
-                            void>::type
-    check_step(const op::Range* node, T step)
+static void check_start(const op::v0::Range* node, T start)
 {
-    T step_minus_step = step - step;
+    NODE_VALIDATION_CHECK(node, check_value(start), "'start' cannot be nan or infinite.");
+}
+
+template <typename T>
+void check_stop(const op::v0::Range* node, T stop)
+{
+    NODE_VALIDATION_CHECK(node, check_value(stop), "'stop' cannot be nan or infinite.");
+}
+
+template <typename T>
+void static check_step(const op::v0::Range* node, T step)
+{
     NODE_VALIDATION_CHECK(node,
-                          step == step && step_minus_step == step_minus_step &&
-                              (step > static_cast<T>(0) || step < static_cast<T>(0)),
+                          check_value(step) &&
+                              ((step > static_cast<T>(0) || step < static_cast<T>(0))),
                           "'step' cannot be zero, nan, or infinite.");
 }
 
@@ -121,7 +102,7 @@ static
 }
 
 template <typename T>
-static PartialShape infer_output_shape(const op::Range* node, const element::Type& /* et */)
+static PartialShape infer_output_shape(const op::v0::Range* node, const element::Type& /* et */)
 {
     auto const_start = as_type_ptr<op::Constant>(node->input_value(0).get_node_shared_ptr());
     auto const_stop = as_type_ptr<op::Constant>(node->input_value(1).get_node_shared_ptr());
@@ -187,7 +168,7 @@ bool ngraph::op::v0::Range::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-void op::Range::validate_and_infer_types()
+void op::v0::Range::validate_and_infer_types()
 {
     set_input_is_relevant_to_shape(0);
     set_input_is_relevant_to_shape(1);
@@ -249,8 +230,69 @@ void op::Range::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<Node> op::Range::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Range::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Range>(new_args.at(0), new_args.at(1), new_args.at(2));
+}
+
+template <element::Type_t ET, typename T>
+void positive_range(T start_val, T stop_val, T step_val)
+{
+}
+
+template <element::Type_t ET>
+bool try_evaluate_range(const HostTensorPtr& out,
+                        const HostTensorPtr& start,
+                        const HostTensorPtr& stop,
+                        const HostTensorPtr& step)
+{
+    using T = typename element_type_traits<ET>::value_type;
+    if (ET == start->get_element_type())
+    {
+        T start_val = *start->get_data_ptr<ET>();
+        T stop_val = *stop->get_data_ptr<ET>();
+        T step_val = *step->get_data_ptr<ET>();
+        if (!(check_value(start_val) && check_value(stop_val) && check_value(step_val) &&
+              (step_val != static_cast<T>(0))))
+        {
+            return false;
+        }
+
+        int64_t out_size = 0;
+
+        int64_t steps = static_cast<int64_t>(std::ceil(double(stop_val - start_val) / step_val));
+        if (steps > 0)
+        {
+            out_size = steps;
+        }
+        Shape out_shape = Shape({static_cast<size_t>(out_size)});
+        out->set_shape(out_shape);
+        runtime::reference::range(&start_val, &step_val, out_shape, out->get_data_ptr<ET>());
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool op::v0::Range::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    HostTensorPtr out = outputs[0];
+    HostTensorPtr start = inputs[0];
+    HostTensorPtr stop = inputs[1];
+    HostTensorPtr step = inputs[2];
+    return try_evaluate_range<element::Type_t::i8>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::i16>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::i32>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::i64>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::u8>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::u16>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::u32>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::u64>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::f32>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::f16>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::bf16>(out, start, stop, step) ||
+           try_evaluate_range<element::Type_t::f64>(out, start, stop, step);
 }

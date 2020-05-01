@@ -96,7 +96,6 @@ public:
         construct_constant_strided_slice();
         construct_constant_dyn_reshape();
         construct_constant_transpose();
-        construct_constant_range();
         construct_constant_select();
         construct_constant_squeeze();
         construct_constant_unsqueeze();
@@ -128,7 +127,6 @@ private:
     void construct_constant_strided_slice();
     void construct_constant_dyn_reshape();
     void construct_constant_transpose();
-    void construct_constant_range();
     void construct_constant_select();
     void construct_constant_squeeze();
     void construct_constant_unsqueeze();
