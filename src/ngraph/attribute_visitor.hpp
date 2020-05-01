@@ -53,6 +53,20 @@ namespace ngraph
     class NGRAPH_API AttributeVisitor
     {
     public:
+        enum class ContextType
+        {
+            Struct,
+            Sequence,
+            Map
+        };
+        struct Context
+        {
+            ContextType context_type;
+            std::string name;
+            std::string key;
+            int64_t index;
+        };
+
         virtual ~AttributeVisitor() {}
         // Must implement these methods
         /// \brief Called when an attribute that is a string is visited
@@ -60,13 +74,19 @@ namespace ngraph
         /// \brief Called when an attribute that is a boolean is visited
         virtual void on_attribute(const std::string& name, bool& value) = 0;
         /// \brief Visit a sub-structure
-        template <typename T>
-        void on_structure_attribute(const std::string& name, T& value)
+        /// \tparam AT the attribute type
+        template <typename AT>
+        void on_structure_attribute(const std::string& name, AT& value)
         {
-            AttributeAdapter<T> adapter(value);
-            adapter.visit_attributes(*this, name);
+            AttributeAdapter<AT> adapter(value);
+            start_structure(name);
+            adapter.visit_attributes(*this);
+            finish_structure();
         }
-
+        const std::vector<Context>& get_context() const { return m_context; }
+        virtual std::string get_name_with_context(const std::string& name);
+        virtual void start_structure(const std::string& name);
+        virtual void finish_structure();
         /// \brief handles all specialized on_adapter methods implemented by the visitor.
         ///
         /// The adapter implements get_type_info(), which can be used to determine the adapter
@@ -74,110 +94,45 @@ namespace ngraph
         /// or via is_type and as_type on any platform
         virtual void on_adapter(const std::string& name, ValueAccessor<void>& adapter) = 0;
         // The remaining adapter methods fall back on the void adapter if not implemented
-        virtual void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        };
-        virtual void on_adapter(const std::string& name, ValueAccessor<int8_t>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
-        virtual void on_adapter(const std::string& name, ValueAccessor<int16_t>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
-        virtual void on_adapter(const std::string& name, ValueAccessor<int32_t>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
-        virtual void on_adapter(const std::string& name, ValueAccessor<int64_t>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
-        virtual void on_adapter(const std::string& name, ValueAccessor<uint8_t>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
-        virtual void on_adapter(const std::string& name, ValueAccessor<uint16_t>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
-        virtual void on_adapter(const std::string& name, ValueAccessor<uint32_t>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
-        virtual void on_adapter(const std::string& name, ValueAccessor<uint64_t>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
-        virtual void on_adapter(const std::string& name, ValueAccessor<float>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
-        virtual void on_adapter(const std::string& name, ValueAccessor<double>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
+        virtual void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter);
+        virtual void on_adapter(const std::string& name, ValueAccessor<int8_t>& adapter);
+        virtual void on_adapter(const std::string& name, ValueAccessor<int16_t>& adapter);
+        virtual void on_adapter(const std::string& name, ValueAccessor<int32_t>& adapter);
+        virtual void on_adapter(const std::string& name, ValueAccessor<int64_t>& adapter);
+        virtual void on_adapter(const std::string& name, ValueAccessor<uint8_t>& adapter);
+        virtual void on_adapter(const std::string& name, ValueAccessor<uint16_t>& adapter);
+        virtual void on_adapter(const std::string& name, ValueAccessor<uint32_t>& adapter);
+        virtual void on_adapter(const std::string& name, ValueAccessor<uint64_t>& adapter);
+        virtual void on_adapter(const std::string& name, ValueAccessor<float>& adapter);
+        virtual void on_adapter(const std::string& name, ValueAccessor<double>& adapter);
         virtual void on_adapter(const std::string& name,
-                                ValueAccessor<std::vector<int8_t>>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
+                                ValueAccessor<std::vector<int8_t>>& adapter);
         virtual void on_adapter(const std::string& name,
-                                ValueAccessor<std::vector<int16_t>>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
+                                ValueAccessor<std::vector<int16_t>>& adapter);
         virtual void on_adapter(const std::string& name,
-                                ValueAccessor<std::vector<int32_t>>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
+                                ValueAccessor<std::vector<int32_t>>& adapter);
         virtual void on_adapter(const std::string& name,
-                                ValueAccessor<std::vector<int64_t>>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
+                                ValueAccessor<std::vector<int64_t>>& adapter);
         virtual void on_adapter(const std::string& name,
-                                ValueAccessor<std::vector<uint8_t>>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
+                                ValueAccessor<std::vector<uint8_t>>& adapter);
         virtual void on_adapter(const std::string& name,
-                                ValueAccessor<std::vector<uint16_t>>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
+                                ValueAccessor<std::vector<uint16_t>>& adapter);
         virtual void on_adapter(const std::string& name,
-                                ValueAccessor<std::vector<uint32_t>>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
+                                ValueAccessor<std::vector<uint32_t>>& adapter);
         virtual void on_adapter(const std::string& name,
-                                ValueAccessor<std::vector<uint64_t>>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
-        virtual void on_adapter(const std::string& name, ValueAccessor<std::vector<float>>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
+                                ValueAccessor<std::vector<uint64_t>>& adapter);
         virtual void on_adapter(const std::string& name,
-                                ValueAccessor<std::vector<double>>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
+                                ValueAccessor<std::vector<float>>& adapter);
         virtual void on_adapter(const std::string& name,
-                                ValueAccessor<std::vector<std::string>>& adapter)
-        {
-            on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
-        }
+                                ValueAccessor<std::vector<double>>& adapter);
+        virtual void on_adapter(const std::string& name,
+                                ValueAccessor<std::vector<std::string>>& adapter);
         /// The generic visitor. There must be a definition of AttributeAdapter<T> that can convert
         /// to a ValueAccessor<U> for one of the on_adpater methods.
-        template <typename T>
-        void on_attribute(const std::string& name, T& value)
+        template <typename AT>
+        void on_attribute(const std::string& name, AT& value)
         {
-            AttributeAdapter<T> adapter(value);
+            AttributeAdapter<AT> adapter(value);
             on_adapter(name, adapter);
         }
         void on_attribute(const std::string& name, op::AutoBroadcastSpec& value)
@@ -190,5 +145,8 @@ namespace ngraph
             AttributeAdapter<op::BroadcastType> adapter(value.m_type);
             on_adapter(name, adapter);
         }
+
+    protected:
+        std::vector<Context> m_context;
     };
 }
