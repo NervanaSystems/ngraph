@@ -24,14 +24,15 @@ using namespace ngraph;
 TEST(type_prop, extractimagepatches)
 {
     auto data = make_shared<op::Parameter>(element::i32, Shape{64, 3, 10, 10});
-    auto sizes = Shape{3,3};
-    auto strides = Strides{5,5};
-    auto rates = Shape{1,1};
-    auto padding = string("valid"); 
+    auto sizes = Shape{3, 3};
+    auto strides = Strides{5, 5};
+    auto rates = Shape{1, 1};
+    auto padding = string("valid");
     auto padtype_padding = PadType::VALID;
-    auto eip_attributes = op::v3::ExtractImagePatches::ExtractImagePatchesAttrs(sizes,strides,rates,padding);
-    auto exractimagepatches = make_shared<op::v3::ExtractImagePatches>( data, eip_attributes); 
-    
+    auto eip_attributes =
+        op::v3::ExtractImagePatches::ExtractImagePatchesAttrs(sizes, strides, rates, padding);
+    auto exractimagepatches = make_shared<op::v3::ExtractImagePatches>(data, eip_attributes);
+
     EXPECT_EQ(extractimagepatches->get_element_type(), element::i32);
     EXPECT_TRUE(extractimagepatches->get_output_shape(0).same_scheme(PartialShape{64, 27, 2, 2}));
 }
@@ -39,15 +40,15 @@ TEST(type_prop, extractimagepatches)
 TEST(type_prop, extractimagepatches_output_type)
 {
     auto data = make_shared<op::Parameter>(element::i64, Shape{64, 3, 10, 10});
-    auto sizes = Shape{3,3};
-    auto strides = Strides{5,5};
-    auto rates = Shape{1,1};
-    auto padding = string("valid"); 
+    auto sizes = Shape{3, 3};
+    auto strides = Strides{5, 5};
+    auto rates = Shape{1, 1};
+    auto padding = string("valid");
     auto padtype_padding = PadType::VALID;
-    auto eip_attributes = op::v3::ExtractImagePatches::ExtractImagePatchesAttrs(sizes,strides,rates,padding);
-    auto exractimagepatches = make_shared<op::v3::ExtractImagePatches>( data, eip_attributes); 
-    
+    auto eip_attributes =
+        op::v3::ExtractImagePatches::ExtractImagePatchesAttrs(sizes, strides, rates, padding);
+    auto exractimagepatches = make_shared<op::v3::ExtractImagePatches>(data, eip_attributes);
+
     EXPECT_EQ(extractimagepatches->get_element_type(), element::i64);
     EXPECT_TRUE(extractimagepatches->get_output_shape(0).same_scheme(PartialShape{64, 27, 2, 2}));
 }
-

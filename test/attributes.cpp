@@ -53,7 +53,7 @@ namespace ngraph
     };
 
     constexpr DiscreteTypeInfo AttributeAdapter<TuringModel>::type_info;
-}
+} // namespace ngraph
 
 // Given a Turing machine program and data, return scalar 1 if the program would
 // complete, 1 if it would not.
@@ -1369,16 +1369,16 @@ TEST(attributes, extractimagepatches_op)
     FactoryRegistry<Node>::get().register_factory<opset3::ExtractImagePatches>();
     auto data = make_shared<op::Parameter>(element::i32, Shape{64, 3, 10, 10});
 
-    auto sizes = Shape{3,3};
-    auto strides = Strides{5,5};
-    auto rates = Shape{1,1};
-    auto padding = string("valid"); 
+    auto sizes = Shape{3, 3};
+    auto strides = Strides{5, 5};
+    auto rates = Shape{1, 1};
+    auto padding = string("valid");
     auto padtype_padding = PadType::VALID;
-    
-    auto eip_attributes = op::v3::ExtractImagePatches::ExtractImagePatchesAttrs(sizes,strides,rates,padding);
 
-    auto exractimagepatches = make_shared<opset3::ExtractImagePatches>(
-        data, eip_attributes);
+    auto eip_attributes =
+        op::v3::ExtractImagePatches::ExtractImagePatchesAttrs(sizes, strides, rates, padding);
+
+    auto exractimagepatches = make_shared<opset3::ExtractImagePatches>(data, eip_attributes);
     NodeBuilder builder(extractimagepatches);
     auto g_extractimagepatches = as_type_ptr<opset3::ExtractImagePatches>(builder.create());
 
