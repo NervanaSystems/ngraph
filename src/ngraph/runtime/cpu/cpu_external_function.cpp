@@ -275,7 +275,7 @@ public:
 
 #if !defined(NGRAPH_DEX_ONLY)
 
-static const string s_output_dir = "cpu_codegen";
+static const string s_debug_dir = "cpu_codegen";
 
 static string emit_string_array(const vector<string>& s, size_t max_line_length)
 {
@@ -308,8 +308,6 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
     ss << line.str();
     return ss.str();
 }
-
-static StaticInitializers s_static_initializers(s_output_dir);
 
 #define TI(x) type_index(typeid(x))
 
@@ -1095,9 +1093,9 @@ using namespace ngraph::runtime;
     writer += "}\n\n";
 
     // TODO: Cleanup and make this a utility function
-    string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
+    string filename = file_util::path_join(s_debug_dir, m_function_name + "_codegen.cpp");
     string code = writer.get_code();
-    runtime::cpu::CPU_ExternalFunction::write_to_file(writer.get_code(), s_output_dir, filename);
+    runtime::cpu::CPU_ExternalFunction::write_to_file(writer.get_code(), s_debug_dir, filename);
 
     m_compiler.reset(new codegen::Compiler());
     m_execution_engine.reset(new codegen::ExecutionEngine());
@@ -1176,6 +1174,8 @@ using namespace ngraph::runtime;
     {
         release_function();
     }
+
+    NGRAPH_INFO;
 }
 
 #endif // !defined(NGRAPH_DEX_ONLY)
@@ -1446,7 +1446,6 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
 #endif
 
     // stream writer to dump the debug manifest for the DEX
-    static const string s_debug_dir = "cpu_codegen";
     static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
