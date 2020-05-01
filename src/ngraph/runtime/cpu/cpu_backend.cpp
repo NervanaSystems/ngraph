@@ -61,8 +61,10 @@ extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
 
 runtime::cpu::CPU_Backend::CPU_Backend(const string& config)
     : m_allocator{nullptr}
+    , m_codegen_enable{config == "CODEGEN"}
 {
     NGRAPH_INFO << config;
+    NGRAPH_INFO << m_codegen_enable;
 }
 
 runtime::cpu::CPU_Backend::~CPU_Backend()
@@ -126,7 +128,7 @@ shared_ptr<runtime::Executable>
         }
     }
     rc = make_shared<CPU_Executable>(
-        func, pass_config, get_host_memory_allocator(), performance_counters_enabled);
+        func, pass_config, get_host_memory_allocator(), performance_counters_enabled, m_codegen_enable);
     {
         std::lock_guard<std::mutex> guard(m_exec_map_mutex);
         m_exec_map.insert({func, rc});

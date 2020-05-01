@@ -116,7 +116,7 @@ namespace ngraph
                 friend class CPU_Executable;
 
             public:
-                CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function);
+                CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function, bool codegen_enable);
                 ~CPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
                     make_call_frame(ngraph::pass::PassConfig& pass_config, Allocator* allocator);

@@ -240,7 +240,7 @@ using namespace ngraph;
     }
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
-    const shared_ptr<ngraph::Function>& function)
+    const shared_ptr<ngraph::Function>& function, bool codegen_enable)
     : m_function(function)
     , m_emit_timing(false)
 #if defined(NGRAPH_TBB_ENABLE)
@@ -248,7 +248,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
 #endif
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
-    , m_direct_execution(!getenv_bool("NGRAPH_CODEGEN"))
+    , m_direct_execution(!codegen_enable)
 #else
     , m_direct_execution(true)
 #endif

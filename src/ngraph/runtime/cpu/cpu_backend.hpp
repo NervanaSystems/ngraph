@@ -80,6 +80,7 @@ namespace ngraph
                 std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>>
                     m_exec_map;
                 Allocator* m_allocator;
+                bool m_codegen_enable;
             };
         }
     }
