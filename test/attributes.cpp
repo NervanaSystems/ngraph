@@ -1408,3 +1408,37 @@ TEST(attributes, bucketize_v3_op_custom_attributes)
     EXPECT_EQ(g_bucketize->get_output_type(), bucketize->get_output_type());
     EXPECT_EQ(g_bucketize->get_with_right_bound(), bucketize->get_with_right_bound());
 }
+
+TEST(attributes, cum_sum_op_default_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::CumSum>();
+
+    Shape shape{1, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto axis = make_shared<op::Parameter>(element::i32, Shape{1});
+    auto cs = make_shared<op::CumSum>(A, axis);
+
+    NodeBuilder builder(cs);
+    auto g_cs = as_type_ptr<opset3::CumSum>(builder.create());
+
+    EXPECT_EQ(g_cs->is_exclusive(), cs->is_exclusive());
+    EXPECT_EQ(g_cs->is_reverse(), cs->is_reverse());
+}
+
+TEST(attributes, cum_sum_op_custom_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::CumSum>();
+
+    Shape shape{1, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto axis = make_shared<op::Parameter>(element::i32, Shape{1});
+    bool exclusive = true;
+    bool reverse = true;
+    auto cs = make_shared<op::CumSum>(A, axis, exclusive, reverse);
+
+    NodeBuilder builder(cs);
+    auto g_cs = as_type_ptr<opset3::CumSum>(builder.create());
+
+    EXPECT_EQ(g_cs->is_exclusive(), cs->is_exclusive());
+    EXPECT_EQ(g_cs->is_reverse(), cs->is_reverse());
+}
