@@ -179,6 +179,8 @@ set (SRC
     op/dot.hpp
     op/embedding_lookup.cpp
     op/embedding_lookup.hpp
+    op/embeddingbag_packed_sum.cpp
+    op/embeddingbag_packed_sum.hpp
     op/equal.cpp
     op/equal.hpp
     op/erf.cpp
