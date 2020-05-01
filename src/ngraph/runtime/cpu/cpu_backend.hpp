@@ -39,6 +39,7 @@ namespace ngraph
             class CPU_BACKEND_API CPU_Backend : public runtime::Backend
             {
             public:
+                CPU_Backend(const std::string& config);
                 ~CPU_Backend() override;
 
                 std::shared_ptr<CPU_CallFrame>
