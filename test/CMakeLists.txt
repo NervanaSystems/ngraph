@@ -137,6 +137,7 @@ set(SRC
     type_prop/strided_slice.cpp
     type_prop/elu.cpp
     type_prop/embedding_lookup.cpp
+    type_prop/embedding_segments_sum.cpp
     type_prop/fake_quantize.cpp
     type_prop/gather.cpp
     type_prop/gather_nd.cpp
