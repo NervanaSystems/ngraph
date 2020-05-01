@@ -69,26 +69,12 @@ namespace ngraph
         }
     };
 
-    template <typename AT>
-    class StructAttributeAdapterBase : public ValueAccessor<void>
-    {
-    public:
-        StructAttributeAdapterBase(AT& ref)
-            : m_ref(ref)
-        {
-        }
-        virtual bool visit_attributes(AttributeVisitor& visitor) = 0;
-
-    protected:
-        AT& m_ref;
-    };
-
     template <>
-    class AttributeAdapter<Position> : public StructAttributeAdapterBase<Position>
+    class AttributeAdapter<Position> : public StructAdapter
     {
     public:
         AttributeAdapter(Position& value)
-            : StructAttributeAdapterBase<Position>(value)
+            : m_ref(value)
         {
         }
         bool visit_attributes(AttributeVisitor& visitor) override
@@ -100,6 +86,8 @@ namespace ngraph
         }
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Position>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    protected:
+        Position& m_ref;
     };
 
     constexpr DiscreteTypeInfo AttributeAdapter<Position>::type_info;
@@ -273,7 +261,7 @@ public:
         visitor.on_attribute("vec_int32_t", m_vec_int32_t);
         visitor.on_attribute("vec_int64_t", m_vec_int64_t);
         visitor.on_attribute("vec_size_t", m_vec_size_t);
-        visitor.on_structure_attribute("position", m_position);
+        visitor.on_attribute("position", m_position);
         return true;
     }
 
@@ -432,8 +420,6 @@ public:
         m_string_vectors[get_name_with_context(name)] = value;
     }
 
-    void on_attribute(const string& name, string& value) override { set_string(name, value); };
-    void on_attribute(const string& name, bool& value) override { set_bool(name, value); }
     void on_adapter(const string& name, ValueAccessor<void>& adapter) override
     {
         NGRAPH_CHECK(false, "Attribute \"", name, "\" cannot be marshalled");
@@ -443,6 +429,11 @@ public:
     {
         set_string(name, adapter.get());
     };
+    void on_adapter(const string& name, ValueAccessor<bool>& adapter) override
+    {
+        set_bool(name, adapter.get());
+    };
+
     void on_adapter(const string& name, ValueAccessor<int64_t>& adapter) override
     {
         set_signed(name, adapter.get());
@@ -532,14 +523,6 @@ public:
         return node;
     }
 
-    void on_attribute(const string& name, string& value) override
-    {
-        value = m_values.get_string(get_name_with_context(name));
-    };
-    void on_attribute(const string& name, bool& value) override
-    {
-        value = m_values.get_bool(get_name_with_context(name));
-    }
     void on_adapter(const string& name, ValueAccessor<void>& adapter) override
     {
         NGRAPH_CHECK(false, "Attribute \"", name, "\" cannot be unmarshalled");
@@ -548,6 +531,10 @@ public:
     void on_adapter(const string& name, ValueAccessor<string>& adapter) override
     {
         adapter.set(m_values.get_string(get_name_with_context(name)));
+    };
+    void on_adapter(const string& name, ValueAccessor<bool>& adapter) override
+    {
+        adapter.set(m_values.get_bool(get_name_with_context(name)));
     };
     void on_adapter(const string& name, ValueAccessor<int64_t>& adapter) override
     {

@@ -26,6 +26,8 @@
 ///
 namespace ngraph
 {
+    class AttributeVisitor;
+
     /// \brief Provides access to an attribute of type AT as a value accessor type VAT
     template <typename VAT>
     class ValueAccessor;
@@ -196,6 +198,12 @@ namespace ngraph
         }
     };
 
+    class StructAdapter : public ValueAccessor<void>
+    {
+    public:
+        virtual bool visit_attributes(AttributeVisitor& visitor) = 0;
+    };
+
     template <>
     class NGRAPH_API AttributeAdapter<float> : public IndirectScalarValueAccessor<float, double>
     {
@@ -220,6 +228,20 @@ namespace ngraph
         }
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<double>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    /// \brief Access a bool as a bool
+    template <>
+    class NGRAPH_API AttributeAdapter<std::string> : public DirectValueAccessor<std::string>
+    {
+    public:
+        AttributeAdapter(std::string& value)
+            : DirectValueAccessor<std::string>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<string>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
 

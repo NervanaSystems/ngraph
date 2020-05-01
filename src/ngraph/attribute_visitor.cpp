@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/attribute_visitor.hpp"
+#include "ngraph/attribute_adapter.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -43,7 +44,19 @@ string AttributeVisitor::get_name_with_context(const std::string& name)
     return result.str();
 }
 
+void AttributeVisitor::on_adapter(const std::string& name, StructAdapter& adapter)
+{
+    start_structure(name);
+    adapter.visit_attributes(*this);
+    finish_structure();
+}
+
 void AttributeVisitor::on_adapter(const string& name, ValueAccessor<string>& adapter)
+{
+    on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
+};
+
+void AttributeVisitor::on_adapter(const string& name, ValueAccessor<bool>& adapter)
 {
     on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
 };

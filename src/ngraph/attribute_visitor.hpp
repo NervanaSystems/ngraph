@@ -27,6 +27,7 @@ namespace ngraph
 {
     template <typename T>
     class ValueAccessor;
+    class StructAdapter;
 
     /// \brief Visits the attributes of a node.
     ///
@@ -69,24 +70,6 @@ namespace ngraph
 
         virtual ~AttributeVisitor() {}
         // Must implement these methods
-        /// \brief Called when an attribute that is a string is visited
-        virtual void on_attribute(const std::string& name, std::string& value) = 0;
-        /// \brief Called when an attribute that is a boolean is visited
-        virtual void on_attribute(const std::string& name, bool& value) = 0;
-        /// \brief Visit a sub-structure
-        /// \tparam AT the attribute type
-        template <typename AT>
-        void on_structure_attribute(const std::string& name, AT& value)
-        {
-            AttributeAdapter<AT> adapter(value);
-            start_structure(name);
-            adapter.visit_attributes(*this);
-            finish_structure();
-        }
-        const std::vector<Context>& get_context() const { return m_context; }
-        virtual std::string get_name_with_context(const std::string& name);
-        virtual void start_structure(const std::string& name);
-        virtual void finish_structure();
         /// \brief handles all specialized on_adapter methods implemented by the visitor.
         ///
         /// The adapter implements get_type_info(), which can be used to determine the adapter
@@ -95,6 +78,7 @@ namespace ngraph
         virtual void on_adapter(const std::string& name, ValueAccessor<void>& adapter) = 0;
         // The remaining adapter methods fall back on the void adapter if not implemented
         virtual void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter);
+        virtual void on_adapter(const std::string& name, ValueAccessor<bool>& adapter);
         virtual void on_adapter(const std::string& name, ValueAccessor<int8_t>& adapter);
         virtual void on_adapter(const std::string& name, ValueAccessor<int16_t>& adapter);
         virtual void on_adapter(const std::string& name, ValueAccessor<int32_t>& adapter);
@@ -127,6 +111,8 @@ namespace ngraph
                                 ValueAccessor<std::vector<double>>& adapter);
         virtual void on_adapter(const std::string& name,
                                 ValueAccessor<std::vector<std::string>>& adapter);
+        /// \brief Hook for inline struct visit
+        virtual void on_adapter(const std::string& name, StructAdapter& adapter);
         /// The generic visitor. There must be a definition of AttributeAdapter<T> that can convert
         /// to a ValueAccessor<U> for one of the on_adpater methods.
         template <typename AT>
@@ -135,6 +121,15 @@ namespace ngraph
             AttributeAdapter<AT> adapter(value);
             on_adapter(name, adapter);
         }
+        /// \returns The nested context of visits
+        const std::vector<Context>& get_context() const { return m_context; }
+        /// \returns context prepended to names
+        virtual std::string get_name_with_context(const std::string& name);
+        /// \brief Start visiting a nested structure
+        virtual void start_structure(const std::string& name);
+        /// \bried Finish visiting a nested structure
+        virtual void finish_structure();
+
         void on_attribute(const std::string& name, op::AutoBroadcastSpec& value)
         {
             AttributeAdapter<op::AutoBroadcastType> adapter(value.m_type);

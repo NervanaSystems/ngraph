@@ -33,6 +33,7 @@ namespace ngraph
 {
     constexpr DiscreteTypeInfo AttributeAdapter<float>::type_info;
     constexpr DiscreteTypeInfo AttributeAdapter<double>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<string>::type_info;
     constexpr DiscreteTypeInfo AttributeAdapter<bool>::type_info;
     constexpr DiscreteTypeInfo AttributeAdapter<int8_t>::type_info;
     constexpr DiscreteTypeInfo AttributeAdapter<int16_t>::type_info;

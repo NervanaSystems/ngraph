@@ -113,11 +113,6 @@ public:
     {
     }
 
-    void on_attribute(const std::string& name, std::string& value) override
-    {
-        m_json[name] = value;
-    }
-    void on_attribute(const std::string& name, bool& value) override { m_json[name] = value; }
     void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override
     {
         if (auto a = as_type<AttributeAdapter<element::Type>>(&adapter))
@@ -128,6 +123,10 @@ public:
         {
             m_json[name] = write_partial_shape(static_cast<PartialShape&>(*a));
         }
+    }
+    void on_adapter(const std::string& name, ValueAccessor<bool>& adapter) override
+    {
+        m_json[name] = adapter.get();
     }
     void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter) override
     {
@@ -198,20 +197,6 @@ public:
         : m_json(j)
     {
     }
-    void on_attribute(const std::string& name, std::string& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = m_json.at(name).get<std::string>();
-        }
-    }
-    void on_attribute(const std::string& name, bool& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = m_json.at(name).get<bool>();
-        }
-    }
     void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override
     {
         if (has_key(m_json, name))
@@ -234,6 +219,14 @@ public:
             adapter.set(m_json.at(name).get<std::string>());
         }
     }
+    void on_adapter(const std::string& name, ValueAccessor<bool>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<bool>());
+        }
+    }
+
     void on_adapter(const std::string& name, ValueAccessor<int64_t>& adapter) override
     {
         if (has_key(m_json, name))
