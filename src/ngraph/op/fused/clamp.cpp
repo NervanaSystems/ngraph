@@ -42,6 +42,22 @@ namespace
         bool rc = true;
         switch (arg->get_element_type())
         {
+            TYPE_CASE(i8)(arg, out, min, max, count);
+            break;
+            TYPE_CASE(i16)(arg, out, min, max, count);
+            break;
+            TYPE_CASE(i32)(arg, out, min, max, count);
+            break;
+            TYPE_CASE(i64)(arg, out, min, max, count);
+            break;
+            TYPE_CASE(u8)(arg, out, min, max, count);
+            break;
+            TYPE_CASE(u16)(arg, out, min, max, count);
+            break;
+            TYPE_CASE(u32)(arg, out, min, max, count);
+            break;
+            TYPE_CASE(u64)(arg, out, min, max, count);
+            break;
             TYPE_CASE(f32)(arg, out, min, max, count);
             break;
             TYPE_CASE(f64)(arg, out, min, max, count);
@@ -68,11 +84,6 @@ op::Clamp::Clamp(const Output<Node>& data, const double min, const double max)
 
 void op::Clamp::pre_validate_and_infer_types()
 {
-    NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(0) == element::f64 ||
-                              get_input_element_type(0) == element::f32,
-                          "Clamp input must be a floating point input, either f64 or f32");
-
     NODE_VALIDATION_CHECK(
         this, m_min < m_max, "The 'min' parameter needs to be less than 'max' for Clamp");
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));

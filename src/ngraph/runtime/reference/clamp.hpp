@@ -26,18 +26,32 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
+            T double_to_T(double x, double float_to_int_converter(double))
+            {
+                if (std::is_integral<T>())
+                {
+                    double min_t = static_cast<double>(std::numeric_limits<T>::min());
+                    double max_t = static_cast<double>(std::numeric_limits<T>::max());
+                    x = std::max(x, min_t);
+                    x = std::min(x, max_t);
+                    x = float_to_int_converter(x);
+                }
+                return static_cast<T>(x);
+            }
+
+            template <typename T>
             void clamp(const T* arg, T* out, double min, double max, size_t count)
             {
-                T min_t = static_cast<T>(min);
-                T max_t = static_cast<T>(max);
-
                 for (size_t i = 0; i < count; i++)
                 {
+                    T min_t = double_to_T<T>(min, [](double x) { return std::ceil(x); });
+                    T max_t = double_to_T<T>(max, [](double x) { return std::floor(x); });
+
                     if (arg[i] < min_t)
                     {
                         out[i] = min_t;
                     }
-                    else if (arg[i] > max_t)
+                    else if (arg[i] > max)
                     {
                         out[i] = max_t;
                     }
