@@ -55,7 +55,7 @@ namespace ngraph
                 void set_attrs(const Shape& sizes,
                                const Strides& strides,
                                const Shape& rates,
-                               const string& str_padding)
+                               const std::string& str_padding)
                 {
                     m_attrs.patch_sizes = sizes;
                     m_attrs.patch_movement_strides = strides;
@@ -64,11 +64,11 @@ namespace ngraph
                     {
                         m_attrs.padding = PadType::VALID;
                     }
-                    else if (str_padding == "")
+                    else if (str_padding == "same_lower")
                     {
                         m_attrs.padding = PadType::SAME_LOWER;
                     }
-                    else if (str_padding == "")
+                    else if (str_padding == "same_upper")
                     {
                         m_attrs.padding = PadType::SAME_UPPER;
                     }
@@ -76,6 +76,35 @@ namespace ngraph
                     {
                         m_attrs.padding = PadType::NOTSET;
                     }
+                }
+
+                static ExtractImagePatchesAttrs
+                    CreateExtractImagePatchesAttrs(const Shape& sizes,
+                                                   const Strides& strides,
+                                                   const Shape& rates,
+                                                   const std::string& str_padding)
+                {
+                    ExtractImagePatchesAttrs attrs;
+                    attrs.patch_sizes = sizes;
+                    attrs.patch_movement_strides = strides;
+                    attrs.patch_selection_rates = rates;
+                    if (str_padding == "valid")
+                    {
+                        attrs.padding = PadType::VALID;
+                    }
+                    else if (str_padding == "same_lower")
+                    {
+                        attrs.padding = PadType::SAME_LOWER;
+                    }
+                    else if (str_padding == "same_upper")
+                    {
+                        attrs.padding = PadType::SAME_UPPER;
+                    }
+                    else
+                    {
+                        attrs.padding = PadType::NOTSET;
+                    }
+                    return attrs;
                 }
 
             private:

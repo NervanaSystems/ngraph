@@ -20,15 +20,13 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::ExtractImagePatches::type_info;
-
 // ExtractImagePatches v3
 
 constexpr NodeTypeInfo op::v3::ExtractImagePatches::type_info;
 
 op::v3::ExtractImagePatches::ExtractImagePatches(const Output<Node>& image,
                                                  const op::v3::ExtractImagePatchesAttrs& attrs)
-    : Op({image, output_shape})
+    : Op({image})
     , m_attrs(attrs)
 {
     constructor_validate_and_infer_types();
@@ -79,8 +77,8 @@ void op::v3::ExtractImagePatches::validate_and_infer_types()
     }
     Shape output_shape;
     output_shape.push_back(input_shape[0]);
-    output_shape.push_back(input_shape[1] * patch_sizes[0] +
-                           patch_sizes[1]); // size[1]*size[2]*depth
+    output_shape.push_back(input_shape[1] * m_attrs.patch_sizes[0] +
+                           m_attrs.patch_sizes[1]); // size[1]*size[2]*depth
     output_shape.push_back(out_rows);
     output_shape.push_back(out_cols);
 
@@ -96,7 +94,7 @@ bool op::v3::ExtractImagePatches::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("sizes", m_attrs.patch_sizes);
     visitor.on_attribute("strides", m_attrs.patch_movement_strides);
-    visitor.on_attribute("rates", m_attrs.rates);
+    visitor.on_attribute("rates", m_attrs.patch_selection_rates);
     visitor.on_attribute("padding", m_attrs.padding);
     return true;
 }

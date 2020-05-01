@@ -1387,12 +1387,12 @@ TEST(attributes, extractimagepatches_op)
     auto strides = Strides{5, 5};
     auto rates = Shape{1, 1};
     auto padding = string("valid");
-    auto padtype_padding = PadType::VALID;
+    auto padtype_padding = ngraph::op::PadType::VALID;
 
     auto eip_attributes =
-        op::v3::ExtractImagePatches::ExtractImagePatchesAttrs(sizes, strides, rates, padding);
+        opset3::ExtractImagePatches::CreateExtractImagePatchesAttrs(sizes, strides, rates, padding);
 
-    auto exractimagepatches = make_shared<opset3::ExtractImagePatches>(data, eip_attributes);
+    auto extractimagepatches = make_shared<opset3::ExtractImagePatches>(data, eip_attributes);
     NodeBuilder builder(extractimagepatches);
     auto g_extractimagepatches = as_type_ptr<opset3::ExtractImagePatches>(builder.create());
 
