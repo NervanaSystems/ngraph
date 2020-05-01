@@ -53,6 +53,56 @@ namespace ngraph
     };
 
     constexpr DiscreteTypeInfo AttributeAdapter<TuringModel>::type_info;
+
+    struct Position
+    {
+        float x;
+        float y;
+        float z;
+        bool operator==(const Position& p) const { return x == p.x && y == p.y && z == p.z; }
+        Position& operator=(const Position& p)
+        {
+            x = p.x;
+            y = p.y;
+            z = p.z;
+            return *this;
+        }
+    };
+
+    template <typename AT>
+    class StructAttributeAdapterBase : public ValueAccessor<void>
+    {
+    public:
+        StructAttributeAdapterBase(AT& ref)
+            : m_ref(ref)
+        {
+        }
+        virtual void visit_attributes(AttributeVisitor& visitor, const std::string& name) = 0;
+
+    protected:
+        AT& m_ref;
+    };
+
+    template <>
+    class AttributeAdapter<Position> : public StructAttributeAdapterBase<Position>
+    {
+    public:
+        AttributeAdapter(Position& value)
+            : StructAttributeAdapterBase<Position>(value)
+        {
+        }
+        void visit_attributes(AttributeVisitor& visitor, const std::string& name) override
+        {
+            // Don't like needing to do the concat like this
+            visitor.on_attribute(name + ".x", m_ref.x);
+            visitor.on_attribute(name + ".y", m_ref.y);
+            visitor.on_attribute(name + ".z", m_ref.z);
+        }
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Position>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    constexpr DiscreteTypeInfo AttributeAdapter<Position>::type_info;
 }
 
 // Given a Turing machine program and data, return scalar 1 if the program would
@@ -77,6 +127,7 @@ public:
            int16_t val_int16_t,
            int32_t val_int32_t,
            int64_t val_int64_t,
+           size_t val_size_t,
            const std::vector<std::string>& vec_string,
            const std::vector<float>& vec_float,
            const std::vector<double>& vec_double,
@@ -87,7 +138,9 @@ public:
            const std::vector<int8_t>& vec_int8_t,
            const std::vector<int16_t>& vec_int16_t,
            const std::vector<int32_t>& vec_int32_t,
-           const std::vector<int64_t>& vec_int64_t)
+           const std::vector<int64_t>& vec_int64_t,
+           const std::vector<size_t>& vec_size_t,
+           const Position& position)
         : Op({program, data})
         , m_turing_model(turing_model)
         , m_element_type(element_type)
@@ -104,6 +157,7 @@ public:
         , m_val_int16_t(val_int16_t)
         , m_val_int32_t(val_int32_t)
         , m_val_int64_t(val_int64_t)
+        , m_val_size_t(val_size_t)
         , m_vec_string(vec_string)
         , m_vec_float(vec_float)
         , m_vec_double(vec_double)
@@ -115,6 +169,8 @@ public:
         , m_vec_int16_t(vec_int16_t)
         , m_vec_int32_t(vec_int32_t)
         , m_vec_int64_t(vec_int64_t)
+        , m_vec_size_t(vec_size_t)
+        , m_position(position)
     {
     }
 
@@ -137,6 +193,7 @@ public:
     int64_t get_val_int16_t() const { return m_val_int16_t; }
     int64_t get_val_int32_t() const { return m_val_int32_t; }
     int64_t get_val_int64_t() const { return m_val_int64_t; }
+    size_t get_val_size_t() const { return m_val_size_t; }
     const vector<uint8_t>& get_vec_uint8_t() const { return m_vec_uint8_t; }
     const vector<uint16_t>& get_vec_uint16_t() const { return m_vec_uint16_t; }
     const vector<uint32_t>& get_vec_uint32_t() const { return m_vec_uint32_t; }
@@ -148,6 +205,8 @@ public:
     const vector<string>& get_vec_string() const { return m_vec_string; }
     const vector<float>& get_vec_float() const { return m_vec_float; }
     const vector<double>& get_vec_double() const { return m_vec_double; }
+    const vector<size_t>& get_vec_size_t() const { return m_vec_size_t; }
+    const Position& get_position() const { return m_position; }
     shared_ptr<Node> clone_with_new_inputs(const OutputVector& args) const override
     {
         return make_shared<Oracle>(args[0],
@@ -167,6 +226,7 @@ public:
                                    m_val_int16_t,
                                    m_val_int32_t,
                                    m_val_int64_t,
+                                   m_val_size_t,
                                    m_vec_string,
                                    m_vec_float,
                                    m_vec_double,
@@ -177,7 +237,9 @@ public:
                                    m_vec_int8_t,
                                    m_vec_int16_t,
                                    m_vec_int32_t,
-                                   m_vec_int64_t);
+                                   m_vec_int64_t,
+                                   m_vec_size_t,
+                                   m_position);
     }
 
     void validate_and_infer_types() override { set_output_type(0, element::i64, {}); }
@@ -198,6 +260,7 @@ public:
         visitor.on_attribute("val_int16_t", m_val_int16_t);
         visitor.on_attribute("val_int32_t", m_val_int32_t);
         visitor.on_attribute("val_int64_t", m_val_int64_t);
+        visitor.on_attribute("val_size_t", m_val_size_t);
         visitor.on_attribute("vec_string", m_vec_string);
         visitor.on_attribute("vec_float", m_vec_float);
         visitor.on_attribute("vec_double", m_vec_double);
@@ -209,6 +272,8 @@ public:
         visitor.on_attribute("vec_int16_t", m_vec_int16_t);
         visitor.on_attribute("vec_int32_t", m_vec_int32_t);
         visitor.on_attribute("vec_int64_t", m_vec_int64_t);
+        visitor.on_attribute("vec_size_t", m_vec_size_t);
+        visitor.on_structure_attribute("position", m_position);
         return true;
     }
 
@@ -228,6 +293,7 @@ protected:
     int16_t m_val_int16_t;
     int32_t m_val_int32_t;
     int64_t m_val_int64_t;
+    size_t m_val_size_t{23};
     vector<string> m_vec_string;
     vector<float> m_vec_float;
     vector<double> m_vec_double;
@@ -239,6 +305,8 @@ protected:
     vector<int16_t> m_vec_int16_t;
     vector<int32_t> m_vec_int32_t;
     vector<int64_t> m_vec_int64_t;
+    vector<size_t> m_vec_size_t;
+    Position m_position;
 };
 
 constexpr NodeTypeInfo Oracle::type_info;
@@ -522,6 +590,7 @@ TEST(attributes, user_op)
                                       -2,
                                       -4,
                                       -8,
+                                      34,
                                       vector<string>{"Hello", "World"},
                                       vector<float>{1.0f, 2.0f},
                                       vector<double>{1.0, 2.0},
@@ -532,7 +601,9 @@ TEST(attributes, user_op)
                                       vector<int8_t>{1, 2, 4, 8},
                                       vector<int16_t>{1, 2, 4, 8},
                                       vector<int32_t>{1, 2, 4, 8},
-                                      vector<int64_t>{1, 2, 4, 8});
+                                      vector<int64_t>{1, 2, 4, 8},
+                                      vector<size_t>{1, 3, 8, 4, 2},
+                                      Position{1.3f, 5.1f, 2.3f});
     NodeBuilder builder(oracle);
     auto g_oracle = as_type_ptr<Oracle>(builder.create());
 
@@ -551,6 +622,7 @@ TEST(attributes, user_op)
     EXPECT_EQ(g_oracle->get_val_int16_t(), oracle->get_val_int16_t());
     EXPECT_EQ(g_oracle->get_val_int32_t(), oracle->get_val_int32_t());
     EXPECT_EQ(g_oracle->get_val_int64_t(), oracle->get_val_int64_t());
+    EXPECT_EQ(g_oracle->get_val_size_t(), oracle->get_val_size_t());
     EXPECT_EQ(g_oracle->get_vec_uint8_t(), oracle->get_vec_uint8_t());
     EXPECT_EQ(g_oracle->get_vec_uint16_t(), oracle->get_vec_uint16_t());
     EXPECT_EQ(g_oracle->get_vec_uint32_t(), oracle->get_vec_uint32_t());
@@ -562,6 +634,8 @@ TEST(attributes, user_op)
     EXPECT_EQ(g_oracle->get_vec_string(), oracle->get_vec_string());
     EXPECT_EQ(g_oracle->get_vec_float(), oracle->get_vec_float());
     EXPECT_EQ(g_oracle->get_vec_double(), oracle->get_vec_double());
+    EXPECT_EQ(g_oracle->get_vec_size_t(), oracle->get_vec_size_t());
+    EXPECT_EQ(g_oracle->get_position(), oracle->get_position());
 }
 
 TEST(attributes, matmul_op)

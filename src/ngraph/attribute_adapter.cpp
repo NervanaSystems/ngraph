@@ -45,6 +45,7 @@ namespace ngraph
 #ifdef __APPLE__
     // size_t is not uint_64t on OSX
     constexpr DiscreteTypeInfo AttributeAdapter<size_t>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<vector<size_t>>::type_info;
 #endif
     constexpr DiscreteTypeInfo AttributeAdapter<vector<int8_t>>::type_info;
     constexpr DiscreteTypeInfo AttributeAdapter<vector<int16_t>>::type_info;

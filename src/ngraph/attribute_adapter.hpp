@@ -128,6 +128,49 @@ namespace ngraph
         bool m_buffer_valid{false};
     };
 
+    template <typename A, typename B>
+    A copy_from(B& b)
+    {
+        A result(b.size());
+        for (int i = 0; i < b.size(); ++i)
+        {
+            result[i] =
+                static_cast<typename std::remove_reference<decltype(result[i])>::type>(b[i]);
+        }
+        return result;
+    }
+
+    template <typename AT, typename VAT>
+    class IndirectVectorValueAccessor : public ValueAccessor<VAT>
+    {
+    public:
+        IndirectVectorValueAccessor(AT& ref)
+            : m_ref(ref)
+        {
+        }
+
+        const VAT& get() override
+        {
+            if (!m_buffer_valid)
+            {
+                m_buffer = copy_from<typename std::remove_cv<VAT>::type>(m_ref);
+                m_buffer_valid = true;
+            }
+            return m_buffer;
+        }
+
+        void set(const VAT& value) override
+        {
+            m_ref = copy_from<AT>(value);
+            m_buffer_valid = false;
+        }
+
+    protected:
+        AT& m_ref;
+        VAT m_buffer;
+        bool m_buffer_valid{false};
+    };
+
     /// \brief An AttributeAdapter "captures" an attribute as an AT& and makes it available as a
     /// ValueAccessor<VAT>.
     template <typename AT>
@@ -326,6 +369,20 @@ namespace ngraph
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<size_t>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
+
+    template <>
+    class NGRAPH_API AttributeAdapter<std::vector<size_t>>
+        : public IndirectVectorValueAccessor<std::vector<size_t>, std::vector<int64_t>>
+    {
+    public:
+        AttributeAdapter(std::vector<size_t>& value)
+            : IndirectVectorValueAccessor<std::vector<size_t>, std::vector<int64_t>>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<size_t>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 #endif
 
     /// Note: These class bodies cannot be defined with templates because of interactions
@@ -495,16 +552,4 @@ namespace ngraph
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<vector<string>>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
-
-    template <typename A, typename B>
-    A copy_from(B& b)
-    {
-        A result(b.size());
-        for (int i = 0; i < b.size(); ++i)
-        {
-            result[i] =
-                static_cast<typename std::remove_reference<decltype(result[i])>::type>(b[i]);
-        }
-        return result;
-    }
 }
