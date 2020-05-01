@@ -143,6 +143,8 @@ set (SRC
     op/binary_convolution.hpp
     op/broadcast.cpp
     op/broadcast_distributed.cpp
+    op/bucketize.cpp
+    op/bucketize.hpp
     op/ceiling.cpp
     op/ceiling.hpp
     op/concat.cpp
@@ -476,6 +478,8 @@ set (SRC
     op/util/binary_elementwise_comparison.hpp
     op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise_logical.hpp
+    op/util/broadcast_base.cpp
+    op/util/broadcast_base.hpp
     op/util/fused_op.cpp
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
@@ -521,8 +525,6 @@ set (SRC
     pass/constant_folding_reshape.cpp
     pass/constant_folding_reverse.cpp
     pass/constant_folding_select.cpp
-    pass/constant_folding_squeeze.cpp
-    pass/constant_folding_unsqueeze.cpp
     pass/constant_folding_slice.cpp
     pass/constant_folding_split.cpp
     pass/constant_folding_variadic_split.cpp

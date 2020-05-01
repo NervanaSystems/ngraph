@@ -1052,6 +1052,20 @@ TEST(attributes, fake_quantize_op)
     EXPECT_EQ(g_fake_quantize->get_auto_broadcast(), fake_quantize->get_auto_broadcast());
 }
 
+TEST(attributes, broadcast_v3)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::Broadcast>();
+    const auto arg = make_shared<op::Parameter>(element::i64, Shape{1, 3, 1});
+    const auto shape = make_shared<op::Parameter>(element::i64, Shape{3});
+    const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
+
+    const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+    NodeBuilder builder(broadcast_v3);
+    auto g_broadcast_v3 = as_type_ptr<opset3::Broadcast>(builder.create());
+
+    EXPECT_EQ(g_broadcast_v3->get_broadcast_spec(), broadcast_spec);
+}
+
 TEST(attributes, grn_op)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::GRN>();
@@ -1362,4 +1376,69 @@ TEST(attributes, logical_xor_op)
     auto g_logical_xor = as_type_ptr<opset1::LogicalXor>(builder.create());
 
     EXPECT_EQ(g_logical_xor->get_autob(), logical_xor->get_autob());
+}
+
+TEST(attributes, bucketize_v3_op_default_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::Bucketize>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto buckets = make_shared<op::Parameter>(element::f32, Shape{5});
+    auto bucketize = make_shared<opset3::Bucketize>(data, buckets);
+    NodeBuilder builder(bucketize);
+
+    auto g_bucketize = as_type_ptr<opset3::Bucketize>(builder.create());
+
+    EXPECT_EQ(g_bucketize->get_output_type(), bucketize->get_output_type());
+    EXPECT_EQ(g_bucketize->get_with_right_bound(), bucketize->get_with_right_bound());
+}
+
+TEST(attributes, bucketize_v3_op_custom_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::Bucketize>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto buckets = make_shared<op::Parameter>(element::f32, Shape{5});
+    element::Type output_type = element::i32;
+    bool with_right_bound = false;
+
+    auto bucketize = make_shared<opset3::Bucketize>(data, buckets, output_type, with_right_bound);
+    NodeBuilder builder(bucketize);
+
+    auto g_bucketize = as_type_ptr<opset3::Bucketize>(builder.create());
+
+    EXPECT_EQ(g_bucketize->get_output_type(), bucketize->get_output_type());
+    EXPECT_EQ(g_bucketize->get_with_right_bound(), bucketize->get_with_right_bound());
+}
+
+TEST(attributes, cum_sum_op_default_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::CumSum>();
+
+    Shape shape{1, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto axis = make_shared<op::Parameter>(element::i32, Shape{1});
+    auto cs = make_shared<op::CumSum>(A, axis);
+
+    NodeBuilder builder(cs);
+    auto g_cs = as_type_ptr<opset3::CumSum>(builder.create());
+
+    EXPECT_EQ(g_cs->is_exclusive(), cs->is_exclusive());
+    EXPECT_EQ(g_cs->is_reverse(), cs->is_reverse());
+}
+
+TEST(attributes, cum_sum_op_custom_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::CumSum>();
+
+    Shape shape{1, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto axis = make_shared<op::Parameter>(element::i32, Shape{1});
+    bool exclusive = true;
+    bool reverse = true;
+    auto cs = make_shared<op::CumSum>(A, axis, exclusive, reverse);
+
+    NodeBuilder builder(cs);
+    auto g_cs = as_type_ptr<opset3::CumSum>(builder.create());
+
+    EXPECT_EQ(g_cs->is_exclusive(), cs->is_exclusive());
+    EXPECT_EQ(g_cs->is_reverse(), cs->is_reverse());
 }
