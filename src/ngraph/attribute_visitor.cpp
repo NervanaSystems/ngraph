@@ -20,6 +20,18 @@
 using namespace std;
 using namespace ngraph;
 
+void AttributeVisitor::on_attribute(const string& name, string& value)
+{
+    AttributeAdapter<string> handler(value);
+    on_adapter(name, handler);
+}
+
+void AttributeVisitor::on_attribute(const string& name, bool& value)
+{
+    AttributeAdapter<bool> handler(value);
+    on_adapter(name, handler);
+}
+
 void AttributeVisitor::start_structure(const string& name)
 {
     m_context.push_back(Context{ContextType::Struct, name, "", 0});
