@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <locale>
+
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
@@ -26,6 +28,20 @@
 using namespace std;
 using namespace ngraph;
 
+namespace
+{
+    string capitulate(string name)
+    {
+        locale loc;
+        string munged_name(name);
+        if (munged_name.size() >= 2)
+        {
+            munged_name[1] = std::toupper(munged_name[1], loc);
+        }
+        return munged_name;
+    }
+}
+
 #define CHECK_OPSET(op1, op2)                                                                      \
     EXPECT_TRUE(is_type<op1>(make_shared<op2>()));                                                 \
     EXPECT_TRUE((std::is_same<op1, op2>::value));                                                  \
@@ -34,6 +50,9 @@ using namespace ngraph;
         shared_ptr<Node> op(get_opset1().create(op2::type_info.name));                             \
         ASSERT_TRUE(op);                                                                           \
         EXPECT_TRUE(is_type<op2>(op));                                                             \
+        shared_ptr<Node> opi(get_opset1().create_insensitive(capitulate(op2::type_info.name)));    \
+        ASSERT_TRUE(opi);                                                                          \
+        EXPECT_TRUE(is_type<op2>(opi));                                                            \
     }
 
 TEST(opset, check_opset1)
@@ -187,6 +206,9 @@ TEST(opset, new_op)
     ASSERT_FALSE(fred);
     // Fred should be in the copy
     fred = shared_ptr<Node>(opset1_copy.create("Fred"));
+    EXPECT_TRUE(fred);
+    // FReD should also be in the copy
+    fred = shared_ptr<Node>(opset1_copy.create_insensitive("FReD"));
     EXPECT_TRUE(fred);
     // Fred should not be in the registry
     ASSERT_FALSE(FactoryRegistry<Node>::get().has_factory<NewOp>());
