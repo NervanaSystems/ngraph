@@ -137,17 +137,6 @@ namespace ngraph
         /// \bried Finish visiting a nested structure
         virtual void finish_structure();
 
-        void on_attribute(const std::string& name, op::AutoBroadcastSpec& value)
-        {
-            AttributeAdapter<op::AutoBroadcastType> adapter(value.m_type);
-            on_adapter(name, adapter);
-        }
-        void on_attribute(const std::string& name, op::BroadcastModeSpec& value)
-        {
-            AttributeAdapter<op::BroadcastType> adapter(value.m_type);
-            on_adapter(name, adapter);
-        }
-
     protected:
         std::vector<Context> m_context;
     };

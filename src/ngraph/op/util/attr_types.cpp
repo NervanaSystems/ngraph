@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include <map>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/enum_names.hpp"
 #include "ngraph/op/util/attr_types.hpp"
@@ -169,5 +170,21 @@ namespace ngraph
         return allowed_values.at(type);
     }
 
+    bool AttributeAdapter<op::AutoBroadcastSpec>::visit_attributes(AttributeVisitor& visitor)
+    {
+        visitor.on_attribute("type", m_ref.m_type);
+        visitor.on_attribute("axis", m_ref.m_axis);
+        return true;
+    }
+
     NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
+
+    bool AttributeAdapter<op::BroadcastModeSpec>::visit_attributes(AttributeVisitor& visitor)
+    {
+        visitor.on_attribute("type", m_ref.m_type);
+        visitor.on_attribute("axis", m_ref.m_axis);
+        return true;
+    }
+
+    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<op::BroadcastModeSpec>::type_info;
 }
