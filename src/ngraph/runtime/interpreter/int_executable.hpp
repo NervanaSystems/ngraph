@@ -468,6 +468,25 @@ protected:
                                     broadcast_axes);
             break;
         }
+        case OP_TYPEID::Broadcast_v3:
+        {
+            const op::v3::Broadcast* broadcast = static_cast<const op::v3::Broadcast*>(&node);
+            Shape in_shape = node.get_input_shape(0);
+            Shape out_shape = node.get_output_shape(0);
+            std::pair<bool, AxisSet> pair_broadcast_axes = broadcast->get_broadcast_axes();
+            if (pair_broadcast_axes.first)
+            {
+                reference::broadcast<T>(args[0]->get_data_ptr<const T>(),
+                                        out[0]->get_data_ptr<T>(),
+                                        in_shape,
+                                        out_shape,
+                                        pair_broadcast_axes.second);
+            }
+            else {
+                throw "op::v3::Broadcast - Cannot determine broadcast_axes\n";
+            }
+            break;
+        }
         case OP_TYPEID::BroadcastDistributed:
         {
             const ngraph::op::BroadcastDistributed* broadcast =
