@@ -1,32 +1,71 @@
-shape_of_scalar
-shape_of_vector
-shape_of_matrix
-shape_of_5d
-sum_stable_acc_double
+CPU.shape_of_scalar
+CPU.shape_of_vector
+CPU.shape_of_matrix
+CPU.shape_of_5d
+CPU.sum_stable_acc_double
 
 # failing in CI build but passing on local machine
-max_3d_to_scalar_int32
+CPU.max_3d_to_scalar_int32
 
 # Not implemented
-send_recv
-send_recv_ring
+CPU.send_recv
+CPU.send_recv_ring
 
 # ONNX TopK with dynamic K
-onnx_top_k_opset_10
+CPU.onnx_top_k_opset_10
 
 # ONNX GatherND with int32
-onnx_model_gatherND_int32
+CPU.onnx_model_gatherND_int32
 
 # RNN pattern fails after removing GOE
-fuse_rnn_across_layer_2layer_3timestep
-fuse_bi_directional_rnn
-bi_rnn_interpreter_vs_cpu
-fuse_lstm_cells
-fuse_2_layer_rnn
-fuse_1_layer_rnn
-rnn_fusion_1rnn_layer_3lstm_cell
-rnn_fusion_2rnn_layer_3lstm_cell
+CPU.fuse_rnn_across_layer_2layer_3timestep
+CPU.fuse_bi_directional_rnn
+CPU.bi_rnn_interpreter_vs_cpu
+CPU.fuse_lstm_cells
+CPU.fuse_2_layer_rnn
+CPU.fuse_1_layer_rnn
+CPU.rnn_fusion_1rnn_layer_3lstm_cell
+CPU.rnn_fusion_2rnn_layer_3lstm_cell
 
 #ONNX Flatten with dynamic reshape
-onnx_dyn_shapes_flatten_axis
-onnx_dyn_shapes_flatten_neg_axis
+CPU.onnx_dyn_shapes_flatten_axis
+CPU.onnx_dyn_shapes_flatten_neg_axis
+
+CPU_CODEGEN.atan2
+CPU_CODEGEN.backwards_atan2
+CPU_CODEGEN.convert_bf16_float32
+CPU_CODEGEN.convert_float32_bf16
+CPU_CODEGEN.generate_mask
+CPU_CODEGEN.lrn_2d_across_empty
+CPU_CODEGEN.lrn_2d_across_outermost_axis
+CPU_CODEGEN.lrn_6D_across_2_axes
+CPU_CODEGEN.lrn_across_all_dims
+CPU_CODEGEN.lrn_across_empty
+CPU_CODEGEN.lrn_across_h
+CPU_CODEGEN.lrn_across_hw
+CPU_CODEGEN.lrn_across_nw
+CPU_CODEGEN.random_uniform_all_static_range_dynamic
+CPU_CODEGEN.random_uniform_all_static_seed_unused
+CPU_CODEGEN.random_uniform_all_static_seed_used
+CPU_CODEGEN.random_uniform_dynamic_shapes
+CPU_CODEGEN.random_uniform_seed_use_dynamic
+CPU_CODEGEN.round
+CPU_CODEGEN.round_2D
+CPU_CODEGEN.sum_stable_acc
+CPU_CODEGEN.sum_stable_acc_double
+CPU_CODEGEN.topk_1d_i32_max_all
+CPU_CODEGEN.topk_1d_max_all
+CPU_CODEGEN.topk_1d_max_partial
+CPU_CODEGEN.topk_1d_min_all
+CPU_CODEGEN.topk_1d_min_partial
+CPU_CODEGEN.topk_2d_max_all
+CPU_CODEGEN.topk_2d_max_partial
+CPU_CODEGEN.topk_2d_min_all
+CPU_CODEGEN.topk_2d_min_partial
+CPU_CODEGEN.topk_3d_large_input_max
+CPU_CODEGEN.topk_3d_large_input_min
+CPU_CODEGEN.topk_3d_max_all
+CPU_CODEGEN.topk_3d_min_all
+CPU_CODEGEN.topk_5d_max_partial
+CPU_CODEGEN.topk_int64
+CPU_CODEGEN.topk_max_sort_value
