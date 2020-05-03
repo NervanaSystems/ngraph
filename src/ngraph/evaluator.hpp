@@ -167,9 +167,13 @@ namespace ngraph
                 // Request to execute the handleer. Pass what we know about the inputs to the
                 // handler and associate the results with the outputs
                 std::vector<V> inputs;
+                std::cout << "In evaluator.hpp, map size is " << evaluator.get_value_map().size() <<"\n";
                 for (auto v : node->input_values())
                 {
-                    inputs.push_back(evaluator.get_value_map().at(v));
+                    std::cout << "In evaluator.hpp, handle(), v : " << v <<"\n";
+                    auto map_val = evaluator.get_value_map().at(v);
+                    inputs.push_back(map_val);
+                    //std::cout << "In evaluator.hpp, handle(),  pushed : " << map_val <<"\n";
                 }
                 std::vector<V> outputs = m_handler(node, inputs);
                 for (size_t i = 0; i < outputs.size(); ++i)
@@ -188,19 +192,25 @@ namespace ngraph
         {
             InstStack inst_stack;
             inst_stack.push(InstPtr(new ValueInst(value)));
+            std::cout << "In evaluate, value node = " << value.get_node()->get_name() << ", before while starts\n";
             while (!inst_stack.empty())
             {
                 InstPtr inst;
                 std::swap(inst_stack.top(), inst);
                 inst_stack.pop();
                 auto node = inst->get_node();
+                std::cout << "\tIn evaluate, value node = " << node->get_name() << ", out0 = " << node->output(0)<<"\n";
                 if (m_value_map.find(node->output(0)) != m_value_map.end())
                 {
+                    std::cout << "\tevaluator.hpp, in if condition, already computed, " << node->output(0)<<"\n";
                     // Already computed
-                    continue;
+                    //continue;
                 }
+                std::cout << "\tevaluator.hpp, in else condition, calling inst->handle, " << node->output(0)<<"\n";
                 inst->handle(*this, inst_stack, node);
+                std::cout <<"\n\n";
             }
+            std::cout << "In evaluate, value node, after while loop\n\n\n";
             return m_value_map.at(value);
         }
 

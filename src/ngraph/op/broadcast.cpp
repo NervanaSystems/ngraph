@@ -51,8 +51,9 @@ op::v3::Broadcast::Broadcast(const Output<Node>& arg,
 std::pair<bool, AxisSet> op::v3::Broadcast::get_broadcast_axes() const
 {
     AxisSet broadcast_axes;
-    if (m_mode.m_type == BroadcastType::BIDIRECTIONAL)
+    if (m_mode.m_type == op::BroadcastType::BIDIRECTIONAL)
     {
+        std::cout << "Broadcast op, in get_broadcast_axes() , bi-di\n";
         if (get_input_partial_shape(0).is_static() && get_output_partial_shape(0).is_static())
         {
             const auto arg_shape = get_input_shape(0);
@@ -71,8 +72,13 @@ std::pair<bool, AxisSet> op::v3::Broadcast::get_broadcast_axes() const
             const bool axes_known = true;
             return std::make_pair(axes_known, broadcast_axes);
         }
+        else {
+            std::cout << "Broadcast op, in get_broadcast_axes() , bi-di, shapes not static\n";
+            const bool axes_known = false;
+            return std::make_pair(axes_known, broadcast_axes);
+        }
     }
-
+    std::cout << "Broadcast op, in get_broadcast_axes() , other bcast types\n";
     return util::BroadcastBase::get_broadcast_axes();
 }
 
@@ -172,6 +178,7 @@ namespace
                         const HostTensorPtr& out,
                         const AxisSet& broadcast_axes)
     {
+        std::cout << " In evaluate : before calling refkern\n";
         using T = typename element_type_traits<ET>::value_type;
         runtime::reference::broadcast<T>((arg0->get_data_ptr<ET>()),
                                             (out->get_data_ptr<ET>()),
@@ -185,7 +192,8 @@ namespace
                             const HostTensorPtr& arg1,
                             const HostTensorPtr& out,
                             const std::pair<bool, AxisSet> pair_broadcast_axes/*,
-                            const op::BroadcastModeSpec& broadcast_spec*/)
+                            const op::BroadcastModeSpec& broadcast_spec*/,
+                            const PartialShape out_shape)
     {
         if (arg0->get_element_type() != out->get_element_type())
         {
@@ -196,10 +204,13 @@ namespace
             //error / debug message: broadcast_axes not known deterministically
             return false;
         }
+        std::cout << " In evaluate_broadcast : after checks\n";
         bool rc = true;
         Shape in_shape = arg0->get_shape();
-        Shape out_shape = out->get_shape();
+        //Shape out_shape = out->get_shape();
+        out->set_shape(Shape{2,4,4});
         //output_value->set_shape(Shape{shape.size()});
+        std::cout << " In evaluate_broadcast : before switch case\n";
         switch (arg0->get_element_type())
         {
             TYPE_CASE(i8)(arg0, out, pair_broadcast_axes.second);
@@ -231,7 +242,7 @@ namespace
 bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs,
                                const HostTensorVector& inputs)
 {
-    return evaluate_broadcast(inputs[0], inputs[1], outputs[0], get_broadcast_axes());
+    return evaluate_broadcast(inputs[0], inputs[1], outputs[0], get_broadcast_axes(), get_output_partial_shape(0));
 }
 
 namespace
@@ -295,6 +306,12 @@ bool op::v1::Broadcast::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("broadcast_spec", m_broadcast_spec);
     return true;
+}
+
+bool op::v1::Broadcast::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs)
+{
+    return evaluate_broadcast(inputs[0], inputs[1], outputs[0], get_broadcast_axes(), get_output_shape(0));
 }
 
 constexpr NodeTypeInfo op::v0::Broadcast::type_info;
@@ -407,6 +424,13 @@ shared_ptr<Node> op::v0::BroadcastLike::clone_with_new_inputs(const OutputVector
         throw ngraph_error("Incorrect number of new arguments");
     }
     return make_shared<v0::BroadcastLike>(new_args.at(0), new_args.at(1), m_initial_broadcast_axes);
+}
+
+bool op::v0::Broadcast::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs)
+{
+    //return evaluate_broadcast(inputs[0], inputs[1], outputs[0], get_broadcast_axes(), get_output_shape(0));
+    return false; // TBD: not supported currently
 }
 
 void op::v0::BroadcastLike::infer_shape()

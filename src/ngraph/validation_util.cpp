@@ -1028,6 +1028,7 @@ void ngraph::evaluate_nodes(std::map<RawNodeOutput, HostTensorPtr>& value_map,
         });
     for (auto value : outputs)
     {
+        std::cout << "In validation_util.cpp, value: " << value <<"\n";
         evaluator.evaluate(value);
     }
 }

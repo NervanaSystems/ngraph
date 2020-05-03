@@ -468,7 +468,7 @@ protected:
                                     broadcast_axes);
             break;
         }
-        case OP_TYPEID::Broadcast_v3:
+        /*case OP_TYPEID::Broadcast_v3:
         {
             const op::v3::Broadcast* broadcast = static_cast<const op::v3::Broadcast*>(&node);
             Shape in_shape = node.get_input_shape(0);
@@ -486,7 +486,7 @@ protected:
                 throw "op::v3::Broadcast - Cannot determine broadcast_axes\n";
             }
             break;
-        }
+        }*/
         case OP_TYPEID::BroadcastDistributed:
         {
             const ngraph::op::BroadcastDistributed* broadcast =
