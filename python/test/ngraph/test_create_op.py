@@ -18,7 +18,6 @@ import pytest
 
 import ngraph as ng
 
-
 integral_np_types = [np.int8, np.int16, np.int32, np.int64,
                      np.uint8, np.uint16, np.uint32, np.uint64]
 
@@ -28,14 +27,15 @@ def test_interpolate(dtype):
     image_shape = [1, 3, 1024, 1024]
     output_shape = [64, 64]
     attributes = {
-        'axes': [2, 3],
-        'mode': 'cubic',
+        'InterpolateAttrs.axes': [2, 3],
+        'InterpolateAttrs.mode': 'cubic',
+        'InterpolateAttrs.pads_begin': np.array([2, 2], dtype=dtype),
     }
 
     image_node = ng.parameter(image_shape, dtype, name='Image')
 
     node = ng.interpolate(image_node, output_shape, attributes)
-    expected_shape = [1, 3, 1024, 1024]
+    expected_shape = [1, 3, 64, 64]
 
     assert node.get_type_name() == 'Interpolate'
     assert node.get_output_size() == 1
@@ -55,11 +55,11 @@ def test_interpolate(dtype):
     (np.int32, np.float64),
 ])
 def test_prior_box(int_dtype, fp_dtype):
-    image_shape = np.array([300, 300], dtype=int_dtype)
+    image_shape = np.array([64, 64], dtype=int_dtype)
     attributes = {
-        'offset': fp_dtype(0),
-        'min_size': np.array([2, 3], dtype=fp_dtype),
-        'aspect_ratio': np.array([1.5, 2.0, 2.5], dtype=fp_dtype),
+        'PriorBoxAttrs.offset': fp_dtype(0),
+        'PriorBoxAttrs.min_size': np.array([2, 3], dtype=fp_dtype),
+        'PriorBoxAttrs.aspect_ratio': np.array([1.5, 2.0, 2.5], dtype=fp_dtype),
     }
 
     layer_shape = ng.constant(np.array([32, 32], dtype=int_dtype), int_dtype)
@@ -68,7 +68,7 @@ def test_prior_box(int_dtype, fp_dtype):
 
     assert node.get_type_name() == 'PriorBox'
     assert node.get_output_size() == 1
-    assert node.get_output_shape(0) == [2, 20480]
+    assert list(node.get_output_shape(0)) == [2, 20480]
 
 
 @pytest.mark.parametrize('int_dtype, fp_dtype', [
@@ -84,11 +84,11 @@ def test_prior_box(int_dtype, fp_dtype):
     (np.int32, np.float64),
 ])
 def test_prior_box_clustered(int_dtype, fp_dtype):
-    image_size = np.array([300, 300], dtype=int_dtype)
+    image_size = np.array([64, 64], dtype=int_dtype)
     attributes = {
-        'offset': fp_dtype(0.5),
-        'widths': np.array([4.0, 2.0, 3.2], dtype=fp_dtype),
-        'heights': np.array([1.0, 2.0, 1.0], dtype=fp_dtype),
+        'PriorBoxClusteredAttrs.offset': fp_dtype(0.5),
+        'PriorBoxClusteredAttrs.widths': np.array([4.0, 2.0, 3.2], dtype=fp_dtype),
+        'PriorBoxClusteredAttrs.heights': np.array([1.0, 2.0, 1.0], dtype=fp_dtype),
     }
 
     output_size = ng.constant(np.array([19, 19], dtype=int_dtype), int_dtype)
@@ -97,7 +97,7 @@ def test_prior_box_clustered(int_dtype, fp_dtype):
 
     assert node.get_type_name() == 'PriorBoxClustered'
     assert node.get_output_size() == 1
-    assert node.get_output_shape(0) == [2, 4332]
+    assert list(node.get_output_shape(0)) == [2, 4332]
 
 
 @pytest.mark.parametrize('int_dtype, fp_dtype', [
@@ -114,9 +114,9 @@ def test_prior_box_clustered(int_dtype, fp_dtype):
 ])
 def test_detection_output(int_dtype, fp_dtype):
     attributes = {
-        'num_classes': int_dtype(85),
-        'keep_top_k': np.array([200], dtype=int_dtype),
-        'nms_threshold': fp_dtype(0.645),
+        'DetectionOutputAttrs.num_classes': int_dtype(85),
+        'DetectionOutputAttrs.keep_top_k': np.array([64], dtype=int_dtype),
+        'DetectionOutputAttrs.nms_threshold': fp_dtype(0.645),
     }
 
     box_logits = ng.parameter([4, 1, 5, 5], fp_dtype, 'box_logits')
@@ -130,7 +130,7 @@ def test_detection_output(int_dtype, fp_dtype):
 
     assert node.get_type_name() == 'DetectionOutput'
     assert node.get_output_size() == 1
-    assert node.get_output_shape(0) == [1, 1, 800, 7]
+    assert list(node.get_output_shape(0)) == [1, 1, 256, 7]
 
 
 @pytest.mark.parametrize('int_dtype, fp_dtype', [
@@ -143,14 +143,14 @@ def test_detection_output(int_dtype, fp_dtype):
 ])
 def test_proposal(int_dtype, fp_dtype):
     attributes = {
-        'base_size': int_dtype(1),
-        'pre_nms_topn': int_dtype(20),
-        'post_nms_topn': int_dtype(200),
-        'nms_thresh': fp_dtype(0.34),
-        'feat_stride': int_dtype(16),
-        'min_size': int_dtype(32),
-        'ratio': np.array([0.1, 1.5, 2.0, 2.5], dtype=fp_dtype),
-        'scale': np.array([2, 3, 3, 4], dtype=fp_dtype),
+        'ProposalAttrs.base_size': int_dtype(1),
+        'ProposalAttrs.pre_nms_topn': int_dtype(20),
+        'ProposalAttrs.post_nms_topn': int_dtype(64),
+        'ProposalAttrs.nms_thresh': fp_dtype(0.34),
+        'ProposalAttrs.feat_stride': int_dtype(16),
+        'ProposalAttrs.min_size': int_dtype(32),
+        'ProposalAttrs.ratio': np.array([0.1, 1.5, 2.0, 2.5], dtype=fp_dtype),
+        'ProposalAttrs.scale': np.array([2, 3, 3, 4], dtype=fp_dtype),
     }
     batch_size = 7
 
@@ -161,4 +161,5 @@ def test_proposal(int_dtype, fp_dtype):
 
     assert node.get_type_name() == 'Proposal'
     assert node.get_output_size() == 1
-    assert node.get_output_shape(0) == [batch_size * attributes['post_nms_topn'], 5]
+    assert (list(node.get_output_shape(0)) ==
+            [batch_size * attributes['ProposalAttrs.post_nms_topn'], 5])

@@ -1966,12 +1966,12 @@ def interpolate(image, output_shape, attrs, name=None):
     :return: Node representing interpolation operation.
     """
     requirements = [
-        ('axes', True, np.integer, is_non_negative_value),
-        ('mode', True, np.str_, None),
-        ('align_corners', False, np.bool_, None),
-        ('antialias', False, np.bool_, None),
-        ('pads_begin', False, np.integer, is_non_negative_value),
-        ('pads_end', False, np.integer, is_non_negative_value),
+        ('InterpolateAttrs.axes', True, np.integer, is_non_negative_value),
+        ('InterpolateAttrs.mode', True, np.str_, None),
+        ('InterpolateAttrs.align_corners', False, np.bool_, None),
+        ('InterpolateAttrs.antialias', False, np.bool_, None),
+        ('InterpolateAttrs.pads_begin', False, np.integer, is_non_negative_value),
+        ('InterpolateAttrs.pads_end', False, np.integer, is_non_negative_value),
     ]
 
     check_valid_attributes('Interpolate', attrs, requirements)
@@ -2074,18 +2074,18 @@ def prior_box(layer_shape, image_shape, attrs, name=None):
     :return: Node representing prior box operation.
     """
     requirements = [
-        ('offset', True, np.floating, is_non_negative_value),
-        ('min_size', False, np.floating, is_positive_value),
-        ('max_size', False, np.floating, is_positive_value),
-        ('aspect_ratio', False, np.floating, is_positive_value),
-        ('flip', False, np.bool_, None),
-        ('clip', False, np.bool_, None),
-        ('step', False, np.floating, is_non_negative_value),
-        ('variance', False, np.floating, is_positive_value),
-        ('scale_all_sizes', False, np.bool_, None),
-        ('fixed_ratio', False, np.floating, is_positive_value),
-        ('fixed_size', False, np.floating, is_positive_value),
-        ('density', False, np.floating, is_positive_value),
+        ('PriorBoxAttrs.offset', True, np.floating, is_non_negative_value),
+        ('PriorBoxAttrs.min_size', False, np.floating, is_positive_value),
+        ('PriorBoxAttrs.max_size', False, np.floating, is_positive_value),
+        ('PriorBoxAttrs.aspect_ratio', False, np.floating, is_positive_value),
+        ('PriorBoxAttrs.flip', False, np.bool_, None),
+        ('PriorBoxAttrs.clip', False, np.bool_, None),
+        ('PriorBoxAttrs.step', False, np.floating, is_non_negative_value),
+        ('PriorBoxAttrs.variance', False, np.floating, is_positive_value),
+        ('PriorBoxAttrs.scale_all_sizes', False, np.bool_, None),
+        ('PriorBoxAttrs.fixed_ratio', False, np.floating, is_positive_value),
+        ('PriorBoxAttrs.fixed_size', False, np.floating, is_positive_value),
+        ('PriorBoxAttrs.density', False, np.floating, is_positive_value),
     ]
 
     check_valid_attributes('PriorBox', attrs, requirements)
@@ -2162,13 +2162,13 @@ def prior_box_clustered(output_size, image_size, attrs, name=None):
     :return: Node representing PriorBoxClustered operation.
     """
     requirements = [
-        ('widths', False, np.floating, is_positive_value),
-        ('heights', False, np.floating, is_positive_value),
-        ('clip', False, np.bool_, None),
-        ('step_widths', False, np.floating, is_positive_value),
-        ('step_heights', False, np.floating, is_positive_value),
-        ('offset', True, np.floating, is_positive_value),
-        ('variance', False, np.floating, is_positive_value),
+        ('PriorBoxClusteredAttrs.widths', False, np.floating, is_positive_value),
+        ('PriorBoxClusteredAttrs.heights', False, np.floating, is_positive_value),
+        ('PriorBoxClusteredAttrs.clip', False, np.bool_, None),
+        ('PriorBoxClusteredAttrs.step_widths', False, np.floating, is_positive_value),
+        ('PriorBoxClusteredAttrs.step_heights', False, np.floating, is_positive_value),
+        ('PriorBoxClusteredAttrs.offset', True, np.floating, is_positive_value),
+        ('PriorBoxClusteredAttrs.variance', False, np.floating, is_positive_value),
     ]
 
     check_valid_attributes('PriorBoxClustered', attrs, requirements)
@@ -2311,22 +2311,22 @@ def detection_output(box_logits,            # type: Node
     :return: Node representing DetectionOutput operation.
     """
     requirements = [
-        ('num_classes', True, np.integer, is_positive_value),
-        ('background_label_id', False, np.integer, None),
-        ('top_k', False, np.integer, None),
-        ('variance_encoded_in_target', False, np.bool_, None),
-        ('keep_top_k', True, np.integer, None),
-        ('code_type', False, np.str_, None),
-        ('share_location', False, np.bool_, None),
-        ('nms_threshold', True, np.floating, None),
-        ('confidence_threshold', False, np.floating, None),
-        ('clip_after_nms', False, np.bool_, None),
-        ('clip_before_nms', False, np.bool_, None),
-        ('decrease_label_id', False, np.bool_, None),
-        ('normalized', False, np.bool_, None),
-        ('input_height', False, np.integer, is_positive_value),
-        ('input_width', False, np.integer, is_positive_value),
-        ('objectness_score', False, np.floating, is_non_negative_value),
+        ('DetectionOutputAttrs.num_classes', True, np.integer, is_positive_value),
+        ('DetectionOutputAttrs.background_label_id', False, np.integer, None),
+        ('DetectionOutputAttrs.top_k', False, np.integer, None),
+        ('DetectionOutputAttrs.variance_encoded_in_target', False, np.bool_, None),
+        ('DetectionOutputAttrs.keep_top_k', True, np.integer, None),
+        ('DetectionOutputAttrs.code_type', False, np.str_, None),
+        ('DetectionOutputAttrs.share_location', False, np.bool_, None),
+        ('DetectionOutputAttrs.nms_threshold', True, np.floating, None),
+        ('DetectionOutputAttrs.confidence_threshold', False, np.floating, None),
+        ('DetectionOutputAttrs.clip_after_nms', False, np.bool_, None),
+        ('DetectionOutputAttrs.clip_before_nms', False, np.bool_, None),
+        ('DetectionOutputAttrs.decrease_label_id', False, np.bool_, None),
+        ('DetectionOutputAttrs.normalized', False, np.bool_, None),
+        ('DetectionOutputAttrs.input_height', False, np.integer, is_positive_value),
+        ('DetectionOutputAttrs.input_width', False, np.integer, is_positive_value),
+        ('DetectionOutputAttrs.objectness_score', False, np.floating, is_non_negative_value),
     ]
 
     check_valid_attributes('DetectionOutput', attrs, requirements)
@@ -2453,20 +2453,20 @@ def proposal(class_probs,           # type: Node
     :return: Node representing Proposal operation.
     """
     requirements = [
-        ('base_size', True, np.unsignedinteger, is_positive_value),
-        ('pre_nms_topn', True, np.unsignedinteger, is_positive_value),
-        ('post_nms_topn', True, np.unsignedinteger, is_positive_value),
-        ('nms_thresh', True, np.floating, is_positive_value),
-        ('feat_stride', True, np.unsignedinteger, is_positive_value),
-        ('min_size', True, np.unsignedinteger, is_positive_value),
-        ('ratio', True, np.floating, None),
-        ('scale', True, np.floating, None),
-        ('clip_before_nms', False, np.bool_, None),
-        ('clip_after_nms', False, np.bool_, None),
-        ('normalize', False, np.bool_, None),
-        ('box_size_scale', False, np.floating, is_positive_value),
-        ('box_coordinate_scale', False, np.floating, is_positive_value),
-        ('framework', False, np.str_, None),
+        ('ProposalAttrs.base_size', True, np.unsignedinteger, is_positive_value),
+        ('ProposalAttrs.pre_nms_topn', True, np.unsignedinteger, is_positive_value),
+        ('ProposalAttrs.post_nms_topn', True, np.unsignedinteger, is_positive_value),
+        ('ProposalAttrs.nms_thresh', True, np.floating, is_positive_value),
+        ('ProposalAttrs.feat_stride', True, np.unsignedinteger, is_positive_value),
+        ('ProposalAttrs.min_size', True, np.unsignedinteger, is_positive_value),
+        ('ProposalAttrs.ratio', True, np.floating, None),
+        ('ProposalAttrs.scale', True, np.floating, None),
+        ('ProposalAttrs.clip_before_nms', False, np.bool_, None),
+        ('ProposalAttrs.clip_after_nms', False, np.bool_, None),
+        ('ProposalAttrs.normalize', False, np.bool_, None),
+        ('ProposalAttrs.box_size_scale', False, np.floating, is_positive_value),
+        ('ProposalAttrs.box_coordinate_scale', False, np.floating, is_positive_value),
+        ('ProposalAttrs.framework', False, np.str_, None),
     ]
 
     check_valid_attributes('Proposal', attrs, requirements)
