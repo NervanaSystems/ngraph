@@ -86,8 +86,8 @@ namespace
         Shape input_shape = input->get_shape();
         size_t input_rank = input_shape.size();
 
-        size_t non_zero_count =
-            runtime::reference::non_zero_get_count<IN_T>(input->get_data_ptr<INPUT_ET>(), input_shape);
+        size_t non_zero_count = runtime::reference::non_zero_get_count<IN_T>(
+            input->get_data_ptr<INPUT_ET>(), input_shape);
 
         Shape out_shape;
         if (non_zero_count == 0)
@@ -116,13 +116,13 @@ namespace
         bool rc = true;
         switch (output->get_element_type())
         {
-            case element::Type_t::i64:
+        case element::Type_t::i64:
             rc = evaluate_nonzero_execute<INPUT_ET, element::Type_t::i64>(input, output);
             break;
-            case element::Type_t::i32:
+        case element::Type_t::i32:
             rc = evaluate_nonzero_execute<INPUT_ET, element::Type_t::i32>(input, output);
             break;
-            default: rc = false; break;
+        default: rc = false; break;
         }
 
         return rc;
