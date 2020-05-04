@@ -176,18 +176,11 @@ namespace ngraph
         /// \brief Index operator for PartialShape.
         /// \param i The index of the dimension being selected.
         /// \return A reference to the `i`th Dimension of this shape.
-        const Dimension& operator[](size_t i) const
-        {
-            if (i >= m_dimensions.size())
-            {
-                throw std::out_of_range("Accessing out-of-range dimension in Dimension[]");
-            }
-            return m_dimensions[i];
-        }
+        const Dimension& operator[](size_t i) const;
         /// \brief Index operator for PartialShape.
         /// \param i The index of the dimension being selected.
         /// \return A reference to the `i`th Dimension of this shape.
-        Dimension& operator[](size_t i) { return m_dimensions[i]; }
+        Dimension& operator[](size_t i);
         /// \brief Returns a vector of the dimensions. This has no meaning if dynamic.
         explicit operator std::vector<Dimension>() const { return m_dimensions; }
         friend NGRAPH_API std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
