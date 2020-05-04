@@ -69,11 +69,74 @@ public:
         }
     }
     virtual void on_adapter(const std::string& name,
-                            ngraph::ValueAccessor<std::int64_t>& adapter) override
+                            ngraph::ValueAccessor<int8_t>& adapter) override
     {
         if (m_attributes.contains(name))
         {
-            adapter.set(m_attributes[name.c_str()].cast<std::int64_t>());
+            adapter.set(m_attributes[name.c_str()].cast<int8_t>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<int16_t>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<int16_t>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<int32_t>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<int32_t>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<int64_t>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<int64_t>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<uint8_t>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<uint8_t>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<uint16_t>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<uint16_t>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<uint32_t>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<uint32_t>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<uint64_t>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<uint64_t>());
+        }
+    }
+    virtual void on_adapter(const std::string& name, ngraph::ValueAccessor<float>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<float>());
         }
     }
     virtual void on_adapter(const std::string& name,
@@ -85,14 +148,6 @@ public:
         }
     }
     virtual void on_adapter(const std::string& name,
-                            ngraph::ValueAccessor<std::vector<int64_t>>& adapter) override
-    {
-        if (m_attributes.contains(name))
-        {
-            adapter.set(m_attributes[name.c_str()].cast<std::vector<std::int64_t>>());
-        }
-    }
-    virtual void on_adapter(const std::string& name,
                             ngraph::ValueAccessor<std::vector<std::string>>& adapter) override
     {
         if (m_attributes.contains(name))
@@ -101,11 +156,83 @@ public:
         }
     }
     virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<std::vector<int8_t>>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::vector<int8_t>>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<std::vector<int16_t>>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::vector<int16_t>>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<std::vector<int32_t>>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::vector<int32_t>>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<std::vector<int64_t>>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::vector<int64_t>>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<std::vector<uint8_t>>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::vector<uint8_t>>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<std::vector<uint16_t>>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::vector<uint16_t>>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<std::vector<uint32_t>>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::vector<uint32_t>>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<std::vector<uint64_t>>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::vector<uint64_t>>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
                             ngraph::ValueAccessor<std::vector<float>>& adapter) override
     {
         if (m_attributes.contains(name))
         {
             adapter.set(m_attributes[name.c_str()].cast<std::vector<float>>());
+        }
+    }
+    virtual void on_adapter(const std::string& name,
+                            ngraph::ValueAccessor<std::vector<double>>& adapter) override
+    {
+        if (m_attributes.contains(name))
+        {
+            adapter.set(m_attributes[name.c_str()].cast<std::vector<double>>());
         }
     }
 
