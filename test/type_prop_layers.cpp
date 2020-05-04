@@ -76,34 +76,6 @@ TEST(type_prop_layers, interpolate)
                     .same_scheme(PartialShape{2, 2, Dimension::dynamic(), Dimension::dynamic()}));
 }
 
-TEST(type_prop_layers, interpolate_wrong_mode)
-{
-    auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
-    auto dyn_output_shape = make_shared<op::Parameter>(element::i64, Shape{2});
-    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
-
-    op::InterpolateAttrs attrs;
-    attrs.axes = {2, 3};
-    attrs.mode = "wrong";
-    attrs.align_corners = true;
-    attrs.antialias = false;
-    attrs.pads_begin = {0, 0, 0, 0};
-    attrs.pads_end = {0, 0, 0, 0};
-    try
-    {
-        auto op = make_shared<op::Interpolate>(image, output_shape, attrs);
-        FAIL() << "Did not detect invalid mode.";
-    }
-    catch (const CheckFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("\"wrong\" is not a member of enum"));
-    }
-    catch (...)
-    {
-        FAIL() << "Invalid mode check failed for unexpected reason";
-    }
-}
-
 TEST(type_prop_layers, interpolate_v3)
 {
     using op::v3::Interpolate;

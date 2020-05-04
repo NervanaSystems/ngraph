@@ -31,7 +31,7 @@ op::Interpolate::Interpolate(const Output<Node>& image,
     constructor_validate_and_infer_types();
 }
 
-bool op::Interpolate::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::Interpolate::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("attrs.axes", m_attrs.axes);
     visitor.on_attribute("attrs.mode", m_attrs.mode);
@@ -44,8 +44,6 @@ bool op::Interpolate::visit_attributes(AttributeVisitor& visitor)
 
 void op::Interpolate::validate_and_infer_types()
 {
-    // Check if string attribute is valid by converting to and back from valid enum type
-    m_attrs.mode = as_string<InterpolateMode>(as_enum<InterpolateMode>(m_attrs.mode));
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(1).is_integral_number(),
                           "output shape must be an integral number.");
