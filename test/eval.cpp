@@ -21,6 +21,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/node_output.hpp"
+#include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/minimum.hpp"
@@ -154,4 +155,19 @@ TEST(eval, interpret_dynamic_range_sum)
     auto result_val = read_vector<float>(result);
     vector<float> seq{8.0f, 11.0f, 14.0f};
     ASSERT_EQ(result_val, seq);
+}
+
+TEST(eval, evaluate_abs)
+{
+    auto p = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto abs = make_shared<op::Abs>(p);
+    auto fun = make_shared<Function>(OutputVector{abs}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate({result},
+                              {make_host_tensor<element::Type_t::f32>(
+                                  Shape{2, 3}, {0.0f, -1.0f, -2.0f, -3.0f, 4.0f, 5.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+    ASSERT_EQ(result_val, expec);
 }
