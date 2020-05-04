@@ -66,7 +66,7 @@ void op::v3::ExtractImagePatches::validate_and_infer_types()
     if (input_Pshape.is_dynamic())
     {
         set_input_is_relevant_to_shape(0);
-        auto output_Pshape =  PartialShape{Dimension::dynamic(),Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
+        auto output_Pshape =  PartialShape::dynamic(4);
         set_output_type(0, get_input_element_type(0), output_Pshape);
     }
     else{

@@ -75,3 +75,15 @@ TEST(type_prop, extractimagepatches_input_shape_change)
     EXPECT_EQ(extractimagepatches->get_output_shape(0), (Shape{64, 27, 1, 1}));
 }
 
+TEST(type_prop, extractimagepatches_dynamic_shape)
+{
+    auto data = make_shared<op::Parameter>(element::i32, PartialShape::dynamic(4));
+    auto sizes = Shape{3, 3};
+    auto strides = Strides{5, 5};
+    auto rates = Shape{2, 2};
+    auto padtype_padding = op::PadType::VALID;
+    auto extractimagepatches = make_shared<op::v3::ExtractImagePatches>(data,sizes,strides,rates, padtype_padding);
+
+    EXPECT_EQ(extractimagepatches->get_output_element_type(0), element::i32);
+    EXPECT_TRUE(extractimagepatches->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
