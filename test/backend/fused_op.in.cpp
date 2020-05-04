@@ -1194,6 +1194,518 @@ NGRAPH_TEST(${BACKEND_NAME}, fused_clamp)
     test_case.run();
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int8)
+{
+    auto s = Shape{4, 2};
+    typedef int8_t ctype;
+    auto ntype = element::i8;
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int8_no_max)
+{
+    auto s = Shape{4, 2};
+    typedef int8_t ctype;
+    auto ntype = element::i8;
+
+    auto inf = numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int8_no_min)
+{
+    auto s = Shape{4, 2};
+    typedef int8_t ctype;
+    auto ntype = element::i8;
+
+    auto neginf = -numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int16)
+{
+    auto s = Shape{4, 2};
+    typedef int16_t ctype;
+    auto ntype = element::i16;
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int16_no_max)
+{
+    auto s = Shape{4, 2};
+    typedef int16_t ctype;
+    auto ntype = element::i16;
+
+    auto inf = numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int16_no_min)
+{
+    auto s = Shape{4, 2};
+    typedef int16_t ctype;
+    auto ntype = element::i16;
+
+    auto neginf = -numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int32)
+{
+    auto s = Shape{4, 2};
+    typedef int32_t ctype;
+    auto ntype = element::i32;
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int32_no_max)
+{
+    auto s = Shape{4, 2};
+    typedef int32_t ctype;
+    auto ntype = element::i32;
+
+    auto inf = numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int32_no_min)
+{
+    auto s = Shape{4, 2};
+    typedef int32_t ctype;
+    auto ntype = element::i32;
+
+    auto neginf = -numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int64)
+{
+    auto s = Shape{4, 2};
+    typedef int64_t ctype;
+    auto ntype = element::i64;
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int64_no_max)
+{
+    auto s = Shape{4, 2};
+    typedef int64_t ctype;
+    auto ntype = element::i64;
+
+    auto inf = numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int64_no_min)
+{
+    auto s = Shape{4, 2};
+    typedef int64_t ctype;
+    auto ntype = element::i64;
+
+    auto neginf = -numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint8)
+{
+    auto s = Shape{4, 2};
+    typedef uint8_t ctype;
+    auto ntype = element::u8;
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint8_no_max)
+{
+    auto s = Shape{4, 2};
+    typedef uint8_t ctype;
+    auto ntype = element::u8;
+
+    auto inf = numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint8_no_min)
+{
+    auto s = Shape{4, 2};
+    typedef uint8_t ctype;
+    auto ntype = element::u8;
+
+    auto neginf = -numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint16)
+{
+    auto s = Shape{4, 2};
+    typedef uint16_t ctype;
+    auto ntype = element::u16;
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint16_no_max)
+{
+    auto s = Shape{4, 2};
+    typedef uint16_t ctype;
+    auto ntype = element::u16;
+
+    auto inf = numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint16_no_min)
+{
+    auto s = Shape{4, 2};
+    typedef uint16_t ctype;
+    auto ntype = element::u16;
+
+    auto neginf = -numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint32)
+{
+    auto s = Shape{4, 2};
+    typedef uint32_t ctype;
+    auto ntype = element::u32;
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint32_no_max)
+{
+    auto s = Shape{4, 2};
+    typedef uint32_t ctype;
+    auto ntype = element::u32;
+
+    auto inf = numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint32_no_min)
+{
+    auto s = Shape{4, 2};
+    typedef uint32_t ctype;
+    auto ntype = element::u32;
+
+    auto neginf = -numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint64)
+{
+    auto s = Shape{4, 2};
+    typedef uint64_t ctype;
+    auto ntype = element::u64;
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint64_no_max)
+{
+    auto s = Shape{4, 2};
+    typedef uint64_t ctype;
+    auto ntype = element::u64;
+
+    auto inf = numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint64_no_min)
+{
+    auto s = Shape{4, 2};
+    typedef uint64_t ctype;
+    auto ntype = element::u64;
+
+    auto neginf = -numeric_limits<double>::infinity();
+
+    auto data = make_shared<op::Parameter>(ntype, s);
+    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
+    auto function = make_shared<Function>(clamp, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+
+    test_case.add_input<ctype>({min, max, 9, 10, 11, 19, 20, 21});
+    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
+
+    test_case.run();
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
 {
     Shape data_shape{1, 2, 5};
