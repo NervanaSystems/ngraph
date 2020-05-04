@@ -143,79 +143,105 @@ NodeVector op::Clamp::decompose_op() const
 
     switch (get_element_type())
     {
-        case element::Type_t::i8:
-        {
-            auto clamp_min = builder::make_constant(data_type, data_shape, double_to_int<int8_t>(m_min, ceil_func));
-            auto clamp_max = builder::make_constant(data_type, data_shape, double_to_int<int8_t>(m_max, floor_func));
-            return {std::make_shared<ngraph::op::Minimum>(clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
-            break;
-        }
-        case element::Type_t::i16:
-        {
-            auto clamp_min = builder::make_constant(data_type, data_shape, double_to_int<int16_t>(m_min, ceil_func));
-            auto clamp_max = builder::make_constant(data_type, data_shape, double_to_int<int16_t>(m_max, floor_func));
-            return {std::make_shared<ngraph::op::Minimum>(clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
-            break;
-        }
-        case element::Type_t::i32:
-        {
-            auto clamp_min = builder::make_constant(data_type, data_shape, double_to_int<int32_t>(m_min, ceil_func));
-            auto clamp_max = builder::make_constant(data_type, data_shape, double_to_int<int32_t>(m_max, floor_func));
-            return {std::make_shared<ngraph::op::Minimum>(clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
-            break;
-        }
-        case element::Type_t::i64:
-        {
-            auto clamp_min = builder::make_constant(data_type, data_shape, double_to_int<int64_t>(m_min, ceil_func));
-            auto clamp_max = builder::make_constant(data_type, data_shape, double_to_int<int64_t>(m_max, floor_func));
-            return {std::make_shared<ngraph::op::Minimum>(clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
-            break;
-        }
-        case element::Type_t::u8:
-        {
-            auto clamp_min = builder::make_constant(data_type, data_shape, double_to_int<uint8_t>(m_min, ceil_func));
-            auto clamp_max = builder::make_constant(data_type, data_shape, double_to_int<uint8_t>(m_max, floor_func));
-            return {std::make_shared<ngraph::op::Minimum>(clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
-            break;
-        }
-        case element::Type_t::u16:
-        {
-            auto clamp_min = builder::make_constant(data_type, data_shape, double_to_int<uint16_t>(m_min, ceil_func));
-            auto clamp_max = builder::make_constant(data_type, data_shape, double_to_int<uint16_t>(m_max, floor_func));
-            return {std::make_shared<ngraph::op::Minimum>(clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
-            break;
-        }
-        case element::Type_t::u32:
-        {
-            auto clamp_min = builder::make_constant(data_type, data_shape, double_to_int<uint32_t>(m_min, ceil_func));
-            auto clamp_max = builder::make_constant(data_type, data_shape, double_to_int<uint32_t>(m_max, floor_func));
-            return {std::make_shared<ngraph::op::Minimum>(clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
-            break;
-        }
-        case element::Type_t::u64:
-        {
-            auto clamp_min = builder::make_constant(data_type, data_shape, double_to_int<uint64_t>(m_min, ceil_func));
-            auto clamp_max = builder::make_constant(data_type, data_shape, double_to_int<uint64_t>(m_max, floor_func));
-            return {std::make_shared<ngraph::op::Minimum>(clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
-            break;
-        }
-        case element::Type_t::f32:
-        {
-            auto clamp_min = builder::make_constant(data_type, data_shape, static_cast<float>(m_min));
-            auto clamp_max = builder::make_constant(data_type, data_shape, static_cast<float>(m_max));
-            return {std::make_shared<ngraph::op::Minimum>(clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
-            break;
-        }
-        case element::Type_t::f64:
-        {
-            auto clamp_min = builder::make_constant(data_type, data_shape, m_min);
-            auto clamp_max = builder::make_constant(data_type, data_shape, m_max);
-            return {std::make_shared<ngraph::op::Minimum>(clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
-            break;
-        }
-        default:
-            // TODO: error
-            break;
+    case element::Type_t::i8:
+    {
+        auto clamp_min =
+            builder::make_constant(data_type, data_shape, double_to_int<int8_t>(m_min, ceil_func));
+        auto clamp_max =
+            builder::make_constant(data_type, data_shape, double_to_int<int8_t>(m_max, floor_func));
+        return {std::make_shared<ngraph::op::Minimum>(
+            clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
+        break;
+    }
+    case element::Type_t::i16:
+    {
+        auto clamp_min =
+            builder::make_constant(data_type, data_shape, double_to_int<int16_t>(m_min, ceil_func));
+        auto clamp_max = builder::make_constant(
+            data_type, data_shape, double_to_int<int16_t>(m_max, floor_func));
+        return {std::make_shared<ngraph::op::Minimum>(
+            clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
+        break;
+    }
+    case element::Type_t::i32:
+    {
+        auto clamp_min =
+            builder::make_constant(data_type, data_shape, double_to_int<int32_t>(m_min, ceil_func));
+        auto clamp_max = builder::make_constant(
+            data_type, data_shape, double_to_int<int32_t>(m_max, floor_func));
+        return {std::make_shared<ngraph::op::Minimum>(
+            clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
+        break;
+    }
+    case element::Type_t::i64:
+    {
+        auto clamp_min =
+            builder::make_constant(data_type, data_shape, double_to_int<int64_t>(m_min, ceil_func));
+        auto clamp_max = builder::make_constant(
+            data_type, data_shape, double_to_int<int64_t>(m_max, floor_func));
+        return {std::make_shared<ngraph::op::Minimum>(
+            clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
+        break;
+    }
+    case element::Type_t::u8:
+    {
+        auto clamp_min =
+            builder::make_constant(data_type, data_shape, double_to_int<uint8_t>(m_min, ceil_func));
+        auto clamp_max = builder::make_constant(
+            data_type, data_shape, double_to_int<uint8_t>(m_max, floor_func));
+        return {std::make_shared<ngraph::op::Minimum>(
+            clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
+        break;
+    }
+    case element::Type_t::u16:
+    {
+        auto clamp_min = builder::make_constant(
+            data_type, data_shape, double_to_int<uint16_t>(m_min, ceil_func));
+        auto clamp_max = builder::make_constant(
+            data_type, data_shape, double_to_int<uint16_t>(m_max, floor_func));
+        return {std::make_shared<ngraph::op::Minimum>(
+            clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
+        break;
+    }
+    case element::Type_t::u32:
+    {
+        auto clamp_min = builder::make_constant(
+            data_type, data_shape, double_to_int<uint32_t>(m_min, ceil_func));
+        auto clamp_max = builder::make_constant(
+            data_type, data_shape, double_to_int<uint32_t>(m_max, floor_func));
+        return {std::make_shared<ngraph::op::Minimum>(
+            clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
+        break;
+    }
+    case element::Type_t::u64:
+    {
+        auto clamp_min = builder::make_constant(
+            data_type, data_shape, double_to_int<uint64_t>(m_min, ceil_func));
+        auto clamp_max = builder::make_constant(
+            data_type, data_shape, double_to_int<uint64_t>(m_max, floor_func));
+        return {std::make_shared<ngraph::op::Minimum>(
+            clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
+        break;
+    }
+    case element::Type_t::f32:
+    {
+        auto clamp_min = builder::make_constant(data_type, data_shape, static_cast<float>(m_min));
+        auto clamp_max = builder::make_constant(data_type, data_shape, static_cast<float>(m_max));
+        return {std::make_shared<ngraph::op::Minimum>(
+            clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
+        break;
+    }
+    case element::Type_t::f64:
+    {
+        auto clamp_min = builder::make_constant(data_type, data_shape, m_min);
+        auto clamp_max = builder::make_constant(data_type, data_shape, m_max);
+        return {std::make_shared<ngraph::op::Minimum>(
+            clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
+        break;
+    }
+    default:
+        // TODO: error
+        break;
     }
 }
 
