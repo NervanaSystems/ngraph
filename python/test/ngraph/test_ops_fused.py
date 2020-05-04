@@ -399,6 +399,24 @@ def test_prelu_operator():
     assert np.allclose(result, expected)
 
 
+def test_selu_operator():
+    runtime = get_runtime()
+
+    data_shape = [4, 2, 3, 1]
+
+    data = np.arange(start=1.0, stop=25.0, dtype=np.float32).reshape(data_shape)
+    alpha = np.array(1.6733, dtype=np.float32)
+    lambda_value = np.array(1.0507, dtype=np.float32)
+
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    model = ng.selu(parameter_data, alpha, lambda_value)
+    computation = runtime.computation(model, parameter_data)
+
+    result = computation(data)
+    expected = lambda_value * ((data > 0) * data + (data <= 0) * (alpha * np.exp(data) - alpha))
+    assert np.allclose(result, expected)
+
+
 def test_hard_sigmoid_operator():
     runtime = get_runtime()
 

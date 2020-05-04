@@ -119,6 +119,7 @@ from ngraph.ops import scale_shift
 from ngraph.ops import scatter_elements_update
 from ngraph.ops import scatter_update
 from ngraph.ops import select
+from ngraph.ops import selu
 from ngraph.ops import shape_of
 from ngraph.ops import shuffle_channels
 from ngraph.ops import sigmoid
