@@ -99,22 +99,24 @@ def check_valid_attributes(op_name,        # type: str
                            attributes,     # type: Dict[str, Any]
                            requirements,   # type: List[Tuple[str, bool, Type, Optional[Callable]]]
                            ):
-    # type: (...) -> None
+    # type: (...) -> bool
     """Perform attributes validation according to specified type, value criteria.
 
     :param  op_name:        The operator name which attributes are checked.
     :param  attributes:     The dictionary with user provided attributes to check.
     :param  requirements:   The list of tuples describing attributes' requirements. The tuple should
                             contain following values:
-                            (op_name: str,
+                            (attr_name: str,
                              is_required: bool,
                              value_type: Type,
                              value_condition: Callable)
 
     :raises     UserInputError:
+    :return: True if all attributes satisfies criterias. Otherwise False.
     """
     for attr, required, val_type, cond in requirements:
         check_valid_attribute(op_name, attributes, attr, val_type, cond, required)
+    return True
 
 
 def is_positive_value(x):  # type: (Any) -> bool

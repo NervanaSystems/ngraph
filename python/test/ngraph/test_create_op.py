@@ -795,5 +795,5 @@ def test_proposal(int_dtype, fp_dtype):
 
     assert node.get_type_name() == 'Proposal'
     assert node.get_output_size() == 1
-    assert (list(node.get_output_shape(0)) ==
-            [batch_size * attributes['ProposalAttrs.post_nms_topn'], 5])
+    assert (list(node.get_output_shape(0))
+            == [batch_size * attributes['ProposalAttrs.post_nms_topn'], 5])
