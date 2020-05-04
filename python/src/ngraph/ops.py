@@ -917,7 +917,7 @@ def tan(node, name=None):  # type: (NodeInput, str) -> Node
 # Binary ops
 @binary_op
 def divide(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which applies f(x) = A/B to the input nodes element-wise.
 
     :param left_node: The node providing dividend data.
@@ -933,7 +933,7 @@ def divide(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 @binary_op
 def floor_mod(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node performing element-wise FloorMod (division reminder) with two given tensors.
 
     :param left_node: The first input node for FloorMod operation.
@@ -949,7 +949,7 @@ def floor_mod(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 @binary_op
 def mod(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node performing element-wise division reminder with two given tensors.
 
     :param left_node: The first input node for mod operation.
@@ -965,7 +965,7 @@ def mod(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 @binary_op
 def multiply(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which applies f(x) = A*B to the input nodes elementwise."""
     return _get_node_factory().create('Multiply',
                                       [left_node, right_node],
@@ -973,38 +973,52 @@ def multiply(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 
 @binary_op
-def subtract(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def subtract(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which applies f(x) = A-B to the input nodes element-wise.
 
     :param left_node: The node providing data for left hand side of operator.
     :param right_node: The node providing data for right hand side of operator.
+    :param auto_broadcast: The type of broadcasting that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: numpy, explicit.
     :param name: The optional name for output node.
     :return: The new output node performing subtraction operation on both tensors element-wise.
     """
-    return Subtract(left_node, right_node)
+    return _get_node_factory().create('Subtract',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @binary_op
-def add(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def add(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which applies f(x) = A+B to the input nodes element-wise."""
-    return _get_node_factory().create('Add', [left_node, right_node])
+    return _get_node_factory().create('Add',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @binary_op
-def minimum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def minimum(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which applies the minimum operation to input nodes elementwise."""
-    return Minimum(left_node, right_node)
+    return _get_node_factory().create('Minimum',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @binary_op
-def maximum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def maximum(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which applies the maximum operation to input nodes elementwise."""
-    return _get_node_factory().create('Maximum', [left_node, right_node])
+    return _get_node_factory().create('Maximum',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @binary_op
 def power(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which perform element-wise exponentiation operation.
 
     :param left_node: The node providing the base of operation.
@@ -1022,7 +1036,7 @@ def power(left_node, right_node, auto_broadcast='NUMPY', name=None):
 # Logical ops
 @binary_op
 def equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which checks if input nodes are equal element-wise.
 
     :param left_node: The first input node for equal operation.
@@ -1039,7 +1053,7 @@ def equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 @binary_op
 def not_equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which checks if input nodes are unequal element-wise.
 
     :param left_node: The first input node for not-equal operation.
@@ -1056,7 +1070,7 @@ def not_equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 @binary_op
 def greater(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which checks if left input node is greater than the right node element-wise.
 
     :param left_node: The first input node providing data.
@@ -1073,7 +1087,7 @@ def greater(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 @binary_op
 def greater_equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which checks if left node is greater or equal to the right node element-wise.
 
     :param left_node: The first input node providing data.
@@ -1091,7 +1105,7 @@ def greater_equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 @binary_op
 def less(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which checks if left input node is less than the right node element-wise.
 
     :param left_node: The first input node providing data.
@@ -1108,7 +1122,7 @@ def less(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 @binary_op
 def less_equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which checks if left input node is less or equal the right node element-wise.
 
     :param left_node: The first input node providing data.
@@ -1126,7 +1140,7 @@ def less_equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 @binary_op
 def logical_and(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which perform logical and operation on input nodes element-wise.
 
     :param left_node: The first input node providing data.
@@ -1143,7 +1157,7 @@ def logical_and(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 @binary_op
 def logical_or(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which performs logical OR operation on input nodes element-wise.
 
     :param left_node: The first input node providing data.
@@ -1160,7 +1174,7 @@ def logical_or(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 @binary_op
 def logical_xor(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Return node which performs logical XOR operation on input nodes element-wise.
 
     :param left_node: The first input node providing data.
@@ -1187,17 +1201,22 @@ def logical_not(node, name=None):  # type: (Node, str) -> Node
 
 
 @binary_op
-def squared_difference(x1, x2, name=None):  # type: (Node, Node, str) -> Node
+def squared_difference(x1, x2, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, Optional[str]) -> Node
     """Perform an element-wise squared difference between two tensors.
 
     .. math:: y[i] = (x_1[i] - x_2[i])^2
 
     :param x1: The node with first input tensor.
     :param x2: The node with second input tensor.
+    :param auto_broadcast: The type of broadcasting that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: numpy, explicit.
     :param name: Optional new name for output node.
     :return: The new node performing a squared difference between two tensors.
     """
-    return SquaredDifference(x1, x2)
+    return _get_node_factory().create('SquaredDifference',
+                                      [x1, x2],
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 # Extend Node class to support binary operators
