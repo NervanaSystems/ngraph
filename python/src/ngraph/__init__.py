@@ -83,6 +83,7 @@ from ngraph.ops import matmul
 from ngraph.ops import max_pool
 from ngraph.ops import maximum
 from ngraph.ops import minimum
+from ngraph.ops import mod
 from ngraph.ops import multiply
 from ngraph.ops import mvn
 from ngraph.ops import negative
