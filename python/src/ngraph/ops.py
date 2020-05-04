@@ -1106,6 +1106,7 @@ def logical_and(left_node, right_node, auto_broadcast='NUMPY', name=None):
                                       [left_node, right_node],
                                       {'auto_broadcast': auto_broadcast.upper()})
 
+
 @binary_op
 def logical_or(left_node, right_node, auto_broadcast='NUMPY', name=None):
     # type: (NodeInput, NodeInput, str, str) -> Node
@@ -1201,8 +1202,8 @@ def broadcast(node, new_shape, broadcast_axes=None, auto_broadcast='numpy', name
     """
     # TODO: update to use opset3 by default
     return _get_node_factory('opset1').create('Broadcast',
-                                      [node, new_shape, broadcast_axes],
-                                      {'auto_broadcast': auto_broadcast})
+                                              [node, new_shape, broadcast_axes],
+                                              {'auto_broadcast': auto_broadcast})
 
 
 @nameable_op
@@ -2105,7 +2106,7 @@ def topk(data,   # type: Node
     """
     # TODO: update to use opset3 by default
     return _get_node_factory('opset1').create('TopK', [data, k],
-                                      {'axis': axis, 'mode': mode, 'sort': sort})
+                                              {'axis': axis, 'mode': mode, 'sort': sort})
 
 
 @nameable_op
@@ -2263,23 +2264,6 @@ def scatter_update(data, indices, updates, axis):
 
 
 @nameable_op
-def scatter_update(data, indices, updates, axis):
-    # type: (Node, NodeInput, NodeInput, NodeInput) -> Node
-    """Return a node which produces a ScatterUpdate operation.
-
-    ScatterUpdate sets new values to slices from data addressed by indices.
-
-    :param data:    The input tensor to be updated.
-    :param indices: The tensor with indexes which will be updated.
-    :param updates: The tensor with update values.
-    :param axis:    The axis at which elements will be updated.
-    :return: ScatterUpdate node
-    """
-    return _get_node_factory().create('ScatterUpdate', [data, as_node(indices),
-                                                        as_node(updates), as_node(axis)])
-
-
-@nameable_op
 def scatter_elements_update(data, indices, updates, axis):
     # type: (Node, NodeInput, NodeInput, NodeInput) -> Node
     """Return a node which produces a ScatterElementsUpdate operation.
@@ -2332,7 +2316,7 @@ def psroi_pooling(input,  # type: Node
                   spatial_bins_x,  # type: int
                   spatial_bins_y,  # type: int
                   mode,  # type: str
-                  name=None  # type: str
+                  name=None,  # type: str
                   ):  # type: (...) -> Node
     """Return a node which produces a PSROIPooling operation.
 
@@ -2354,8 +2338,8 @@ def psroi_pooling(input,  # type: Node
                                           'spatial_scale': spatial_scale,
                                           'spatial_bins_x': spatial_bins_x,
                                           'spatial_bins_y': spatial_bins_y,
-                                          'mode': mode
-                                      })
+                                          'mode': mode,
+    })
 
 
 @nameable_op
@@ -2370,5 +2354,4 @@ def reverse_sequence(input, seq_lengths, batch_axis, seq_axis, name=None):
     :return: ReverseSequence node
     """
     return _get_node_factory().create('ReverseSequence', [input, as_node(seq_lengths)],
-                                      {'batch_axis': batch_axis,
-                                       'seq_axis': seq_axis})
+                                      {'batch_axis': batch_axis, 'seq_axis': seq_axis})
