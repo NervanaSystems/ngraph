@@ -18,7 +18,6 @@ import pytest
 
 import ngraph as ng
 from ngraph.impl import Type
-from test.ngraph.util import run_op_node, get_runtime
 
 np_types = [np.float32, np.int32]
 
@@ -164,7 +163,7 @@ def test_gather_tree(dtype):
 def test_roi_pooling():
     inputs = ng.parameter([2, 3, 4, 5], dtype=np.float32)
     coords = ng.parameter([150, 5], dtype=np.float32)
-    node = ng.roi_pooling(inputs, coords, [6, 6], 0.0625, "Max")
+    node = ng.roi_pooling(inputs, coords, [6, 6], 0.0625, 'Max')
 
     assert node.get_type_name() == 'ROIPooling'
     assert node.get_output_size() == 1
@@ -175,7 +174,7 @@ def test_roi_pooling():
 def test_psroi_pooling():
     inputs = ng.parameter([1, 3, 4, 5], dtype=np.float32)
     coords = ng.parameter([150, 5], dtype=np.float32)
-    node = ng.psroi_pooling(inputs, coords, 2, 6, 0.0625, 0, 0, "Avg")
+    node = ng.psroi_pooling(inputs, coords, 2, 6, 0.0625, 0, 0, 'Avg')
 
     assert node.get_type_name() == 'PSROIPooling'
     assert node.get_output_size() == 1
