@@ -80,14 +80,14 @@ namespace
     template <element::Type_t INPUT_ET, element::Type_t OUT_ET>
     bool evaluate_nonzero_execute(const HostTensorPtr& input, const HostTensorPtr& output)
     {
-        using T = typename element_type_traits<INPUT_ET>::value_type;
-        using U = typename element_type_traits<OUT_ET>::value_type;
+        using IN_T = typename element_type_traits<INPUT_ET>::value_type;
+        using OUT_T = typename element_type_traits<OUT_ET>::value_type;
 
         Shape input_shape = input->get_shape();
         size_t input_rank = input_shape.size();
 
         size_t non_zero_count =
-            runtime::reference::non_zero_get_count<T>(input->get_data_ptr<INPUT_ET>(), input_shape);
+            runtime::reference::non_zero_get_count<IN_T>(input->get_data_ptr<INPUT_ET>(), input_shape);
 
         Shape out_shape;
         if (non_zero_count == 0)
@@ -104,7 +104,7 @@ namespace
         }
 
         output->set_shape(out_shape);
-        runtime::reference::non_zero<T, U>(
+        runtime::reference::non_zero<IN_T, OUT_T>(
             input->get_data_ptr<INPUT_ET>(), output->get_data_ptr<OUT_ET>(), input_shape);
 
         return true;
@@ -113,14 +113,19 @@ namespace
     template <element::Type_t INPUT_ET>
     bool evaluate(const HostTensorPtr& input, const HostTensorPtr& output)
     {
-        if (output->get_element_type() == element::i64)
+        bool rc = true;
+        switch (output->get_element_type())
         {
-            return evaluate_nonzero_execute<INPUT_ET, element::Type_t::i64>(input, output);
+            case element::Type_t::i64:
+            rc = evaluate_nonzero_execute<INPUT_ET, element::Type_t::i64>(input, output);
+            break;
+            case element::Type_t::i32:
+            rc = evaluate_nonzero_execute<INPUT_ET, element::Type_t::i32>(input, output);
+            break;
+            default: rc = false; break;
         }
-        else
-        {
-            return evaluate_nonzero_execute<INPUT_ET, element::Type_t::i32>(input, output);
-        }
+
+        return rc;
     }
 
     bool evaluate_nonzero(const HostTensorPtr& input, const HostTensorPtr& output)
@@ -159,13 +164,5 @@ namespace
 
 bool op::v3::NonZero::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    if (outputs[0]->get_element_type() != element::i64 &&
-        outputs[0]->get_element_type() != element::i32)
-    {
-        return false;
-    }
-    else
-    {
-        return evaluate_nonzero(inputs[0], outputs[0]);
-    }
+    return evaluate_nonzero(inputs[0], outputs[0]);
 }
