@@ -35,9 +35,14 @@ namespace ngraph
                 /// \param data 4-D Input data to extract image patches
                 /// \param sizes Patch size in the format of [size_rows, size_cols]
                 /// \param strides Patch movement stride in the format of [stride_rows, stride_cols]
-                /// \param rates Element seleciton rate for creating a patch. in the format of [rate_rows, rate_cols]
-                /// \param padding Padding type. it can be any value from valid, same_lower, same_upper
-                ExtractImagePatches(const Output<Node>& data, const Shape sizes, const Strides strides, const Shape rates, const PadType padding );
+                /// \param rates Element seleciton rate for creating a patch. in the format of
+                /// [rate_rows, rate_cols] \param padding Padding type. it can be any value from
+                /// valid, same_lower, same_upper
+                ExtractImagePatches(const Output<Node>& data,
+                                    const Shape sizes,
+                                    const Strides strides,
+                                    const Shape rates,
+                                    const PadType padding);
 
                 void validate_and_infer_types() override;
                 bool visit_attributes(AttributeVisitor& visitor) override;
@@ -46,17 +51,16 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const Shape& get_sizes() const { return m_patch_sizes; }
-                void  set_sizes(const Shape _sizes) { m_patch_sizes=_sizes; }
+                void set_sizes(const Shape _sizes) { m_patch_sizes = _sizes; }
 
                 const Strides& get_strides() const { return m_patch_movement_strides; }
-                void  set_strides(const Strides _strides) { m_patch_movement_strides =  _strides; }
-                
+                void set_strides(const Strides _strides) { m_patch_movement_strides = _strides; }
+
                 const Shape& get_rates() const { return m_patch_selection_rates; }
-                void  set_rates(const Shape _rates) { m_patch_selection_rates = _rates; }
-                
-                
+                void set_rates(const Shape _rates) { m_patch_selection_rates = _rates; }
+
                 const PadType& get_padding() const { return m_padding; }
-                void set_padding(PadType _padding)  { m_padding = _padding; }
+                void set_padding(PadType _padding) { m_padding = _padding; }
 
             private:
                 Shape m_patch_sizes;

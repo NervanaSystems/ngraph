@@ -24,7 +24,11 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v3::ExtractImagePatches::type_info;
 
-op::v3::ExtractImagePatches::ExtractImagePatches(const Output<Node>& image, const Shape sizes, const Strides strides, const Shape rates, const PadType padding )
+op::v3::ExtractImagePatches::ExtractImagePatches(const Output<Node>& image,
+                                                 const Shape sizes,
+                                                 const Strides strides,
+                                                 const Shape rates,
+                                                 const PadType padding)
     : Op({image})
     , m_patch_sizes(sizes)
     , m_patch_movement_strides(strides)
@@ -36,7 +40,7 @@ op::v3::ExtractImagePatches::ExtractImagePatches(const Output<Node>& image, cons
 
 void op::v3::ExtractImagePatches::validate_and_infer_types()
 {
-    const PartialShape  input_Pshape = get_input_partial_shape(0);
+    const PartialShape input_Pshape = get_input_partial_shape(0);
 
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(0).is_integral_number(),
@@ -61,28 +65,27 @@ void op::v3::ExtractImagePatches::validate_and_infer_types()
             m_padding == PadType::SAME_UPPER,
         "Attribute padding should be in either valid or same_lower or same_upper.");
 
-
-
     if (input_Pshape.is_dynamic())
     {
         set_input_is_relevant_to_shape(0);
-        auto output_Pshape =  PartialShape::dynamic(4);
+        auto output_Pshape = PartialShape::dynamic(4);
         set_output_type(0, get_input_element_type(0), output_Pshape);
     }
-    else{
+    else
+    {
         Shape input_shape = get_input_shape(0); // as input shape is static
         size_t out_rows((input_shape[2] - 1) / m_patch_movement_strides[0]);
         size_t out_cols((input_shape[3] - 1) / m_patch_movement_strides[1]);
         if (m_padding == PadType::VALID)
         {
-            out_rows = ((input_shape[2] -
-                         (m_patch_selection_rates[0]) * (m_patch_sizes[0] - 1) - 1) /
-                        m_patch_movement_strides[0]) +
-                       1;
-            out_cols = ((input_shape[3] -
-                         (m_patch_selection_rates[1]) * (m_patch_sizes[1] - 1) - 1) /
-                        m_patch_movement_strides[1]) +
-                       1;
+            out_rows =
+                ((input_shape[2] - (m_patch_selection_rates[0]) * (m_patch_sizes[0] - 1) - 1) /
+                 m_patch_movement_strides[0]) +
+                1;
+            out_cols =
+                ((input_shape[3] - (m_patch_selection_rates[1]) * (m_patch_sizes[1] - 1) - 1) /
+                 m_patch_movement_strides[1]) +
+                1;
         }
         Shape output_shape;
         output_shape.push_back(input_shape[0]);
@@ -113,5 +116,9 @@ shared_ptr<Node>
     op::v3::ExtractImagePatches::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<op::v3::ExtractImagePatches>(new_args.at(0), m_patch_sizes, m_patch_movement_strides, m_patch_selection_rates, m_padding);
+    return make_shared<op::v3::ExtractImagePatches>(new_args.at(0),
+                                                    m_patch_sizes,
+                                                    m_patch_movement_strides,
+                                                    m_patch_selection_rates,
+                                                    m_padding);
 }
