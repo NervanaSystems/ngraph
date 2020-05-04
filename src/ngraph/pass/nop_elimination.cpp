@@ -69,17 +69,17 @@ static bool eliminate_sum(const std::shared_ptr<Node>& node)
     }
     return false;
 }
-/*************************
- * Eliminates 3 types of spines with converts:
- *
- * 1. [ op1--> convert2(type A->B)--> ReduceMin--> convert1(type B->A)--> op2 ] to
- *                    [ op1--> ReduceMin--> op2 ]
- * 2. [ op3--> convert1-->  NonZero--> op4 ] to
- *                    [ op3--> NonZero--> op4 ]
- * 3. [ op5--> convert1--> convert2--> op6 ] to
- *                    [op5--> convert2--> op6 ]
- *
- **************************/
+//************************
+// Eliminates 3 types of spines with converts:
+//
+// 1. [ op1--> convert2(type A->B)--> ReduceMin--> convert1(type B->A)--> op2 ] to
+//                    [ op1--> ReduceMin--> op2 ]
+// 2. [ op3--> convert1-->  NonZero--> op4 ] to
+//                    [ op3--> NonZero--> op4 ]
+// 3. [ op5--> convert1--> convert2--> op6 ] to
+//                    [op5--> convert2--> op6 ]
+//
+//*************************
 static bool eliminate_convert(const std::shared_ptr<Node>& node)
 {
     auto convert = as_type_ptr<opset3::Convert>(node);
