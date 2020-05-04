@@ -162,21 +162,18 @@ TEST(eval, evaluate_convert)
     auto p = make_shared<op::Parameter>(element::f32, PartialShape{-1, -1});
     auto convert = make_shared<op::v0::Convert>(p, element::i8);
     auto fun = make_shared<Function>(OutputVector{convert}, ParameterVector{p});
-    auto p_arg = op::Constant::create<float>(
-        element::f32, Shape{2, 3}, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
-    EvaluatorTensorVector inputs;
-    inputs.push_back(op::v0::Constant::create_evaluator_tensor(p_arg));
-    EvaluatorTensorVector outputs;
-    auto result = fun->get_results()[0];
-    auto result_tensor = op::v0::Constant::create_evaluator_tensor(
-        result->get_output_element_type(0), result->get_output_shape(0));
-    outputs.push_back(result_tensor);
-    ASSERT_TRUE(fun->evaluate(outputs, inputs));
-    auto c = result_tensor->get_constant();
-    ASSERT_TRUE(c);
-    EXPECT_EQ(c->get_output_element_type(0), element::i8);
-    EXPECT_EQ(c->get_output_partial_shape(0), (PartialShape{2}));
-    auto cshape = c->get_vector<int64_t>();
-    vector<int64_t> arg_shape{2, 3};
-    ASSERT_EQ(cshape, arg_shape);
+
+    std::vector<std::vector<float>> inputs{{-1, 1}};
+    std::vector<std::vector<int64_t>> expected_result{{-1, 1}};
+    for (size_t i = 0; i < inputs.size(); i++)
+    {
+        auto result = make_shared<HostTensor>();
+        ASSERT_TRUE(
+            fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{2}, inputs[i])}));
+        EXPECT_EQ(result->get_element_type(), element::i64);
+        EXPECT_EQ(result->get_shape(), (Shape{2}));
+        auto result_data = read_vector<int64_t>(result);
+        ASSERT_EQ(result_data, expected_result[i]);
+    }
+
 }

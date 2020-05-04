@@ -60,17 +60,17 @@ void op::Convert::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
 namespace
 {
     template <element::Type_t ET>
-    bool try_evaluate_convert(const EvaluatorTensorPtr& arg,
-                              const EvaluatorTensorPtr& out,
+    bool try_evaluate_convert(const HostTensorPtr& arg,
+                              const HostTensorPtr& out,
                               size_t count)
 
     {
         return (ET == arg->get_element_type()) &&
-               (runtime::reference::convert(arg->get_ptr<ET>(), out->get_ptr<ET>(), count), true);
+               (runtime::reference::convert(arg->get_data_ptr<ET>(), out->get_data_ptr<ET>(), count), true);
     }
 
     bool
-        evaluate_convert(const EvaluatorTensorPtr& arg, const EvaluatorTensorPtr& out, size_t count)
+        evaluate_convert(const HostTensorPtr& arg, const HostTensorPtr& out, size_t count)
     {
         return try_evaluate_convert<element::Type_t::i8>(arg, out, count) ||
                try_evaluate_convert<element::Type_t::i16>(arg, out, count) ||
@@ -85,8 +85,8 @@ namespace
     }
 }
 
-bool op::v0::Convert::evaluate(const EvaluatorTensorVector& output_values,
-                               const EvaluatorTensorVector& input_values)
+bool op::v0::Convert::evaluate(const HostTensorVector& output_values,
+                               const HostTensorVector& input_values)
 {
     return evaluate_convert(
         input_values[0], output_values[0], output_values[0]->get_element_count());

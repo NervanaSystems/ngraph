@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 
 namespace ngraph
 {
@@ -54,8 +55,8 @@ namespace ngraph
                 }
 
                 size_t get_version() const override { return 0; }
-                bool evaluate(const EvaluatorTensorVector& outputs,
-                              const EvaluatorTensorVector& inputs) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
 
             protected:
                 ngraph::element::Type m_destination_type;
