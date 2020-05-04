@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
-#include "ngraph/op/abs.hpp"
 #include "ngraph/op/all.hpp"
 #include "ngraph/op/any.hpp"
 #include "ngraph/op/ceiling.hpp"
@@ -26,7 +25,6 @@
 #include "ngraph/op/round.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sqrt.hpp"
-#include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
@@ -42,9 +40,9 @@ using namespace ngraph;
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
-    return is_type<op::Abs>(n) || is_type<op::Ceiling>(n) || is_type<op::Floor>(n) ||
-           is_type<op::Negative>(n) || is_type<op::Not>(n) || is_type<op::Relu>(n) ||
-           is_type<op::Round>(n) || is_type<op::Sign>(n) || is_type<op::Sqrt>(n);
+    return is_type<op::Ceiling>(n) || is_type<op::Floor>(n) || is_type<op::Negative>(n) ||
+           is_type<op::Not>(n) || is_type<op::Relu>(n) || is_type<op::Round>(n) ||
+           is_type<op::Sign>(n) || is_type<op::Sqrt>(n);
 }
 
 template <class T>
@@ -66,12 +64,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
     }
     else
     {
-        if (is_type<op::Abs>(unary))
-        {
-            runtime::reference::abs<T>(
-                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
-        }
-        else if (is_type<op::Ceiling>(unary))
+        if (is_type<op::Ceiling>(unary))
         {
             runtime::reference::ceiling<T>(
                 constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));

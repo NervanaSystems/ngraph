@@ -59,12 +59,8 @@ namespace
 
     bool evaluate_abs(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
     {
-        if (arg0->get_element_type() != out->get_element_type())
-        {
-            return false;
-        }
         bool rc = true;
-        out->set_shape(arg0->get_shape());
+        out->set_unary(arg0);
 
         switch (arg0->get_element_type())
         {
