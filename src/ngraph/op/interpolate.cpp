@@ -20,11 +20,11 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Interpolate::type_info;
+constexpr NodeTypeInfo op::v0::Interpolate::type_info;
 
-op::Interpolate::Interpolate(const Output<Node>& image,
-                             const Output<Node>& output_shape,
-                             const InterpolateAttrs& attrs)
+op::v0::Interpolate::Interpolate(const Output<Node>& image,
+                                 const Output<Node>& output_shape,
+                                 const op::v0::InterpolateAttrs& attrs)
     : Op({image, output_shape})
     , m_attrs(attrs)
 {
@@ -42,7 +42,7 @@ bool op::v0::Interpolate::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-void op::Interpolate::validate_and_infer_types()
+void op::v0::Interpolate::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(1).is_integral_number(),
@@ -71,29 +71,30 @@ void op::Interpolate::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), output_shape);
 }
 
-shared_ptr<Node> op::Interpolate::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Interpolate::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Interpolate>(new_args.at(0), new_args.at(1), m_attrs);
+    return make_shared<op::v0::Interpolate>(new_args.at(0), new_args.at(1), m_attrs);
 }
 
 namespace ngraph
 {
     template <>
-    EnumNames<op::Interpolate::InterpolateMode>& EnumNames<op::Interpolate::InterpolateMode>::get()
+    EnumNames<op::v0::Interpolate::InterpolateMode>&
+        EnumNames<op::v0::Interpolate::InterpolateMode>::get()
     {
-        static auto enum_names = EnumNames<op::Interpolate::InterpolateMode>(
-            "op::Interpolate::InterpolateMode",
-            {{"nearest", op::Interpolate::InterpolateMode::nearest},
-             {"linear", op::Interpolate::InterpolateMode::linear},
-             {"cubic", op::Interpolate::InterpolateMode::cubic},
-             {"area", op::Interpolate::InterpolateMode::area}});
+        static auto enum_names = EnumNames<op::v0::Interpolate::InterpolateMode>(
+            "op::v0::Interpolate::InterpolateMode",
+            {{"nearest", op::v0::Interpolate::InterpolateMode::nearest},
+             {"linear", op::v0::Interpolate::InterpolateMode::linear},
+             {"cubic", op::v0::Interpolate::InterpolateMode::cubic},
+             {"area", op::v0::Interpolate::InterpolateMode::area}});
         return enum_names;
     }
 
-    constexpr DiscreteTypeInfo AttributeAdapter<op::Interpolate::InterpolateMode>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v0::Interpolate::InterpolateMode>::type_info;
 
-    std::ostream& operator<<(std::ostream& s, const op::Interpolate::InterpolateMode& type)
+    std::ostream& operator<<(std::ostream& s, const op::v0::Interpolate::InterpolateMode& type)
     {
         return s << as_string(type);
     }
@@ -105,7 +106,7 @@ constexpr NodeTypeInfo op::v3::Interpolate::type_info;
 
 op::v3::Interpolate::Interpolate(const Output<Node>& image,
                                  const Output<Node>& output_shape,
-                                 const InterpolateAttrs& attrs)
+                                 const op::v3::Interpolate::InterpolateAttrs& attrs)
     : Op({image, output_shape})
     , m_attrs(attrs)
 {
