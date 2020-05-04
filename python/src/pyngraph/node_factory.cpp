@@ -142,11 +142,10 @@ public:
     }
 
 private:
-    const ngraph::OpSet& get_opset(const std::string& opset_ver)
+    const ngraph::OpSet& get_opset(std::string opset_ver)
     {
-        std::string opset_ver_ = opset_ver;
         std::locale loc;
-        std::transform(opset_ver_.begin(), opset_ver_.end(), opset_ver_.begin(), [&loc](char c) {
+        std::transform(opset_ver.begin(), opset_ver.end(), opset_ver.begin(), [&loc](char c) {
             return std::tolower(c, loc);
         });
 
@@ -159,7 +158,7 @@ private:
             {"opset3", OpsetFunction(ngraph::get_opset3)},
         };
 
-        auto it = s_opsets.find(opset_ver_);
+        auto it = s_opsets.find(opset_ver);
         if (it == s_opsets.end())
         {
             throw ngraph::ngraph_error("Unsupported opset version requested.");
