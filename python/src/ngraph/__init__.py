@@ -95,6 +95,8 @@ from ngraph.ops import psroi_pooling
 from ngraph.ops import quantize
 from ngraph.ops import quantized_convolution
 from ngraph.ops import quantized_dot
+from ngraph.ops import reduce_logical_and
+from ngraph.ops import reduce_logical_or
 from ngraph.ops import reduce_max
 from ngraph.ops import reduce_mean
 from ngraph.ops import reduce_min

@@ -1821,6 +1821,38 @@ def reduce_mean(node, reduction_axes, keep_dims=False, name=None):
 
 
 @nameable_op
+def reduce_logical_and(node, reduction_axes, keep_dims=False, name=None):
+    # type: (Node, Node, bool, str) -> Node
+    """Logical AND reduction operation on input tensor, eliminating the specified reduction axes.
+
+    :param node:           The tensor we want to reduce.
+    :param reduction_axes: The axes to eliminate through AND operation.
+    :param keep_dims:      If set to True it holds axes that are used for reduction
+    :param name:           Optional name for output node.
+    :return: The new node performing reduction operation.
+    """
+    return _get_node_factory().create('ReduceLogicalAnd',
+                                      [node, reduction_axes],
+                                      {'keep_dims': keep_dims})
+
+
+@nameable_op
+def reduce_logical_or(node, reduction_axes, keep_dims=False, name=None):
+    # type: (Node, Node, bool, str) -> Node
+    """Logical OR reduction operation on input tensor, eliminating the specified reduction axes.
+
+    :param node:           The tensor we want to reduce.
+    :param reduction_axes: The axes to eliminate through OR operation.
+    :param keep_dims:      If set to True it holds axes that are used for reduction
+    :param name:           Optional name for output node.
+    :return: The new node performing reduction operation.
+    """
+    return _get_node_factory().create('ReduceLogicalOr',
+                                      [node, reduction_axes],
+                                      {'keep_dims': keep_dims})
+
+
+@nameable_op
 def prelu(data, slope, name=None):  # type: (Node, Node, str) -> Node
     """Perform Parametrized Relu operation element-wise on data from input node.
 
