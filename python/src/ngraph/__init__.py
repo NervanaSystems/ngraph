@@ -65,13 +65,13 @@ from ngraph.ops import gelu
 from ngraph.ops import gemm
 from ngraph.ops import get_output_element
 from ngraph.ops import greater
-from ngraph.ops import greater_eq
+from ngraph.ops import greater_equal
 from ngraph.ops import grn
 from ngraph.ops import group_convolution
 from ngraph.ops import group_convolution_backprop_data
 from ngraph.ops import hard_sigmoid
 from ngraph.ops import less
-from ngraph.ops import less_eq
+from ngraph.ops import less_equal
 from ngraph.ops import log
 from ngraph.ops import logical_and
 from ngraph.ops import logical_or

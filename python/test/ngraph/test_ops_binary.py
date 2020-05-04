@@ -32,9 +32,9 @@ from test.ngraph.util import get_runtime, run_op_node
     (ng.equal, np.equal),
     (ng.not_equal, np.not_equal),
     (ng.greater, np.greater),
-    (ng.greater_eq, np.greater_equal),
+    (ng.greater_equal, np.greater_equal),
     (ng.less, np.less),
-    (ng.less_eq, np.less_equal),
+    (ng.less_equal, np.less_equal),
 ])
 def test_binary_op(ng_api_helper, numpy_function):
     runtime = get_runtime()
@@ -64,9 +64,9 @@ def test_binary_op(ng_api_helper, numpy_function):
     (ng.equal, np.equal),
     (ng.not_equal, np.not_equal),
     (ng.greater, np.greater),
-    (ng.greater_eq, np.greater_equal),
+    (ng.greater_equal, np.greater_equal),
     (ng.less, np.less),
-    (ng.less_eq, np.less_equal),
+    (ng.less_equal, np.less_equal),
 ])
 def test_binary_op_with_scalar(ng_api_helper, numpy_function):
     runtime = get_runtime()
