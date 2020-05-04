@@ -873,7 +873,7 @@ def relu(node, name=None):  # type: (NodeInput, str) -> Node
 def selu(data, alpha, lambda_value, name=None):
     # type: (NodeInput, NodeInput, NodeInput, Optional[str]) -> Node
     """Perform a Scaled Exponential Linear Unit (SELU) operation on input node element-wise.
-    
+
     :param data: input node, array or scalar.
     :param alpha: Alpha coefficient of SELU operation
     :param lambda_value: Lambda coefficient of SELU operation
@@ -1401,6 +1401,18 @@ def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Nod
     """Return node which casts input node values to specified type."""
     new_element_type = get_element_type(new_type)
     return Convert(node, new_element_type)
+
+
+@binary_op
+def convert_like(data, like, name=None):  # type: (Node, NumericType, str) -> Node
+    """Return node which casts data node values to the type of another node.
+
+    :param data: Node which produces the input tensor
+    :param like: Node which provides the target type information for the conversion
+    :param name: Optional name for the output node.
+    :return: New node performing the conversion operation.
+    """
+    return _get_node_factory().create('ConvertLike', [data, like])
 
 
 @nameable_op
