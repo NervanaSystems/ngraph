@@ -153,5 +153,10 @@ namespace ngraph
             AttributeAdapter<op::AutoBroadcastType> adapter(value.m_type);
             on_adapter(name, adapter);
         }
+        void on_attribute(const std::string& name, op::BroadcastModeSpec& value)
+        {
+            AttributeAdapter<op::BroadcastType> adapter(value.m_type);
+            on_adapter(name, adapter);
+        }
     };
 }
