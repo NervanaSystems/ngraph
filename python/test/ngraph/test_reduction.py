@@ -45,6 +45,25 @@ def test_reduction_ops(ng_api_helper, numpy_function, reduction_axes):
     assert np.allclose(result, expected)
 
 
+@pytest.mark.parametrize('ng_api_helper, numpy_function, reduction_axes', [
+    (ng.reduce_logical_and, np.logical_and.reduce, [0]),
+    (ng.reduce_logical_or, np.logical_or.reduce, [0]),
+    (ng.reduce_logical_and, np.logical_and.reduce, [0, 2]),
+    (ng.reduce_logical_or, np.logical_or.reduce, [0, 2]),
+    (ng.reduce_logical_and, np.logical_and.reduce, [0, 1, 2, 3]),
+    (ng.reduce_logical_or, np.logical_or.reduce, [0, 1, 2, 3]),
+])
+@pytest.mark.skip_on_interpreter
+def test_reduction_logical_ops(ng_api_helper, numpy_function, reduction_axes):
+    shape = [2, 4, 3, 2]
+    np.random.seed(133391)
+    input_data = np.random.randn(*shape).astype(np.bool)
+
+    expected = numpy_function(input_data, axis=tuple(reduction_axes))
+    result = run_op_node([input_data, reduction_axes], ng_api_helper)
+    assert np.allclose(result, expected)
+
+
 @pytest.mark.skip_on_gpu
 def test_argmax():
     runtime = get_runtime()
