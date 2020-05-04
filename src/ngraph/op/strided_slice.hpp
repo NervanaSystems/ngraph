@@ -103,6 +103,11 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
                 void validate_and_infer_types() override;
                 size_t get_version() const override { return 1; }
+                bool evaluate(const HostTensorVector& output_values,
+                              const HostTensorVector& input_values) override;
+                bool constant_fold(OutputVector& output_values,
+                                   const OutputVector& input_values) override;
+
             protected:
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;
