@@ -86,10 +86,10 @@ namespace ngraph
     {
         static auto enum_names = EnumNames<op::Interpolate::InterpolateMode>(
             "op::Interpolate::InterpolateMode",
-            {{"nearest", op::Interpolate::InterpolateMode::NEAREST},
-             {"linear", op::Interpolate::InterpolateMode::LINEAR},
-             {"cubic", op::Interpolate::InterpolateMode::CUBIC},
-             {"area", op::Interpolate::InterpolateMode::AREA}});
+            {{"nearest", op::Interpolate::InterpolateMode::nearest},
+             {"linear", op::Interpolate::InterpolateMode::linear},
+             {"cubic", op::Interpolate::InterpolateMode::cubic},
+             {"area", op::Interpolate::InterpolateMode::area}});
         return enum_names;
     }
 
@@ -107,7 +107,7 @@ constexpr NodeTypeInfo op::v3::Interpolate::type_info;
 
 op::v3::Interpolate::Interpolate(const Output<Node>& image,
                                  const Output<Node>& output_shape,
-                                 const op::v3::InterpolateAttrs& attrs)
+                                 const InterpolateAttrs& attrs)
     : Op({image, output_shape})
     , m_attrs(attrs)
 {
@@ -129,10 +129,6 @@ bool op::v3::Interpolate::visit_attributes(AttributeVisitor& visitor)
 
 void op::v3::Interpolate::validate_and_infer_types()
 {
-    // Check if string attribute is valid by converting to and back from valid enum type
-    m_attrs.mode = as_string<InterpolateMode>(as_enum<InterpolateMode>(m_attrs.mode));
-    m_attrs.coordinate_transformation_mode = as_string<CoordinateTransformMode>(
-        as_enum<CoordinateTransformMode>(m_attrs.coordinate_transformation_mode));
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(1).is_integral_number(),
                           "output shape must be an integral number.");
@@ -174,10 +170,10 @@ namespace ngraph
     {
         static auto enum_names = EnumNames<op::v3::Interpolate::InterpolateMode>(
             "op::v3::Interpolate::InterpolateMode",
-            {{"nearest", op::v3::Interpolate::InterpolateMode::NEAREST},
-             {"linear", op::v3::Interpolate::InterpolateMode::LINEAR},
-             {"cubic", op::v3::Interpolate::InterpolateMode::CUBIC},
-             {"area", op::v3::Interpolate::InterpolateMode::AREA}});
+            {{"nearest", op::v3::Interpolate::InterpolateMode::nearest},
+             {"linear", op::v3::Interpolate::InterpolateMode::linear},
+             {"cubic", op::v3::Interpolate::InterpolateMode::cubic},
+             {"area", op::v3::Interpolate::InterpolateMode::area}});
         return enum_names;
     }
 
@@ -194,12 +190,12 @@ namespace ngraph
     {
         static auto enum_names = EnumNames<op::v3::Interpolate::CoordinateTransformMode>(
             "op::v3::Interpolate::CoordinateTransformMode",
-            {{"half_pixel", op::v3::Interpolate::CoordinateTransformMode::HALF_PIXEL},
+            {{"half_pixel", op::v3::Interpolate::CoordinateTransformMode::half_pixel},
              {"pytorch_half_pixel",
-              op::v3::Interpolate::CoordinateTransformMode::PYTORCH_HALF_PIXEL},
-             {"asymmetric", op::v3::Interpolate::CoordinateTransformMode::ASYMMETRIC},
+              op::v3::Interpolate::CoordinateTransformMode::pytorch_half_pixel},
+             {"asymmetric", op::v3::Interpolate::CoordinateTransformMode::asymmetric},
              {"tf_half_pixel_for_nn",
-              op::v3::Interpolate::CoordinateTransformMode::TF_HALF_PIXEL_FOR_NN}});
+              op::v3::Interpolate::CoordinateTransformMode::tf_half_pixel_for_nn}});
         return enum_names;
     }
 

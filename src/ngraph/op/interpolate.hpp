@@ -54,10 +54,10 @@ namespace ngraph
             public:
                 enum class InterpolateMode
                 {
-                    NEAREST,
-                    LINEAR,
-                    CUBIC,
-                    AREA
+                    nearest,
+                    linear,
+                    cubic,
+                    area
                 };
 
                 static constexpr NodeTypeInfo type_info{"Interpolate", 0};
@@ -86,49 +86,52 @@ namespace ngraph
 
         namespace v3
         {
-            struct InterpolateAttrs
-            {
-                // specify dimension indices where interpolation is applied, and `axes` is any
-                // unordered list of indeces of different dimensions of input tensor. Required.
-                AxisSet axes;
-                // specifies type of interpolation
-                // one of `nearest`, `linear`, `cubic`, `area`. Required.
-                std::string mode;
-                // specifies how to transform the coordinate in the resized tensor to the coordinate
-                // in the original tensor
-                // one of `half_pixel`, `pytorch_half_pixel`, `asymmetric`, `tf_half_pixel_for_nn`
-                std::string coordinate_transformation_mode = "half_pixel";
-                // a flag that specifies whether to align corners or not.
-                // `true` (default) means the alignment is applied,
-                // `false` means the alignment isn't applied.
-                bool align_corners = true;
-                // a flag that specifies whether to perform anti-aliasing. default is `false`
-                bool antialias = false;
-                // specify the number of pixels to add to the beginning of the image being
-                // interpolated. This addition of pixels is done before interpolation calculation.
-                std::vector<size_t> pads_begin;
-                // specify the number of pixels to add to the end of the image being interpolated.
-                // This addition of pixels is done before interpolation calculation.
-                std::vector<size_t> pads_end;
-            };
-
             class NGRAPH_API Interpolate : public Op
             {
             public:
                 enum class InterpolateMode
                 {
-                    NEAREST,
-                    LINEAR,
-                    CUBIC,
-                    AREA
+                    nearest,
+                    linear,
+                    cubic,
+                    area
                 };
 
                 enum class CoordinateTransformMode
                 {
-                    HALF_PIXEL,
-                    PYTORCH_HALF_PIXEL,
-                    ASYMMETRIC,
-                    TF_HALF_PIXEL_FOR_NN
+                    half_pixel,
+                    pytorch_half_pixel,
+                    asymmetric,
+                    tf_half_pixel_for_nn
+                };
+
+                struct InterpolateAttrs
+                {
+                    // specify dimension indices where interpolation is applied, and `axes` is any
+                    // unordered list of indeces of different dimensions of input tensor. Required.
+                    AxisSet axes;
+                    // specifies type of interpolation
+                    // one of `nearest`, `linear`, `cubic`, `area`. Required.
+                    InterpolateMode mode;
+                    // specifies how to transform the coordinate in the resized tensor to the
+                    // coordinate in the original tensor. one of `half_pixel`, `pytorch_half_pixel`,
+                    // `asymmetric`, `tf_half_pixel_for_nn`
+                    CoordinateTransformMode coordinate_transformation_mode =
+                        CoordinateTransformMode::half_pixel;
+                    // a flag that specifies whether to align corners or not.
+                    // `true` (default) means the alignment is applied,
+                    // `false` means the alignment isn't applied.
+                    bool align_corners = true;
+                    // a flag that specifies whether to perform anti-aliasing. default is `false`
+                    bool antialias = false;
+                    // specify the number of pixels to add to the beginning of the image being
+                    // interpolated. This addition of pixels is done before interpolation
+                    // calculation.
+                    std::vector<size_t> pads_begin;
+                    // specify the number of pixels to add to the end of the image being
+                    // interpolated. This addition of pixels is done before interpolation
+                    // calculation.
+                    std::vector<size_t> pads_end;
                 };
 
                 static constexpr NodeTypeInfo type_info{"Interpolate", 3};

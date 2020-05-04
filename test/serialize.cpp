@@ -20,10 +20,12 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include "ngraph/coordinate_transform.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/interpolate.hpp"
 #include "ngraph/op/passthrough.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
@@ -798,18 +800,23 @@ TEST(serialize, opset1_interpolate)
 
 TEST(serialize, opset3_interpolate)
 {
+    using op::v3::Interpolate;
+    using InterpolateMode = op::v3::Interpolate::InterpolateMode;
+    using CoordinateTransformMode = op::v3::Interpolate::CoordinateTransformMode;
+    using InterpolateAttrs = op::v3::Interpolate::InterpolateAttrs;
+
     auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
     auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
-    op::v3::InterpolateAttrs attrs;
+    InterpolateAttrs attrs;
     attrs.axes = {2, 3};
-    attrs.mode = "linear";
-    attrs.coordinate_transformation_mode = "half_pixel";
+    attrs.mode = InterpolateMode::linear;
+    attrs.coordinate_transformation_mode = CoordinateTransformMode::half_pixel;
     attrs.align_corners = true;
     attrs.antialias = false;
     attrs.pads_begin = {0, 0, 0, 0};
     attrs.pads_end = {0, 0, 0, 0};
 
-    auto op = make_shared<op::v3::Interpolate>(image, output_shape, attrs);
+    auto op = make_shared<Interpolate>(image, output_shape, attrs);
     auto result = make_shared<op::Result>(op);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{image});
     string s = serialize(f);
@@ -819,7 +826,7 @@ TEST(serialize, opset3_interpolate)
     auto g_interpolate = g_result->get_input_node_shared_ptr(0);
     auto g_op = as_type_ptr<op::v3::Interpolate>(g_interpolate);
     ASSERT_TRUE(g_op);
-    op::v3::InterpolateAttrs g_attrs = g_op->get_attrs();
+    InterpolateAttrs g_attrs = g_op->get_attrs();
     EXPECT_EQ(g_attrs.axes, attrs.axes);
     EXPECT_EQ(g_attrs.mode, attrs.mode);
     EXPECT_EQ(g_attrs.coordinate_transformation_mode, attrs.coordinate_transformation_mode);

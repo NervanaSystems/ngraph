@@ -106,83 +106,29 @@ TEST(type_prop_layers, interpolate_wrong_mode)
 
 TEST(type_prop_layers, interpolate_v3)
 {
+    using op::v3::Interpolate;
+    using InterpolateMode = op::v3::Interpolate::InterpolateMode;
+    using CoordinateTransformMode = op::v3::Interpolate::CoordinateTransformMode;
+    using InterpolateAttrs = op::v3::Interpolate::InterpolateAttrs;
+
     auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
     auto dyn_output_shape = make_shared<op::Parameter>(element::i64, Shape{2});
     auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
 
-    op::v3::InterpolateAttrs attrs;
+    InterpolateAttrs attrs;
     attrs.axes = {2, 3};
-    attrs.mode = "nearest";
+    attrs.mode = InterpolateMode::nearest;
+    attrs.coordinate_transformation_mode = CoordinateTransformMode::half_pixel;
     attrs.align_corners = true;
     attrs.antialias = false;
     attrs.pads_begin = {0, 0, 0, 0};
     attrs.pads_end = {0, 0, 0, 0};
-    auto op = make_shared<op::v3::Interpolate>(image, output_shape, attrs);
+    auto op = make_shared<Interpolate>(image, output_shape, attrs);
     ASSERT_EQ(op->get_shape(), (Shape{2, 2, 15, 30}));
 
-    EXPECT_TRUE(make_shared<op::v3::Interpolate>(image, dyn_output_shape, attrs)
+    EXPECT_TRUE(make_shared<Interpolate>(image, dyn_output_shape, attrs)
                     ->get_output_partial_shape(0)
                     .same_scheme(PartialShape{2, 2, Dimension::dynamic(), Dimension::dynamic()}));
-}
-
-TEST(type_prop_layers, interpolate_v3_wrong_mode)
-{
-    auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
-    auto dyn_output_shape = make_shared<op::Parameter>(element::i64, Shape{2});
-    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
-
-    op::v3::InterpolateAttrs attrs;
-    attrs.axes = {2, 3};
-    attrs.mode = "wrong_mode";
-    attrs.coordinate_transformation_mode = "half_pixel";
-    attrs.align_corners = true;
-    attrs.antialias = false;
-    attrs.pads_begin = {0, 0, 0, 0};
-    attrs.pads_end = {0, 0, 0, 0};
-    try
-    {
-        auto op = make_shared<op::v3::Interpolate>(image, output_shape, attrs);
-        FAIL() << "Did not detect invalid mode.";
-    }
-    catch (const CheckFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("\"wrong_mode\" is not a member of enum"));
-    }
-    catch (...)
-    {
-        FAIL() << "Invalid mode check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop_layers, interpolate_v3_wrong_coordinate_transform_mode)
-{
-    auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
-    auto dyn_output_shape = make_shared<op::Parameter>(element::i64, Shape{2});
-    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
-
-    op::v3::InterpolateAttrs attrs;
-    attrs.axes = {2, 3};
-    attrs.mode = "nearest";
-    attrs.coordinate_transformation_mode = "wrong_coordinate_transform_mode";
-    attrs.align_corners = true;
-    attrs.antialias = false;
-    attrs.pads_begin = {0, 0, 0, 0};
-    attrs.pads_end = {0, 0, 0, 0};
-    try
-    {
-        auto op = make_shared<op::v3::Interpolate>(image, output_shape, attrs);
-        FAIL() << "Did not detect invalid coordinate_transformation_mode.";
-    }
-    catch (const CheckFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("\"wrong_coordinate_transform_mode\" is not a member of enum"));
-    }
-    catch (...)
-    {
-        FAIL() << "Invalid coordinate_transformation_mode check failed for unexpected reason";
-    }
 }
 
 TEST(type_prop_layers, prior_box1)
