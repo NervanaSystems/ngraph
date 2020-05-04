@@ -30,7 +30,7 @@ from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
     Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
     Sqrt, SquaredDifference, Squeeze, Subtract, Tan, Tanh
 
-from typing import Callable, Iterable, List, Set, Union
+from typing import Callable, Iterable, List, Set, Union, Optional
 
 from ngraph.utils.broadcasting import get_broadcast_axes
 from ngraph.utils.decorators import nameable_op, binary_op, unary_op
@@ -43,9 +43,11 @@ from ngraph.utils.types import get_element_type
 from ngraph.utils.node_factory import NodeFactory
 
 
-def _get_node_factory(opset_version='opset1'):  # type: (str) -> NodeFactory
-    """Return NodeFactory configured to create operators from specified opset version."""
-    return NodeFactory(opset_version)
+def _get_node_factory(opset_version=None):  # type: (Optional[str]) -> NodeFactory
+    if opset_version:
+        return NodeFactory(opset_version)
+    else:
+        return NodeFactory()
 
 
 @nameable_op
