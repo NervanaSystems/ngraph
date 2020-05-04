@@ -1377,3 +1377,21 @@ TEST(attributes, logical_xor_op)
 
     EXPECT_EQ(g_logical_xor->get_autob(), logical_xor->get_autob());
 }
+
+TEST(attributes, mvn_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::MVN>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+
+    const auto axes = AxisSet{0, 1};
+
+    const auto mvn = make_shared<opset3::MVN>(data, true, false, 0.1);
+    mvn->set_reduction_axes(axes);
+    NodeBuilder builder(mvn);
+    const auto g_mvn = as_type_ptr<opset3::MVN>(builder.create());
+
+    EXPECT_EQ(g_mvn->get_reduction_axes(), mvn->get_reduction_axes());
+    EXPECT_EQ(g_mvn->get_across_channels(), mvn->get_across_channels());
+    EXPECT_EQ(g_mvn->get_normalize_variance(), mvn->get_normalize_variance());
+    EXPECT_EQ(g_mvn->get_eps(), mvn->get_eps());
+}
