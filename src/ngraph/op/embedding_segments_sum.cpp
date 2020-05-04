@@ -188,6 +188,7 @@ void op::v3::EmbeddingSegmentsSum::validate_and_infer_types()
 shared_ptr<Node>
     op::v3::EmbeddingSegmentsSum::clone_with_new_inputs(const OutputVector& new_args) const
 {
+    check_new_args_count(this, new_args);
     if (new_args.size() == 4)
     {
         return make_shared<EmbeddingSegmentsSum>(
