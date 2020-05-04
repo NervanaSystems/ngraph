@@ -984,77 +984,107 @@ def power(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 # Logical ops
 @binary_op
-def equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, str) -> Node
     """Return node which checks if input nodes are equal element-wise.
 
     :param left_node: The first input node for equal operation.
     :param right_node: The second input node for equal operation.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :param name: The optional name for output new node.
     :return: The node performing element-wise equality check.
     """
-    return Equal(left_node, right_node)
+    return _get_node_factory().create('Equal',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast})
 
 
 @binary_op
-def not_equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def not_equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, str) -> Node
     """Return node which checks if input nodes are unequal element-wise.
 
     :param left_node: The first input node for not-equal operation.
     :param right_node: The second input node for not-equal operation.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :param name: The optional name for output new node.
     :return: The node performing element-wise inequality check.
     """
-    return NotEqual(left_node, right_node)
+    return _get_node_factory().create('NotEqual',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast})
 
 
 @binary_op
-def greater(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def greater(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, str) -> Node
     """Return node which checks if left input node is greater than the right node element-wise.
 
     :param left_node: The first input node providing data.
     :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :param name: The optional new name for output node.
     :return: The node performing element-wise check whether left_node is greater than right_node.
     """
-    return Greater(left_node, right_node)
+    return _get_node_factory().create('Greater',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast})
 
 
 @binary_op
-def greater_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def greater_equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, str) -> Node
     """Return node which checks if left node is greater or equal to the right node element-wise.
 
     :param left_node: The first input node providing data.
     :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :param name: The optional new name for output node.
     :return: The node performing element-wise check whether left_node is greater than or equal
              right_node.
     """
-    return GreaterEq(left_node, right_node)
+    return _get_node_factory().create('GreaterEqual',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast})
 
 
 @binary_op
-def less(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def less(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, str) -> Node
     """Return node which checks if left input node is less than the right node element-wise.
 
     :param left_node: The first input node providing data.
     :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :param name: The optional new name for output node.
     :return: The node performing element-wise check whether left_node is less than the right_node.
     """
-    return Less(left_node, right_node)
+    return _get_node_factory().create('Less',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast})
 
 
 @binary_op
-def less_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def less_equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, str) -> Node
     """Return node which checks if left input node is less or equal the right node element-wise.
 
     :param left_node: The first input node providing data.
     :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :param name: The optional new name for output node.
     :return: The node performing element-wise check whether left_node is less than or equal the
              right_node.
     """
-    return LessEq(left_node, right_node)
+    return _get_node_factory().create('LessEqual',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast})
 
 
 @binary_op
@@ -1125,9 +1155,9 @@ Node.__rtruediv__ = lambda left, right: divide(right, left)
 Node.__eq__ = equal
 Node.__ne__ = not_equal
 Node.__lt__ = less
-Node.__le__ = less_eq
+Node.__le__ = less_equal
 Node.__gt__ = greater
-Node.__ge__ = greater_eq
+Node.__ge__ = greater_equal
 
 
 # Custom ops
