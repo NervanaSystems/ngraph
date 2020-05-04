@@ -24,14 +24,6 @@ namespace ngraph
     {
         namespace v3
         {
-            typedef struct
-            {
-                Shape patch_sizes;
-                Strides patch_movement_strides;
-                Shape patch_selection_rates;
-                PadType padding;
-            } ExtractImagePatchesAttrs;
-
             class NGRAPH_API ExtractImagePatches : public Op
             {
             public:
@@ -40,10 +32,12 @@ namespace ngraph
                 ExtractImagePatches() = default;
                 /// \brief Constructs a ExtractImagePatches operation
                 ///
-                /// \param data Input data to extract image patches
-                /// \param attrs        ExtractImagePatches attributes
-                ExtractImagePatches(const Output<Node>& data,
-                                    const ExtractImagePatchesAttrs& attrs);
+                /// \param data 4-D Input data to extract image patches
+                /// \param sizes Patch size in the format of [size_rows, size_cols]
+                /// \param strides Patch movement stride in the format of [stride_rows, stride_cols]
+                /// \param rates Element seleciton rate for creating a patch. in the format of [rate_rows, rate_cols]
+                /// \param padding Padding type. it can be any value from valid, same_lower, same_upper
+                ExtractImagePatches(const Output<Node>& data, const Shape sizes, const Strides strides, const Shape rates, const PadType padding );
 
                 void validate_and_infer_types() override;
                 bool visit_attributes(AttributeVisitor& visitor) override;
@@ -51,67 +45,26 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
-                const ExtractImagePatchesAttrs& get_attrs() const { return m_attrs; }
-                void set_attrs(const Shape& sizes,
-                               const Strides& strides,
-                               const Shape& rates,
-                               const std::string& str_padding)
-                {
-                    m_attrs.patch_sizes = sizes;
-                    m_attrs.patch_movement_strides = strides;
-                    m_attrs.patch_selection_rates = rates;
-                    if (str_padding == "valid")
-                    {
-                        m_attrs.padding = PadType::VALID;
-                    }
-                    else if (str_padding == "same_lower")
-                    {
-                        m_attrs.padding = PadType::SAME_LOWER;
-                    }
-                    else if (str_padding == "same_upper")
-                    {
-                        m_attrs.padding = PadType::SAME_UPPER;
-                    }
-                    else
-                    {
-                        m_attrs.padding = PadType::NOTSET;
-                    }
-                }
+                const Shape& get_sizes() const { return m_patch_sizes; }
+                void  set_sizes(const Shape _sizes) { m_patch_sizes=_sizes; }
 
-                static ExtractImagePatchesAttrs
-                    CreateExtractImagePatchesAttrs(const Shape& sizes,
-                                                   const Strides& strides,
-                                                   const Shape& rates,
-                                                   const std::string& str_padding)
-                {
-                    ExtractImagePatchesAttrs attrs;
-                    attrs.patch_sizes = sizes;
-                    attrs.patch_movement_strides = strides;
-                    attrs.patch_selection_rates = rates;
-                    if (str_padding == "valid")
-                    {
-                        attrs.padding = PadType::VALID;
-                    }
-                    else if (str_padding == "same_lower")
-                    {
-                        attrs.padding = PadType::SAME_LOWER;
-                    }
-                    else if (str_padding == "same_upper")
-                    {
-                        attrs.padding = PadType::SAME_UPPER;
-                    }
-                    else
-                    {
-                        attrs.padding = PadType::NOTSET;
-                    }
-                    return attrs;
-                }
+                const Strides& get_strides() const { return m_patch_movement_strides; }
+                void  set_strides(const Strides _strides) { m_patch_movement_strides =  _strides; }
+                
+                const Shape& get_rates() const { return m_patch_selection_rates; }
+                void  set_rates(const Shape _rates) { m_patch_selection_rates = _rates; }
+                
+                
+                const PadType& get_padding() const { return m_padding; }
+                void set_padding(PadType _padding)  { m_padding = _padding; }
 
             private:
-                ExtractImagePatchesAttrs m_attrs;
+                Shape m_patch_sizes;
+                Strides m_patch_movement_strides;
+                Shape m_patch_selection_rates;
+                PadType m_padding;
             };
         } // namespace v3
         using v3::ExtractImagePatches;
-        using v3::ExtractImagePatchesAttrs;
     } // namespace op
 } // namespace ngraph
