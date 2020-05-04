@@ -457,6 +457,24 @@ def space_to_depth(data, mode, block_size, name=None):  # type: (Node, str, int,
 
 
 @nameable_op
+def batch_to_space(data, block_shape, crops_begin, crops_end, name=None):
+    # type: (Node, NodeInput, NodeInput, NodeInput, str) -> Node
+    """Perform BatchToSpace operation on the input tensor.
+
+    BatchToSpace permutes data from the batch dimension of the data tensor into spatial dimensions.
+
+    :param data: Node producing the data tensor.
+    :param block_shape: The sizes of the block of values to be moved.
+    :param crops_begin: Specifies the amount to crop from the beginning along each axis of `data`.
+    :param crops_end: Specifies the amount to crop from the end along each axis of `data`.
+    :param name: Optional output node name.
+    :return: The new node performing a BatchToSpace operation.
+    """
+    return _get_node_factory().create('BatchToSpace', [data, as_node(block_shape),
+                                                       as_node(crops_begin), as_node(crops_end)])
+
+
+@nameable_op
 def space_to_batch(data, block_shape, pads_begin, pads_end, name=None):
     # type: (Node, NodeInput, NodeInput, NodeInput, str) -> Node
     """Perform SpaceToBatch operation on the input tensor.
