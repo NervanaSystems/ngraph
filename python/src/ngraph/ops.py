@@ -863,10 +863,25 @@ def relu(node, name=None):  # type: (NodeInput, str) -> Node
     """Perform rectified linear unit operation on input node element-wise.
 
     :param node: One of: input node, array or scalar.
-    :param name: The optional ouptut node name.
+    :param name: The optional output node name.
     :return: The new node performing relu operation on its input element-wise.
     """
     return Relu(node)
+
+
+@nameable_op
+def selu(data, alpha, lambda_value, name=None):
+    # type: (NodeInput, NodeInput, NodeInput, Optional[str]) -> Node
+    """Perform a Scaled Exponential Linear Unit (SELU) operation on input node element-wise.
+    
+    :param data: input node, array or scalar.
+    :param alpha: Alpha coefficient of SELU operation
+    :param lambda_value: Lambda coefficient of SELU operation
+    :param name: The optional output node name.
+    :return: The new node performing relu operation on its input element-wise.
+    """
+    return _get_node_factory().create('Selu',
+                                      [as_node(data), as_node(alpha), as_node(lambda_value)])
 
 
 @unary_op
@@ -874,7 +889,7 @@ def sign(node, name=None):  # type: (NodeInput, str) -> Node
     """Perform element-wise sign operation.
 
     :param node: One of: input node, array or scalar.
-    :param name: The optional new name for ouptut node.
+    :param name: The optional new name for output node.
     :return: The node with mapped elements of the input tensor to -1 (if it is negative),
              0 (if it is zero), or 1 (if it is positive).
     """
@@ -1814,7 +1829,7 @@ def reduce_sum(node, reduction_axes, keep_dims=False, name=None):
     :param node:           The node providing data for operation.
     :param reduction_axes: The axes to eliminate through summation.
     :param keep_dims:      If set to True it holds axes that are used for reduction
-    :param name:           The optional new name for ouptut node.
+    :param name:           The optional new name for output node.
     :return: The new node performing summation along `reduction_axes` element-wise.
     """
     return _get_node_factory().create('ReduceSum', [node, reduction_axes], {'keep_dims': keep_dims})
