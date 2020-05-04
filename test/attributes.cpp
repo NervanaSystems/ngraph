@@ -1385,13 +1385,25 @@ TEST(attributes, mvn_op)
 
     const auto axes = AxisSet{0, 1};
 
-    const auto mvn = make_shared<opset3::MVN>(data, true, false, 0.1);
-    mvn->set_reduction_axes(axes);
-    NodeBuilder builder(mvn);
-    const auto g_mvn = as_type_ptr<opset3::MVN>(builder.create());
+    const auto op = make_shared<opset3::MVN>(data, true, false, 0.1);
+    op->set_reduction_axes(axes);
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::MVN>(builder.create());
 
-    EXPECT_EQ(g_mvn->get_reduction_axes(), mvn->get_reduction_axes());
-    EXPECT_EQ(g_mvn->get_across_channels(), mvn->get_across_channels());
-    EXPECT_EQ(g_mvn->get_normalize_variance(), mvn->get_normalize_variance());
-    EXPECT_EQ(g_mvn->get_eps(), mvn->get_eps());
+    EXPECT_EQ(g_op->get_reduction_axes(), op->get_reduction_axes());
+    EXPECT_EQ(g_op->get_across_channels(), op->get_across_channels());
+    EXPECT_EQ(g_op->get_normalize_variance(), op->get_normalize_variance());
+    EXPECT_EQ(g_op->get_eps(), op->get_eps());
+}
+
+TEST(attributes, reorg_yolo_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ReorgYolo>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+
+    const auto op = make_shared<opset3::ReorgYolo>(data, Strides{2});
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::ReorgYolo>(builder.create());
+
+    EXPECT_EQ(g_op->get_strides(), op->get_strides());
 }

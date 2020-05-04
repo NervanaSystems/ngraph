@@ -54,3 +54,8 @@ shared_ptr<Node> op::ReorgYolo::clone_with_new_inputs(const OutputVector& new_ar
     check_new_args_count(this, new_args);
     return make_shared<ReorgYolo>(new_args.at(0), m_strides);
 }
+
+bool op::ReorgYolo::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("strides", m_strides);
+}
