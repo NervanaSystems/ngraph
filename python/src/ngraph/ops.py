@@ -30,7 +30,7 @@ from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
     Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
     Sqrt, SquaredDifference, Squeeze, Subtract, Tan, Tanh
 
-from typing import Callable, Iterable, List, Set, Union
+from typing import Callable, Iterable, List, Set, Union, Optional
 
 from ngraph.utils.broadcasting import get_broadcast_axes
 from ngraph.utils.decorators import nameable_op, binary_op, unary_op
@@ -43,8 +43,11 @@ from ngraph.utils.types import get_element_type
 from ngraph.utils.node_factory import NodeFactory
 
 
-def _get_node_factory():  # type: () -> NodeFactory
-    return NodeFactory()
+def _get_node_factory(opset_version=None):  # type: (Optional[str]) -> NodeFactory
+    if opset_version:
+        return NodeFactory(opset_version)
+    else:
+        return NodeFactory()
 
 
 @nameable_op
@@ -1196,7 +1199,8 @@ def broadcast(node, new_shape, broadcast_axes=None, auto_broadcast='numpy', name
     :param name: Optional new name for output node.
     :return: New node with broadcast shape.
     """
-    return _get_node_factory().create('Broadcast',
+    # TODO: update to use opset3 by default
+    return _get_node_factory('opset1').create('Broadcast',
                                       [node, new_shape, broadcast_axes],
                                       {'auto_broadcast': auto_broadcast})
 
@@ -2099,7 +2103,8 @@ def topk(data,   # type: Node
     :param sort: Order of output elements (sort by: 'none', 'index' or 'value')
     :return: The new node which performs TopK (both indices and values)
     """
-    return _get_node_factory().create('TopK', [data, k],
+    # TODO: update to use opset3 by default
+    return _get_node_factory('opset1').create('TopK', [data, k],
                                       {'axis': axis, 'mode': mode, 'sort': sort})
 
 
@@ -2226,7 +2231,8 @@ def shape_of(data):  # type: (Node) -> Node
     :param data: The tensor containing the input data
     :return: ShapeOf node
     """
-    return _get_node_factory().create('ShapeOf', [data])
+    # TODO: update to use opset3 by default
+    return _get_node_factory('opset1').create('ShapeOf', [data])
 
 
 @nameable_op
