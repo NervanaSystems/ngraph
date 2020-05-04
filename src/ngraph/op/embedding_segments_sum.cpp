@@ -199,7 +199,7 @@ shared_ptr<Node>
         return make_shared<EmbeddingSegmentsSum>(
             new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4));
     }
-    else
+    else if (new_args.size() == 6)
     {
         return make_shared<EmbeddingSegmentsSum>(new_args.at(0),
                                                  new_args.at(1),
@@ -207,5 +207,9 @@ shared_ptr<Node>
                                                  new_args.at(3),
                                                  new_args.at(4),
                                                  new_args.at(5));
+    }
+    else
+    {
+        throw ngraph_error("Incorrect number of arguments");
     }
 }
