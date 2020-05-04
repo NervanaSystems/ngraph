@@ -180,7 +180,6 @@ namespace ngraph
         {
             if (i >= m_dimensions.size())
             {
-                NGRAPH_INFO;
                 throw std::out_of_range("Accessing out-of-range dimension in Dimension[]");
             }
             return m_dimensions[i];
