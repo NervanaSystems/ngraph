@@ -475,7 +475,7 @@ if (NGRAPH_JSON_ENABLE)
     target_link_libraries(unit-test PRIVATE libjson)
 endif()
 if(NOT WIN32)
-    target_link_libraries(unit-test PRIVATE pthread)
+    target_link_libraries(unit-test PRIVATE pthread m)
 endif()
 target_link_libraries(unit-test PRIVATE ${CMAKE_DL_LIBS})
 
