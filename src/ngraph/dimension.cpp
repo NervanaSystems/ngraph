@@ -41,7 +41,7 @@ std::ostream& ngraph::operator<<(std::ostream& str, const Dimension& dimension)
 }
 
 Dimension::Dimension()
-    : m_dimension(0)
+    : m_dimension()
 {
 }
 
