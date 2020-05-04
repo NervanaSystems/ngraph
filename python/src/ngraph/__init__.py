@@ -76,6 +76,7 @@ from ngraph.ops import log
 from ngraph.ops import logical_and
 from ngraph.ops import logical_or
 from ngraph.ops import logical_not
+from ngraph.ops import logical_xor
 from ngraph.ops import lrn
 from ngraph.ops import matmul
 from ngraph.ops import max_pool

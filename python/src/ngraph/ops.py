@@ -1088,16 +1088,20 @@ def less_equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
 
 @binary_op
-def logical_and(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def logical_and(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, str) -> Node
     """Return node which perform logical and operation on input nodes element-wise.
 
     :param left_node: The first input node providing data.
     :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcasting that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: numpy, explicit.
     :param name: The optional new name for output node.
     :return: The node performing logical and operation on input nodes corresponding elements.
     """
-    return And(left_node, right_node)
-
+    return _get_node_factory().create('LogicalAnd',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 @binary_op
 def logical_or(left_node, right_node, auto_broadcast='NUMPY', name=None):
@@ -1106,12 +1110,29 @@ def logical_or(left_node, right_node, auto_broadcast='NUMPY', name=None):
 
     :param left_node: The first input node providing data.
     :param right_node: The second input node providing data.
-    :param auto_broadcast: The type of broadcating that specifies mapping of input tensor axes
+    :param auto_broadcast: The type of broadcasting that specifies mapping of input tensor axes
                            to output shape axes. Range of values: numpy, explicit.
     :param name: The optional new name for output node.
     :return: The node performing logical or operation on input nodes corresponding elements.
     """
     return _get_node_factory().create('LogicalOr',
+                                      [left_node, right_node],
+                                      {'auto_broadcast': auto_broadcast.upper()})
+
+
+@binary_op
+def logical_xor(left_node, right_node, auto_broadcast='NUMPY', name=None):
+    # type: (NodeInput, NodeInput, str, str) -> Node
+    """Return node which performs logical XOR operation on input nodes element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcasting that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: numpy, explicit.
+    :param name: The optional new name for output node.
+    :return: The node performing logical or operation on input nodes corresponding elements.
+    """
+    return _get_node_factory().create('LogicalXor',
                                       [left_node, right_node],
                                       {'auto_broadcast': auto_broadcast.upper()})
 
@@ -1170,7 +1191,7 @@ def broadcast(node, new_shape, broadcast_axes=None, auto_broadcast='numpy', name
     :param new_shape: The node with a new shape we want to broadcast tensor to.
     :param broadcast_axes: The node with a axis positions (0-based) in the result
                            that are being broadcast.
-    :param auto_broadcast: The type of broadcating that specifies mapping of input tensor axes
+    :param auto_broadcast: The type of broadcasting that specifies mapping of input tensor axes
                            to output shape axes. Range of values: numpy, explicit.
     :param name: Optional new name for output node.
     :return: New node with broadcast shape.
