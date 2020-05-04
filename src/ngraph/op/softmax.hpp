@@ -61,8 +61,8 @@ namespace ngraph
                 const AxisSet get_axes() const;
                 void set_axes(const AxisSet& axes);
 
-                bool evaluate(const EvaluatorTensorVector& outputs,
-                              const EvaluatorTensorVector& inputs) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -100,8 +100,8 @@ namespace ngraph
 
                 size_t get_axis() const { return m_axis; }
                 void set_axis(const size_t axis) { m_axis = axis; }
-                bool evaluate(const EvaluatorTensorVector& outputs,
-                              const EvaluatorTensorVector& inputs) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,

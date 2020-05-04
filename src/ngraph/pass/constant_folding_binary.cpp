@@ -15,37 +15,24 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
-#include "ngraph/op/add.hpp"
 #include "ngraph/op/and.hpp"
-#include "ngraph/op/divide.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
-#include "ngraph/op/maximum.hpp"
-#include "ngraph/op/minimum.hpp"
-#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/or.hpp"
-#include "ngraph/op/power.hpp"
-#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/and.hpp"
-#include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
 #include "ngraph/runtime/reference/greater.hpp"
 #include "ngraph/runtime/reference/greater_eq.hpp"
 #include "ngraph/runtime/reference/less.hpp"
 #include "ngraph/runtime/reference/less_eq.hpp"
-#include "ngraph/runtime/reference/maximum.hpp"
-#include "ngraph/runtime/reference/minimum.hpp"
-#include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/not_equal.hpp"
 #include "ngraph/runtime/reference/or.hpp"
-#include "ngraph/runtime/reference/power.hpp"
-#include "ngraph/runtime/reference/subtract.hpp"
 #include "ngraph/runtime/reference/xor.hpp"
 
 using namespace std;
@@ -315,203 +302,6 @@ shared_ptr<op::Constant> fold_constant_binary_comparison(shared_ptr<op::Constant
     }
 }
 
-template <class Tin, class Tout = Tin>
-shared_ptr<op::Constant> fold_constant_binary_arithmetic(shared_ptr<op::Constant> a,
-                                                         shared_ptr<op::Constant> b,
-                                                         shared_ptr<Node> binary,
-                                                         NodeExecutorTy func)
-{
-    const Shape& out_shape = binary->get_shape();
-    runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(Tout));
-    Tout* data_ptr = buffer.get_ptr<Tout>();
-
-    // NOTE: We will skip the executor if the shapes do not match, because that means
-    // auto-broadcast is in use, and the CPU functors don't yet support that.
-    if (func != nullptr && a->get_shape() == b->get_shape())
-    {
-        vector<void*> inputs;
-        inputs.push_back(const_cast<void*>(a->get_data_ptr()));
-        inputs.push_back(const_cast<void*>(b->get_data_ptr()));
-        vector<void*> outputs;
-        outputs.push_back(data_ptr);
-
-        func(inputs, outputs);
-        return make_shared<op::Constant>(binary->get_output_element_type(0), out_shape, data_ptr);
-    }
-    else
-    {
-        if (auto divide_v0_node = as_type_ptr<op::v0::Divide>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            shared_ptr<op::v0::Divide> divop = as_type_ptr<op::v0::Divide>(binary);
-            bool pythondiv = divop->is_pythondiv();
-            runtime::reference::divide<Tin>(a->get_data_ptr<Tin>(),
-                                            b->get_data_ptr<Tin>(),
-                                            data_ptr,
-                                            a->get_shape(),
-                                            b->get_shape(),
-                                            divide_v0_node->get_autob(),
-                                            pythondiv);
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else if (auto divide_v1_node = as_type_ptr<op::v1::Divide>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            shared_ptr<op::v1::Divide> divop = as_type_ptr<op::v1::Divide>(binary);
-            bool pythondiv = divop->is_pythondiv();
-            runtime::reference::divide<Tin>(a->get_data_ptr<Tin>(),
-                                            b->get_data_ptr<Tin>(),
-                                            data_ptr,
-                                            a->get_shape(),
-                                            b->get_shape(),
-                                            divide_v1_node->get_autob(),
-                                            pythondiv);
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else if (auto maximum_v0_node = as_type_ptr<op::v0::Maximum>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            runtime::reference::maximum<Tin>(a->get_data_ptr<Tin>(),
-                                             b->get_data_ptr<Tin>(),
-                                             data_ptr,
-                                             a->get_shape(),
-                                             b->get_shape(),
-                                             maximum_v0_node->get_autob());
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else if (auto maximum_v1_node = as_type_ptr<op::v1::Maximum>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            runtime::reference::maximum<Tin>(a->get_data_ptr<Tin>(),
-                                             b->get_data_ptr<Tin>(),
-                                             data_ptr,
-                                             a->get_shape(),
-                                             b->get_shape(),
-                                             maximum_v1_node->get_autob());
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else if (auto minimum_v0_node = as_type_ptr<op::v0::Minimum>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            runtime::reference::minimum<Tin>(a->get_data_ptr<Tin>(),
-                                             b->get_data_ptr<Tin>(),
-                                             data_ptr,
-                                             a->get_shape(),
-                                             b->get_shape(),
-                                             minimum_v0_node->get_autob());
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else if (auto minimum_v1_node = as_type_ptr<op::v1::Minimum>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            runtime::reference::minimum<Tin>(a->get_data_ptr<Tin>(),
-                                             b->get_data_ptr<Tin>(),
-                                             data_ptr,
-                                             a->get_shape(),
-                                             b->get_shape(),
-                                             minimum_v1_node->get_autob());
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else if (auto multiply_v0_node = as_type_ptr<op::v0::Multiply>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            runtime::reference::multiply<Tin>(a->get_data_ptr<Tin>(),
-                                              b->get_data_ptr<Tin>(),
-                                              data_ptr,
-                                              a->get_shape(),
-                                              b->get_shape(),
-                                              multiply_v0_node->get_autob());
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else if (auto multiply_v1_node = as_type_ptr<op::v1::Multiply>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            runtime::reference::multiply<Tin>(a->get_data_ptr<Tin>(),
-                                              b->get_data_ptr<Tin>(),
-                                              data_ptr,
-                                              a->get_shape(),
-                                              b->get_shape(),
-                                              multiply_v1_node->get_autob());
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else if (auto power_v0_node = as_type_ptr<op::v0::Power>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            shared_ptr<op::v0::Power> powop = as_type_ptr<op::v0::Power>(binary);
-            runtime::reference::power<Tin>(a->get_data_ptr<Tin>(),
-                                           b->get_data_ptr<Tin>(),
-                                           data_ptr,
-                                           a->get_shape(),
-                                           b->get_shape(),
-                                           power_v0_node->get_autob());
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else if (auto power_v1_node = as_type_ptr<op::v1::Power>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            shared_ptr<op::v1::Power> powop = as_type_ptr<op::v1::Power>(binary);
-            runtime::reference::power<Tin>(a->get_data_ptr<Tin>(),
-                                           b->get_data_ptr<Tin>(),
-                                           data_ptr,
-                                           a->get_shape(),
-                                           b->get_shape(),
-                                           power_v1_node->get_autob());
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else if (auto subtract_v0_node = as_type_ptr<op::Subtract>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            runtime::reference::subtract<Tin>(a->get_data_ptr<Tin>(),
-                                              b->get_data_ptr<Tin>(),
-                                              data_ptr,
-                                              a->get_shape(),
-                                              b->get_shape(),
-                                              subtract_v0_node->get_autob());
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else if (auto subtract_v1_node = as_type_ptr<op::v1::Subtract>(binary))
-        {
-            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
-                         "Input/output types do not match");
-            runtime::reference::subtract<Tin>(a->get_data_ptr<Tin>(),
-                                              b->get_data_ptr<Tin>(),
-                                              data_ptr,
-                                              a->get_shape(),
-                                              b->get_shape(),
-                                              subtract_v1_node->get_autob());
-            return make_shared<op::Constant>(
-                binary->get_output_element_type(0), out_shape, data_ptr);
-        }
-        else
-        {
-            NGRAPH_CHECK(false,
-                         "fold_constant_binary must be consistent with is_supported_binary_op");
-        }
-    }
-}
-
 template <class Tin>
 shared_ptr<op::Constant> fold_constant_binary_helper(shared_ptr<op::Constant> a,
                                                      shared_ptr<op::Constant> b,
@@ -522,10 +312,6 @@ shared_ptr<op::Constant> fold_constant_binary_helper(shared_ptr<op::Constant> a,
     {
         return fold_constant_binary_comparison<Tin>(a, b, binary, func);
     }
-    else if (binary->is_binary_elementwise_arithmetic())
-    {
-        return fold_constant_binary_arithmetic<Tin>(a, b, binary, func);
-    }
     else
     {
         NGRAPH_CHECK(
@@ -535,20 +321,14 @@ shared_ptr<op::Constant> fold_constant_binary_helper(shared_ptr<op::Constant> a,
 
 bool is_supported_binary_op(std::shared_ptr<Node> n)
 {
-    return (is_type<op::v0::Multiply>(n) || is_type<op::v1::Multiply>(n) ||
-            is_type<op::v0::Divide>(n) || is_type<op::v1::Divide>(n) || is_type<op::v0::Power>(n) ||
-            is_type<op::v1::Power>(n) || is_type<op::v0::Equal>(n) || is_type<op::v1::Equal>(n) ||
-            is_type<op::v0::NotEqual>(n) || is_type<op::v1::NotEqual>(n) ||
-            is_type<op::v0::Greater>(n) || is_type<op::v1::Greater>(n) ||
-            is_type<op::v0::GreaterEq>(n) || is_type<op::v1::GreaterEqual>(n) ||
-            is_type<op::v0::Less>(n) || is_type<op::v1::Less>(n) || is_type<op::v0::LessEq>(n) ||
-            is_type<op::v1::LessEqual>(n) || is_type<op::v0::Maximum>(n) ||
-            is_type<op::v1::Maximum>(n) || is_type<op::v0::Minimum>(n) ||
-            is_type<op::v1::Minimum>(n) || is_type<op::v0::And>(n) ||
-            is_type<op::v1::LogicalAnd>(n) || is_type<op::v0::Or>(n) ||
-            is_type<op::v1::LogicalOr>(n) || is_type<op::v0::Xor>(n) ||
-            is_type<op::v1::LogicalXor>(n) || is_type<op::v0::Subtract>(n) ||
-            is_type<op::v1::Subtract>(n));
+    return (
+        is_type<op::v0::Equal>(n) || is_type<op::v1::Equal>(n) || is_type<op::v0::NotEqual>(n) ||
+        is_type<op::v1::NotEqual>(n) || is_type<op::v0::Greater>(n) ||
+        is_type<op::v1::Greater>(n) || is_type<op::v0::GreaterEq>(n) ||
+        is_type<op::v1::GreaterEqual>(n) || is_type<op::v0::Less>(n) || is_type<op::v1::Less>(n) ||
+        is_type<op::v0::LessEq>(n) || is_type<op::v1::LessEqual>(n) || is_type<op::v0::And>(n) ||
+        is_type<op::v1::LogicalAnd>(n) || is_type<op::v0::Or>(n) || is_type<op::v1::LogicalOr>(n) ||
+        is_type<op::v0::Xor>(n) || is_type<op::v1::LogicalXor>(n));
 }
 
 void pass::ConstantFolding::construct_constant_binary()

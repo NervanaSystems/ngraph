@@ -79,7 +79,7 @@ def test_topk():
                                     [6, 1, 5],
                                     [3, 11, 7]], dtype=np.float32))
     K = ng.constant(4)
-    comp_topk = ng.topk(input_x, K, 0, 'max', 'SORT_VALUES')
+    comp_topk = ng.topk(input_x, K, 0, 'max', 'value')
 
     model0 = runtime.computation(ng.get_output_element(comp_topk, 0))
     result0 = model0()
