@@ -176,7 +176,15 @@ namespace ngraph
         /// \brief Index operator for PartialShape.
         /// \param i The index of the dimension being selected.
         /// \return A reference to the `i`th Dimension of this shape.
-        const Dimension& operator[](size_t i) const { return m_dimensions[i]; }
+        const Dimension& operator[](size_t i) const
+        {
+            if (i >= m_dimensions.size())
+            {
+                NGRAPH_INFO;
+                throw std::out_of_range("Accessing out-of-range dimension in Dimension[]");
+            }
+            return m_dimensions[i];
+        }
         /// \brief Index operator for PartialShape.
         /// \param i The index of the dimension being selected.
         /// \return A reference to the `i`th Dimension of this shape.
