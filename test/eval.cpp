@@ -127,6 +127,7 @@ TEST(eval, evaluate_dynamic_range_sum)
     ASSERT_EQ(cval, seq);
 }
 
+#ifdef NGRAPH_INTERPRETER_ENABLE
 TEST(eval, interpret_dynamic_range_sum)
 {
     auto p_start = make_shared<op::Parameter>(element::f32, PartialShape{});
@@ -146,7 +147,7 @@ TEST(eval, interpret_dynamic_range_sum)
     copy_data(p_step_val, vector<float>{3.0f});
     auto p1_val = backend->create_tensor(element::f32, Shape{});
     copy_data(p1_val, vector<float>{7.0f});
-    auto result = make_shared<HostTensor>();
+    auto result = backend->create_tensor();
     auto cfun = backend->compile(fun);
     cfun->call({result}, {p_start_val, p_stop_val, p_step_val, p1_val});
     EXPECT_EQ(result->get_element_type(), element::f32);
@@ -155,3 +156,4 @@ TEST(eval, interpret_dynamic_range_sum)
     vector<float> seq{8.0f, 11.0f, 14.0f};
     ASSERT_EQ(result_val, seq);
 }
+#endif
