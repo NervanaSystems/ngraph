@@ -1407,3 +1407,18 @@ TEST(attributes, reorg_yolo_op)
 
     EXPECT_EQ(g_op->get_strides(), op->get_strides());
 }
+
+TEST(attributes, roi_pooling_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ROIPooling>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+    const auto coords = make_shared<op::Parameter>(element::i32, Shape{2, 3});
+
+    const auto op = make_shared<opset3::ROIPooling>(data, coords, Shape{5, 5}, 0.123, "Bilinear");
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::ROIPooling>(builder.create());
+
+    EXPECT_EQ(g_op->get_output_size(), op->get_output_size());
+    EXPECT_EQ(g_op->get_spatial_scale(), op->get_spatial_scale());
+    EXPECT_EQ(g_op->get_method(), op->get_method());
+}
