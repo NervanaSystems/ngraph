@@ -1241,7 +1241,7 @@ Node.__ge__ = greater_equal
 # Custom ops
 @nameable_op
 def broadcast(data, target_shape, axes_mapping=None, broadcast_spec='NUMPY', name=None):
-    # type: (Node, Node, Node, str, str) -> Node
+    # type: (Node, NodeInput, NodeInput, str, str) -> Node
     """Create a node which broadcasts the input node's values along specified axes to a desired shape.
 
     :param data: The node with input tensor data.
@@ -1253,12 +1253,12 @@ def broadcast(data, target_shape, axes_mapping=None, broadcast_spec='NUMPY', nam
     :param name: Optional new name for output node.
     :return: New node with broadcast shape.
     """
-    inputs = [data, target_shape]
-    if broadcast_spec == 'EXPLICIT':
-        inputs.append(axes_mapping)
+    inputs = [data, as_node(target_shape)]
+    if broadcast_spec.upper() == 'EXPLICIT':
+        inputs.append(as_node(axes_mapping))
     return _get_node_factory().create('Broadcast',
                                       inputs,
-                                      {'broadcast_spec': broadcast_spec})
+                                      {'broadcast_spec': broadcast_spec.upper()})
 
 @nameable_op
 def broadcast_to(node, new_shape, axis=None, name=None):
@@ -2094,7 +2094,7 @@ def batch_norm(eps,             # type: float
 
 @nameable_op
 def lrn(data,       # type: Node
-        axes,       # type: Node
+        axes,       # type: NodeInput
         alpha=1,    # type: float
         beta=0.5,   # type: float
         bias=1,     # type: float
@@ -2113,7 +2113,7 @@ def lrn(data,       # type: Node
     :return: The new node which performs LRN.
     """
     attributes = {'alpha': alpha, 'beta': beta, 'bias': bias, 'size': size}
-    return _get_node_factory().create('LRN', [data, axes], attributes)
+    return _get_node_factory().create('LRN', [data, as_node(axes)], attributes)
 
 
 @nameable_op
@@ -2146,10 +2146,10 @@ def argmin(data,    # type: Node
 
 @nameable_op
 def non_max_suppression(boxes,                              # type: Node
-                        scores,                             # type: Node
-                        max_output_boxes_per_class=None,    # type: Node
-                        iou_threshold=None,                 # type: Node
-                        score_threshold=None,               # type: Node
+                        scores,                             # type: NodeInput
+                        max_output_boxes_per_class=None,    # type: NodeInput
+                        iou_threshold=None,                 # type: NodeInput
+                        score_threshold=None,               # type: NodeInput
                         box_encoding='corner',              # type: str
                         sort_result_descending=True,        # type: bool
                         output_type='i64',                  # type: str
@@ -2176,7 +2176,8 @@ def non_max_suppression(boxes,                              # type: Node
     if score_threshold is None:
         score_threshold = make_constant_node(0, np.float32)
 
-    inputs = [boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold]
+    inputs = [boxes, as_node(scores), as_node(max_output_boxes_per_class),
+              as_node(iou_threshold), as_node(score_threshold)]
     attributes = {'box_encoding': box_encoding,
                   'sort_result_descending': sort_result_descending,
                   'output_type': output_type}
@@ -2201,7 +2202,7 @@ def non_zero(data,                # type: Node
 
 @nameable_op
 def topk(data,                      # type: Node
-         k,                         # type: Node
+         k,                         # type: NodeInput
          axis,                      # type: int
          mode,                      # type: str
          sort,                      # type: str
@@ -2218,15 +2219,15 @@ def topk(data,                      # type: Node
     :param index_element_type: Type of output tensor with indices.
     :return: The new node which performs TopK (both indices and values)
     """
-    return _get_node_factory().create('TopK', [data, k],
+    return _get_node_factory().create('TopK', [data, as_node(k)],
                                       {'axis': axis, 'mode': mode, 'sort': sort,
                                        'index_element_type': index_element_type})
 
 
 @nameable_op
 def roi_align(data,             # type: Node
-              rois,             # type: Node
-              batch_indices,    # type: Node
+              rois,             # type: NodeInput
+              batch_indices,    # type: NodeInput
               pooled_h,         # type: int
               pooled_w,         # type: int
               sampling_ratio,   # type: int
@@ -2249,7 +2250,7 @@ def roi_align(data,             # type: Node
 
     :return: The new node which performs ROIAlign
     """
-    inputs = [data, rois, batch_indices]
+    inputs = [data, as_node(rois), as_node(batch_indices)]
     attributes = {'pooled_h': pooled_h, 'pooled_w': pooled_w,
                   'sampling_ratio': sampling_ratio,
                   'spatial_scale': spatial_scale, 'mode': mode}
