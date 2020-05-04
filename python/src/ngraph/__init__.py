@@ -87,6 +87,8 @@ from ngraph.ops import mod
 from ngraph.ops import multiply
 from ngraph.ops import mvn
 from ngraph.ops import negative
+from ngraph.ops import non_max_suppression
+from ngraph.ops import non_zero
 from ngraph.ops import not_equal
 from ngraph.ops import one_hot
 from ngraph.ops import pad
@@ -111,6 +113,7 @@ from ngraph.ops import result
 from ngraph.ops import reverse
 from ngraph.ops import reverse_sequence
 from ngraph.ops import rnn_cell
+from ngraph.ops import roi_align
 from ngraph.ops import roi_pooling
 from ngraph.ops import scale_shift
 from ngraph.ops import scatter_elements_update

@@ -866,7 +866,7 @@ def relu(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: The optional ouptut node name.
     :return: The new node performing relu operation on its input element-wise.
     """
-    return Relu(node)
+    return _get_node_factory().create('Relu', [node])
 
 
 @unary_op
@@ -1240,23 +1240,25 @@ Node.__ge__ = greater_equal
 
 # Custom ops
 @nameable_op
-def broadcast(node, new_shape, broadcast_axes=None, auto_broadcast='numpy', name=None):
-    # type: (Node, Node, Node, str, str) -> Node
+def broadcast(data, target_shape, axes_mapping=None, broadcast_spec='NUMPY', name=None):
+    # type: (Node, NodeInput, NodeInput, str, str) -> Node
     """Create a node which broadcasts the input node's values along specified axes to a desired shape.
 
-    :param node: The node with input tensor data.
-    :param new_shape: The node with a new shape we want to broadcast tensor to.
-    :param broadcast_axes: The node with a axis positions (0-based) in the result
+    :param data: The node with input tensor data.
+    :param target_shape: The node with a new shape we want to broadcast tensor to.
+    :param axes_mapping: The node with a axis positions (0-based) in the result
                            that are being broadcast.
-    :param auto_broadcast: The type of broadcasting that specifies mapping of input tensor axes
-                           to output shape axes. Range of values: numpy, explicit.
+    :param broadcast_spec: The type of broadcating that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: NUMPY, EXPLICIT, BIDIRECTIONAL.
     :param name: Optional new name for output node.
     :return: New node with broadcast shape.
     """
-    # TODO: update to use opset3 by default
-    return _get_node_factory('opset1').create('Broadcast',
-                                              [node, new_shape, broadcast_axes],
-                                              {'auto_broadcast': auto_broadcast})
+    inputs = [data, as_node(target_shape)]
+    if broadcast_spec.upper() == 'EXPLICIT':
+        inputs.append(as_node(axes_mapping))
+    return _get_node_factory('opset3').create('Broadcast',
+                                      inputs,
+                                      {'broadcast_spec': broadcast_spec.upper()})
 
 
 @nameable_op
@@ -1486,7 +1488,8 @@ def clamp(data, min_value, max_value, name=None):
     :param name: Optional output node name.
     :return: The new node performing a clamp operation on its input data element-wise.
     """
-    return Clamp(as_node(data), min_value, max_value)
+    return _get_node_factory().create('Clamp', [as_node(data)],
+                                      {'min': min_value, 'max': max_value})
 
 
 # matmul ops
@@ -1980,7 +1983,7 @@ def concat(nodes, axis, name=None):  # type: (List[Node], int, str) -> Node
     :param name: The optional new name for output node.
     :return: Return new node that is a concatenation of input nodes.
     """
-    return Concat(nodes, axis)
+    return _get_node_factory().create('Concat', nodes, {'axis': axis})
 
 
 @nameable_op
@@ -2092,6 +2095,7 @@ def batch_norm(eps,             # type: float
 
 @nameable_op
 def lrn(data,       # type: Node
+        axes,       # type: NodeInput
         alpha=1,    # type: float
         beta=0.5,   # type: float
         bias=1,     # type: float
@@ -2109,7 +2113,8 @@ def lrn(data,       # type: Node
     :param name: An optional name of the output node.
     :return: The new node which performs LRN.
     """
-    return LRN(data, alpha, beta, bias, size)
+    attributes = {'alpha': alpha, 'beta': beta, 'bias': bias, 'size': size}
+    return _get_node_factory().create('LRN', [data, as_node(axes)], attributes)
 
 
 @nameable_op
@@ -2141,11 +2146,68 @@ def argmin(data,    # type: Node
 
 
 @nameable_op
-def topk(data,   # type: Node
-         k,      # type: Node
-         axis,   # type: int
-         mode,   # type: str
-         sort,   # type: str
+def non_max_suppression(boxes,                              # type: Node
+                        scores,                             # type: NodeInput
+                        max_output_boxes_per_class=None,    # type: NodeInput
+                        iou_threshold=None,                 # type: NodeInput
+                        score_threshold=None,               # type: NodeInput
+                        box_encoding='corner',              # type: str
+                        sort_result_descending=True,        # type: bool
+                        output_type='i64',                  # type: str
+                        ):
+    # type: (...) -> Node
+    """Return a node which performs NonMaxSuppression.
+
+    :param boxes: Tensor with box coordinates.
+    :param scores: Tensor with box scores.
+    :param max_output_boxes_per_class: Tensor Specifying maximum number of boxes
+                                        to be selected per class.
+    :param iou_threshold: Tensor specifying intersection over union threshold
+    :param score_threshold: Tensor specifying minimum score to consider box for the processing.
+    :param box_encoding: Format of boxes data encoding.
+    :param sort_result_descending: Flag that specifies whenever it is necessary to sort selected
+                                   boxes across batches or not.
+    :param output_type: Output element type.
+    :return: The new node which performs NonMaxSuppression
+    """
+    if max_output_boxes_per_class is None:
+        max_output_boxes_per_class = make_constant_node(0, np.int64)
+    if iou_threshold is None:
+        iou_threshold = make_constant_node(0, np.float32)
+    if score_threshold is None:
+        score_threshold = make_constant_node(0, np.float32)
+
+    inputs = [boxes, as_node(scores), as_node(max_output_boxes_per_class),
+              as_node(iou_threshold), as_node(score_threshold)]
+    attributes = {'box_encoding': box_encoding,
+                  'sort_result_descending': sort_result_descending,
+                  'output_type': output_type}
+
+    return _get_node_factory().create('NonMaxSuppression', inputs, attributes)
+
+
+@nameable_op
+def non_zero(data,                # type: Node
+             output_type='i64',   # type: str
+             ):
+    # type: (...) -> Node
+    """Return a node which performs NonZero.
+
+    :param data: Input data.
+    :param output_type: Output tensor type.
+
+    :return: The new node which performs NonZero
+    """
+    return _get_node_factory().create('NonZero', [data], {'output_type': output_type})
+
+
+@nameable_op
+def topk(data,                      # type: Node
+         k,                         # type: NodeInput
+         axis,                      # type: int
+         mode,                      # type: str
+         sort,                      # type: str
+         index_element_type='i32',  # type: str
          ):
     # type: (...) -> Node
     """Return a node which performs TopK.
@@ -2155,11 +2217,45 @@ def topk(data,   # type: Node
     :param axis: TopK Axis.
     :param mode: Compute TopK largest ('max') or smallest ('min')
     :param sort: Order of output elements (sort by: 'none', 'index' or 'value')
+    :param index_element_type: Type of output tensor with indices.
     :return: The new node which performs TopK (both indices and values)
     """
-    # TODO: update to use opset3 by default
-    return _get_node_factory('opset1').create('TopK', [data, k],
-                                              {'axis': axis, 'mode': mode, 'sort': sort})
+    return _get_node_factory('opset3').create('TopK', [data, as_node(k)],
+                                      {'axis': axis, 'mode': mode, 'sort': sort,
+                                       'index_element_type': index_element_type})
+
+
+@nameable_op
+def roi_align(data,             # type: Node
+              rois,             # type: NodeInput
+              batch_indices,    # type: NodeInput
+              pooled_h,         # type: int
+              pooled_w,         # type: int
+              sampling_ratio,   # type: int
+              spatial_scale,    # type: float
+              mode,             # type: str
+              ):
+    # type: (...) -> Node
+    """Return a node which performs ROIAlign.
+
+    :param data: Input data.
+    :param rois: RoIs (Regions of Interest) to pool over.
+    :param batch_indices: Tensor with each element denoting the index of
+                          the corresponding image in the batch.
+    :param pooled_h: Height of the ROI output feature map.
+    :param pooled_w: Width of the ROI output feature map.
+    :param sampling_ratio: Number of bins over height and width to use to calculate
+                           each output feature map element.
+    :param spatial_scale: Multiplicative spatial scale factor to translate ROI coordinates.
+    :param mode: Method to perform pooling to produce output feature map elements.
+
+    :return: The new node which performs ROIAlign
+    """
+    inputs = [data, as_node(rois), as_node(batch_indices)]
+    attributes = {'pooled_h': pooled_h, 'pooled_w': pooled_w,
+                  'sampling_ratio': sampling_ratio,
+                  'spatial_scale': spatial_scale, 'mode': mode}
+    return _get_node_factory().create('ROIAlign', inputs, attributes)
 
 
 @nameable_op
@@ -2279,14 +2375,14 @@ def sigmoid(data):  # type: (Node) -> Node
 
 
 @nameable_op
-def shape_of(data):  # type: (Node) -> Node
+def shape_of(data, output_type='i64'):  # type: (Node, str) -> Node
     """Return a node which produces a tensor containing the shape of its input data.
 
-    :param data: The tensor containing the input data
+    :param data: The tensor containing the input data.
+    :para output_type: Output element type.
     :return: ShapeOf node
     """
-    # TODO: update to use opset3 by default
-    return _get_node_factory('opset1').create('ShapeOf', [data])
+    return _get_node_factory('opset3').create('ShapeOf', [data], {'output_type': output_type})
 
 
 @nameable_op
