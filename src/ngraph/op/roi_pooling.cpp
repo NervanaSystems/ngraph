@@ -77,4 +77,5 @@ bool op::ROIPooling::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("output_size", m_output_size);
     visitor.on_attribute("spatial_scale", m_spatial_scale);
     visitor.on_attribute("method", m_method);
+    return true;
 }

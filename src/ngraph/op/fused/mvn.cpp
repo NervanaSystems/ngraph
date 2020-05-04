@@ -114,4 +114,5 @@ bool op::MVN::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("across_channels", m_across_channels);
     visitor.on_attribute("normalize_variance", m_normalize_variance);
     visitor.on_attribute("reduction_axes", m_reduction_axes);
+    return true;
 }
