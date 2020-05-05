@@ -1257,7 +1257,7 @@ Node.__ge__ = greater_equal
 # Custom ops
 @nameable_op
 def broadcast(data, target_shape, axes_mapping=None, broadcast_spec='NUMPY', name=None):
-    # type: (Node, NodeInput, NodeInput, str, str) -> Node
+    # type: (Node, NodeInput, Optional[NodeInput], str, Optional[str]) -> Node
     """Create a node which broadcasts the input node's values along specified axes to a desired shape.
 
     :param data: The node with input tensor data.
