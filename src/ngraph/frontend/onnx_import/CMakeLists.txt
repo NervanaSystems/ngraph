@@ -266,6 +266,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
             -Wno-unused-private-field -Wno-shadow -Wno-deprecated PUBLIC -Wno-undefined-func-template)
 endif()
 
-target_compile_definitions(onnx_importer PRIVATE ONNX_IMPORTER_EXPORTS)
+target_compile_definitions(onnx_importer PRIVATE ONNX_IMPORTER_DLL_EXPORTS)
 
 install(TARGETS onnx_importer DESTINATION ${NGRAPH_INSTALL_LIB})
