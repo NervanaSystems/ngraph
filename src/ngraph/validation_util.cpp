@@ -1003,32 +1003,39 @@ void ngraph::evaluate_nodes(std::map<RawNodeOutput, HostTensorPtr>& value_map,
     evaluator.set_univeral_handler(
         [&output_tensor_map](Node* node,
                              const HostTensorVector& input_tensors) -> HostTensorVector {
+            std::cout << "in evaluator.set_univeral_handler() \n";
             HostTensorVector output_tensors;
             for (auto v : node->outputs())
             {
+                std::cout << "\tset_univeral_handler, for loop v = " << v << std::endl;
                 auto it = output_tensor_map.find(v);
                 if (it == output_tensor_map.end())
                 {
                     auto c = make_shared<HostTensor>(v);
                     output_tensors.push_back(c);
+                    std::cout << "\tset_univeral_handler, for loop, if cond\n";
                 }
                 else
                 {
                     output_tensors.push_back(it->second);
+                    std::cout << "\tset_univeral_handler, for loop, else cond\n";
                 }
             }
             if (node->evaluate(output_tensors, input_tensors))
             {
+                std::cout << "\tin evaluator.set_univeral_handler(), if cond. node->evaluate() for node = " << node <<"\n";
                 return output_tensors;
             }
             else
             {
+                std::cout << "\tin evaluator.set_univeral_handler(). else cond {} for node = " << node <<"\n";
                 return {};
             }
         });
     for (auto value : outputs)
     {
-        std::cout << "In validation_util.cpp, value: " << value <<"\n";
+        std::cout << "------- In validation_util.cpp, value: " << value <<"--------\n";
         evaluator.evaluate(value);
+        std::cout << "------- In validation_util.cpp after the evaluate() call for : " << value <<"--------\n";
     }
 }

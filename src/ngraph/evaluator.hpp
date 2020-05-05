@@ -128,6 +128,7 @@ namespace ngraph
 
             void handle(Evaluator& evaluator, InstStack& inst_stack, Node* node) override
             {
+                std::cout << "evaluator.hpp handle on line 131 called\n";
                 // Request to analyze this value if we can
                 if (auto handler = evaluator.get_handler(node))
                 {
@@ -140,6 +141,7 @@ namespace ngraph
                 }
                 else
                 {
+                    std::cout << "evaluator.hpp handle on line 131 called, else, unknown op: " << node <<"\n";
                     // We don't know how to handle this op, so mark the outputs as unknown
                     for (auto output : node->outputs())
                     {

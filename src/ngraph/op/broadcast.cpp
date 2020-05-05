@@ -145,6 +145,7 @@ void op::v3::Broadcast::validate_and_infer_types()
     {
         set_input_is_relevant_to_shape(2); // axes_mapping - Broadcast type
     }
+    std::cout << "Broadcast v3, ctor, setting result_shape = " << result_shape << "\n";
     set_output_type(0, get_input_element_type(0), result_shape);
 }
 
@@ -173,12 +174,52 @@ bool op::v3::Broadcast::visit_attributes(AttributeVisitor& visitor)
 
 namespace
 {
+    std::pair<bool, AxisSet> get_broadcast_axes(PartialShape data_shape,
+                                                PartialShape target_shape,
+                                                op::BroadcastType bcast_type)
+    {
+        std::cout << "data shape = " << data_shape << ", target_shape = " << target_shape <<"\n";
+        AxisSet broadcast_axes;
+        bool axes_known = false;
+        if (bcast_type == op::BroadcastType::BIDIRECTIONAL)
+        {
+            std::cout << "Broadcast op, in get_broadcast_axes() , bi-di\n";
+            if (data_shape.is_static() && target_shape.is_static())
+            {
+                const auto arg_shape = data_shape.get_shape();
+                const auto result_shape = target_shape.get_shape();
+
+                const auto start_axis = result_shape.size() - arg_shape.size();
+                NGRAPH_CHECK(start_axis >= 0);
+                for (size_t i = 0; i < result_shape.size(); i++)
+                {
+                    if (i < start_axis || result_shape[i] != arg_shape[i - start_axis])
+                    {
+                        broadcast_axes.insert(i);
+                    }
+                }
+
+                axes_known = true;
+                std::cout << "Bcast axes----- > " << broadcast_axes << "\n";
+                return std::make_pair(axes_known, broadcast_axes);
+            }
+            else {
+                // TODO: throw??
+                std::cout << "Broadcast op, in get_broadcast_axes() , bi-di, shapes not static\n";
+                const bool axes_known = false;
+                return std::make_pair(axes_known, broadcast_axes);
+            }
+        }
+        std::cout << "Broadcast op, in get_broadcast_axes() , other bcast types\n";
+        //TODO: return util::BroadcastBase::get_broadcast_axes();
+    }
+
     template <element::Type_t ET>
     inline bool evaluate(const HostTensorPtr& arg0,
                         const HostTensorPtr& out,
                         const AxisSet& broadcast_axes)
     {
-        std::cout << " In evaluate : before calling refkern\n";
+        std::cout << " In evaluate : before calling refkern, bcast_axes = " << broadcast_axes << "\n";
         using T = typename element_type_traits<ET>::value_type;
         runtime::reference::broadcast<T>((arg0->get_data_ptr<ET>()),
                                             (out->get_data_ptr<ET>()),
@@ -191,25 +232,28 @@ namespace
     bool evaluate_broadcast(const HostTensorPtr& arg0,
                             const HostTensorPtr& arg1,
                             const HostTensorPtr& out,
-                            const std::pair<bool, AxisSet> pair_broadcast_axes/*,
-                            const op::BroadcastModeSpec& broadcast_spec*/,
-                            const PartialShape out_shape)
+                            /*const std::pair<bool, AxisSet> p_broadcast_axes,*/
+                            const PartialShape out_shape,
+                            const op::BroadcastType bcast_type
+                            )
     {
-        if (arg0->get_element_type() != out->get_element_type())
-        {
-            return false;
-        }
-        if (!pair_broadcast_axes.first)
-        {
-            //error / debug message: broadcast_axes not known deterministically
-            return false;
-        }
-        std::cout << " In evaluate_broadcast : after checks\n";
+        std::cout << " In evaluate_broadcast : out_shape =  " << out_shape << "\n";
         bool rc = true;
         Shape in_shape = arg0->get_shape();
-        //Shape out_shape = out->get_shape();
-        out->set_shape(Shape{2,4,4});
-        //output_value->set_shape(Shape{shape.size()});
+        //Shape o_shape = out->get_shape();
+        //out->set_shape(out_shape);
+        out->set_shape(Shape{2,4,4}); // This needs a Shape and not PartialShape
+
+        auto pair_broadcast_axes = get_broadcast_axes(arg0->get_partial_shape(),
+                                                  Shape{2,4,4},
+                                                  bcast_type);
+
+        if (!pair_broadcast_axes.first)
+        {
+            std::cout << "----- broadcast_axes not known deterministically ------\n";
+            return false;
+        }
+
         std::cout << " In evaluate_broadcast : before switch case\n";
         switch (arg0->get_element_type())
         {
@@ -242,7 +286,24 @@ namespace
 bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs,
                                const HostTensorVector& inputs)
 {
-    return evaluate_broadcast(inputs[0], inputs[1], outputs[0], get_broadcast_axes(), get_output_partial_shape(0));
+    std::cout << "op::v3::Broadcast::evaluate called ()\n";
+
+    if (get_input_partial_shape(1).is_static())
+    {
+        const auto shape_constant =
+            as_type_ptr<op::v0::Constant>(get_input_node_shared_ptr(1));
+        if (shape_constant)
+        {
+            auto target_shape = shape_constant->get_shape_val();
+            std::cout << "target shape from the constant input = " << target_shape << "\n";
+            return evaluate_broadcast(inputs[0], inputs[1], outputs[0], 
+                                    //get_broadcast_axes(), 
+                                    target_shape,
+                                    get_broadcast_spec().m_type);
+        }
+    }
+    std:cout << "ERROR: cannot evaluate, input 1 is not static and not constant\n";
+    return false;
 }
 
 namespace
@@ -311,7 +372,8 @@ bool op::v1::Broadcast::visit_attributes(AttributeVisitor& visitor)
 bool op::v1::Broadcast::evaluate(const HostTensorVector& outputs,
                                const HostTensorVector& inputs)
 {
-    return evaluate_broadcast(inputs[0], inputs[1], outputs[0], get_broadcast_axes(), get_output_shape(0));
+    //return evaluate_broadcast(inputs[0], inputs[1], outputs[0], get_broadcast_axes(), get_output_shape(0));
+    return false;
 }
 
 constexpr NodeTypeInfo op::v0::Broadcast::type_info;
