@@ -33,6 +33,16 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::LSTMCell::type_info;
 
+op::LSTMCell::LSTMCell()
+    : m_input_forget(false)
+    , m_weights_format(LSTMWeightsFormat::IFCO)
+{
+    m_activations = {"sigmoid", "tanh", "tanh"};
+    m_activation_f = get_activation_function(0);
+    m_activation_g = get_activation_function(1);
+    m_activation_h = get_activation_function(2);
+}
+
 op::LSTMCell::LSTMCell(const Output<Node>& X,
                        const Output<Node>& initial_hidden_state,
                        const Output<Node>& initial_cell_state,
