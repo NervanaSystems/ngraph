@@ -1256,7 +1256,7 @@ def broadcast(data, target_shape, axes_mapping=None, broadcast_spec='NUMPY', nam
     inputs = [data, as_node(target_shape)]
     if broadcast_spec.upper() == 'EXPLICIT':
         inputs.append(as_node(axes_mapping))
-    return _get_node_factory('opset3').create('Broadcast',
+    return _get_node_factory().create('Broadcast',
                                       inputs,
                                       {'broadcast_spec': broadcast_spec.upper()})
 
@@ -2191,7 +2191,7 @@ def non_zero(data,                # type: Node
              output_type='i64',   # type: str
              ):
     # type: (...) -> Node
-    """Return a node which performs NonZero.
+    """Return the indices of the elements that are non-zero.
 
     :param data: Input data.
     :param output_type: Output tensor type.
@@ -2220,7 +2220,7 @@ def topk(data,                      # type: Node
     :param index_element_type: Type of output tensor with indices.
     :return: The new node which performs TopK (both indices and values)
     """
-    return _get_node_factory('opset3').create('TopK', [data, as_node(k)],
+    return _get_node_factory().create('TopK', [data, as_node(k)],
                                       {'axis': axis, 'mode': mode, 'sort': sort,
                                        'index_element_type': index_element_type})
 
@@ -2382,7 +2382,7 @@ def shape_of(data, output_type='i64'):  # type: (Node, str) -> Node
     :para output_type: Output element type.
     :return: ShapeOf node
     """
-    return _get_node_factory('opset3').create('ShapeOf', [data], {'output_type': output_type})
+    return _get_node_factory().create('ShapeOf', [data], {'output_type': output_type})
 
 
 @nameable_op
