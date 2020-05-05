@@ -2149,7 +2149,7 @@ def argmin(data,    # type: Node
 def non_max_suppression(boxes,                              # type: Node
                         scores,                             # type: NodeInput
                         max_output_boxes_per_class=None,    # type: NodeInput
-                        iou_threshold=None,                 # type: NodeInput
+                        iou_threshold=None,                 # type: Optional[NodeInput]
                         score_threshold=None,               # type: NodeInput
                         box_encoding='corner',              # type: str
                         sort_result_descending=True,        # type: bool
