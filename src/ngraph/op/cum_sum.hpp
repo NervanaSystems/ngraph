@@ -81,8 +81,9 @@ namespace ngraph
                 ///
                 /// \param arg The tensor to be summed.
                 /// \param axis zero dimension tensor specifying axis position along which
-                /// cumulative
-                /// sum must be performed
+                /// cumulative sum must be performed
+                /// \param exclusive if set to true, the top element is not included
+                /// \param reverse if set to true, will perform the sums in reverse direction
                 CumSum(const Output<Node>& arg,
                        const Output<Node>& axis,
                        const bool exclusive = false,
@@ -92,6 +93,7 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 void validate_and_infer_types() override;
+                virtual bool visit_attributes(AttributeVisitor& visitor) override;
 
                 /// \return The default value for CumSum.
                 virtual std::shared_ptr<Node> get_default_value() const override;

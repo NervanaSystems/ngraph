@@ -72,3 +72,10 @@ shared_ptr<Node> op::v0::CumSum::get_default_value() const
 {
     return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }
+
+bool op::v0::CumSum::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("exclusive", m_exclusive);
+    visitor.on_attribute("reverse", m_reverse);
+    return true;
+}
