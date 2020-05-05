@@ -120,6 +120,8 @@ namespace ngraph
                 std::vector<int64_t> m_new_axis_mask;
                 std::vector<int64_t> m_shrink_axis_mask;
                 std::vector<int64_t> m_ellipsis_mask;
+
+                bool m_is_foldable = true;
             };
         }
     }
