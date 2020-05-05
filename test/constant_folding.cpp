@@ -3072,11 +3072,12 @@ TEST(constant_folding, constant_scatter_elements_update_one_elem)
 void test_constant_folding_reshape_v1(Shape& shape_in,
                                       vector<float>& values_in,
                                       Shape shape_shape,
-                                      vector<int32_t> values_shape)
+                                      vector<int32_t> values_shape,
+                                      bool zero_flag = false)
 {
     auto constant_in = make_shared<op::Constant>(element::f32, shape_in, values_in);
     auto constant_shape = make_shared<op::Constant>(element::i64, shape_shape, values_shape);
-    auto dyn_reshape = make_shared<op::v1::Reshape>(constant_in, constant_shape, false);
+    auto dyn_reshape = make_shared<op::v1::Reshape>(constant_in, constant_shape, zero_flag);
     auto f = make_shared<Function>(dyn_reshape, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -3097,11 +3098,27 @@ TEST(constant_folding, constant_dyn_reshape_v1_2d)
     Shape shape_in{2, 5};
     vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
-    Shape shape_shape{4};
-    vector<int32_t> values_shape{1, 1, 1, 10};
-
     test_constant_folding_reshape_v1(shape_in, values_in, {4}, {1, 1, 1, 10});
     test_constant_folding_reshape_v1(shape_in, values_in, {4}, {1, 1, 2, 5});
     test_constant_folding_reshape_v1(shape_in, values_in, {3}, {1, 2, 5});
     test_constant_folding_reshape_v1(shape_in, values_in, {3}, {5, 2, 1});
+}
+
+TEST(constant_folding, constant_dyn_reshape_v1_pattern_with_negative_indices)
+{
+    Shape shape_in{2, 2, 2, 2};
+    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+
+    test_constant_folding_reshape_v1(shape_in, values_in, {3}, {4, -1, 2});
+    test_constant_folding_reshape_v1(shape_in, values_in, {2}, {4, -1});
+    test_constant_folding_reshape_v1(shape_in, values_in, {1}, {-1});
+}
+
+TEST(constant_folding, constant_dyn_reshape_v1_pattern_with_zero_dims)
+{
+    Shape shape_in{2, 2, 2, 2};
+    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+
+    test_constant_folding_reshape_v1(shape_in, values_in, {4}, {2, -1, 2, 0}, true);
+    test_constant_folding_reshape_v1(shape_in, values_in, {4}, {4, 1, 0, 2}, true);
 }

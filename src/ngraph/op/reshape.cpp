@@ -313,6 +313,14 @@ void op::v1::Reshape::validate_and_infer_types()
                     }
                 }
 
+                if (negative_dim == -1)
+                {
+                    NODE_VALIDATION_CHECK(
+                        this,
+                        input_elements == output_elements,
+                        "number of elements in output is not number of elements in input");
+                }
+
                 if (negative_dim != -1)
                 {
                     // Infer size such that number of output elements matches
@@ -419,6 +427,14 @@ bool op::v1::Reshape::evaluate(const HostTensorVector& outputs, const HostTensor
             {
                 output_elements *= out_shape_val[i];
             }
+        }
+
+        if (negative_dim == -1)
+        {
+            NODE_VALIDATION_CHECK(
+                this,
+                input_elements == output_elements,
+                "number of elements in output is not number of elements in input");
         }
 
         if (negative_dim != -1)
