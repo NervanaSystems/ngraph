@@ -91,6 +91,123 @@ namespace ngraph
     };
 
     constexpr DiscreteTypeInfo AttributeAdapter<Position>::type_info;
+
+    /// \brief Visits type info for value.
+    ///
+    /// If value is nullptr, type info is obtained from the visitor and the factory is used
+    /// to create an object. Otherwise, type_info is obtained from value and visited.
+    template <typename BASE_TYPE>
+    BASE_TYPE* visit_type_info(AttributeVisitor& visitor, BASE_TYPE* value)
+    {
+        string name;
+        uint64_t version = 0;
+        if (value)
+        {
+            auto type_info = value->get_type_info();
+            name = type_info.name;
+            version = type_info.version;
+        }
+        visitor.on_attribute("name", name);
+        visitor.on_attribute("version", version);
+        if (value || name.empty())
+        {
+            return nullptr;
+        }
+        else
+        {
+            return FactoryRegistry<BASE_TYPE>::get().create(
+                DiscreteTypeInfo{name.c_str(), version});
+        }
+    }
+
+    /// \brief Visits a node. All inputs and control dependencies must have already been visited.
+    template <>
+    class AttributeAdapter<std::shared_ptr<Node>> : StructAdapter
+    {
+    public:
+        AttributeAdapter(std::shared_ptr<Node>& value)
+            : m_ref(value)
+        {
+        }
+
+        virtual bool visit_attributes(AttributeVisitor& visitor) override;
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<std::shared_ptr<Node>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    protected:
+        std::shared_ptr<Node>& m_ref;
+    };
+}
+
+constexpr DiscreteTypeInfo AttributeAdapter<shared_ptr<Node>>::type_info;
+
+int64_t get_node_visitor_id(AttributeVisitor& visitor, std::shared_ptr<Node>& node)
+{
+    vector<int64_t> input_nodes;
+    vector<size_t> input_indices;
+    vector<int64_t> control_deps;
+    bool node_created = false;
+    visitor.start_structure("type_info");
+    auto val = visit_type_info(visitor, node.get());
+    visitor.finish_structure();
+    if (val)
+    {
+        node_created = true;
+        node = shared_ptr<Node>(val);
+    }
+
+    if (!node_created)
+    {
+        // Get the indices for the inputs and control deps
+        for (auto value : node->input_values())
+        {
+            input_nodes.push_back(visitor.get_id(value.get_node()));
+            input_indices.push_back(value.get_index());
+        }
+        for (auto node_ptr : node->get_control_dependencies())
+        {
+            control_deps.push_back(visitor.get_id(node_ptr.get()));
+        }
+    }
+
+    if (node)
+    {
+        visitor.on_attribute("input_nodes", input_nodes);
+        visitor.on_attribute("input_indices", input_indices);
+        visitor.on_attribute("control_deps", control_deps);
+        node->visit_attributes(visitor);
+        if (node_created)
+        {
+            OutputVector args;
+            for (size_t i = 0; i < input_nodes.size(); ++i)
+            {
+                args.push_back(
+                    static_cast<Node*>(visitor.get_ptr(input_nodes[i]))->output(input_indices[i]));
+            }
+            node->set_arguments(args);
+            for (auto control_dep_index : control_deps)
+            {
+                node->add_control_dependency(
+                    static_cast<Node*>(visitor.get_ptr(control_dep_index))->shared_from_this());
+            }
+            node->constructor_validate_and_infer_types();
+        }
+    }
+    return visitor.insert_ptr(node.get());
+}
+
+vector<int64_t> visit_nodes(AttributeVisitor& visitor, const NodeVector& nodes)
+{
+    vector<int64_t> node_ids;
+    traverse_nodes(nodes, [&visitor, &node_ids](std::shared_ptr<Node> node) {
+        auto id = visitor.get_id(node.get());
+        if (id == -1)
+        {
+            id = get_node_visitor_id(visitor, node);
+        }
+        NGRAPH_CHECK(id != -1, "Node ", node, " could not be visited");
+        node_ids.push_back(id);
+    });
+    return node_ids;
 }
 
 // Given a Turing machine program and data, return scalar 1 if the program would

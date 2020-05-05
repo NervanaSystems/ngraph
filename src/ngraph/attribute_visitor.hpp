@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 #include "ngraph/partial_shape.hpp"
@@ -134,10 +135,18 @@ namespace ngraph
         virtual std::string get_name_with_context(const std::string& name);
         /// \brief Start visiting a nested structure
         virtual void start_structure(const std::string& name);
-        /// \bried Finish visiting a nested structure
+        /// \brief Finish visiting a nested structure
         virtual void finish_structure();
+        /// \brief Get the id for a pointer
+        virtual int64_t get_id(void*);
+        /// \brief Retrieve a pointer from the id table
+        virtual void* get_ptr(int64_t id);
+        /// \brief Add a pointer to the id table
+        virtual int64_t insert_ptr(void*);
 
     protected:
         std::vector<Context> m_context;
+        std::unordered_map<void*, int64_t> m_ids;
+        std::vector<void*> m_ptrs;
     };
 }

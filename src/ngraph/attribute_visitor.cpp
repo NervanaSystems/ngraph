@@ -177,3 +177,25 @@ void AttributeVisitor::on_adapter(const string& name, ValueAccessor<std::vector<
 {
     on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
 }
+
+void* AttributeVisitor::get_ptr(int64_t id)
+{
+    NGRAPH_CHECK(id < m_ptrs.size(), "Invalid visitor table id");
+    return m_ptrs.at(id);
+}
+
+int64_t AttributeVisitor::get_id(void* ptr)
+{
+    auto it = m_ids.find(ptr);
+    return it->first ? it->second : -1;
+}
+
+int64_t AttributeVisitor::insert_ptr(void* ptr)
+{
+    auto it = m_ids.find(ptr);
+    NGRAPH_CHECK(it->second, "Unregistered visitor table pointer");
+    int64_t id = m_ptrs.size();
+    m_ids[ptr] = id;
+    m_ptrs.push_back(ptr);
+    return id;
+}
