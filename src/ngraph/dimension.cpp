@@ -40,11 +40,6 @@ std::ostream& ngraph::operator<<(std::ostream& str, const Dimension& dimension)
     }
 }
 
-Dimension::Dimension()
-    : m_dimension()
-{
-}
-
 Dimension::Dimension(value_type dimension)
     : m_dimension(dimension == -1 ? 0 : dimension, dimension == -1 ? Interval::s_max : dimension)
 {

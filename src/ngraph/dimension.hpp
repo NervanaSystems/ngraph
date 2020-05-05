@@ -46,7 +46,7 @@ namespace ngraph
         Dimension(value_type min_dimension, value_type max_dimension);
 
         /// \brief Construct a dynamic dimension with range [0, ...]
-        Dimension();
+        Dimension() = default;
 
         bool operator==(const Dimension& dimension) const
         {
