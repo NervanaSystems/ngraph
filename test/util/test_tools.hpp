@@ -32,6 +32,7 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
 #define MLIR_DISABLE_TEST(name) DISABLED_##name
@@ -69,6 +70,17 @@ void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>
 {
     size_t data_size = data.size() * sizeof(T);
     tv->write(data.data(), data_size);
+}
+
+template <ngraph::element::Type_t ET>
+ngraph::HostTensorPtr
+    make_host_tensor(const ngraph::Shape& shape,
+                     const std::vector<typename ngraph::element_type_traits<ET>::value_type>& data)
+{
+    NGRAPH_CHECK(shape_size(shape) == data.size(), "Incorrect number of initialization elements");
+    auto host_tensor = std::make_shared<ngraph::HostTensor>(ET, shape);
+    copy_data(host_tensor, data);
+    return host_tensor;
 }
 
 template <>
