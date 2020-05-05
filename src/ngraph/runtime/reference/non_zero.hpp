@@ -87,7 +87,7 @@ namespace ngraph
                     return;
                 }
 
-                // Dimension size for the arg_shape. This is used to map one-dimentional
+                // Dimensional size for the arg_shape. This is used to map one-dimentional
                 // arg array indices to corresponding arg_rank-dimentional shape indices.
                 // i.e., arg_shape {2, 3, 2} => elem_per_axis {6, 2, 1}.
                 // Array index 4 in arg (arg[4]) correspond to 3-D index of [0][2][0]
