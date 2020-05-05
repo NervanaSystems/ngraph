@@ -2176,7 +2176,7 @@ def non_max_suppression(boxes,                              # type: Node
                         scores,                             # type: NodeInput
                         max_output_boxes_per_class=None,    # type: Optional[NodeInput]
                         iou_threshold=None,                 # type: Optional[NodeInput]
-                        score_threshold=None,               # type: NodeInput
+                        score_threshold=None,               # Optional[NodeInput]
                         box_encoding='corner',              # type: str
                         sort_result_descending=True,        # type: bool
                         output_type='i64',                  # type: str
