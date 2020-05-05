@@ -236,6 +236,7 @@ add_library(onnx_importer SHARED
         utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp
+        utils/onnx_importer_visibility.hpp
         utils/pooling_factory.cpp
         utils/pooling_factory.hpp
         utils/reduction.cpp
@@ -253,7 +254,8 @@ set_target_properties(onnx_importer PROPERTIES
                       C_VISIBILITY_PRESET hidden
                       VISIBILITY_INLINES_HIDDEN ON
                       POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_importer SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
+target_include_directories(onnx_importer SYSTEM PUBLIC ${ONNX_IMPORT_INCLUDE_DIR})
+target_include_directories(onnx_importer SYSTEM PRIVATE ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 
 target_compile_definitions(onnx_importer PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
@@ -264,6 +266,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
             -Wno-unused-private-field -Wno-shadow -Wno-deprecated PUBLIC -Wno-undefined-func-template)
 endif()
 
-target_compile_definitions(onnx_importer PRIVATE ngraph_EXPORTS)
+target_compile_definitions(onnx_importer PRIVATE ONNX_IMPORTER_EXPORTS)
 
 install(TARGETS onnx_importer DESTINATION ${NGRAPH_INSTALL_LIB})
