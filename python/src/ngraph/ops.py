@@ -1940,6 +1940,21 @@ def reduce_logical_or(node, reduction_axes, keep_dims=False, name=None):
 
 
 @nameable_op
+def cum_sum(arg, axis, exclusive=False, reverse=False, name=None):
+    # type: (NodeInput, NodeInput, bool, bool, str) -> Node
+    """Construct a cumulative summation operation.
+
+    :param arg: The tensor to be summed.
+    :param axis: zero dimension tensor specifying axis position along which sum will be performed.
+    :param exclusive: if set to true, the top element is not included
+    :param reverse: if set to true, will perform the sums in reverse direction
+    :return: New node performing the operation
+    """
+    return _get_node_factory().create('CumSum', as_nodes(arg, axis),
+                                      {'exclusive': exclusive, 'reverse': reverse})
+
+
+@nameable_op
 def prelu(data, slope, name=None):  # type: (Node, Node, str) -> Node
     """Perform Parametrized Relu operation element-wise on data from input node.
 

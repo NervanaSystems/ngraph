@@ -48,6 +48,8 @@ from ngraph.ops import convolution_backprop_data
 from ngraph.ops import cos
 from ngraph.ops import cosh
 from ngraph.ops import ctc_greedy_decoder
+from ngraph.ops import cum_sum
+from ngraph.ops import cum_sum as cumsum
 from ngraph.ops import deformable_convolution
 from ngraph.ops import deformable_psroi_pooling
 from ngraph.ops import depth_to_space

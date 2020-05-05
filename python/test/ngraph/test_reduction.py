@@ -188,3 +188,23 @@ def test_roi_align():
     assert node.get_type_name() == 'ROIAlign'
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == expected_shape
+
+@pytest.mark.parametrize('input_shape, cumsum_axis, reverse', [
+    ([5, 2], 0, False),
+    ([5, 2], 1, False),
+    ([5, 2, 6], 2, False),
+    ([5, 2], 0, True),
+])
+def test_cum_sum(input_shape, cumsum_axis, reverse):
+    input_data = np.arange(np.prod(input_shape)).reshape(input_shape)
+
+    if reverse:
+        expected = np.cumsum(input_data[::-1], axis=cumsum_axis)[::-1]
+    else:
+        expected = np.cumsum(input_data, axis=cumsum_axis)
+
+    runtime = get_runtime()
+    node = ng.cum_sum(input_data, cumsum_axis, reverse=reverse)
+    computation = runtime.computation(node)
+    result = computation()
+    assert np.allclose(result, expected)
