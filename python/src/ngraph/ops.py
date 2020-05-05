@@ -2232,7 +2232,7 @@ def non_zero(data,                # type: Node
              output_type='i64',   # type: str
              ):
     # type: (...) -> Node
-    """Return a node which performs NonZero.
+    """Return the indices of the elements that are non-zero.
 
     :param data: Input data.
     :param output_type: Output tensor type.
