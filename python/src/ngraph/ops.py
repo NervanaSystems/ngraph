@@ -2143,7 +2143,7 @@ def lrn(data,       # type: Node
         beta=0.5,   # type: float
         bias=1,     # type: float
         size=5,     # type: int
-        name=None,  # type: str
+        name=None,  # type: Optional[str]
         ):
     # type: (...) -> Node
     """Return a node which performs element-wise Local Response Normalization (LRN) operation.
@@ -2197,6 +2197,7 @@ def non_max_suppression(boxes,                              # type: Node
                         box_encoding='corner',              # type: str
                         sort_result_descending=True,        # type: bool
                         output_type='i64',                  # type: str
+                        name=None,                          # type: Optional[str]
                         ):
     # type: (...) -> Node
     """Return a node which performs NonMaxSuppression.
@@ -2232,6 +2233,7 @@ def non_max_suppression(boxes,                              # type: Node
 @nameable_op
 def non_zero(data,                # type: Node
              output_type='i64',   # type: str
+             name=None,           # type: Optional[str]
              ):
     # type: (...) -> Node
     """Return the indices of the elements that are non-zero.
@@ -2251,6 +2253,7 @@ def topk(data,                      # type: Node
          mode,                      # type: str
          sort,                      # type: str
          index_element_type='i32',  # type: str
+         name=None,                 # type: Optional[str]
          ):
     # type: (...) -> Node
     """Return a node which performs TopK.
@@ -2277,6 +2280,7 @@ def roi_align(data,             # type: Node
               sampling_ratio,   # type: int
               spatial_scale,    # type: float
               mode,             # type: str
+              name=None,        # type: Optional[str]
               ):
     # type: (...) -> Node
     """Return a node which performs ROIAlign.
@@ -2418,7 +2422,7 @@ def sigmoid(data):  # type: (Node) -> Node
 
 
 @nameable_op
-def shape_of(data, output_type='i64'):  # type: (Node, str) -> Node
+def shape_of(data, output_type='i64', name=None):  # type: (Node, str, Optional[str]) -> Node
     """Return a node which produces a tensor containing the shape of its input data.
 
     :param data: The tensor containing the input data.
