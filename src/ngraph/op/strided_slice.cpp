@@ -20,6 +20,10 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/gather.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/slice.hpp"
+#include "ngraph/slice_plan.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
@@ -226,4 +230,109 @@ void op::v1::StridedSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                              const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for StridedSlice");
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    inline bool evaluate(const HostTensorPtr& in, const SlicePlan& sp, const HostTensorPtr& out)
+
+    {
+        runtime::reference::slice(in->get_data_ptr<ET>(),
+                                  out->get_data_ptr<ET>(),
+                                  in->get_shape(),
+                                  Coordinate(sp.begins.begin(), sp.begins.end()),
+                                  Coordinate(sp.ends.begin(), sp.ends.end()),
+                                  Strides(sp.strides.begin(), sp.strides.end()),
+                                  out->get_shape());
+        return true;
+    }
+
+    bool evaluate_strided_slice(const HostTensorPtr& in,
+                                const HostTensorPtr& begin,
+                                const HostTensorPtr& end,
+                                const HostTensorPtr& stride,
+                                const AxisSet& begin_mask,
+                                const AxisSet& end_mask,
+                                const AxisSet& new_axis_mask,
+                                const AxisSet& shrink_axis_mask,
+                                const AxisSet& ellipsis_mask,
+                                const HostTensorPtr& out)
+    {
+        bool rc = true;
+
+        // element::Type element_type = begin->get_element_type();
+        // if (element_type != element::i64)
+        // {
+        //     return false;
+        // }
+        std::vector<int64_t> begin_const = read_vector<int64_t>(begin);
+        std::vector<int64_t> end_const = read_vector<int64_t>(end);
+        std::vector<int64_t> stride_const = read_vector<int64_t>(stride);
+        SlicePlan slice_plan = make_slice_plan(in->get_shape(),
+                                               begin_const,
+                                               end_const,
+                                               stride_const,
+                                               begin_mask,
+                                               end_mask,
+                                               new_axis_mask,
+                                               shrink_axis_mask,
+                                               ellipsis_mask);
+        switch (in->get_element_type())
+        {
+            TYPE_CASE(i8)(in, slice_plan, out);
+            break;
+            TYPE_CASE(i16)(in, slice_plan, out);
+            break;
+            TYPE_CASE(i32)(in, slice_plan, out);
+            break;
+            TYPE_CASE(i64)(in, slice_plan, out);
+            break;
+            TYPE_CASE(u8)(in, slice_plan, out);
+            break;
+            TYPE_CASE(u16)(in, slice_plan, out);
+            break;
+            TYPE_CASE(u32)(in, slice_plan, out);
+            break;
+            TYPE_CASE(u64)(in, slice_plan, out);
+            break;
+            TYPE_CASE(bf16)(in, slice_plan, out);
+            break;
+            TYPE_CASE(f32)(in, slice_plan, out);
+            break;
+            TYPE_CASE(f64)(in, slice_plan, out);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+
+    bool constant_fold_strided_slice(Node* strided_slice_node,
+                                     Output<Node>& replacement,
+                                     const Output<Node>& strided_slice_input,
+                                     bool is_foldable)
+    {
+        return false;
+    }
+}
+
+bool op::v1::StridedSlice::evaluate(const HostTensorVector& output_values,
+                                    const HostTensorVector& input_values)
+{
+    return evaluate_strided_slice(input_values[0],
+                                  input_values[1],
+                                  input_values[2],
+                                  input_values[3],
+                                  convert_mask_to_axis_set(get_begin_mask()),
+                                  convert_mask_to_axis_set(get_end_mask()),
+                                  convert_mask_to_axis_set(get_new_axis_mask()),
+                                  convert_mask_to_axis_set(get_shrink_axis_mask()),
+                                  convert_mask_to_axis_set(get_ellipsis_mask()),
+                                  output_values[0]);
+}
+
+bool op::v1::StridedSlice::constant_fold(OutputVector& output_values,
+                                         const OutputVector& input_values)
+{
+    return constant_fold_strided_slice(this, output_values[0], input_values[0], m_is_foldable);
 }
