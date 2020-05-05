@@ -149,14 +149,23 @@ static bool replace_squeeze_unsqueeze(const std::shared_ptr<Node>& node)
         if (as_type_ptr<opset3::Reshape>(input) || as_type_ptr<opset3::Squeeze>(input) ||
             as_type_ptr<opset3::Unsqueeze>(input))
         {
-            reshape = make_shared<opset3::Reshape>(
-                input->input_value(0).get_node_shared_ptr(), pat, false);
+            input = input->input_value(0).get_node_shared_ptr();
+            reshape = make_shared<opset3::Reshape>(input->output(0), pat, false);
         }
         else
         {
-            reshape = make_shared<opset3::Reshape>(input, pat, false);
+            reshape = make_shared<opset3::Reshape>(input->output(0), pat, false);
         }
-        return replace_output_update_name(node->output(0), reshape->output(0));
+
+        // skip if reshape is nop
+        if (reshape->get_input_shape(0) == shape)
+        {
+            return replace_output_update_name(node->output(0), reshape->input_value(0));
+        }
+        else
+        {
+            return replace_output_update_name(node->output(0), reshape->output(0));
+        }
     }
     return false;
 }
@@ -216,8 +225,8 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
     auto squeeze = as_type_ptr<opset3::Squeeze>(input);
     auto replace_unsqueeze_only = [&](const vector<int64_t>& axes) {
         auto axes_const = op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
-        auto new_unsq =
-            make_shared<opset3::Unsqueeze>(input->input_value(0).get_node_shared_ptr(), axes_const);
+        auto new_unsq = make_shared<opset3::Unsqueeze>(
+            input->input_value(0).get_node_shared_ptr()->output(0), axes_const);
         if (unsqueeze->get_output_partial_shape(0).same_scheme(
                 new_unsq->get_output_partial_shape(0)))
         {
@@ -255,7 +264,7 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
                 auto axes_const =
                     op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
                 auto new_sq = make_shared<opset3::Squeeze>(
-                    input->input_value(0).get_node_shared_ptr(), axes_const);
+                    input->input_value(0).get_node_shared_ptr()->output(0), axes_const);
                 if (unsqueeze->get_output_partial_shape(0).same_scheme(
                         new_sq->get_output_partial_shape(0)))
                 {
