@@ -73,6 +73,8 @@ namespace
             break;
             TYPE_CASE(u64)(arg0, out, order);
             break;
+            TYPE_CASE(boolean)(arg0, out, order);
+            break;
         default: rc = false; break;
         }
         return rc;

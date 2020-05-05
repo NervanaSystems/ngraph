@@ -1446,16 +1446,6 @@ protected:
                                         node.get_output_shape(0));
             break;
         }
-        case OP_TYPEID::Reshape:
-        {
-            const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
-            reference::reshape(args[0]->get_data_ptr<const T>(),
-                               out[0]->get_data_ptr<T>(),
-                               node.get_input_shape(0),
-                               reshape->get_input_order(),
-                               node.get_output_shape(0));
-            break;
-        }
         case OP_TYPEID::Reverse:
         {
             const op::Reverse* reverse = static_cast<const op::Reverse*>(&node);
@@ -1765,6 +1755,7 @@ protected:
         case OP_TYPEID::Multiply:
         case OP_TYPEID::Power:
         case OP_TYPEID::Range:
+        case OP_TYPEID::Reshape:
         case OP_TYPEID::Result:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShapeOf_v3:
