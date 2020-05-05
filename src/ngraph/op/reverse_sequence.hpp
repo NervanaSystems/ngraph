@@ -33,7 +33,8 @@ namespace ngraph
                 /// \brief Constructs a ReverseSequence operation.
                 ///
                 /// \param arg         tensor with input data to reverse
-                /// \param seq_lengths 1D tensor of integers with sequence lengths in the input tensor.
+                /// \param seq_lengths 1D tensor of integers with sequence lengths in the input
+                /// tensor.
                 /// \param batch_axis  index of the batch dimension.
                 /// \param seq_axis    index of the sequence dimension.
                 ReverseSequence(const Output<Node>& arg,

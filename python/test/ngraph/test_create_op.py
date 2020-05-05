@@ -180,3 +180,15 @@ def test_psroi_pooling():
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == [150, 2, 6, 6]
     assert node.get_output_element_type(0) == Type.f32
+
+
+def test_convert_like():
+    parameter_data = ng.parameter([1, 2, 3, 4], name='data', dtype=np.float32)
+    like = ng.constant(1, dtype=np.int8)
+
+    node = ng.convert_like(parameter_data, like)
+
+    assert node.get_type_name() == 'ConvertLike'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == [1, 2, 3, 4]
+    assert node.get_output_element_type(0) == Type.i8
