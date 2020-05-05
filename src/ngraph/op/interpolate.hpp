@@ -28,8 +28,8 @@ namespace ngraph
             std::string mode;
             bool align_corners = true;
             bool antialias = false;
-            std::vector<size_t> pads_begin;
-            std::vector<size_t> pads_end;
+            std::vector<int64_t> pads_begin;
+            std::vector<int64_t> pads_end;
         } InterpolateAttrs;
 
         namespace v0
