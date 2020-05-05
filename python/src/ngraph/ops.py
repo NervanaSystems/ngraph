@@ -44,6 +44,7 @@ from ngraph.utils.node_factory import NodeFactory
 
 
 def _get_node_factory(opset_version=None):  # type: (Optional[str]) -> NodeFactory
+    """Return NodeFactory configured to create operators from specified opset version."""
     if opset_version:
         return NodeFactory(opset_version)
     else:
@@ -863,10 +864,25 @@ def relu(node, name=None):  # type: (NodeInput, str) -> Node
     """Perform rectified linear unit operation on input node element-wise.
 
     :param node: One of: input node, array or scalar.
-    :param name: The optional ouptut node name.
+    :param name: The optional output node name.
     :return: The new node performing relu operation on its input element-wise.
     """
     return _get_node_factory().create('Relu', [node])
+
+
+@nameable_op
+def selu(data, alpha, lambda_value, name=None):
+    # type: (NodeInput, NodeInput, NodeInput, Optional[str]) -> Node
+    """Perform a Scaled Exponential Linear Unit (SELU) operation on input node element-wise.
+
+    :param data: input node, array or scalar.
+    :param alpha: Alpha coefficient of SELU operation
+    :param lambda_value: Lambda coefficient of SELU operation
+    :param name: The optional output node name.
+    :return: The new node performing relu operation on its input element-wise.
+    """
+    return _get_node_factory().create('Selu',
+                                      [as_node(data), as_node(alpha), as_node(lambda_value)])
 
 
 @unary_op
@@ -874,7 +890,7 @@ def sign(node, name=None):  # type: (NodeInput, str) -> Node
     """Perform element-wise sign operation.
 
     :param node: One of: input node, array or scalar.
-    :param name: The optional new name for ouptut node.
+    :param name: The optional new name for output node.
     :return: The node with mapped elements of the input tensor to -1 (if it is negative),
              0 (if it is zero), or 1 (if it is positive).
     """
@@ -1389,6 +1405,18 @@ def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Nod
     return Convert(node, new_element_type)
 
 
+@binary_op
+def convert_like(data, like, name=None):  # type: (Node, NumericType, str) -> Node
+    """Return node which casts data node values to the type of another node.
+
+    :param data: Node which produces the input tensor
+    :param like: Node which provides the target type information for the conversion
+    :param name: Optional name for the output node.
+    :return: New node performing the conversion operation.
+    """
+    return _get_node_factory().create('ConvertLike', [data, like])
+
+
 @nameable_op
 def depth_to_space(node, mode, block_size, name=None):  # type: (Node, str, int, str) -> Node
     """Rearranges input tensor from depth into blocks of spatial data.
@@ -1817,7 +1845,7 @@ def reduce_sum(node, reduction_axes, keep_dims=False, name=None):
     :param node:           The node providing data for operation.
     :param reduction_axes: The axes to eliminate through summation.
     :param keep_dims:      If set to True it holds axes that are used for reduction
-    :param name:           The optional new name for ouptut node.
+    :param name:           The optional new name for output node.
     :return: The new node performing summation along `reduction_axes` element-wise.
     """
     return _get_node_factory().create('ReduceSum', [node, reduction_axes], {'keep_dims': keep_dims})
@@ -1911,6 +1939,21 @@ def reduce_logical_or(node, reduction_axes, keep_dims=False, name=None):
     return _get_node_factory().create('ReduceLogicalOr',
                                       [node, reduction_axes],
                                       {'keep_dims': keep_dims})
+
+
+@nameable_op
+def cum_sum(arg, axis, exclusive=False, reverse=False, name=None):
+    # type: (NodeInput, NodeInput, bool, bool, str) -> Node
+    """Construct a cumulative summation operation.
+
+    :param arg: The tensor to be summed.
+    :param axis: zero dimension tensor specifying axis position along which sum will be performed.
+    :param exclusive: if set to true, the top element is not included
+    :param reverse: if set to true, will perform the sums in reverse direction
+    :return: New node performing the operation
+    """
+    return _get_node_factory().create('CumSum', as_nodes(arg, axis),
+                                      {'exclusive': exclusive, 'reverse': reverse})
 
 
 @nameable_op

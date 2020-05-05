@@ -42,11 +42,14 @@ from ngraph.ops import clamp
 from ngraph.ops import concat
 from ngraph.ops import constant
 from ngraph.ops import convert
+from ngraph.ops import convert_like
 from ngraph.ops import convolution
 from ngraph.ops import convolution_backprop_data
 from ngraph.ops import cos
 from ngraph.ops import cosh
 from ngraph.ops import ctc_greedy_decoder
+from ngraph.ops import cum_sum
+from ngraph.ops import cum_sum as cumsum
 from ngraph.ops import deformable_convolution
 from ngraph.ops import deformable_psroi_pooling
 from ngraph.ops import depth_to_space
@@ -119,6 +122,7 @@ from ngraph.ops import scale_shift
 from ngraph.ops import scatter_elements_update
 from ngraph.ops import scatter_update
 from ngraph.ops import select
+from ngraph.ops import selu
 from ngraph.ops import shape_of
 from ngraph.ops import shuffle_channels
 from ngraph.ops import sigmoid
