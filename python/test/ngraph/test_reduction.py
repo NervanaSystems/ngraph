@@ -134,3 +134,24 @@ def test_reduce_mean_op(ng_api_helper, numpy_function, reduction_axes):
     expected = numpy_function(input_data, axis=tuple(reduction_axes))
     result = run_op_node([input_data, reduction_axes], ng_api_helper)
     assert np.allclose(result, expected)
+
+
+@pytest.mark.parametrize('input_shape, cumsum_axis, reverse', [
+    ([5, 2], 0, False),
+    ([5, 2], 1, False),
+    ([5, 2, 6], 2, False),
+    ([5, 2], 0, True),
+])
+def test_cum_sum(input_shape, cumsum_axis, reverse):
+    input_data = np.arange(np.prod(input_shape)).reshape(input_shape)
+
+    if reverse:
+        expected = np.cumsum(input_data[::-1], axis=cumsum_axis)[::-1]
+    else:
+        expected = np.cumsum(input_data, axis=cumsum_axis)
+
+    runtime = get_runtime()
+    node = ng.cum_sum(input_data, cumsum_axis, reverse=reverse)
+    computation = runtime.computation(node)
+    result = computation()
+    assert np.allclose(result, expected)
