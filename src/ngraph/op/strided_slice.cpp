@@ -21,7 +21,7 @@
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
-#include "ngraph/runtime/reference/slice.hpp"
+#include "ngraph/runtime/reference/strided_slice.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/type/element_type_traits.hpp"
 #include "ngraph/util.hpp"
@@ -238,13 +238,8 @@ namespace
     inline bool evaluate(const HostTensorPtr& in, const SlicePlan& sp, const HostTensorPtr& out)
 
     {
-        runtime::reference::slice(in->get_data_ptr<ET>(),
-                                  out->get_data_ptr<ET>(),
-                                  in->get_shape(),
-                                  Coordinate(sp.begins.begin(), sp.begins.end()),
-                                  Coordinate(sp.ends.begin(), sp.ends.end()),
-                                  Strides(sp.strides.begin(), sp.strides.end()),
-                                  out->get_shape());
+        runtime::reference::strided_slice(
+            in->get_data_ptr<ET>(), out->get_data_ptr<ET>(), in->get_shape(), sp, out->get_shape());
         return true;
     }
 
@@ -261,11 +256,6 @@ namespace
     {
         bool rc = true;
 
-        // element::Type element_type = begin->get_element_type();
-        // if (element_type != element::i64)
-        // {
-        //     return false;
-        // }
         std::vector<int64_t> begin_const = read_vector<int64_t>(begin);
         std::vector<int64_t> end_const = read_vector<int64_t>(end);
         std::vector<int64_t> stride_const = read_vector<int64_t>(stride);

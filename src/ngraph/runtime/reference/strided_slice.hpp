@@ -1,3 +1,4 @@
+//*****************************************************************************
 // Copyright 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +20,10 @@
 
 #include "ngraph/check.hpp"
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/runtime/reference/reshape.hpp"
+#include "ngraph/runtime/reference/reverse.hpp"
+#include "ngraph/runtime/reference/slice.hpp"
+#include "ngraph/slice_plan.hpp"
 
 namespace ngraph
 {
@@ -30,14 +35,37 @@ namespace ngraph
             void strided_slice(const T* arg,
                                T* out,
                                const Shape& arg_shape,
-                               const Coordinate& lower_bound,
-                               const Coordinate& upper_bound,
-                               const Strides& strides,
-                               const Shape& out_shape,
-                               const std::vector<int64_t>& begin_mask,
-                               const std::vector<int64_t>& end_mask,
-                               const std::vector<int64_t>& new_axis_mask = std::vector<int64_t>{},
-                               const std::vector<int64_t>& shrink_axis_mask = std::vector<int64_t>{},
-                               const std::vector<int64_t>& ellipsis_mask = std::vector<int64_t>{})
+                               const SlicePlan& sp,
+                               const Shape& out_shape)
             {
+                runtime::AlignedBuffer slice_out_buffer(shape_size(sp.reshape_in_shape) *
+                                                        sizeof(T));
+                runtime::reference::slice<T>(arg,
+                                             slice_out_buffer.get_ptr<T>(),
+                                             arg_shape,
+                                             Coordinate(sp.begins.begin(), sp.begins.end()),
+                                             Coordinate(sp.ends.begin(), sp.ends.end()),
+                                             Strides(sp.strides.begin(), sp.strides.end()),
+                                             sp.reshape_in_shape);
+
+                runtime::AlignedBuffer reshape_out_buffer(shape_size(sp.reshape_out_shape) *
+                                                          sizeof(T));
+                runtime::reference::reshape<T>(slice_out_buffer.get_ptr<T>(),
+                                               reshape_out_buffer.get_ptr<T>(),
+                                               sp.reshape_in_shape,
+                                               get_default_order(sp.reshape_in_shape.size()),
+                                               sp.reshape_out_shape);
+
+                runtime::AlignedBuffer reverse_out_buffer(shape_size(sp.reshape_out_shape) *
+                                                          sizeof(T));
+                runtime::reference::reverse<T>(reshape_out_buffer.get_ptr<T>(),
+                                               reverse_out_buffer.get_ptr<T>(),
+                                               sp.reshape_out_shape,
+                                               sp.reshape_out_shape,
+                                               sp.reverse_axes);
+
+                out = reverse_out_buffer.get_ptr<T>();
             }
+        }
+    }
+}
