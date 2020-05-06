@@ -26,7 +26,11 @@ using namespace std;
 using namespace ngraph;
 
 // *** Convolution OP SET 1 ***
-constexpr NodeTypeInfo op::v1::Convolution::type_info;
+const NodeTypeInfo op::v1::Convolution::type_info{"Convolution", 1};
+
+const NodeTypeInfo& op::v1::Convolution::get_type_info_static() {
+    return type_info;
+}
 
 op::v1::Convolution::Convolution(const Output<Node>& data_batch,
                                  const Output<Node>& filters,
