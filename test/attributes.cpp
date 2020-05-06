@@ -124,38 +124,8 @@ namespace ngraph
     }
 
     // TODO: Move to attribute_adapter
-    /// \brief Visits a reference to a node. The node must have been registered.
-    template <>
-    class AttributeAdapter<std::shared_ptr<Node>> : VisitorAdapter
-    {
-    public:
-        AttributeAdapter(std::shared_ptr<Node>& value)
-            : m_ref(value)
-        {
-        }
-
-        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
-        {
-            int64_t original_id = visitor.get_registered_node_id(m_ref);
-            int64_t id = original_id;
-            visitor.on_attribute(name, id);
-            if (id != original_id)
-            {
-                m_ref = visitor.get_registered_node(id);
-            }
-            return true;
-        }
-        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<std::shared_ptr<Node>>", 0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-    protected:
-        void visit_node_vector(AttributeVisitor& visitor,
-                               const std::string& name,
-                               NodeVector& node_vector);
-        std::shared_ptr<Node>& m_ref;
-    };
 }
 
-constexpr DiscreteTypeInfo AttributeAdapter<shared_ptr<Node>>::type_info;
 #if 0
 // TODO Update and use for NodeVector, ParameterVector, OutputVector, ResultVector
 void AttributeAdapter<std::shared_ptr<Node>>::visit_node_vector(AttributeVisitor& visitor,
