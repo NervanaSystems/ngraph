@@ -513,8 +513,7 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
 
     auto zero_axis = op::Constant::create<int64_t>(element::i64, Shape{}, {0});
     shared_ptr<Node> replace_node;
-    auto new_shapeof =
-        make_shared<opset3::ShapeOf>(gather->input_value(0).get_node_shared_ptr()->output(0));
+    auto new_shapeof = make_shared<opset3::ShapeOf>(gather->input_value(0));
     if (indices_rank.get_length() == 0)
     {
         std::vector<int64_t> vi(gather_in_rank.get_length());
@@ -534,8 +533,7 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
             auto gather = make_shared<opset3::Gather>(new_shapeof, indices, zero_axis);
             concat_inputs.push_back(gather);
         }
-        auto shapeof_indices =
-            make_shared<opset3::ShapeOf>(gather->input_value(1).get_node_shared_ptr()->output(0));
+        auto shapeof_indices = make_shared<opset3::ShapeOf>(gather->input_value(1));
 
         concat_inputs.push_back(shapeof_indices);
 
