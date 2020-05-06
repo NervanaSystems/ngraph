@@ -92,6 +92,7 @@ from ngraph.ops import mvn
 from ngraph.ops import negative
 from ngraph.ops import non_max_suppression
 from ngraph.ops import non_zero
+from ngraph.ops import normalize_l2
 from ngraph.ops import not_equal
 from ngraph.ops import one_hot
 from ngraph.ops import pad
