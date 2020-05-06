@@ -169,9 +169,9 @@ TEST(eval, evaluate_convert)
     {
         auto result = make_shared<HostTensor>();
         ASSERT_TRUE(
-            fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{2}, inputs[i])}));
-        EXPECT_EQ(result->get_element_type(), element::i64);
-        EXPECT_EQ(result->get_shape(), (Shape{2}));
+		    fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{1, 2}, inputs[i])}));
+        EXPECT_EQ(result->get_element_type(), element::i8);
+        EXPECT_EQ(result->get_shape(), (Shape{1, 2}));
         auto result_data = read_vector<int64_t>(result);
         ASSERT_EQ(result_data, expected_result[i]);
     }

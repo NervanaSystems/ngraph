@@ -67,6 +67,7 @@ namespace
       out->set_shape(arg->get_shape());
       size_t element_count = shape_size(out->get_shape());
         return (INPUT_ET == arg->get_element_type()) &&
+	        OUTPUT_ET == out->get_element_type() &&
                (runtime::reference::convert(arg->get_data_ptr<INPUT_ET>(),
 					    out->get_data_ptr<OUTPUT_ET>(), element_count), true);
     }
