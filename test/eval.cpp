@@ -24,7 +24,11 @@
 #include "ngraph/node.hpp"
 #include "ngraph/node_output.hpp"
 #include "ngraph/op/abs.hpp"
+#include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/asin.hpp"
+#include "ngraph/op/atan.hpp"
+#include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
@@ -38,6 +42,10 @@
 #include "ngraph/op/round.hpp"
 #include "ngraph/op/shape_of.hpp"
 #include "ngraph/op/sigmoid.hpp"
+#include "ngraph/op/sign.hpp"
+#include "ngraph/op/sin.hpp"
+#include "ngraph/op/sinh.hpp"
+#include "ngraph/op/sqrt.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/validation_util.hpp"
@@ -382,7 +390,7 @@ TEST(eval, evaluate_round_2D)
     ASSERT_EQ(result_val, expec);
 }
 
-TEST(eval, evaluate_sigmoid_n1c1h2w2)
+TEST(eval, evaluate_sigmoid)
 {
     auto p = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
     auto sigmoid = make_shared<op::Sigmoid>(p);
@@ -401,21 +409,145 @@ TEST(eval, evaluate_sigmoid_n1c1h2w2)
     ASSERT_EQ(result_val, expec);
 }
 
-TEST(eval, evaluate_sigmoid)
+TEST(eval, evaluate_sign)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
-    auto sigmoid = make_shared<op::Sigmoid>(p);
-    auto fun = make_shared<Function>(OutputVector{sigmoid}, ParameterVector{p});
+    auto p = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto sign = make_shared<op::Sign>(p);
+    auto fun = make_shared<Function>(OutputVector{sign}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
-    float x1 = 1.0f;
-    float x2 = 4.0f;
-    float sigma1 = 1.0f / (1.0f + std::exp(-x1));
-    float sigma2 = 1.0f / (1.0f + std::exp(-x2));
     ASSERT_TRUE(fun->evaluate(
-        {result}, {make_host_tensor<element::Type_t::f32>(Shape{1, 1, 2, 2}, {x1, x2, x1, x2})}));
+        {result},
+        {make_host_tensor<element::Type_t::f32>(Shape{2, 3}, {1, -2, 0, -4.8f, 4.8f, -0.0f})}));
     EXPECT_EQ(result->get_element_type(), element::f32);
     auto result_val = read_vector<float>(result);
-    vector<float> expec{sigma1, sigma2, sigma1, sigma2};
+    vector<float> expec{1, -1, 0, -1, 1, 0};
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_sin)
+{
+    auto p = make_shared<op::Parameter>(element::f32, Shape{11});
+    auto sin = make_shared<op::Sin>(p);
+    auto fun = make_shared<Function>(OutputVector{sin}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+
+    ASSERT_TRUE(fun->evaluate(
+        {result},
+        {make_host_tensor<element::Type_t::f32>(
+            Shape{11}, {0.f, 0.25f, -0.25f, 0.5f, -0.5f, 1.f, -1.f, 2.f, -2.f, 4.f, -4.f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{0.00000000f,
+                        0.24740396f,
+                        -0.24740396f,
+                        0.47942554f,
+                        -0.47942554f,
+                        0.84147098f,
+                        -0.84147098f,
+                        0.90929743f,
+                        -0.90929743f,
+                        -0.75680250f,
+                        0.75680250f};
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_sinh)
+{
+    auto p = make_shared<op::Parameter>(element::f32, Shape{6});
+    auto sinh = make_shared<op::Sinh>(p);
+    auto fun = make_shared<Function>(OutputVector{sinh}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 5.0f, -5.0f};
+    ASSERT_TRUE(fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{6}, input)}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    auto result_val = read_vector<float>(result);
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return sinhf(x); });
+    ASSERT_EQ(result_val, input);
+}
+
+TEST(eval, evaluate_sqrt)
+{
+    auto p = make_shared<op::Parameter>(element::f32, Shape{6});
+    auto sqrt = make_shared<op::Sqrt>(p);
+    auto fun = make_shared<Function>(OutputVector{sqrt}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+
+    vector<float> input{16, 4, 81, 100, 10000, 0};
+    ASSERT_TRUE(fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{6}, input)}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{4, 2, 9, 10, 100, 0};
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_acos)
+{
+    auto p = make_shared<op::Parameter>(element::f32, Shape{11});
+    auto acos = make_shared<op::Acos>(p);
+    auto fun = make_shared<Function>(OutputVector{acos}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+
+    vector<float> input{-1.f, -0.75f, -0.5f, -0.25f, -0.125f, 0.f, 0.125f, 0.25f, 0.5f, 0.75f, 1.f};
+    ASSERT_TRUE(
+        fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{11}, input)}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    auto result_val = read_vector<float>(result);
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return std::acos(x); });
+    ASSERT_EQ(result_val, input);
+}
+
+TEST(eval, evaluate_asin)
+{
+    auto p = make_shared<op::Parameter>(element::f32, Shape{11});
+    auto asin = make_shared<op::Asin>(p);
+    auto fun = make_shared<Function>(OutputVector{asin}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+
+    vector<float> input{-1.f, -0.75f, -0.5f, -0.25f, -0.125f, 0.f, 0.125f, 0.25f, 0.5f, 0.75f, 1.f};
+    ASSERT_TRUE(
+        fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{11}, input)}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    auto result_val = read_vector<float>(result);
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return std::asin(x); });
+
+    ASSERT_EQ(result_val, input);
+}
+
+TEST(eval, evaluate_atan)
+{
+    auto p = make_shared<op::Parameter>(element::f32, Shape{11});
+    auto atan = make_shared<op::Atan>(p);
+    auto fun = make_shared<Function>(OutputVector{atan}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+
+    vector<float> input{-4.f, -2.f, -1.f, -0.5f, -0.25f, 0.f, 0.25f, 0.5f, 1.f, 2.f, 4.f};
+    ASSERT_TRUE(
+        fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{11}, input)}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    auto result_val = read_vector<float>(result);
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return std::atan(x); });
+
+    ASSERT_EQ(result_val, input);
+}
+
+TEST(eval, evaluate_ceiling)
+{
+    auto p = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+    auto ceil = make_shared<op::Ceiling>(p);
+    auto fun = make_shared<Function>(OutputVector{ceil}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+
+    vector<float> input{-2.5f, -2.0f, 0.3f, 4.8f};
+    ASSERT_TRUE(
+        fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{2, 2}, input)}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{-2.0f, -2.0f, 1.0f, 5.0f};
     ASSERT_EQ(result_val, expec);
 }
