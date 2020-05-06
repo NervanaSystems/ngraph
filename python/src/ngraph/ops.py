@@ -2143,6 +2143,21 @@ def batch_norm(eps,             # type: float
 
 
 @nameable_op
+def normalize_l2(data, axes, eps, eps_mode, name=None):
+    # type: (NodeInput, NodeInput, float, str, Optional[str]) -> Node
+    """Construct an NormalizeL2 operation.
+
+    :param data: Node producing the input tensor
+    :param axes: Node indicating axes along which L2 reduction is calculated
+    :param eps: The epsilon added to L2 norm
+    :param eps_mode: how eps is combined with L2 value (`add` or `max`)
+    :return: New node which performs the L2 normalization.
+    """
+    return _get_node_factory().create('NormalizeL2', as_nodes(data, axes),
+                                      {'eps': eps, 'mode': eps_mode})
+
+
+@nameable_op
 def lrn(data,       # type: Node
         alpha=1,    # type: float
         beta=0.5,   # type: float
