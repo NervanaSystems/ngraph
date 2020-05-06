@@ -1460,19 +1460,21 @@ def gelu(node, name=None):  # type: (NodeInput, str) -> Node
 
 
 @nameable_op
-def select(selection_node, input_node1, input_node2, name=None):
-    # type: (Node, Node, Node, str) -> Node
+def select(cond, then_node, else_node, auto_broadcast='numpy', name=None):
+    # type: (Node, NodeInput, NodeInput, Optional[str]) -> Node
     """Perform an element-wise selection operation on input tensors.
 
-    :param selection_node: The node providing selection values of `bool` type.
-    :param input_node1: The node providing data to be selected if respective `selection_node`
+    :param cond: Tensor with selection mask of type `boolean`.
+    :param then_node: Tensor providing data to be selected if respective `cond`
                         item value is `True`.
-    :param input_node2: The node providing data to be selected if respective `selection_node`
+    :param else_node: Tensor providing data to be selected if respective `cond`
                         item value is `False`.
+    :param auto_broadcast: Mode specifies rules used for auto-broadcasting of input tensors.
     :param name: The optional new name for output node.
     :return: The new node with values selected according to provided arguments.
     """
-    return Select(selection_node, input_node1, input_node2)
+    inputs = [cond, as_node(then_node), as_node(else_node)]
+    return _get_node_factory().create('Select', inputs, {'auto_broadcast': auto_broadcast.upper()})
 
 
 # Non-linear ops
@@ -2122,7 +2124,7 @@ def reverse(data, axis, mode, name=None):  # type: (Node, NodeInput, str, Option
     :param name: The optional name of the output node.
     :return: The new node with reversed axes.
     """
-    return _get_node_factory('opset1').create('Reverse', [data, as_node(axis)], {'mode': mode})
+    return _get_node_factory('opset1').create('Reverse', [data, as_node(axis)], {'mode': mode.lower()})
 
 
 @nameable_op
