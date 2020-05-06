@@ -885,7 +885,7 @@ TEST(algebraic_simplification, replace_transpose_with_reshape)
         {
             A1 = make_shared<op::v0::Abs>(param);
         }
-        auto transpose = make_shared<op::v1::Transpose>(A1, perm);
+        auto transpose = make_shared<op::v1::Transpose>((multiout ? A1->output(0) : A1), perm);
         auto transpose1 = make_shared<op::v0::Abs>(transpose);
         auto baseline_f = make_shared<Function>(transpose1, ParameterVector{param});
         auto optimized_f = clone_function(*baseline_f);
