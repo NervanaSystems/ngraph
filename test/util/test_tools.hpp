@@ -69,6 +69,7 @@ namespace ngraph
         {
             return std::make_shared<TestOpMultiOut>(new_args.at(0), new_args.at(1));
         }
+        bool evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) override;
     };
 }
 

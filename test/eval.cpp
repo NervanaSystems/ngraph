@@ -155,3 +155,28 @@ TEST(eval, interpret_dynamic_range_sum)
     vector<float> seq{8.0f, 11.0f, 14.0f};
     ASSERT_EQ(result_val, seq);
 }
+
+TEST(eval, test_op_multi_out)
+{
+    auto p = make_shared<op::Parameter>(element::f32, PartialShape{2, 3});
+    auto p2 = make_shared<op::Parameter>(element::f64, PartialShape{2, 2});
+    auto so = make_shared<TestOpMultiOut>(p, p2);
+    auto fun =
+        make_shared<Function>(OutputVector{so->output(0), so->output(1)}, ParameterVector{p, p2});
+    auto result = make_shared<HostTensor>(element::Type_t::f32, Shape{2, 3});
+    auto result2 = make_shared<HostTensor>(element::Type_t::f64, Shape{2, 2});
+    ASSERT_TRUE(fun->evaluate(
+        {result, result2},
+        {make_host_tensor<element::Type_t::f32>(Shape{2, 3}, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f}),
+         make_host_tensor<element::Type_t::f64>(Shape{2, 2}, {0.0f, 1.0f, 2.0f, 3.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3}));
+    auto result_val = read_vector<float>(result);
+    vector<float> arg_val{0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+    ASSERT_EQ(result_val, arg_val);
+    EXPECT_EQ(result2->get_element_type(), element::f64);
+    EXPECT_EQ(result2->get_partial_shape(), (PartialShape{2, 2}));
+    auto result_val2 = read_vector<double>(result2);
+    vector<double> arg_val2{0.0f, 1.0f, 2.0f, 3.0f};
+    ASSERT_EQ(result_val2, arg_val2);
+}
