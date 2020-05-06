@@ -209,10 +209,10 @@ def test_one_hot():
 
 def test_reverse():
     parameter_data = ng.parameter([3, 10, 100, 200], name='data', dtype=np.float32)
-    parameter_axis  = ng.parameter([1], name='axis', dtype=np.int64)
+    parameter_axis = ng.parameter([1], name='axis', dtype=np.int64)
     expected_shape = [3, 10, 100, 200]
 
-    node = ng.reverse(parameter_data, parameter_axis,'index')
+    node = ng.reverse(parameter_data, parameter_axis, 'index')
 
     assert node.get_type_name() == 'Reverse'
     assert node.get_output_size() == 1
@@ -228,4 +228,3 @@ def test_select():
 
     result = test.ngraph.util.run_op_node([cond, then_node, else_node], ng.ops.select)
     assert np.allclose(result, excepted)
-  
