@@ -195,20 +195,23 @@ void AttributeVisitor::on_adapter(const string& name, ValueAccessor<std::vector<
     on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
 }
 
-void AttributeVisitor::register_node(const std::shared_ptr<Node>& node, int64_t id)
+const AttributeVisitor::node_id_t AttributeVisitor::invalid_node_id = "";
+
+void AttributeVisitor::register_node(const std::shared_ptr<Node>& node, node_id_t id)
 {
     m_id_node_map[id] = node;
     m_node_id_map[node] = id;
 }
 
-std::shared_ptr<Node> AttributeVisitor::get_registered_node(int64_t id)
+std::shared_ptr<Node> AttributeVisitor::get_registered_node(node_id_t id)
 {
     auto it = m_id_node_map.find(id);
-    return it->first ? it->second : shared_ptr<Node>();
+    return it == m_id_node_map.end() ? shared_ptr<Node>() : it->second;
 }
 
-int64_t AttributeVisitor::get_registered_node_id(const std::shared_ptr<Node>& node)
+AttributeVisitor::node_id_t
+    AttributeVisitor::get_registered_node_id(const std::shared_ptr<Node>& node)
 {
     auto it = m_node_id_map.find(node);
-    return it->first ? it->second : -1;
+    return it == m_node_id_map.end() ? "" : it->second;
 }

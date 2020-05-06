@@ -637,6 +637,36 @@ namespace ngraph
         bool operator>=(const RawNodeOutput& other) const { return !(*this < other); }
     };
 
+    /// \brief Visits a reference to a node that has been registered with the visitor.
+    template <>
+    class NGRAPH_API AttributeAdapter<std::shared_ptr<Node>> : VisitorAdapter
+    {
+    public:
+        AttributeAdapter(std::shared_ptr<Node>& value)
+            : m_ref(value)
+        {
+        }
+
+        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
+        {
+            auto original_id = visitor.get_registered_node_id(m_ref);
+            auto id = original_id;
+            visitor.on_attribute(name, id);
+            if (id != original_id)
+            {
+                m_ref = visitor.get_registered_node(id);
+            }
+            return true;
+        }
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<std::shared_ptr<Node>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    protected:
+        void visit_node_vector(AttributeVisitor& visitor,
+                               const std::string& name,
+                               NodeVector& node_vector);
+        std::shared_ptr<Node>& m_ref;
+    };
+
     using RawNodeOutputMap = std::map<RawNodeOutput, Output<Node>>;
 
     class NGRAPH_API NodeValidationFailure : public CheckFailure

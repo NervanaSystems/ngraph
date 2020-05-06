@@ -1148,3 +1148,5 @@ bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_
     }
     return false;
 }
+
+constexpr DiscreteTypeInfo AttributeAdapter<shared_ptr<Node>>::type_info;

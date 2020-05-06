@@ -137,19 +137,21 @@ namespace ngraph
         virtual void start_vector(const std::string& name);
         virtual void next_vector_element();
         virtual void finish_vector();
+        using node_id_t = std::string;
+        static const node_id_t invalid_node_id;
         /// \brief Associate a node with an id.
         ///
         /// No node may be used as an attribute unless it has already been registered with an ID.
         /// References to nodes are visited with a ValueAccessor of their ID.
-        virtual void register_node(const std::shared_ptr<Node>& node, int64_t id);
+        virtual void register_node(const std::shared_ptr<Node>& node, node_id_t id);
         /// Returns the node with the given id, or nullptr if there is no registered node
-        virtual std::shared_ptr<Node> get_registered_node(int64_t id);
+        virtual std::shared_ptr<Node> get_registered_node(node_id_t id);
         /// Returns the id for the node, or -1 if the node is not registered
-        virtual int64_t get_registered_node_id(const std::shared_ptr<Node>& node);
+        virtual node_id_t get_registered_node_id(const std::shared_ptr<Node>& node);
 
     protected:
         std::vector<Context> m_context;
-        std::unordered_map<std::shared_ptr<Node>, int64_t> m_node_id_map;
-        std::unordered_map<int64_t, std::shared_ptr<Node>> m_id_node_map;
+        std::unordered_map<std::shared_ptr<Node>, node_id_t> m_node_id_map;
+        std::unordered_map<node_id_t, std::shared_ptr<Node>> m_id_node_map;
     };
 }
