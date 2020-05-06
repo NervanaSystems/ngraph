@@ -63,6 +63,14 @@ namespace
             replacement_node = make_shared<op::v1::Broadcast>(data, target_shape, broadcast_spec);
             break;
         }
+        default:
+        {
+            NGRAPH_CHECK(
+                true,
+                "Not supported broadcast type during Broadcast:v3 to Broadcast:v1 conversion. ",
+                "Node: ",
+                *node);
+        }
         }
         replace_node(node, replacement_node);
         return replacement_node;
