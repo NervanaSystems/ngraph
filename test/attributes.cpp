@@ -1386,7 +1386,6 @@ TEST(attributes, extractimagepatches_op)
     auto sizes = Shape{3, 3};
     auto strides = Strides{5, 5};
     auto rates = Shape{1, 1};
-    // auto padding = string("valid");
     auto padtype_padding = ngraph::op::PadType::VALID;
 
     auto extractimagepatches =

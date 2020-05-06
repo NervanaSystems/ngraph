@@ -56,8 +56,16 @@ void op::v3::ExtractImagePatches::validate_and_infer_types()
                           "Attribute strides should be in [stride_rows, stride_cols] format.");
 
     NODE_VALIDATION_CHECK(this,
+                          m_patch_movement_strides[0] > 0 && m_patch_movement_strides[1] > 0,
+                          "Attribute strides should be strictly greater than zeros in values.");
+
+    NODE_VALIDATION_CHECK(this,
                           m_patch_selection_rates.size() == 2,
                           "Attribute rates should be in [rate_rows, rate_cols] format.");
+
+    NODE_VALIDATION_CHECK(this,
+                          m_patch_selection_rates[0] > 0 && m_patch_selection_rates[1] > 0,
+                          "Attribute rates should be strictly greater than zeros in values.");
 
     NODE_VALIDATION_CHECK(
         this,
@@ -74,9 +82,29 @@ void op::v3::ExtractImagePatches::validate_and_infer_types()
     else
     {
         Shape input_shape = get_input_shape(0); // as input shape is static
-        size_t out_rows((input_shape[2] - 1) / m_patch_movement_strides[0]);
-        size_t out_cols((input_shape[3] - 1) / m_patch_movement_strides[1]);
-        if (m_padding == PadType::VALID)
+        size_t out_rows(0);
+        size_t out_cols(0);
+
+        if (m_patch_movement_strides[0] > input_shape[2] ||
+            m_patch_movement_strides[1] > input_shape[3])
+        {
+            if (m_padding == PadType::VALID)
+            {
+                out_rows = 0; // no padding allowed for VALID
+                out_cols = 0; // no padding allowed for VALID
+            }
+            else
+            {
+                out_rows = 1; // padding will get 1 patch
+                out_cols = 1; // padding will get 1 patch
+            }
+        }
+        else if (input_shape[2] == 0 || input_shape[3] == 0)
+        {
+            out_rows = 0;
+            out_cols = 0;
+        }
+        else if (m_padding == PadType::VALID)
         {
             out_rows =
                 ((input_shape[2] - (m_patch_selection_rates[0]) * (m_patch_sizes[0] - 1) - 1) /
@@ -86,6 +114,11 @@ void op::v3::ExtractImagePatches::validate_and_infer_types()
                 ((input_shape[3] - (m_patch_selection_rates[1]) * (m_patch_sizes[1] - 1) - 1) /
                  m_patch_movement_strides[1]) +
                 1;
+        }
+        else
+        {
+            out_rows = ((input_shape[2] - 1) / m_patch_movement_strides[0]);
+            out_cols = ((input_shape[3] - 1) / m_patch_movement_strides[1]);
         }
         Shape output_shape;
         output_shape.push_back(input_shape[0]);
