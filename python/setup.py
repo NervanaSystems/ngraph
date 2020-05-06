@@ -166,6 +166,7 @@ def cpp_flag(compiler):
 
 
 sources = [
+    'pyngraph/dimension.cpp',
     'pyngraph/function.cpp',
     'pyngraph/serializer.cpp',
     'pyngraph/node.cpp',

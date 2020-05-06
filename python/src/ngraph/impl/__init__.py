@@ -42,6 +42,7 @@ else:
         flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
     sys.setdlopenflags(flags)
 
+from _pyngraph import Dimension
 from _pyngraph import Function
 from _pyngraph import Node
 from _pyngraph import Type
