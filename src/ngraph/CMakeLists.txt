@@ -536,6 +536,8 @@ set (SRC
     pass/constant_folding.cpp
     pass/constant_folding.hpp
     pass/constant_to_broadcast.cpp
+    pass/convert_elimination.hpp
+    pass/convert_elimination.cpp		
     pass/convert_fp32_to_fp16.hpp
     pass/convert_fp32_to_fp16.cpp
     pass/core_fusion.cpp
