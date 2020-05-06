@@ -24,6 +24,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/minimum.hpp"
+#include "ngraph/op/non_zero.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/range.hpp"
 #include "ngraph/op/shape_of.hpp"
