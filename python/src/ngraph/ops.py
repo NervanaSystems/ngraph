@@ -2124,7 +2124,8 @@ def reverse(data, axis, mode, name=None):  # type: (Node, NodeInput, str, Option
     :param name: The optional name of the output node.
     :return: The new node with reversed axes.
     """
-    return _get_node_factory('opset1').create('Reverse', [data, as_node(axis)], {'mode': mode.lower()})
+    return _get_node_factory('opset1').create('Reverse', [data, as_node(axis)],
+                                              {'mode': mode.lower()})
 
 
 @nameable_op
