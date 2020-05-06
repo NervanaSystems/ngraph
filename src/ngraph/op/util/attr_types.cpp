@@ -170,19 +170,25 @@ namespace ngraph
         return allowed_values.at(type);
     }
 
-    bool AttributeAdapter<op::AutoBroadcastSpec>::visit_attributes(AttributeVisitor& visitor)
+    bool AttributeAdapter<op::AutoBroadcastSpec>::visit_attributes(AttributeVisitor& visitor,
+                                                                   const std::string& name)
     {
+        visitor.start_structure(name);
         visitor.on_attribute("type", m_ref.m_type);
         visitor.on_attribute("axis", m_ref.m_axis);
+        visitor.finish_structure();
         return true;
     }
 
     NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
 
-    bool AttributeAdapter<op::BroadcastModeSpec>::visit_attributes(AttributeVisitor& visitor)
+    bool AttributeAdapter<op::BroadcastModeSpec>::visit_attributes(AttributeVisitor& visitor,
+                                                                   const std::string& name)
     {
+        visitor.start_structure(name);
         visitor.on_attribute("type", m_ref.m_type);
         visitor.on_attribute("axis", m_ref.m_axis);
+        visitor.finish_structure();
         return true;
     }
 

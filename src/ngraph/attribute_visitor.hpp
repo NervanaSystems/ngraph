@@ -28,7 +28,8 @@ namespace ngraph
 {
     template <typename T>
     class ValueAccessor;
-    class StructAdapter;
+    class VisitorAdapter;
+    class Node;
 
     /// \brief Visits the attributes of a node.
     ///
@@ -38,9 +39,8 @@ namespace ngraph
     ///
     /// Attributes can have a wide variety of types. In order for a visitor to handle a wide
     /// range of types, some defined in other modules. on_attribute for string and bool attributes
-    // must be implemented directly by a visitor. For other attribute types, an attribute visitor
-    // uses an
-    /// AttributeAdapter<T> class to convert a T& to a ValueAccessor<T>& derived from
+    /// must be implemented directly by a visitor. For other attribute types, an attribute visitor
+    /// uses an AttributeAdapter<T> class to convert a T& to a ValueAccessor<T>& derived from
     /// ValueAccessor<void>. If the attribute visitor overrides one of the optional on_adapter
     /// methods, that method will be called; otherwise the default implementation for
     /// on_adapter will call the on_adapter method for ValueAccessor<void>&.
@@ -50,22 +50,19 @@ namespace ngraph
     ///
     /// Why aren't all the methods on_attribute? Either there was some template issue related to the
     /// generic on_attribute, or it was related to preventing API changes. similarly the string and
-    /// bool
-    /// on_attributes are related to API stability.
+    /// bool on_attributes are related to API stability.
     class NGRAPH_API AttributeVisitor
     {
     public:
         enum class ContextType
         {
             Struct,
-            Sequence,
-            Map
+            Vector
         };
         struct Context
         {
             ContextType context_type;
             std::string name;
-            std::string key;
             int64_t index;
         };
 
@@ -112,8 +109,8 @@ namespace ngraph
                                 ValueAccessor<std::vector<double>>& adapter);
         virtual void on_adapter(const std::string& name,
                                 ValueAccessor<std::vector<std::string>>& adapter);
-        /// \brief Hook for inline struct visit
-        virtual void on_adapter(const std::string& name, StructAdapter& adapter);
+        /// \brief Hook for adapters that need visitor access
+        virtual void on_adapter(const std::string& name, VisitorAdapter& adapter);
 
         /// Legacy method
         virtual void on_attribute(const std::string& name, std::string& value)
@@ -137,16 +134,22 @@ namespace ngraph
         virtual void start_structure(const std::string& name);
         /// \brief Finish visiting a nested structure
         virtual void finish_structure();
-        /// \brief Get the id for a pointer
-        virtual int64_t get_id(void*);
-        /// \brief Retrieve a pointer from the id table
-        virtual void* get_ptr(int64_t id);
-        /// \brief Add a pointer to the id table
-        virtual int64_t insert_ptr(void*);
+        virtual void start_vector(const std::string& name);
+        virtual void next_vector_element();
+        virtual void finish_vector();
+        /// \brief Associate a node with an id.
+        ///
+        /// No node may be used as an attribute unless it has already been registered with an ID.
+        /// References to nodes are visited with a ValueAccessor of their ID.
+        virtual void register_node(const std::shared_ptr<Node>& node, int64_t id);
+        /// Returns the node with the given id, or nullptr if there is no registered node
+        virtual std::shared_ptr<Node> get_registered_node(int64_t id);
+        /// Returns the id for the node, or -1 if the node is not registered
+        virtual int64_t get_registered_node_id(const std::shared_ptr<Node>& node);
 
     protected:
         std::vector<Context> m_context;
-        std::unordered_map<void*, int64_t> m_ids;
-        std::vector<void*> m_ptrs;
+        std::unordered_map<std::shared_ptr<Node>, int64_t> m_node_id_map;
+        std::unordered_map<int64_t, std::shared_ptr<Node>> m_id_node_map;
     };
 }

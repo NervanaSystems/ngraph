@@ -198,10 +198,11 @@ namespace ngraph
         }
     };
 
-    class StructAdapter : public ValueAccessor<void>
+    /// Adapters will see visitor
+    class VisitorAdapter : public ValueAccessor<void>
     {
     public:
-        virtual bool visit_attributes(AttributeVisitor& visitor) = 0;
+        virtual bool visit_attributes(AttributeVisitor& visitor, const std::string& name) = 0;
     };
 
     template <>

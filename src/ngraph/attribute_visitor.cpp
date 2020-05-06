@@ -34,10 +34,25 @@ void AttributeVisitor::on_attribute(const string& name, bool& value)
 
 void AttributeVisitor::start_structure(const string& name)
 {
-    m_context.push_back(Context{ContextType::Struct, name, "", 0});
+    m_context.push_back(Context{ContextType::Struct, name, 0});
 }
 
 void AttributeVisitor::finish_structure()
+{
+    m_context.pop_back();
+}
+
+void AttributeVisitor::start_vector(const std::string& name)
+{
+    m_context.push_back(Context{ContextType::Vector, name, 0});
+}
+
+void AttributeVisitor::next_vector_element()
+{
+    m_context.back().index++;
+}
+
+void AttributeVisitor::finish_vector()
 {
     m_context.pop_back();
 }
@@ -51,16 +66,18 @@ string AttributeVisitor::get_name_with_context(const std::string& name)
         result << sep;
         sep = ".";
         result << c.name;
+        if (c.context_type == ContextType::Vector)
+        {
+            result << "[" << c.index << "]";
+        }
     }
     result << sep << name;
     return result.str();
 }
 
-void AttributeVisitor::on_adapter(const std::string& name, StructAdapter& adapter)
+void AttributeVisitor::on_adapter(const std::string& name, VisitorAdapter& adapter)
 {
-    start_structure(name);
-    adapter.visit_attributes(*this);
-    finish_structure();
+    adapter.visit_attributes(*this, name);
 }
 
 void AttributeVisitor::on_adapter(const string& name, ValueAccessor<string>& adapter)
@@ -178,24 +195,20 @@ void AttributeVisitor::on_adapter(const string& name, ValueAccessor<std::vector<
     on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
 }
 
-void* AttributeVisitor::get_ptr(int64_t id)
+void AttributeVisitor::register_node(const std::shared_ptr<Node>& node, int64_t id)
 {
-    NGRAPH_CHECK(id < m_ptrs.size(), "Invalid visitor table id");
-    return m_ptrs.at(id);
+    m_id_node_map[id] = node;
+    m_node_id_map[node] = id;
 }
 
-int64_t AttributeVisitor::get_id(void* ptr)
+std::shared_ptr<Node> AttributeVisitor::get_registered_node(int64_t id)
 {
-    auto it = m_ids.find(ptr);
+    auto it = m_id_node_map.find(id);
+    return it->first ? it->second : shared_ptr<Node>();
+}
+
+int64_t AttributeVisitor::get_registered_node_id(const std::shared_ptr<Node>& node)
+{
+    auto it = m_node_id_map.find(node);
     return it->first ? it->second : -1;
-}
-
-int64_t AttributeVisitor::insert_ptr(void* ptr)
-{
-    auto it = m_ids.find(ptr);
-    NGRAPH_CHECK(it->second, "Unregistered visitor table pointer");
-    int64_t id = m_ptrs.size();
-    m_ids[ptr] = id;
-    m_ptrs.push_back(ptr);
-    return id;
 }

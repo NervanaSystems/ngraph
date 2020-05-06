@@ -355,14 +355,14 @@ namespace ngraph
     }
 
     template <>
-    class AttributeAdapter<op::AutoBroadcastSpec> : public StructAdapter
+    class AttributeAdapter<op::AutoBroadcastSpec> : public VisitorAdapter
     {
     public:
         AttributeAdapter(op::AutoBroadcastSpec& value)
             : m_ref(value)
         {
         }
-        bool visit_attributes(AttributeVisitor& visitor) override;
+        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override;
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastSpec>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
@@ -406,14 +406,14 @@ namespace ngraph
     }
 
     template <>
-    class AttributeAdapter<op::BroadcastModeSpec> : public StructAdapter
+    class AttributeAdapter<op::BroadcastModeSpec> : public VisitorAdapter
     {
     public:
         AttributeAdapter(op::BroadcastModeSpec& value)
             : m_ref(value)
         {
         }
-        bool visit_attributes(AttributeVisitor& visitor) override;
+        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override;
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::BroadcastModeSpec>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }

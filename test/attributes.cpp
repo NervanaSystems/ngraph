@@ -70,18 +70,20 @@ namespace ngraph
     };
 
     template <>
-    class AttributeAdapter<Position> : public StructAdapter
+    class AttributeAdapter<Position> : public VisitorAdapter
     {
     public:
         AttributeAdapter(Position& value)
             : m_ref(value)
         {
         }
-        bool visit_attributes(AttributeVisitor& visitor) override
+        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
         {
+            visitor.start_structure(name);
             visitor.on_attribute("x", m_ref.x);
             visitor.on_attribute("y", m_ref.y);
             visitor.on_attribute("z", m_ref.z);
+            visitor.finish_structure();
             return true;
         }
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Position>", 0};
@@ -92,6 +94,7 @@ namespace ngraph
 
     constexpr DiscreteTypeInfo AttributeAdapter<Position>::type_info;
 
+    /// TODO: Better name and move to attribute_adapter
     /// \brief Visits type info for value.
     ///
     /// If value is nullptr, type info is obtained from the visitor and the factory is used
@@ -120,9 +123,10 @@ namespace ngraph
         }
     }
 
-    /// \brief Visits a node. All inputs and control dependencies must have already been visited.
+    // TODO: Move to attribute_adapter
+    /// \brief Visits a reference to a node. The node must have been registered.
     template <>
-    class AttributeAdapter<std::shared_ptr<Node>> : StructAdapter
+    class AttributeAdapter<std::shared_ptr<Node>> : VisitorAdapter
     {
     public:
         AttributeAdapter(std::shared_ptr<Node>& value)
@@ -130,69 +134,117 @@ namespace ngraph
         {
         }
 
-        virtual bool visit_attributes(AttributeVisitor& visitor) override;
+        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
+        {
+            int64_t original_id = visitor.get_registered_node_id(m_ref);
+            int64_t id = original_id;
+            visitor.on_attribute(name, id);
+            if (id != original_id)
+            {
+                m_ref = visitor.get_registered_node(id);
+            }
+            return true;
+        }
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<std::shared_ptr<Node>>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     protected:
+        void visit_node_vector(AttributeVisitor& visitor,
+                               const std::string& name,
+                               NodeVector& node_vector);
         std::shared_ptr<Node>& m_ref;
     };
 }
 
 constexpr DiscreteTypeInfo AttributeAdapter<shared_ptr<Node>>::type_info;
-
-int64_t get_node_visitor_id(AttributeVisitor& visitor, std::shared_ptr<Node>& node)
+#if 0
+// TODO Update and use for NodeVector, ParameterVector, OutputVector, ResultVector
+void AttributeAdapter<std::shared_ptr<Node>>::visit_node_vector(AttributeVisitor& visitor,
+                                                                const std::string& name,
+                                                                NodeVector& node_vector)
 {
-    vector<int64_t> input_nodes;
-    vector<size_t> input_indices;
-    vector<int64_t> control_deps;
-    bool node_created = false;
-    visitor.start_structure("type_info");
-    auto val = visit_type_info(visitor, node.get());
-    visitor.finish_structure();
-    if (val)
+    std::vector<AttributeVisitor::id_type> references;
+    if (references.size() == 0 && node_vector.size() > 0)
     {
-        node_created = true;
-        node = shared_ptr<Node>(val);
+        for (auto node : node_vector)
+        {
+            auto val = visitor.get_id(type_info, node.get(), false);
+            NGRAPH_CHECK(val != AttributeVisitor::INVALID_ID,
+                         "Cannot serialize node vector that references unserialized nodes");
+            references.push_back(val);
+        }
     }
+    visitor.on_attribute(name, references);
+    if (node_vector.size() == 0 && references.size() > 0)
+    {
+        for (auto id : references)
+        {
+            auto val = visitor.get_ptr(type_info, id);
+            NGRAPH_CHECK(val.first, "Bad reference to node");
+            node_vector.push_back(static_cast<Node*>(val.second)->shared_from_this());
+        }
+    }
+}
 
+bool AttributeAdapter<std::shared_ptr<Node>>::visit_attributes(AttributeVisitor& visitor)
+{
+    AttributeVisitor::id_type id = visitor.get_id(type_info, m_ref.get(), true);
+    visitor.on_attribute("reference_id", id);
+    if (m_ref == nullptr)
+    {
+        NGRAPH_CHECK(id != AttributeVisitor::INVALID_ID, "Unable to visit node");
+        auto found_ptr = visitor.get_ptr(type_info, id);
+        if (found_ptr.first)
+        {
+            // Already visited
+            m_ref = static_cast<Node*>(found_ptr.second)->shared_from_this();
+            visitor.add_keep_alice(m_ref);
+            return true;
+        }
+    }
+    // Full visit
+    bool node_created = false;
+    {
+        visitor.start_structure("type_info");
+        auto val = visit_type_info(visitor, m_ref.get());
+        visitor.finish_structure();
+        NGRAPH_CHECK(val, "Failed to create node");
+        node_created = true;
+        m_ref = shared_ptr<Node>(val);
+    }
+    vector<size_t> input_indices;
+    NodeVector input_nodes;
+    NodeVector control_deps;
     if (!node_created)
     {
-        // Get the indices for the inputs and control deps
-        for (auto value : node->input_values())
+        // Get the indices for the input_nodes and control deps
+        for (auto value : m_ref->input_values())
         {
-            input_nodes.push_back(visitor.get_id(value.get_node()));
+            input_nodes.push_back(value.get_node_shared_ptr());
             input_indices.push_back(value.get_index());
         }
-        for (auto node_ptr : node->get_control_dependencies())
-        {
-            control_deps.push_back(visitor.get_id(node_ptr.get()));
-        }
+        control_deps = m_ref->get_control_dependencies();
     }
 
-    if (node)
+    visit_node_vector(visitor, "input_nodes", input_nodes);
+    visitor.on_attribute("input_indices", input_indices);
+    visit_node_vector(visitor, "control_deps", control_deps);
+    m_ref->visit_attributes(visitor);
+    if (node_created)
     {
-        visitor.on_attribute("input_nodes", input_nodes);
-        visitor.on_attribute("input_indices", input_indices);
-        visitor.on_attribute("control_deps", control_deps);
-        node->visit_attributes(visitor);
-        if (node_created)
+        OutputVector args;
+        for (size_t i = 0; i < input_nodes.size(); ++i)
         {
-            OutputVector args;
-            for (size_t i = 0; i < input_nodes.size(); ++i)
-            {
-                args.push_back(
-                    static_cast<Node*>(visitor.get_ptr(input_nodes[i]))->output(input_indices[i]));
-            }
-            node->set_arguments(args);
-            for (auto control_dep_index : control_deps)
-            {
-                node->add_control_dependency(
-                    static_cast<Node*>(visitor.get_ptr(control_dep_index))->shared_from_this());
-            }
-            node->constructor_validate_and_infer_types();
+            args.push_back(input_nodes[i]->output(input_indices[i]));
         }
+        m_ref->set_arguments(args);
+        for (auto control_dep : control_deps)
+        {
+            m_ref->add_control_dependency(control_dep);
+        }
+        m_ref->constructor_validate_and_infer_types();
     }
-    return visitor.insert_ptr(node.get());
+
+    return true;
 }
 
 vector<int64_t> visit_nodes(AttributeVisitor& visitor, const NodeVector& nodes)
@@ -209,7 +261,7 @@ vector<int64_t> visit_nodes(AttributeVisitor& visitor, const NodeVector& nodes)
     });
     return node_ids;
 }
-
+#endif
 // Given a Turing machine program and data, return scalar 1 if the program would
 // complete, 1 if it would not.
 class Oracle : public op::Op
