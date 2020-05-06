@@ -160,7 +160,7 @@ TEST(eval, interpret_dynamic_range_sum)
 TEST(eval, evaluate_convert)
 {
     auto p = make_shared<op::Parameter>(element::f32, PartialShape{-1, -1});
-    auto convert = make_shared<op::v0::Convert>(p, element::i8);
+    auto convert = make_shared<op::v0::Convert>(p, element::i64);
     auto fun = make_shared<Function>(OutputVector{convert}, ParameterVector{p});
 
     std::vector<std::vector<float>> inputs{{-1, 1}};
@@ -168,12 +168,11 @@ TEST(eval, evaluate_convert)
     for (size_t i = 0; i < inputs.size(); i++)
     {
         auto result = make_shared<HostTensor>();
-        ASSERT_TRUE(
-		    fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{1, 2}, inputs[i])}));
-        EXPECT_EQ(result->get_element_type(), element::i8);
+        ASSERT_TRUE(fun->evaluate(
+            {result}, {make_host_tensor<element::Type_t::f32>(Shape{1, 2}, inputs[i])}));
+        EXPECT_EQ(result->get_element_type(), element::i64);
         EXPECT_EQ(result->get_shape(), (Shape{1, 2}));
         auto result_data = read_vector<int64_t>(result);
         ASSERT_EQ(result_data, expected_result[i]);
     }
-
 }

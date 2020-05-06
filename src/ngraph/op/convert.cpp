@@ -59,97 +59,90 @@ void op::Convert::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
 
 namespace
 {
-  template <element::Type_t INPUT_ET, element::Type_t OUTPUT_ET>
-    bool evaluate(const HostTensorPtr& arg,
-                              const HostTensorPtr& out)
+    template <element::Type_t INPUT_ET, element::Type_t OUTPUT_ET>
+    bool evaluate(const HostTensorPtr& arg, const HostTensorPtr& out)
 
     {
-      out->set_shape(arg->get_shape());
-      size_t element_count = shape_size(out->get_shape());
-        return (INPUT_ET == arg->get_element_type()) &&
-	        OUTPUT_ET == out->get_element_type() &&
-               (runtime::reference::convert(arg->get_data_ptr<INPUT_ET>(),
-					    out->get_data_ptr<OUTPUT_ET>(), element_count), true);
+        out->set_shape(arg->get_shape());
+        size_t element_count = shape_size(out->get_shape());
+        return (INPUT_ET == arg->get_element_type()) && OUTPUT_ET == out->get_element_type() &&
+               (runtime::reference::convert(
+                    arg->get_data_ptr<INPUT_ET>(), out->get_data_ptr<OUTPUT_ET>(), element_count),
+                true);
     }
 
-#define TYPE_OUT_CASE(a)               \
-  case element::Type_t::a: rc = evaluate<INPUT_ET, element::Type_t::a>
+#define TYPE_OUT_CASE(a)                                                                           \
+    case element::Type_t::a: rc = evaluate<INPUT_ET, element::Type_t::a>
 
-  template <element::Type_t INPUT_ET>
-  bool evaluate(const HostTensorPtr& arg, const HostTensorPtr& out)
-  {
-     bool rc = true;
+    template <element::Type_t INPUT_ET>
+    bool evaluate(const HostTensorPtr& arg, const HostTensorPtr& out)
+    {
+        bool rc = true;
 
-     switch (arg->get_element_type())
-       {
-	 TYPE_OUT_CASE(i8)(arg, out);
-	 break;
-	 TYPE_OUT_CASE(i16)(arg, out);
-	 break;
-	 TYPE_OUT_CASE(i32)(arg, out);
-	 break;
-	 TYPE_OUT_CASE(i64)(arg, out);
-	 break;
-	 TYPE_OUT_CASE(u8)(arg, out);
-	 break;
-	 TYPE_OUT_CASE(u16)(arg, out);
-	 break;
-	 TYPE_OUT_CASE(u32)(arg, out);
-	 break;
-	 TYPE_OUT_CASE(u64)(arg, out);
-	 break;
-	 TYPE_OUT_CASE(bf16)(arg, out);
-	 break;
-	 TYPE_OUT_CASE(f32)(arg, out);
-	 break;
-	 TYPE_OUT_CASE(f64)(arg, out);
-	 break;
-       default: rc = false; break;
-       }
-     return rc;
-  }
-  
+        switch (out->get_element_type())
+        {
+            TYPE_OUT_CASE(i8)(arg, out);
+            break;
+            TYPE_OUT_CASE(i16)(arg, out);
+            break;
+            TYPE_OUT_CASE(i32)(arg, out);
+            break;
+            TYPE_OUT_CASE(i64)(arg, out);
+            break;
+            TYPE_OUT_CASE(u8)(arg, out);
+            break;
+            TYPE_OUT_CASE(u16)(arg, out);
+            break;
+            TYPE_OUT_CASE(u32)(arg, out);
+            break;
+            TYPE_OUT_CASE(u64)(arg, out);
+            break;
+            TYPE_OUT_CASE(bf16)(arg, out);
+            break;
+            TYPE_OUT_CASE(f32)(arg, out);
+            break;
+            TYPE_OUT_CASE(f64)(arg, out);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
 
-  bool
-  evaluate_convert(const HostTensorPtr& arg, const HostTensorPtr& out)
-  {
-    bool rc = true;
-    
-    switch (arg->get_element_type())
-      {
-	TYPE_CASE(i8)(arg, out);
-	break;
-	TYPE_CASE(i16)(arg, out);
-	break;
-	TYPE_CASE(i32)(arg, out);
-	break;
-	TYPE_CASE(i64)(arg, out);
-	break;
-	TYPE_CASE(u8)(arg, out);
-	break;
-	TYPE_CASE(u16)(arg, out);
-	break;
-	TYPE_CASE(u32)(arg, out);
-	break;
-	TYPE_CASE(u64)(arg, out);
-	break;
-	TYPE_CASE(bf16)(arg, out);
-	break;
-	TYPE_CASE(f32)(arg, out);
-	break;
-	TYPE_CASE(f64)(arg, out);
-	break;
-      default: rc = false; break;
-      }
-    return rc;
-  }
-  
+    bool evaluate_convert(const HostTensorPtr& arg, const HostTensorPtr& out)
+    {
+        bool rc = true;
+
+        switch (arg->get_element_type())
+        {
+            TYPE_CASE(i8)(arg, out);
+            break;
+            TYPE_CASE(i16)(arg, out);
+            break;
+            TYPE_CASE(i32)(arg, out);
+            break;
+            TYPE_CASE(i64)(arg, out);
+            break;
+            TYPE_CASE(u8)(arg, out);
+            break;
+            TYPE_CASE(u16)(arg, out);
+            break;
+            TYPE_CASE(u32)(arg, out);
+            break;
+            TYPE_CASE(u64)(arg, out);
+            break;
+            TYPE_CASE(bf16)(arg, out);
+            break;
+            TYPE_CASE(f32)(arg, out);
+            break;
+            TYPE_CASE(f64)(arg, out);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
 }
-  bool op::v0::Convert::evaluate(const HostTensorVector& output_values,
-				 const HostTensorVector& input_values)
-  {
-    return evaluate_convert(
-			    input_values[0], output_values[0]);
-    
-  }
-
+bool op::v0::Convert::evaluate(const HostTensorVector& output_values,
+                               const HostTensorVector& input_values)
+{
+    return evaluate_convert(input_values[0], output_values[0]);
+}
