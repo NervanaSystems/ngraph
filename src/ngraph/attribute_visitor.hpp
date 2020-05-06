@@ -118,6 +118,7 @@ namespace ngraph
         /// Legacy method
         virtual void on_attribute(const std::string& name, bool& value)
             NGRAPH_DEPRECATED("Override on_adapter instead");
+        virtual void on_attribute(const std::string& name, void* data, size_t size) {}
         /// The generic visitor. There must be a definition of AttributeAdapter<T> that can convert
         /// to a ValueAccessor<U> for one of the on_adpater methods.
         template <typename AT>
