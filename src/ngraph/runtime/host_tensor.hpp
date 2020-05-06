@@ -54,6 +54,8 @@ public:
     explicit HostTensor(const std::shared_ptr<op::v0::Constant>& constant);
     virtual ~HostTensor() override;
 
+    void initialize(const std::shared_ptr<op::v0::Constant>& constant);
+
     void* get_data_ptr();
     const void* get_data_ptr() const;
 
