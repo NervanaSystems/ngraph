@@ -38,7 +38,7 @@ from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
     NodeInput, ScalarData, as_node, as_nodes
-from ngraph.utils.types import get_element_type
+from ngraph.utils.types import get_element_type, get_element_type_str
 
 from ngraph.utils.node_factory import NodeFactory
 
@@ -1399,10 +1399,19 @@ def gemm(A,                      # type: Node
 
 
 @nameable_op
-def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Node
-    """Return node which casts input node values to specified type."""
-    new_element_type = get_element_type(new_type)
-    return Convert(node, new_element_type)
+def convert(data, destination_type, name=None):
+    # type: (Node, Union[str, NumericType], str) -> Node
+    """Return node which casts input node values to specified type.
+
+    :param data: Node which produces the input tensor.
+    :param destination_type: Provides the target type for the conversion.
+    :param name: Optional name for the output node.
+    :return: New node performing the conversion operation.
+    """
+    if not isinstance(destination_type, str):
+        destination_type = get_element_type_str(destination_type)
+    return _get_node_factory().create('Convert', [data],
+                                      {'destination_type': destination_type.lower()})
 
 
 @binary_op
