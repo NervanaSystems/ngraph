@@ -1023,6 +1023,7 @@ TEST(algebraic_simplification, gather_shapeof)
                             bool opset2,
                             bool i32,
                             bool multiout,
+                            bool multiout_1,
                             const std::vector<int64_t>& indices_val,
                             int64_t axis_val) {
         static size_t id = 0;
@@ -1048,18 +1049,23 @@ TEST(algebraic_simplification, gather_shapeof)
             axis = op::Constant::create<int64_t>(element::i64, Shape{}, {axis_val});
         }
 
+        auto dims_1 = std::vector<Dimension>(pshape);
+        dims_1.push_back(11);
+        dims_1.push_back(13);
+        auto pshape_1 = PartialShape(dims_1);
         auto A = make_shared<op::Parameter>(element::f32, pshape);
+        auto AA = make_shared<op::Parameter>(element::f64, pshape_1);
         shared_ptr<Node> A1;
         if (multiout)
         {
-            auto last_dim = pshape.rank().get_length() - 1;
-            A1 = make_shared<op::v0::TopK>(A, last_dim, element::i32);
+            A1 = make_shared<TestOpMultiOut>(A, AA);
         }
         else
         {
             A1 = make_shared<op::v0::Abs>(A);
         }
-        auto B = make_shared<op::v1::Gather>((multiout ? A1->output(0) : A1), indices, axis);
+        auto B = make_shared<op::v1::Gather>(
+            (multiout ? (multiout_1 ? A1->output(1) : A1->output(0)) : A1), indices, axis);
         shared_ptr<Node> B1;
         if (opset2)
         {
@@ -1069,7 +1075,8 @@ TEST(algebraic_simplification, gather_shapeof)
         {
             B1 = make_shared<op::v3::ShapeOf>(B);
         }
-        auto baseline_f = make_shared<Function>(make_shared<op::v0::Abs>(B1), ParameterVector{A});
+        auto baseline_f = make_shared<Function>(
+            make_shared<op::v0::Abs>(B1), (multiout ? ParameterVector{A, AA} : ParameterVector{A}));
         auto optimized_f = clone_function(*baseline_f);
 
         pass::Manager pass_manager;
@@ -1077,10 +1084,13 @@ TEST(algebraic_simplification, gather_shapeof)
         pass_manager.register_pass<pass::AlgebraicSimplification>();
         pass_manager.run_passes(optimized_f);
 
+        ASSERT_EQ(baseline_f->get_results().at(0)->get_element_type(),
+                  optimized_f->get_results().at(0)->get_element_type());
+
         auto ps = baseline_f->get_results()[0]->get_output_partial_shape(0);
         auto ps_r = optimized_f->get_results()[0]->get_output_partial_shape(0);
         EXPECT_TRUE(ps.rank().is_static() && ps_r.rank().is_static()) << casename;
-        ASSERT_EQ(ps.rank().get_length(), ps_r.rank().get_length()) << casename;
+        EXPECT_TRUE(ps.same_scheme(ps_r)) << casename;
 
         ASSERT_EQ(count_ops_of_type<op::v1::Gather>(baseline_f), 1) << casename;
 
@@ -1101,39 +1111,45 @@ TEST(algebraic_simplification, gather_shapeof)
     for (auto& opset2 : {true, false})
         for (auto& i32 : {true, false})
             for (auto& multiout : {true, false})
-            {
-                check_usecase(PartialShape{2, 3, 2, 1},
-                              true,
-                              opset2,
-                              i32,
-                              multiout,
-                              std::vector<int64_t>{0},
-                              3);
-                check_usecase(PartialShape{2, Dimension::dynamic(), 2, 1},
-                              true,
-                              opset2,
-                              i32,
-                              multiout,
-                              std::vector<int64_t>{0},
-                              3);
-            }
+                for (auto& multiout_1 : {true, false})
+                {
+                    check_usecase(PartialShape{2, 3, 2, 1},
+                                  true,
+                                  opset2,
+                                  i32,
+                                  multiout,
+                                  multiout_1,
+                                  std::vector<int64_t>{0},
+                                  3);
+                    check_usecase(PartialShape{2, Dimension::dynamic(), 2, 1},
+                                  true,
+                                  opset2,
+                                  i32,
+                                  multiout,
+                                  multiout_1,
+                                  std::vector<int64_t>{0},
+                                  3);
+                }
     for (auto& opset2 : {true, false})
         for (auto& i32 : {true, false})
             for (auto& multiout : {true, false})
-            {
-                check_usecase(PartialShape{2, 3, 2, 1},
-                              false,
-                              opset2,
-                              i32,
-                              multiout,
-                              std::vector<int64_t>{0, 2},
-                              1);
-                check_usecase(PartialShape{2, Dimension::dynamic(), 2, 1},
-                              false,
-                              opset2,
-                              i32,
-                              multiout,
-                              std::vector<int64_t>{0, 2},
-                              1);
-            }
+                for (auto& multiout_1 : {true, false})
+                {
+                    check_usecase(PartialShape{2, 3, 2, 1},
+                                  false,
+                                  opset2,
+                                  i32,
+                                  multiout,
+                                  multiout_1,
+                                  std::vector<int64_t>{0, 2},
+                                  1);
+                    check_usecase(PartialShape{2, Dimension::dynamic(), 2, 1},
+                                  false,
+                                  opset2,
+                                  i32,
+                                  multiout,
+                                  multiout_1,
+                                  std::vector<int64_t>{0, 2},
+                                  1);
+                }
 }

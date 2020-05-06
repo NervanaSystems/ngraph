@@ -258,3 +258,5 @@ std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
     }
     return ::testing::AssertionSuccess();
 }
+
+constexpr NodeTypeInfo ngraph::TestOpMultiOut::type_info;

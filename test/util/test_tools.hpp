@@ -29,6 +29,7 @@
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
@@ -44,6 +45,31 @@ namespace ngraph
 {
     class Node;
     class Function;
+    class TestOpMultiOut : public op::Op
+    {
+    public:
+        static constexpr NodeTypeInfo type_info{"TestOpMultiOut", 0};
+        const NodeTypeInfo& get_type_info() const override { return type_info; }
+        TestOpMultiOut() = default;
+
+        TestOpMultiOut(const Output<Node>& output_1, const Output<Node>& output_2)
+            : Op({output_1, output_2})
+        {
+            validate_and_infer_types();
+        }
+        void validate_and_infer_types() override
+        {
+            set_output_size(2);
+            set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
+            set_output_type(1, get_input_element_type(1), get_input_partial_shape(1));
+        }
+
+        virtual std::shared_ptr<Node>
+            clone_with_new_inputs(const OutputVector& new_args) const override
+        {
+            return std::make_shared<TestOpMultiOut>(new_args.at(0), new_args.at(1));
+        }
+    };
 }
 
 class DisableRemoveGOE
