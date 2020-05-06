@@ -16,6 +16,9 @@
 
 #include <algorithm>
 #include <cctype>
+#include <functional>
+#include <locale>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -117,8 +120,8 @@ class NodeFactory
 {
 public:
     NodeFactory() {}
-    NodeFactory(const std::string& opset_name)
-        : m_opset{get_opset(opset_name)}
+    NodeFactory(const std::string& opset_ver)
+        : m_opset{get_opset(opset_ver)}
     {
     }
 
@@ -139,27 +142,28 @@ public:
     }
 
 private:
-    const ngraph::OpSet& get_opset(const std::string& opset_name)
+    const ngraph::OpSet& get_opset(std::string opset_ver)
     {
-        std::string opset_name_ = opset_name;
-        std::transform(opset_name_.begin(), opset_name_.end(), opset_name_.begin(), ::tolower);
+        std::locale loc;
+        std::transform(opset_ver.begin(), opset_ver.end(), opset_ver.begin(), [&loc](char c) {
+            return std::tolower(c, loc);
+        });
 
-        if (opset_name_ == "opset0")
-        {
-            return ngraph::get_opset0();
-        }
-        else if (opset_name_ == "opset1")
-        {
-            return ngraph::get_opset1();
-        }
-        else if (opset_name_ == "opset2")
-        {
-            return ngraph::get_opset2();
-        }
-        else
+        using OpsetFunction = std::function<const ngraph::OpSet&()>;
+
+        static const std::map<std::string, OpsetFunction> s_opsets{
+            {"opset0", OpsetFunction(ngraph::get_opset0)},
+            {"opset1", OpsetFunction(ngraph::get_opset1)},
+            {"opset2", OpsetFunction(ngraph::get_opset2)},
+            {"opset3", OpsetFunction(ngraph::get_opset3)},
+        };
+
+        auto it = s_opsets.find(opset_ver);
+        if (it == s_opsets.end())
         {
             throw ngraph::ngraph_error("Unsupported opset version requested.");
         }
+        return it->second();
     }
 
     const ngraph::OpSet& m_opset{ngraph::get_opset0()};
