@@ -1553,7 +1553,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
 
         // Check if values are being broadcast along channel (2nd) dimension
         auto is_channel_bcast = [](const std::shared_ptr<ngraph::op::Broadcast>& bcast) {
-            auto input_shape = bcast->get_argument(0)->get_shape();
+            auto input_shape = bcast->get_input_shape(0);
             if (input_shape.size() == 0 || shape_size(input_shape) == 1)
             {
                 return true;
@@ -1578,7 +1578,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
         }
 
         auto get_bcast_input = [](const std::shared_ptr<ngraph::op::Broadcast>& bcast) {
-            auto input_shape = bcast->get_argument(0)->get_shape();
+            auto input_shape = bcast->get_input_shape(0);
             if (input_shape.size() == 0)
             {
                 Shape bshape{bcast->get_shape()[1]};
@@ -2123,8 +2123,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
                 qconv_m->get_data_dilation_strides(),
                 requantization_scale);
         }
-        auto zp =
-            builder::make_constant<uint8_t>(element::u8, dq_m->get_argument(1)->get_shape(), 0);
+        auto zp = builder::make_constant<uint8_t>(element::u8, dq_m->get_input_shape(1), 0);
         auto dq_n = std::make_shared<ngraph::op::Dequantize>(
             qconv_n, dq_m->get_argument(1), zp, dq_m->get_output_element_type(0), dq_m->get_axes());
         ngraph::replace_node(m.get_match_root(), dq_n);

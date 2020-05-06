@@ -21,7 +21,9 @@
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "random.hpp"
 #include "test_tools.hpp"
 
 namespace ngraph
@@ -156,5 +158,37 @@ namespace ngraph
             }
             return ::testing::AssertionSuccess();
         }
+    } // namespace test
+} // namespace ngraph
+
+// apply pass, execute and compare with INTERPRETER using random data
+template <typename T, typename TIN, typename TOUT = TIN>
+bool compare_pass_int(std::shared_ptr<ngraph::Function>& baseline_f,
+                      std::shared_ptr<ngraph::Function>& optimized_f,
+                      std::vector<std::vector<TIN>> args = std::vector<std::vector<TIN>>{})
+{
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<ngraph::pass::Validate>();
+    pass_manager.register_pass<T>();
+    pass_manager.run_passes(optimized_f);
+
+    if (args.size() == 0)
+    {
+        for (auto& p : baseline_f->get_parameters())
+        {
+            args.emplace_back(shape_size(p->get_shape()), 0);
+            if (std::is_integral<TIN>())
+            {
+                std::generate(args.back().begin(), args.back().end(), rand);
+            }
+            else
+            {
+                static ngraph::test::Uniform<float> rng{0, 1, 0};
+                rng.initialize(args.back());
+            }
+        }
     }
+    auto baseline_results = execute<TIN, TOUT>(baseline_f, args, "INTERPRETER");
+    auto optimized_results = execute<TIN, TOUT>(optimized_f, args, "INTERPRETER");
+    return ngraph::test::all_close(baseline_results.at(0), optimized_results.at(0));
 }

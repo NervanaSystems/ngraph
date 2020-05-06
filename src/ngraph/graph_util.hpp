@@ -505,6 +505,5 @@ namespace ngraph
                           bool& is_bkwd_cycle);
 
     NGRAPH_API
-    bool remove_node_update_name(const std::shared_ptr<Node>& node,
-                                 const std::shared_ptr<Node>& node_input);
+    bool replace_output_update_name(Output<Node> node, const Output<Node>& node_input);
 }

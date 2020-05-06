@@ -112,7 +112,8 @@ namespace
 }
 
 template <typename T>
-static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Constant>& data)
+static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Constant>& data,
+                                                       const element::Type& index_element_type)
 {
     const auto input_shape = data->get_shape();
     const auto* input_values = data->get_data_ptr<T>();
@@ -125,7 +126,7 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
 
     if (ngraph::is_scalar(input_shape))
     {
-        return op::Constant::create(element::i64, Shape{1, 1}, {0});
+        return op::Constant::create(index_element_type, Shape{1, 1}, {0});
     }
     else if (is_vector(input_shape))
     {
@@ -153,7 +154,7 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
             indices.shrink_to_fit();
         }
 
-        return op::Constant::create(element::i64, Shape{1, indices.size()}, indices);
+        return op::Constant::create(index_element_type, Shape{1, indices.size()}, indices);
     }
     else
     {
@@ -179,7 +180,7 @@ static shared_ptr<op::Constant> fold_constant_non_zero(const shared_ptr<op::Cons
         }
 
         const Shape out_shape{found_indices.size(), found_indices.front().size()};
-        return op::Constant::create(element::i64, out_shape, indices);
+        return op::Constant::create(index_element_type, out_shape, indices);
     }
 }
 
@@ -193,23 +194,51 @@ void pass::ConstantFolding::construct_constant_non_zero()
         auto pattern_map = m.get_pattern_map();
 
         const auto data = static_pointer_cast<op::Constant>(pattern_map[data_label]);
+        const auto non_zero_matched = as_type_ptr<op::v3::NonZero>(m.get_match_root());
+        auto output_type = non_zero_matched->get_output_type();
 
         std::shared_ptr<Node> replacement;
         switch (data->get_element_type())
         {
-        case element::Type_t::boolean: replacement = fold_constant_non_zero<char>(data); break;
-        case element::Type_t::bf16: replacement = fold_constant_non_zero<bfloat16>(data); break;
-        case element::Type_t::f16: replacement = fold_constant_non_zero<float16>(data); break;
-        case element::Type_t::f32: replacement = fold_constant_non_zero<float>(data); break;
-        case element::Type_t::f64: replacement = fold_constant_non_zero<double>(data); break;
-        case element::Type_t::i8: replacement = fold_constant_non_zero<int8_t>(data); break;
-        case element::Type_t::i16: replacement = fold_constant_non_zero<int16_t>(data); break;
-        case element::Type_t::i32: replacement = fold_constant_non_zero<int32_t>(data); break;
-        case element::Type_t::i64: replacement = fold_constant_non_zero<int64_t>(data); break;
-        case element::Type_t::u8: replacement = fold_constant_non_zero<uint8_t>(data); break;
-        case element::Type_t::u16: replacement = fold_constant_non_zero<uint16_t>(data); break;
-        case element::Type_t::u32: replacement = fold_constant_non_zero<uint32_t>(data); break;
-        case element::Type_t::u64: replacement = fold_constant_non_zero<uint64_t>(data); break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_non_zero<char>(data, output_type);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_non_zero<bfloat16>(data, output_type);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_non_zero<float16>(data, output_type);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_non_zero<float>(data, output_type);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_non_zero<double>(data, output_type);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_non_zero<int8_t>(data, output_type);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_non_zero<int16_t>(data, output_type);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_non_zero<int32_t>(data, output_type);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_non_zero<int64_t>(data, output_type);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_non_zero<uint8_t>(data, output_type);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_non_zero<uint16_t>(data, output_type);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_non_zero<uint32_t>(data, output_type);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_non_zero<uint64_t>(data, output_type);
+            break;
         case element::Type_t::u1:
         case element::Type_t::dynamic:
         case element::Type_t::undefined:

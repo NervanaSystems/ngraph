@@ -164,17 +164,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         {
             m_timer_map[op].start();
         }
-        EvaluatorTensorVector out_tensors;
-        for (auto out : op_outputs)
-        {
-            out_tensors.push_back(runtime::HostTensor::create_evaluator_tensor(out));
-        }
-        EvaluatorTensorVector in_tensors;
-        for (auto in : op_inputs)
-        {
-            in_tensors.push_back(runtime::HostTensor::create_evaluator_tensor(in));
-        }
-        if (!op->evaluate(out_tensors, in_tensors))
+        if (!op->evaluate(op_outputs, op_inputs))
         {
             generate_calls(type, *op, op_outputs, op_inputs);
         }

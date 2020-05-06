@@ -195,8 +195,8 @@ namespace ngraph
     /// function.
     /// \param output_tensor_map Tensors to use for particular outputs
     /// \param outputs Root set of values to try to compute
-    NGRAPH_API void evaluate_nodes(std::map<RawNodeOutput, EvaluatorTensorPtr>& value_map,
-                                   std::map<RawNodeOutput, EvaluatorTensorPtr>& output_tensor_map,
+    NGRAPH_API void evaluate_nodes(std::map<RawNodeOutput, HostTensorPtr>& value_map,
+                                   std::map<RawNodeOutput, HostTensorPtr>& output_tensor_map,
                                    const OutputVector& outputs);
 
     namespace opset1
