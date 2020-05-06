@@ -74,11 +74,6 @@ namespace
     }
 }
 
-namespace
-{
-    set <
-}
-
 runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
     : m_device{device}
 {
