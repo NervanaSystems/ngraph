@@ -22,6 +22,7 @@ try:
 except DistributionNotFound:
     __version__ = '0.0.0-dev'
 
+
 from ngraph.ops import absolute
 from ngraph.ops import absolute as abs
 from ngraph.ops import acos
@@ -78,8 +79,8 @@ from ngraph.ops import less
 from ngraph.ops import less_equal
 from ngraph.ops import log
 from ngraph.ops import logical_and
-from ngraph.ops import logical_or
 from ngraph.ops import logical_not
+from ngraph.ops import logical_or
 from ngraph.ops import logical_xor
 from ngraph.ops import lrn
 from ngraph.ops import matmul
@@ -92,6 +93,7 @@ from ngraph.ops import mvn
 from ngraph.ops import negative
 from ngraph.ops import non_max_suppression
 from ngraph.ops import non_zero
+from ngraph.ops import normalize_l2
 from ngraph.ops import not_equal
 from ngraph.ops import one_hot
 from ngraph.ops import pad
@@ -131,13 +133,13 @@ from ngraph.ops import sin
 from ngraph.ops import sinh
 from ngraph.ops import slice
 from ngraph.ops import softmax
-from ngraph.ops import split
-from ngraph.ops import space_to_depth
 from ngraph.ops import space_to_batch
-from ngraph.ops import strided_slice
+from ngraph.ops import space_to_depth
+from ngraph.ops import split
 from ngraph.ops import sqrt
 from ngraph.ops import squared_difference
 from ngraph.ops import squeeze
+from ngraph.ops import strided_slice
 from ngraph.ops import subtract
 from ngraph.ops import tan
 from ngraph.ops import tanh
