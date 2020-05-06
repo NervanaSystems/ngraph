@@ -656,7 +656,10 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     size_t element_count = ngraph::shape_size(tv->get_shape());
     size_t size = element_count * sizeof(T);
     std::vector<T> rc(element_count);
-    tv->read(rc.data(), size);
+    if (size > 0)
+    {
+        tv->read(rc.data(), size);
+    }
     return rc;
 }
 
