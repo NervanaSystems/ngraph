@@ -315,14 +315,6 @@ void op::v1::Reshape::validate_and_infer_types()
                     }
                 }
 
-                if (negative_dim == -1)
-                {
-                    NODE_VALIDATION_CHECK(
-                        this,
-                        input_elements == output_elements,
-                        "number of elements in output is not number of elements in input");
-                }
-
                 if (negative_dim != -1)
                 {
                     // Infer size such that number of output elements matches
@@ -371,9 +363,19 @@ void op::v1::Reshape::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 
 bool op::v1::Reshape::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    // infer and set output shape if the output shape constain -1
+    // infer and set output shape if the output shape contain -1
     // and zero value dimension
-    Shape out_shape_val = inputs[1]->get_shape();
+    size_t output_rank = inputs[1]->get_shape()[0];
+    Shape out_shape_val;
+
+    // read the pattern tensor to set the shape of the output.
+    int64_t* pattern_ptr = inputs[1]->get_data_ptr<int64_t>();
+
+    for (int i = 0; i < output_rank; i++)
+    {
+        out_shape_val.push_back(pattern_ptr[i]);
+    }
+
     NODE_VALIDATION_CHECK(
         this,
         std::none_of(out_shape_val.begin(), out_shape_val.end(), [](int64_t v) { return v < -1; }),
@@ -388,7 +390,7 @@ bool op::v1::Reshape::evaluate(const HostTensorVector& outputs, const HostTensor
 
     if (!(zero_dims && m_special_zero) && !negative_dims)
     {
-        auto output_shape = inputs[1]->get_shape();
+        auto output_shape = out_shape_val;
         if (get_input_partial_shape(0).is_static())
         {
             NODE_VALIDATION_CHECK(this,
@@ -402,8 +404,7 @@ bool op::v1::Reshape::evaluate(const HostTensorVector& outputs, const HostTensor
     }
     else
     {
-        size_t output_rank = inputs[1]->get_shape().size();
-        Shape output_shape(output_rank);
+        Shape output_shape = out_shape_val;
         size_t output_elements = 1;
         int negative_dim = -1;
 
@@ -429,14 +430,6 @@ bool op::v1::Reshape::evaluate(const HostTensorVector& outputs, const HostTensor
             {
                 output_elements *= out_shape_val[i];
             }
-        }
-
-        if (negative_dim == -1)
-        {
-            NODE_VALIDATION_CHECK(
-                this,
-                input_elements == output_elements,
-                "number of elements in output is not number of elements in input");
         }
 
         if (negative_dim != -1)
