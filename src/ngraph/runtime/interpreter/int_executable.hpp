@@ -35,7 +35,6 @@
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/all.hpp"
 #include "ngraph/runtime/reference/allreduce.hpp"
-#include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/reference/argmax.hpp"
 #include "ngraph/runtime/reference/argmin.hpp"
@@ -52,24 +51,18 @@
 #include "ngraph/runtime/reference/constant.hpp"
 #include "ngraph/runtime/reference/convert.hpp"
 #include "ngraph/runtime/reference/convolution.hpp"
-#include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/cos.hpp"
 #include "ngraph/runtime/reference/cosh.hpp"
 #include "ngraph/runtime/reference/cum_sum.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/runtime/reference/embedding_lookup.hpp"
-#include "ngraph/runtime/reference/equal.hpp"
 #include "ngraph/runtime/reference/erf.hpp"
 #include "ngraph/runtime/reference/exp.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
 #include "ngraph/runtime/reference/gather.hpp"
 #include "ngraph/runtime/reference/gather_nd.hpp"
 #include "ngraph/runtime/reference/generate_mask.hpp"
-#include "ngraph/runtime/reference/greater.hpp"
-#include "ngraph/runtime/reference/greater_eq.hpp"
-#include "ngraph/runtime/reference/less.hpp"
-#include "ngraph/runtime/reference/less_eq.hpp"
 #include "ngraph/runtime/reference/log.hpp"
 #include "ngraph/runtime/reference/lrn.hpp"
 #include "ngraph/runtime/reference/max.hpp"
@@ -77,9 +70,7 @@
 #include "ngraph/runtime/reference/min.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
 #include "ngraph/runtime/reference/not.hpp"
-#include "ngraph/runtime/reference/not_equal.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
-#include "ngraph/runtime/reference/or.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
@@ -107,7 +98,6 @@
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
-#include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/bernoulli_rng_state.hpp"
 #include "ngraph/state/uniform_rng_state.hpp"
@@ -237,17 +227,6 @@ protected:
                                     node.get_input_element_type(0),
                                     allreduce->get_reduce_type(),
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
-            break;
-        }
-        case OP_TYPEID::And:
-        {
-            auto logical_and = static_cast<const op::And*>(&node);
-            reference::logical_and(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   logical_and->get_autob());
             break;
         }
         case OP_TYPEID::Any:
@@ -774,17 +753,6 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::Equal:
-        {
-            auto equal = static_cast<const op::Equal*>(&node);
-            reference::equal<T>(args[0]->get_data_ptr<const T>(),
-                                args[1]->get_data_ptr<const T>(),
-                                out[0]->get_data_ptr<char>(),
-                                node.get_input_shape(0),
-                                node.get_input_shape(1),
-                                equal->get_autob());
-            break;
-        }
         case OP_TYPEID::Erf:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -886,99 +854,11 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::Greater:
-        {
-            auto greater = static_cast<const op::Greater*>(&node);
-            reference::greater<T>(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<char>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  greater->get_autob());
-            break;
-        }
-        case OP_TYPEID::GreaterEq:
-        {
-            auto greater_eq = static_cast<const op::GreaterEq*>(&node);
-            reference::greater_eq<T>(args[0]->get_data_ptr<const T>(),
-                                     args[1]->get_data_ptr<const T>(),
-                                     out[0]->get_data_ptr<char>(),
-                                     node.get_input_shape(0),
-                                     node.get_input_shape(1),
-                                     greater_eq->get_autob());
-            break;
-        }
-        case OP_TYPEID::Less:
-        {
-            auto less = static_cast<const op::Less*>(&node);
-            reference::less<T>(args[0]->get_data_ptr<const T>(),
-                               args[1]->get_data_ptr<const T>(),
-                               out[0]->get_data_ptr<char>(),
-                               node.get_input_shape(0),
-                               node.get_input_shape(1),
-                               less->get_autob());
-            break;
-        }
-        case OP_TYPEID::LessEq:
-        {
-            auto less_eq = static_cast<const op::LessEq*>(&node);
-            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<char>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  less_eq->get_autob());
-            break;
-        }
-        case OP_TYPEID::LessEqual_v1:
-        {
-            auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
-            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<char>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  less_eq->get_autob());
-            break;
-        }
         case OP_TYPEID::Log:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::log<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
-            break;
-        }
-        case OP_TYPEID::LogicalAnd_v1:
-        {
-            auto logical_and = static_cast<const op::v1::LogicalAnd*>(&node);
-            reference::logical_and(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   logical_and->get_autob());
-            break;
-        }
-        case OP_TYPEID::LogicalOr_v1:
-        {
-            auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
-            reference::logical_or(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  logical_or->get_autob());
-            break;
-        }
-        case OP_TYPEID::LogicalXor_v1:
-        {
-            auto logical_xor = static_cast<const op::v1::LogicalXor*>(&node);
-            reference::logical_xor(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   logical_xor->get_autob());
             break;
         }
         case OP_TYPEID::LRN:
@@ -1059,17 +939,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::NotEqual:
-        {
-            auto not_equal = static_cast<const op::NotEqual*>(&node);
-            reference::not_equal<T>(args[0]->get_data_ptr<const T>(),
-                                    args[1]->get_data_ptr<const T>(),
-                                    out[0]->get_data_ptr<char>(),
-                                    node.get_input_shape(0),
-                                    node.get_input_shape(1),
-                                    not_equal->get_autob());
-            break;
-        }
         case OP_TYPEID::OneHot:
         {
             const op::OneHot* oh = static_cast<const op::OneHot*>(&node);
@@ -1078,17 +947,6 @@ protected:
                                   node.get_input_shape(0),
                                   node.get_output_shape(0),
                                   oh->get_one_hot_axis());
-            break;
-        }
-        case OP_TYPEID::Or:
-        {
-            auto logical_or = static_cast<const op::Or*>(&node);
-            reference::logical_or(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  logical_or->get_autob());
             break;
         }
         case OP_TYPEID::Parameter: break;
@@ -1683,17 +1541,6 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::Xor:
-        {
-            auto logical_xor = static_cast<const op::Or*>(&node);
-            reference::logical_xor(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   logical_xor->get_autob());
-            break;
-        }
 
         // Fused Ops are not supported in interpreter. They need to be decomposed before execution
         case OP_TYPEID::BatchMatMulTranspose:
@@ -1743,27 +1590,43 @@ protected:
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::Split:
         case OP_TYPEID::SquaredDifference:
-        case OP_TYPEID::Squeeze:
         case OP_TYPEID::Stack:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TensorIterator:
         case OP_TYPEID::Tile:
         case OP_TYPEID::UnknownOp:
-        case OP_TYPEID::Unsqueeze:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
+        case OP_TYPEID::And:
         case OP_TYPEID::Constant:
         case OP_TYPEID::Divide:
+        case OP_TYPEID::Equal:
+        case OP_TYPEID::Greater:
+        case OP_TYPEID::GreaterEq:
+        case OP_TYPEID::Less:
+        case OP_TYPEID::LessEq:
+        case OP_TYPEID::LessEqual_v1:
+        case OP_TYPEID::LogicalAnd_v1:
+        case OP_TYPEID::LogicalOr_v1:
+        case OP_TYPEID::LogicalXor_v1:
         case OP_TYPEID::Maximum:
         case OP_TYPEID::Minimum:
         case OP_TYPEID::Multiply:
+        case OP_TYPEID::NonZero_v3:
+        case OP_TYPEID::NotEqual:
+        case OP_TYPEID::Or:
         case OP_TYPEID::Power:
         case OP_TYPEID::Range:
         case OP_TYPEID::Result:
-        case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShapeOf_v3:
+        case OP_TYPEID::ShapeOf:
         case OP_TYPEID::Softmax:
-        case OP_TYPEID::Subtract: NGRAPH_CHECK(false, "Op not handled by evaluator method:", node);
+        case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Subtract:
+        case OP_TYPEID::Unsqueeze:
+        case OP_TYPEID::Xor:
+            // These ops are handled by op evaluators so nothing to do
+            break;
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
