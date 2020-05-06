@@ -189,6 +189,7 @@ def test_roi_align():
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == expected_shape
 
+
 @pytest.mark.parametrize('input_shape, cumsum_axis, reverse', [
     ([5, 2], 0, False),
     ([5, 2], 1, False),
@@ -226,7 +227,7 @@ def test_normalize_l2():
     expected = np.array([0.01428571, 0.02857143, 0.04285714, 0.05714286, 0.07142857, 0.08571429,
                          0.1, 0.11428571, 0.12857144, 0.14285715, 0.15714286, 0.17142858,
                          0.18571429, 0.2, 0.21428572, 0.22857143, 0.24285714, 0.25714287,
-                         0.27142859, 0.2857143, 0.30000001, 0.31428573, 0.32857144, 0.34285715, ]
-                        ).reshape(input_shape)
+                         0.27142859, 0.2857143, 0.30000001, 0.31428573, 0.32857144, 0.34285715,
+                         ]).reshape(input_shape)
 
     assert np.allclose(result, expected)
