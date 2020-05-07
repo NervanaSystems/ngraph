@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-from ngraph.impl import Dimension
+from ngraph.impl import Dimension, PartialShape, Shape
 
 
 def test_dimension():
@@ -80,3 +80,112 @@ def test_dimension_comparisons():
     assert not d2.compatible(d1)
     assert not d2.same_scheme(d1)
 
+
+def test_partial_shape():
+    ps = PartialShape([1, 2, 3, 4])
+    assert ps.is_static
+    assert not ps.is_dynamic
+    assert ps.rank == 4
+    assert repr(ps) == '<PartialShape: {1,2,3,4}>'
+
+    shape = Shape([1, 2, 3])
+    ps = PartialShape(shape)
+    assert ps.is_static
+    assert not ps.is_dynamic
+    assert ps.rank == 3
+    assert list(ps.get_shape()) == [1, 2, 3]
+    assert list(ps.to_shape()) == [1, 2, 3]
+    assert repr(shape) == '<Shape{1, 2, 3}>'
+    assert repr(ps) == '<PartialShape: {1,2,3}>'
+
+    ps = PartialShape([Dimension(1), Dimension(2), Dimension(3), Dimension.dynamic()])
+    assert not ps.is_static
+    assert ps.is_dynamic
+    assert ps.rank == 4
+    assert repr(ps) == '<PartialShape: {1,2,3,?}>'
+
+    ps = PartialShape([1, 2, 3, -1])
+    assert not ps.is_static
+    assert ps.is_dynamic
+    assert ps.rank == 4
+    assert repr(ps) == '<PartialShape: {1,2,3,?}>'
+
+    ps = PartialShape.dynamic()
+    assert not ps.is_static
+    assert ps.is_dynamic
+    assert ps.rank == Dimension.dynamic()
+    assert repr(ps) == '<PartialShape: ?>'
+
+    ps = PartialShape.dynamic(r=Dimension(2))
+    assert not ps.is_static
+    assert ps.is_dynamic
+    assert ps.rank == 2
+    assert 2 == ps.rank
+    assert repr(ps) == '<PartialShape: {?,?}>'
+
+
+def test_partial_shape_compatible():
+    ps1 = PartialShape.dynamic()
+    ps2 = PartialShape.dynamic()
+    assert ps1.compatible(ps2)
+
+    ps1 = PartialShape([3])
+    ps2 = PartialShape.dynamic()
+    assert ps1.compatible(ps2)
+
+    ps1 = PartialShape.dynamic()
+    ps2 = PartialShape([4])
+    assert ps1.compatible(ps2)
+
+    ps1 = PartialShape([2, -1, 3, -1, 5])
+    ps2 = PartialShape([2, -1, -1, 4, 5])
+    assert ps1.compatible(ps2)
+
+    ps1 = PartialShape([2, -1, 3, -1, 5])
+    ps2 = PartialShape([1, -1, -1, 4, 5])
+    assert not ps1.compatible(ps2)
+
+
+def test_partial_shape_same_scheme():
+    ps1 = PartialShape([1, 2, -1])
+    ps2 = PartialShape([1, 3, -1])
+    assert not ps1.same_scheme(ps2)
+
+    ps1 = PartialShape([1, 2, -1])
+    ps2 = PartialShape([1, 2, -1])
+    assert ps1.same_scheme(ps2)
+
+    ps1 = PartialShape([1, 2, 3])
+    ps2 = PartialShape([1, 2, 3])
+    assert ps1.same_scheme(ps2)
+
+    ps1 = PartialShape([1, 2, -1])
+    ps2 = PartialShape([1, 3, -1])
+    assert not ps1.same_scheme(ps2)
+
+    ps1 = PartialShape.dynamic()
+    ps2 = PartialShape.dynamic()
+    assert ps1.same_scheme(ps2)
+
+
+def test_partial_shape_refinement():
+    ps1 = PartialShape.dynamic()
+    ps2 = PartialShape.dynamic()
+    assert ps1.refines(ps2)
+    assert ps1.relaxes(ps2)
+    assert ps2.refines(ps1)
+    assert ps2.relaxes(ps1)
+
+    ps1 = PartialShape.dynamic()
+    ps2 = PartialShape([3, -1, 7, 9])
+    assert not ps1.refines(ps2)
+    assert ps1.relaxes(ps2)
+    assert ps2.refines(ps1)
+    assert not ps2.relaxes(ps1)
+
+    ps1 = PartialShape.dynamic()
+    ps2 = PartialShape([3, 5, 7, 9])
+    assert not ps1.refines(ps2)
+    assert ps1.relaxes(ps2)
+    assert ps2.refines(ps1)
+    assert not ps2.relaxes(ps1)
