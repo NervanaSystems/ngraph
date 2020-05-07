@@ -54,7 +54,6 @@ namespace ngraph
                     m_destination_type = destination_type;
                 }
 
-                size_t get_version() const override { return 0; }
                 bool evaluate(const HostTensorVector& outputs,
                               const HostTensorVector& inputs) override;
 
