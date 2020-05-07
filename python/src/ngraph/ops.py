@@ -1471,19 +1471,21 @@ def gelu(node, name=None):  # type: (NodeInput, str) -> Node
 
 
 @nameable_op
-def select(selection_node, input_node1, input_node2, name=None):
-    # type: (Node, Node, Node, str) -> Node
+def select(cond, then_node, else_node, auto_broadcast='numpy', name=None):
+    # type: (Node, NodeInput, NodeInput, str, Optional[str]) -> Node
     """Perform an element-wise selection operation on input tensors.
 
-    :param selection_node: The node providing selection values of `bool` type.
-    :param input_node1: The node providing data to be selected if respective `selection_node`
+    :param cond: Tensor with selection mask of type `boolean`.
+    :param then_node: Tensor providing data to be selected if respective `cond`
                         item value is `True`.
-    :param input_node2: The node providing data to be selected if respective `selection_node`
+    :param else_node: Tensor providing data to be selected if respective `cond`
                         item value is `False`.
+    :param auto_broadcast: Mode specifies rules used for auto-broadcasting of input tensors.
     :param name: The optional new name for output node.
     :return: The new node with values selected according to provided arguments.
     """
-    return Select(selection_node, input_node1, input_node2)
+    inputs = [cond, as_node(then_node), as_node(else_node)]
+    return _get_node_factory().create('Select', inputs, {'auto_broadcast': auto_broadcast.upper()})
 
 
 # Non-linear ops
@@ -2077,16 +2079,23 @@ def pad(arg,                 # type: Node
 
 
 @nameable_op
-def one_hot(node, shape, one_hot_axis, name=None):  # type: (Node, TensorShape, int, str) -> Node
+def one_hot(indices, depth, on_value, off_value, axis, name=None):
+    # type: (Node, NodeInput, NodeInput, NodeInput, int, Optional[str]) -> Node
     """Create node performing one-hot encoding on input data.
 
-    :param node: The input node providing data for operation.
-    :param shape: The output node shape including the new one-hot axis.
-    :param one_hot_axis: The index within the output shape of the new one-hot axis.
+    :param indices: Input tensor of rank N with indices of any supported integer data type.
+    :param depth: Scalar of any supported integer type that specifies number of classes and
+                  the size of one-hot dimension.
+    :param on_value: Scalar of any type that is the value that the locations
+                     in output tensor represented by indices in input take.
+    :param off_value: Scalar of any type that is the value that the locations not represented
+                      by indices in input take.
+
     :param name: The optional name for new output node.
     :return: New node performing one-hot operation.
     """
-    return OneHot(node, Shape(shape), one_hot_axis)
+    inputs = [indices, as_node(depth), as_node(on_value), as_node(off_value)]
+    return _get_node_factory().create('OneHot', inputs, {'axis': axis})
 
 
 @nameable_op
@@ -2117,15 +2126,18 @@ def replace_slice(dest_node,        # type: Node
 
 
 @nameable_op
-def reverse(node, reversed_axes, name=None):  # type: (Node, List[int], str) -> Node
+def reverse(data, axis, mode, name=None):  # type: (Node, NodeInput, str, Optional[str]) -> Node
     """Perform axis-reverse operation.
 
-    :param node: The input node on which operation will be carried out.
-    :param reversed_axes: The list of indices of axes to be reversed.
+    :param data: The input node on which operation will be carried out.
+    :param axis: The list of indices of axes to be reversed.
+    :param mode: The mode specifies how the second input tensor should be interpreted:
+                 as a set of indices or a mask. Range of values: index, mask.
     :param name: The optional name of the output node.
     :return: The new node with reversed axes.
     """
-    return Reverse(node, AxisSet(reversed_axes))
+    return _get_node_factory('opset1').create('Reverse', [data, as_node(axis)],
+                                              {'mode': mode.lower()})
 
 
 @nameable_op
