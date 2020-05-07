@@ -40,7 +40,7 @@ using namespace ngraph;
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
-    return is_type<op::Not>(n);
+    return false;
 }
 
 template <class T>

@@ -30,12 +30,15 @@
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/cos.hpp"
+#include "ngraph/op/cosh.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/not.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/range.hpp"
 #include "ngraph/op/relu.hpp"
@@ -46,6 +49,9 @@
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
 #include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/stop_gradient.hpp"
+#include "ngraph/op/tan.hpp"
+#include "ngraph/op/tanh.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/validation_util.hpp"
@@ -549,5 +555,107 @@ TEST(eval, evaluate_ceiling)
     EXPECT_EQ(result->get_element_type(), element::f32);
     auto result_val = read_vector<float>(result);
     vector<float> expec{-2.0f, -2.0f, 1.0f, 5.0f};
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_cos)
+{
+    auto p = make_shared<op::Parameter>(element::f32, Shape{11});
+    auto cos = make_shared<op::Cos>(p);
+    auto fun = make_shared<Function>(OutputVector{cos}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+
+    vector<float> input{0.f, 0.25f, -0.25f, 0.5f, -0.5f, 1.f, -1.f, 2.f, -2.f, 4.f, -4.f};
+    ASSERT_TRUE(
+        fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{11}, input)}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    auto result_val = read_vector<float>(result);
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return std::cos(x); });
+
+    ASSERT_EQ(result_val, input);
+}
+
+TEST(eval, evaluate_cosh)
+{
+    auto p = make_shared<op::Parameter>(element::f32, Shape{6});
+    auto cosh = make_shared<op::Cosh>(p);
+    auto fun = make_shared<Function>(OutputVector{cosh}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 5.0f, -5.0f};
+    ASSERT_TRUE(
+        fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{6}, input)}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    auto result_val = read_vector<float>(result);
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return std::cosh(x); });
+
+    ASSERT_EQ(result_val, input);
+}
+
+TEST(eval, evaluate_tan)
+{
+    auto p = make_shared<op::Parameter>(element::f32, Shape{11});
+    auto tan = make_shared<op::Tan>(p);
+    auto fun = make_shared<Function>(OutputVector{tan}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+
+    vector<float> input{0.f, 0.25f, -0.25f, 0.5f, -0.5f, 1.f, -1.f, 2.f, -2.f, 4.f, -4.f};
+    ASSERT_TRUE(
+        fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{11}, input)}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    auto result_val = read_vector<float>(result);
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return std::tan(x); });
+
+    ASSERT_EQ(result_val, input);
+}
+
+TEST(eval, evaluate_tanh)
+{
+    auto p = make_shared<op::Parameter>(element::f32, Shape{6});
+    auto tanh = make_shared<op::Tanh>(p);
+    auto fun = make_shared<Function>(OutputVector{tanh}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
+    ASSERT_TRUE(
+        fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{6}, input)}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    auto result_val = read_vector<float>(result);
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return std::tanh(x); });
+
+    ASSERT_EQ(result_val, input);
+}
+
+TEST(eval, evaluate_not)
+{
+    auto p = make_shared<op::Parameter>(element::boolean, Shape{2, 2});
+    auto op_not = make_shared<op::Not>(p);
+    auto fun = make_shared<Function>(OutputVector{op_not}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+
+    ASSERT_TRUE(
+        fun->evaluate({result}, {make_host_tensor<element::Type_t::boolean>(Shape{2, 2}, {1, 0, 1, 0})}));
+    EXPECT_EQ(result->get_element_type(), element::boolean);
+    auto result_val = read_vector<char>(result);
+    vector<char> expec{0, 1, 0, 1};
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_logical_not)
+{
+    auto p = make_shared<op::Parameter>(element::boolean, Shape{2, 2});
+    auto logical_not = make_shared<op::v1::LogicalNot>(p);
+    auto fun = make_shared<Function>(OutputVector{logical_not}, ParameterVector{p});
+    auto result = make_shared<HostTensor>();
+
+    ASSERT_TRUE(
+        fun->evaluate({result}, {make_host_tensor<element::Type_t::boolean>(Shape{2, 2}, {1, 0, 1, 0})}));
+    EXPECT_EQ(result->get_element_type(), element::boolean);
+    auto result_val = read_vector<char>(result);
+    vector<char> expec{0, 1, 0, 1};
     ASSERT_EQ(result_val, expec);
 }
