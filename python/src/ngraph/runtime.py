@@ -19,7 +19,7 @@ from typing import Dict, List, Union
 
 import numpy as np
 
-from ngraph.impl import Function, Node, Shape, serialize, util
+from ngraph.impl import Function, Node, Shape, PartialShape, serialize, util
 from ngraph.impl.runtime import Backend, Executable, Tensor
 from ngraph.utils.types import get_dtype, NumericData
 from ngraph.exceptions import UserInputError
@@ -40,7 +40,8 @@ class Runtime:
 
     def __init__(self, backend_name):  # type: (str) -> None
         self.backend_name = backend_name
-        self.backend = Backend.create(backend_name)
+        use_dynamic_backend = True
+        self.backend = Backend.create(backend_name, use_dynamic_backend)
 
     def set_config(self, config):  # type: (Dict[str, str]) -> None
         """Set the backend configuration."""
@@ -82,9 +83,9 @@ class Computation(object):
 
         self.result_views = []  # type: List[Tensor]
         for result in self.results:
-            shape = result.get_shape()
+            output_pshape = result.get_output_partial_shape(0)
             element_type = result.get_element_type()
-            self.result_views.append(runtime.backend.create_tensor(element_type, shape))
+            self.result_views.append(runtime.backend.create_dynamic_tensor(element_type, output_pshape))
 
     def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])
@@ -97,7 +98,7 @@ class Computation(object):
                 value = np.array(value)
             Computation._write_ndarray_to_tensor_view(value, tensor_view)
 
-        self.handle.call(self.result_views, self.tensor_views)
+        self.handle.call_with_validate(self.result_views, self.tensor_views)
 
         results = []
         for result_view in self.result_views:

@@ -28,6 +28,7 @@
 #include "pyngraph/ops/op.hpp"
 #include "pyngraph/ops/regmodule_pyngraph_op.hpp"
 #include "pyngraph/ops/util/regmodule_pyngraph_op_util.hpp"
+#include "pyngraph/partial_shape.hpp"
 #include "pyngraph/passes/regmodule_pyngraph_passes.hpp"
 #include "pyngraph/runtime/regmodule_pyngraph_runtime.hpp"
 #include "pyngraph/serializer.hpp"
@@ -44,6 +45,7 @@ PYBIND11_MODULE(_pyngraph, m)
     regclass_pyngraph_Node(m);
     regclass_pyngraph_NodeFactory(m);
     regclass_pyngraph_Shape(m);
+    regclass_pyngraph_PartialShape(m);
     regclass_pyngraph_Strides(m);
     regclass_pyngraph_CoordinateDiff(m);
     regclass_pyngraph_AxisSet(m);

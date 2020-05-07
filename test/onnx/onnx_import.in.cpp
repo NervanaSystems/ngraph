@@ -1738,42 +1738,6 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_erf_int32)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, onnx_model_hardmax)
-{
-    auto hardmax_fn = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/hardmax.prototxt"));
-
-    auto test_case = ngraph::test::NgraphTestCase(hardmax_fn, "${BACKEND_NAME}");
-    test_case.add_input<float>(
-        {-2.02458119f, 0.00126542f,  -0.58045743f, -0.75186814f, 0.9406899f,
-         -0.513188f,   0.85887463f,  1.61444086f,  0.23801147f,  -0.26816885f,
-         0.6597208f,   1.43889519f,  0.28798895f,  1.44769952f,  -1.99466756f,
-         0.41386644f,  0.69389555f,  1.46118255f,  -1.67628606f, 1.49697552f,
-
-         0.06337166f,  -1.15740783f, 0.8792142f,   -0.95352717f, -1.87895792f,
-         -0.74066102f, -0.27131459f, 0.2219685f,   0.31831001f,  0.52495901f,
-         0.60283089f,  0.60397976f,  0.92401468f,  0.29565101f,  -1.14443776f,
-         -1.07399045f, -0.92266259f, 0.24017731f,  -0.30105675f, 1.18513269f,
-
-         0.55494542f,  1.12119279f,  -0.43156474f, 0.15101668f,  -1.460439f,
-         0.96375129f,  1.10411785f,  -0.30272771f, -0.48855848f, 0.12103213f,
-         -0.71388492f, 1.38398178f,  0.21924434f,  0.93105052f,  -0.21074303f,
-         0.48213503f,  -1.37810638f, 8.99060285f,  0.54794592f,  -0.46820172f});
-
-    // values for hardmax with axis==2
-    test_case.add_expected_output<float>(
-        Shape{3, 4, 5}, {0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-                         0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-
-                         0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-                         0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-
-                         0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-                         0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f});
-
-    test_case.run();
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, onnx_model_shrink_float)
 {
     const auto shrink_fn = onnx_import::import_onnx_model(
