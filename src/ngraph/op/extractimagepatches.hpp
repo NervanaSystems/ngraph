@@ -39,10 +39,10 @@ namespace ngraph
                 /// [rate_rows, rate_cols] \param padding Padding type. it can be any value from
                 /// valid, same_lower, same_upper
                 ExtractImagePatches(const Output<Node>& data,
-                                    const Shape sizes,
-                                    const Strides strides,
-                                    const Shape rates,
-                                    const PadType padding);
+                                    const Shape& sizes,
+                                    const Strides& strides,
+                                    const Shape& rates,
+                                    const PadType& padding);
 
                 void validate_and_infer_types() override;
                 bool visit_attributes(AttributeVisitor& visitor) override;
@@ -51,13 +51,13 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const Shape& get_sizes() const { return m_patch_sizes; }
-                void set_sizes(const Shape sizes) { m_patch_sizes = sizes; }
+                void set_sizes(const Shape& sizes) { m_patch_sizes = sizes; }
                 const Strides& get_strides() const { return m_patch_movement_strides; }
-                void set_strides(const Strides strides) { m_patch_movement_strides = strides; }
+                void set_strides(const Strides& strides) { m_patch_movement_strides = strides; }
                 const Shape& get_rates() const { return m_patch_selection_rates; }
-                void set_rates(const Shape rates) { m_patch_selection_rates = rates; }
+                void set_rates(const Shape& rates) { m_patch_selection_rates = rates; }
                 const PadType& get_padding() const { return m_padding; }
-                void set_padding(PadType padding) { m_padding = padding; }
+                void set_padding(PadType& padding) { m_padding = padding; }
             private:
                 Shape m_patch_sizes;
                 Strides m_patch_movement_strides;

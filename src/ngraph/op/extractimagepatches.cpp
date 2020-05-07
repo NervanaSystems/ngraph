@@ -25,10 +25,10 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::v3::ExtractImagePatches::type_info;
 
 op::v3::ExtractImagePatches::ExtractImagePatches(const Output<Node>& image,
-                                                 const Shape sizes,
-                                                 const Strides strides,
-                                                 const Shape rates,
-                                                 const PadType padding)
+                                                 const Shape& sizes,
+                                                 const Strides& strides,
+                                                 const Shape& rates,
+                                                 const PadType& padding)
     : Op({image})
     , m_patch_sizes(sizes)
     , m_patch_movement_strides(strides)
