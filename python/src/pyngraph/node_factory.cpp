@@ -139,34 +139,14 @@ namespace
                 std::shared_ptr<ngraph::Node>(m_opset.create(op_type_name));
 
             NGRAPH_CHECK(op_node != nullptr, "Couldn't create operator: ", op_type_name);
+            NGRAPH_CHECK(!op_node->is_constant(),
+                         "Currently NodeFactory doesn't support Constant node: ",
+                         op_type_name);
+
             DictAttributeDeserializer visitor(attributes);
 
             op_node->set_arguments(arguments);
-            if (op_node->is_constant())
-            {
-                NGRAPH_CHECK(attributes.contains("shape"), "Missing required \"shape\" attribute");
-                std::vector<size_t> shape = attributes["shape"].cast<std::vector<size_t>>();
-
-                NGRAPH_CHECK(attributes.contains("element_type"),
-                             "Missing required \"element_type\" attribute");
-                ngraph::element::Type el_type = ngraph::as_enum<ngraph::element::Type_t>(
-                    attributes["element_type"].cast<std::string>());
-                // const void* data = attributes["value"].cast<void*>();
-
-                NGRAPH_CHECK(attributes.contains("value"), "Missing required \"value\" attribute");
-                std::vector<float> data = attributes["value"].cast<std::vector<float>>();
-
-                // py::array np_array = py::array(attributes["value"]);
-                // py::buffer_info info = np_array.request();
-                // op_node = std::make_shared<ngraph::op::v0::Constant>(el_type, shape, data);
-                // op_node = std::make_shared<ngraph::op::v0::Constant>(el_type, shape, info.ptr);
-
-                op_node = std::make_shared<ngraph::op::v0::Constant>(el_type, shape, data);
-            }
-            else
-            {
-                op_node->visit_attributes(visitor);
-            }
+            op_node->visit_attributes(visitor);
             op_node->constructor_validate_and_infer_types();
 
             return op_node;
