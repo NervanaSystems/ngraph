@@ -1463,7 +1463,7 @@ def gelu(node, name=None):  # type: (NodeInput, str) -> Node
 
 @nameable_op
 def select(cond, then_node, else_node, auto_broadcast='numpy', name=None):
-    # type: (Node, NodeInput, NodeInput, Optional[str]) -> Node
+    # type: (Node, NodeInput, NodeInput, str, Optional[str]) -> Node
     """Perform an element-wise selection operation on input tensors.
 
     :param cond: Tensor with selection mask of type `boolean`.
@@ -2220,7 +2220,7 @@ def non_max_suppression(boxes,                              # type: Node
                         scores,                             # type: NodeInput
                         max_output_boxes_per_class=None,    # type: Optional[NodeInput]
                         iou_threshold=None,                 # type: Optional[NodeInput]
-                        score_threshold=None,               # Optional[NodeInput]
+                        score_threshold=None,               # type: Optional[NodeInput]
                         box_encoding='corner',              # type: str
                         sort_result_descending=True,        # type: bool
                         output_type='i64',                  # type: str
