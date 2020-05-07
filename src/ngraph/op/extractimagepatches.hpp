@@ -38,7 +38,7 @@ namespace ngraph
                 /// \param rates Element seleciton rate for creating a patch. in the format of
                 /// [rate_rows, rate_cols] \param padding Padding type. it can be any value from
                 /// valid, same_lower, same_upper
-                ExtractImagePatches(const Output<Node>& data,
+                ExtractImagePatches(const Output<Node>& image,
                                     const Shape& sizes,
                                     const Strides& strides,
                                     const Shape& rates,
