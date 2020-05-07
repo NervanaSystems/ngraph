@@ -40,10 +40,12 @@ namespace ngraph
             {
             public:
                 IE_Backend(const std::string& configuration_string);
-                virtual ~IE_Backend() = default;
+                ~IE_Backend() override;
 
                 std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
                                                     bool enable_performance_data = false) override;
+
+                void remove_compiled_function(std::shared_ptr<Executable> exec) override;
                 bool executable_can_create_tensors();
 
                 bool is_supported(const Node& node) const override;
@@ -73,6 +75,9 @@ namespace ngraph
                 }
 
             private:
+                std::mutex m_exec_map_mutex;
+                std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>>
+                    m_exec_map;
                 std::string m_device;
             };
         }

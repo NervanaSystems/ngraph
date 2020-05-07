@@ -41,6 +41,7 @@ namespace ngraph
 
             private:
                 InferenceEngine::CNNNetwork m_network;
+                InferenceEngine::InferRequest m_infer_req;
                 std::string m_device;
             };
         }

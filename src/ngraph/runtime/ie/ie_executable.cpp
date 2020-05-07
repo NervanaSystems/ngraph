@@ -110,17 +110,18 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
 
     m_network = InferenceEngine::CNNNetwork(func);
     set_parameters_and_results(*func);
+
+    InferenceEngine::Core ie;
+    //  Load model to the plugin (BACKEND_NAME)
+    InferenceEngine::ExecutableNetwork exe_network = ie.LoadNetwork(m_network, m_device);
+    //  Create infer request
+     m_infer_req = exe_network.CreateInferRequest();
 }
 
 bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                       const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    InferenceEngine::Core ie;
 
-    //  Loading model to the plugin (BACKEND_NAME)
-    InferenceEngine::ExecutableNetwork exe_network = ie.LoadNetwork(m_network, m_device);
-    //  Create infer request
-    InferenceEngine::InferRequest infer_request = exe_network.CreateInferRequest();
     //  Prepare input and output blobs
     InferenceEngine::InputsDataMap input_info = m_network.getInputsInfo();
 
@@ -134,7 +135,7 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     {
         shared_ptr<runtime::ie::IETensor> tv =
             static_pointer_cast<runtime::ie::IETensor>(inputs[i]);
-        infer_request.SetBlob(it.first,
+        m_infer_req.SetBlob(it.first,
                               fill_blob(it.second->getTensorDesc().getDims(),
                                         tv->get_data_ptr(),
                                         tv->get_element_count(),
@@ -145,8 +146,8 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     //  Prepare output blobs
     string output_name = m_network.getOutputsInfo().begin()->first;
 
-    infer_request.Infer();
-    InferenceEngine::Blob::Ptr output = infer_request.GetBlob(output_name);
+    m_infer_req.Infer();
+    InferenceEngine::Blob::Ptr output = m_infer_req.GetBlob(output_name);
 
     InferenceEngine::MemoryBlob::Ptr moutput =
         InferenceEngine::as<InferenceEngine::MemoryBlob>(output);

@@ -41,9 +41,46 @@ runtime::ie::IE_Backend::IE_Backend(const string& configuration_string)
     m_device = config;
 }
 
+runtime::ie::IE_Backend::~IE_Backend()
+{
+    m_exec_map.clear();
+}
+
 shared_ptr<runtime::Executable> runtime::ie::IE_Backend::compile(shared_ptr<Function> func, bool)
 {
-    return make_shared<IE_Executable>(func, m_device);
+    shared_ptr<runtime::Executable> rc;
+    // we will protect the access to map (m_exec_map) across multiple threads by creating a
+    // lock_gaurd
+    // m_exec_map_mutex will be released once the object `guard` goes out of scope
+    {
+        std::lock_guard<std::mutex> guard(m_exec_map_mutex);
+        auto it = m_exec_map.find(func);
+        if (it != m_exec_map.end())
+        {
+            rc = it->second;
+            return rc;
+        }
+    }
+
+    rc = make_shared<IE_Executable>(func, m_device);
+    {
+        std::lock_guard<std::mutex> guard(m_exec_map_mutex);
+        m_exec_map.insert({func, rc});
+        return rc;
+    }
+}
+
+void runtime::ie::IE_Backend::remove_compiled_function(shared_ptr<Executable> exec)
+{
+    std::lock_guard<std::mutex> guard(m_exec_map_mutex);
+    for (auto it = m_exec_map.begin(); it != m_exec_map.end(); ++it)
+    {
+        if (it->second == exec)
+        {
+            m_exec_map.erase(it);
+            break;
+        }
+    }
 }
 
 bool runtime::ie::IE_Backend::is_supported(const Node& node) const
