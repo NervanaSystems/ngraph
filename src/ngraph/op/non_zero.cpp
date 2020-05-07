@@ -53,6 +53,7 @@ bool ngraph::op::v3::NonZero::visit_attributes(AttributeVisitor& visitor)
 
 void op::v3::NonZero::validate_and_infer_types()
 {
+    const PartialShape& input_shape = get_input_partial_shape(0);
     const auto input_et = get_input_element_type(0);
 
     NODE_VALIDATION_CHECK(this,
@@ -63,9 +64,7 @@ void op::v3::NonZero::validate_and_infer_types()
                           m_output_type == element::i64 || m_output_type == element::i32,
                           "Output type must be i32 or i64");
 
-    // Rank and dimension values of output shape depend on both input shape
-    // and input data
-    set_output_type(0, m_output_type, PartialShape::dynamic());
+    set_output_type(0, m_output_type, PartialShape{input_shape.rank(), Dimension::dynamic()});
     set_input_is_relevant_to_shape(0);
 }
 
@@ -89,20 +88,7 @@ namespace
         size_t non_zero_count = runtime::reference::non_zero_get_count<IN_T>(
             input->get_data_ptr<INPUT_ET>(), input_shape);
 
-        Shape out_shape;
-        if (non_zero_count == 0)
-        {
-            out_shape = Shape{0};
-        }
-        else if (input_rank == 0)
-        {
-            out_shape = Shape{1, 1};
-        }
-        else
-        {
-            out_shape = Shape{input_rank, non_zero_count};
-        }
-
+        Shape out_shape = Shape{input_rank, non_zero_count};
         output->set_shape(out_shape);
         runtime::reference::non_zero<IN_T, OUT_T>(
             input->get_data_ptr<INPUT_ET>(), output->get_data_ptr<OUT_ET>(), input_shape);

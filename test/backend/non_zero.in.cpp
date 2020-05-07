@@ -93,7 +93,7 @@ NGRAPH_TEST(${BACKEND_NAME}, non_zero_all_0s)
     auto input = backend->create_tensor(element::i32, input_shape);
     copy_data(input, input_data);
 
-    Shape expected_output_shape{0};
+    Shape expected_output_shape{input_shape.size(), 0};
 
     auto result = make_shared<HostTensor>();
     cfun->call_with_validate({result}, {input});
