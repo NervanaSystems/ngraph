@@ -70,3 +70,32 @@ void op::Parameter::set_is_relevant_to_shapes(bool is_relevant)
 {
     m_is_relevant_to_shapes = is_relevant;
 }
+
+constexpr DiscreteTypeInfo AttributeAdapter<ParameterVector>::type_info;
+
+AttributeAdapter<ParameterVector>::AttributeAdapter(ParameterVector& ref)
+    : m_ref(ref)
+{
+}
+
+bool AttributeAdapter<ParameterVector>::visit_attributes(AttributeVisitor& visitor,
+                                                         const std::string& name)
+{
+    vector<AttributeVisitor::node_id_t> original_ids;
+    for (auto elt : m_ref)
+    {
+        original_ids.push_back(visitor.get_registered_node_id(elt));
+    }
+    vector<AttributeVisitor::node_id_t> ids(original_ids);
+    visitor.on_attribute(name, ids);
+    if (original_ids != ids)
+    {
+        ParameterVector new_nodes;
+        for (auto id : ids)
+        {
+            new_nodes.push_back(as_type_ptr<op::v0::Parameter>(visitor.get_registered_node(id)));
+        }
+        m_ref = new_nodes;
+    }
+    return true;
+}

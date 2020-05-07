@@ -1150,3 +1150,50 @@ bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_
 }
 
 constexpr DiscreteTypeInfo AttributeAdapter<shared_ptr<Node>>::type_info;
+
+AttributeAdapter<std::shared_ptr<Node>>::AttributeAdapter(std::shared_ptr<Node>& value)
+    : m_ref(value)
+{
+}
+
+bool AttributeAdapter<std::shared_ptr<Node>>::visit_attributes(AttributeVisitor& visitor,
+                                                               const std::string& name)
+{
+    auto original_id = visitor.get_registered_node_id(m_ref);
+    auto id = original_id;
+    visitor.on_attribute(name, id);
+    if (id != original_id)
+    {
+        m_ref = visitor.get_registered_node(id);
+    }
+    return true;
+}
+
+constexpr DiscreteTypeInfo AttributeAdapter<NodeVector>::type_info;
+
+AttributeAdapter<NodeVector>::AttributeAdapter(NodeVector& ref)
+    : m_ref(ref)
+{
+}
+
+bool AttributeAdapter<NodeVector>::visit_attributes(AttributeVisitor& visitor,
+                                                    const std::string& name)
+{
+    vector<AttributeVisitor::node_id_t> original_ids;
+    for (auto elt : m_ref)
+    {
+        original_ids.push_back(visitor.get_registered_node_id(elt));
+    }
+    vector<AttributeVisitor::node_id_t> ids(original_ids);
+    visitor.on_attribute(name, ids);
+    if (original_ids != ids)
+    {
+        NodeVector new_nodes;
+        for (auto id : ids)
+        {
+            new_nodes.push_back(visitor.get_registered_node(id));
+        }
+        m_ref = new_nodes;
+    }
+    return true;
+}

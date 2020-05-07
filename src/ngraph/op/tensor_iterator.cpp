@@ -200,54 +200,6 @@ bool op::v0::TensorIterator::BodyOutputDescription::visit_attributes(AttributeVi
     return true;
 }
 
-// TODO: Move to attribute_adapter
-template <>
-class AttributeAdapter<ParameterVector> : public VisitorAdapter
-{
-public:
-    AttributeAdapter(ParameterVector& ref)
-        : m_ref(ref)
-    {
-    }
-
-    bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
-    {
-        return true;
-    }
-
-    static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<ParameterVector>", 0};
-    const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-protected:
-    ParameterVector& m_ref;
-};
-
-// TODO: Move to attribute_adapter
-constexpr DiscreteTypeInfo AttributeAdapter<ParameterVector>::type_info;
-
-// TODO: Move to attribute_adapter
-template <>
-class AttributeAdapter<ResultVector> : public VisitorAdapter
-{
-public:
-    AttributeAdapter(ResultVector& ref)
-        : m_ref(ref)
-    {
-    }
-
-    bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
-    {
-        return true;
-    }
-
-    static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<ResultVector>", 0};
-    const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-protected:
-    ResultVector& m_ref;
-};
-
-// TODO: Move to attribute_adapter
-constexpr DiscreteTypeInfo AttributeAdapter<ResultVector>::type_info;
-
 template <>
 class AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>>
     : public VisitorAdapter

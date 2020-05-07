@@ -642,29 +642,27 @@ namespace ngraph
     class NGRAPH_API AttributeAdapter<std::shared_ptr<Node>> : public VisitorAdapter
     {
     public:
-        AttributeAdapter(std::shared_ptr<Node>& value)
-            : m_ref(value)
-        {
-        }
+        AttributeAdapter(std::shared_ptr<Node>& value);
 
-        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
-        {
-            auto original_id = visitor.get_registered_node_id(m_ref);
-            auto id = original_id;
-            visitor.on_attribute(name, id);
-            if (id != original_id)
-            {
-                m_ref = visitor.get_registered_node(id);
-            }
-            return true;
-        }
+        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override;
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<std::shared_ptr<Node>>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     protected:
-        void visit_node_vector(AttributeVisitor& visitor,
-                               const std::string& name,
-                               NodeVector& node_vector);
         std::shared_ptr<Node>& m_ref;
+    };
+
+    template <>
+    class NGRAPH_API AttributeAdapter<NodeVector> : public VisitorAdapter
+    {
+    public:
+        AttributeAdapter(NodeVector& ref);
+
+        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override;
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<NodeVector>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    protected:
+        NodeVector& m_ref;
     };
 
     using RawNodeOutputMap = std::map<RawNodeOutput, Output<Node>>;
