@@ -44,6 +44,8 @@ namespace ngraph
 
                 std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
                                                     bool enable_performance_data = false) override;
+                bool executable_can_create_tensors();
+
                 bool is_supported(const Node& node) const override;
                 bool is_supported_property(const Property prop) const override;
 

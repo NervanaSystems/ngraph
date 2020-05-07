@@ -65,6 +65,11 @@ bool runtime::ie::IE_Backend::is_supported_property(const Property) const
     return false;
 }
 
+bool runtime::ie::IE_Backend::executable_can_create_tensors()
+{
+    return false;
+}
+
 shared_ptr<runtime::Tensor>
     runtime::ie::IE_Backend::create_dynamic_tensor(const element::Type& type,
                                                    const PartialShape& shape)
