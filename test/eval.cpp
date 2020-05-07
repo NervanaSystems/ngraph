@@ -211,3 +211,22 @@ TEST(eval, evaluate_reshape_v1_negative_index_zero_dim_zero_flag)
     vector<float> expected_val{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
     ASSERT_EQ(computed_val, expected_val);
 }
+
+TEST(eval, evaluate_reshape_v1_pattern_int16)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2, 2});
+    auto pattern = make_shared<op::Parameter>(element::i16, Shape{6});
+    auto dyn_reshape = make_shared<op::v1::Reshape>(data, pattern, true);
+    auto func = make_shared<Function>(OutputVector{dyn_reshape}, ParameterVector{data, pattern});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        func->evaluate({result_tensor},
+                       {make_host_tensor<element::Type_t::f32>(
+                            {2, 2, 2, 2}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                        make_host_tensor<element::Type_t::i16>({6}, {2, 0, 1, -1, 1, 2})}));
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{2, 2, 1, 2, 1, 2}));
+    auto computed_val = read_vector<float>(result_tensor);
+    vector<float> expected_val{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    ASSERT_EQ(computed_val, expected_val);
+}

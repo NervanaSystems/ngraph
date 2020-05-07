@@ -368,12 +368,45 @@ bool op::v1::Reshape::evaluate(const HostTensorVector& outputs, const HostTensor
     size_t output_rank = inputs[1]->get_shape()[0];
     Shape out_shape_val;
 
-    // read the pattern tensor to set the shape of the output.
-    int64_t* pattern_ptr = inputs[1]->get_data_ptr<int64_t>();
+#define COMPUTE_OUPUT_SHAPE(T)                                                                     \
+    T* pattern_ptr = inputs[1]->get_data_ptr<T>();                                                 \
+    for (int i = 0; i < output_rank; i++)                                                          \
+    {                                                                                              \
+        out_shape_val.push_back(pattern_ptr[i]);                                                   \
+    }
 
-    for (int i = 0; i < output_rank; i++)
+    // read the pattern tensor to set the shape of the output.
+    if (inputs[1]->get_element_type() == element::i8)
     {
-        out_shape_val.push_back(pattern_ptr[i]);
+        COMPUTE_OUPUT_SHAPE(int8_t);
+    }
+    else if (inputs[1]->get_element_type() == element::i16)
+    {
+        COMPUTE_OUPUT_SHAPE(int16_t);
+    }
+    else if (inputs[1]->get_element_type() == element::i32)
+    {
+        COMPUTE_OUPUT_SHAPE(int32_t);
+    }
+    else if (inputs[1]->get_element_type() == element::i64)
+    {
+        COMPUTE_OUPUT_SHAPE(int64_t);
+    }
+    else if (inputs[1]->get_element_type() == element::u8)
+    {
+        COMPUTE_OUPUT_SHAPE(uint8_t);
+    }
+    else if (inputs[1]->get_element_type() == element::u16)
+    {
+        COMPUTE_OUPUT_SHAPE(uint16_t);
+    }
+    else if (inputs[1]->get_element_type() == element::u32)
+    {
+        COMPUTE_OUPUT_SHAPE(uint32_t);
+    }
+    else if (inputs[1]->get_element_type() == element::u64)
+    {
+        COMPUTE_OUPUT_SHAPE(uint64_t);
     }
 
     NODE_VALIDATION_CHECK(
