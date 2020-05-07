@@ -54,7 +54,7 @@ NGRAPH_TEST(${BACKEND_NAME}, not)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::boolean, shape);
-    copy_data(a, vector<char>{1, 0, 2, 0});
+    copy_data(a, vector<char>{1, 0, 1, 0});
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);

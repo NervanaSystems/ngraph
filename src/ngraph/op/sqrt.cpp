@@ -58,6 +58,12 @@ namespace
     inline bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
     {
         using T = typename element_type_traits<ET>::value_type;
+        std::vector<T> in_vec(count);
+        arg0->read(in_vec.data(), count * sizeof(T));
+        if (std::any_of(in_vec.begin(), in_vec.end(), [](T i) { return i < T(0); }))
+        {
+            throw ngraph_error("Square root of negative value");
+        }
         runtime::reference::sqrt<T>(arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), count);
         return true;
     }

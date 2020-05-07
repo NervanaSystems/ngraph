@@ -62,20 +62,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
     }
     else
     {
-        if (is_type<op::v1::LogicalNot>(unary))
-        {
-            runtime::reference::logical_not<T>(
-                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
-        }
-        else if (is_type<op::v0::Not>(unary))
-        {
-            runtime::reference::logical_not<T>(
-                constant->get_data_ptr<T>(), buffer.get_ptr<T>(), shape_size(out_shape));
-        }
-        else
-        {
-            NGRAPH_CHECK(false, "must be consistent with is_supported_unary_op");
-        }
+        NGRAPH_CHECK(false, "must be consistent with is_supported_unary_op");
     }
 
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, buffer.get_ptr<T>());
