@@ -24,9 +24,7 @@ void regmodule_pyngraph_op(py::module m_op)
 {
     regclass_pyngraph_op_Abs(m_op);
     regclass_pyngraph_op_Acos(m_op);
-    regclass_pyngraph_op_Add(m_op);
     regclass_pyngraph_op_AllReduce(m_op);
-    regclass_pyngraph_op_And(m_op);
     regclass_pyngraph_op_ArgMax(m_op);
     regclass_pyngraph_op_ArgMin(m_op);
     regclass_pyngraph_op_Asin(m_op);
@@ -39,8 +37,6 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Broadcast(m_op);
     regclass_pyngraph_op_BroadcastDistributed(m_op);
     regclass_pyngraph_op_Ceiling(m_op);
-    regclass_pyngraph_op_Clamp(m_op);
-    regclass_pyngraph_op_Concat(m_op);
     regclass_pyngraph_op_Constant(m_op);
     regclass_pyngraph_op_Convert(m_op);
     regclass_pyngraph_op_Convolution(m_op);
@@ -50,12 +46,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Cosh(m_op);
     regclass_pyngraph_op_DepthToSpace(m_op);
     regclass_pyngraph_op_Dequantize(m_op);
-    regclass_pyngraph_op_Divide(m_op);
     regclass_pyngraph_op_Dot(m_op);
-    regclass_pyngraph_op_Elu(m_op);
-    regclass_pyngraph_op_Equal(m_op);
-    regclass_pyngraph_op_Exp(m_op);
-    regclass_pyngraph_op_FakeQuantize(m_op);
     regclass_pyngraph_op_Floor(m_op);
     regclass_pyngraph_op_Gelu(m_op);
     regclass_pyngraph_op_Gemm(m_op);

@@ -20,10 +20,10 @@ import numpy as np
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
     Shape, Strides
 
-from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
-    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
-    Cos, Cosh, DepthToSpace, Dequantize, Divide, Dot, Elu, \
-    FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
+from ngraph.impl.op import Abs, Acos, Asin, ArgMax, ArgMin, Atan, \
+    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Constant, Convert, \
+    Cos, Cosh, DepthToSpace, Dequantize, Dot, \
+    Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
     HardSigmoid, Less, LessEq, Log, LRN, Minimum, \
     Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Power, \
     Quantize, QuantizedConvolution, QuantizedDot, PRelu, Relu, RNNCell, ReplaceSlice, Reshape, \

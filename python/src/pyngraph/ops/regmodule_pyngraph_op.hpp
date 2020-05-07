@@ -19,9 +19,7 @@
 #include <pybind11/pybind11.h>
 #include "pyngraph/ops/abs.hpp"
 #include "pyngraph/ops/acos.hpp"
-#include "pyngraph/ops/add.hpp"
 #include "pyngraph/ops/allreduce.hpp"
-#include "pyngraph/ops/and.hpp"
 #include "pyngraph/ops/argmax.hpp"
 #include "pyngraph/ops/argmin.hpp"
 #include "pyngraph/ops/asin.hpp"
@@ -31,22 +29,15 @@
 #include "pyngraph/ops/broadcast.hpp"
 #include "pyngraph/ops/broadcast_distributed.hpp"
 #include "pyngraph/ops/ceiling.hpp"
-#include "pyngraph/ops/concat.hpp"
 #include "pyngraph/ops/constant.hpp"
 #include "pyngraph/ops/convert.hpp"
 #include "pyngraph/ops/convolution.hpp"
 #include "pyngraph/ops/cos.hpp"
 #include "pyngraph/ops/cosh.hpp"
 #include "pyngraph/ops/dequantize.hpp"
-#include "pyngraph/ops/divide.hpp"
 #include "pyngraph/ops/dot.hpp"
-#include "pyngraph/ops/equal.hpp"
-#include "pyngraph/ops/exp.hpp"
 #include "pyngraph/ops/floor.hpp"
-#include "pyngraph/ops/fused/clamp.hpp"
 #include "pyngraph/ops/fused/depth_to_space.hpp"
-#include "pyngraph/ops/fused/elu.hpp"
-#include "pyngraph/ops/fused/fake_quantize.hpp"
 #include "pyngraph/ops/fused/gelu.hpp"
 #include "pyngraph/ops/fused/gemm.hpp"
 #include "pyngraph/ops/fused/grn.hpp"
@@ -104,6 +95,7 @@
 #include "pyngraph/ops/tan.hpp"
 #include "pyngraph/ops/tanh.hpp"
 #include "pyngraph/ops/topk.hpp"
+
 
 namespace py = pybind11;
 

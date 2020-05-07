@@ -37,9 +37,7 @@ if sys.platform != 'win32':
 
 from _pyngraph.op import Abs
 from _pyngraph.op import Acos
-from _pyngraph.op import Add
 from _pyngraph.op import AllReduce
-from _pyngraph.op import And
 from _pyngraph.op import ArgMax
 from _pyngraph.op import ArgMin
 from _pyngraph.op import Asin
@@ -51,7 +49,6 @@ from _pyngraph.op import BatchNormInference
 from _pyngraph.op import BatchNormTrainingBackprop
 from _pyngraph.op import Broadcast
 from _pyngraph.op import Ceiling
-from _pyngraph.op import Concat
 from _pyngraph.op import Constant
 
 """ Retrieve Constant inner data.
@@ -62,7 +59,6 @@ from _pyngraph.op import Constant
 """
 Constant.get_data = lambda self: np.array(self, copy=True)
 
-from _pyngraph.op import Clamp
 from _pyngraph.op import Convert
 from _pyngraph.op import Convolution
 from _pyngraph.op import ConvolutionBackpropData
@@ -71,12 +67,7 @@ from _pyngraph.op import Cos
 from _pyngraph.op import Cosh
 from _pyngraph.op import DepthToSpace
 from _pyngraph.op import Dequantize
-from _pyngraph.op import Divide
 from _pyngraph.op import Dot
-from _pyngraph.op import Elu
-from _pyngraph.op import Equal
-from _pyngraph.op import Exp
-from _pyngraph.op import FakeQuantize
 from _pyngraph.op import Floor
 from _pyngraph.op import Gelu
 from _pyngraph.op import Gemm
