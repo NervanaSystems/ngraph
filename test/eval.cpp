@@ -584,8 +584,7 @@ TEST(eval, evaluate_cosh)
     auto result = make_shared<HostTensor>();
 
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 5.0f, -5.0f};
-    ASSERT_TRUE(
-        fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{6}, input)}));
+    ASSERT_TRUE(fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{6}, input)}));
     EXPECT_EQ(result->get_element_type(), element::f32);
     auto result_val = read_vector<float>(result);
     std::transform(
@@ -620,8 +619,7 @@ TEST(eval, evaluate_tanh)
     auto result = make_shared<HostTensor>();
 
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
-    ASSERT_TRUE(
-        fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{6}, input)}));
+    ASSERT_TRUE(fun->evaluate({result}, {make_host_tensor<element::Type_t::f32>(Shape{6}, input)}));
     EXPECT_EQ(result->get_element_type(), element::f32);
     auto result_val = read_vector<float>(result);
     std::transform(
@@ -637,8 +635,8 @@ TEST(eval, evaluate_not)
     auto fun = make_shared<Function>(OutputVector{op_not}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
-    ASSERT_TRUE(
-        fun->evaluate({result}, {make_host_tensor<element::Type_t::boolean>(Shape{2, 2}, {1, 0, 1, 0})}));
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::boolean>(Shape{2, 2}, {1, 0, 1, 0})}));
     EXPECT_EQ(result->get_element_type(), element::boolean);
     auto result_val = read_vector<char>(result);
     vector<char> expec{0, 1, 0, 1};
@@ -652,8 +650,8 @@ TEST(eval, evaluate_logical_not)
     auto fun = make_shared<Function>(OutputVector{logical_not}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
-    ASSERT_TRUE(
-        fun->evaluate({result}, {make_host_tensor<element::Type_t::boolean>(Shape{2, 2}, {1, 0, 1, 0})}));
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::boolean>(Shape{2, 2}, {1, 0, 1, 0})}));
     EXPECT_EQ(result->get_element_type(), element::boolean);
     auto result_val = read_vector<char>(result);
     vector<char> expec{0, 1, 0, 1};
