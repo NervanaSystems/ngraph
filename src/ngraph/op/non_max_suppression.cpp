@@ -60,13 +60,34 @@ shared_ptr<Node>
     op::v1::NonMaxSuppression::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<op::v1::NonMaxSuppression>(new_args.at(0),
-                                                  new_args.at(1),
-                                                  new_args.at(2),
-                                                  new_args.at(3),
-                                                  new_args.at(4),
-                                                  m_box_encoding,
-                                                  m_sort_result_descending);
+    NODE_VALIDATION_CHECK(this,
+                          new_args.size() >= 3 && new_args.size() <= 5,
+                          "Number of inputs must be 3, 4 or 5");
+    if (new_args.size() == 5) {
+        return make_shared<op::v1::NonMaxSuppression>(new_args.at(0),
+                                                      new_args.at(1),
+                                                      new_args.at(2),
+                                                      new_args.at(3),
+                                                      new_args.at(4),
+                                                      m_box_encoding,
+                                                      m_sort_result_descending);
+    } else if (new_args.size() == 4) {
+        return make_shared<op::v1::NonMaxSuppression>(new_args.at(0),
+                                                      new_args.at(1),
+                                                      new_args.at(2),
+                                                      new_args.at(3),
+                                                      op::Constant::create(element::f32, Shape{}, {.0f}),
+                                                      m_box_encoding,
+                                                      m_sort_result_descending);
+    } else {
+        return make_shared<op::v1::NonMaxSuppression>(new_args.at(0),
+                                                      new_args.at(1),
+                                                      new_args.at(2),
+                                                      op::Constant::create(element::f32, Shape{}, {.0f}),
+                                                      op::Constant::create(element::f32, Shape{}, {.0f}),
+                                                      m_box_encoding,
+                                                      m_sort_result_descending);
+    }
 }
 
 bool ngraph::op::v1::NonMaxSuppression::visit_attributes(AttributeVisitor& visitor)
@@ -240,14 +261,37 @@ shared_ptr<Node>
     op::v3::NonMaxSuppression::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<op::v3::NonMaxSuppression>(new_args.at(0),
-                                                  new_args.at(1),
-                                                  new_args.at(2),
-                                                  new_args.at(3),
-                                                  new_args.at(4),
-                                                  m_box_encoding,
-                                                  m_sort_result_descending,
-                                                  m_output_type);
+    NODE_VALIDATION_CHECK(this,
+                          new_args.size() >= 3 && new_args.size() <= 5,
+                          "Number of inputs must be 3, 4 or 5");
+    if (new_args.size() == 5) {
+        return make_shared<op::v3::NonMaxSuppression>(new_args.at(0),
+                                                      new_args.at(1),
+                                                      new_args.at(2),
+                                                      new_args.at(3),
+                                                      new_args.at(4),
+                                                      m_box_encoding,
+                                                      m_sort_result_descending,
+                                                      m_output_type);
+    } else if (new_args.size() == 4) {
+        return make_shared<op::v3::NonMaxSuppression>(new_args.at(0),
+                                                      new_args.at(1),
+                                                      new_args.at(2),
+                                                      new_args.at(3),
+                                                      op::Constant::create(element::f32, Shape{}, {.0f}),
+                                                      m_box_encoding,
+                                                      m_sort_result_descending,
+                                                      m_output_type);
+    } else {
+        return make_shared<op::v3::NonMaxSuppression>(new_args.at(0),
+                                                      new_args.at(1),
+                                                      new_args.at(2),
+                                                      op::Constant::create(element::f32, Shape{}, {.0f}),
+                                                      op::Constant::create(element::f32, Shape{}, {.0f}),
+                                                      m_box_encoding,
+                                                      m_sort_result_descending,
+                                                      m_output_type);
+    }
 }
 
 bool ngraph::op::v3::NonMaxSuppression::visit_attributes(AttributeVisitor& visitor)
