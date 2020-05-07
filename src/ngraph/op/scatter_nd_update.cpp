@@ -33,6 +33,11 @@ shared_ptr<Node> op::v3::ScatterNDUpdate::clone_with_new_inputs(const OutputVect
         new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
 }
 
+bool op::v3::ScatterNDUpdate::visit_attributes(AttributeVisitor& visitor)
+{
+    // No attributes to set for serializer
+    return true;
+}
 void op::v3::ScatterNDUpdate::validate_and_infer_types()
 {
     element::Type inputs_et = get_input_element_type(INPUTS);
