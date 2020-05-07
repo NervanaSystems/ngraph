@@ -88,15 +88,13 @@ TEST(type_prop_layers, interpolate_v3)
     auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
 
     InterpolateAttrs attrs;
-    ASSERT_EQ(attrs.coordinate_transformation_mode, CoordinateTransformMode::half_pixel);
-    ASSERT_EQ(attrs.align_corners, true);
-    ASSERT_EQ(attrs.antialias, false);
-    ASSERT_EQ(attrs.pads_begin.size(), 1);
-    ASSERT_EQ(attrs.pads_begin[0], 0);
-    ASSERT_EQ(attrs.pads_end.size(), 1);
-    ASSERT_EQ(attrs.pads_end[0], 0);
     attrs.axes = {2, 3};
     attrs.mode = InterpolateMode::nearest;
+    attrs.coordinate_transformation_mode = CoordinateTransformMode::half_pixel;
+    attrs.align_corners = true;
+    attrs.antialias = false;
+    attrs.pads_begin = {0, 0, 0, 0};
+    attrs.pads_end = {0, 0, 0, 0};
     auto op = make_shared<Interpolate>(image, output_shape, attrs);
     ASSERT_EQ(op->get_shape(), (Shape{2, 2, 15, 30}));
 
