@@ -84,7 +84,6 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const DetectionOutputAttrs& get_attrs() const { return m_attrs; }
-
             private:
                 DetectionOutputAttrs m_attrs;
             };

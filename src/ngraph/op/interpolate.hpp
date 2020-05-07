@@ -56,7 +56,6 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const InterpolateAttrs& get_attrs() const { return m_attrs; }
-
             private:
                 InterpolateAttrs m_attrs;
             };
