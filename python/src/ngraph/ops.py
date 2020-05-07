@@ -21,7 +21,7 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
     Shape, Strides, util
 
 from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
-    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Convert, \
+    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
     Cos, Cosh, DepthToSpace, Dequantize, Divide, Dot, Elu, \
     FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
     HardSigmoid, Less, LessEq, Log, LRN, Minimum, \
