@@ -51,13 +51,13 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const Shape& get_sizes() const { return m_patch_sizes; }
-                void set_sizes(const Shape _sizes) { m_patch_sizes = _sizes; }
+                void set_sizes(const Shape sizes) { m_patch_sizes = sizes; }
                 const Strides& get_strides() const { return m_patch_movement_strides; }
-                void set_strides(const Strides _strides) { m_patch_movement_strides = _strides; }
+                void set_strides(const Strides strides) { m_patch_movement_strides = strides; }
                 const Shape& get_rates() const { return m_patch_selection_rates; }
-                void set_rates(const Shape _rates) { m_patch_selection_rates = _rates; }
+                void set_rates(const Shape rates) { m_patch_selection_rates = rates; }
                 const PadType& get_padding() const { return m_padding; }
-                void set_padding(PadType _padding) { m_padding = _padding; }
+                void set_padding(PadType padding) { m_padding = padding; }
             private:
                 Shape m_patch_sizes;
                 Strides m_patch_movement_strides;
