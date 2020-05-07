@@ -92,29 +92,15 @@ def test_argmin():
 
 @pytest.mark.skip_on_gpu
 def test_topk():
-    runtime = get_runtime()
-    input_x = ng.constant(np.array([[9, 2, 10],
-                                    [12, 8, 4],
-                                    [6, 1, 5],
-                                    [3, 11, 7]], dtype=np.float32))
-    K = ng.constant(4)
-    comp_topk = ng.topk(input_x, K, 0, 'max', 'value')
-
-    model0 = runtime.computation(ng.get_output_element(comp_topk, 0))
-    result0 = model0()
-    assert np.allclose(result0,
-                       np.array([[12, 11, 10],
-                                 [9, 8, 7],
-                                 [6, 2, 5],
-                                 [3, 1, 4]], dtype=np.float32))
-
-    model1 = runtime.computation(ng.get_output_element(comp_topk, 1))
-    result1 = model1()
-    assert np.allclose(result1,
-                       np.array([[1, 3, 0],
-                                 [0, 1, 3],
-                                 [2, 0, 2],
-                                 [3, 2, 1]], dtype=np.int32))
+    data_shape = [6, 12, 10, 24]
+    data_parameter = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    K = np.int32(3)
+    axis = np.int32(1)
+    node = ng.topk(data_parameter, K, axis, 'max', 'value')
+    assert node.get_type_name() == 'TopK'
+    assert node.get_output_size() == 2
+    assert list(node.get_output_shape(0)) == [6, 3, 10, 24]
+    assert list(node.get_output_shape(1)) == [6, 3, 10, 24]
 
 
 @pytest.mark.parametrize('ng_api_helper, numpy_function, reduction_axes', [
