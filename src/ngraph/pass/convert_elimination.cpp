@@ -32,14 +32,12 @@ using namespace ngraph;
 #define TI(x) x::type_info
 
 //************************
-// Eliminates 3 types of spines with converts:
+// Eliminates 2 types of spines with converts:
 //
-// 1. [ op1--> convert2(type A->B)--> ReduceMin--> convert1(type B->A)--> op2 ] to
+// 1. [ op1--> convert2(type i64->i32)--> ReduceMin--> convert1(type i32->i64)--> op2 ] to
 //                    [ op1--> ReduceMin--> op2 ]
 // 2. [ op3--> convert1-->  NonZero--> op4 ] to
 //                    [ op3--> NonZero--> op4 ]
-// 3. [ op5--> convert1--> convert2--> op6 ] to
-//                    [op5--> convert2--> op6 ]
 //
 //*************************
 static bool eliminate_convert(const std::shared_ptr<Node>& node)
@@ -67,20 +65,11 @@ static bool eliminate_convert(const std::shared_ptr<Node>& node)
             }
         }
     }
-    bool is_out_type_agnostic = false;
+    // case 2
     static const std::set<NodeTypeInfo> type_agnostic{TI(opset3::NonZero)};
-    // case 2 & 3
-    if (convert->get_users().size() == 1)
+    bool is_out_type_agnostic = type_agnostic.count(convert->get_users()[0]->get_type_info()) == 1;
+    if (convert->get_users().size() == 1 && is_out_type_agnostic)
     {
-        is_out_type_agnostic = type_agnostic.count(convert->get_users()[0]->get_type_info()) == 1;
-    }
-
-    if (destination_type == input_op.get_element_type() || is_out_type_agnostic)
-    {
-        if (is_out_type_agnostic && is_type<opset3::Convert>(input_op.get_node()))
-        {
-            input_op = input_op.get_node()->input_value(0);
-        }
         return replace_output_update_name(convert->output(0), input_op);
     }
     return false;
@@ -90,11 +79,12 @@ bool pass::ConvertElimination::run_on_function(std::shared_ptr<Function> functio
 {
     bool clobbered = false;
 
-    for (const auto& n : function->get_ops())
+    for (const auto& node : function->get_ops())
     {
-        // Work around a warning [-Wpotentially-evaluated-expression]
-        //        const Node& node = *n;
-        clobbered = eliminate_convert(n) || clobbered;
+        if (node->get_type_info() == TI(opset3::Convert))
+        {
+            clobbered = eliminate_convert(node) || clobbered;
+        }
     }
 
     return clobbered;

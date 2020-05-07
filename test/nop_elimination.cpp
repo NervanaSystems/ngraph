@@ -18,6 +18,7 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/convert_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
 #include "util/all_close.hpp"
@@ -85,10 +86,10 @@ TEST(nop_elimination, convert_type_agnostic)
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Validate>();
-    pass_manager.register_pass<pass::NopElimination>();
+    pass_manager.register_pass<pass::ConvertElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 1);
 }
 
 TEST(nop_elimination, convert_type_ReduceMin)
@@ -106,7 +107,7 @@ TEST(nop_elimination, convert_type_ReduceMin)
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Validate>();
-    pass_manager.register_pass<pass::NopElimination>();
+    pass_manager.register_pass<pass::ConvertElimination>();
     pass_manager.run_passes(func);
 
     ASSERT_EQ(count_ops_of_type<op::v0::Convert>(func), 0);
@@ -137,7 +138,7 @@ TEST(nop_elimination, convert_type_ReduceMin_negative)
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Validate>();
-    pass_manager.register_pass<pass::NopElimination>();
+    pass_manager.register_pass<pass::ConvertElimination>();
     pass_manager.run_passes(func);
 
     ASSERT_EQ(count_ops_of_type<op::v0::Convert>(func), 1);
