@@ -136,25 +136,24 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
 
 static bool replace_squeeze_unsqueeze(const std::shared_ptr<Node>& node)
 {
-    auto out_shape = node->get_output_partial_shape(0);
-    if (!out_shape.is_dynamic() && shape_size(out_shape.get_shape()) != 0)
+    auto shape_ps = node->get_output_partial_shape(0);
+    if (!shape_ps.is_dynamic() && shape_size(shape_ps.get_shape()) != 0)
     {
         shared_ptr<Node> reshape;
         auto input = node->input_value(0).get_node_shared_ptr();
-        auto shape = node->get_shape();
+        auto shape = shape_ps.get_shape();
         std::vector<int64_t> vi;
         vi.assign(shape.begin(), shape.end());
         auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
 
-        if (as_type_ptr<opset3::Reshape>(input) || as_type_ptr<opset3::Squeeze>(input) ||
-            as_type_ptr<opset3::Unsqueeze>(input))
+        if (is_type<opset3::Reshape>(input) || is_type<opset3::Squeeze>(input) ||
+            is_type<opset3::Unsqueeze>(input))
         {
-            input = input->input_value(0).get_node_shared_ptr();
-            reshape = make_shared<opset3::Reshape>(input->output(0), pat, false);
+            reshape = make_shared<opset3::Reshape>(input->input_value(0), pat, false);
         }
         else
         {
-            reshape = make_shared<opset3::Reshape>(input->output(0), pat, false);
+            reshape = make_shared<opset3::Reshape>(node->input_value(0), pat, false);
         }
 
         // skip if reshape is nop
@@ -225,8 +224,7 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
     auto squeeze = as_type_ptr<opset3::Squeeze>(input);
     auto replace_unsqueeze_only = [&](const vector<int64_t>& axes) {
         auto axes_const = op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
-        auto new_unsq = make_shared<opset3::Unsqueeze>(
-            input->input_value(0).get_node_shared_ptr()->output(0), axes_const);
+        auto new_unsq = make_shared<opset3::Unsqueeze>(input->input_value(0), axes_const);
         if (unsqueeze->get_output_partial_shape(0).same_scheme(
                 new_unsq->get_output_partial_shape(0)))
         {
@@ -263,8 +261,7 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
             {
                 auto axes_const =
                     op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
-                auto new_sq = make_shared<opset3::Squeeze>(
-                    input->input_value(0).get_node_shared_ptr()->output(0), axes_const);
+                auto new_sq = make_shared<opset3::Squeeze>(input->input_value(0), axes_const);
                 if (unsqueeze->get_output_partial_shape(0).same_scheme(
                         new_sq->get_output_partial_shape(0)))
                 {
@@ -305,8 +302,7 @@ static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
     auto unsqueeze = as_type_ptr<opset3::Unsqueeze>(input);
     auto replace_squeeze_only = [&](const vector<int64_t>& axes) {
         auto axes_const = op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
-        auto new_sq = make_shared<opset3::Squeeze>(
-            input->input_value(0).get_node_shared_ptr()->output(0), axes_const);
+        auto new_sq = make_shared<opset3::Squeeze>(input->input_value(0), axes_const);
         if (squeeze->get_output_partial_shape(0).same_scheme(new_sq->get_output_partial_shape(0)))
         {
             return replace_output_update_name(squeeze->output(0), new_sq->output(0));
@@ -342,8 +338,7 @@ static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
             {
                 auto axes_const =
                     op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
-                auto new_unsq = make_shared<opset3::Unsqueeze>(
-                    input->input_value(0).get_node_shared_ptr()->output(0), axes_const);
+                auto new_unsq = make_shared<opset3::Unsqueeze>(input->input_value(0), axes_const);
                 if (squeeze->get_output_partial_shape(0).same_scheme(
                         new_unsq->get_output_partial_shape(0)))
                 {

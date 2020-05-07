@@ -31,6 +31,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/type/element_type_traits.hpp"
@@ -342,3 +343,12 @@ std::vector<T> read_binary_file(const std::string& path)
 
 testing::AssertionResult test_ordered_ops(std::shared_ptr<ngraph::Function> f,
                                           const ngraph::NodeVector& required_ops);
+
+template <ngraph::element::Type_t ET>
+ngraph::HostTensorPtr make_host_tensor(const ngraph::Shape& shape)
+{
+    auto host_tensor = std::make_shared<ngraph::HostTensor>(ET, shape);
+    static std::default_random_engine engine(2112);
+    random_init(host_tensor.get(), engine);
+    return host_tensor;
+}
