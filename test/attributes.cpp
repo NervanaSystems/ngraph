@@ -268,7 +268,8 @@ public:
            const std::vector<int32_t>& vec_int32_t,
            const std::vector<int64_t>& vec_int64_t,
            const std::vector<size_t>& vec_size_t,
-           const Position& position)
+           const Position& position,
+           const shared_ptr<Node>& node)
         : Op({program, data})
         , m_turing_model(turing_model)
         , m_element_type(element_type)
@@ -299,6 +300,7 @@ public:
         , m_vec_int64_t(vec_int64_t)
         , m_vec_size_t(vec_size_t)
         , m_position(position)
+        , m_node(node)
     {
     }
 
@@ -335,6 +337,7 @@ public:
     const vector<double>& get_vec_double() const { return m_vec_double; }
     const vector<size_t>& get_vec_size_t() const { return m_vec_size_t; }
     const Position& get_position() const { return m_position; }
+    const shared_ptr<Node>& get_node() const { return m_node; }
     shared_ptr<Node> clone_with_new_inputs(const OutputVector& args) const override
     {
         return make_shared<Oracle>(args[0],
@@ -367,7 +370,8 @@ public:
                                    m_vec_int32_t,
                                    m_vec_int64_t,
                                    m_vec_size_t,
-                                   m_position);
+                                   m_position,
+                                   m_node);
     }
 
     void validate_and_infer_types() override { set_output_type(0, element::i64, {}); }
@@ -402,6 +406,7 @@ public:
         visitor.on_attribute("vec_int64_t", m_vec_int64_t);
         visitor.on_attribute("vec_size_t", m_vec_size_t);
         visitor.on_attribute("position", m_position);
+        visitor.on_attribute("node", m_node);
         return true;
     }
 
@@ -435,6 +440,7 @@ protected:
     vector<int64_t> m_vec_int64_t;
     vector<size_t> m_vec_size_t;
     Position m_position;
+    shared_ptr<Node> m_node;
 };
 
 constexpr NodeTypeInfo Oracle::type_info;
@@ -443,8 +449,14 @@ class NodeSaver : public AttributeVisitor
 {
 public:
     NodeSaver(shared_ptr<Node> node)
-        : m_node_type_info(node->get_type_info())
     {
+        save_node(node);
+        node->visit_attributes(*this);
+    }
+    NodeSaver() {}
+    void save_node(shared_ptr<Node> node)
+    {
+        m_node_type_info = node->get_type_info();
         node->visit_attributes(*this);
     }
     const NodeTypeInfo& get_node_type_info() { return m_node_type_info; }
@@ -662,11 +674,9 @@ protected:
 class NodeBuilder : public AttributeVisitor
 {
 public:
-    NodeBuilder(const shared_ptr<Node>& node)
-        : m_values(node)
-    {
-    }
-
+    NodeBuilder(const shared_ptr<Node>& node) { save_node(node); }
+    NodeBuilder() {}
+    void save_node(const std::shared_ptr<Node>& node) { m_values.save_node(node); }
     // Does not validate, since inputs aren't set
     shared_ptr<Node> create()
     {
@@ -674,7 +684,7 @@ public:
         node->visit_attributes(*this);
         return node;
     }
-
+    NodeSaver& get_node_saver() { return m_values; }
     void on_adapter(const string& name, ValueAccessor<void>& adapter) override
     {
         NGRAPH_CHECK(false, "Attribute \"", name, "\" cannot be unmarshalled");
@@ -786,8 +796,16 @@ TEST(attributes, user_op)
                                       vector<int32_t>{1, 2, 4, 8},
                                       vector<int64_t>{1, 2, 4, 8},
                                       vector<size_t>{1, 3, 8, 4, 2},
-                                      Position{1.3f, 5.1f, 2.3f});
-    NodeBuilder builder(oracle);
+                                      Position{1.3f, 5.1f, 2.3f},
+                                      data);
+    NodeBuilder builder;
+    builder.register_node(program, "program");
+    ASSERT_EQ(builder.get_registered_node("program"), program);
+    ASSERT_EQ(builder.get_registered_node_id(program), "program");
+    builder.register_node(data, "data");
+    builder.get_node_saver().register_node(program, "program");
+    builder.get_node_saver().register_node(data, "data");
+    builder.save_node(oracle);
     auto g_oracle = as_type_ptr<Oracle>(builder.create());
 
     EXPECT_EQ(g_oracle->get_turing_model(), oracle->get_turing_model());
@@ -819,6 +837,7 @@ TEST(attributes, user_op)
     EXPECT_EQ(g_oracle->get_vec_double(), oracle->get_vec_double());
     EXPECT_EQ(g_oracle->get_vec_size_t(), oracle->get_vec_size_t());
     EXPECT_EQ(g_oracle->get_position(), oracle->get_position());
+    EXPECT_EQ(g_oracle->get_node(), oracle->get_node());
 }
 
 TEST(attributes, matmul_op)

@@ -639,7 +639,7 @@ namespace ngraph
 
     /// \brief Visits a reference to a node that has been registered with the visitor.
     template <>
-    class NGRAPH_API AttributeAdapter<std::shared_ptr<Node>> : VisitorAdapter
+    class NGRAPH_API AttributeAdapter<std::shared_ptr<Node>> : public VisitorAdapter
     {
     public:
         AttributeAdapter(std::shared_ptr<Node>& value)
