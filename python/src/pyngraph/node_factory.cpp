@@ -16,10 +16,14 @@
 
 #include <algorithm>
 #include <cctype>
+#include <functional>
+#include <locale>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
 #include "ngraph/attribute_visitor.hpp"
@@ -140,11 +144,23 @@ namespace
             op_node->set_arguments(arguments);
             if (op_node->is_constant())
             {
+                NGRAPH_CHECK(attributes.contains("shape"), "Missing required \"shape\" attribute");
                 std::vector<size_t> shape = attributes["shape"].cast<std::vector<size_t>>();
+
+                NGRAPH_CHECK(attributes.contains("element_type"),
+                             "Missing required \"element_type\" attribute");
                 ngraph::element::Type el_type = ngraph::as_enum<ngraph::element::Type_t>(
                     attributes["element_type"].cast<std::string>());
-                const void* data = attributes["value"].cast<void*>();
-                // TODO: How to select correct opset version?
+                // const void* data = attributes["value"].cast<void*>();
+
+                NGRAPH_CHECK(attributes.contains("value"), "Missing required \"value\" attribute");
+                std::vector<float> data = attributes["value"].cast<std::vector<float>>();
+
+                // py::array np_array = py::array(attributes["value"]);
+                // py::buffer_info info = np_array.request();
+                // op_node = std::make_shared<ngraph::op::v0::Constant>(el_type, shape, data);
+                // op_node = std::make_shared<ngraph::op::v0::Constant>(el_type, shape, info.ptr);
+
                 op_node = std::make_shared<ngraph::op::v0::Constant>(el_type, shape, data);
             }
             else
@@ -157,27 +173,28 @@ namespace
         }
 
     private:
-        const ngraph::OpSet& get_opset(const std::string& opset_name)
+        const ngraph::OpSet& get_opset(std::string opset_ver)
         {
-            std::string opset_name_ = opset_name;
-            std::transform(opset_name_.begin(), opset_name_.end(), opset_name_.begin(), ::tolower);
+            std::locale loc;
+            std::transform(opset_ver.begin(), opset_ver.end(), opset_ver.begin(), [&loc](char c) {
+                return std::tolower(c, loc);
+            });
 
-            if (opset_name_ == "opset0")
-            {
-                return ngraph::get_opset0();
-            }
-            else if (opset_name_ == "opset1")
-            {
-                return ngraph::get_opset1();
-            }
-            else if (opset_name_ == "opset2")
-            {
-                return ngraph::get_opset2();
-            }
-            else
+            using OpsetFunction = std::function<const ngraph::OpSet&()>;
+
+            static const std::map<std::string, OpsetFunction> s_opsets{
+                {"opset0", OpsetFunction(ngraph::get_opset0)},
+                {"opset1", OpsetFunction(ngraph::get_opset1)},
+                {"opset2", OpsetFunction(ngraph::get_opset2)},
+                {"opset3", OpsetFunction(ngraph::get_opset3)},
+            };
+
+            auto it = s_opsets.find(opset_ver);
+            if (it == s_opsets.end())
             {
                 throw ngraph::ngraph_error("Unsupported opset version requested.");
             }
+            return it->second();
         }
 
         const ngraph::OpSet& m_opset{ngraph::get_opset0()};

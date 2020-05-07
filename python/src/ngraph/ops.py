@@ -44,8 +44,9 @@ from ngraph.utils.types import get_element_type
 from ngraph.utils.node_factory import NodeFactory
 
 
-def _get_node_factory():  # type: () -> NodeFactory
-    return NodeFactory()
+def _get_node_factory(opset_version='opset1'):  # type: (str) -> NodeFactory
+    """Return NodeFactory configured to create operators from specified opset version."""
+    return NodeFactory(opset_version)
 
 
 @nameable_op
