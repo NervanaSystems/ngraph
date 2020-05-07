@@ -20,6 +20,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/gather.hpp"
+#include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/strided_slice.hpp"
 #include "ngraph/slice_plan.hpp"
@@ -299,9 +300,52 @@ namespace
 
     bool constant_fold_strided_slice(Node* strided_slice_node,
                                      Output<Node>& replacement,
-                                     const Output<Node>& strided_slice_input,
+                                     const Output<Node>& data,
+                                     const Output<Node>& begin,
+                                     const Output<Node>& end,
+                                     const Output<Node>& strides,
+                                     const AxisSet& begin_mask,
+                                     const AxisSet& end_mask,
+                                     const AxisSet& new_axis_mask,
+                                     const AxisSet& shrink_axis_mask,
+                                     const AxisSet& ellipsis_mask,
                                      bool is_foldable)
     {
+        auto strided_slice =
+            std::static_pointer_cast<op::v1::StridedSlice>(strided_slice_node->shared_from_this());
+        auto data_node =
+            std::static_pointer_cast<op::Constant>(data.get_node()->shared_from_this());
+        auto begin_node =
+            std::static_pointer_cast<op::Constant>(begin.get_node()->shared_from_this());
+        auto end_node = std::static_pointer_cast<op::Constant>(end.get_node()->shared_from_this());
+        auto strides_node =
+            std::static_pointer_cast<op::Constant>(strides.get_node()->shared_from_this());
+        if (!data_node && !begin_node && !end_node && !strides_node)
+        {
+            return false;
+        }
+
+        NGRAPH_CHECK(pass::revalidate_and_ensure_static(strided_slice));
+
+        // get hostTensor for evaluate func
+        auto output_element_type = strided_slice_node->get_output_element_type(0);
+        auto output_shape = strided_slice_node->get_output_shape(0);
+        auto result_tensor = make_shared<HostTensor>(output_element_type, output_shape);
+        if (evaluate_strided_slice(make_shared<HostTensor>(data_node),
+                                   make_shared<HostTensor>(begin_node),
+                                   make_shared<HostTensor>(end_node),
+                                   make_shared<HostTensor>(strides_node),
+                                   begin_mask,
+                                   end_mask,
+                                   new_axis_mask,
+                                   shrink_axis_mask,
+                                   ellipsis_mask,
+                                   result_tensor))
+        {
+            replacement = make_shared<op::v0::Constant>(result_tensor);
+            return true;
+        }
+
         return false;
     }
 }
@@ -324,5 +368,16 @@ bool op::v1::StridedSlice::evaluate(const HostTensorVector& output_values,
 bool op::v1::StridedSlice::constant_fold(OutputVector& output_values,
                                          const OutputVector& input_values)
 {
-    return constant_fold_strided_slice(this, output_values[0], input_values[0], m_is_foldable);
+    return constant_fold_strided_slice(this,
+                                       output_values[0],
+                                       input_values[0],
+                                       input_values[1],
+                                       input_values[2],
+                                       input_values[3],
+                                       convert_mask_to_axis_set(get_begin_mask()),
+                                       convert_mask_to_axis_set(get_end_mask()),
+                                       convert_mask_to_axis_set(get_new_axis_mask()),
+                                       convert_mask_to_axis_set(get_shrink_axis_mask()),
+                                       convert_mask_to_axis_set(get_ellipsis_mask()),
+                                       m_is_foldable);
 }
