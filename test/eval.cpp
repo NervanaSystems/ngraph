@@ -22,6 +22,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/node_output.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/non_zero.hpp"
@@ -158,3 +159,66 @@ TEST(eval, interpret_dynamic_range_sum)
     ASSERT_EQ(result_val, seq);
 }
 #endif
+
+TEST(eval, evaluate_broadcast_v3_bidirectional)
+{
+    Shape shape_a{4, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = op::Constant::create<int32_t>(element::i32, Shape{3}, {2, 1, 4});
+    auto bcast_v3 =
+        make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(Shape{4, 1}, {1.0f, 2.0f, 3.0f, 4.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 4, 4}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+                        1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4};
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v3_numpy)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
+    auto bcast_v3 = make_shared<op::v3::Broadcast>(A, target_shape);
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 6}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+    };
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v3_pdpd)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
+    auto bcast_v3 = make_shared<op::v3::Broadcast>(
+        A, target_shape, op::BroadcastModeSpec(op::BroadcastType::PDPD, 1));
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 6}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+    };
+    ASSERT_EQ(result_val, expec);
+}
