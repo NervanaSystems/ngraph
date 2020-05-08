@@ -2745,6 +2745,8 @@ TEST(constant_folding, constant_non_zero_0D)
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
+    // Fold into constant with shape of {1, 1} for scalar input with
+    // non-zero value
     ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
