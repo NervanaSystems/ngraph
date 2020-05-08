@@ -134,6 +134,23 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
     return false;
 }
 
+static size_t count_unknown_dims(const PartialShape& ps)
+{
+    size_t rc = 0;
+    if (ps.is_static())
+    {
+        return rc;
+    }
+    for (auto i = 0; i < ps.rank().get_length(); i++)
+    {
+        if (ps[i].is_dynamic())
+        {
+            rc += 1;
+        }
+    }
+    return rc;
+}
+
 static bool replace_squeeze_unsqueeze(const std::shared_ptr<Node>& node)
 {
     auto shape_ps = node->get_output_partial_shape(0);
@@ -229,8 +246,8 @@ static std::vector<int64_t> get_squeeze_axes(const PartialShape& data_shape,
 static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
 {
     auto out_shape = node->get_output_partial_shape(0);
-    // try to replace all squeeze/unsqueeze with reshape if outshape is static
-    if (!out_shape.is_dynamic() && shape_size(out_shape.get_shape()) != 0)
+    // try to replace all squeeze/unsqueeze with reshape
+    if (out_shape.rank().get_length() != 0 && count_unknown_dims(out_shape) < 2)
     {
         return replace_squeeze_unsqueeze(node);
     }
@@ -307,8 +324,8 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
 static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
 {
     auto out_shape = node->get_output_partial_shape(0);
-    // try to replace all squeeze/unsqueeze with reshape if outshape is static
-    if (!out_shape.is_dynamic() && shape_size(out_shape.get_shape()) != 0)
+    // try to replace all unsqueeze/squeeze with reshape
+    if (out_shape.rank().get_length() != 0 && count_unknown_dims(out_shape) < 2)
     {
         return replace_squeeze_unsqueeze(node);
     }
