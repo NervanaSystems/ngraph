@@ -76,7 +76,7 @@ namespace
 
 namespace
 {
-    Î std::set<NodeTypeInfo>& get_ie_ops()
+    std::set<NodeTypeInfo>& get_ie_ops()
     {
         std::set<NodeTypeInfo> ie_ops = get_opset_1().get_type_info_set();
         auto& opset2 = get_opset_2().get_type_info_set();
