@@ -518,7 +518,6 @@ set (SRC
     pass/constant_folding_gather.cpp
     pass/constant_folding_scatter.cpp
     pass/constant_folding_logical_reduction.cpp
-    pass/constant_folding_non_zero.cpp
     pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
@@ -568,6 +567,8 @@ set (SRC
     pass/pass.hpp
     pass/opset0_downgrade.cpp
     pass/opset0_downgrade.hpp
+    pass/opset1_downgrade.cpp
+    pass/opset1_downgrade.hpp
     pass/opset1_upgrade.cpp
     pass/opset1_upgrade.hpp
     pass/pass_config.cpp

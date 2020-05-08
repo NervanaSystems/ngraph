@@ -77,6 +77,7 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    op_eval/non_zero.cpp
     op_is.cpp
     opset1.cpp
     opset_pass/binary_elementwise_opset_pass.cpp
@@ -369,6 +370,7 @@ set(MULTI_TEST_SRC
     backend/negative.in.cpp
     backend/node_name.in.cpp
     backend/not.in.cpp
+    backend/non_zero.in.cpp
     backend/numeric.in.cpp
     backend/one_hot.in.cpp
     backend/pad.in.cpp

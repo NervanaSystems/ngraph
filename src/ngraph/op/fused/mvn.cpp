@@ -107,3 +107,12 @@ shared_ptr<Node> op::MVN::clone_with_new_inputs(const OutputVector& new_args) co
                           new_args.size());
     return make_shared<MVN>(new_args.at(0), m_reduction_axes, m_normalize_variance, m_eps);
 }
+
+bool op::MVN::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("eps", m_eps);
+    visitor.on_attribute("across_channels", m_across_channels);
+    visitor.on_attribute("normalize_variance", m_normalize_variance);
+    visitor.on_attribute("reduction_axes", m_reduction_axes);
+    return true;
+}

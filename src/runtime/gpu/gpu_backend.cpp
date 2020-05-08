@@ -101,6 +101,11 @@ runtime::gpu::GPUBackend::BackendContext::~BackendContext()
     delete m_runtime_context->compiled_kernel_pool;
 }
 
+shared_ptr<runtime::Tensor> runtime::gpu::GPUBackend::create_tensor()
+{
+    throw runtime_error("GPU backend does not support dynamic tensors");
+}
+
 shared_ptr<runtime::Tensor>
     runtime::gpu::GPUBackend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
