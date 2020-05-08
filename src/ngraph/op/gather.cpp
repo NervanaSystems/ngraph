@@ -16,6 +16,9 @@
 
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/gather.hpp"
+#include "ngraph/runtime/reference/gather_nd.hpp"
 #include "ngraph/shape.hpp"
 
 #include <limits>
@@ -207,4 +210,81 @@ shared_ptr<Node> op::v1::Gather::clone_with_new_inputs(const OutputVector& new_a
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::Gather>(new_args.at(PARAMS), new_args.at(INDICES), new_args.at(AXIS));
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    inline bool evaluate(const HostTensorPtr& arg0,
+                         const HostTensorPtr& arg1,
+                         const HostTensorPtr& out,
+                         size_t axis)
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        if (arg1->get_element_type() == element::i64)
+        {
+            runtime::reference::gather<T, int64_t>(arg0->get_data_ptr<ET>(),
+                                                   arg1->get_data_ptr<int64_t>(),
+                                                   out->get_data_ptr<ET>(),
+                                                   arg0->get_shape(),
+                                                   arg1->get_shape(),
+                                                   out->get_shape(),
+                                                   axis);
+        }
+        else if (arg1->get_element_type() == element::i32)
+        {
+            runtime::reference::gather<T, int32_t>(arg0->get_data_ptr<ET>(),
+                                                   arg1->get_data_ptr<int32_t>(),
+                                                   out->get_data_ptr<ET>(),
+                                                   arg0->get_shape(),
+                                                   arg1->get_shape(),
+                                                   out->get_shape(),
+                                                   axis);
+        }
+        else
+        {
+            throw ngraph_error("Unexpected type");
+        }
+
+        return true;
+    }
+
+    bool evaluate_gather(const HostTensorPtr& arg0,
+                         const HostTensorPtr& arg1,
+                         const HostTensorPtr& out,
+                         size_t axis)
+    {
+        bool rc = true;
+
+        switch (out->get_element_type())
+        {
+            TYPE_CASE(i8)(arg0, arg1, out, axis);
+            break;
+            TYPE_CASE(i16)(arg0, arg1, out, axis);
+            break;
+            TYPE_CASE(i32)(arg0, arg1, out, axis);
+            break;
+            TYPE_CASE(i64)(arg0, arg1, out, axis);
+            break;
+            TYPE_CASE(u8)(arg0, arg1, out, axis);
+            break;
+            TYPE_CASE(u16)(arg0, arg1, out, axis);
+            break;
+            TYPE_CASE(u32)(arg0, arg1, out, axis);
+            break;
+            TYPE_CASE(u64)(arg0, arg1, out, axis);
+            break;
+            TYPE_CASE(f32)(arg0, arg1, out, axis);
+            break;
+            TYPE_CASE(f64)(arg0, arg1, out, axis);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::Gather::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_gather(inputs[0], inputs[1], outputs[0], get_axis());
 }

@@ -45,6 +45,8 @@ namespace ngraph
                 void set_axis(size_t axis) { m_axis = axis; }
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
 
             protected:
                 size_t m_axis;
