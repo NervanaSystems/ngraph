@@ -137,33 +137,51 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
 static bool replace_squeeze_unsqueeze(const std::shared_ptr<Node>& node)
 {
     auto shape_ps = node->get_output_partial_shape(0);
-    if (!shape_ps.is_dynamic() && shape_size(shape_ps.get_shape()) != 0)
+    if (shape_ps.rank().get_length() == 0)
     {
-        shared_ptr<Node> reshape;
-        auto input = node->input_value(0).get_node_shared_ptr();
-        auto shape = shape_ps.get_shape();
-        std::vector<int64_t> vi(shape.begin(), shape.end());
-        auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
-
-        if (is_type<opset3::Reshape>(input) || is_type<opset3::Squeeze>(input) ||
-            is_type<opset3::Unsqueeze>(input))
+        return false;
+    }
+    size_t num_unknown = 0;
+    std::vector<int64_t> vi;
+    for (auto i = 0; i < shape_ps.rank().get_length(); i++)
+    {
+        if (shape_ps[i].is_dynamic())
         {
-            reshape = make_shared<opset3::Reshape>(input->input_value(0), pat, false);
+            num_unknown += 1;
+            if (num_unknown > 1)
+            {
+                return false;
+            }
+            vi.emplace_back(-1);
         }
         else
         {
-            reshape = make_shared<opset3::Reshape>(node->input_value(0), pat, false);
+            vi.emplace_back(shape_ps[i]);
         }
+    }
 
-        // skip if reshape is nop
-        if (reshape->get_input_shape(0) == shape)
-        {
-            return replace_output_update_name(node->output(0), reshape->input_value(0));
-        }
-        else
-        {
-            return replace_output_update_name(node->output(0), reshape->output(0));
-        }
+    shared_ptr<Node> reshape;
+    auto input = node->input_value(0).get_node_shared_ptr();
+    auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+
+    if (is_type<opset3::Reshape>(input) || is_type<opset3::Squeeze>(input) ||
+        is_type<opset3::Unsqueeze>(input))
+    {
+        reshape = make_shared<opset3::Reshape>(input->input_value(0), pat, false);
+    }
+    else
+    {
+        reshape = make_shared<opset3::Reshape>(node->input_value(0), pat, false);
+    }
+
+    // skip if reshape is nop
+    if (reshape->get_input_partial_shape(0).same_scheme(shape_ps))
+    {
+        return replace_output_update_name(node->output(0), reshape->input_value(0));
+    }
+    else
+    {
+        return replace_output_update_name(node->output(0), reshape->output(0));
     }
     return false;
 }
