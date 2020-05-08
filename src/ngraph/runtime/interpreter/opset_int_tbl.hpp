@@ -28,4 +28,5 @@ NGRAPH_OP(LogicalNot, op::v1)
 
 #define ID_SUFFIX(NAME) NAME##_v3
 NGRAPH_OP(ShapeOf, op::v3)
+NGRAPH_OP(NonZero, op::v3)
 #undef ID_SUFFIX

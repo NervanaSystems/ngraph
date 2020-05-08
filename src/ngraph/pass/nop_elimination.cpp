@@ -76,7 +76,7 @@ static bool eliminate_convert(const std::shared_ptr<Node>& node)
     static const std::set<NodeTypeInfo> type_agnostic{TI(opset3::NonZero)};
     if (node->output(0).get_target_inputs().size() == 1)
     {
-        auto& out = *node->output(0).get_target_inputs().begin();
+        Input<Node> out = *node->output(0).get_target_inputs().begin();
         is_out_type_agnostic = type_agnostic.count(out.get_node()->get_type_info()) == 1;
     }
     auto convert = as_type_ptr<opset3::Convert>(node);
