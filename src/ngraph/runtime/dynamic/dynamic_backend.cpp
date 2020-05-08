@@ -42,6 +42,11 @@ runtime::dynamic::DynamicBackend::DynamicBackend(shared_ptr<runtime::Backend> wr
 {
 }
 
+shared_ptr<runtime::Tensor> runtime::dynamic::DynamicBackend::create_tensor()
+{
+    return m_wrapped_backend->create_tensor();
+}
+
 shared_ptr<runtime::Tensor>
     runtime::dynamic::DynamicBackend::create_tensor(const element::Type& type, const Shape& shape)
 {
@@ -93,7 +98,7 @@ bool is_dynamic_op(const std::shared_ptr<Node>& op)
            is_type<op::v1::ConvolutionBackpropData>(op) ||
            is_type<op::v1::ConvolutionBackpropFilters>(op) ||
            is_type<op::v1::AvgPoolBackprop>(op) || is_type<op::v1::Broadcast>(op) ||
-           is_type<op::v1::GenerateMask>(op);
+           is_type<op::v3::Broadcast>(op) || is_type<op::v1::GenerateMask>(op);
 }
 
 // Helper for a vile hack in DynamicExecutable::call. See body of that function for details.
