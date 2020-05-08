@@ -630,48 +630,45 @@ std::shared_ptr<Node>
 namespace ngraph
 {
     template class NGRAPH_API FactoryRegistry<op::v0::TensorIterator::InputDescription>;
-}
 
-template <>
-FactoryRegistry<op::v0::TensorIterator::InputDescription>&
-    FactoryRegistry<op::v0::TensorIterator::InputDescription>::get()
-{
-    static FactoryRegistry<op::v0::TensorIterator::InputDescription> registry;
-    static mutex init_guard;
-    // TODO: Add a lock
-    if (registry.m_factory_map.size() == 0)
+    template <>
+    FactoryRegistry<op::v0::TensorIterator::InputDescription>&
+        FactoryRegistry<op::v0::TensorIterator::InputDescription>::get()
     {
-        lock_guard<mutex> guard(init_guard);
+        static FactoryRegistry<op::v0::TensorIterator::InputDescription> registry;
+        static mutex init_guard;
+        // TODO: Add a lock
         if (registry.m_factory_map.size() == 0)
         {
-            registry.register_factory<op::v0::TensorIterator::SliceInputDescription>();
-            registry.register_factory<op::v0::TensorIterator::MergedInputDescription>();
-            registry.register_factory<op::v0::TensorIterator::InvariantInputDescription>();
+            lock_guard<mutex> guard(init_guard);
+            if (registry.m_factory_map.size() == 0)
+            {
+                registry.register_factory<op::v0::TensorIterator::SliceInputDescription>();
+                registry.register_factory<op::v0::TensorIterator::MergedInputDescription>();
+                registry.register_factory<op::v0::TensorIterator::InvariantInputDescription>();
+            }
         }
+        return registry;
     }
-    return registry;
-}
 
-namespace ngraph
-{
     template class NGRAPH_API FactoryRegistry<op::v0::TensorIterator::OutputDescription>;
-}
 
-template <>
-FactoryRegistry<op::v0::TensorIterator::OutputDescription>&
-    FactoryRegistry<op::v0::TensorIterator::OutputDescription>::get()
-{
-    static FactoryRegistry<op::v0::TensorIterator::OutputDescription> registry;
-    static mutex init_guard;
-    // TODO: Add a lock
-    if (registry.m_factory_map.size() == 0)
+    template <>
+    FactoryRegistry<op::v0::TensorIterator::OutputDescription>&
+        FactoryRegistry<op::v0::TensorIterator::OutputDescription>::get()
     {
-        lock_guard<mutex> guard(init_guard);
+        static FactoryRegistry<op::v0::TensorIterator::OutputDescription> registry;
+        static mutex init_guard;
+        // TODO: Add a lock
         if (registry.m_factory_map.size() == 0)
         {
-            registry.register_factory<op::v0::TensorIterator::ConcatOutputDescription>();
-            registry.register_factory<op::v0::TensorIterator::BodyOutputDescription>();
+            lock_guard<mutex> guard(init_guard);
+            if (registry.m_factory_map.size() == 0)
+            {
+                registry.register_factory<op::v0::TensorIterator::ConcatOutputDescription>();
+                registry.register_factory<op::v0::TensorIterator::BodyOutputDescription>();
+            }
         }
+        return registry;
     }
-    return registry;
 }
