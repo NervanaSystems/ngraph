@@ -296,6 +296,11 @@ bool op::v1::Broadcast::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
+bool op::v1::Broadcast::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_broadcast(inputs[0], inputs[1], outputs[0], get_broadcast_axes());
+}
+
 constexpr NodeTypeInfo op::v0::Broadcast::type_info;
 
 op::v0::Broadcast::Broadcast(const OutputVector& args,
@@ -378,6 +383,12 @@ void op::v0::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const Ou
     auto x = input_value(0);
 
     adjoints.add_delta(x, make_shared<op::Sum>(delta, m_broadcast_axes));
+}
+
+bool op::v0::Broadcast::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    // return evaluate_broadcast(inputs[0], inputs[1], outputs[0], get_broadcast_axes());
+    return false;
 }
 
 constexpr NodeTypeInfo op::v0::BroadcastLike::type_info;
