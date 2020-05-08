@@ -45,7 +45,7 @@ namespace ngraph
                       const HostTensorVector& input_tensors);
 
     protected:
-        Lambda();
+        Lambda() = default;
         Lambda(const ResultVector& results, const ParameterVector& parameters);
         Lambda(const OutputVector& results, const ParameterVector& parameters);
 
