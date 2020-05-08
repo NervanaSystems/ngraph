@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 #include "ngraph/node.hpp"
@@ -412,7 +413,7 @@ TEST(eval, evaluate_sigmoid)
     EXPECT_EQ(result->get_element_type(), element::f32);
     auto result_val = read_vector<float>(result);
     vector<float> expec{sigma1, sigma2, sigma1, sigma2};
-    ASSERT_EQ(result_val, expec);
+    ASSERT_THAT(result_val, testing::ElementsAreArray(expec));
 }
 
 TEST(eval, evaluate_sign)
@@ -455,7 +456,7 @@ TEST(eval, evaluate_sin)
                         -0.90929743f,
                         -0.75680250f,
                         0.75680250f};
-    ASSERT_EQ(result_val, expec);
+    ASSERT_THAT(result_val, testing::ElementsAreArray(expec));
 }
 
 TEST(eval, evaluate_sinh)
@@ -471,7 +472,7 @@ TEST(eval, evaluate_sinh)
     auto result_val = read_vector<float>(result);
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return sinhf(x); });
-    ASSERT_EQ(result_val, input);
+    ASSERT_THAT(result_val, testing::ElementsAreArray(input));
 }
 
 TEST(eval, evaluate_sqrt)
@@ -486,7 +487,7 @@ TEST(eval, evaluate_sqrt)
     EXPECT_EQ(result->get_element_type(), element::f32);
     auto result_val = read_vector<float>(result);
     vector<float> expec{4, 2, 9, 10, 100, 0};
-    ASSERT_EQ(result_val, expec);
+    ASSERT_THAT(result_val, testing::ElementsAreArray(expec));
 }
 
 TEST(eval, evaluate_acos)
@@ -503,7 +504,7 @@ TEST(eval, evaluate_acos)
     auto result_val = read_vector<float>(result);
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return std::acos(x); });
-    ASSERT_EQ(result_val, input);
+    ASSERT_THAT(result_val, testing::ElementsAreArray(input));
 }
 
 TEST(eval, evaluate_asin)
@@ -521,7 +522,7 @@ TEST(eval, evaluate_asin)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return std::asin(x); });
 
-    ASSERT_EQ(result_val, input);
+    ASSERT_THAT(result_val, testing::ElementsAreArray(input));
 }
 
 TEST(eval, evaluate_atan)
@@ -539,7 +540,7 @@ TEST(eval, evaluate_atan)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return std::atan(x); });
 
-    ASSERT_EQ(result_val, input);
+    ASSERT_THAT(result_val, testing::ElementsAreArray(input));
 }
 
 TEST(eval, evaluate_ceiling)
@@ -573,7 +574,7 @@ TEST(eval, evaluate_cos)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return std::cos(x); });
 
-    ASSERT_EQ(result_val, input);
+    ASSERT_THAT(result_val, testing::ElementsAreArray(input));
 }
 
 TEST(eval, evaluate_cosh)
@@ -590,7 +591,7 @@ TEST(eval, evaluate_cosh)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return std::cosh(x); });
 
-    ASSERT_EQ(result_val, input);
+    ASSERT_THAT(result_val, testing::ElementsAreArray(input));
 }
 
 TEST(eval, evaluate_tan)
@@ -608,7 +609,7 @@ TEST(eval, evaluate_tan)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return std::tan(x); });
 
-    ASSERT_EQ(result_val, input);
+    ASSERT_THAT(result_val, testing::ElementsAreArray(input));
 }
 
 TEST(eval, evaluate_tanh)
@@ -625,7 +626,7 @@ TEST(eval, evaluate_tanh)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return std::tanh(x); });
 
-    ASSERT_EQ(result_val, input);
+    ASSERT_THAT(result_val, testing::ElementsAreArray(input));
 }
 
 TEST(eval, evaluate_not)
