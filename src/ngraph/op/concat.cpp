@@ -19,7 +19,8 @@
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/slice.hpp"
-
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/concat.hpp"
 using namespace std;
 using namespace ngraph;
 
@@ -141,4 +142,62 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVec
 
         pos = next_pos;
     }
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    inline bool
+        evaluate(const HostTensorVector& args, const HostTensorPtr& out, int64_t concatenation_axis)
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        std::vector<const T*> arg_bufs;
+        std::vector<Shape> arg_shapes;
+        for (auto& input : args)
+        {
+            arg_bufs.push_back(input->get_data_ptr<ET>());
+            arg_shapes.push_back(input->get_shape());
+        }
+        runtime::reference::concat<T>(
+            arg_bufs, out->get_data_ptr<ET>(), arg_shapes, out->get_shape(), concatenation_axis);
+        return true;
+    }
+
+    bool evaluate_concat(const HostTensorVector& args,
+                         const HostTensorPtr& out,
+                         int64_t concatenation_axis)
+    {
+        bool rc = true;
+
+        switch (out->get_element_type())
+        {
+            TYPE_CASE(i8)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(i16)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(i32)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(i64)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(u8)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(u16)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(u32)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(u64)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(f32)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(f64)(args, out, concatenation_axis);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+} // namespace
+
+bool op::Concat::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_concat(inputs, outputs[0], get_concatenation_axis());
 }
