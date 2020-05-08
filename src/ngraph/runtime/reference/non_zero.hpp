@@ -74,9 +74,16 @@ namespace ngraph
 
                 size_t non_zero_count = non_zero_get_count(arg, arg_shape);
 
-                // Input arg is scalar or only contains 0s
-                if (non_zero_count == 0 || arg_rank == 0)
+                // Input arg only contains 0s
+                if (non_zero_count == 0)
                 {
+                    return;
+                }
+
+                // Input arg is non-zero scalar
+                if (arg_rank == 0)
+                {
+                    out[0] = static_cast<U>(0);
                     return;
                 }
 

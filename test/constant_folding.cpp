@@ -2745,8 +2745,8 @@ TEST(constant_folding, constant_non_zero_0D)
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    // Fold into constant with shape of {0, 1} for scalar input to
-    // follow the spec on output shape being {input_rank, non-zero_count}
+    // Fold into constant with shape of {1, 1} for scalar input with
+    // non-zero value
     ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
@@ -2754,8 +2754,9 @@ TEST(constant_folding, constant_non_zero_0D)
     ASSERT_TRUE(new_const);
     const auto values_out = new_const->get_vector<int64_t>();
 
-    ASSERT_EQ(nullptr, values_out.data());
-    ASSERT_EQ((Shape{0, 1}), new_const->get_shape());
+    const vector<int64_t> values_expected{0};
+    ASSERT_EQ(values_expected, values_out);
+    ASSERT_EQ((Shape{1, 1}), new_const->get_shape());
 }
 
 TEST(constant_folding, constant_non_zero_1D)
