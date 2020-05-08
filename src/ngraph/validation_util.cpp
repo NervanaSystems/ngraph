@@ -941,7 +941,7 @@ namespace
             : m_value(value)
         {
         }
-        MaxValue(vector<uint64_t> slices, int64_t slice_axis)
+        MaxValue(const vector<uint64_t>& slices, int64_t slice_axis)
             : m_slices(slices)
             , m_slice_axis(slice_axis)
         {
