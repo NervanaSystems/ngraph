@@ -1091,7 +1091,7 @@ void ngraph::evaluate_nodes(std::map<RawNodeOutput, HostTensorPtr>& value_map,
             }
             else
             {
-                return {};
+                NGRAPH_CHECK(false, "Evaluation failed on ", node);
             }
         });
     for (auto value : outputs)
