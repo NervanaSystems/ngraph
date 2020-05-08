@@ -43,6 +43,11 @@ runtime::dynamic::DynamicBackend::DynamicBackend(shared_ptr<runtime::Backend> wr
 {
 }
 
+shared_ptr<runtime::Tensor> runtime::dynamic::DynamicBackend::create_tensor()
+{
+    return m_wrapped_backend->create_tensor();
+}
+
 shared_ptr<runtime::Tensor>
     runtime::dynamic::DynamicBackend::create_tensor(const element::Type& type, const Shape& shape)
 {
