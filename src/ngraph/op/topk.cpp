@@ -505,3 +505,14 @@ size_t op::v3::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
 
     return k;
 }
+
+shared_ptr<Node> op::v3::TopK::clone_with_new_inputs(const OutputVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    auto new_v3_topk =
+        make_shared<v3::TopK>(new_args.at(0), new_args.at(1), m_axis, m_mode, m_sort);
+
+    new_v3_topk->set_index_element_type(m_index_element_type);
+
+    return std::move(new_v3_topk);
+}
