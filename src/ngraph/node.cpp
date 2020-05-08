@@ -34,6 +34,10 @@
 using namespace std;
 using namespace ngraph;
 
+const Node::type_info_t Node::type_info{"Node", 0, nullptr };
+const Node::type_info_t& Node::get_type_info_static () { return Node::type_info; }
+
+
 atomic<size_t> Node::m_next_instance_id(0);
 
 Node::Node(size_t output_size)
@@ -314,16 +318,9 @@ bool Node::is_constant() const
     return false;
 }
 
-const std::string& Node::description() const
+std::string Node::description() const
 {
-    if (m_node_type.size() == 0)
-    {
-        // Terrible transitional kludge to keep description working while we change
-        // type_name to const_char and virtual description() to virtual get_type_name()
-        const_cast<Node*>(this)->m_node_type = get_type_name();
-    }
-
-    return m_node_type;
+    return get_name();
 }
 
 const std::string& Node::get_friendly_name() const

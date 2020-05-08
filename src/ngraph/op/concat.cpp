@@ -23,9 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-const NodeTypeInfo op::Concat::type_info{"Concat", 0};
-
-const NodeTypeInfo& op::Concat::get_type_info_static() { return type_info; }
+RTTI_DEFINITION("Concat", op::Concat, Node, 0);
 
 op::Concat::Concat(const OutputVector& args, int64_t axis)
     : Op(args)
