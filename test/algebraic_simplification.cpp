@@ -887,7 +887,7 @@ TEST(algebraic_simplification, replace_transpose_with_reshape)
     check_usecase(Shape{10, 20, 1, 1, 1}, vector<int64_t>{0, 2, 3, 4, 1});
     check_usecase(Shape{10, 1, 1, 1, 1}, vector<int64_t>{1, 4, 2, 3, 0});
     check_usecase(Shape{10, 1, 1, 1, 1}, vector<int64_t>{4, 2, 0, 1, 3});
-    check_usecase(Shape{1, 1, 1, 1, 1}, vector<int64_t>{4, 2, 0, 1, 3});
+//    check_usecase(Shape{1, 1, 1, 1, 1}, vector<int64_t>{4, 2, 0, 1, 3}); Transpose will be removed
 }
 
 TEST(algebraic_simplification, replace_transpose_with_reshape_fail)
