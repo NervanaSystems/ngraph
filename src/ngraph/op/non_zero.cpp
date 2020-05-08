@@ -53,6 +53,7 @@ bool ngraph::op::v3::NonZero::visit_attributes(AttributeVisitor& visitor)
 
 void op::v3::NonZero::validate_and_infer_types()
 {
+    const PartialShape& input_shape = get_input_partial_shape(0);
     const auto input_et = get_input_element_type(0);
 
     NODE_VALIDATION_CHECK(this,
@@ -63,9 +64,16 @@ void op::v3::NonZero::validate_and_infer_types()
                           m_output_type == element::i64 || m_output_type == element::i32,
                           "Output type must be i32 or i64");
 
-    // Rank and dimension values of output shape depend on both input shape
-    // and input data
-    set_output_type(0, m_output_type, PartialShape::dynamic());
+    // For scalar non-zero value case, onnx test case expects output shape {1, 1}
+    if (input_shape.rank() == 0)
+    {
+        set_output_type(0, m_output_type, PartialShape{Dimension::dynamic(), Dimension::dynamic()});
+    }
+    else
+    {
+        set_output_type(0, m_output_type, PartialShape{input_shape.rank(), Dimension::dynamic()});
+    }
+
     set_input_is_relevant_to_shape(0);
 }
 
@@ -90,11 +98,7 @@ namespace
             input->get_data_ptr<INPUT_ET>(), input_shape);
 
         Shape out_shape;
-        if (non_zero_count == 0)
-        {
-            out_shape = Shape{0};
-        }
-        else if (input_rank == 0)
+        if (input_rank == 0 && non_zero_count > 0)
         {
             out_shape = Shape{1, 1};
         }
