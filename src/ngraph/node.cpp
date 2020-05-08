@@ -320,7 +320,7 @@ bool Node::is_constant() const
 
 std::string Node::description() const
 {
-    return get_name();
+    return get_type_name();
 }
 
 const std::string& Node::get_friendly_name() const
