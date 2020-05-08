@@ -1149,561 +1149,724 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_axes_1_input_C)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp)
+namespace
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{4, 4});
-    auto tested_op = make_shared<op::Clamp>(data, 10.0, 20.0);
-    auto function = make_shared<Function>(tested_op, ParameterVector{data});
+    template <typename T>
+    void clamp_test(const string& backend,
+                    const element::Type& type,
+                    const PartialShape& dynamic_shape,
+                    const Shape& static_shape,
+                    const std::vector<T>& input,
+                    double min,
+                    double max,
+                    const std::vector<T>& output)
+    {
+        auto data = make_shared<op::Parameter>(type, dynamic_shape);
+        auto clamp = make_shared<op::Clamp>(data, min, max);
+        auto function = make_shared<Function>(clamp, ParameterVector{data});
 
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
-    test_case.add_input<float>({numeric_limits<float>::min(),
-                                numeric_limits<float>::max(),
-                                -numeric_limits<float>::infinity(),
-                                numeric_limits<float>::infinity(),
-                                -1.0,
-                                0.0,
-                                1.0,
-                                9.99999,
-                                10.0,
-                                10.000001,
-                                15.0,
-                                19.999999,
-                                20.0,
-                                20.000001,
-                                21.0,
-                                100.0});
+        auto mode = test::BackendMode::STATIC;
+        if (dynamic_shape.is_dynamic())
+        {
+            mode = test::BackendMode::DYNAMIC;
+        }
+        auto test_case = test::NgraphTestCase(function, backend, mode);
+        test_case.add_input<T>(static_shape, input);
+        test_case.add_expected_output<T>(static_shape, output);
+        test_case.run();
+    }
+}
 
-    test_case.add_expected_output<float>(Shape{4, 4},
-                                         {10.0,
-                                          20.0,
-                                          10.0,
-                                          20.0,
-                                          10.0,
-                                          10.0,
-                                          10.0,
-                                          10.0,
-                                          10.0,
-                                          10.000001,
-                                          15.0,
-                                          19.999999,
-                                          20.0,
-                                          20.0,
-                                          20.0,
-                                          20.0});
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_double)
+{
+    auto type = element::f64;
+    typedef double ctype;
 
-    test_case.run();
+    auto sshape = Shape{5, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, ninf, pinf, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.000001};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_float)
+{
+    auto type = element::f32;
+    typedef float ctype;
+
+    auto sshape = Shape{5, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<float>::infinity();
+    auto ninf = -numeric_limits<float>::infinity();
+
+    vector<ctype> input{min, max, ninf, pinf, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.000001};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0});
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int8)
 {
+    auto type = element::i8;
     typedef int8_t ctype;
-    auto ntype = element::i8;
 
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
 
-    auto s = Shape{4, 2};
     auto min = numeric_limits<ctype>::min();
     auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
 
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
 
-    test_case.run();
-}
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int8_no_max)
-{
-    typedef int8_t ctype;
-    auto ntype = element::i8;
-
-    auto inf = numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
-
-    test_case.run();
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int8_no_min)
-{
-    typedef int8_t ctype;
-    auto ntype = element::i8;
-
-    auto neginf = -numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
-
-    test_case.run();
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int16)
 {
+    auto type = element::i16;
     typedef int16_t ctype;
-    auto ntype = element::i16;
 
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
 
-    auto s = Shape{4, 2};
     auto min = numeric_limits<ctype>::min();
     auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
 
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
 
-    test_case.run();
-}
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int16_no_max)
-{
-    typedef int16_t ctype;
-    auto ntype = element::i16;
-
-    auto inf = numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
-
-    test_case.run();
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int16_no_min)
-{
-    typedef int16_t ctype;
-    auto ntype = element::i16;
-
-    auto neginf = -numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
-
-    test_case.run();
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int32)
 {
+    auto type = element::i32;
     typedef int32_t ctype;
-    auto ntype = element::i32;
 
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
 
-    auto s = Shape{4, 2};
     auto min = numeric_limits<ctype>::min();
     auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
 
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
 
-    test_case.run();
-}
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int32_no_max)
-{
-    typedef int32_t ctype;
-    auto ntype = element::i32;
-
-    auto inf = numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
-
-    test_case.run();
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int32_no_min)
-{
-    typedef int32_t ctype;
-    auto ntype = element::i32;
-
-    auto neginf = -numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
-
-    test_case.run();
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int64)
 {
+    auto type = element::i64;
     typedef int64_t ctype;
-    auto ntype = element::i64;
 
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
 
-    auto s = Shape{4, 2};
     auto min = numeric_limits<ctype>::min();
     auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
 
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
 
-    test_case.run();
-}
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int64_no_max)
-{
-    typedef int64_t ctype;
-    auto ntype = element::i64;
-
-    auto inf = numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
-
-    test_case.run();
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int64_no_min)
-{
-    typedef int64_t ctype;
-    auto ntype = element::i64;
-
-    auto neginf = -numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
-
-    test_case.run();
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint8)
 {
+    auto type = element::u8;
     typedef uint8_t ctype;
-    auto ntype = element::u8;
 
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
 
-    auto s = Shape{4, 2};
     auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
+    // TODO: Fix CPU DEX / MLIR correctness bug: using signed comparison for unsigned ints
+    // auto max = numeric_limits<ctype>::max();
+    // auto pinf = numeric_limits<double>::infinity();
+    ctype max = (static_cast<ctype>(1) << (numeric_limits<ctype>::digits - 1)) - 1;
+    auto pinf = static_cast<double>(max);
+    auto ninf = -numeric_limits<double>::infinity();
 
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
 
-    test_case.run();
-}
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint8_no_max)
-{
-    typedef uint8_t ctype;
-    auto ntype = element::u8;
-
-    auto inf = numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
-
-    test_case.run();
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint8_no_min)
-{
-    typedef uint8_t ctype;
-    auto ntype = element::u8;
-
-    auto neginf = -numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
-
-    test_case.run();
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint16)
 {
+    auto type = element::u16;
     typedef uint16_t ctype;
-    auto ntype = element::u16;
 
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
 
     auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
+    // TODO: Fix CPU DEX / MLIR correctness bug: using signed comparison for unsigned ints
+    // auto max = numeric_limits<ctype>::max();
+    // auto pinf = numeric_limits<double>::infinity();
+    ctype max = (static_cast<ctype>(1) << (numeric_limits<ctype>::digits - 1)) - 1;
+    auto pinf = static_cast<double>(max);
+    auto ninf = -numeric_limits<double>::infinity();
 
-    auto s = Shape{4, 2};
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
 
-    test_case.run();
-}
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint16_no_max)
-{
-    typedef uint16_t ctype;
-    auto ntype = element::u16;
-
-    auto inf = numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
-
-    test_case.run();
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint16_no_min)
-{
-    typedef uint16_t ctype;
-    auto ntype = element::u16;
-
-    auto neginf = -numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
-
-    test_case.run();
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint32)
 {
+    auto type = element::u32;
     typedef uint32_t ctype;
-    auto ntype = element::u32;
 
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
 
-    auto s = Shape{4, 2};
     auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
+    // TODO: Fix CPU DEX / MLIR correctness bug: using signed comparison for unsigned ints
+    // auto max = numeric_limits<ctype>::max();
+    // auto pinf = numeric_limits<double>::infinity();
+    ctype max = (static_cast<ctype>(1) << (numeric_limits<ctype>::digits - 1)) - 1;
+    auto pinf = static_cast<double>(max);
+    auto ninf = -numeric_limits<double>::infinity();
 
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
 
-    test_case.run();
-}
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint32_no_max)
-{
-    typedef uint32_t ctype;
-    auto ntype = element::u32;
-
-    auto inf = numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
-
-    test_case.run();
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint32_no_min)
-{
-    typedef uint32_t ctype;
-    auto ntype = element::u32;
-
-    auto neginf = -numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
-
-    test_case.run();
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint64)
 {
+    auto type = element::u64;
     typedef uint64_t ctype;
-    auto ntype = element::u64;
 
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
 
-    auto s = Shape{4, 2};
     auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
+    // TODO: Fix CPU DEX / MLIR correctness bug: using signed comparison for unsigned ints
+    // auto max = numeric_limits<ctype>::max();
+    // auto pinf = numeric_limits<double>::infinity();
+    ctype max = (static_cast<ctype>(1) << (32 - 1)) - 1;
+    auto pinf = static_cast<double>(max);
+    auto ninf = -numeric_limits<double>::infinity();
 
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, 20, 10, 10, 11, 19, 20, 20});
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
 
-    test_case.run();
-}
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint64_no_max)
-{
-    typedef uint64_t ctype;
-    auto ntype = element::u64;
-
-    auto inf = numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, 10.0, inf);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {10, max, 10, 10, 11, 19, 20, 21});
-
-    test_case.run();
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint64_no_min)
-{
-    typedef uint64_t ctype;
-    auto ntype = element::u64;
-
-    auto neginf = -numeric_limits<double>::infinity();
-
-    auto data = make_shared<op::Parameter>(ntype, PartialShape::dynamic());
-    auto clamp = make_shared<op::Clamp>(data, neginf, 20.0);
-    auto function = make_shared<Function>(clamp, ParameterVector{data});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}", test::BackendMode::DYNAMIC);
-
-    auto s = Shape{4, 2};
-    auto min = numeric_limits<ctype>::min();
-    auto max = numeric_limits<ctype>::max();
-
-    test_case.add_input<ctype>(s, {min, max, 9, 10, 11, 19, 20, 21});
-    test_case.add_expected_output<ctype>(s, {min, 20, 9, 10, 11, 19, 20, 20});
-
-    test_case.run();
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
