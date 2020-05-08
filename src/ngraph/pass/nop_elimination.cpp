@@ -142,8 +142,7 @@ static bool replace_squeeze_unsqueeze(const std::shared_ptr<Node>& node)
         shared_ptr<Node> reshape;
         auto input = node->input_value(0).get_node_shared_ptr();
         auto shape = shape_ps.get_shape();
-        std::vector<int64_t> vi;
-        vi.assign(shape.begin(), shape.end());
+        std::vector<int64_t> vi(shape.begin(), shape.end());
         auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
 
         if (is_type<opset3::Reshape>(input) || is_type<opset3::Squeeze>(input) ||
@@ -193,12 +192,12 @@ static std::vector<int64_t> get_squeeze_axes(const PartialShape& data_shape,
                                              const PartialShape& out_shape)
 {
     std::vector<int64_t> axes;
-    size_t o = 0;
+    size_t out_i = 0;
     for (auto i = 0; i < data_shape.rank().get_length(); i++)
     {
-        if (o < out_shape.rank().get_length() && data_shape[i].same_scheme(out_shape[o]))
+        if (out_i < out_shape.rank().get_length() && data_shape[i].same_scheme(out_shape[out_i]))
         {
-            o += 1;
+            out_i += 1;
             continue;
         }
         if (data_shape[i].is_static() && data_shape[i] == 1)
