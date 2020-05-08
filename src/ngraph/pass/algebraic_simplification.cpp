@@ -16,8 +16,8 @@
 
 #include <memory>
 #include <numeric>
-#include <set>
 #include <rt_info.hpp>
+#include <set>
 
 #include "algebraic_simplification.hpp"
 #include "ngraph/axis_vector.hpp"
@@ -717,7 +717,11 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> transpose)
 
     // Transpose operation can be removed if original transpose order is sorted
     // or dimension that changes their places equal to 1
-    using DimensionToPositoin = struct { Dimension dim; size_t pos;};
+    using DimensionToPositoin = struct
+    {
+        Dimension dim;
+        size_t pos;
+    };
     std::vector<DimensionToPositoin> dims;
     for (size_t i = 0; i < input_shape_rank; ++i)
     {
@@ -728,11 +732,9 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> transpose)
     }
 
     // If number of dimensions != 1 to move equal to 0 we can remove this Transpose
-    if (count_if(dims.begin(), dims.end(),
-            [](const DimensionToPositoin & item)
-            {
-                return !(item.dim.is_static() && item.dim.get_length() == 1);
-            }) == 0)
+    if (count_if(dims.begin(), dims.end(), [](const DimensionToPositoin& item) {
+            return !(item.dim.is_static() && item.dim.get_length() == 1);
+        }) == 0)
     {
         return replace_output_update_name(transpose->output(0), transpose->input_value(0));
     }
@@ -742,27 +744,32 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> transpose)
     // 2. Reshape with dims as input (ShapeOf->Gather)
     //
     // The first case is possible only if one or less dynamic dimensions changes their position
-    // For example: input_shape {?, 3, 1, ?} and order {0, 1, 3, 2} can be replaced with Reshape with Constant {0, 3, -1, 1}
-    //              but if input_shape {?, 1, 1, ?} and order {1, 0, 3, 2} transpose cannot be replaced int the same way
-    //              and in this case its only possible to use Gather(ShapeOf, order)
+    // For example: input_shape {?, 3, 1, ?} and order {0, 1, 3, 2} can be replaced with Reshape
+    // with Constant {0, 3, -1, 1} but if input_shape {?, 1, 1, ?} and order {1, 0, 3, 2} transpose
+    // cannot be replaced int the same way and in this case its only possible to use Gather(ShapeOf,
+    // order)
 
     Output<Node> reshape_dim;
-    NodeVector  new_ops;
+    NodeVector new_ops;
 
-    if (count_if(dims.begin(), dims.end(), [](const DimensionToPositoin & item) { return item.dim.is_dynamic(); }) < 2)
+    if (count_if(dims.begin(), dims.end(), [](const DimensionToPositoin& item) {
+            return item.dim.is_dynamic();
+        }) < 2)
     {
         vector<int64_t> reshape_value(input_shape_rank, 0);
-        for (const auto & item : dims)
+        for (const auto& item : dims)
         {
             reshape_value[item.pos] = item.dim.is_dynamic() ? -1 : item.dim.get_length();
         }
-        reshape_dim = opset3::Constant::create(element::i64, Shape{reshape_value.size()}, reshape_value);
+        reshape_dim =
+            opset3::Constant::create(element::i64, Shape{reshape_value.size()}, reshape_value);
     }
     else
     {
         auto shape_of = make_shared<opset3::ShapeOf>(data);
         new_ops.push_back(shape_of);
-        reshape_dim = make_shared<opset3::Gather>(shape_of, order, opset3::Constant::create(element::i64, Shape{1}, {0}));
+        reshape_dim = make_shared<opset3::Gather>(
+            shape_of, order, opset3::Constant::create(element::i64, Shape{1}, {0}));
         new_ops.push_back(reshape_dim.get_node_shared_ptr());
     }
 
