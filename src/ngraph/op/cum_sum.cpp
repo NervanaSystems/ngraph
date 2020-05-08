@@ -50,6 +50,7 @@ bool op::v0::CumSum::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("reverse", m_reverse);
     return true;
 }
+
 void op::v0::CumSum::validate_and_infer_types()
 {
     element::Type arg_type = get_input_element_type(0);
@@ -86,11 +87,4 @@ void op::v0::CumSum::generate_adjoints(autodiff::Adjoints& adjoints, const Outpu
 shared_ptr<Node> op::v0::CumSum::get_default_value() const
 {
     return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
-}
-
-bool op::v0::CumSum::visit_attributes(AttributeVisitor& visitor)
-{
-    visitor.on_attribute("exclusive", m_exclusive);
-    visitor.on_attribute("reverse", m_reverse);
-    return true;
 }

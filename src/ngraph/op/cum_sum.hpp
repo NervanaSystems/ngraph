@@ -101,7 +101,6 @@ namespace ngraph
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
-                virtual bool visit_attributes(AttributeVisitor& visitor) override;
 
                 /// \return The default value for CumSum.
                 virtual std::shared_ptr<Node> get_default_value() const override;
