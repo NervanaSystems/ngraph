@@ -48,9 +48,11 @@ namespace
 
         InferenceEngine::MemoryBlob::Ptr blob;
 
+        auto size = data_size * elem_type.size();
+
 #define MAKE_IE_TBLOB(type_, precision_, shape_, layout_)                                          \
     make_shared<InferenceEngine::TBlob<type_>>(                                                    \
-        InferenceEngine::TensorDesc{InferenceEngine::Precision::precision_, shape_, layout_})
+        InferenceEngine::TensorDesc{InferenceEngine::Precision::precision_, shape_, layout_}, (type_*)data, size)
 
         switch (elem_type)
         {
@@ -66,10 +68,6 @@ namespace
         default: THROW_IE_EXCEPTION << "Can't convert type " << elem_type << " to IE Precision!";
         }
 #undef MAKE_IE_TBLOB
-
-        blob->allocate();
-        uint8_t* blob_ptr = blob->rwmap().as<uint8_t*>();
-        memcpy(blob_ptr, data, data_size * elem_type.size());
         return blob;
     }
 }
@@ -124,7 +122,6 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
 
     //  Prepare input and output blobs
     InferenceEngine::InputsDataMap input_info = m_network.getInputsInfo();
-
     if (input_info.size() != inputs.size())
     {
         THROW_IE_EXCEPTION << "Function inputs number differ from number of given inputs";
@@ -144,20 +141,25 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     }
 
     //  Prepare output blobs
-    string output_name = m_network.getOutputsInfo().begin()->first;
-
-    m_infer_req.Infer();
-    InferenceEngine::Blob::Ptr output = m_infer_req.GetBlob(output_name);
-
-    InferenceEngine::MemoryBlob::Ptr moutput =
-        InferenceEngine::as<InferenceEngine::MemoryBlob>(output);
-    if (!moutput)
+    InferenceEngine::OutputsDataMap output_info = m_network.getOutputsInfo();
+    if (output_info.size() != outputs.size())
     {
-        THROW_IE_EXCEPTION << "Cannot get output MemoryBlob in call_with_validate()";
+        THROW_IE_EXCEPTION << "Function outputs number differ from number of given outputs";
     }
 
-    auto lm = moutput->rmap();
-    uint8_t* output_ptr = lm.as<uint8_t*>();
-    outputs[0]->write(output_ptr, moutput->byteSize());
+    i = 0;
+    for (const auto& it : output_info)
+    {
+        shared_ptr<runtime::ie::IETensor> tv =
+            static_pointer_cast<runtime::ie::IETensor>(outputs[i]);
+        m_infer_req.SetBlob(it.first,
+                              fill_blob(it.second->getTensorDesc().getDims(),
+                                        tv->get_data_ptr(),
+                                        tv->get_element_count(),
+                                        tv->get_element_type()));
+        i++;
+    }
+
+    m_infer_req.Infer();
     return true;
 }
