@@ -153,13 +153,17 @@ namespace
         using T = typename element_type_traits<ET>::value_type;
         std::vector<const T*> arg_bufs;
         std::vector<Shape> arg_shapes;
+        Shape out_shape(args[0]->get_shape());
+        out_shape[concatenation_axis] = 0;
         for (auto& input : args)
         {
             arg_bufs.push_back(input->get_data_ptr<ET>());
             arg_shapes.push_back(input->get_shape());
+            out_shape[concatenation_axis] += arg_shapes.back()[concatenation_axis];
         }
+        out->set_shape(out_shape);
         runtime::reference::concat<T>(
-            arg_bufs, out->get_data_ptr<ET>(), arg_shapes, out->get_shape(), concatenation_axis);
+            arg_bufs, out->get_data_ptr<ET>(), arg_shapes, out_shape, concatenation_axis);
         return true;
     }
 
@@ -195,9 +199,10 @@ namespace
         }
         return rc;
     }
-} // namespace
+}
 
 bool op::Concat::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    return evaluate_concat(inputs, outputs[0], get_concatenation_axis());
+    auto concat_axis = get_axis() < 0 ? get_axis() + inputs[0]->get_shape().size() : get_axis();
+    return evaluate_concat(inputs, outputs[0], concat_axis);
 }

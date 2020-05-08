@@ -22,6 +22,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/node_output.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/non_zero.hpp"
@@ -158,3 +159,20 @@ TEST(eval, interpret_dynamic_range_sum)
     ASSERT_EQ(result_val, seq);
 }
 #endif
+
+TEST(eval, evaluate_dynamic_concat)
+{
+    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto concat = make_shared<op::v0::Concat>(NodeVector{arg1, arg2}, 1);
+    auto fun = make_shared<Function>(OutputVector{concat}, ParameterVector{arg1, arg2});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate({result_tensor},
+                              {make_host_tensor<element::Type_t::f32>({1, 1}, {1.0f}),
+                               make_host_tensor<element::Type_t::f32>({1, 2}, {8.0f, 10.0f})}));
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{1, 3}));
+    auto cval = read_vector<float>(result_tensor);
+    vector<float> out{1.0f, 8.0f, 10.0f};
+    ASSERT_EQ(cval, out);
+}

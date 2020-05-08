@@ -1580,6 +1580,7 @@ protected:
         case OP_TYPEID::UnknownOp:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
+        case OP_TYPEID::And:
         case OP_TYPEID::Concat:
         case OP_TYPEID::Constant:
         case OP_TYPEID::Divide:
