@@ -180,7 +180,7 @@ namespace ngraph
         return true;
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
 
     bool AttributeAdapter<op::BroadcastModeSpec>::visit_attributes(AttributeVisitor& visitor,
                                                                    const std::string& name)
@@ -192,5 +192,5 @@ namespace ngraph
         return true;
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<op::BroadcastModeSpec>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<op::BroadcastModeSpec>::type_info;
 }
