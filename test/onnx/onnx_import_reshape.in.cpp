@@ -475,7 +475,7 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_expand_static_shape)
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     // input data shape (3,1)
-    test_case.add_input(Shape{1, 2, 2, 2}, std::vector<float>{1, 2, 3});
+    test_case.add_input(std::vector<float>{1, 2, 3});
 
     test_case.add_expected_output<float>(Shape{2, 3, 6},
                                          {1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,

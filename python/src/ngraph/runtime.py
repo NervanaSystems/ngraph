@@ -40,8 +40,7 @@ class Runtime:
 
     def __init__(self, backend_name):  # type: (str) -> None
         self.backend_name = backend_name
-        use_dynamic_backend = True
-        self.backend = Backend.create(backend_name, use_dynamic_backend)
+        self.backend = Backend.create_dynamic(backend_name)
 
     def set_config(self, config):  # type: (Dict[str, str]) -> None
         """Set the backend configuration."""
@@ -85,7 +84,8 @@ class Computation(object):
         for result in self.results:
             output_pshape = result.get_output_partial_shape(0)
             element_type = result.get_element_type()
-            self.result_views.append(runtime.backend.create_dynamic_tensor(element_type, output_pshape))
+            output_tensor = runtime.backend.create_dynamic_tensor(element_type, output_pshape)
+            self.result_views.append(output_tensor)
 
     def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])
