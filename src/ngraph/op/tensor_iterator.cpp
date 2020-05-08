@@ -200,55 +200,60 @@ bool op::v0::TensorIterator::BodyOutputDescription::visit_attributes(AttributeVi
     return true;
 }
 
-template <>
-class AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>>
-    : public VisitorAdapter
+namespace ngraph
 {
-public:
-    AttributeAdapter(std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>& ref)
-        : m_ref(ref)
+    template <>
+    class AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>>
+        : public VisitorAdapter
     {
-    }
+    public:
+        AttributeAdapter(std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>& ref)
+            : m_ref(ref)
+        {
+        }
 
-    bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
+        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
+        {
+            return true;
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>>",
+            0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    protected:
+        std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>& m_ref;
+    };
+
+    constexpr DiscreteTypeInfo AttributeAdapter<
+        std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>>::type_info;
+
+    template <>
+    class AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>>
+        : public VisitorAdapter
     {
-        return true;
-    }
+    public:
+        AttributeAdapter(std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>& ref)
+            : m_ref(ref)
+        {
+        }
 
-    static constexpr DiscreteTypeInfo type_info{
-        "AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>>", 0};
-    const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-protected:
-    std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>& m_ref;
-};
+        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
+        {
+            return true;
+        }
 
-constexpr DiscreteTypeInfo
-    AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>>::type_info;
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>",
+            0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    protected:
+        std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>& m_ref;
+    };
 
-template <>
-class AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>>
-    : public VisitorAdapter
-{
-public:
-    AttributeAdapter(std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>& ref)
-        : m_ref(ref)
-    {
-    }
-
-    bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
-    {
-        return true;
-    }
-
-    static constexpr DiscreteTypeInfo type_info{
-        "AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>", 0};
-    const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-protected:
-    std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>& m_ref;
-};
-
-constexpr DiscreteTypeInfo AttributeAdapter<
-    std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<
+        std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>>::type_info;
+}
 
 bool op::v0::TensorIterator::visit_attributes(AttributeVisitor& visitor)
 {
