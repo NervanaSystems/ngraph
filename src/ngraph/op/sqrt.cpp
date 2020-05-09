@@ -52,7 +52,7 @@ void op::Sqrt::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVecto
     adjoints.add_delta(x, delta / (shared_from_this() + shared_from_this()));
 }
 
-namespace
+/*namespace
 {
     template <element::Type_t ET>
     inline bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
@@ -105,3 +105,4 @@ bool op::Sqrt::evaluate(const HostTensorVector& outputs, const HostTensorVector&
 {
     return evaluate_sqrt(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }
+*/

@@ -79,6 +79,7 @@ public:
         construct_constant_broadcast();
         construct_constant_dyn_broadcast();
         construct_constant_pad();
+        construct_constant_unary();
         construct_constant_binary();
         construct_constant_quantize();
         construct_constant_dequantize();
