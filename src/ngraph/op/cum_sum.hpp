@@ -81,8 +81,9 @@ namespace ngraph
                 ///
                 /// \param arg The tensor to be summed.
                 /// \param axis zero dimension tensor specifying axis position along which
-                /// cumulative
-                /// sum must be performed
+                /// cumulative sum must be performed
+                /// \param exclusive if set to true, the top element is not included
+                /// \param reverse if set to true, will perform the sums in reverse direction
                 CumSum(const Output<Node>& arg,
                        const Output<Node>& axis,
                        const bool exclusive = false,

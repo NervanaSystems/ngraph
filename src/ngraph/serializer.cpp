@@ -2259,7 +2259,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::RegionYolo: { break;
         }
-        case OP_TYPEID::ReorgYolo: { break;
+        case OP_TYPEID::ReorgYolo:
+        {
+            break;
+            const auto strides = node_js.at("strides").get<vector<size_t>>();
+            node = make_shared<op::ReorgYolo>(args[0], strides);
+            break;
         }
         case OP_TYPEID::Round:
         {
@@ -2981,7 +2986,11 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::RegionYolo: { break;
     }
-    case OP_TYPEID::ReorgYolo: { break;
+    case OP_TYPEID::ReorgYolo:
+    {
+        auto tmp = static_cast<const op::ReorgYolo*>(&n);
+        node["strides"] = tmp->get_strides();
+        break;
     }
     case OP_TYPEID::Round: { break;
     }
