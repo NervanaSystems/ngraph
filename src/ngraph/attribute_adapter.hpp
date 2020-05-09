@@ -115,7 +115,7 @@ namespace ngraph
     A copy_from(B& b)
     {
         A result(b.size());
-        for (int i = 0; i < b.size(); ++i)
+        for (size_t i = 0; i < b.size(); ++i)
         {
             result[i] =
                 static_cast<typename std::remove_reference<decltype(result[i])>::type>(b[i]);
