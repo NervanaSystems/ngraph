@@ -64,25 +64,6 @@ namespace ngraph
         virtual const VAT& get() = 0;
         /// Sets the value
         virtual void set(const VAT& value) = 0;
-
-    protected:
-        VAT m_buffer;
-        bool m_buffer_valid{false};
-    };
-
-    /// \brief holds a reference to a value
-    /// \tparam AT the type of the referenced attribute value
-    template <typename AT>
-    class ValueReference
-    {
-    public:
-        operator AT&() const { return m_value; }
-    protected:
-        ValueReference(AT& value)
-            : m_value(value)
-        {
-        }
-        AT& m_value;
     };
 
     template <typename AT>
@@ -183,19 +164,18 @@ namespace ngraph
     /// \brief Access an enum via a string
     /// \tparam AT The attribute type enum class
     template <typename AT>
-    class EnumAttributeAdapterBase : public ValueReference<AT>, public ValueAccessor<std::string>
+    class EnumAttributeAdapterBase : public ValueAccessor<std::string>
     {
     public:
         EnumAttributeAdapterBase(AT& value)
-            : ValueReference<AT>(value)
+            : m_ref(value)
         {
         }
 
-        const std::string& get() override { return as_string(ValueReference<AT>::m_value); }
-        void set(const std::string& value) override
-        {
-            ValueReference<AT>::m_value = as_enum<AT>(value);
-        }
+        const std::string& get() override { return as_string(m_ref); }
+        void set(const std::string& value) override { m_ref = as_enum<AT>(value); }
+    protected:
+        AT& m_ref;
     };
 
     /// Adapters will see visitor

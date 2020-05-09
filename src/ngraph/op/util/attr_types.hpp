@@ -263,7 +263,7 @@ namespace ngraph
     {
         enum class TopKSortType
         {
-            // Returned values are not sorted
+            // Returned values are not sorte
             NONE,
             // Sort result based on element indices
             SORT_INDICES,
