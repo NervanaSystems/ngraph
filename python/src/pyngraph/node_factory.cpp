@@ -53,7 +53,7 @@ public:
     {
         if (m_attributes.contains(name))
         {
-            adapter.set(m_attributes[name.c_str()].cast<bool>();
+            adapter.set(m_attributes[name.c_str()].cast<bool>());
         }
     }
     virtual void on_adapter(const std::string& name,
