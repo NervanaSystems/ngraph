@@ -882,6 +882,43 @@ TEST(attributes, matmul_op)
     EXPECT_EQ(g_matmul->get_transpose_b(), matmul->get_transpose_b());
 }
 
+TEST(attributes, partial_shape)
+{
+    NodeBuilder builder;
+    AttributeVisitor& loader(builder);
+    AttributeVisitor& saver(builder.get_node_saver());
+
+    PartialShape dyn = PartialShape::dynamic();
+    saver.on_attribute("dyn", dyn);
+    PartialShape g_dyn;
+    loader.on_attribute("dyn", g_dyn);
+    EXPECT_EQ(dyn, g_dyn);
+
+    PartialShape scalar{};
+    saver.on_attribute("scalar", scalar);
+    PartialShape g_scalar;
+    loader.on_attribute("scalar", g_scalar);
+    EXPECT_EQ(scalar, g_scalar);
+
+    PartialShape dyn_vector{Dimension::dynamic()};
+    saver.on_attribute("dyn_vector", dyn_vector);
+    PartialShape g_dyn_vector;
+    loader.on_attribute("dyn_vector", g_dyn_vector);
+    EXPECT_EQ(dyn_vector, g_dyn_vector);
+
+    PartialShape stat_vector{7};
+    saver.on_attribute("stat_vector", stat_vector);
+    PartialShape g_stat_vector;
+    loader.on_attribute("stat_vector", g_stat_vector);
+    EXPECT_EQ(stat_vector, g_stat_vector);
+
+    PartialShape general{7, Dimension::dynamic(), 2, Dimension::dynamic(), 4};
+    saver.on_attribute("general", general);
+    PartialShape g_general;
+    loader.on_attribute("general", g_general);
+    EXPECT_EQ(general, g_general);
+}
+
 TEST(attributes, max_pool_op)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::MaxPool>();

@@ -463,7 +463,7 @@ const std::vector<int64_t>& ngraph::AttributeAdapter<ngraph::PartialShape>::get(
 void ngraph::AttributeAdapter<ngraph::PartialShape>::set(const std::vector<int64_t>& value)
 {
     m_ref = PartialShape();
-    if (value.size() == 1 || value[0] == -2)
+    if (value.size() == 1 && value[0] == -2)
     {
         m_ref = PartialShape::dynamic();
     }
