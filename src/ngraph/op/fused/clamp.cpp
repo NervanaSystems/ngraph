@@ -141,7 +141,8 @@ NodeVector op::Clamp::decompose_op() const
     auto ceil_func = [](double x) { return std::ceil(x); };
     auto floor_func = [](double x) { return std::floor(x); };
 
-    shared_ptr<Node> clamp_min, clamp_max;
+    shared_ptr<Node> clamp_min;
+    shared_ptr<Node> clamp_max;
 
     switch (type)
     {
