@@ -16,6 +16,7 @@
 """Provide a layer of abstraction for the ngraph++ runtime environment."""
 import logging
 from typing import Dict, List, Union
+from enum import Enum
 
 import numpy as np
 
@@ -26,21 +27,26 @@ from ngraph.exceptions import UserInputError
 
 log = logging.getLogger(__name__)
 
+BackendMode = Enum('STATIC', 'DYNAMIC')
 
-def runtime(backend_name='CPU'):  # type: (str) -> 'Runtime'
+
+def runtime(backend_name='CPU', mode=BackendMode.DYNAMIC):  # type: (str, BackendMode) -> 'Runtime'
     """Create a Runtime object (helper factory).
 
     Use signature to parameterize runtime as needed.
     """
-    return Runtime(backend_name)
+    return Runtime(backend_name, mode)
 
 
 class Runtime:
     """Represents the ngraph++ runtime environment."""
 
-    def __init__(self, backend_name):  # type: (str) -> None
+    def __init__(self, backend_name, mode=BackendMode.DYNAMIC):  # type: (str, BackendMode) -> None
         self.backend_name = backend_name
-        self.backend = Backend.create_dynamic(backend_name)
+        if mode == BackendMode.DYNAMIC:
+            self.backend = Backend.create_dynamic(backend_name)
+        else:
+            self.backend = Backend.create(backend_name)
 
     def set_config(self, config):  # type: (Dict[str, str]) -> None
         """Set the backend configuration."""
@@ -82,10 +88,15 @@ class Computation(object):
 
         self.result_views = []  # type: List[Tensor]
         for result in self.results:
-            output_pshape = result.get_output_partial_shape(0)
             element_type = result.get_element_type()
-            output_tensor = runtime.backend.create_dynamic_tensor(element_type, output_pshape)
-            self.result_views.append(output_tensor)
+            if self.function.is_dynamic():
+                output_pshape = result.get_output_partial_shape(0)
+                output_tensor = runtime.backend.create_dynamic_tensor(element_type, output_pshape)
+                self.result_views.append(output_tensor)
+            else:
+                output_shape = result.get_shape()
+                output_tensor = runtime.backend.create_tensor(element_type, output_shape)
+                self.result_views.append(output_tensor)
 
     def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])
@@ -98,7 +109,10 @@ class Computation(object):
                 value = np.array(value)
             Computation._write_ndarray_to_tensor_view(value, tensor_view)
 
-        self.handle.call_with_validate(self.result_views, self.tensor_views)
+        if self.function.is_dynamic():
+            self.handle.call_with_validate(self.result_views, self.tensor_views)
+        else:
+            self.handle.call(self.result_views, self.tensor_views)
 
         results = []
         for result_view in self.result_views:
