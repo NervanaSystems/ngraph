@@ -14,19 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#define ID_SUFFIX(NAME) NAME
-#include "ngraph/opsets/opset0_tbl.hpp"
-#undef ID_SUFFIX
+#include <onnx/onnx_pb.h>
+#include "onnx/defs/function.h"
+#include "onnx/defs/schema.h"
 
-#define ID_SUFFIX(NAME) NAME##_v1
-NGRAPH_OP(LessEqual, op::v1)
-NGRAPH_OP(LogicalAnd, op::v1)
-NGRAPH_OP(LogicalOr, op::v1)
-NGRAPH_OP(LogicalXor, op::v1)
-NGRAPH_OP(LogicalNot, op::v1)
-#undef ID_SUFFIX
+#include "gtest/gtest.h"
+#include "util/all_close.hpp"
+#include "util/test_case.hpp"
+#include "util/test_control.hpp"
 
-#define ID_SUFFIX(NAME) NAME##_v3
-NGRAPH_OP(ShapeOf, op::v3)
-NGRAPH_OP(NonZero, op::v3)
-#undef ID_SUFFIX
+using namespace ngraph;
+
+static std::string s_manifest = "${MANIFEST}";
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, get_function_op_with_version)
+{
+    const auto* schema =
+        ONNX_NAMESPACE::OpSchemaRegistry::Schema("MeanVarianceNormalization", 9, "");
+    EXPECT_TRUE(schema);
+    EXPECT_TRUE(schema->HasFunction());
+    auto func = schema->GetFunction();
+    EXPECT_EQ(func->name(), "MeanVarianceNormalization");
+}

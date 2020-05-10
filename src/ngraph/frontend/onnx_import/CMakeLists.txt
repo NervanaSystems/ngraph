@@ -259,7 +259,7 @@ set_target_properties(onnx_import PROPERTIES
 target_include_directories(onnx_import
     SYSTEM PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
     SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
-target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} onnx_proto)
+target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} onnx onnx_proto)
 
 target_compile_definitions(onnx_import PRIVATE ONNX_OPSET_VERSION=${ONNX_OPSET_VERSION})
 
