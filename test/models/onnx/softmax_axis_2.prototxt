@@ -11,7 +11,7 @@ graph {
       type: INT
     }
   }
-  name: "test_softmax_axis_0"
+  name: "test_softmax_axis_2"
   input {
     name: "x"
     type {

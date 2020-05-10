@@ -706,9 +706,19 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_matmul)
     test_case.run();
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, onnx_model_softmax_1D)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/softmax_1D.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({-1.0, 0.0, 1.0});
+    test_case.add_expected_output<float>({0.09003058, 0.24472848, 0.66524094});
+    test_case.run(0);
+}
 namespace
 {
-    // common input for all Softmax test cases (Shape = {3,4,5})
+    // common input for all Softmax 3D test cases (Shape = {3,4,5})
     const std::vector<float> SOFTMAX_INPUT = {
         2.75793882,  -0.50841322, 0.82013929,  -0.62409912, -0.96136118, 0.21004745,  1.38337255,
         1.19030397,  2.0940445,   -0.03551657, -0.78686039, 1.992782,    0.04300319,  -0.29230777,
