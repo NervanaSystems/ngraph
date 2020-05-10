@@ -27,7 +27,12 @@ from ngraph.exceptions import UserInputError
 
 log = logging.getLogger(__name__)
 
-BackendMode = Enum('STATIC', 'DYNAMIC')
+
+class BackendMode(Enum):
+    """DYNAMIC mode enables backend's wrapper which supports dynamic shapes."""
+
+    STATIC = 0
+    DYNAMIC = 1
 
 
 def runtime(backend_name='CPU', mode=BackendMode.DYNAMIC):  # type: (str, BackendMode) -> 'Runtime'
