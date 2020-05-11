@@ -31,26 +31,41 @@ namespace ngraph
     class VisitorAdapter;
     class Node;
 
-    /// \brief Visits the attributes of a node.
+    /// \brief Visits the attributes of a node, primarily for serialization-like tasks.
     ///
-    /// Attributes are the values set when building a graph which are not
-    /// computed as the graph executes. Values computed from the graph topology and attributes
-    /// during compilation are not attributes.
+    /// Attributes are the node parameters that are always compile-time constants.
+    /// Values computed from the graph topology and attributes during compilation are not
+    /// attributes.
     ///
-    /// Attributes can have a wide variety of types. In order for a visitor to handle a wide
-    /// range of types, some defined in other modules. on_attribute for string and bool attributes
-    /// must be implemented directly by a visitor. For other attribute types, an attribute visitor
-    /// uses an AttributeAdapter<T> class to convert a T& to a ValueAccessor<T>& derived from
-    /// ValueAccessor<void>. If the attribute visitor overrides one of the optional on_adapter
-    /// methods, that method will be called; otherwise the default implementation for
-    /// on_adapter will call the on_adapter method for ValueAccessor<void>&.
+    /// Attributes have a wide variety of types, but serialization formats are more restricted.
+    /// We asume serialation easily supports scalar types of bool 64-bit signed, string, and double,
+    /// and has specialized ways to support numeric arrays and raw data+size. The visitor and
+    /// adapter convert between the limited serialization types and the unlimited attribute types.
     ///
-    /// Why are there optional on_adapter methods? This allows new on_adapter methods to be added
-    /// without requiring AttributeVisitors to be immediately updated.
+    /// A visitor is passed to an op's visit_attributes method. The visit_attributes method calls
+    /// the template method visitor.on_attribute<AT>(const std::string& name, AT& value) on each
+    /// attribute. The visitor can read or write the attribute's value. The on_attribute
+    /// method creates an AttributeAdapter<AT> for the value and passes it to one of the visitors
+    /// on_adapter methods. The on_adapter methods expect a reference to a ValueAccessor<VAT> or a
+    /// VisitorAdapter. A ValueAccessor<VAT> has get/set methods that can be used to read/write the
+    /// attribute value as type VAT. These methods are triggered by deriving AttributeAdapter<AT>
+    /// from ValueAccessor<VAT>. For more complex cases, such as structs, the on_adapter method for
+    /// VisitorAdapter passes the name and visitor to the adapter, so that the adapter can perform
+    /// additional work such as visiting struct members or sequence values.
     ///
-    /// Why aren't all the methods on_attribute? Either there was some template issue related to the
-    /// generic on_attribute, or it was related to preventing API changes. similarly the string and
-    /// bool on_attributes are related to API stability.
+    /// When a node visits an attribute with structure, the node's on_attribute passes a name for
+    /// the entire attribute, but the struct will have its own methods to be visited. Similarly, a
+    /// vector will have a sequence of members to be visited. The adapter may use the visitor
+    /// methods start_struct/finish_struct and start_vector/next_vector/finish_vector to inidicate
+    /// nexted members.
+    ///
+    /// The visitor method get_name_with_context creates a generic nested version of the name.
+    /// Visitors can override according to their serialization requirements.
+    ///
+    /// Attributes that are shared_ptr<Node> are special. They must have been already been
+    /// registered with the visitor using register_node, which needs a shared pointer to a node and
+    /// a string ID. The ID string will be used to serialize the node or find the node during
+    /// deserialization.
     class NGRAPH_API AttributeVisitor
     {
     public:
