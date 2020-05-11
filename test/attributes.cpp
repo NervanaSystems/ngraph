@@ -125,7 +125,7 @@ public:
 
     TuringModel get_turing_model() const { return m_turing_model; }
     const element::Type get_element_type() const { return m_element_type; }
-    const element::Type_t get_element_type_t() const { return m_element_type_t; }
+    element::Type_t get_element_type_t() const { return m_element_type_t; }
     const string& get_val_string() const { return m_val_string; }
     bool get_val_bool() const { return m_val_bool; }
     bool get_val_float() const { return m_val_float; }
@@ -1416,6 +1416,51 @@ TEST(attributes, extractimagepatches_op)
     EXPECT_EQ(g_extractimagepatches->get_strides(), strides);
     EXPECT_EQ(g_extractimagepatches->get_rates(), rates);
     EXPECT_EQ(g_extractimagepatches->get_padding(), padtype_padding);
+}
+
+TEST(attributes, mvn_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::MVN>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+
+    const auto axes = AxisSet{0, 1};
+
+    const auto op = make_shared<opset3::MVN>(data, true, false, 0.1);
+    op->set_reduction_axes(axes);
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::MVN>(builder.create());
+
+    EXPECT_EQ(g_op->get_reduction_axes(), op->get_reduction_axes());
+    EXPECT_EQ(g_op->get_across_channels(), op->get_across_channels());
+    EXPECT_EQ(g_op->get_normalize_variance(), op->get_normalize_variance());
+    EXPECT_EQ(g_op->get_eps(), op->get_eps());
+}
+
+TEST(attributes, reorg_yolo_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ReorgYolo>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+
+    const auto op = make_shared<opset3::ReorgYolo>(data, Strides{2});
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::ReorgYolo>(builder.create());
+
+    EXPECT_EQ(g_op->get_strides(), op->get_strides());
+}
+
+TEST(attributes, roi_pooling_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ROIPooling>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+    const auto coords = make_shared<op::Parameter>(element::i32, Shape{2, 3});
+
+    const auto op = make_shared<opset3::ROIPooling>(data, coords, Shape{5, 5}, 0.123, "Bilinear");
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::ROIPooling>(builder.create());
+
+    EXPECT_EQ(g_op->get_output_size(), op->get_output_size());
+    EXPECT_EQ(g_op->get_spatial_scale(), op->get_spatial_scale());
+    EXPECT_EQ(g_op->get_method(), op->get_method());
 }
 
 TEST(attributes, constant_op)
