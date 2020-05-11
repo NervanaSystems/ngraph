@@ -44,6 +44,10 @@ from ngraph.utils.node_factory import NodeFactory
 
 
 def _get_node_factory(opset_version=None):  # type: (Optional[str]) -> NodeFactory
+<<<<<<< HEAD
+=======
+    """Return NodeFactory configured to create operators from specified opset version."""
+>>>>>>> a854042db00effb408f2db8ac90c7e2d16a82665
     if opset_version:
         return NodeFactory(opset_version)
     else:
@@ -1274,6 +1278,10 @@ def broadcast(data, target_shape, axes_mapping=None, broadcast_spec='NUMPY', nam
     return _get_node_factory().create('Broadcast',
                                       inputs,
                                       {'broadcast_spec': broadcast_spec.upper()})
+<<<<<<< HEAD
+=======
+
+>>>>>>> a854042db00effb408f2db8ac90c7e2d16a82665
 
 @nameable_op
 def broadcast_to(node, new_shape, axis=None, name=None):
