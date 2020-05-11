@@ -84,6 +84,7 @@ from ngraph.ops import logical_not
 from ngraph.ops import logical_or
 from ngraph.ops import logical_xor
 from ngraph.ops import lrn
+from ngraph.ops import lstm_cell
 from ngraph.ops import matmul
 from ngraph.ops import max_pool
 from ngraph.ops import maximum
