@@ -158,6 +158,11 @@ void op::v3::EmbeddingBagOffsetsSum::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
+bool op::EmbeddingBagOffsetsSum::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
 shared_ptr<Node>
     op::v3::EmbeddingBagOffsetsSum::clone_with_new_inputs(const OutputVector& new_args) const
 {
