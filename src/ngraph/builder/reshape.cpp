@@ -258,6 +258,9 @@ namespace ngraph
 
 shared_ptr<Node> builder::opset1::flatten(const Output<Node>& value, int axis)
 {
+    // First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of
+    // input tensor. The last dimension is the product of the rest of input tensor dimensions:
+    // [d_{axis}, ..., d_n]
     shared_ptr<Node> output_shape;
     if (axis == 0)
     {

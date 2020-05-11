@@ -53,7 +53,7 @@ namespace ngraph
                         std::make_shared<default_opset::Gather>(
                             coerced_tensor_shape,
                             ngraph::opset1::Constant::create(element::i64, {1}, {1}),
-                            ngraph::op::Constant::create(element::i64, {}, {0}));
+                            ngraph::opset1::Constant::create(element::i64, {}, {0}));
                     row_size = ngraph::onnx_import::reshape::interpret_as_scalar(row_size);
 
                     const auto indices_axis = 1;
