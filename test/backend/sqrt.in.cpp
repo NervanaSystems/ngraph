@@ -61,3 +61,23 @@ NGRAPH_TEST(${BACKEND_NAME}, sqrt)
     handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(vector<float>{4, 2, 9, 10, 100, 0}, read_vector<float>(result)));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, sqrt_negative_inputs)
+{
+    Shape shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Sqrt>(A), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{-1, -4, -81, -100, -10000, 0});
+    auto result = backend->create_tensor (element::f32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(vector<float>{std::sqrt(-1), std::sqrt(-4), std::sqrt(-81),
+                                                std::sqrt(-10), std::sqrt(-10000), std::sqrt(0)},
+                                  read_vector<float>(result)));
+}
