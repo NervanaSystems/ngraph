@@ -369,6 +369,50 @@ def test_hard_sigmoid_operator():
     assert np.allclose(result, expected)
 
 
+def test_lstm_cell_operator():
+    batch_size = 1
+    input_size = 16
+    hidden_size = 128
+
+    X_shape = [batch_size, input_size]
+    H_t_shape = [batch_size, hidden_size]
+    C_t_shape = [batch_size, hidden_size]
+    W_shape = [4 * hidden_size, input_size]
+    R_shape = [4 * hidden_size, hidden_size]
+    B_shape = [4 * hidden_size]
+
+    parameter_X = ng.parameter(X_shape, name='X', dtype=np.float32)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=np.float32)
+    parameter_C_t = ng.parameter(C_t_shape, name='C_t', dtype=np.float32)
+    parameter_W = ng.parameter(W_shape, name='W', dtype=np.float32)
+    parameter_R = ng.parameter(R_shape, name='R', dtype=np.float32)
+    parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
+
+    activations = []
+    activation_alpha = []
+    activation_beta = []
+    clip = 0
+
+    node = ng.lstm_cell(parameter_X,
+                        parameter_H_t,
+                        parameter_C_t,
+                        parameter_W,
+                        parameter_R,
+                        parameter_B,
+                        hidden_size,
+                        activations,
+                        activation_alpha,
+                        activation_beta,
+                        clip)
+
+    expected_shape = [1, 128]
+
+    assert node.get_type_name() == 'LSTMCell'
+    assert node.get_output_size() == 2
+    assert list(node.get_output_shape(0)) == expected_shape
+    # assert list(node.get_output_shape(1)) == expected_shape
+
+
 def test_mvn_operator():
     runtime = get_runtime()
 
