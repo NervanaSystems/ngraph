@@ -55,10 +55,6 @@ public:
         {
             adapter.set(m_attributes[name.c_str()].cast<bool>());
         }
-        else
-        {
-            NGRAPH_CHECK(false, "Missing bool ", name);
-        }
     }
     virtual void on_adapter(const std::string& name,
                             ngraph::ValueAccessor<std::string>& adapter) override
@@ -66,10 +62,6 @@ public:
         if (m_attributes.contains(name))
         {
             adapter.set(m_attributes[name.c_str()].cast<std::string>());
-        }
-        else
-        {
-            NGRAPH_CHECK(false, "Missing string ", name);
         }
     }
     virtual void on_adapter(const std::string& name,

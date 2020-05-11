@@ -112,12 +112,6 @@ namespace ngraph
         /// \brief Hook for adapters that need visitor access
         virtual void on_adapter(const std::string& name, VisitorAdapter& adapter);
 
-        /// Legacy method
-        virtual void on_attribute(const std::string& name, std::string& value)
-            NGRAPH_DEPRECATED("Override on_adapter instead");
-        /// Legacy method
-        virtual void on_attribute(const std::string& name, bool& value)
-            NGRAPH_DEPRECATED("Override on_adapter instead");
         virtual void on_attribute(const std::string& name, void* data, size_t size) {}
         /// The generic visitor. There must be a definition of AttributeAdapter<T> that can convert
         /// to a ValueAccessor<U> for one of the on_adpater methods.
