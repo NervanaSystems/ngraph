@@ -490,6 +490,8 @@ set (SRC
     op/util/logical_reduction.hpp
     op/util/rnn_cell_base.cpp
     op/util/rnn_cell_base.hpp
+    op/util/scatter_nd_base.cpp
+    op/util/scatter_nd_base.hpp
     op/util/scatter_base.cpp
     op/util/scatter_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
