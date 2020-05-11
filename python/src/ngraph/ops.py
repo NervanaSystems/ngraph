@@ -302,6 +302,70 @@ def group_convolution_backprop_data(data,                 # type: Node
 
 
 @nameable_op
+def gru_cell(X,                                  # type: NodeInput
+             initial_hidden_state,               # type: NodeInput
+             W,                                  # type: NodeInput
+             R,                                  # type: NodeInput
+             B,                                  # type: NodeInput
+             hidden_size,                        # type: int
+             activations=None,                   # type: List[str]
+             activations_alpha=None,             # type: List[float]
+             activations_beta=None,              # type: List[float]
+             clip=0.,                            # type: float
+             linear_before_reset=False,          # type: bool
+             name=None,                          # type: str
+             ):
+    # type: (...) -> Node
+    """Perform GRUCell operation on tensor from input node.
+
+    GRUCell represents a single GRU Cell that computes the output 
+    using the formula described in the paper: https://arxiv.org/abs/1406.1078
+
+    Note this class represents only single *cell* and not whole *layer*.
+
+    :param X:                       The input tensor with shape: [batch_size, input_size].
+    :param initial_hidden_state:    The hidden state tensor at current time step with shape:
+                                    [batch_size, hidden_size].
+    :param W:                       The weights for matrix multiplication, gate order: zrh.
+                                    Shape: [3*hidden_size, input_size].
+    :param R:                       The recurrence weights for matrix multiplication, gate order: zrh.
+                                    Shape: [3*hidden_size, hidden_size].
+    :param B:                       The sum of biases (weight and recurrence). If *linear_before_reset*
+                                    is set True, then the shape is [4 * hidden_size].
+                                    Otherwise the shape is [3 * hidden_size].
+    :param hidden_size:             The number of hidden units for recurrent cell.
+                                    Specifies hidden state size.
+    :param activations:             The vector of activation functions used inside recurrent cell.
+    :param activation_alpha:        The vector of alpha parameters for activation functions in
+                                    order respective to activation list.
+    :param activation_beta:         The vector of beta parameters for activation functions in order
+                                    respective to activation list.
+    :param clip:                    The value defining clipping range [-clip, clip] on input of
+                                    activation functions.
+    :param linear_before_reset:     flag denotes if the layer behaves according to the modification
+                                    of GRUCell described in the formula in the ONNX documentation.
+    :param name:                    Optional output node name.
+    :returns:   The new node performing a RNNCell operation on tensor from input node.
+    """
+    if activations is None:
+        activations = ['relu', 'sigmoid', 'tanh']
+    if activations_alpha is None:
+        activations_alpha = []
+    if activations_beta is None:
+        activations_beta = []
+
+    input_nodes = as_nodes(X, initial_hidden_state, W, R, B)
+    attributes = {'hidden_size': hidden_size,
+                  'activations': activations,
+                  'activations_alpha': activations_alpha,
+                  'activations_beta': activations_beta,
+                  'linear_before_reset': linear_before_reset,
+                  'clip': clip,
+                  }
+    return _get_node_factory().create('GRUCell', input_nodes, attributes)
+
+
+@nameable_op
 def lstm_cell(X,                       # type: NodeInput
               initial_hidden_state,    # type: NodeInput
               initial_cell_state,      # type: NodeInput
@@ -356,16 +420,16 @@ def lstm_cell(X,                       # type: NodeInput
 
 
 @nameable_op
-def rnn_cell(X,                      # type: Node
-             initial_hidden_state,   # type: Node
-             W,                      # type: Node
-             R,                      # type: Node
-             B,                      # type: Node
+def rnn_cell(X,                      # type: NodeInput
+             initial_hidden_state,   # type: NodeInput
+             W,                      # type: NodeInput
+             R,                      # type: NodeInput
+             B,                      # type: NodeInput
              hidden_size,            # type: int
              activations,            # type: List[str]
              activations_alpha,      # type: List[float]
              activations_beta,       # type: List[float]
-             clip,                   # type: float
+             clip=0.,                # type: float
              name=None,              # type: str
              ):
     # type: (...) -> Node
