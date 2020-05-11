@@ -22,7 +22,7 @@
 #include "ngraph/except.hpp"
 #include "ngraph/node.hpp"
 
-namespace onnx
+namespace ONNX_NAMESPACE
 {
     // forward declaration
     class NodeProto;
@@ -55,7 +55,7 @@ namespace ngraph
         {
         public:
             Node() = delete;
-            Node(const onnx::NodeProto& node_proto, const Graph& graph);
+            Node(const ONNX_NAMESPACE::NodeProto& node_proto, const Graph& graph);
 
             Node(Node&&) noexcept;
             Node(const Node&);
