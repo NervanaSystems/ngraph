@@ -15,32 +15,28 @@
 # ******************************************************************************
 
 """Factory functions for all ngraph ops."""
+from typing import Callable, Iterable, List, Optional, Set, Union
+
 import numpy as np
 
-from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
-    Shape, Strides
-
-from ngraph.impl.op import Abs, Acos, Asin, ArgMax, ArgMin, Atan, \
-    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Constant, Convert, \
-    Cos, Cosh, DepthToSpace, Dequantize, Dot, \
-    Floor, Gelu, Gemm, GetOutputElement, GRN, \
-    HardSigmoid, Log, \
-    MVN, Negative, Parameter, \
-    Quantize, QuantizedConvolution, QuantizedDot, RNNCell, ReplaceSlice, \
-    ScaleShift, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
-    Sqrt, Tan
-
-from typing import Callable, Iterable, List, Set, Union, Optional
-
+from ngraph.impl import (AxisSet, Coordinate, CoordinateDiff, Node, Shape, Strides)
+from ngraph.impl.op import (GRN, MVN, Abs, Acos, ArgMax, ArgMin, Asin, Atan,
+                            BatchNormInference, BatchNormTraining, Broadcast,
+                            Ceiling, Constant, Cos, Cosh, DepthToSpace,
+                            Dequantize, Dot, Floor, Gelu, Gemm,
+                            GetOutputElement, HardSigmoid, Log, Negative,
+                            Parameter, Quantize, QuantizedConvolution,
+                            QuantizedDot, ReplaceSlice, RNNCell, ScaleShift,
+                            ShuffleChannels, Sign, Sin, Sinh, Slice,
+                            SpaceToDepth, Sqrt, Tan)
 from ngraph.utils.broadcasting import get_broadcast_axes
-from ngraph.utils.decorators import nameable_op, binary_op, unary_op
+from ngraph.utils.decorators import binary_op, nameable_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
-from ngraph.utils.reduction import get_reduction_axes
-from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    NodeInput, ScalarData, as_node, as_nodes
-from ngraph.utils.types import get_element_type, get_element_type_str
-
 from ngraph.utils.node_factory import NodeFactory
+from ngraph.utils.types import (NodeInput, NumericData, NumericType,
+                                ScalarData, TensorShape, as_node, as_nodes,
+                                get_element_type, get_element_type_str,
+                                make_constant_node)
 
 
 def _get_node_factory(opset_version=None):  # type: (Optional[str]) -> NodeFactory
