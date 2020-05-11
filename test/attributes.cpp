@@ -1418,7 +1418,7 @@ TEST(attributes, extractimagepatches_op)
     EXPECT_EQ(g_extractimagepatches->get_padding(), padtype_padding);
 }
 
- TEST(attributes, constant_op)
+TEST(attributes, constant_op)
 {
     vector<float> data{5.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.0f};
     auto k = make_shared<op::v0::Constant>(element::f32, Shape{2, 3}, data);
