@@ -46,6 +46,8 @@ def test_dimension():
 def test_dimension_comparisons():
     d1 = Dimension.dynamic()
     d2 = Dimension.dynamic()
+    assert d1 == d2
+    assert d1 == -1
     assert d1.refines(d2)
     assert d1.relaxes(d2)
     assert d2.refines(d1)
@@ -55,6 +57,8 @@ def test_dimension_comparisons():
 
     d1 = Dimension.dynamic()
     d2 = Dimension(3)
+    assert d1 != d2
+    assert d2 == 3
     assert not d1.refines(d2)
     assert d1.relaxes(d2)
     assert d2.refines(d1)
@@ -64,6 +68,7 @@ def test_dimension_comparisons():
 
     d1 = Dimension(3)
     d2 = Dimension(3)
+    assert d1 == d2
     assert d1.refines(d2)
     assert d1.relaxes(d2)
     assert d2.refines(d1)
@@ -73,6 +78,7 @@ def test_dimension_comparisons():
 
     d1 = Dimension(4)
     d2 = Dimension(3)
+    assert d1 != d2
     assert not d1.refines(d2)
     assert not d1.relaxes(d2)
     assert not d2.refines(d1)
@@ -92,8 +98,11 @@ def test_partial_shape():
     ps = PartialShape(shape)
     assert ps.is_static
     assert not ps.is_dynamic
+    assert ps.all_non_negative
     assert ps.rank == 3
     assert list(ps.get_shape()) == [1, 2, 3]
+    assert list(ps.get_max_shape()) == [1, 2, 3]
+    assert list(ps.get_min_shape()) == [1, 2, 3]
     assert list(ps.to_shape()) == [1, 2, 3]
     assert repr(shape) == '<Shape{1, 2, 3}>'
     assert repr(ps) == '<PartialShape: {1,2,3}>'
@@ -101,19 +110,27 @@ def test_partial_shape():
     ps = PartialShape([Dimension(1), Dimension(2), Dimension(3), Dimension.dynamic()])
     assert not ps.is_static
     assert ps.is_dynamic
+    assert ps.all_non_negative
     assert ps.rank == 4
+    assert list(ps.get_min_shape()) == [1, 2, 3, 0]
+    assert list(ps.get_max_shape())[3] > 1000000000
     assert repr(ps) == '<PartialShape: {1,2,3,?}>'
 
     ps = PartialShape([1, 2, 3, -1])
     assert not ps.is_static
     assert ps.is_dynamic
+    assert ps.all_non_negative
     assert ps.rank == 4
+    assert list(ps.get_min_shape()) == [1, 2, 3, 0]
+    assert list(ps.get_max_shape())[3] > 1000000000
     assert repr(ps) == '<PartialShape: {1,2,3,?}>'
 
     ps = PartialShape.dynamic()
     assert not ps.is_static
     assert ps.is_dynamic
     assert ps.rank == Dimension.dynamic()
+    assert list(ps.get_min_shape()) == []
+    assert list(ps.get_max_shape()) == []
     assert repr(ps) == '<PartialShape: ?>'
 
     ps = PartialShape.dynamic(r=Dimension(2))
@@ -121,6 +138,8 @@ def test_partial_shape():
     assert ps.is_dynamic
     assert ps.rank == 2
     assert 2 == ps.rank
+    assert list(ps.get_min_shape()) == [0, 0]
+    assert list(ps.get_max_shape())[0] > 1000000000
     assert repr(ps) == '<PartialShape: {?,?}>'
 
 
@@ -159,8 +178,8 @@ def test_partial_shape_same_scheme():
     ps2 = PartialShape([1, 2, 3])
     assert ps1.same_scheme(ps2)
 
-    ps1 = PartialShape([1, 2, -1])
-    ps2 = PartialShape([1, 3, -1])
+    ps1 = PartialShape([-1, 2, 3])
+    ps2 = PartialShape([1, -1, 3])
     assert not ps1.same_scheme(ps2)
 
     ps1 = PartialShape.dynamic()
@@ -189,3 +208,17 @@ def test_partial_shape_refinement():
     assert ps1.relaxes(ps2)
     assert ps2.refines(ps1)
     assert not ps2.relaxes(ps1)
+
+
+def test_partial_shape_equals():
+    ps1 = PartialShape.dynamic()
+    ps2 = PartialShape.dynamic()
+    assert ps1 == ps2
+
+    ps1 = PartialShape([1, 2, 3])
+    ps2 = PartialShape([1, 2, 3])
+    assert ps1 == ps2
+
+    shape = Shape([1, 2, 3])
+    ps = PartialShape([1, 2, 3])
+    assert shape == ps

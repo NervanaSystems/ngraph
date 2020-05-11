@@ -50,7 +50,6 @@ void regclass_pyngraph_PartialShape(py::module m)
     shape.def_property_readonly("is_static", &ngraph::PartialShape::is_static);
     shape.def_property_readonly("rank", &ngraph::PartialShape::rank);
     shape.def_property_readonly("all_non_negative", &ngraph::PartialShape::all_non_negative);
-    shape.def_property_readonly("rank", &ngraph::PartialShape::rank);
 
     shape.def("compatible", &ngraph::PartialShape::compatible);
     shape.def("refines", &ngraph::PartialShape::refines);
