@@ -165,72 +165,9 @@ bool op::v3::Broadcast::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-namespace
-{
-    template <element::Type_t ET>
-    inline bool
-        evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out, const AxisSet& broadcast_axes)
-    {
-        using T = typename element_type_traits<ET>::value_type;
-        runtime::reference::broadcast<T>((arg0->get_data_ptr<ET>()),
-                                         (out->get_data_ptr<ET>()),
-                                         arg0->get_shape(),
-                                         out->get_shape(),
-                                         broadcast_axes);
-        return true;
-    }
-
-    bool evaluate_broadcast(const HostTensorPtr& arg0,
-                            const HostTensorPtr& arg1,
-                            const HostTensorPtr& out,
-                            const std::pair<bool, AxisSet> pair_broadcast_axes /*,
-                            const op::BroadcastModeSpec& broadcast_spec*/)
-    {
-        if (arg0->get_element_type() != out->get_element_type())
-        {
-            return false;
-        }
-        if (!pair_broadcast_axes.first)
-        {
-            // error / debug message: broadcast_axes not known deterministically
-            std::cout << " Broadcast axes not known deterministically\n";
-            return false;
-        }
-        bool rc = true;
-        Shape in_shape = arg0->get_shape();
-        Shape out_shape = out->get_shape();
-        // output_value->set_shape(Shape{shape.size()});
-        switch (arg0->get_element_type())
-        {
-            TYPE_CASE(i8)(arg0, out, pair_broadcast_axes.second);
-            break;
-            TYPE_CASE(i16)(arg0, out, pair_broadcast_axes.second);
-            break;
-            TYPE_CASE(i32)(arg0, out, pair_broadcast_axes.second);
-            break;
-            TYPE_CASE(i64)(arg0, out, pair_broadcast_axes.second);
-            break;
-            TYPE_CASE(u8)(arg0, out, pair_broadcast_axes.second);
-            break;
-            TYPE_CASE(u16)(arg0, out, pair_broadcast_axes.second);
-            break;
-            TYPE_CASE(u32)(arg0, out, pair_broadcast_axes.second);
-            break;
-            TYPE_CASE(u64)(arg0, out, pair_broadcast_axes.second);
-            break;
-            TYPE_CASE(f32)(arg0, out, pair_broadcast_axes.second);
-            break;
-            TYPE_CASE(f64)(arg0, out, pair_broadcast_axes.second);
-            break;
-        default: rc = false; break;
-        }
-        return rc;
-    }
-}
-
 bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    return evaluate_broadcast(inputs[0], inputs[1], outputs[0], get_broadcast_axes());
+    return util::BroadcastBase::evaluate(outputs, inputs);
 }
 
 namespace
@@ -298,7 +235,7 @@ bool op::v1::Broadcast::visit_attributes(AttributeVisitor& visitor)
 
 bool op::v1::Broadcast::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    return evaluate_broadcast(inputs[0], inputs[1], outputs[0], get_broadcast_axes());
+    return util::BroadcastBase::evaluate(outputs, inputs);
 }
 
 constexpr NodeTypeInfo op::v0::Broadcast::type_info;
