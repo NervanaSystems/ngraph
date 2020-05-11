@@ -68,6 +68,11 @@ void AttributeVisitor::on_adapter(const std::string& name, VisitorAdapter& adapt
     adapter.visit_attributes(*this, name);
 }
 
+void AttributeVisitor::on_adapter(const std::string& name, ValueAccessor<void*>& adapter)
+{
+    on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));
+}
+
 void AttributeVisitor::on_adapter(const string& name, ValueAccessor<string>& adapter)
 {
     on_adapter(name, static_cast<ValueAccessor<void>&>(adapter));

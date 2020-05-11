@@ -476,116 +476,80 @@ public:
         node->visit_attributes(*this);
     }
     const NodeTypeInfo& get_node_type_info() { return m_node_type_info; }
-    string& get_string(const string& name) { return m_strings.at(get_name_with_context(name)); }
-    bool get_bool(const string& name) { return m_bools.at(get_name_with_context(name)); }
-    float get_float(const string& name) { return m_doubles.at(get_name_with_context(name)); }
-    double get_double(const string& name) { return m_doubles.at(get_name_with_context(name)); }
-    int64_t get_signed(const string& name) { return m_signeds.at(get_name_with_context(name)); }
-    uint64_t get_unsigned(const string& name)
-    {
-        return m_unsigneds.at(get_name_with_context(name));
-    }
-    vector<float>& get_float_vector(const string& name)
-    {
-        return m_float_vectors.at(get_name_with_context(name));
-    }
-    vector<double>& get_double_vector(const string& name)
-    {
-        return m_double_vectors.at(get_name_with_context(name));
-    }
-    vector<int8_t>& get_int8_t_vector(const string& name)
-    {
-        return m_int8_t_vectors.at(get_name_with_context(name));
-    }
-    vector<int16_t>& get_int16_t_vector(const string& name)
-    {
-        return m_int16_t_vectors.at(get_name_with_context(name));
-    }
-    vector<int32_t>& get_int32_t_vector(const string& name)
-    {
-        return m_int32_t_vectors.at(get_name_with_context(name));
-    }
-    vector<int64_t>& get_int64_t_vector(const string& name)
-    {
-        return m_int64_t_vectors.at(get_name_with_context(name));
-    }
-    vector<uint8_t>& get_uint8_t_vector(const string& name)
-    {
-        return m_uint8_t_vectors.at(get_name_with_context(name));
-    }
+    string& get_string(const string& name) { return m_strings.at(name); }
+    bool get_bool(const string& name) { return m_bools.at(name); }
+    float get_float(const string& name) { return m_doubles.at(name); }
+    double get_double(const string& name) { return m_doubles.at(name); }
+    int64_t get_signed(const string& name) { return m_signeds.at(name); }
+    uint64_t get_unsigned(const string& name) { return m_unsigneds.at(name); }
+    vector<float>& get_float_vector(const string& name) { return m_float_vectors.at(name); }
+    vector<double>& get_double_vector(const string& name) { return m_double_vectors.at(name); }
+    vector<int8_t>& get_int8_t_vector(const string& name) { return m_int8_t_vectors.at(name); }
+    vector<int16_t>& get_int16_t_vector(const string& name) { return m_int16_t_vectors.at(name); }
+    vector<int32_t>& get_int32_t_vector(const string& name) { return m_int32_t_vectors.at(name); }
+    vector<int64_t>& get_int64_t_vector(const string& name) { return m_int64_t_vectors.at(name); }
+    vector<uint8_t>& get_uint8_t_vector(const string& name) { return m_uint8_t_vectors.at(name); }
     vector<uint16_t>& get_uint16_t_vector(const string& name)
     {
-        return m_uint16_t_vectors.at(get_name_with_context(name));
+        return m_uint16_t_vectors.at(name);
     }
     vector<uint32_t>& get_uint32_t_vector(const string& name)
     {
-        return m_uint32_t_vectors.at(get_name_with_context(name));
+        return m_uint32_t_vectors.at(name);
     }
     vector<uint64_t>& get_uint64_t_vector(const string& name)
     {
-        return m_uint64_t_vectors.at(get_name_with_context(name));
+        return m_uint64_t_vectors.at(name);
     }
     HostTensorPtr get_host_tensor(const string& name) { return m_host_tensors.at(name); }
-    vector<string>& get_string_vector(const string& name)
-    {
-        return m_string_vectors.at(get_name_with_context(name));
-    }
-    void set_string(const string& name, const string& value)
-    {
-        m_strings[get_name_with_context(name)] = value;
-    }
-    void set_bool(const string& name, bool value) { m_bools[get_name_with_context(name)] = value; }
-    void set_double(const string& name, double value)
-    {
-        m_doubles[get_name_with_context(name)] = value;
-    }
-    void set_signed(const string& name, int64_t value)
-    {
-        m_signeds[get_name_with_context(name)] = value;
-    }
+    vector<string>& get_string_vector(const string& name) { return m_string_vectors.at(name); }
+    void set_string(const string& name, const string& value) { m_strings[name] = value; }
+    void set_bool(const string& name, bool value) { m_bools[name] = value; }
+    void set_double(const string& name, double value) { m_doubles[name] = value; }
+    void set_signed(const string& name, int64_t value) { m_signeds[name] = value; }
     void set_float_vector(const string& name, const vector<float>& value)
     {
-        m_float_vectors[get_name_with_context(name)] = value;
+        m_float_vectors[name] = value;
     }
     void set_double_vector(const string& name, const vector<double>& value)
     {
-        m_double_vectors[get_name_with_context(name)] = value;
+        m_double_vectors[name] = value;
     }
     void set_int8_t_vector(const string& name, const vector<int8_t>& value)
     {
-        m_int8_t_vectors[get_name_with_context(name)] = value;
+        m_int8_t_vectors[name] = value;
     }
     void set_int16_t_vector(const string& name, const vector<int16_t>& value)
     {
-        m_int16_t_vectors[get_name_with_context(name)] = value;
+        m_int16_t_vectors[name] = value;
     }
     void set_int32_t_vector(const string& name, const vector<int32_t>& value)
     {
-        m_int32_t_vectors[get_name_with_context(name)] = value;
+        m_int32_t_vectors[name] = value;
     }
     void set_int64_t_vector(const string& name, const vector<int64_t>& value)
     {
-        m_int64_t_vectors[get_name_with_context(name)] = value;
+        m_int64_t_vectors[name] = value;
     }
     void set_uint8_t_vector(const string& name, const vector<uint8_t>& value)
     {
-        m_uint8_t_vectors[get_name_with_context(name)] = value;
+        m_uint8_t_vectors[name] = value;
     }
     void set_uint16_t_vector(const string& name, const vector<uint16_t>& value)
     {
-        m_uint16_t_vectors[get_name_with_context(name)] = value;
+        m_uint16_t_vectors[name] = value;
     }
     void set_uint32_t_vector(const string& name, const vector<uint32_t>& value)
     {
-        m_uint32_t_vectors[get_name_with_context(name)] = value;
+        m_uint32_t_vectors[name] = value;
     }
     void set_uint64_t_vector(const string& name, const vector<uint64_t>& value)
     {
-        m_uint64_t_vectors[get_name_with_context(name)] = value;
+        m_uint64_t_vectors[name] = value;
     }
     void set_string_vector(const string& name, const vector<string>& value)
     {
-        m_string_vectors[get_name_with_context(name)] = value;
+        m_string_vectors[name] = value;
     }
     void set_host_tensor(const string& name, const HostTensorPtr& value)
     {
@@ -659,10 +623,10 @@ public:
     {
         set_uint64_t_vector(name, adapter.get());
     }
-    void on_attribute(const std::string& name, void* constant_data, size_t size) override
+    void on_adapter(const std::string& name, ValueAccessor<void*>& adapter) override
     {
-        HostTensorPtr data = make_shared<HostTensor>(element::u8, Shape{size});
-        data->write(constant_data, size);
+        HostTensorPtr data = make_shared<HostTensor>(element::u8, Shape{adapter.size()});
+        data->write(adapter.get_ptr(), adapter.size());
         set_host_tensor(name, data);
     }
 
@@ -708,69 +672,69 @@ public:
     // The remaining adapter methods fall back on the void adapter if not implemented
     void on_adapter(const string& name, ValueAccessor<string>& adapter) override
     {
-        adapter.set(m_values.get_string(get_name_with_context(name)));
+        adapter.set(m_values.get_string(name));
     };
     void on_adapter(const string& name, ValueAccessor<bool>& adapter) override
     {
-        adapter.set(m_values.get_bool(get_name_with_context(name)));
+        adapter.set(m_values.get_bool(name));
     };
     void on_adapter(const string& name, ValueAccessor<int64_t>& adapter) override
     {
-        adapter.set(m_values.get_signed(get_name_with_context(name)));
+        adapter.set(m_values.get_signed(name));
     }
     void on_adapter(const string& name, ValueAccessor<double>& adapter) override
     {
-        adapter.set(m_values.get_double(get_name_with_context(name)));
+        adapter.set(m_values.get_double(name));
     }
 
     void on_adapter(const string& name, ValueAccessor<vector<int8_t>>& adapter) override
     {
-        adapter.set(m_values.get_int8_t_vector(get_name_with_context(name)));
+        adapter.set(m_values.get_int8_t_vector(name));
     }
     void on_adapter(const string& name, ValueAccessor<vector<int16_t>>& adapter) override
     {
-        adapter.set(m_values.get_int16_t_vector(get_name_with_context(name)));
+        adapter.set(m_values.get_int16_t_vector(name));
     }
     void on_adapter(const string& name, ValueAccessor<vector<int32_t>>& adapter) override
     {
-        adapter.set(m_values.get_int32_t_vector(get_name_with_context(name)));
+        adapter.set(m_values.get_int32_t_vector(name));
     }
     void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
     {
-        adapter.set(m_values.get_int64_t_vector(get_name_with_context(name)));
+        adapter.set(m_values.get_int64_t_vector(name));
     }
     void on_adapter(const string& name, ValueAccessor<vector<uint8_t>>& adapter) override
     {
-        adapter.set(m_values.get_uint8_t_vector(get_name_with_context(name)));
+        adapter.set(m_values.get_uint8_t_vector(name));
     }
     void on_adapter(const string& name, ValueAccessor<vector<uint16_t>>& adapter) override
     {
-        adapter.set(m_values.get_uint16_t_vector(get_name_with_context(name)));
+        adapter.set(m_values.get_uint16_t_vector(name));
     }
     void on_adapter(const string& name, ValueAccessor<vector<uint32_t>>& adapter) override
     {
-        adapter.set(m_values.get_uint32_t_vector(get_name_with_context(name)));
+        adapter.set(m_values.get_uint32_t_vector(name));
     }
     void on_adapter(const string& name, ValueAccessor<vector<uint64_t>>& adapter) override
     {
-        adapter.set(m_values.get_uint64_t_vector(get_name_with_context(name)));
+        adapter.set(m_values.get_uint64_t_vector(name));
     }
     void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
     {
-        adapter.set(m_values.get_string_vector(get_name_with_context(name)));
+        adapter.set(m_values.get_string_vector(name));
     }
     void on_adapter(const string& name, ValueAccessor<vector<float>>& adapter) override
     {
-        adapter.set(m_values.get_float_vector(get_name_with_context(name)));
+        adapter.set(m_values.get_float_vector(name));
     }
     void on_adapter(const string& name, ValueAccessor<vector<double>>& adapter) override
     {
-        adapter.set(m_values.get_double_vector(get_name_with_context(name)));
+        adapter.set(m_values.get_double_vector(name));
     }
-    void on_attribute(const std::string& name, void* constant_data, size_t size) override
+    void on_adapter(const std::string& name, ValueAccessor<void*>& adapter) override
     {
         HostTensorPtr data = m_values.get_host_tensor(name);
-        data->read(constant_data, size);
+        data->read(adapter.get_ptr(), adapter.size());
     }
 
 protected:

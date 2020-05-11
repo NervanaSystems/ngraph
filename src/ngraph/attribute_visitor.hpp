@@ -90,6 +90,7 @@ namespace ngraph
         /// or via is_type and as_type on any platform
         virtual void on_adapter(const std::string& name, ValueAccessor<void>& adapter) = 0;
         // The remaining adapter methods fall back on the void adapter if not implemented
+        virtual void on_adapter(const std::string& name, ValueAccessor<void*>& adapter);
         virtual void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter);
         virtual void on_adapter(const std::string& name, ValueAccessor<bool>& adapter);
         virtual void on_adapter(const std::string& name, ValueAccessor<int8_t>& adapter);
@@ -127,14 +128,13 @@ namespace ngraph
         /// \brief Hook for adapters that need visitor access
         virtual void on_adapter(const std::string& name, VisitorAdapter& adapter);
 
-        virtual void on_attribute(const std::string& name, void* data, size_t size) {}
         /// The generic visitor. There must be a definition of AttributeAdapter<T> that can convert
         /// to a ValueAccessor<U> for one of the on_adpater methods.
         template <typename AT>
         void on_attribute(const std::string& name, AT& value)
         {
             AttributeAdapter<AT> adapter(value);
-            on_adapter(name, adapter);
+            on_adapter(get_name_with_context(name), adapter);
         }
         /// \returns The nested context of visits
         const std::vector<Context>& get_context() const { return m_context; }

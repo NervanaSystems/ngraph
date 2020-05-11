@@ -66,6 +66,14 @@ namespace ngraph
         virtual void set(const VAT& value) = 0;
     };
 
+    template <>
+    class ValueAccessor<void*> : public ValueAccessor<void>
+    {
+    public:
+        virtual void* get_ptr() = 0;
+        virtual size_t size() = 0;
+    };
+
     template <typename AT>
     class DirectValueAccessor : public ValueAccessor<AT>
     {
