@@ -23,6 +23,7 @@
 #include "ngraph/node_output.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/range.hpp"
@@ -154,4 +155,21 @@ TEST(eval, interpret_dynamic_range_sum)
     auto result_val = read_vector<float>(result);
     vector<float> seq{8.0f, 11.0f, 14.0f};
     ASSERT_EQ(result_val, seq);
+}
+
+TEST(eval, evaluate_dynamic_gather)
+{
+    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto gather = make_shared<op::v0::Gather>(arg1, arg2);
+    auto fun = make_shared<Function>(OutputVector{gather}, ParameterVector{arg1, arg2});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate({result_tensor},
+                              {make_host_tensor<element::Type_t::f32>({3}, {1.0f, 2.0f, 3.0f}),
+                               make_host_tensor<element::Type_t::i32>({2}, {1, 0})}));
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{2}));
+    auto cval = read_vector<float>(result_tensor);
+    vector<float> out{2.0f, 1.0f};
+    ASSERT_EQ(cval, out);
 }
