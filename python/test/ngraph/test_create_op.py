@@ -161,6 +161,63 @@ def test_gather_tree(dtype):
     assert list(node.get_output_shape(0)) == expected_shape
 
 
+def test_gru_cell_operator():
+    batch_size = 1
+    input_size = 16
+    hidden_size = 128
+
+    X_shape = [batch_size, input_size]
+    H_t_shape = [batch_size, hidden_size]
+    W_shape = [3 * hidden_size, input_size]
+    R_shape = [3 * hidden_size, hidden_size]
+    B_shape = [3 * hidden_size]
+
+    parameter_X = ng.parameter(X_shape, name='X', dtype=np.float32)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=np.float32)
+    parameter_W = ng.parameter(W_shape, name='W', dtype=np.float32)
+    parameter_R = ng.parameter(R_shape, name='R', dtype=np.float32)
+    parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
+
+    expected_shape = [1, 128]
+
+    node_default = ng.gru_cell(parameter_X,
+                        parameter_H_t,
+                        parameter_W,
+                        parameter_R,
+                        parameter_B,
+                        hidden_size)
+
+    assert node_default.get_type_name() == 'GRUCell'
+    assert node_default.get_output_size() == 1
+    assert list(node_default.get_output_shape(0)) == expected_shape
+
+    activations = ['tanh', 'relu']
+    activations_alpha = [1.0, 2.0]
+    activations_beta = [1.0, 2.0]
+    clip = 0.5
+    linear_before_reset=True
+
+    # If *linear_before_reset* is set True, then B tensor shape must be [4 * hidden_size]
+    B_shape = [4 * hidden_size]
+    parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
+
+    node_param = ng.gru_cell(parameter_X,
+                        parameter_H_t,
+                        parameter_W,
+                        parameter_R,
+                        parameter_B,
+                        hidden_size,
+                        activations,
+                        activations_alpha,
+                        activations_beta,
+                        clip,
+                        linear_before_reset)
+
+    assert node_param.get_type_name() == 'GRUCell'
+    assert node_param.get_output_size() == 1
+    assert list(node_param.get_output_shape(0)) == expected_shape
+
+
 def test_roi_pooling():
     inputs = ng.parameter([2, 3, 4, 5], dtype=np.float32)
     coords = ng.parameter([150, 5], dtype=np.float32)
