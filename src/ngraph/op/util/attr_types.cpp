@@ -174,8 +174,11 @@ namespace ngraph
                                                                    const std::string& name)
     {
         visitor.start_structure(name);
-        visitor.on_attribute("type", m_ref.m_type);
-        visitor.on_attribute("axis", m_ref.m_axis);
+        visitor.on_attribute("auto_broadcast", m_ref.m_type);
+        if (m_ref.m_type == op::AutoBroadcastType::PDPD)
+        {
+            visitor.on_attribute("auto_broadcast_axis", m_ref.m_axis);
+        }
         visitor.finish_structure();
         return true;
     }
