@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/cum_sum.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -33,6 +34,21 @@ op::v0::CumSum::CumSum(const Output<Node>& arg,
     , m_reverse(reverse)
 {
     constructor_validate_and_infer_types();
+}
+
+op::v0::CumSum::CumSum(const Output<Node>& arg, const bool exclusive, const bool reverse)
+    : Op({arg, op::Constant::create(element::i32, Shape{}, {0})})
+    , m_exclusive(exclusive)
+    , m_reverse(reverse)
+{
+    constructor_validate_and_infer_types();
+}
+
+bool op::v0::CumSum::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("exclusive", m_exclusive);
+    visitor.on_attribute("reverse", m_reverse);
+    return true;
 }
 
 void op::v0::CumSum::validate_and_infer_types()

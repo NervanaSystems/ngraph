@@ -52,8 +52,8 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> row_size =
                         std::make_shared<default_opset::Gather>(
                             coerced_tensor_shape,
-                            ngraph::opset1::Constant::create(element::i64, {1}, {1}),
-                            ngraph::opset1::Constant::create(element::i64, {}, {0}));
+                            default_opset::Constant::create(element::i64, {1}, {1}),
+                            default_opset::Constant::create(element::i64, {}, {0}));
                     row_size = ngraph::onnx_import::reshape::interpret_as_scalar(row_size);
 
                     const auto indices_axis = 1;
