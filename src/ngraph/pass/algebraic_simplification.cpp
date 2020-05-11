@@ -685,7 +685,7 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> n)
 {
     auto transpose = as_type_ptr<opset3::Transpose>(n);
 
-    auto data = n->input_value(0).get_node_shared_ptr();
+    auto data = n->input_value(0);
     PartialShape shape = n->input_value(0).get_partial_shape();
     if (shape.rank().is_dynamic())
     {

@@ -244,6 +244,17 @@ namespace ngraph
                     set_output_type(0, m_element_type, m_shape);
                 }
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
+
+                // Don't constant fold a constant; it would make a copy
+                bool constant_fold(OutputVector& outputs, const OutputVector& inputs) override
+                {
+                    return false;
+                }
+
                 /// \brief Returns the value of the constant node as a Shape object
                 ///        Can only be used on element::i64 nodes and interprets
                 ///        negative values as zeros.
