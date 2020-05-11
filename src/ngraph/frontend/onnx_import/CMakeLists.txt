@@ -247,7 +247,7 @@ add_library(onnx_importer SHARED
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
-target_link_libraries(onnx_importer PRIVATE ngraph onnx_proto)
+target_link_libraries(onnx_importer PRIVATE ngraph onnx onnx_proto)
 
 set_target_properties(onnx_importer PROPERTIES
                       CXX_VISIBILITY_PRESET hidden
