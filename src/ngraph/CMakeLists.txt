@@ -115,6 +115,8 @@ set (SRC
     op/abs.hpp
     op/acos.cpp
     op/acos.hpp
+    op/acosh.cpp
+    op/acosh.hpp
     op/add.cpp
     op/add.hpp
     op/all.cpp
@@ -131,8 +133,12 @@ set (SRC
     op/argmin.hpp
     op/asin.cpp
     op/asin.hpp
+    op/asinh.cpp
+    op/asinh.hpp
     op/atan.cpp
     op/atan.hpp
+    op/atanh.cpp
+    op/atanh.hpp
     op/atan2.cpp
     op/atan2.hpp
     op/avg_pool.cpp

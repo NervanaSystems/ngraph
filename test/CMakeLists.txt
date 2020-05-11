@@ -308,6 +308,7 @@ set(MULTI_TEST_SRC
     backend/abc.in.cpp
     backend/abs.in.cpp
     backend/acos.in.cpp
+    backend/acosh.in.cpp
     backend/add.in.cpp
     backend/aliased_output.in.cpp
     backend/all.in.cpp
@@ -315,8 +316,10 @@ set(MULTI_TEST_SRC
     backend/api.in.cpp
     backend/arg_reduce.in.cpp
     backend/asin.in.cpp
-    backend/atan.in.cpp
+    backend/asin.in.cpp
     backend/atan2.in.cpp
+    backend/atanh.in.cpp
+    backend/atanh.in.cpp
     backend/auto_broadcast.in.cpp
     backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp
