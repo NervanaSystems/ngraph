@@ -706,6 +706,17 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_matmul)
     test_case.run();
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, onnx_model_softmax_0D)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/softmax_0D.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({3.141592});
+    test_case.add_expected_output<float>({1.0});
+    test_case.run();
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, onnx_model_softmax_1D)
 {
     auto function = onnx_import::import_onnx_model(
@@ -714,7 +725,7 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_softmax_1D)
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input<float>({-1.0, 0.0, 1.0});
     test_case.add_expected_output<float>({0.09003058, 0.24472848, 0.66524094});
-    test_case.run(0);
+    test_case.run();
 }
 namespace
 {
@@ -803,6 +814,36 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_softmax_axis_2)
          0.11166912, 0.03615172, 0.07108136, 0.08527994, 0.44775794, 0.35972905});
 
     test_case.run(4);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, onnx_model_softmax_invalid_axis_1D)
+{
+    try
+    {
+        onnx_import::import_onnx_model(
+            file_util::path_join(SERIALIZED_ZOO, "onnx/softmax_invalid_axis_1D.prototxt"));
+        FAIL() << "Softmax model with invalid axis was successfully imported while it should have "
+                  "thrown.";
+    }
+    catch (ngraph::ngraph_error const& err)
+    {
+        SUCCEED();
+    }
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, onnx_model_softmax_invalid_axis_3D)
+{
+    try
+    {
+        onnx_import::import_onnx_model(
+            file_util::path_join(SERIALIZED_ZOO, "onnx/softmax_invalid_axis_3D.prototxt"));
+        FAIL() << "Softmax model with invalid axis was successfully imported while it should have "
+                  "thrown.";
+    }
+    catch (ngraph::ngraph_error const& err)
+    {
+        SUCCEED();
+    }
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, onnx_model_sub)

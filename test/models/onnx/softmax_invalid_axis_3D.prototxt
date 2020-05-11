@@ -7,11 +7,11 @@ graph {
     op_type: "Softmax"
     attribute {
       name: "axis"
-      i: 0
+      i: -5
       type: INT
     }
   }
-  name: "test_softmax_1D"
+  name: "test_softmax_invalid_axis"
   input {
     name: "x"
     type {
@@ -20,6 +20,12 @@ graph {
         shape {
           dim {
             dim_value: 3
+          }
+          dim {
+            dim_value: 4
+          }
+          dim {
+            dim_value: 5
           }
         }
       }
@@ -33,6 +39,12 @@ graph {
         shape {
           dim {
             dim_value: 3
+          }
+          dim {
+            dim_value: 4
+          }
+          dim {
+            dim_value: 5
           }
         }
       }
