@@ -52,7 +52,7 @@ void op::Sqrt::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVecto
     adjoints.add_delta(x, delta / (shared_from_this() + shared_from_this()));
 }
 
-/*namespace
+namespace
 {
     template <element::Type_t ET>
     inline bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
@@ -62,7 +62,9 @@ void op::Sqrt::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVecto
         arg0->read(in_vec.data(), count * sizeof(T));
         if (std::any_of(in_vec.begin(), in_vec.end(), [](T i) { return i < T(0); }))
         {
-            throw ngraph_error("Square root of negative value");
+            // std::cout << "---------------- Square root of negative value ----------------\n";
+            // throw ngraph_error("Square root of negative value");
+            return false;
         }
         runtime::reference::sqrt<T>(arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), count);
         return true;
@@ -72,7 +74,7 @@ void op::Sqrt::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVecto
     {
         bool rc = true;
         out->set_unary(arg0);
-
+        std::cout << "---------------- Sqrt element type = " << arg0->get_element_type() << "\n";
         switch (arg0->get_element_type())
         {
             TYPE_CASE(i8)(arg0, out, count);
@@ -91,6 +93,10 @@ void op::Sqrt::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVecto
             break;
             TYPE_CASE(u64)(arg0, out, count);
             break;
+            TYPE_CASE(f16)(arg0, out, count);
+            break;
+            TYPE_CASE(bf16)(arg0, out, count);
+            break;
             TYPE_CASE(f32)(arg0, out, count);
             break;
             TYPE_CASE(f64)(arg0, out, count);
@@ -105,4 +111,3 @@ bool op::Sqrt::evaluate(const HostTensorVector& outputs, const HostTensorVector&
 {
     return evaluate_sqrt(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }
-*/

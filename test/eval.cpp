@@ -482,7 +482,7 @@ TEST(eval, evaluate_sinh)
     ASSERT_FLOAT_VECTORS_EQ(input, result_val);
 }
 
-/*TEST(eval, evaluate_sqrt)
+TEST(eval, evaluate_sqrt)
 {
     auto p = make_shared<op::Parameter>(element::f32, Shape{6});
     auto sqrt = make_shared<op::Sqrt>(p);
@@ -495,7 +495,7 @@ TEST(eval, evaluate_sinh)
     auto result_val = read_vector<float>(result);
     vector<float> expec{4, 2, 9, 10, 100, 0};
     ASSERT_FLOAT_VECTORS_EQ(expec, result_val);
-}*/
+}
 
 TEST(eval, evaluate_acos)
 {
