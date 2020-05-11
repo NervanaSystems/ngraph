@@ -173,13 +173,11 @@ namespace ngraph
     bool AttributeAdapter<op::AutoBroadcastSpec>::visit_attributes(AttributeVisitor& visitor,
                                                                    const std::string& name)
     {
-        visitor.start_structure(name);
         visitor.on_attribute("auto_broadcast", m_ref.m_type);
         if (m_ref.m_type == op::AutoBroadcastType::PDPD)
         {
             visitor.on_attribute("auto_broadcast_axis", m_ref.m_axis);
         }
-        visitor.finish_structure();
         return true;
     }
 
@@ -188,10 +186,11 @@ namespace ngraph
     bool AttributeAdapter<op::BroadcastModeSpec>::visit_attributes(AttributeVisitor& visitor,
                                                                    const std::string& name)
     {
-        visitor.start_structure(name);
-        visitor.on_attribute("type", m_ref.m_type);
-        visitor.on_attribute("axis", m_ref.m_axis);
-        visitor.finish_structure();
+        visitor.on_attribute("broadcast_spec", m_ref.m_type);
+        if (m_ref.m_type == op::BroadcastType::PDPD)
+        {
+            visitor.on_attribute("broadcast_axis", m_ref.m_axis);
+        }
         return true;
     }
 
