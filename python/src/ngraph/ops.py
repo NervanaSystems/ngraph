@@ -368,16 +368,16 @@ def group_convolution_backprop_data(data,                 # type: Node
 
 
 @nameable_op
-def rnn_cell(X,                      # type: Node
-             H_t,                    # type: Node
-             W,                      # type: Node
-             R,                      # type: Node
-             B,                      # type: Node
+def rnn_cell(X,                      # type: NodeInput
+             initial_hidden_state,   # type: NodeInput
+             W,                      # type: NodeInput
+             R,                      # type: NodeInput
+             B,                      # type: NodeInput
              hidden_size,            # type: int
              activations,            # type: List[str]
-             activation_alpha,       # type: List[float]
-             activation_beta,        # type: List[float]
-             clip,                   # type: float
+             activations_alpha,      # type: List[float]
+             activations_beta,       # type: List[float]
+             clip=0.,                # type: float
              name=None,              # type: str
              ):
     # type: (...) -> Node
@@ -388,34 +388,40 @@ def rnn_cell(X,                      # type: Node
 
     Note this class represents only single *cell* and not whole RNN *layer*.
 
-    :param      X:                 The input tensor with shape: [batch_size, input_size].
-    :param      H_t:               The hidden state tensor at current time step with shape:
-                                   [batch_size, hidden_size].
-    :param      W:                 The weight tensor with shape: [hidden_size, input_size].
-    :param      R:                 The recurrence weight tensor with shape: [hidden_size,
-                                   hidden_size].
-    :param      B:                 The bias tensor for input gate with shape: [2*hidden_size].
-    :param      hidden_size:       The number of hidden units for recurrent cell.
-    :param      activations:       The vector of activation functions used inside recurrent cell.
-    :param      activation_alpha:  The vector of alpha parameters for activation functions in
-                                   order respective to activation list.
-    :param      activation_beta:   The vector of beta parameters for activation functions in order
-                                   respective to activation list.
-    :param      clip:              The value defining clipping range [-clip, clip] on input of
-                                   activation functions.
-    :param      name:              Optional output node name.
+    :param X:                       The input tensor with shape: [batch_size, input_size].
+    :param initial_hidden_state:    The hidden state tensor at current time step with shape:
+                                    [batch_size, hidden_size].
+    :param W:                       The weight tensor with shape: [hidden_size, input_size].
+    :param R:                       The recurrence weight tensor with shape: [hidden_size,
+                                    hidden_size].
+    :param B:                       The bias tensor for input gate with shape: [2*hidden_size].
+    :param hidden_size:             The number of hidden units for recurrent cell.
+                                    Specifies hidden state size.
+    :param activations:             The vector of activation functions used inside recurrent cell.
+    :param activation_alpha:        The vector of alpha parameters for activation functions in
+                                    order respective to activation list.
+    :param activation_beta:         The vector of beta parameters for activation functions in order
+                                    respective to activation list.
+    :param clip:                    The value defining clipping range [-clip, clip] on input of
+                                    activation functions.
+    :param name:                    Optional output node name.
     :returns:   The new node performing a RNNCell operation on tensor from input node.
     """
-    return RNNCell(X,
-                   H_t,
-                   W,
-                   R,
-                   B,
-                   hidden_size,
-                   activations,
-                   activation_alpha,
-                   activation_beta,
-                   clip)
+    if activations is None:
+        activations = ['sigmoid', 'tanh']
+    if activations_alpha is None:
+        activations_alpha = []
+    if activations_beta is None:
+        activations_beta = []
+
+    input_nodes = as_nodes(X, initial_hidden_state, W, R, B)
+    attributes = {'hidden_size': hidden_size,
+                  'activations': activations,
+                  'activations_alpha': activations_alpha,
+                  'activations_beta': activations_beta,
+                  'clip': clip,
+                  }
+    return _get_node_factory().create('RNNCell', input_nodes, attributes)
 
 
 @nameable_op
