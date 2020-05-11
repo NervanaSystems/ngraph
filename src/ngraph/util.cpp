@@ -775,3 +775,119 @@ vector<float> read_float_vector(shared_ptr<runtime::Tensor> tv)
 
     return float_vec;
 }
+
+vector<int64_t> read_index_vector(shared_ptr<runtime::Tensor> tv)
+{
+    vector<int64_t> index_vec;
+    element::Type element_type = tv->get_tensor_layout()->get_element_type();
+
+    if (element_type == element::boolean)
+    {
+        vector<char> vec = read_vector<char>(tv);
+        // Changed from vector ctor to explicit for loop to add static_cast
+        // This silences MSVC warnings
+        for (char value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::bf16)
+    {
+        vector<bfloat16> vec = read_vector<bfloat16>(tv);
+        vector<float> float_vec = bfloat16::to_float_vector(vec);
+        for (float value : float_vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::f16)
+    {
+        vector<float16> vec = read_vector<float16>(tv);
+        for (float16 value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(static_cast<float>(value)));
+        }
+    }
+    else if (element_type == element::f32)
+    {
+        vector<float> vec = read_vector<float>(tv);
+        for (float value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::f64)
+    {
+        vector<double> vec = read_vector<double>(tv);
+        for (double value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::i8)
+    {
+        vector<int8_t> vec = read_vector<int8_t>(tv);
+        for (int8_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::i16)
+    {
+        vector<int16_t> vec = read_vector<int16_t>(tv);
+        for (int16_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::i32)
+    {
+        vector<int32_t> vec = read_vector<int32_t>(tv);
+        for (int32_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::i64)
+    {
+        index_vec = read_vector<int64_t>(tv);
+    }
+    else if (element_type == element::u8)
+    {
+        vector<uint8_t> vec = read_vector<uint8_t>(tv);
+        for (uint8_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::u16)
+    {
+        vector<uint16_t> vec = read_vector<uint16_t>(tv);
+        for (uint16_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::u32)
+    {
+        vector<uint32_t> vec = read_vector<uint32_t>(tv);
+        for (uint32_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::u64)
+    {
+        vector<uint64_t> vec = read_vector<uint64_t>(tv);
+        for (uint64_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else
+    {
+        throw ngraph_error("Unsupported nGraph element type.");
+    }
+
+    return index_vec;
+}
