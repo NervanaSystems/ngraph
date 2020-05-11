@@ -28,7 +28,6 @@
 #include "ngraph/op/transpose.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/dyn_elimination.hpp"
-#include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/shape_relevance.hpp"
@@ -258,7 +257,6 @@ bool runtime::dynamic::DynamicExecutable::call(
         }
 
         pass::Manager passes;
-        passes.register_pass<pass::GetOutputElementElimination>(); // CF for multi-output nodes
         passes.register_pass<pass::ConstantFolding>();
         passes.register_pass<pass::DynElimination>();
         passes.register_pass<pass::Opset0Downgrade>(); // Converts dynamic v1 variants to v0 ops

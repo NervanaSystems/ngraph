@@ -35,7 +35,7 @@ class BackendMode(Enum):
     DYNAMIC = 1
 
 
-def runtime(backend_name='CPU', mode=BackendMode.DYNAMIC):  # type: (str, BackendMode) -> 'Runtime'
+def runtime(backend_name='CPU', mode=BackendMode.STATIC):  # type: (str, BackendMode) -> 'Runtime'
     """Create a Runtime object (helper factory).
 
     Use signature to parameterize runtime as needed.
@@ -46,7 +46,7 @@ def runtime(backend_name='CPU', mode=BackendMode.DYNAMIC):  # type: (str, Backen
 class Runtime:
     """Represents the ngraph++ runtime environment."""
 
-    def __init__(self, backend_name, mode=BackendMode.DYNAMIC):  # type: (str, BackendMode) -> None
+    def __init__(self, backend_name, mode=BackendMode.STATIC):  # type: (str, BackendMode) -> None
         self.backend_name = backend_name
         if mode == BackendMode.DYNAMIC:
             self.backend = Backend.create_dynamic(backend_name)
