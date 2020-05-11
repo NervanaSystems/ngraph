@@ -86,7 +86,8 @@ namespace ngraph
                     }
                     case 1:
                     {
-                        const auto normalized_axis = ngraph::normalize_axis(
+                        // checks if the axis belongs to the allowed values set (-1 and 0 for 1D)
+                        ngraph::normalize_axis(
                             node.get_description(), axis, data->get_output_partial_shape(0).rank());
                         result = std::make_shared<default_opset::Softmax>(data, 0);
                         break;
