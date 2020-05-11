@@ -302,15 +302,69 @@ def group_convolution_backprop_data(data,                 # type: Node
 
 
 @nameable_op
+def lstm_cell(X,                       # type: NodeInput
+              initial_hidden_state,    # type: NodeInput
+              initial_cell_state,      # type: NodeInput
+              W,                       # type: NodeInput
+              R,                       # type: NodeInput
+              B,                       # type: NodeInput
+              hidden_size,             # type: int
+              activations=None,        # type: List[str]
+              activations_alpha=None,  # type: List[float]
+              activations_beta=None,   # type: List[float]
+              clip=0.,                 # type: float
+              name=None,               # type: str
+              ):
+    # type: (...) -> Node
+    """Return a node which performs LSTMCell operation.
+
+    :param X: The input tensor with shape: [batch_size, input_size].
+    :param initial_hidden_state: The hidden state tensor with shape: [batch_size, hidden_size].
+    :param initial_cell_state: The cell state tensor with shape: [batch_size, hidden_size].
+    :param W: The weight tensor with shape: [4*hidden_size, input_size].
+    :param R: The recurrence weight tensor with shape: [4*hidden_size, hidden_size].
+    :param B: The bias tensor for gates with shape: [4*hidden_size].
+    :param hidden_size: Specifies hidden state size.
+    :param activations: The list of three activation functions for gates.
+    :param activations_alpha: The list of alpha parameters for activation functions.
+    :param activations_beta: The list of beta parameters for activation functions.
+    :param clip: Specifies bound values [-C, C] for tensor clipping performed before activations.
+    :param name: An optional name of the output node.
+
+    :return: The new node with two outputs which performs LSTMCell.
+    """
+    weights_format = 'ifco'  # nGraph default, not such attribute in the OV spec
+    input_forget = False  # nGraph default, not such attribute in the OV spec
+
+    if activations is None:
+        activations = ['sigmoid', 'tanh', 'tanh']
+    if activations_alpha is None:
+        activations_alpha = []
+    if activations_beta is None:
+        activations_beta = []
+
+    node_inputs = as_nodes(X, initial_hidden_state, initial_cell_state, W, R, B)
+    attributes = {'hidden_size': hidden_size,
+                  'activations': activations,
+                  'activations_alpha': activations_alpha,
+                  'activations_beta': activations_beta,
+                  'clip': clip,
+                  'weights_format': weights_format,
+                  'input_forget': input_forget,
+                  }
+    return _get_node_factory().create('LSTMCell', node_inputs, attributes)
+
+
+@nameable_op
 def rnn_cell(X,                      # type: Node
-             H_t,                    # type: Node
+             initial_hidden_state,   # type: Node
              W,                      # type: Node
              R,                      # type: Node
              B,                      # type: Node
              hidden_size,            # type: int
              activations,            # type: List[str]
-             activation_alpha,       # type: List[float]
-             activation_beta,        # type: List[float]
+             activations_alpha,      # type: List[float]
+             activations_beta,       # type: List[float]
              clip,                   # type: float
              name=None,              # type: str
              ):
@@ -322,34 +376,40 @@ def rnn_cell(X,                      # type: Node
 
     Note this class represents only single *cell* and not whole RNN *layer*.
 
-    :param      X:                 The input tensor with shape: [batch_size, input_size].
-    :param      H_t:               The hidden state tensor at current time step with shape:
-                                   [batch_size, hidden_size].
-    :param      W:                 The weight tensor with shape: [hidden_size, input_size].
-    :param      R:                 The recurrence weight tensor with shape: [hidden_size,
-                                   hidden_size].
-    :param      B:                 The bias tensor for input gate with shape: [2*hidden_size].
-    :param      hidden_size:       The number of hidden units for recurrent cell.
-    :param      activations:       The vector of activation functions used inside recurrent cell.
-    :param      activation_alpha:  The vector of alpha parameters for activation functions in
-                                   order respective to activation list.
-    :param      activation_beta:   The vector of beta parameters for activation functions in order
-                                   respective to activation list.
-    :param      clip:              The value defining clipping range [-clip, clip] on input of
-                                   activation functions.
-    :param      name:              Optional output node name.
+    :param X:                       The input tensor with shape: [batch_size, input_size].
+    :param initial_hidden_state:    The hidden state tensor at current time step with shape:
+                                    [batch_size, hidden_size].
+    :param W:                       The weight tensor with shape: [hidden_size, input_size].
+    :param R:                       The recurrence weight tensor with shape: [hidden_size,
+                                    hidden_size].
+    :param B:                       The bias tensor for input gate with shape: [2*hidden_size].
+    :param hidden_size:             The number of hidden units for recurrent cell.
+                                    Specifies hidden state size.
+    :param activations:             The vector of activation functions used inside recurrent cell.
+    :param activation_alpha:        The vector of alpha parameters for activation functions in
+                                    order respective to activation list.
+    :param activation_beta:         The vector of beta parameters for activation functions in order
+                                    respective to activation list.
+    :param clip:                    The value defining clipping range [-clip, clip] on input of
+                                    activation functions.
+    :param name:                    Optional output node name.
     :returns:   The new node performing a RNNCell operation on tensor from input node.
     """
-    return RNNCell(X,
-                   H_t,
-                   W,
-                   R,
-                   B,
-                   hidden_size,
-                   activations,
-                   activation_alpha,
-                   activation_beta,
-                   clip)
+    if activations is None:
+        activations = ['sigmoid', 'tanh']
+    if activations_alpha is None:
+        activations_alpha = []
+    if activations_beta is None:
+        activations_beta = []
+
+    input_nodes = as_nodes(X, initial_hidden_state, W, R, B)
+    attributes = {'hidden_size': hidden_size,
+                  'activations': activations,
+                  'activations_alpha': activations_alpha,
+                  'activations_beta': activations_beta,
+                  'clip': clip,
+                  }
+    return _get_node_factory().create('RNNCell', input_nodes, attributes)
 
 
 @nameable_op
@@ -1715,60 +1775,6 @@ def lrn(data,       # type: Node
     :return: The new node which performs LRN.
     """
     return LRN(data, alpha, beta, bias, size)
-
-
-@nameable_op
-def lstm_cell(X,                 # type: NodeInput
-              initial_hidden_state,    # type: NodeInput
-              initial_cell_state,      # type: NodeInput
-              W,                       # type: NodeInput
-              R,                       # type: NodeInput
-              B,                       # type: NodeInput
-              hidden_size,             # type: int
-              activations=None,        # type: List[str]
-              activations_alpha=None,  # type: List[float]
-              activations_beta=None,   # type: List[float]
-              clip=0.,                 # type: float
-              name=None,               # type: str
-              ):
-    # type: (...) -> Node
-    """Return a node which performs LSTMCell operation.
-
-    :param X: The input tensor with shape: [batch_size, input_size].
-    :param initial_hidden_state: The hidden state tensor with shape: [batch_size, hidden_size].
-    :param initial_cell_state: The cell state tensor with shape: [batch_size, hidden_size].
-    :param W: The weight tensor with shape: [4*hidden_size, input_size].
-    :param R: The recurrence weight tensor with shape: [4*hidden_size, hidden_size].
-    :param B: The bias tensor for gates with shape: [4*hidden_size].
-    :param hidden_size: Specifies hidden state size.
-    :param activations: The list of three activation functions for gates.
-    :param activations_alpha: The list of alpha parameters for activation functions.
-    :param activations_beta: The list of beta parameters for activation functions.
-    :param clip: Specifies bound values [-C, C] for tensor clipping performed before activations.
-    :param name: An optional name of the output node.
-
-    :return: The new node with two outputs which performs LSTMCell.
-    """
-    weights_format = 'ifco'  # nGraph default, not such attribute in the OV spec
-    input_forget = False  # nGraph default, not such attribute in the OV spec
-
-    if activations is None:
-        activations = ['sigmoid', 'tanh', 'tanh']
-    if activations_alpha is None:
-        activations_alpha = []
-    if activations_beta is None:
-        activations_beta = []
-
-    node_inputs = as_nodes(X, initial_hidden_state, initial_cell_state, W, R, B)
-    return _get_node_factory().create('LSTMCell', node_inputs,
-                                      {'hidden_size': hidden_size,
-                                       'weights_format': weights_format,
-                                       'activations': activations,
-                                       'activations_alpha': activations_alpha,
-                                       'activations_beta': activations_beta,
-                                       'clip': clip, 
-                                       'input_forget': input_forget,
-                                       })
 
 
 @nameable_op
