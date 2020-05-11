@@ -649,10 +649,17 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                               "Upper bounds and strides needs to have same number of values");
     }
 
+    NODE_VALIDATION_CHECK(node, ellipsis_mask.size() <= 1, "At most one ellipsis is allowed.");
+
     if (input_shape.rank().is_dynamic())
     {
         return PartialShape::dynamic();
     }
+
+    NODE_VALIDATION_CHECK(node,
+                          input_shape.rank().get_length() + new_axis_mask.size() >= begin.size(),
+                          "Input rank plus number of new axis has to be at least the size of Lower "
+                          "and Upper bounds vector.");
 
     std::vector<Dimension> dim;
 
@@ -995,22 +1002,21 @@ pair<bool, int64_t> ngraph::maximum_value(const Output<Node>& value)
     return pair<bool, int64_t>(false, 0);
 }
 
-void ngraph::evaluate_nodes(std::map<RawNodeOutput, EvaluatorTensorPtr>& value_map,
-                            std::map<RawNodeOutput, EvaluatorTensorPtr>& output_tensor_map,
+void ngraph::evaluate_nodes(std::map<RawNodeOutput, HostTensorPtr>& value_map,
+                            std::map<RawNodeOutput, HostTensorPtr>& output_tensor_map,
                             const OutputVector& outputs)
 {
-    Evaluator<EvaluatorTensorPtr> evaluator({}, value_map);
+    Evaluator<HostTensorPtr> evaluator({}, value_map);
     evaluator.set_univeral_handler(
         [&output_tensor_map](Node* node,
-                             const EvaluatorTensorVector& input_tensors) -> EvaluatorTensorVector {
-            EvaluatorTensorVector output_tensors;
+                             const HostTensorVector& input_tensors) -> HostTensorVector {
+            HostTensorVector output_tensors;
             for (auto v : node->outputs())
             {
                 auto it = output_tensor_map.find(v);
                 if (it == output_tensor_map.end())
                 {
-                    auto c = runtime::HostTensor::create_evaluator_tensor(v.get_element_type(),
-                                                                          v.get_shape());
+                    auto c = make_shared<HostTensor>(v);
                     output_tensors.push_back(c);
                 }
                 else
@@ -1024,7 +1030,7 @@ void ngraph::evaluate_nodes(std::map<RawNodeOutput, EvaluatorTensorPtr>& value_m
             }
             else
             {
-                return {};
+                NGRAPH_CHECK(false, "Evaluation failed on ", node);
             }
         });
     for (auto value : outputs)
