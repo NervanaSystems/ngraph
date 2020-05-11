@@ -54,8 +54,6 @@ public:
     explicit HostTensor(const std::shared_ptr<op::v0::Constant>& constant);
     virtual ~HostTensor() override;
 
-    void initialize(const std::shared_ptr<op::v0::Constant>& constant);
-
     void* get_data_ptr();
     const void* get_data_ptr() const;
 
@@ -112,15 +110,6 @@ public:
     void set_broadcast(const op::AutoBroadcastSpec& autob,
                        const HostTensorPtr& arg0,
                        const HostTensorPtr& arg1);
-    /// \brief Set the shape of the tensor using broadcast rules
-    /// \param autob The broadcast mode
-    /// \param arg0 The first argument
-    /// \param arg1 The second argument
-    /// \param element_type The output element type
-    void set_broadcast(const op::AutoBroadcastSpec& autob,
-                       const HostTensorPtr& arg0,
-                       const HostTensorPtr& arg1,
-                       const element::Type& element_type);
 
 private:
     void allocate_buffer();

@@ -39,11 +39,6 @@ extern "C" NOP_BACKEND_API void ngraph_register_nop_backend()
         "NOP", [](const std::string&) { return std::make_shared<runtime::nop::NOPBackend>(); });
 }
 
-shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor()
-{
-    return make_shared<runtime::HostTensor>();
-}
-
 shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const element::Type& type,
                                                                     const Shape& shape)
 {

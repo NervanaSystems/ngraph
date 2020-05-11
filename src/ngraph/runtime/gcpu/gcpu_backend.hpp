@@ -47,8 +47,6 @@ public:
     GCPUBackend(GCPUBackend&&) = delete;
     GCPUBackend& operator=(const GCPUBackend&) = delete;
 
-    std::shared_ptr<Tensor> create_tensor() override;
-
     std::shared_ptr<Tensor>
         create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
 

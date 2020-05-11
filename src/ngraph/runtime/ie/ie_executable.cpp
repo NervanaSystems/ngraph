@@ -77,7 +77,7 @@ namespace
 runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
     : m_device{device}
 {
-    const auto& opset = get_ie_opset();
+    const auto& opset = get_opset1();
     pass::Manager passes;
     passes.register_pass<pass::Opset1Upgrade>();
     passes.run_passes(func);

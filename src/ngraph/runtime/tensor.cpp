@@ -55,12 +55,12 @@ void runtime::Tensor::set_tensor_layout(const shared_ptr<descriptor::layout::Ten
 
 size_t runtime::Tensor::get_element_count() const
 {
-    return shape_size(m_descriptor->get_shape());
+    return get_tensor_layout()->get_size();
 }
 
 size_t runtime::Tensor::get_size_in_bytes() const
 {
-    return m_descriptor->size();
+    return get_tensor_layout()->get_size() * get_element_type().size();
 }
 
 const std::string& runtime::Tensor::get_name() const

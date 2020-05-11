@@ -2745,8 +2745,6 @@ TEST(constant_folding, constant_non_zero_0D)
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    // Fold into constant with shape of {1, 1} for scalar input with
-    // non-zero value
     ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
@@ -2886,13 +2884,9 @@ TEST(constant_folding, constant_non_zero_2D_all_zeros)
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    // fold into Constant with shape of {0}
-    ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 0);
+    // constant folding should fail and the NonZero op should still be in the graph
+    ASSERT_EQ(count_ops_of_type<op::v3::NonZero>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
-
-    const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
-    ASSERT_TRUE(new_const);
-    ASSERT_EQ(shape_size(new_const->get_shape()), 0);
 }
 
 TEST(constant_folding, constant_non_zero_3D)

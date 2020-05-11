@@ -59,8 +59,6 @@ class ngraph::runtime::dynamic::DynamicBackend : public Backend
 public:
     DynamicBackend(std::shared_ptr<ngraph::runtime::Backend> wrapped_backend);
 
-    std::shared_ptr<Tensor> create_tensor() override;
-
     std::shared_ptr<Tensor>
         create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
 

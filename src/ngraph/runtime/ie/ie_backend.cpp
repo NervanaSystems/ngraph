@@ -72,11 +72,6 @@ shared_ptr<runtime::Tensor>
     return make_shared<IETensor>(type, shape);
 }
 
-shared_ptr<runtime::Tensor> runtime::ie::IE_Backend::create_tensor()
-{
-    throw runtime_error("IE_Backend::create_tensor() not supported");
-}
-
 shared_ptr<runtime::Tensor>
     runtime::ie::IE_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {

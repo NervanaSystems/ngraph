@@ -99,15 +99,9 @@ void runtime::HostTensor::allocate_buffer()
     }
 }
 runtime::HostTensor::HostTensor(const std::shared_ptr<op::v0::Constant>& constant)
-    : HostTensor(constant->output(0).get_tensor().get_name())
+    : HostTensor(
+          constant->get_output_element_type(0), constant->get_output_shape(0), constant->get_name())
 {
-    initialize(constant);
-}
-
-void runtime::HostTensor::initialize(const std::shared_ptr<op::v0::Constant>& constant)
-{
-    set_element_type(constant->get_output_element_type(0));
-    set_shape(constant->get_output_shape(0));
     memcpy(get_data_ptr(), constant->get_data_ptr(), get_size_in_bytes());
 }
 
@@ -191,14 +185,6 @@ void runtime::HostTensor::set_broadcast(const op::AutoBroadcastSpec& autob,
     element::Type element_type = arg0->get_element_type();
     NGRAPH_CHECK(element::Type::merge(element_type, element_type, arg1->get_element_type()),
                  "Argument element types are inconsistent.");
-    set_broadcast(autob, arg0, arg1, element_type);
-}
-
-void runtime::HostTensor::set_broadcast(const op::AutoBroadcastSpec& autob,
-                                        const HostTensorPtr& arg0,
-                                        const HostTensorPtr& arg1,
-                                        const element::Type& element_type)
-{
     set_element_type(element_type);
 
     PartialShape pshape = arg0->get_partial_shape();

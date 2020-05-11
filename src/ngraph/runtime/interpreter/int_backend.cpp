@@ -44,11 +44,6 @@ runtime::interpreter::INTBackend::INTBackend(const vector<string>& unsupported_o
 {
 }
 
-shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor()
-{
-    return make_shared<runtime::HostTensor>();
-}
-
 shared_ptr<runtime::Tensor>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
 {

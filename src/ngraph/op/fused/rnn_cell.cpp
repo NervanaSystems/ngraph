@@ -31,12 +31,6 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::RNNCell::type_info;
 
-op::RNNCell::RNNCell()
-{
-    m_activations = {"tanh"};
-    m_activation_f = get_activation_function(0);
-}
-
 op::RNNCell::RNNCell(const Output<Node>& X,
                      const Output<Node>& initial_hidden_state,
                      const Output<Node>& W,

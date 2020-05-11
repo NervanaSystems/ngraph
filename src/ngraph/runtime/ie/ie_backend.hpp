@@ -51,8 +51,6 @@ namespace ngraph
                     create_dynamic_tensor(const ngraph::element::Type& type,
                                           const ngraph::PartialShape& shape) override;
 
-                std::shared_ptr<ngraph::runtime::Tensor> create_tensor() override;
-
                 std::shared_ptr<ngraph::runtime::Tensor>
                     create_tensor(const ngraph::element::Type& element_type,
                                   const Shape& shape) final override;

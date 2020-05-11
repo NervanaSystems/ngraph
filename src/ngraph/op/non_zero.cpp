@@ -16,9 +16,6 @@
 
 #include "ngraph/op/non_zero.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/runtime/host_tensor.hpp"
-#include "ngraph/runtime/reference/non_zero.hpp"
-#include "ngraph/type/element_type_traits.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -64,16 +61,7 @@ void op::v3::NonZero::validate_and_infer_types()
                           m_output_type == element::i64 || m_output_type == element::i32,
                           "Output type must be i32 or i64");
 
-    // For scalar non-zero value case, onnx test case expects output shape {1, 1}
-    if (input_shape.rank() == 0)
-    {
-        set_output_type(0, m_output_type, PartialShape{Dimension::dynamic(), Dimension::dynamic()});
-    }
-    else
-    {
-        set_output_type(0, m_output_type, PartialShape{input_shape.rank(), Dimension::dynamic()});
-    }
-
+    set_output_type(0, m_output_type, PartialShape{input_shape.rank(), Dimension::dynamic()});
     set_input_is_relevant_to_shape(0);
 }
 
@@ -81,92 +69,4 @@ shared_ptr<Node> op::v3::NonZero::clone_with_new_inputs(const OutputVector& new_
 {
     check_new_args_count(this, new_args);
     return make_shared<v3::NonZero>(new_args.at(0), m_output_type);
-}
-
-namespace
-{
-    template <element::Type_t INPUT_ET, element::Type_t OUT_ET>
-    bool evaluate_nonzero_execute(const HostTensorPtr& input, const HostTensorPtr& output)
-    {
-        using IN_T = typename element_type_traits<INPUT_ET>::value_type;
-        using OUT_T = typename element_type_traits<OUT_ET>::value_type;
-
-        Shape input_shape = input->get_shape();
-        size_t input_rank = input_shape.size();
-
-        size_t non_zero_count = runtime::reference::non_zero_get_count<IN_T>(
-            input->get_data_ptr<INPUT_ET>(), input_shape);
-
-        Shape out_shape;
-        if (input_rank == 0 && non_zero_count > 0)
-        {
-            out_shape = Shape{1, 1};
-        }
-        else
-        {
-            out_shape = Shape{input_rank, non_zero_count};
-        }
-
-        output->set_shape(out_shape);
-        runtime::reference::non_zero<IN_T, OUT_T>(
-            input->get_data_ptr<INPUT_ET>(), output->get_data_ptr<OUT_ET>(), input_shape);
-
-        return true;
-    }
-
-    template <element::Type_t INPUT_ET>
-    bool evaluate(const HostTensorPtr& input, const HostTensorPtr& output)
-    {
-        bool rc = true;
-        switch (output->get_element_type())
-        {
-        case element::Type_t::i64:
-            rc = evaluate_nonzero_execute<INPUT_ET, element::Type_t::i64>(input, output);
-            break;
-        case element::Type_t::i32:
-            rc = evaluate_nonzero_execute<INPUT_ET, element::Type_t::i32>(input, output);
-            break;
-        default: rc = false; break;
-        }
-
-        return rc;
-    }
-
-    bool evaluate_nonzero(const HostTensorPtr& input, const HostTensorPtr& output)
-    {
-        bool rc = true;
-
-        switch (input->get_element_type())
-        {
-            TYPE_CASE(i8)(input, output);
-            break;
-            TYPE_CASE(i16)(input, output);
-            break;
-            TYPE_CASE(i32)(input, output);
-            break;
-            TYPE_CASE(i64)(input, output);
-            break;
-            TYPE_CASE(u8)(input, output);
-            break;
-            TYPE_CASE(u16)(input, output);
-            break;
-            TYPE_CASE(u32)(input, output);
-            break;
-            TYPE_CASE(u64)(input, output);
-            break;
-            TYPE_CASE(bf16)(input, output);
-            break;
-            TYPE_CASE(f32)(input, output);
-            break;
-            TYPE_CASE(f64)(input, output);
-            break;
-        default: rc = false; break;
-        }
-        return rc;
-    }
-}
-
-bool op::v3::NonZero::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
-{
-    return evaluate_nonzero(inputs[0], outputs[0]);
 }

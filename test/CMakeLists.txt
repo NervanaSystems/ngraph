@@ -15,10 +15,6 @@
 # ******************************************************************************
 
 add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
-set(NGRAPH_ONNX_NAMESPACE ngraph_onnx)
-
-set(ONNX_LIBRARIES onnx onnx_proto)
-
 
 if(NOT NGRAPH_UNIT_TEST_ENABLE)
     message(STATUS "unit tests disabled")
@@ -77,7 +73,6 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
-    op_eval/non_zero.cpp
     op_is.cpp
     opset1.cpp
     opset_pass/binary_elementwise_opset_pass.cpp
@@ -122,7 +117,6 @@ set(SRC
     type_prop/batch_to_space.cpp
     type_prop/binary_elementwise.cpp
     type_prop/broadcast.cpp
-    type_prop/bucketize.cpp
     type_prop/clamp.cpp
     type_prop/compat.cpp
     type_prop/concat.cpp
@@ -370,7 +364,6 @@ set(MULTI_TEST_SRC
     backend/negative.in.cpp
     backend/node_name.in.cpp
     backend/not.in.cpp
-    backend/non_zero.in.cpp
     backend/numeric.in.cpp
     backend/one_hot.in.cpp
     backend/pad.in.cpp
@@ -427,7 +420,6 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
             onnx/onnx_import_const_folding.in.cpp
             onnx/onnx_import_convpool.in.cpp
             onnx/onnx_import_dyn_shapes.in.cpp
-            onnx/onnx_import_library.in.cpp
             onnx/onnx_import_provenance.in.cpp
             onnx/onnx_import_reshape.in.cpp
             onnx/onnx_import_rnn.in.cpp
@@ -477,12 +469,6 @@ endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
-
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    target_include_directories(unit-test
-        SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
-    target_link_libraries(unit-test PRIVATE ${Protobuf_LIBRARIES} ${ONNX_LIBRARIES})
-endif()
 
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
